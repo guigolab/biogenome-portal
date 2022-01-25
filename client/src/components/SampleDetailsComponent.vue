@@ -1,0 +1,213 @@
+<template>
+<b-container class="router-container" fluid>
+    <b-row>
+        <b-col v-if="validCoordinates" cols="5">
+            <b-row class="map-container">
+                <map-container :geojson="geojson"/>
+            </b-row>
+        </b-col>
+        <b-col>
+            <b-row>
+                <b-col>
+                    <div>
+                        <h1>{{sample.accession}}</h1>
+                    </div>
+                </b-col>
+            </b-row>
+            <b-row>
+                <b-col cols="2">
+                    <div>
+                        <p class="info-icons"><b-icon-calendar/> {{sample.collection_date.text}}</p>
+                    </div>
+                </b-col>
+                <b-col>
+                    <div>
+                        <p class="info-icons">
+                            <b-icon-geo-alt-fill/> 
+                            {{validCoordinates ? sample.geographic_location_region_and_locality.text + ' (' + sample.geographic_location_longitude.text + ', '+ sample.geographic_location_latitude.text + ') ': sample.geographic_location_region_and_locality.text }}
+                        </p>
+                    </div>
+                </b-col>
+            </b-row>
+            <b-row>
+                <b-col>
+                    <b-badge style="margin-right:5px" variant='info' pill><strong> {{sample.taxonId}} </strong></b-badge>
+                    <b-badge style="margin-right:5px" pill variant='secondary'><strong> {{sample.tolid.text}}</strong></b-badge>
+                    <b-badge style="margin-right:5px" pill variant="success" :href="'https://www.ebi.ac.uk/biosamples/samples/'+sample.accession" target="_blank">BioSamples</b-badge>
+                </b-col>
+            </b-row>
+         </b-col>
+    </b-row>
+    <b-row>
+        <b-col>
+            <b-tabs
+                pills
+                content-class="mt-3" fill
+                v-model="tabIndex"
+            >
+                <b-tab :title-link-class="linkClass(0)" active class="tab-element">
+                    <template #title>
+                        <strong>Details  </strong>
+                    </template>
+                    <table-component :sticky-header="stickyHeader" :items="[metadata]" :stacked="true">
+                        <template #cell(accession)="data">
+                            <b-link :href="'https://www.ebi.ac.uk/ena/browser/view/'+ data.value" target="_blank">{{data.value}}</b-link>
+                        </template>
+                    </table-component>
+                </b-tab>
+                <b-tab v-if="sample.specimens && sample.specimens.length > 0" :title-link-class="linkClass(1)" class="tab-element" lazy>
+                    <template #title>
+                        <strong>Specimens  </strong><b-badge :variant="linkVariant(1)" pill>{{sample.specimens.length}}</b-badge>
+                    </template>
+                    <sample-component :samples="sample.specimens"/>
+                </b-tab>
+                <b-tab :title-link-class="linkClass(assIndex)" class="tab-element" v-if="sample.assemblies && sample.assemblies.length" lazy>
+                    <template #title>
+                        <strong>Assemblies  </strong><b-badge :variant="linkVariant(assIndex)" pill>{{sample.assemblies.length}}</b-badge>
+                    </template>
+                    <assemblies-component :assemblies="sample.assemblies"/>
+                </b-tab>
+                <b-tab :title-link-class="linkClass(expIndex)" class="tab-element"  v-if="sample.experiments && sample.experiments.length" lazy>
+                    <template #title>
+                        <strong>Experiments  </strong><b-badge :variant="linkVariant(expIndex)" pill>{{sample.experiments.length}}</b-badge>
+                    </template>
+                    <experiments-component :experiments="sample.experiments"/>
+                </b-tab>
+            </b-tabs>
+        </b-col>
+    </b-row>
+</b-container>
+</template>
+
+<script>
+import {BTabs,BLink,BTab, BBadge,BIconCalendar, BIconGeoAltFill} from 'bootstrap-vue'
+import MapContainer from './MapContainer.vue'
+import AssembliesComponent from './AssembliesComponent.vue'
+import ExperimentsComponent from './ExperimentsComponent.vue'
+import SampleComponent from './SampleComponent.vue'
+import TableComponent from './TableComponent.vue'
+// import Feature from 'ol/Feature'
+export default {
+    components: {BTabs,BTab,BIconCalendar, BIconGeoAltFill,BLink,TableComponent, BBadge, MapContainer, AssembliesComponent, ExperimentsComponent, SampleComponent},
+    props:['sample'],
+    computed:{
+        metadata(){
+            const mappedSample = {}
+            Object.keys(this.sample)
+            .filter(key => !this.excludedFields.includes(key) && (this.sample[key]))
+            .forEach(key => {
+                if(this.sample[key] && this.sample[key].text){
+                    mappedSample[key] = this.sample[key].text
+                }
+                else {
+                    if(typeof this.sample[key] !== 'object')
+                    mappedSample[key] = this.sample[key]
+                }
+              })
+            return mappedSample
+        },
+        validCoordinates(){
+            return this.sample.geographic_location_longitude 
+            && this.sample.geographic_location_latitude 
+            && this.sample.geographic_location_longitude.text 
+            && this.sample.geographic_location_latitude.text
+            && !isNaN(this.sample.geographic_location_latitude.text) && !isNaN(this.sample.geographic_location_longitude.text)
+        },
+        expIndex(){
+            if(this.haveItems(this.sample.assemblies) && this.haveItems(this.sample.specimens)){
+                return 3
+            }else {
+                return 2
+            }
+        },
+        assIndex(){
+            if(this.haveItems(this.sample.specimens)){
+                return 2
+            } return 1
+        }
+    },
+    data(){
+        return {
+            geojson:null,
+            excludedFields: ['_id', 'experiments', 'assemblies', 'specimens'],
+            tabIndex:0,
+        }
+    },
+    mounted(){
+        if(this.validCoordinates){
+            this.createGeoJson()
+        }
+    },
+    methods: {
+        haveItems(arr){
+            return arr && arr.length > 0
+        },
+        createGeoJson(){
+            const geoJson = {
+                'type': 'FeatureCollection',
+                'crs': {
+                    'type': 'name',
+                    'properties': {
+                        'name': 'EPSG:3857'
+                    }
+                },
+                'features': []
+            }
+                const feature = {
+                    'type': 'Feature',
+                    'geometry': {
+                        'type': 'Point',
+                        'coordinates': [this.sample.geographic_location_longitude.text, this.sample.geographic_location_latitude.text]
+                    }
+                }
+            geoJson.features.push(feature)
+            this.geojson = geoJson                 
+        },
+        linkClass(idx) {
+            if (this.tabIndex === idx) {
+                return ['bg-secondary', 'text-light']
+            } 
+            else {
+                return ['bg-light', 'text-dark']
+            }
+        },
+        linkVariant(idx){
+             if (this.tabIndex === idx) {
+                return 'light'
+            } 
+            else {
+                return 'secondary'
+            }
+        }
+}
+}
+
+</script>
+<style>
+.tab-element{
+    padding-top: 10px;
+    padding-bottom: 10px;
+    min-height: 66vh;
+}
+.exp-field{
+    margin-right:4rem!important;
+}
+
+/* not supported in IE, but is anybody still using it? */
+#experiment-fields{
+   columns: 5;
+  -webkit-columns: 5;
+  -moz-columns: 5;
+}
+.map-container{
+    width: 100%;
+    height: 100%;
+    /* min-height:300px;
+    min-width:200px;
+    margin-bottom:20px */
+}
+.info-icons{
+    color: #545b62;
+    font-size: 0.85rem;
+}
+</style>
