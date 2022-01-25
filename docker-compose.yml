@@ -1,0 +1,42 @@
+version: '3'
+
+services:
+  server:
+    container_name: 'fvmc_app'
+    restart: always
+    build: ./server
+    expose:
+      - "8000"
+    volumes:
+      - server-data:/static
+    env_file: 
+      - .env
+    command: /usr/local/bin/gunicorn -w 2 -b :8000 app:app
+
+  mongodb:
+    image: mongo:latest
+    container_name: "fvmc_db"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+      MONGO_INITDB_DATABASE: flask_db
+    volumes:
+     - mongodb-data:/var/lib/mongodb-data
+    ports:
+      - "27017:27017"
+
+  nginx:
+    container_name: 'fvmc_ngnix'
+    restart: always
+    build: ./nginx
+    ports:
+      - "80:80"
+    volumes:
+      - .:/www/static
+      - server-data:/usr/src/app/static
+    links:
+      - server:server
+
+volumes:
+  server-data:
+  mongodb-data:

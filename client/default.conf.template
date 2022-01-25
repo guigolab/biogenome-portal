@@ -1,0 +1,16 @@
+
+server {
+    listen 80;
+
+    location / {
+        root /usr/share/nginx/html;
+        try_files $uri $uri/ /index.html;
+        client_max_body_size 1000M;
+    }
+
+    location /api {
+        include uwsgi_params;
+        uwsgi_pass ${API_HOST}:${API_PORT};
+        client_max_body_size 1000M;
+    }
+}
