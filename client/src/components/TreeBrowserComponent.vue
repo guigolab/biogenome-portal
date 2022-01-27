@@ -33,7 +33,7 @@ export default {
 </script>
 <style>
 .tree-wrapper{
-    height: 75vh;
+    height: 33vh;
     cursor: pointer;
     list-style-type: none;
     overflow: auto;

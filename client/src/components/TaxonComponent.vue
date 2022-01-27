@@ -33,6 +33,15 @@
         :id="tableId"
         :sticky-header="stickyHeader"
         >
+        <template #head(trackingSystem)>
+          <b-form-select
+            id="status-select"
+            v-model="selectedStatus"
+            :options="statuses"
+            size="sm"
+          >
+          </b-form-select>
+        </template>
         <template #cell(organism)="data">
           <b-link :to="{name: 'organism-details', params: {name: data.item.organism}}">
             {{data.item.organism}}
@@ -40,6 +49,8 @@
         </template>
         <template #cell(trackingSystem)="data">
           <status-badge-component :status="data.item.trackingSystem"/>
+        </template>
+         <template #cell(externalReferences)="data">
             <b-badge pill variant='info' target="_blank" :href="'https://goat.genomehubs.org/records?record_id='+data.item.taxid+'&result=taxon&taxonomy=ncbi#'+data.item.organism">GoaT</b-badge>
         </template>
       </table-component>
@@ -49,7 +60,7 @@
 
 <script>
 import portalService from "../services/DataPortalService"
-import { BIconXCircle, BBadge,  BButton, BLink } from 'bootstrap-vue'
+import { BIconXCircle, BBadge,  BButton, BLink, BFormSelect } from 'bootstrap-vue'
 import TableComponent from './TableComponent.vue';
 import FilterComponent from './FilterComponent.vue';
 import PaginationComponent from './PaginationComponent.vue';
@@ -59,7 +70,7 @@ import StatusBadgeComponent from './StatusBadgeComponent.vue';
 export default {
   components: 
     {BLink, BIconXCircle, BBadge,
-     BButton, TableComponent,PaginationComponent,
+     BButton, BFormSelect,TableComponent,PaginationComponent,
       FilterComponent,
       StatusBadgeComponent},
   computed: {
@@ -74,17 +85,33 @@ export default {
       pageOptions: [20,50,100],
       isBusy: false,
       stickyHeader: '70vh',
+      selectedStatus: '',
+      statuses: [
+        { value: '', text: 'All' },
+        { value: 'Biosample Submitted', text: 'Biosample Submitted'},
+        { value: 'Mapped Reads Submitted', text: 'Mapped Reads Submitted' },
+        { value: 'Assemblies Submitted', text: 'Assemblies Submitted' },
+        { value: 'Raw Data Submitted', text: 'Raw Data Submitted' },
+        { value: 'Annotation Complete', text: 'Annotation Complete' },
+        { value: 'Annotation Submitted', text: 'Annotation Submitted' }
+      ],
       fields: [
         {key: 'taxid', label: 'TaxId',sortable: true},
         {key: 'organism',label:'Scientific Name',sortable: true},
         {key:'commonName', label: 'Common Name', sortable: true},
-        {key: 'trackingSystem', label:''}
+        {key: 'trackingSystem', label:'Status', sortalble: false},
+        {key: 'externalReferences', label:'External References'}
       ]
         // {key: 'kingdom',label:'Kingdom', sortable: true,
         // formatter: (value, key, item) => {
         // return item.lineage['kingdom']}, sortByFormatted: true},
         // {key: 'family',label:'Family', sortable: true, formatter: (value, key, item) => {
         // return item.lineage['family']},sortByFormatted: true},],
+    }
+  },
+  watch: {
+    selectedStatus(){
+      this.$root.$emit('bv::refresh::table', this.tableId)
     }
   },
   methods: {
@@ -114,14 +141,14 @@ export default {
       return null
     },
     organismsProvider(ctx,callback){
-      console.log(ctx)
       const fromParam = (ctx.currentPage - 1) * ctx.perPage
+      const status = this.selectedStatus
       if(ctx.filter){
-        const params = {filter: ctx.filter,from: fromParam, size: ctx.perPage,sortColumn: ctx.sortBy, sortOrder: ctx.sortDesc,taxName: this.taxName }
+        const params = {filter: ctx.filter,from: fromParam, size: ctx.perPage,sortColumn: ctx.sortBy, sortOrder: ctx.sortDesc,taxName: this.taxName, status: status }
         this.filterSearch(params,callback)          
       }
       else {
-        const params = {offset: fromParam , limit: ctx.perPage, sortColumn: ctx.sortBy, sortOrder: ctx.sortDesc,taxName: this.taxName}
+        const params = {offset: fromParam , limit: ctx.perPage, sortColumn: ctx.sortBy, sortOrder: ctx.sortDesc,taxName: this.taxName, status: status}
         this.defaultSearch(params,callback)
       }
     },

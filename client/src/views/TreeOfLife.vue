@@ -5,8 +5,8 @@
           <b-row>
             <b-col>
               <h1 style="text-align:center">{{node}}</h1>
-              <svg ref="svg"  class="tree-svg">
-              </svg>
+              <!-- <svg ref="legend"/> -->
+                <svg ref="svg"  class="tree-svg"/>
             </b-col>
           </b-row>
       </b-container>
@@ -40,7 +40,10 @@ export default {
       return this.width/2
     },
     innerRadius(){
-      return this.outerRadius - 170
+      return this.outerRadius - this.outerRadius/3
+    },
+    windowSize(){
+      return this.width <= 450 ? -this.width*1.33 : -this.outerRadius
     }
   },
   watch: {
@@ -76,7 +79,7 @@ export default {
       this.setColor(root);
     
       const svg = d3.select(this.$refs.svg)
-          .attr("viewBox", [-this.outerRadius, -this.outerRadius, this.width, this.width])
+          .attr("viewBox", [-this.outerRadius, this.windowSize, this.width, this.width])
           .attr("font-family", "sans-serif")
           .attr("font-size", 10);
     
@@ -170,8 +173,6 @@ export default {
           return
         }
         this.$router.push({name:'tree-of-life', params: {node: name}})
-        // this.$forceUpdate()
-        // this.createTree(name)
       }
     
     },
@@ -238,10 +239,10 @@ export default {
         .selectAll("g").text('').attr('fill',null).attr('stroke',null)
         .data(this.color().domain())
         .join("g")
-        .attr("transform", (d, i) => `translate(${-this.outerRadius},${-this.outerRadius + i * 20})`);
+        .attr("transform", (d, i) => `translate(${-this.outerRadius},${this.windowSize + i * 20})`);
         g.append("rect")
-        .attr("width", 18)
-        .attr("height", 18)
+        .attr("width", 15)
+        .attr("height", 15)
         .attr("fill", this.color());
 
         g.append("text")
@@ -253,6 +254,7 @@ export default {
         .on("click", this.info(this))
         .on("mouseover", this.mouseovered(true))
         .on("mouseout", this.mouseovered(false));
+      
     },
   }
 };
@@ -261,14 +263,13 @@ export default {
 <style>
 .leaves-class, .legend-text {
   cursor: pointer;
-  font-size: 14px;
+  font-size: 0.8rem;
+  /* font-size: inherit; */
 }
 .tree-svg {
     width: inherit;
     height: 100%;
+    /* max-width: 100%; */
     overflow: visible;
-}
-text {
-  font-size: 14px;
 }
 </style>

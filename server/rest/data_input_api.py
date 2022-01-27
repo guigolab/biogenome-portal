@@ -21,10 +21,11 @@ class InputDataApi(Resource):
             app.logger.error(e)
         raise InternalServerError
 
-    def delete(self):
-        TaxonNode.drop_collection()
-        SecondaryOrganism.drop_collection()
-        Organism.drop_collection()
-        Assembly.drop_collection()
-        Experiment.drop_collection()
-        return 200
+#Endpoint to drop db collections
+    # def delete(self):
+    #     TaxonNode.drop_collection()
+    #     SecondaryOrganism.drop_collection()
+    #     Organism.drop_collection()
+    #     Assembly.drop_collection()
+    #     Experiment.drop_collection()
+    #     return 200

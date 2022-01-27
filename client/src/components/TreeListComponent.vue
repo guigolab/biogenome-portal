@@ -93,16 +93,16 @@ ul{
     margin: 0.25rem;
 }
 #tree-leaves-button {
-    margin-left: 3px;
+    margin-left: 0.3rem;
 }
 .taxon-title{
-    margin-left: 2px
+    margin-left: 0.2rem
 }
 .icons-container{
     display:contents
 }
 .to-tree-link{
-    margin-right: 5px
+    margin-right: 0.5rem
 }
 
 </style>

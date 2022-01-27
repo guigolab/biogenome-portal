@@ -1,7 +1,7 @@
 <template>
 <b-container class="router-container" fluid>
     <b-row>
-        <b-col v-if="validRecords.length > 0" cols="5">
+        <b-col v-if="validRecords.length > 0" lg="5">
             <b-row class="map-container">
                 <map-container :geojson="geojson"/>
             </b-row>
@@ -162,20 +162,15 @@ export default {
     padding-bottom: 10px;
     min-height: 66vh;
 }
-.exp-field{
-    margin-right:4rem!important;
-}
+
 .map-container{
     width: 100%;
     height: 100%;
+    min-height: 150px
     /* min-height:300px;
     min-width:200px;
     margin-bottom:20px */
 }
 /* not supported in IE, but is anybody still using it? */
-#experiment-fields{
-   columns: 5;
-  -webkit-columns: 5;
-  -moz-columns: 5;
-}
+
 </style>

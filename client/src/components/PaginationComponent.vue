@@ -1,6 +1,6 @@
 <template>
     <b-row>
-        <b-col sm="5" md="6" class="my-1">
+        <b-col class="my-1">
           <b-form-group
             label="Per page"
             label-for="per-page-select"
@@ -19,7 +19,7 @@
             ></b-form-select>
           </b-form-group>
         </b-col>
-        <b-col sm="7" md="6" class="my-1">
+        <b-col class="my-1">
           <b-pagination
             v-model="currentPage"
             :total-rows="totalRows"
@@ -29,6 +29,9 @@
             class="my-0"
             :aria-controls="tableId"
           ></b-pagination>
+        </b-col>
+        <b-col cols="2" class="my-1">
+          <p><strong>Total items: {{totalRows}} </strong></p>
         </b-col>
     </b-row>
 </template>

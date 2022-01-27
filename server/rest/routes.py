@@ -1,12 +1,12 @@
 from .organisms import OrganismsApi, OrganismApi, OrganismsSearchApi, SampleApi
 from .parser_api import ExcelParserApi, XMLParserApi
 from .tree_api import TreeApi,TaxNodesApi
-from .data_input_api import InputDataApi, WebHookApi
+from .data_input_api import InputDataApi
 
 def initialize_routes(api):
 
 	api.add_resource(InputDataApi, '/api/input', '/api/input/<value>')
-	api.add_resource(WebHookApi, '/api/webhook')
+	# api.add_resource(WebHookApi, '/api/webhook')
 
 	##data portal endpoints
 	api.add_resource(OrganismsApi, '/api/root_organisms')

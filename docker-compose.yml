@@ -1,42 +1,52 @@
 version: '3'
 
 services:
-  server:
-    container_name: 'fvmc_app'
+  cbp-server:
+    build: 
+      context: .
+      dockerfile: ./server/Dockerfile
+    container_name: "portal_server"
     restart: always
-    build: ./server
+    environment: 
+      - APP_NAME=PORTAL
     expose:
-      - "8000"
+      - "8686"
     volumes:
-      - server-data:/static
+      - ./server:/server
+      - ./tmp:/tmp
     env_file: 
       - .env
-    command: /usr/local/bin/gunicorn -w 2 -b :8000 app:app
 
-  mongodb:
+  nginx:
+    build: ./client
+    container_name:  "portal_nginx"
+    restart: always
+    volumes:
+      - ./client:/client
+      - node_modules:/client/node_modules
+      - ./tmp:/tmp
+    ports:
+        - "89:89"
+    environment:
+        - API_HOST=portal_server
+        - API_PORT=8686
+        
+  cbp-db:
     image: mongo:latest
-    container_name: "fvmc_db"
+    container_name: "portal_mongo"
+    command: mongod --port 27013
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: root
       MONGO_INITDB_DATABASE: flask_db
+      MONGODB_DATA_DIR: /var/lib/mongodb-data
+      MONDODB_LOG_DIR: /dev/null
     volumes:
      - mongodb-data:/var/lib/mongodb-data
     ports:
-      - "27017:27017"
-
-  nginx:
-    container_name: 'fvmc_ngnix'
-    restart: always
-    build: ./nginx
-    ports:
-      - "80:80"
-    volumes:
-      - .:/www/static
-      - server-data:/usr/src/app/static
-    links:
-      - server:server
+      - "27013:27013"
 
 volumes:
-  server-data:
+  app:
   mongodb-data:
+  node_modules:

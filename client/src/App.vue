@@ -4,18 +4,18 @@
     <b-overlay :show="loading">
     <b-container fluid class="router-container">
       <b-row>
-        <b-col cols="4">
+        <b-col lg="4">
           <bread-crumb-component/>
         </b-col>
       </b-row>
       <b-row>
-        <b-col cols="2"/>
-        <b-col cols="8">
+        <b-col lg="1"/>
+        <b-col lg="10">
           <b-container fluid class="router-container">
               <router-view />
           </b-container>
         </b-col>
-        <b-col cols="2"/>
+        <b-col lg="1"/>
       </b-row>
     </b-container>
     </b-overlay>

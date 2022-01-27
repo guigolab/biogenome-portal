@@ -5,7 +5,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from config import BaseConfig
 from db import initialize_db
 from rest import initialize_api
-from cronjobs import import_from_biosample
+from cronjobs.import_from_biosample import import_from_biosamples
 import os
 
 # def remove_tmpfiles_job():
@@ -22,8 +22,10 @@ initialize_db(app)
 
 initialize_api(app)
 
+PROJECTS=os.getenv('PROJECTS')
+TIME= os.getenv('EXEC_TIME')
 sched = BackgroundScheduler(daemon=True) ## keep the scheduler for future uses
-sched.add_job(import_from_biosample.import_from_biosamples(os.environ['PROJECTS'].split(',')),'interval',seconds=os.environ['EXEC_TIME'])
+sched.add_job(import_from_biosamples,"interval", [PROJECTS.split(',')], seconds=int(TIME))
 # # # sched.add_job(remove_tmpfiles_job,'interval',seconds=60)
 
 sched.start()

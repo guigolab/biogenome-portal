@@ -8,8 +8,13 @@
                 id="experiment-fields"
                 v-model="experimentFields"
                 name="experiment-fields"
+                size="sm"
             >
-                <b-form-checkbox class="exp-field" v-for="key in experimentKeys()" :key="key" :value="key">{{key}}</b-form-checkbox>
+            <b-row cols="1" cols-sm="2" cols-md="4" cols-lg="6">
+                <b-col v-for="key in experimentKeys()" :key="key">
+                    <b-form-checkbox class="exp-field" :value="key">{{key}}</b-form-checkbox>
+                </b-col>
+            </b-row>
             </b-form-checkbox-group>
     </b-collapse>
     <table-component

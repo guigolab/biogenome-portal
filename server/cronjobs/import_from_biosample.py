@@ -47,25 +47,28 @@ CHECKLIST_PARSER = {
 def import_from_biosamples(PROJECTS):
     samples = list()
     for project in PROJECTS:
-        response = requests.get(
+        resp = requests.get(
         f"https://www.ebi.ac.uk/biosamples/samples?size=100000&"
-        f"filter=attr%3Aproject%20name%3A{project}").json()
-        samples.extend(response['_embedded']['samples'])
+        f"filter=attr%3Aproject%20name%3A{project}")
+        if resp.status_code != 200:
+            return
+        else:
+            resp = resp.json()
+        samples.extend(resp['_embedded']['samples'])
     if len(samples) != 0 and len(samples) == len(SecondaryOrganism.objects()):
         return
     for sample in samples:
-        accession = sample['accession']
-        sample = SecondaryOrganism.objects(accession = accession).first()
-        if sample:
-            update_sample(sample,accession)
+        sample_obj = SecondaryOrganism.objects(accession = sample['accession']).first()
+        if sample_obj:
+            update_sample(sample_obj)
         else:
-            parse_record(sample['characteristics'],accession,str(sample['taxId']))
+            parse_record(sample['characteristics'],sample['accession'],str(sample['taxId']))
     append_specimens(SecondaryOrganism.objects())
 
-def update_sample(sample,accession):
+def update_sample(sample):
     organism = Organism.objects(taxid = str(sample.taxonId)).first()
-    experiments = get_reads(accession)
-    assemblies = parse_assemblies(accession)
+    experiments = get_reads(sample.accession)
+    assemblies = parse_assemblies(sample.accession)
     if len(sample.experiments) != len(experiments):
         new_experiments = list(set(experiments) - set(sample.experiments))
         for ex in new_experiments:
@@ -188,7 +191,8 @@ def get_organism(taxon_id):
         lineage.insert(0,species)
         taxon_lineage = create_taxons(lineage)
         create_children(taxon_lineage)
-        organism = Organism(organism=species['scientificName'],taxid=species['taxId'],taxon_lineage=taxon_lineage).save()
+        common_name = species['commonName'] if 'commonName' in species.keys() else ''
+        organism = Organism(organism=species['scientificName'],taxid=species['taxId'], commonName = common_name,taxon_lineage=taxon_lineage).save()
         leaves_counter(organism.taxon_lineage)
         return organism
     else:
