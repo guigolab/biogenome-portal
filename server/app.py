@@ -5,14 +5,8 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from config import BaseConfig
 from db import initialize_db
 from rest import initialize_api
-from cronjobs.import_from_biosample import import_from_biosamples
+from cronjobs.import_from_biosample import import_records
 import os
-
-# def remove_tmpfiles_job():
-#     # files = TaxonFile.objects()
-#     # taxons = TaxonNode.objects()
-#     for entry in os.scandir("/tmp"):
-#         os.remove(entry)
 
 app = Flask(__name__)
 CORS(app)
@@ -24,9 +18,8 @@ initialize_api(app)
 
 PROJECTS=os.getenv('PROJECTS')
 TIME= os.getenv('EXEC_TIME')
-sched = BackgroundScheduler(daemon=True) ## keep the scheduler for future uses
-sched.add_job(import_from_biosamples,"interval", [PROJECTS.split(',')], seconds=int(TIME))
-# # # sched.add_job(remove_tmpfiles_job,'interval',seconds=60)
+sched = BackgroundScheduler(daemon=True)
+sched.add_job(import_records,"interval", [PROJECTS.split(',')], seconds=int(TIME))
 
 sched.start()
 

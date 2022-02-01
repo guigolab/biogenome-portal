@@ -16,21 +16,27 @@ class TargetListStatus(Enum):
     CBP = 'cbp'
 
 
+
 class TaxonNode(db.Document):
     children = db.ListField(db.LazyReferenceField('self', passthrough=True))
     name = db.StringField(required=True,unique=True)
     taxid = db.StringField(required= True)
     rank = db.StringField()
     leaves = db.IntField()
-    
-    
+    meta = {
+        'indexes': [
+            'name',  
+            'taxid'
+        ]
+    }
 
+    
 class Experiment(db.Document):
     study_accession= db.StringField()
     secondary_study_accession= db.StringField()
     sample_accession= db.StringField()
     secondary_sample_accession= db.StringField()
-    experiment_accession= db.StringField()
+    experiment_accession= db.StringField(unique=True)
     run_accession= db.StringField()
     submission_accession= db.StringField()
     tax_id= db.StringField()
@@ -77,13 +83,19 @@ class Experiment(db.Document):
     sample_title= db.StringField()
     nominal_sdev= db.StringField()
     first_created= db.StringField()
+    meta = {
+        'indexes': ['$experiment_accession']
+    }
 
 class Assembly(db.Document):
-    accession = db.StringField()
+    accession = db.StringField(unique=True)
     version = db.StringField()
     assembly_name = db.StringField()
     description = db.StringField()
     sample_accession = db.StringField()
+    meta = {
+        'indexes': ['$accession']
+    }
 
 class SecondaryOrganism(db.Document):
     assemblies = db.ListField(db.LazyReferenceField(Assembly))
@@ -124,6 +136,9 @@ class SecondaryOrganism(db.Document):
     specimen_id = db.DictField()
     GAL_sample_id = db.DictField()
     culture_or_strain_id = db.DictField()
+    meta = {
+        'indexes': ['$accession']
+    }
 
 class Organism(db.Document):
     assemblies = db.ListField(db.LazyReferenceField(Assembly))
@@ -135,4 +150,8 @@ class Organism(db.Document):
     image = db.FileField()
     taxon_lineage = db.ListField(db.LazyReferenceField(TaxonNode))
     trackingSystem = db.EnumField(TrackStatus, default=TrackStatus.SAMPLE)
-
+    meta = {
+        'indexes': ['organism',
+            {'fields':['$organism','$commonName','$taxid']}
+        ]
+    }

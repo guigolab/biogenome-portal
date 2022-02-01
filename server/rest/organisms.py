@@ -1,13 +1,81 @@
 import services.search_service as service
 from flask import Response, request
-from db.models import Organism, SecondaryOrganism,Assembly
+from db.models import Organism, SecondaryOrganism
 from flask_restful import Resource
 from mongoengine.errors import DoesNotExist
 from errors import NotFound
-import services.common_functions as common
 from flask import current_app as app
 import json
-# import json
+
+OrganismPipeline = [
+	{"$lookup":
+		{"from": "secondary_organism",
+		"localField": "records",
+		"foreignField": "_id",
+		"as": "records",
+		}
+	},
+	{"$lookup":
+		{"from": "experiment",
+		"localField": "experiments",
+		"foreignField": "_id",
+		"as": "experiments",
+		}
+	},
+	{"$lookup":
+		{"from": "assembly",
+		"localField": "assemblies",
+		"foreignField": "_id",
+		"as": "assemblies",
+		}
+	},
+	{"$lookup":
+		{"from": "taxon_node",
+		"localField": "taxon_lineage",
+		"foreignField": "_id",
+		"as": "taxon_lineage",
+		}
+	},
+	{"$project": 
+		{"_id":0, 
+		"records": {"_id":0,"assemblies":0,"experiments":0,"specimens":0},
+		"taxon_lineage" : {"_id":0,"children":0},
+		"assemblies" : {"_id":0},
+		"experiments": {"_id":0}
+		}
+	}
+]
+
+SamplePipeline = [
+	{"$lookup":
+		{"from": "secondary_organism",
+		"localField": "specimens",
+		"foreignField": "_id",
+		"as": "specimens",
+		}
+	},
+	{"$lookup":
+		{"from": "experiment",
+		"localField": "experiments",
+		"foreignField": "_id",
+		"as": "experiments",
+		}
+	},
+	{"$lookup":
+		{"from": "assembly",
+		"localField": "assemblies",
+		"foreignField": "_id",
+		"as": "assemblies",
+		}
+	},
+	{"$project": 
+		{"_id":0, 
+		"specimens": {"_id":0,"assemblies":0,"experiments":0,"specimens":0},
+		"assemblies" : {"_id":0},
+		"experiments": {"_id":0}
+		}
+	}
+]
 
 class OrganismsApi(Resource):
 	def get(self):
@@ -19,37 +87,23 @@ class OrganismsApi(Resource):
 class OrganismsSearchApi(Resource):
 	def get(self):
 		try:
-			app.logger.info(Assembly.objects().first())
 			return Response(service.full_text_search(request.args,Organism),mimetype="application/json", status=200)
 		except DoesNotExist:
 			raise NotFound
 
 class OrganismApi(Resource):
 	def get(self,name):
-		try:
-			organism = Organism.objects(organism=name).first()
-			response = json.loads(organism.to_json())
-			response['taxon_lineage'] = common.fetch_lazy_reference(organism.taxon_lineage)
-			response['records'] = common.fetch_lazy_reference(organism.records)
-			response['assemblies'] = common.fetch_lazy_reference(organism.assemblies)
-			response['experiments'] = common.fetch_lazy_reference(organism.experiments)
-			return Response(json.dumps(response),mimetype="application/json", status=200)
-		except DoesNotExist:
+		organism = Organism.objects(organism=name).aggregate(*OrganismPipeline).next()
+		if not organism:
 			raise NotFound
+		return Response(json.dumps(organism),mimetype="application/json", status=200)
 
 class SampleApi(Resource):
 	def get(self,accession):
-		try:
-			sample = SecondaryOrganism.objects(accession=accession).first()
-			response = json.loads(sample.to_json())
-			if len(response['specimens']) > 0:
-				response['specimens'] = common.fetch_lazy_reference(sample.specimens)
-			if len(response['experiments']) > 0:	
-				response['experiments'] = common.fetch_lazy_reference(sample.experiments)
-			if len(response['assemblies']):
-				response['assemblies'] = common.fetch_lazy_reference(sample.assemblies)
-			return Response(json.dumps(response),mimetype="application/json", status=200)
-		except DoesNotExist:
+		sample = SecondaryOrganism.objects(accession=accession).aggregate(*SamplePipeline).next()
+		if not sample:
 			raise NotFound
+		return Response(json.dumps(sample),mimetype="application/json", status=200)
+
 
 ##endpoint to retrieve checklist fields

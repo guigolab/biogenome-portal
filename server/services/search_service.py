@@ -3,64 +3,56 @@ from flask import json
 from flask import current_app as app
 from mongoengine.queryset.visitor import Q
 from db.models import TaxonNode
+from . import common_functions
 
-class SearchParams(Enum):
-  SORT = "sortOrder"
-  SORTCOLUMN = "sortColumn"
-  FROM = "from"
-  SIZE = "size"
-  FILTER = "filter"
-  TAX_NAME = "taxName"
-  STATUS = "status"
+DefaultParams = {
+    'sortOrder': '',
+    'sortColumn': '',
+    'taxName': 'Eukaryota',
+    'status': ' '
+}
+FilterParams = { **DefaultParams,
+    'from': 0,
+    'size': 20,
+    'filter': '',
+}
 
-class QueryParams(Enum):
-  LIMIT = "limit"
-  OFFSET = "offset"
-  SORT = "sortOrder"
-  SORTCOLUMN = "sortColumn"
-  TAX_NAME = "taxName"
-  STATUS = "status"
+QueryParams = {
+    **DefaultParams,
+    'limit': 20,
+    'offset': 0,
+}
+
 
 ##when filter is present we trigger FTS
 def full_text_search(params,model):
     json_resp = {}
-    from_param = params.get(SearchParams.FROM.value) if params.get(SearchParams.FROM.value) else 0
-    size_param = params.get(SearchParams.SIZE.value) if params.get(SearchParams.SIZE.value) else 20
-    tax_name = params.get(SearchParams.TAX_NAME.value)
-    filter = params.get(SearchParams.FILTER.value)
-    sort_column = params.get(SearchParams.SORTCOLUMN.value)
-    status = params.get(SearchParams.STATUS.value)
-    query_tax = ''
-    organisms = model.objects()
-    if tax_name:
-        tax_node = TaxonNode.objects(name=tax_name).first()
-        # organisms = model.objects(raw_lineage=tax_name)
-        organisms = model.objects(taxon_lineage=tax_node)
-        query_tax = Q(taxon_lineage=tax_node)
-    if status:
-        query_status = query_by_status(status)
-    query = query_by_taxid(filter) if filter.isnumeric() else query_by_name(filter)
-    if query_tax and query_status:
-        organisms = model.objects(query & query_tax & query_status)
-    elif query_tax:
-        organisms = model.objects(query & query_tax)
-    elif query_status:
-        organisms = model.objects(query & query_status)
+    resolved_params = common_functions.resolve_params(FilterParams,**params)
+    app.logger.info(resolved_params)
+    # #tax name param always present, Eukaryota by default
+    tax_node = TaxonNode.objects(name=resolved_params['taxName']).first()
+    query_tax = query_by_taxNode(tax_node)
+    query_status = query_by_status(resolved_params['status']) if resolved_params['status'] else None
+    query = query_by_taxid(resolved_params['filter']) if resolved_params['filter'].isnumeric() else query_by_name(resolved_params['filter'])
+    if query_status:
+        organisms = model.objects(query_tax & query_status & query).only('commonName','taxid','organism', 'trackingSystem')
     else:
-        organisms = model.objects(query)
-    if sort_column:
-        sort = '-'+sort_column if params.get(SearchParams.SORT.value) == 'true' else sort_column
+        organisms = model.objects(query_tax & query).only('commonName','taxid','organism', 'trackingSystem')
+    if resolved_params['sortColumn']:
+        sort = '-'+resolved_params['sortColumn'] if resolved_params['sortOrder'] == 'true' else resolved_params['sortColumn']
         organisms = organisms.order_by(sort)
     json_resp['total'] = organisms.count()
-    json_resp['data'] = json.loads(organisms[int(from_param):int(from_param)+int(size_param)].to_json())
+    json_resp['data'] = organisms[int(resolved_params['from']):int(resolved_params['from'])+int(resolved_params['size'])].as_pymongo()
     return json.dumps(json_resp)
 
+def query_by_taxNode(taxNode):
+    return Q(taxon_lineage=taxNode)
 
 def query_by_status(status):
     return Q(trackingSystem=status)
 
 def query_by_name(filter):
-    return (Q(organism__iexact=filter) | Q(organism__icontains=filter))
+    return (Q(organism__iexact=filter) | Q(organism__icontains=filter) | Q(commonName__icontains=filter) | Q(commonName__iexact=filter))
 
 def query_by_taxid(filter):
     return (Q(taxid__iexact=filter) | Q(taxid__icontains=filter))
@@ -68,26 +60,17 @@ def query_by_taxid(filter):
 ##filter is not present
 def default_query_params(params,model):
     json_resp = {}
-    offset =  params.get(QueryParams.OFFSET.value) if params.get(QueryParams.OFFSET.value) else 0
-    limit = params.get(QueryParams.LIMIT.value) if params.get(QueryParams.LIMIT.value) else 20
-    tax_name = params.get(QueryParams.TAX_NAME.value)
-    status = params.get(SearchParams.STATUS.value)
-    if tax_name:
-        tax_node = TaxonNode.objects(name=tax_name).first()
-        organisms = model.objects(taxon_lineage=tax_node)
-        query_tax = Q(taxon_lineage=tax_node)
-    query_status = query_by_status(status) if status else None
-    if query_tax and query_status:
-        organisms = model.objects(query_tax & query_status)
-    elif query_tax:
-        organisms = model.objects(query_tax)
-    elif query_status:
-        organisms = model.objects(query_status)
+    resolved_params = common_functions.resolve_params(QueryParams, **params)
+    tax_node = TaxonNode.objects(name=resolved_params['taxName']).first()
+    query_tax = query_by_taxNode(tax_node)
+    query_status = query_by_status(resolved_params['status']) if resolved_params['status'] else None
+    if query_status:
+        organisms = model.objects(query_tax & query_status).only('commonName','taxid','organism', 'trackingSystem')
     else:
-        organisms = model.objects()
-    if params.get(QueryParams.SORTCOLUMN.value):
-        sort = '-' if params.get(QueryParams.SORT.value) == 'true' else '+'
-        organisms = organisms.order_by(sort+params.get(QueryParams.SORTCOLUMN.value))
+        organisms = model.objects(query_tax).only('commonName','taxid','organism', 'trackingSystem')
+    if resolved_params['sortColumn']:
+        sort = '-'+resolved_params['sortColumn'] if resolved_params['sortOrder'] == 'true' else resolved_params['sortColumn']
+        organisms = organisms.order_by(sort)
     json_resp['total'] = organisms.count()
-    json_resp['data'] = json.loads(organisms[int(offset):int(limit)+int(offset)].to_json())
+    json_resp['data'] = organisms[int(resolved_params['offset']):int(resolved_params['limit'])+int(resolved_params['offset'])].as_pymongo()
     return json.dumps(json_resp)

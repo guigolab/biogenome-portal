@@ -1,4 +1,5 @@
 import requests
+import services.taxon_service as service
 from db.models import Assembly, Organism, SecondaryOrganism, TaxonNode, Experiment, TrackStatus
 from lxml import etree
 
@@ -44,13 +45,14 @@ CHECKLIST_PARSER = {
 #import biosamples
 #track status
 #FIX: passing a list or a single project??
-def import_from_biosamples(PROJECTS):
+def import_records(PROJECTS):
     samples = list()
     for project in PROJECTS:
         resp = requests.get(
         f"https://www.ebi.ac.uk/biosamples/samples?size=100000&"
         f"filter=attr%3Aproject%20name%3A{project}")
         if resp.status_code != 200:
+            print('Request failed!')
             return
         else:
             resp = resp.json()
@@ -60,30 +62,40 @@ def import_from_biosamples(PROJECTS):
     for sample in samples:
         sample_obj = SecondaryOrganism.objects(accession = sample['accession']).first()
         if sample_obj:
+            print(f'UPDATING SAMPLE: {sample_obj.accession}')
             update_sample(sample_obj)
         else:
-            parse_record(sample['characteristics'],sample['accession'],str(sample['taxId']))
+            print('CREATING SAMPLE: '+ sample['accession'])
+            create_sample(sample['characteristics'],sample['accession'],str(sample['taxId']))
     append_specimens(SecondaryOrganism.objects())
 
 def update_sample(sample):
     organism = Organism.objects(taxid = str(sample.taxonId)).first()
     experiments = get_reads(sample.accession)
     assemblies = parse_assemblies(sample.accession)
-    if len(sample.experiments) != len(experiments):
-        new_experiments = list(set(experiments) - set(sample.experiments))
-        for ex in new_experiments:
-            sample.experiments.append(ex)
-            organism.experiments.append(ex)
     if len(sample.assemblies) != len(assemblies):
         new_assemblies = list(set(assemblies) - set(sample.assemblies))
         for ass in new_assemblies:
-            sample.assemblies.append(ass)
-            organism.assemblies.append(ass)
+            if not any([ass['accession'] == assembly.accession for assembly in organism.assemblies]):
+                ass_obj = Assembly(**ass).save()
+            else:
+                continue
+            sample.assemblies.append(ass_obj)
+            organism.assemblies.append(ass_obj)
+    if len(sample.experiments) != len(experiments):
+        new_experiments = list(set(experiments) - set(sample.experiments))
+        for ex in new_experiments:
+            if not any([ex['experiment_accession'] == experiment.experiment_accession for experiment in organism.experiments]):
+                exp_obj = Experiment(**ex).save()
+            else:
+                continue
+            sample.experiments.append(exp_obj)
+            organism.experiments.append(exp_obj)
     sample.save()
-    organism.save()
+    update_status(organism)
 
 
-def parse_record(sample, accession, taxon_id):
+def create_sample(sample, accession, taxon_id):
     organism = Organism.objects(taxid=taxon_id).first() if Organism.objects(taxid=taxon_id).first() else get_organism(taxon_id)
     if not organism:
         return ##skip sample creation if taxon is not present in ENA
@@ -94,8 +106,6 @@ def parse_record(sample, accession, taxon_id):
             secondary_organism[CHECKLIST_PARSER[key]]['text'] = sample[key][0]['text']
             if 'unit' in sample[key][0].keys():
                 secondary_organism[CHECKLIST_PARSER[key]]['unit'] = sample[key][0]['unit']
-        # else:
-        #     secondary_organism.custom_fields[key] = sample[key][0]['text']
     experiments = get_reads(accession)
     assemblies = parse_assemblies(accession)
     if len(assemblies) > 0:
@@ -104,16 +114,25 @@ def parse_record(sample, accession, taxon_id):
             ass = Assembly(**assembly).save()
             secondary_organism.assemblies.append(ass)
             organism.assemblies.append(ass)
-            organism.trackingSystem = TrackStatus.ASSEMBLIES
     if len(experiments) > 0:
         for experiment in experiments:
             exp = Experiment(**experiment).save()
             secondary_organism.experiments.append(exp)
             organism.experiments.append(exp)
-            organism.trackingSystem = TrackStatus.MAP_READS
     secondary_organism.save()
     if not secondary_organism.sample_derived_from:
         organism.records.append(secondary_organism)
+    update_status(organism)
+
+def update_status(organism):
+    if organism.assemblies and organism.experiments:
+        organism.trackingSystem = TrackStatus.MAP_READS
+    elif organism.experiments:
+        organism.trackingSystem = TrackStatus.RAW_DATA
+    elif organism.assemblies:
+        organism.trackingSystem = TrackStatus.ASSEMBLIES
+    else:
+        organism.trackingSystem = TrackStatus.SAMPLE
     organism.save()
 
 def parse_assemblies(accession):
@@ -178,6 +197,7 @@ def append_specimens(samples):
         else:
             continue            
 
+
 def get_organism(taxon_id):
     response = requests.get(f"https://www.ebi.ac.uk/ena/browser/api/xml/{taxon_id}?download=false") ## 
     if response.status_code == 200:
@@ -189,49 +209,13 @@ def get_organism(taxon_id):
                 for node in taxon:
                     lineage.append(node.attrib)
         lineage.insert(0,species)
-        taxon_lineage = create_taxons(lineage)
-        create_children(taxon_lineage)
+        taxon_lineage = service.create_taxons(lineage)
+        service.create_children(taxon_lineage)
         common_name = species['commonName'] if 'commonName' in species.keys() else ''
         organism = Organism(organism=species['scientificName'],taxid=species['taxId'], commonName = common_name,taxon_lineage=taxon_lineage).save()
-        leaves_counter(organism.taxon_lineage)
+        # print([lz_ref.id for lz_ref in organism.taxon_lineage])
+        lineage_nodes = TaxonNode.objects(id__in=[lz_ref.id for lz_ref in organism.taxon_lineage])
+        service.leaves_counter(lineage_nodes)
         return organism
     else:
         return None
-
-
-def create_taxons(lineage):
-    taxon_lineage = []
-    for node in lineage:
-        if ('rank' in node.keys() and node['rank'] in RANKS) or node['taxId'] == 1:
-            taxon_node = TaxonNode.objects(taxid=node['taxId']).first()
-            if not taxon_node:
-                taxon_node = TaxonNode(taxid=node['taxId'], name=node['scientificName'], rank=node['rank']).save()
-            taxon_lineage.append(taxon_node)
-    return taxon_lineage
-
-def create_children(lineage):
-    for index in range(len(lineage)-1):
-        child_taxon = lineage[index]
-        father_taxon = lineage[index + 1]
-        if not any(child_node.id == child_taxon.id for child_node in father_taxon.children):
-            father_taxon.children.append(child_taxon)
-            father_taxon.save()
-        else:
-            continue
-
-def leaves_counter(lineage_list):
-    for node in lineage_list:
-        tax_node = node.fetch()
-        tax_node.leaves=count_species(tax_node)
-        tax_node.save()
-
-def count_species(tax_node):
-    leaves = 0
-    if not tax_node:
-        return 0
-    elif len(tax_node.children) == 0:
-        return 1
-    else:
-        for child in [lazy_ref.fetch() for lazy_ref in tax_node.children]:
-            leaves += count_species(child)
-        return leaves

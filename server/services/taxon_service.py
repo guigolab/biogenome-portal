@@ -6,7 +6,7 @@ from flask import current_app as app
 
 RANKS = ['root','superkingdom','kingdom','phylum','subphylum','class','order','family','genus','species','subspecies']
 LINEAGE_KEY = 'lineage_list'
-DTOL_LIMIT=100
+DTOL_LIMIT=90
 
 
 def create_data(data):
@@ -27,20 +27,14 @@ def create_data(data):
     return sample    
 
 
-def leaves_counter(lineage_list):
-    for node in lineage_list:
-        tax_node = node.fetch()
-        tax_node.leaves=count_species(tax_node)
-        tax_node.save()
 
 def create_taxons(lineage):
     taxon_lineage = []
     for node in lineage:
-        taxon = node['$']
-        if ('rank' in taxon.keys() and taxon['rank'] in RANKS) or taxon['taxId'] == 1:
-            taxon_node = TaxonNode.objects(taxonId=taxon['taxId']).first()
+        if ('rank' in node.keys() and node['rank'] in RANKS) or node['taxId'] == 1:
+            taxon_node = TaxonNode.objects(taxid=node['taxId']).first()
             if not taxon_node:
-                taxon_node = TaxonNode(taxonId=taxon['taxId'], name=taxon['scientificName'], rank=taxon['rank']).save()
+                taxon_node = TaxonNode(taxid=node['taxId'], name=node['scientificName'], rank=node['rank']).save()
             taxon_lineage.append(taxon_node)
     return taxon_lineage
 
@@ -54,6 +48,11 @@ def create_children(lineage):
         else:
             continue
 
+def leaves_counter(lineage_list):
+    for node in lineage_list:
+        node.leaves=count_species(node)
+        node.save()
+
 def count_species(tax_node):
     leaves = 0
     if not tax_node:
@@ -61,48 +60,8 @@ def count_species(tax_node):
     elif len(tax_node.children) == 0:
         return 1
     else:
-        for child in [lazy_ref.fetch() for lazy_ref in tax_node.children]:
+        children = TaxonNode.objects(id__in=[lz_ref.id for lz_ref in tax_node.children])
+        for child in children:
             leaves += count_species(child)
         return leaves
 
-def bfs(root,nodes):
-    queue = [(root,0)]
-    while queue:
-        node, level = queue.pop(0)
-        if level == 0:
-            nodes[level] = 1
-        if node.children:
-            for child in node.children:
-                queue.append((child, level+1))
-                nodes[level+1] = nodes.setdefault(level+1, 0) + 1
-        if nodes[level] > DTOL_LIMIT:
-            return level-1
-
-def dfs(stack, tree, max_level):
-    node, level = stack.pop(0)
-    tree["name"] = node.name
-    tree["isOpen"] = True
-    tree["children"] = []
-    tree['rank'] = node.rank
-    tree['leaves'] = node.leaves
-    if max_level and max_level <= level:
-        return
-    if node.children:
-        childrens = [lazy_ref.fetch() for lazy_ref in node.children]
-        for child in childrens:
-            child_dict = {}
-            dfs([(child, level+1)], child_dict, max_level)
-            tree["children"].append(child_dict)
-    return tree
-
-def get_max_level(counts, limit):
-    for level, nodes in counts.items():
-        if nodes > limit:
-            return level-1
-
-def create_tree(node):
-    node_counts={}
-    max_level = bfs(node,node_counts)
-    tree={}
-    dfs([(node,0)],tree,max_level)
-    return tree

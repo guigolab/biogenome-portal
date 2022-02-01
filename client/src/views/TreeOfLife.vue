@@ -3,7 +3,7 @@
     <b-col>
       <b-container>
           <b-row>
-            <b-col>
+            <b-col style="min-height:600px">
               <h1 style="text-align:center">{{node}}</h1>
               <!-- <svg ref="legend"/> -->
                 <svg ref="svg"  class="tree-svg"/>
@@ -43,7 +43,10 @@ export default {
       return this.outerRadius - this.outerRadius/3
     },
     windowSize(){
-      return this.width <= 450 ? -this.width*1.33 : -this.outerRadius
+      return this.width <= 450 ? -this.width : -this.outerRadius
+    },
+    legendPosition(){
+      return this.width <= 450 ? -(this.width + this.outerRadius) : -this.outerRadius
     }
   },
   watch: {
@@ -239,7 +242,7 @@ export default {
         .selectAll("g").text('').attr('fill',null).attr('stroke',null)
         .data(this.color().domain())
         .join("g")
-        .attr("transform", (d, i) => `translate(${-this.outerRadius},${this.windowSize + i * 20})`);
+        .attr("transform", (d, i) => `translate(${-this.outerRadius},${this.legendPosition + i * 20})`);
         g.append("rect")
         .attr("width", 15)
         .attr("height", 15)
