@@ -29,14 +29,15 @@
 </template>
 <script>
 import {BInputGroup,BInputGroupAppend, BButton, BFormInput, BFormSelect,BInputGroupPrepend} from 'bootstrap-vue'
-import {mapPortalFields} from '../helper'
+import {mapFields} from '../helper'
 
 export default {
     props:['placeholder', 'prependSelect', 'options'],
     components: {BInputGroup, BInputGroupAppend, BInputGroupPrepend, BFormSelect,BButton, BFormInput},
     computed: {
-        ...mapPortalFields({
+        ...mapFields({
             fields: ['filter','option'],
+            module: 'portal',
             mutation: 'portal/setField' 
         })
     }

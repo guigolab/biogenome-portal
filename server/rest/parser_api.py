@@ -1,5 +1,4 @@
 from flask import Response,request
-from werkzeug.datastructures import ContentSecurityPolicy
 from flask_restful import Resource
 import services.parser_service as service
 from errors import InternalServerError

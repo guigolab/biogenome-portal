@@ -116,14 +116,18 @@ export default {
         expIndex(){
             if(this.haveItems(this.sample.assemblies) && this.haveItems(this.sample.specimens)){
                 return 3
-            }else {
+            }else if (this.haveItems(this.sample.assemblies) || this.haveItems(this.sample.specimens)) {
                 return 2
+            } else {
+                return 1
             }
         },
         assIndex(){
             if(this.haveItems(this.sample.specimens)){
                 return 2
-            } return 1
+            }else  {
+                return 1
+            }
         }
     },
     data(){

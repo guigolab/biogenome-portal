@@ -38,7 +38,7 @@ excelParser = {
         'ORIGINAL_GEOGRAPHIC_LOCATION':'original geographic location',
         'IDENTIFIED_BY':'identified_by',
         'IDENTIFIER_AFFILIATION':'identifier_affiliation',
-        'SAMPLE_UNIQUE_NAME':'alias'
+        'SAMPLE_UNIQUE_NAME':'sample_unique_name'
     }
 
 #DToL checklist converter
@@ -125,7 +125,7 @@ def parse_excel(excel):
                     elif key == 'SCIENTIFIC_NAME':
                         parsed_sample['scientificName'] = value
                     elif key == 'SAMPLE_UNIQUE_NAME':
-                        parsed_sample['alias'] = value
+                        parsed_sample['sample_unique_name'] = value
                     else:
                         dict['text'] = value
                     checklist_key = excelParser[key]

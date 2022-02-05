@@ -46,6 +46,8 @@ export default {
         if(mappedTo.path === '/' ){
             this.$store.commit('portal/setField',{label: 'breadcrumbs', value: [{text: 'Home', to: mappedTo}]})
             return
+        } else if (mappedTo.path === '/login'){
+            return
         }
         const value = this.getValue(mappedTo) //value is the param or the name
         const index = this.breadcrumbs.findIndex(bcrumb => bcrumb.text === value)

@@ -8,3 +8,4 @@ class BaseConfig(object):
     MONGODB_PORT = int(os.environ['DB_PORT'])
     MONGODB_USERNAME = os.environ['DB_USER']
     MONGODB_PASSWORD = os.environ['DB_PASS']
+    JWT_SECRET_KEY = os.environ['JWT_SECRET_KEY']

@@ -3,6 +3,7 @@ import http from "../http-common";
 const base = http.base
 
 class DataPortalService {
+
     getOrganisms(params) {
         return base.get("/root_organisms", {
         params: params
@@ -11,7 +12,7 @@ class DataPortalService {
     getFilteredOrganisms(params){
         return base.get("/root_organisms/search", {
         params: params
-    })
+        })
     }
     getOrganism(name) {
         return base.get(`/root_organisms/${name}`)

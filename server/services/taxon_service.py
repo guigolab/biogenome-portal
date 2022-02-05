@@ -26,8 +26,6 @@ def create_data(data):
     organism.save()
     return sample    
 
-
-
 def create_taxons(lineage):
     taxon_lineage = []
     for node in lineage:

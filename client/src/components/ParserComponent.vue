@@ -1,6 +1,5 @@
 <template>
 <div>
-    <b-overlay opacity="1" :show="loading">
     <b-card class="card-container" v-if="errors.length > 0" no-body
         border-variant="danger"
         header="Errors"
@@ -50,10 +49,10 @@
             </div>
         </template>
     </b-card>
-    </b-overlay>
 </div>
 </template>
 <script>
+import {BCard,BButton,BFormGroup,BFormFile,BTabs,BTab,BCardText,BAlert} from 'bootstrap-vue'
 import submissionService from '../services/SubmissionService'
 export default {
     data(){
@@ -65,6 +64,9 @@ export default {
             isValid:false,
             loading:false,
         }
+    },
+    components:{
+        BCard,BButton,BFormGroup,BFormFile,BTabs,BTab,BCardText,BAlert
     },
     mounted(){
     },

@@ -37,7 +37,7 @@
 </template>
 <script>
 import {BPagination,BFormGroup,BFormSelect} from 'bootstrap-vue'
-import {mapPortalFields} from '../helper'
+import {mapFields} from '../helper'
 
 export default {
     props: 
@@ -46,8 +46,9 @@ export default {
         BPagination,BFormGroup,BFormSelect
     },
     computed: {
-        ...mapPortalFields({
+        ...mapFields({
             fields: ['currentPage','totalRows','perPage'],
+            module: 'portal',
             mutation: 'portal/setField' 
         })
     }

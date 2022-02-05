@@ -21,13 +21,13 @@ export function mapCheckListFields(options) {
     return object;
 }
 
-export function mapPortalFields(options) {
+export function mapFields(options) {
     const object = {};
     for (let x = 0; x < options.fields.length; x++) {
       const field = options.fields[x];
       object[field] = {
         get() {
-          return this.$store.state.portal[field];
+          return this.$store.state[options.module][field];
         },
         set(value) {
           this.$store.commit(options.mutation, {value: value, label: field});

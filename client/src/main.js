@@ -19,7 +19,6 @@ new Vue({
 
 
 router.beforeEach((to, from, next) => {
-  console.log(from)
   if(to.name){
     store.commit('portal/setField',{value: true, label: 'loading'})
   }

@@ -4,92 +4,24 @@ from db.models import Organism, SecondaryOrganism
 from flask_restful import Resource
 from mongoengine.errors import DoesNotExist
 from errors import NotFound
+from flask_jwt_extended import jwt_required
 from flask import current_app as app
+
+
 import json
+from constants import OrganismPipeline, SamplePipeline
 
-OrganismPipeline = [
-	{"$lookup":
-		{"from": "secondary_organism",
-		"localField": "records",
-		"foreignField": "_id",
-		"as": "records",
-		}
-	},
-	{"$lookup":
-		{"from": "experiment",
-		"localField": "experiments",
-		"foreignField": "_id",
-		"as": "experiments",
-		}
-	},
-	{"$lookup":
-		{"from": "assembly",
-		"localField": "assemblies",
-		"foreignField": "_id",
-		"as": "assemblies",
-		}
-	},
-	{"$lookup":
-		{"from": "taxon_node",
-		"localField": "taxon_lineage",
-		"foreignField": "_id",
-		"as": "taxon_lineage",
-		}
-	},
-	{"$project": 
-		{"_id":0, 
-		"records": {"_id":0,"assemblies":0,"experiments":0,"specimens":0},
-		"taxon_lineage" : {"_id":0,"children":0},
-		"assemblies" : {"_id":0},
-		"experiments": {"_id":0}
-		}
-	}
-]
-
-SamplePipeline = [
-	{"$lookup":
-		{"from": "secondary_organism",
-		"localField": "specimens",
-		"foreignField": "_id",
-		"as": "specimens",
-		}
-	},
-	{"$lookup":
-		{"from": "experiment",
-		"localField": "experiments",
-		"foreignField": "_id",
-		"as": "experiments",
-		}
-	},
-	{"$lookup":
-		{"from": "assembly",
-		"localField": "assemblies",
-		"foreignField": "_id",
-		"as": "assemblies",
-		}
-	},
-	{"$project": 
-		{"_id":0, 
-		"specimens": {"_id":0,"assemblies":0,"experiments":0,"specimens":0},
-		"assemblies" : {"_id":0},
-		"experiments": {"_id":0}
-		}
-	}
-]
 
 class OrganismsApi(Resource):
 	def get(self):
-		try:
-			return Response(service.default_query_params(request.args,Organism),mimetype="application/json", status=200)
-		except DoesNotExist:
-			raise NotFound
+		return Response(service.default_query_params(request.args,Organism),mimetype="application/json", status=200)
+
 
 class OrganismsSearchApi(Resource):
 	def get(self):
-		try:
-			return Response(service.full_text_search(request.args,Organism),mimetype="application/json", status=200)
-		except DoesNotExist:
-			raise NotFound
+		return Response(service.full_text_search(request.args,Organism),mimetype="application/json", status=200)
+
+
 
 class OrganismApi(Resource):
 	def get(self,name):
@@ -98,12 +30,50 @@ class OrganismApi(Resource):
 			raise NotFound
 		return Response(json.dumps(organism),mimetype="application/json", status=200)
 
+#CRUD operations on sample
 class SampleApi(Resource):
 	def get(self,accession):
 		sample = SecondaryOrganism.objects(accession=accession).aggregate(*SamplePipeline).next()
 		if not sample:
 			raise NotFound
 		return Response(json.dumps(sample),mimetype="application/json", status=200)
+	
+	@jwt_required
+	def put(self,accession):
+		params = request.args
+		sample = SecondaryOrganism.objects(accession=accession)
+		if not sample:
+			raise NotFound
+		#update sample
+
+	#deleting sample triggers taxon and organism update (they'll be deleted if containing this as the only sample)
+	def delete(self,accession):
+		sample = SecondaryOrganism.objects(accession=accession)
+		if not sample:
+			raise NotFound
+		#delete sample
+
+class SamplesApi(Resource):
+	def get(self,accession):
+		sample = SecondaryOrganism.objects(accession=accession).aggregate(*SamplePipeline).next()
+		if not sample:
+			raise NotFound
+		return Response(json.dumps(sample),mimetype="application/json", status=200)
+
+	@jwt_required()
+	def post(self):
+		app.logger.info('Valid')
+		if request.is_json:
+			data = request.json
+		else:
+			data = request.form
+		app.logger.info(data)
+		#update sample
 
 
+
+	def delete(self,accession):
+		sample = SecondaryOrganism.objects(accession=accession)
+		if not sample:
+			raise NotFound
 ##endpoint to retrieve checklist fields

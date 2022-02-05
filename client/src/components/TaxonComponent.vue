@@ -64,7 +64,7 @@ import { BIconXCircle, BBadge,  BButton, BLink, BFormSelect } from 'bootstrap-vu
 import TableComponent from './TableComponent.vue';
 import FilterComponent from './FilterComponent.vue';
 import PaginationComponent from './PaginationComponent.vue';
-import {mapPortalFields} from '../helper'
+import {mapFields} from '../helper'
 import StatusBadgeComponent from './StatusBadgeComponent.vue';
 
 export default {
@@ -74,8 +74,9 @@ export default {
       FilterComponent,
       StatusBadgeComponent},
   computed: {
-    ...mapPortalFields({
+    ...mapFields({
       fields: ['filter','taxName','perPage', 'totalRows','currentPage'],
+      module: 'portal',
       mutation: 'portal/setField'      
     })
   },

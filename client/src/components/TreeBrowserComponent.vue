@@ -32,8 +32,17 @@ export default {
 }
 </script>
 <style>
-.tree-wrapper{
-    height: 33vh;
+@media screen and (max-width: 600px){
+    .tree-wrapper{
+        height: 33vh;
+    }
+}
+@media screen and (min-width: 992px){
+.tree-wrapper  {
+    height: 70vh;
+}
+}
+.tree-wrapper  {
     cursor: pointer;
     list-style-type: none;
     overflow: auto;
@@ -44,6 +53,5 @@ export default {
     display: inline-block;
     overflow: auto;
     padding: 15px; 
-
 } */
 </style>

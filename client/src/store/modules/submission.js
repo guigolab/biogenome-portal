@@ -2,6 +2,8 @@ const state = () => ({
     samplesToSubmit: [],
     sampleXML: null,
     submissionXML: null,
+    user: '',
+    token: null,
 })
 const mutations= {
     addSample (state, payload){
@@ -17,7 +19,10 @@ const mutations= {
     },
     resetSamples(state){
         state.samplesToSubmit = []
-    }
+    },
+    setField(state, payload){
+        state[payload.label] = payload.value
+    },
 }
 const actions = {
     reset(context){
@@ -31,6 +36,9 @@ const getters= {
     },
     getSampleXML(state){
         return state.sampleXML
+    },
+    isAuthenticated(state){
+        return state.token && state.user
     }
 }
 export default {

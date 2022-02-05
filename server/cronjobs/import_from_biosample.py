@@ -213,7 +213,6 @@ def get_organism(taxon_id):
         service.create_children(taxon_lineage)
         common_name = species['commonName'] if 'commonName' in species.keys() else ''
         organism = Organism(organism=species['scientificName'],taxid=species['taxId'], commonName = common_name,taxon_lineage=taxon_lineage).save()
-        # print([lz_ref.id for lz_ref in organism.taxon_lineage])
         lineage_nodes = TaxonNode.objects(id__in=[lz_ref.id for lz_ref in organism.taxon_lineage])
         service.leaves_counter(lineage_nodes)
         return organism

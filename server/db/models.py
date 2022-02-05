@@ -100,7 +100,8 @@ class Assembly(db.Document):
 class SecondaryOrganism(db.Document):
     assemblies = db.ListField(db.LazyReferenceField(Assembly))
     experiments = db.ListField(db.LazyReferenceField(Experiment))
-    accession = db.StringField(required=True,unique=True)
+    accession = db.StringField(unique=True)
+    sample_unique_name = db.StringField(unique=True)
     taxonId = db.IntField(required=True)
     customFields = db.ListField(db.DictField())
     specimens = db.ListField(db.LazyReferenceField('self', passthrough=True))
@@ -137,7 +138,7 @@ class SecondaryOrganism(db.Document):
     GAL_sample_id = db.DictField()
     culture_or_strain_id = db.DictField()
     meta = {
-        'indexes': ['$accession']
+        'indexes': ['$accession','$sample_unique_name']
     }
 
 class Organism(db.Document):

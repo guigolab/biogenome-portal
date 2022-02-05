@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "4f3005b5c72e65fc389c1f550d11311f11b39285f142cafba17a9bb63c14deff"
+            "sha256": "214dd415dbf44479b5121461774ba52ccfb878741e7abb9e2996bb10aaa67c01"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -40,11 +40,11 @@
         },
         "charset-normalizer": {
             "hashes": [
-                "sha256:876d180e9d7432c5d1dfd4c5d26b72f099d503e8fcc0feb7532c9289be60fcbd",
-                "sha256:cb957888737fc0bbcd78e3df769addb41fd1ff8cf950dc9e7ad7793f1bf44455"
+                "sha256:2842d8f5e82a1f6aa437380934d5e1cd4fcf2003b06fed6940769c164a480a45",
+                "sha256:98398a9d69ee80548c762ba991a4728bfc3836768ed226b3945908d1a688371c"
             ],
             "markers": "python_version >= '3'",
-            "version": "==2.0.10"
+            "version": "==2.0.11"
         },
         "click": {
             "hashes": [
@@ -99,6 +99,22 @@
             ],
             "index": "pypi",
             "version": "==3.0.10"
+        },
+        "flask-httpauth": {
+            "hashes": [
+                "sha256:395040fda2854df800d15e84bc4a81a5f32f1d4a5e91eee554936f36f330aa29",
+                "sha256:e16067ba3378ea366edf8de4b9d55f38c0a0cbddefcc0f777a54b3fce1d99392"
+            ],
+            "index": "pypi",
+            "version": "==4.5.0"
+        },
+        "flask-jwt-extended": {
+            "hashes": [
+                "sha256:ad6977b07c54e51c13b5981afc246868b9901a46715d9b9827898bfd916aae88",
+                "sha256:c82c9e505bc96f4a5186de31c05262dbcde6fa10581e9aa46df8f99ca04be2c3"
+            ],
+            "index": "pypi",
+            "version": "==4.3.1"
         },
         "flask-mongoengine": {
             "hashes": [
@@ -312,6 +328,14 @@
             ],
             "index": "pypi",
             "version": "==3.0.9"
+        },
+        "pyjwt": {
+            "hashes": [
+                "sha256:b888b4d56f06f6dcd777210c334e69c737be74755d3e5e9ee3fe67dc18a0ee41",
+                "sha256:e0c4bb8d9f0af0c7f5b1ec4c5036309617d03d56932877f2f7a0beeb5318322f"
+            ],
+            "markers": "python_version >= '3.6'",
+            "version": "==2.3.0"
         },
         "pymongo": {
             "hashes": [

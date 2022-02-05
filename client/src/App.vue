@@ -19,6 +19,7 @@
       </b-row>
     </b-container>
     </b-overlay>
+    <login-modal/>
   </div>
 </template>
 
@@ -26,6 +27,7 @@
 import {BOverlay} from 'bootstrap-vue'
 import BreadCrumbComponent from './components/BreadCrumbComponent.vue';
 import NavBarComponent from './components/NavBarComponent.vue'
+import LoginModal from './components/modal/LoginModal.vue';
 
 export default {
   name: "app",
@@ -37,7 +39,8 @@ export default {
 components: {
   NavBarComponent,
   BreadCrumbComponent,
-  BOverlay
+  BOverlay,
+  LoginModal
   }
 };
 </script>

@@ -8,19 +8,8 @@ from flask_restful import Resource
 # from mongoengine.errors import DoesNotExist, NotUniqueError, ValidationError
 # from errors import InternalServerError, SchemaValidationError, UserNotFoundError, EmailAlreadyExistError
 import json
+from constants import TaxonPipeline
 
-TaxonPipeline = [
-	{"$lookup":
-		{"from": "taxon_node",
-		"localField": "children",
-		"foreignField": "_id",
-		"as": "children",
-		}
-	},
-	{"$project": 
-		{"_id":0}
-	}
-]
 
 class TreeApi(Resource):
     def get(self, node):
