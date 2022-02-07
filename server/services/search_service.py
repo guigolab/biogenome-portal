@@ -3,7 +3,7 @@ from flask import json
 from flask import current_app as app
 from mongoengine.queryset.visitor import Q
 from db.models import TaxonNode
-from . import common_functions
+from utils.common_functions import resolve_params
 
 DefaultParams = {
     'sortOrder': '',
@@ -27,7 +27,7 @@ QueryParams = {
 ##when filter is present we trigger FTS
 def full_text_search(params,model):
     json_resp = {}
-    resolved_params = common_functions.resolve_params(FilterParams,**params)
+    resolved_params = resolve_params(FilterParams,**params)
     app.logger.info(resolved_params)
     # #tax name param always present, Eukaryota by default
     tax_node = TaxonNode.objects(name=resolved_params['taxName']).first()
@@ -60,7 +60,7 @@ def query_by_taxid(filter):
 ##filter is not present
 def default_query_params(params,model):
     json_resp = {}
-    resolved_params = common_functions.resolve_params(QueryParams, **params)
+    resolved_params = resolve_params(QueryParams, **params)
     tax_node = TaxonNode.objects(name=resolved_params['taxName']).first()
     query_tax = query_by_taxNode(tax_node)
     query_status = query_by_status(resolved_params['status']) if resolved_params['status'] else None

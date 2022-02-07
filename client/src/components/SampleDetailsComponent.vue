@@ -85,7 +85,7 @@ import MapContainer from './MapContainer.vue'
 import AssembliesComponent from './AssembliesComponent.vue'
 import ExperimentsComponent from './ExperimentsComponent.vue'
 import SampleComponent from './SampleComponent.vue'
-import TableComponent from './TableComponent.vue'
+import TableComponent from './base/TableComponent.vue'
 // import Feature from 'ol/Feature'
 export default {
     components: {BTabs,BTab,BIconCalendar, BIconGeoAltFill,BLink,TableComponent, BBadge, MapContainer, AssembliesComponent, ExperimentsComponent, SampleComponent},

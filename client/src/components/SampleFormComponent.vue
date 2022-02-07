@@ -3,8 +3,6 @@
     <b-container class="router-container">
     <b-row>
         <b-col>
-    <b-alert :show="showAlert" variant="danger">Fill all the mandatory fields before continuing</b-alert>
-    <b-alert :show="showError" variant="danger">{{message}}</b-alert>
     <div style="min-height:50px">
         <b-button-toolbar>
             <b-button-group class="mx-1">
@@ -54,10 +52,11 @@
                     :append="field.units? field.units: null">
                         <b-form-input
                             v-if="field.label===taxIdField"
-                            ref="taxonId"
-                            id="taxonId"
-                            v-model="taxonId"
-                            :state="Boolean(scientificName) && Boolean(taxId)"
+                            :disabled="Boolean(scientificName)"
+                            ref="taxid"
+                            id="taxid"
+                            v-model="taxid"
+                            :state="Boolean(scientificName) && Boolean(taxid)"
                         >
                         </b-form-input>
                         <b-form-input v-else
@@ -67,7 +66,10 @@
                             :state="validateInput(field,self()[mappedFields[field.label]])">
                         </b-form-input>
                         <b-input-group-append v-if="field.label===taxIdField">
-                            <b-button @click="getTaxon(taxonId)">Get Taxon</b-button>
+                            <b-button @click="getTaxon()">Get Taxon</b-button>
+                        </b-input-group-append>
+                        <b-input-group-append v-if="Boolean(scientificName)">
+                            <b-button @click="resetTaxon()">Reset taxon</b-button>
                         </b-input-group-append>
                     </b-input-group>
                 </div>
@@ -102,37 +104,34 @@
 </template>
 <script>
 
-import searchService from "../services/ENAClientService"
-import { mapCheckListFields,showConfirmationModal, xmlParser } from '../helper'
+import enaService from "../services/ENAClientService"
+import { mapCheckListFields,showConfirmationModal,mapFields } from '../helper'
 import {checklistFieldGroups, mappedFields} from '../static-config'
-import submissionService from "../services/SubmissionService"
+// import submissionService from "../services/SubmissionService"
 import { BOverlay,BButton,BButtonToolbar, BButtonGroup, 
 BFormGroup,BCard,BBadge,BDropdownItemButton, BFormSelect, 
-BFormInput, BFormTextarea, BAlert, BProgressBar,
+BFormInput, BFormTextarea, BProgressBar,
 BDropdown, BInputGroup} from 'bootstrap-vue'
+import SubmissionService from '../services/SubmissionService'
 
 // 
 
 
 
-const SampleToSubmitModal = () => import(/* webpackPrefetch: true */ '../components/modal/SampleToSubmitModal.vue')
+const SampleToSubmitModal = () => import(/* webpackPrefetch: true */ './modal/SampleToSubmitModal.vue')
 
 export default {
     components:{SampleToSubmitModal,BOverlay,BButton,BButtonToolbar, BButtonGroup, 
     BFormGroup,BCard,BBadge,BDropdownItemButton, BFormSelect, 
-    BFormInput, BFormTextarea, BAlert, BProgressBar,
+    BFormInput, BFormTextarea,BProgressBar,
     BDropdown, BInputGroup},
     data(){
         return {
-            taxonId: '', // use taxonId for ENA request and taxId from parent for validation/store model
-            showAlert:false,
-            showError: false,
+             // use taxonId for ENA request and taxId from parent for validation/store model
             sample: null,
             groups: checklistFieldGroups,
-            message:'',
             mappedFields: mappedFields,
             taxIdField: 'taxon ID',
-            taxon: null
         }
     },
     computed: {
@@ -140,11 +139,16 @@ export default {
             return this.$store.getters['form/getIndex']
         },
         validSample(){
-            return this.alias && this.scientificName
+            return this.sample_unique_name && this.scientificName
         },
         samplesToSubmit(){
             return this.$store.getters['submission/getSamplesToSubmit']
         },
+        ...mapFields({
+            fields:['scientificName','taxid'],
+            module: 'form',
+            mutation: 'form/setField'
+        }),
         ...mapCheckListFields({
             fields: [
                 'organism_part','lifestage',
@@ -155,7 +159,7 @@ export default {
                 'collecting_institution','GAL',
                 'specimen_voucher','specimen_id','GAL_sample_id',
                 'culture_or_strain_id',
-                'alias','scientificName','taxId'
+                'sample_unique_name',
             ],
             base: "sampleForm",
             mutation: "form/updateform"
@@ -191,7 +195,8 @@ export default {
         updatePage(number){
             if (number > 0){
                 if(document.getElementsByClassName('wrong').length > 0){
-                    this.showAlert = true
+                    this.$store.commit('submission/setAlert',{variant: 'danger',message: 'Fill all the mandatory fields before continuing'})
+                    this.$store.dispatch('submission/showAlert')
                     return
                 }else{
                     this.$store.dispatch('form/increment')
@@ -200,36 +205,39 @@ export default {
             else{
                 this.$store.dispatch('form/decrement')
             }
-            this.showAlert=false
         },
-        getTaxon(taxId){
-            this.showError = false
-            searchService.getEnaRecord(taxId)
+        getTaxon(){
+            this.$store.dispatch('portal/showLoading')
+            enaService.getTaxon(this.taxid)
             .then(response => {
-                return xmlParser(response.data)
-            })
-            .then(result => {
-                this.taxon = result.TAXON_SET.taxon[0]
-                return showConfirmationModal(this.$bvModal,this.taxon.$.scientificName)
-            })
-            .then(value => {
-                if(value && this.taxon){
-                    this.scientificName = this.taxon.$.scientificName
-                    this.taxId = this.taxon.$.taxId
-                }
-                this.taxon = null
-                return null
+                this.scientificName = response.data[0].description
+                this.$store.dispatch('portal/hideLoading')
+                return showConfirmationModal(this.$bvModal,this.scientificName)
+                // return xmlParser(response.data)
             })
             .catch(e => {
-                this.message = e
-                this.showError = true
+                this.$store.dispatch('portal/hideLoading')
+                this.$store.commit('submission/setAlert',{variant: 'danger',message: e})
+                this.$store.dispatch('submission/showAlert')
             });
         },
+        resetTaxon(){
+            this.taxid = ''
+            this.scientificName = ''
+        },
         parseSample(){
-            const sample = JSON.parse(JSON.stringify(Object.keys(this.$store.getters['form/getSampleForm'])
-            .filter((key) => this.$store.getters['form/getSampleForm'][key].text !== '')
-            .reduce((a, k) => ({ ...a, [Object.keys(mappedFields).find(key => mappedFields[key] === k)]: this.$store.getters['form/getSampleForm'][k]}), {})))
-            return sample
+            const form = this.$store.getters['form/getSampleForm']
+            const metadata = {}
+            Object.keys(form).forEach(key => {
+                if (form[key].text !== ''){
+                    metadata[key] = form[key]
+                }
+            })
+            return metadata
+            // const sample = JSON.parse(JSON.stringify(Object.(this.$store.getters['form/getSampleForm'])
+            // .filter((key) => this.$store.getters['form/getSampleForm'][key].text !== '')))
+            // // .reduce((a, k) => ({ ...a, [Object.keys(mappedFields).find(keyk => mappedFields[key] === k)]: this.$store.getters['form/getSampleForm'][k]}), {})))
+            // return sample
         },
         addSample(){
             this.$store.commit('submission/addSample', this.parseSample()) // push sample to store samples list
@@ -243,25 +251,38 @@ export default {
             })
         },
         submit(){
-            showConfirmationModal(this.$bvModal,'Generate XML and checkout to ENA submission page?')
+            showConfirmationModal(this.$bvModal,`Save the sample with ID ${this.sample_unique_name}?`)
             .then(value => {
-                console.log(value)
+                this.$store.dispatch('portal/showLoading')
                 if(value){
-                    this.$store.commit('submission/addSample', this.parseSample())
-                    return submissionService.generateXML(this.$store.getters['submission/getSamplesToSubmit'])
+                    return this.parseSample()
                 }
                 return null  
             })
-            .then(response => {
-                const blob = new Blob([response.data], { type: 'application/octet-stream'})
-                const file = new File([blob],"samples.xml",{type:"xml"})
-                this.$store.commit('submission/setXML', {file: file})
-                this.$router.push({name:'ENA submission'})
-                this.$store.dispatch('submission/resetSamples')
-                this.$store.dispatch('form/reset')
+            .then(sample => {
+                if (sample){
+                    const sampleToSubmit = {
+                        metadata: sample,
+                        taxid: this.taxid,
+                        name: this.scientificName
+                    }
+                    return SubmissionService.createSample(sampleToSubmit)
+                }
+                return null
             })
-            .catch(err => {
-                console.log(err)
+            .then(response => {
+                if(response.data){
+                    this.$store.dispatch('portal/hideLoading')
+                    this.$store.commit('submission/setAlert',{variant: 'success',message: response.data})
+                    this.$store.dispatch('submission/showAlert')
+                }                
+                return null
+            })
+            .catch(error => {
+                console.log(error.response)
+                this.$store.dispatch('portal/hideLoading')
+                this.$store.commit('submission/setAlert',{variant: 'danger',message: error})
+                this.$store.dispatch('submission/showAlert')
             })
         }
     }

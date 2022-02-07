@@ -111,7 +111,7 @@
 <script>
 import {BButton,BFormGroup,BButtonToolbar,BButtonGroup,BInputGroupAppend,BFormInput,BFormSelect,BInputGroup, BForm, BAlert, BCard, BFormFile} from 'bootstrap-vue'
 import submissionService from "../services/SubmissionService"
-import {xmlParser} from '../helper'
+// import {xmlParser} from '../helper'
 
 export default {
   components: { BButton,BFormGroup,BButtonToolbar,BButtonGroup,BInputGroupAppend,BFormInput,BFormSelect,BInputGroup, BForm, BAlert, BCard, BFormFile },
@@ -171,35 +171,35 @@ export default {
             link.setAttribute('download', xmlFile);
             link.click();
         },
-       sendForm(event){
-        event.preventDefault()
-            var formData = new FormData()
-            if(this.xml){
-                formData.append('SAMPLE',this.xml)
-            }else {
-                formData.append('SAMPLE',this.form.sampleFile)
-            }
-            formData.append('SUBMISSION', this.form.submissionFile)
-            submissionService.submitSamples(this.url,formData, {user: this.form.user, password: this.form.password})
-            .then(response => {
-                return xmlParser(response.data)
-            })
-            .then(result => {
-                this.result = result
-                if(this.result && this.result.RECEIPT.$.success){
-                    this.success = true
-                }
-                if(this.result && this.result.RECEIPT.MESSAGES.length > 0 && this.result.RECEIPT.MESSAGES[0].INFO){
-                    this.warning = true
-                }
-                if(this.result && this.result.RECEIPT.MESSAGES.length > 0 && this.result.RECEIPT.MESSAGES[0].ERROR){
-                    this.danger = true
-                }
-            })
-            .catch(e => {
-                console.log(e);
-            })
-       }
+    //    sendForm(event){
+    //     event.preventDefault()
+    //         var formData = new FormData()
+    //         if(this.xml){
+    //             formData.append('SAMPLE',this.xml)
+    //         }else {
+    //             formData.append('SAMPLE',this.form.sampleFile)
+    //         }
+    //         formData.append('SUBMISSION', this.form.submissionFile)
+    //         submissionService.submitSamples(this.url,formData, {user: this.form.user, password: this.form.password})
+    //         .then(response => {
+    //             return xmlParser(response.data)
+    //         })
+    //         .then(result => {
+    //             this.result = result
+    //             if(this.result && this.result.RECEIPT.$.success){
+    //                 this.success = true
+    //             }
+    //             if(this.result && this.result.RECEIPT.MESSAGES.length > 0 && this.result.RECEIPT.MESSAGES[0].INFO){
+    //                 this.warning = true
+    //             }
+    //             if(this.result && this.result.RECEIPT.MESSAGES.length > 0 && this.result.RECEIPT.MESSAGES[0].ERROR){
+    //                 this.danger = true
+    //             }
+    //         })
+    //         .catch(e => {
+    //             console.log(e);
+    //         })
+    //    }
     }
 }
 </script>

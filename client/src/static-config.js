@@ -155,9 +155,7 @@ module.exports = {
         "specimen_id":"specimen_id",
         "GAL_sample_id":"GAL_sample_id",
         "culture_or_strain_id":"culture_or_strain_id",
-        "sample unique name":"alias",
-        "taxid":"taxId",
-        "scientificName":"scientificName"
+        "sample unique name":"sample_unique_name",
         }
 
 

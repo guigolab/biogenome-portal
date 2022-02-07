@@ -3,28 +3,36 @@
       id="login-modal"
       ref="modal"
       title="Login"
-      @show="resetModal"
-      @hidden="resetModal"
+      no-close-on-backdrop
+      ok-only
       @ok="handleOk"
+      hide-header-close
+      v-model="showModal"
     >
       <b-form ref="form" @submit.stop.prevent="handleSubmit">
         <b-form-group
-          label="Name"
+          label="User"
           label-for="name-input"
+          invalid-feedback="User is required"
+          :state="Boolean(user)"
         >
           <b-form-input
             id="name-input"
             v-model="user"
+            :state="Boolean(user)"
             required
           ></b-form-input>
         </b-form-group>
           <b-form-group
           label="Password"
-          label-for="name-input"
+          invalid-feedback="A password is required"
+          label-for="password-input"
+          :state="password"
         >
           <b-form-input
             id="password-input"
             v-model="password"
+            :state="Boolean(password)"
             type="password"
             required
           ></b-form-input>
@@ -52,28 +60,34 @@ export default {
             fields: ['user','token'],
             module: 'submission',
             mutation: 'submission/setField'      
-        })
+        }),
+        showModal(){
+            return this.$store.getters['submission/showLoginModal']
+        },
     },
     methods:{
         handleSubmit(){
+            if(!(this.user && this.password)){
+                return
+            }
             const formData = new FormData()
             formData.append('user', this.user)
             formData.append('password', this.password)
-            submissionService.login(formData).then(resp => {
+            submissionService.login(formData)
+            .then(resp => {
                 //store token in vuex (localStorage)
-                 this.token = resp.data
-                 this.$router.push('/admin')
-                  this.$nextTick(() => {
-                    this.$bvModal.hide('login-modal')
-                    })
+            console.log(resp)
+            this.token = resp.data
+            this.$nextTick(() => {
+                this.$store.dispatch('submission/hideLoginModal')
+            })
             }).catch(e => {
                 console.log(e)
+                this.$store.dispatch('submission/hideLoginModal')
+                this.$store.commit('submission/setAlert',{variant:'danger',message:e})
+                this.$store.dispatch('submission/showAlert')
+                this.$router.push('/')
             })
-        },
-        checkFormValidity() {
-            const valid = this.$refs.form.checkValidity()
-            this.formState = valid
-            return valid
         },
         resetModal() {
             this.user = ''
@@ -86,8 +100,5 @@ export default {
             this.handleSubmit()
         },
     },
-    mounted(){
-        this.$root.$emit('bv::show::modal', 'login-modal')
-    }
 }
 </script>

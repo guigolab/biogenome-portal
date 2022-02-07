@@ -5,6 +5,7 @@ import 'bootstrap/dist/css/bootstrap.css'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
 import {LayoutPlugin, ModalPlugin} from 'bootstrap-vue'
 import store from './store'
+// import submission from './store/modules/submission'
 
 Vue.use(LayoutPlugin)
 Vue.use(ModalPlugin)
@@ -20,11 +21,11 @@ new Vue({
 
 router.beforeEach((to, from, next) => {
   if(to.name){
-    store.commit('portal/setField',{value: true, label: 'loading'})
+    store.dispatch('portal/showLoading')
   }
     next()
 })
 
 router.afterEach(() => {
-  store.commit('portal/setField',{value: false, label: 'loading'})
+  store.dispatch('portal/hideLoading')
 })

@@ -1,11 +1,23 @@
 import axios from "axios";
 
+const baseURL = process.env.BASE_URL + "api"
 const base = axios.create({
-  baseURL: process.env.BASE_URL + "api",
+  baseURL: baseURL,
   headers: {
     "Content-type": "application/json"
   }
-})
+});
+
+const submission = {
+  submission(token){
+    return axios.create({
+      baseURL: baseURL,
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+  }
+}
 
 const ena = {
   enaApi : axios.create({
@@ -24,6 +36,7 @@ const ena = {
 
 
 export default {
-  ena: ena,
-  base: base
+  submission: submission,
+  base: base,
+  ena: ena
 }

@@ -1,4 +1,4 @@
-import http from "../http-common";
+import http from "../http-axios";
 
 
 const ena = http.ena.enaApi
@@ -15,7 +15,7 @@ class ENAClientService {
     return ena.get(`/ena/browser/api/xml/${accession}?download=true`)
   }
   getTaxon(taxonId) {
-    return ena.get(`/ena/browser/api/xml/${taxonId}`)
+    return ena.get(`/ena/portal/api/links/taxon?accession=${taxonId}&format=JSON&result=taxon`)
   }
 }
 

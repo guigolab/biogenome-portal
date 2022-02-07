@@ -68,7 +68,7 @@
 
 <script>
 import {BTabs,BLink,BTab,BBadge,} from 'bootstrap-vue'
-import StatusBadgeComponent from './StatusBadgeComponent.vue'
+import StatusBadgeComponent from './base/StatusBadgeComponent.vue'
 import MapContainer from './MapContainer.vue'
 import ExperimentsComponent from './ExperimentsComponent.vue'
 import AssembliesComponent from './AssembliesComponent.vue'

@@ -1,6 +1,5 @@
 import Vue from "vue";
 import Router from "vue-router";
-// import store from "./store"
 
 
 
@@ -28,6 +27,10 @@ const routes = [
     path: "/admin",
     name: "admin",
     component: () => import(/* webpackPrefetch: true */ '../src/views/AdminPage.vue'),
+    // children: [
+    //   {createSample},
+    //   {updateSample},
+    // ]
   },
   {
     path: "/docs",

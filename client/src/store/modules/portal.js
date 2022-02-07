@@ -51,6 +51,12 @@ const mutations = {
         const item = findObj(state.tree.children, payload.label)
         item.children = payload.value
     },
+    showLoading(state){
+        state.loading = true
+    },
+    hideLoading(state){
+        state.loading = false
+    }
 }
 const getters= {
     getState(state){
@@ -60,10 +66,19 @@ const getters= {
         return findObj(state.tree.children,name);
     }
 }
+const actions= {
+    showLoading(context){
+        context.commit('showLoading')
+    },
+    hideLoading(context){
+        context.commit('hideLoading')
+    }
+}
 
 export default {
     namespaced: true,
     state,
     getters,
-    mutations
+    mutations,
+    actions
     }

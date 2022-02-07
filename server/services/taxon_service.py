@@ -1,32 +1,34 @@
 from db.models import TaxonNode,Organism, SecondaryOrganism
 from flask import current_app as app
+from utils import ena_client, utils, constants
 # from mongoengine.queryset.visitor import Q
 ## create a service to retrieve lineage from taxon_id and create taxon_nodes from that
 ## check http://etetoolkit.org/docs/latest/tutorial/tutorial_ncbitaxonomy.html
 
-RANKS = ['root','superkingdom','kingdom','phylum','subphylum','class','order','family','genus','species','subspecies']
+RANKS = constants.RANKS
 LINEAGE_KEY = 'lineage_list'
 DTOL_LIMIT=90
 
 
-def create_data(data):
-    taxon = data['taxon']
-    sample = SecondaryOrganism(taxonId = int(data['taxonId']) , metadata=data['fields']).save() ###save sample here
-    taxid = sample.taxonId
-    organism = Organism.objects(taxonId = taxid).first()
-    if not organism:
-        lineage = taxon['lineage'][0]['taxon']
-        tax_node = {'$': taxon['$']}
-        lineage.insert(0,tax_node)
-        taxon_lineage = create_taxons(lineage)
-        create_children(taxon_lineage)
-        organism = Organism(taxonId=taxid, name = taxon['$']['scientificName'], taxon_lineage=taxon_lineage)
-        leaves_counter(organism.taxon_lineage)
-    organism.samples.append(sample)
-    organism.save()
-    return sample    
+#this service is the interface between mongo and the client
+def get_taxon(taxid):
+    taxon = ena_client.get_taxon(taxid)
+    lineage = utils.parse_taxon(taxon)
+    species = lineage[0]
+    taxon_lineage = create_taxons_from_lineage(lineage)
+    create_relationship(taxon_lineage)
+    common_name = species['commonName'] if 'commonName' in species.keys() else ''
+    organism = Organism(organism=species['scientificName'],taxid=species['taxId'], commonName = common_name,taxon_lineage=taxon_lineage).save()
+    lineage_nodes = TaxonNode.objects(id__in=[lz_ref.id for lz_ref in organism.taxon_lineage])
+    leaves_counter(lineage_nodes)
+    return organism
 
-def create_taxons(lineage):
+def delete_taxons(taxid_list):
+    length = len(TaxonNode.objects(taxid__in=taxid_list))
+    TaxonNode.objects(taxid__in=taxid_list).delete()
+    return length
+
+def create_taxons_from_lineage(lineage):
     taxon_lineage = []
     for node in lineage:
         if ('rank' in node.keys() and node['rank'] in RANKS) or node['taxId'] == 1:
@@ -34,9 +36,11 @@ def create_taxons(lineage):
             if not taxon_node:
                 taxon_node = TaxonNode(taxid=node['taxId'], name=node['scientificName'], rank=node['rank']).save()
             taxon_lineage.append(taxon_node)
+    #create relationship
+    create_relationship(lineage)
     return taxon_lineage
 
-def create_children(lineage):
+def create_relationship(lineage):
     for index in range(len(lineage)-1):
         child_taxon = lineage[index]
         father_taxon = lineage[index + 1]

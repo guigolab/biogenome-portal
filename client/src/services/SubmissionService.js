@@ -1,8 +1,17 @@
-import http from "../http-common";
+import http from "../http-axios";
+import store from "../store";
 
 const base = http.base
-const ena = http.ena
-
+const submission = http.submission.submission(store.getters['submission/getToken'])
+submission.interceptors.response.use(undefined, function (error) {
+  if (error) {
+    const originalRequest = error.config;
+    if (error.response.status === 401 && !originalRequest._retry) {
+        originalRequest._retry = true;
+        store.dispatch('submission/showLoginModal')
+    }
+  }
+})
 class SubmissionService {
   generateXML(form) {
       return base.post("/xml", form)
@@ -13,26 +22,20 @@ class SubmissionService {
   parseExcel(formData) {
     return base.post('/excel',formData)
   }
-  submitSamples(url, formData, auth){
-    return ena.submitXML(url,formData,auth)
-  }
+  // submitSamples(url, formData, auth){
+  //   return ena.submitXML(url,formData,auth)
+  // }
   login(formData){
     return base.post('/login',formData)
   }
-  createSample(formData, token){
-    return base.put('/organisms', formData, {
-        headers: {
-          Authorization: `Bearer ${token}` 
-        }
-    })
+  createSample(formData){
+    return submission.post('/organisms', formData)
   }
-  updateSample(accession, token){
-    return base.put(`/organisms/${accession}`, {
-        headers: {
-          'Authorization': `Bearer ${token}` 
-        }
-      }
-    )
+  updateSample(accession, formData){
+    return submission.put(`/organismis/${accession}`,formData)
+  }
+  deleteSamples(samples){
+    return submission.delete('/organisms', samples)
   }
 
 }

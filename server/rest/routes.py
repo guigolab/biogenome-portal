@@ -1,8 +1,9 @@
-from .organisms import OrganismsApi, OrganismApi, OrganismsSearchApi, SampleApi, SamplesApi
+from .organisms import OrganismsApi, OrganismApi, OrganismsSearchApi
 from .parser_api import ExcelParserApi, XMLParserApi
 from .tree_api import TreeApi,TaxNodesApi
-from .statistics_api import StatisticsApi
+# from .statistics_api import StatisticsApi
 from .data_input_api import Login
+from .samples_api import SamplesApi,SampleApi
 
 def initialize_routes(api):
 
@@ -20,7 +21,7 @@ def initialize_routes(api):
 	api.add_resource(SampleApi, '/api/organisms/<accession>')
 	api.add_resource(SamplesApi, '/api/organisms')
 	api.add_resource(TreeApi,'/api/tree/<node>') 
-	api.add_resource(StatisticsApi, '/api/statistics')
+	# api.add_resource(StatisticsApi, '/api/statistics')
 
 
 	##parser endpoint

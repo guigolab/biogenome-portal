@@ -2,7 +2,13 @@ const state = () => ({
     samplesToSubmit: [],
     sampleXML: null,
     submissionXML: null,
-    user: '',
+    showAlert: false,
+    showLoginModal: false,
+    alert: {
+        variant:'',
+        message: '',
+    },
+    user: null,
     token: null,
 })
 const mutations= {
@@ -23,11 +29,40 @@ const mutations= {
     setField(state, payload){
         state[payload.label] = payload.value
     },
+    setAlert(state, payload){
+        state.alert = payload
+    },
+    showAlert(state){
+        state.showAlert = true
+    },
+    hideAlert(state){
+        state.showAlert = false
+    },
+    showLoginModal(state){
+        state.showLoginModal = true
+    },
+    hideLoginModal(state){
+        state.showLoginModal = false
+    }
+
 }
 const actions = {
     reset(context){
         context.commit('resetSamples')
+    },
+    showAlert(context){
+        context.commit('showAlert')
+    },
+    hideAlert(context){
+        context.commit('hideAlert')
+    },
+    showLoginModal(context){
+        context.commit('showLoginModal')
+    },
+    hideLoginModal(context){
+        context.commit('hideLoginModal')
     }
+
 }
 
 const getters= {
@@ -37,9 +72,19 @@ const getters= {
     getSampleXML(state){
         return state.sampleXML
     },
-    isAuthenticated(state){
-        return state.token && state.user
+    showLoginModal(state){
+        return state.showLoginModal
+    },
+    getToken(state){
+        return state.token
+    },
+    getAlert(state){
+        return state.alert
+    },
+    getShowAlert(state){
+        return state.showAlert
     }
+
 }
 export default {
     namespaced: true,

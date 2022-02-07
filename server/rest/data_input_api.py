@@ -1,5 +1,4 @@
 from flask import current_app as app
-from db.models import Organism,TaxonNode,Experiment,Assembly,SecondaryOrganism
 from flask_restful import Resource
 import services.taxon_service as service
 from errors import InternalServerError

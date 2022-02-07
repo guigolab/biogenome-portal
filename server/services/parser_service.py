@@ -3,7 +3,7 @@ import openpyxl
 from flask import current_app as app
 import re
 from dateutil.parser import parse
-import constants
+from utils.constants import CHECKLIST_FIELD_GROUPS
 import xml.etree.ElementTree as ET
 
 
@@ -93,7 +93,7 @@ def parse_excel(excel):
     sheet_obj = wb_obj.active
     header = [cell.value for cell in sheet_obj[1]]
     samples=[]
-    field_groups = constants.CHECKLIST_FIELD_GROUPS
+    field_groups = CHECKLIST_FIELD_GROUPS
     fields = []
     parsed_samples=[]
     for group in field_groups:

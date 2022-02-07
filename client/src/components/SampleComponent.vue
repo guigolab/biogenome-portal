@@ -18,7 +18,7 @@
 </template>
 <script>
 import {BLink} from 'bootstrap-vue'
-import TableComponent from './TableComponent.vue'
+import TableComponent from './base/TableComponent.vue'
 export default {
   components: { TableComponent,BLink },
     props:['samples'],

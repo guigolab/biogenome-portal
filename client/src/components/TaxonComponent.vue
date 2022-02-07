@@ -61,11 +61,11 @@
 <script>
 import portalService from "../services/DataPortalService"
 import { BIconXCircle, BBadge,  BButton, BLink, BFormSelect } from 'bootstrap-vue'
-import TableComponent from './TableComponent.vue';
-import FilterComponent from './FilterComponent.vue';
-import PaginationComponent from './PaginationComponent.vue';
+import TableComponent from './base/TableComponent.vue';
+import FilterComponent from './base/FilterComponent.vue';
+import PaginationComponent from './base/PaginationComponent.vue';
 import {mapFields} from '../helper'
-import StatusBadgeComponent from './StatusBadgeComponent.vue';
+import StatusBadgeComponent from './base/StatusBadgeComponent.vue';
 
 export default {
   components: 

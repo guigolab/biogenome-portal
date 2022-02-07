@@ -35,10 +35,10 @@ const getDefaultState = () => {
             specimen_id:{text:''},
             GAL_sample_id:{text:'',},
             culture_or_strain_id:{text:''},
-            taxId: {text:''},
-            alias: {text:''},
-            scientificName: {text: ''}
+            sample_unique_name: {text:''},
         },
+        taxid: '',
+        scientificName: '',
         index: 0
     }
   }
@@ -65,6 +65,9 @@ const mutations= {
                 state.sampleForm[mappedFields[key]].text = payload[key].text
             }
         })
+    },
+    setField(state, payload){
+        state[payload.label] = payload.value
     },
 }
 const actions= {

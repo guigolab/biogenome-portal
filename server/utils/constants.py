@@ -82,3 +82,41 @@ SamplePipeline = [
 		}
 	}
 ]
+
+
+RANKS = ['root','superkingdom','kingdom','phylum','subphylum','class','order','family','genus','species','subspecies']
+
+CHECKLIST_PARSER = {
+    'organism part' : 'organism_part', 
+    'lifestage' : 'lifestage', 
+    'project name' : 'project_name' ,
+    'tolid' : 'tolid' ,
+    'barcoding center' : 'barcoding_center',
+    'collected_by' : 'collected_by',
+    'collection date' : 'collection_date',
+    'geographic location (country and/or sea)':'geographic_location_country',
+    'geographic location (latitude)':'geographic_location_latitude',
+    'geographic location (longitude)':'geographic_location_longitude',
+    'geographic location (region and locality)': 'geographic_location_region_and_locality',
+    'identified_by' : 'identified_by',
+    'geographic location (depth)': 'geographic_location_depth'  ,
+    'geographic location (elevation)': 'geographic_location_elevation'  ,
+    'habitat' : 'habitat',
+    'identifier_affiliation' : 'identifier_affiliation',
+    'original collection date' :  'original_collection_date',
+    'original geographic location':'original_geographic_location' ,
+    'sample derived from':'sample_derived_from' ,
+    'sample same as': 'sample_same_as' ,
+    'sample symbiont of':'sample_symbiont_of' ,
+    'sample coordinator':'sample_coordinator' ,
+    'sample coordinator affiliation':'sample_coordinator_affiliation' ,
+    'sex' : 'sex',
+    'relationship' : 'relationship',
+    'symbiont' : 'symbiont',
+    'collecting institution' : 'collecting_institution',
+    'GAL' : 'GAL',
+    'specimen_voucher' : 'specimen_voucher',
+    'specimen_id' : 'specimen_id',
+    'GAL_sample_id' : 'GAL_sample_id',
+    'culture_or_strain_id' : 'culture_or_strain_id'
+    }

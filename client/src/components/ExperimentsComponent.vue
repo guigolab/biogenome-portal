@@ -130,7 +130,7 @@
 
 <script>
 import {BCollapse,BFormCheckboxGroup,BButton, BFormCheckbox} from 'bootstrap-vue'
-import TableComponent from './TableComponent.vue'
+import TableComponent from './base/TableComponent.vue'
 import {experimentsParams} from '../static-config'
 
 

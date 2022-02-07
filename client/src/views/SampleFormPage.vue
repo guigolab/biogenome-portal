@@ -7,7 +7,7 @@
 </template>
 
 <script>
-import SampleFormContainer from '../components/SampleFormContainer.vue'
+import SampleFormContainer from '../components/SampleFormComponent.vue'
 
 
 

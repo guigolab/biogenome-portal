@@ -29,7 +29,7 @@
 </template>
 <script>
 import {BInputGroup,BInputGroupAppend, BButton, BFormInput, BFormSelect,BInputGroupPrepend} from 'bootstrap-vue'
-import {mapFields} from '../helper'
+import {mapFields} from '../../helper'
 
 export default {
     props:['placeholder', 'prependSelect', 'options'],

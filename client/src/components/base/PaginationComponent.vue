@@ -37,7 +37,7 @@
 </template>
 <script>
 import {BPagination,BFormGroup,BFormSelect} from 'bootstrap-vue'
-import {mapFields} from '../helper'
+import {mapFields} from '../../helper'
 
 export default {
     props: 

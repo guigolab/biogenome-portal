@@ -1,16 +1,13 @@
 <template>
-    <b-overlay variant='white' :show="show">
-        <b-container class="router-container" fluid>
-            <b-row>
-                <b-col>
-                    <tree-list-component v-if="tree" class="tree-wrapper" :item="tree"></tree-list-component>
-                </b-col>
-            </b-row>
-        </b-container>
-    </b-overlay>
+    <b-container class="router-container" fluid>
+        <b-row>
+            <b-col>
+                <tree-list-component v-if="tree" class="tree-wrapper" :item="tree"></tree-list-component>
+            </b-col>
+        </b-row>
+    </b-container>
 </template>
 <script>
-import {BOverlay} from 'bootstrap-vue'
 import TreeListComponent from "./TreeListComponent.vue"
 
 
@@ -26,8 +23,7 @@ export default {
         }
     },
     components:{
-        TreeListComponent,
-        BOverlay
+        TreeListComponent
     }
 }
 </script>

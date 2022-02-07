@@ -4,6 +4,9 @@
     <b-overlay :show="loading">
     <b-container fluid class="router-container">
       <b-row>
+        <alert-component/>
+      </b-row>
+      <b-row>
         <b-col lg="4">
           <bread-crumb-component/>
         </b-col>
@@ -19,15 +22,14 @@
       </b-row>
     </b-container>
     </b-overlay>
-    <login-modal/>
   </div>
 </template>
 
 <script>
 import {BOverlay} from 'bootstrap-vue'
-import BreadCrumbComponent from './components/BreadCrumbComponent.vue';
-import NavBarComponent from './components/NavBarComponent.vue'
-import LoginModal from './components/modal/LoginModal.vue';
+import BreadCrumbComponent from './components/base/BreadCrumbComponent.vue';
+import NavBarComponent from './components/base/NavBarComponent.vue'
+import AlertComponent from './components/base/AlertComponent.vue';
 
 export default {
   name: "app",
@@ -40,7 +42,7 @@ components: {
   NavBarComponent,
   BreadCrumbComponent,
   BOverlay,
-  LoginModal
+  AlertComponent,
   }
 };
 </script>

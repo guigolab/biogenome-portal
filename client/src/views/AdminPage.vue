@@ -1,36 +1,50 @@
 <template>
-    <b-button-toolbar>
-        <b-button-group>
-            <b-button @click="createSample()">
-                Create Sample
-            </b-button>
-        </b-button-group>
-        <b-button-group>
-        </b-button-group>
-    </b-button-toolbar>
+ <b-row>
+        <b-button-toolbar>
+            <b-button-group class="mx-1">
+                <b-button :disabled="show.excelForm" :pressed="show.sampleForm" @click="show.sampleForm = !show.sampleForm">Create sample</b-button>
+                <b-button :disabled="show.excelForm" @click="updateSample()">Edit sample</b-button>
+                <b-button @click="deleteSamples()">Delete samples</b-button>
+            </b-button-group>
+            <b-dropdown class="mx-1" right text="menu">
+                <b-dropdown-item :disabled="show.sampleForm" :active="show.excelForm" @click="show.excelForm = !show.excelForm">Insert/Update from excel</b-dropdown-item>
+                <b-dropdown-item>Download samples</b-dropdown-item>
+            </b-dropdown>
+        </b-button-toolbar>
+        <b-col>
+            <sample-form-component v-if="show.sampleForm"/>
+            <parser-component v-if="show.excelForm" />
+        </b-col>
+        <login-modal/>
+</b-row>
 </template>
 
 <script>
-import {BButtonToolbar,BButtonGroup,BButton} from 'bootstrap-vue'
+import {BButtonToolbar,BButtonGroup,BButton, BDropdown, BDropdownItem} from 'bootstrap-vue'
 // import submissionService from "../services/SubmissionService"
 import {mapFields} from '../helper'
 import axios from 'axios'
-
+import SampleFormComponent from '../components/SampleFormComponent.vue'
+import ParserComponent from '../components/ParserComponent.vue'
+import LoginModal from '../components/modal/LoginModal.vue'
+// import TableComponent from '../components/TableComponent.vue'
 /*
 Steps for admin feature:
 
 
 
 */
-
-
 export default {
-       data(){
-           return {
-               test:'test'
-           }
+    data(){
+        return {
+            test:'test',
+            show:{
+                excelForm:false,
+                sampleForm: false,
+            }
+        }
        },
-       computed: {
+    computed: {
         ...mapFields({
             fields: ['token','user'],
             module: 'submission',
@@ -38,7 +52,15 @@ export default {
         })
     },
     components: {
-        BButtonToolbar,BButtonGroup,BButton
+        BButtonToolbar,BButtonGroup,BButton,
+        SampleFormComponent,ParserComponent,
+        LoginModal,BDropdown, BDropdownItem,
+        // TableComponent
+    },
+    mounted(){
+        if(!this.$store.getters['submission/getToken']){
+            this.$store.dispatch('submission/showLoginModal')
+        }
     },
     methods: {
         createSample(){
@@ -57,18 +79,13 @@ export default {
                 if(error.response && error.response.status === 401){
                     this.user = ''
                     this.token = null
-                    this.$router.push('/login')
                 }
             })
         },
         updateSample(){
             
-
-
-
         },
         deleteSample(){
-
 
         },
         uploadExcel(){
