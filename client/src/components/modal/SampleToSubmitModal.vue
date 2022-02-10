@@ -22,7 +22,7 @@
 </template>
 <script>
 import {BButton,BButtonToolbar, BButtonGroup} from 'bootstrap-vue'
-import {showConfirmationModal} from '../../helper'
+import {showConfirmationModal} from '../../utils/helper'
 
 export default {
     props: ['sample'],

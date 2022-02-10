@@ -43,7 +43,7 @@
 <script>
 import {BForm,BFormGroup,BFormInput} from 'bootstrap-vue'
 import submissionService from '../../services/SubmissionService'
-import {mapFields} from '../../helper'
+import {mapFields} from '../../utils/helper'
 
 export default {
     data(){
@@ -64,6 +64,9 @@ export default {
         showModal(){
             return this.$store.getters['submission/showLoginModal']
         },
+        isTokenExpired(){
+            return localStorage.getItem('token')
+        }
     },
     methods:{
         handleSubmit(){
@@ -76,8 +79,7 @@ export default {
             submissionService.login(formData)
             .then(resp => {
                 //store token in vuex (localStorage)
-            console.log(resp)
-            this.token = resp.data
+            localStorage.setItem('token',resp.data)
             this.$nextTick(() => {
                 this.$store.dispatch('submission/hideLoginModal')
             })

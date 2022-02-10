@@ -5,13 +5,14 @@
         :show="showAlert"
         @dismissed="showAlert=false"
         :variant="alert.variant"
+        v-if="alert.message"
         >
         {{alert.message}}
     </b-alert>
 </template>
 <script>
 import {BAlert} from 'bootstrap-vue'
-import {mapFields} from '../../helper'
+import {mapFields} from '../../utils/helper'
 export default {
     computed:{
         ...mapFields({

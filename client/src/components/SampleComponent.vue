@@ -2,16 +2,19 @@
     <div>
         <table-component :sticky-header="stickyHeader" :fields="sampleFields" :items="samples">
             <template #cell(accession)="data">
-                <b-link :to="{name: 'sample-details', params: {accession: data.value}}">{{data.value}}</b-link>
+                <b-link v-if="data.value" :to="{name: 'sample-details', params: {accession: data.value}}">{{data.value}}</b-link>
+            </template>
+            <template #cell(sample_unique_name)="data">
+                <b-link v-if="data.value" :to="{name: 'sample-details', params: {accession: data.value}}">{{data.value}}</b-link>
             </template>
             <template #cell(organism_part)="data">
-                {{data.value && data.value.text? data.value.text : ''}}
+                {{data.value? data.value : ''}}
             </template>
             <template #cell(sex)="data">
-                {{data.value && data.value.text? data.value.text : ''}}
+                {{data.value? data.value : ''}}
             </template>
             <template #cell(GAL)="data">
-                {{data.value && data.value.text? data.value.text : ''}}
+                {{data.value? data.value : ''}}
             </template>
         </table-component>
     </div>
@@ -25,12 +28,13 @@ export default {
     data(){
         return {
             sampleFields: [
-                {key: 'accession', label: 'Accession'},
+                {key: 'sample_unique_name', label: 'Sample unique name'},
+                {key: 'accession', label: 'BioSamples accession'},
                 {key: 'organism_part', label: 'Organism Part'},
                 {key: 'sex', label: 'Sex'},
                 {key: 'GAL', label: 'GAL'},
             ],
-            stickyHeader: '50vh',
+            stickyHeader: '60vh',
         } 
     }
 }

@@ -9,7 +9,7 @@ const routes = [
   {
     path: "/",
     name: "home-page",
-    component: () => import(/* webpackPrefetch: true */ './views/HomePage.vue'),
+    component: () => import(/* webpackPrefetch: true */ '../views/HomePage.vue'),
     // children: [
     //   {
     //     path: "/login",
@@ -19,35 +19,33 @@ const routes = [
     // ]
   },
   {
-    path: "/login",
-    name: "login",
-    component: () => import(/* webpackPrefetch: true */ '../src/components/modal/LoginModal.vue')
-  },
-  {
     path: "/admin",
     name: "admin",
-    component: () => import(/* webpackPrefetch: true */ '../src/views/AdminPage.vue'),
-    // children: [
-    //   {createSample},
-    //   {updateSample},
+    component: () => import(/* webpackPrefetch: true */ '../views/admin/AdminPage.vue'),
+          // children: [
+    //   {
+    //     path: "/login",
+    //     name: "login",
+    //     component: () => import(/* webpackPrefetch: true */ '../src/components/modal/LoginModal.vue')
+    //   },
     // ]
   },
   {
     path: "/docs",
     name: "docs",
-    component: () => import(/* webpackPrefetch: true */ '../src/views/SwaggerPage.vue')
+    component: () => import(/* webpackPrefetch: true */ '../views/SwaggerPage.vue')
   },
   {
     path: "/organisms/:name",
     name: "organism-details",
     props: true,
-    component: () => import(/* webpackPrefetch: true */ '../src/views/OrganismDetailsPage.vue')
+    component: () => import(/* webpackPrefetch: true */ '../views/OrganismDetailsPage.vue')
   },
   {
     path: "/samples/:accession",
     name: "sample-details",
     props: true,
-    component: () => import(/* webpackPrefetch: true */ '../src/views/SampleDetailsPage.vue')
+    component: () => import(/* webpackPrefetch: true */ '../views/SampleDetailsPage.vue')
   },
   {
     path: '/tree-of-life',
@@ -57,23 +55,23 @@ const routes = [
     path: "/tree-of-life/:node",
     name: "tree-of-life",
     props: true,
-    component: () => import(/* webpackPrefetch: true */ '../src/views/TreeOfLife.vue')
+    component: () => import(/* webpackPrefetch: true */ '../views/TreeOfLife.vue')
   },
   {
     path: "/submit-sample",
     name: "Submit sample",
-    component:() => import(/* webpackPrefetch: true */ '../src/views/SampleFormPage.vue'),
+    component:() => import(/* webpackPrefetch: true */ '../views/admin/SampleFormPage.vue'),
   },
-  {
-    path: "/submit-excel",
-    name: "Submit excel",
-    component: () => import(/* webpackPrefetch: true */ '../src/views/ExcelFormPage.vue')
-  },
-  {
-    path: '/submit-ena',
-    name: 'ENA submission',
-    component: () => import(/* webpackPrefetch: true */ '../src/views/ENASubmissionPage.vue')
-  }
+  // {
+  //   path: "/submit-excel",
+  //   name: "Submit excel",
+  //   component: () => import(/* webpackPrefetch: true */ '../views/ExcelFormPage.vue')
+  // },
+  // {
+  //   path: '/submit-ena',
+  //   name: 'ENA submission',
+  //   component: () => import(/* webpackPrefetch: true */ '../views/ENASubmissionPage.vue')
+  // }
 ]
 const router = new Router({
     base: process.env.BASE_URL,

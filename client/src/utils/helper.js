@@ -11,18 +11,22 @@ export function mapCheckListFields(options) {
       const field = options.fields[x];
       object[field] = {
         get() {
-          return this.$store.state.form[options.base][field].text;
+          if(this.$store.state.form[options.base][field].unit){
+            return this.$store.state.form[options.base][field].text
+          }else{
+            return this.$store.state.form[options.base][field]
+          }
         },
         set(value) {
-            this.$store.commit(options.mutation, {value: value, label:field});
+            this.$store.commit(options.mutation, {value: value, label:field})
         }
       };
     }
-    return object;
+    return object
 }
 
 export function mapFields(options) {
-    const object = {};
+    const object = {}
     for (let x = 0; x < options.fields.length; x++) {
       const field = options.fields[x];
       object[field] = {

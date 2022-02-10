@@ -1,17 +1,30 @@
-import http from "../http-axios";
-import store from "../store";
+import http from "../utils/http-axios"
+import store from "../store"
 
 const base = http.base
-const submission = http.submission.submission(store.getters['submission/getToken'])
-submission.interceptors.response.use(undefined, function (error) {
+const submission = http.submission
+
+submission.interceptors.response.use(undefined, (error) => {
   if (error) {
-    const originalRequest = error.config;
-    if (error.response.status === 401 && !originalRequest._retry) {
-        originalRequest._retry = true;
+    if (error.response.status === 401) {
         store.dispatch('submission/showLoginModal')
     }
+    return Promise.reject(error)
   }
 })
+submission.interceptors.request.use(
+  (config) => {
+  const token = localStorage.getItem('token') || null
+  config.headers = {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  }
+  return config
+  },
+  (error) => {
+    return Promise.reject(error)
+  }
+)
 class SubmissionService {
   generateXML(form) {
       return base.post("/xml", form)
@@ -20,7 +33,7 @@ class SubmissionService {
     return base.get(`/xml/${value}`)
   }
   parseExcel(formData) {
-    return base.post('/excel',formData)
+    return submission.post('/excel',formData)
   }
   // submitSamples(url, formData, auth){
   //   return ena.submitXML(url,formData,auth)
@@ -32,7 +45,7 @@ class SubmissionService {
     return submission.post('/organisms', formData)
   }
   updateSample(accession, formData){
-    return submission.put(`/organismis/${accession}`,formData)
+    return submission.put(`/organisms/${accession}`,formData)
   }
   deleteSamples(samples){
     return submission.delete('/organisms', samples)

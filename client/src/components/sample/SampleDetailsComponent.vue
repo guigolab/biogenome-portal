@@ -10,30 +10,30 @@
             <b-row>
                 <b-col>
                     <div>
-                        <h1>{{sample.accession}}</h1>
+                        <h2>{{sample.accession || sample.sample_unique_name}}</h2>
                     </div>
                 </b-col>
             </b-row>
             <b-row>
                 <b-col cols="2">
                     <div>
-                        <p class="info-icons"><b-icon-calendar/> {{sample.collection_date.text}}</p>
+                        <p class="info-icons"><b-icon-calendar/> {{sample.collection_date}}</p>
                     </div>
                 </b-col>
                 <b-col>
                     <div>
                         <p class="info-icons">
                             <b-icon-geo-alt-fill/> 
-                            {{validCoordinates ? sample.geographic_location_region_and_locality.text + ' (' + sample.geographic_location_longitude.text + ', '+ sample.geographic_location_latitude.text + ') ': sample.geographic_location_region_and_locality.text }}
+                            {{validCoordinates ? sample.geographic_location_region_and_locality + ' (' + sample.geographic_location_longitude.text + ', '+ sample.geographic_location_latitude.text + ') ': sample.geographic_location_region_and_locality }}
                         </p>
                     </div>
                 </b-col>
             </b-row>
             <b-row>
                 <b-col>
-                    <b-badge style="margin-right:5px" variant='info' pill><strong> {{sample.taxonId}} </strong></b-badge>
-                    <b-badge style="margin-right:5px" pill variant='secondary'><strong> {{sample.tolid.text}}</strong></b-badge>
-                    <b-badge style="margin-right:5px" pill variant="success" :href="'https://www.ebi.ac.uk/biosamples/samples/'+sample.accession" target="_blank">BioSamples</b-badge>
+                    <b-badge style="margin-right:5px" variant='info' pill><strong> {{sample.taxid}} </strong></b-badge>
+                    <b-badge v-if="sample.tolid" style="margin-right:5px" pill variant='secondary'><strong> {{sample.tolid}}</strong></b-badge>
+                    <b-badge v-if="sample.accession" style="margin-right:5px" pill variant="success" :href="'https://www.ebi.ac.uk/biosamples/samples/'+sample.accession" target="_blank">BioSamples</b-badge>
                 </b-col>
             </b-row>
          </b-col>
@@ -49,9 +49,9 @@
                     <template #title>
                         <strong>Details  </strong>
                     </template>
-                    <table-component :sticky-header="stickyHeader" :items="[metadata]" :stacked="true">
+                    <table-component :sticky-header="stickyHeader" :items="[metadata()]" :stacked="true">
                         <template #cell(accession)="data">
-                            <b-link :href="'https://www.ebi.ac.uk/ena/browser/view/'+ data.value" target="_blank">{{data.value}}</b-link>
+                            <b-link v-if="data.value" :href="'https://www.ebi.ac.uk/ena/browser/view/'+ data.value" target="_blank">{{data.value}}</b-link>
                         </template>
                     </table-component>
                 </b-tab>
@@ -81,31 +81,16 @@
 
 <script>
 import {BTabs,BLink,BTab, BBadge,BIconCalendar, BIconGeoAltFill} from 'bootstrap-vue'
-import MapContainer from './MapContainer.vue'
-import AssembliesComponent from './AssembliesComponent.vue'
-import ExperimentsComponent from './ExperimentsComponent.vue'
-import SampleComponent from './SampleComponent.vue'
-import TableComponent from './base/TableComponent.vue'
+import MapContainer from '../base/MapContainer.vue'
+import AssembliesComponent from '../AssembliesComponent.vue'
+import ExperimentsComponent from '../ExperimentsComponent.vue'
+import SampleComponent from '../SampleComponent.vue'
+import TableComponent from '../base/TableComponent.vue'
 // import Feature from 'ol/Feature'
 export default {
     components: {BTabs,BTab,BIconCalendar, BIconGeoAltFill,BLink,TableComponent, BBadge, MapContainer, AssembliesComponent, ExperimentsComponent, SampleComponent},
     props:['sample'],
     computed:{
-        metadata(){
-            const mappedSample = {}
-            Object.keys(this.sample)
-            .filter(key => !this.excludedFields.includes(key) && (this.sample[key]))
-            .forEach(key => {
-                if(this.sample[key] && this.sample[key].text){
-                    mappedSample[key] = this.sample[key].text
-                }
-                else {
-                    if(typeof this.sample[key] !== 'object')
-                    mappedSample[key] = this.sample[key]
-                }
-              })
-            return mappedSample
-        },
         validCoordinates(){
             return this.sample.geographic_location_longitude 
             && this.sample.geographic_location_latitude 
@@ -145,6 +130,20 @@ export default {
     methods: {
         haveItems(arr){
             return arr && arr.length > 0
+        },
+        metadata(){
+            const mappedSample = {}
+            Object.keys(this.sample)
+            .filter(key => !this.excludedFields.includes(key) && (this.sample[key]))
+            .forEach(key => {
+                if(this.sample[key] && this.sample[key].unit){
+                    mappedSample[key] = this.sample[key].text
+                }
+                else {
+                    mappedSample[key] = this.sample[key]
+                }
+                })
+            return mappedSample
         },
         createGeoJson(){
             const geoJson = {

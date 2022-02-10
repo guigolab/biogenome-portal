@@ -1,6 +1,6 @@
 # from typing_extensions import Required
 from . import db
-from enum import Enum
+from enum import Enum, unique
 
 class TrackStatus(Enum):
     SAMPLE = 'Biosample Submitted'
@@ -84,7 +84,7 @@ class Experiment(db.Document):
     nominal_sdev= db.StringField()
     first_created= db.StringField()
     meta = {
-        'indexes': ['$experiment_accession']
+        'indexes': ['experiment_accession']
     }
 
 class Assembly(db.Document):
@@ -94,57 +94,77 @@ class Assembly(db.Document):
     description = db.StringField()
     sample_accession = db.StringField()
     meta = {
-        'indexes': ['$accession']
+        'indexes': ['accession']
+    }
+
+#add PointField for indexing
+class GeoLocation(db.EmbeddedDocument):
+    text = db.StringField()
+    unit = db.StringField()
+
+class NameOntology(db.Document):
+    taxid = db.StringField(required=True,unique=True)
+    organism = db.StringField(required=True, unique=True)
+    text = db.StringField(required=True, unique=True)
+    # geographic_location_country = db.StringField()
+    # geographic_location_latitude = db.EmbeddedDocumentField(GeoLocation, default=GeoLocation)
+    # geographic_location_longitude = db.EmbeddedDocumentField(GeoLocation, default=GeoLocation)
+    geographic_location_region_and_locality = db.StringField()
+    meta = {
+        'indexes': ['taxid','organism','$text']
     }
 
 class SecondaryOrganism(db.Document):
     assemblies = db.ListField(db.LazyReferenceField(Assembly))
     experiments = db.ListField(db.LazyReferenceField(Experiment))
-    accession = db.StringField(unique=True)
-    sample_unique_name = db.StringField(unique=True)
-    taxonId = db.IntField(required=True)
-    customFields = db.ListField(db.DictField())
+    accession = db.StringField()
+    specimen_id = db.StringField() ##this field must be the same between local and esternal sources
+    taxid = db.StringField(required=True)
+    sample_unique_name = db.StringField(required=True, unique=True)
+    customFields = db.ListField(db.StringField())
     specimens = db.ListField(db.LazyReferenceField('self', passthrough=True))
-    organism_part = db.DictField()
-    lifestage = db.DictField()
-    project_name = db.DictField()
-    tolid = db.DictField()
-    barcoding_center = db.DictField()
-    collected_by = db.DictField()
-    collection_date = db.DictField()
-    geographic_location_country = db.DictField()
-    geographic_location_latitude = db.DictField()
-    geographic_location_longitude = db.DictField()
-    geographic_location_region_and_locality = db.DictField()
-    identified_by = db.DictField()
-    geographic_location_depth = db.DictField()
-    geographic_location_elevation = db.DictField()
-    habitat = db.DictField()
-    identifier_affiliation = db.DictField()
-    original_collection_date = db.DictField()
-    original_geographic_location = db.DictField()
-    sample_derived_from = db.DictField()
-    sample_same_as = db.DictField()
-    sample_symbiont_of = db.DictField()
-    sample_coordinator = db.DictField()
-    sample_coordinator_affiliation = db.DictField()
-    sex = db.DictField()
-    relationship = db.DictField()
-    symbiont = db.DictField()
-    collecting_institution = db.DictField()
-    GAL = db.DictField()
-    specimen_voucher = db.DictField()
-    specimen_id = db.DictField()
-    GAL_sample_id = db.DictField()
-    culture_or_strain_id = db.DictField()
+    organism_part = db.StringField()
+    lifestage = db.StringField()
+    project_name = db.StringField()
+    tolid = db.StringField()
+    barcoding_center = db.StringField()
+    collected_by = db.StringField()
+    collection_date = db.StringField()
+    geographic_location_country = db.StringField()
+    geographic_location_latitude = db.EmbeddedDocumentField(GeoLocation, default=GeoLocation)
+    geographic_location_longitude = db.EmbeddedDocumentField(GeoLocation, default=GeoLocation)
+    geographic_location_region_and_locality = db.StringField()
+    identified_by = db.StringField()
+    geographic_location_depth = db.EmbeddedDocumentField(GeoLocation, default=GeoLocation)
+    geographic_location_elevation = db.EmbeddedDocumentField(GeoLocation, default=GeoLocation)
+    habitat = db.StringField()
+    identifier_affiliation = db.StringField()
+    original_collection_date = db.StringField()
+    original_geographic_location = db.StringField()
+    sample_derived_from = db.StringField()
+    sample_same_as = db.StringField()
+    sample_symbiont_of = db.StringField()
+    sample_coordinator = db.StringField()
+    sample_coordinator_affiliation = db.StringField()
+    sex = db.StringField()
+    relationship = db.StringField()
+    symbiont = db.StringField()
+    collecting_institution = db.StringField()
+    GAL = db.StringField()
+    specimen_voucher = db.StringField()
+    GAL_sample_id = db.StringField()
+    culture_or_strain_id = db.StringField()
     meta = {
-        'indexes': ['$accession','$sample_unique_name']
+        'indexes': [
+            {'fields':('accession','sample_unique_name'), 'unique':True}
+        ]
     }
 
 class Organism(db.Document):
     assemblies = db.ListField(db.LazyReferenceField(Assembly))
     experiments = db.ListField(db.LazyReferenceField(Experiment))
-    commonName = db.StringField()
+    # common_names = db.ListField(db.LazyReferenceField(NameOntology))
+    common_names = db.ListField(db.StringField())
     organism = db.StringField(required=True,unique=True)
     records = db.ListField(db.LazyReferenceField(SecondaryOrganism))
     taxid = db.StringField(required= True)
@@ -152,7 +172,9 @@ class Organism(db.Document):
     taxon_lineage = db.ListField(db.LazyReferenceField(TaxonNode))
     trackingSystem = db.EnumField(TrackStatus, default=TrackStatus.SAMPLE)
     meta = {
-        'indexes': ['organism',
-            {'fields':['$organism','$commonName','$taxid']}
+        'indexes': [
+            'organism',
+            'common_names',
+            'taxid'
         ]
     }

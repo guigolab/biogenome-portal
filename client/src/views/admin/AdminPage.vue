@@ -21,19 +21,13 @@
 
 <script>
 import {BButtonToolbar,BButtonGroup,BButton, BDropdown, BDropdownItem} from 'bootstrap-vue'
-// import submissionService from "../services/SubmissionService"
-import {mapFields} from '../helper'
+import {mapFields} from '../../utils/helper'
 import axios from 'axios'
-import SampleFormComponent from '../components/SampleFormComponent.vue'
-import ParserComponent from '../components/ParserComponent.vue'
-import LoginModal from '../components/modal/LoginModal.vue'
+import SampleFormComponent from '../../components/sample/SampleFormComponent.vue'
+import ParserComponent from '../../components/ParserComponent.vue'
+import LoginModal from '../../components/modal/LoginModal.vue'
 // import TableComponent from '../components/TableComponent.vue'
-/*
-Steps for admin feature:
 
-
-
-*/
 export default {
     data(){
         return {
@@ -58,7 +52,7 @@ export default {
         // TableComponent
     },
     mounted(){
-        if(!this.$store.getters['submission/getToken']){
+        if(!localStorage.getItem('token')){
             this.$store.dispatch('submission/showLoginModal')
         }
     },

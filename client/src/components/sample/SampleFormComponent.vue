@@ -1,9 +1,8 @@
 <template>
-<b-overlay opacity="1" :show="loading">
     <b-container class="router-container">
     <b-row>
         <b-col>
-    <div style="min-height:50px">
+    <!-- <div style="min-height:50px">
         <b-button-toolbar>
             <b-button-group class="mx-1">
                 <b-button :disabled="!validSample" @click="addSample()" variant="primary"><b-icon icon="plus"></b-icon>Add another sample</b-button>
@@ -15,8 +14,8 @@
                 </template>
                 <b-dropdown-item-button v-for="sample in samplesToSubmit" :key="sample['sample unique name']" @click="showDetails(sample)">{{sample['sample unique name'].text}}</b-dropdown-item-button>
             </b-dropdown>
-        </b-button-toolbar>
-    </div>
+        </b-button-toolbar> 
+    </div> -->
     <div>
         <b-progress-bar style="min-height:10px" :value="index+1" :max="groups.length" variant="success" striped="true"></b-progress-bar>
     </div>
@@ -32,8 +31,8 @@
                 label-align-sm="right" :label-class="field.label === 'taxon ID' ? 
                     Boolean(scientificName) ? 'success': 'wrong' 
                     : 
-                    validateInput(field,self()[mappedFields[field.label]]) === null ? 
-                    '' : validateInput(field,self()[mappedFields[field.label]]) ? 
+                    validateInput(field,self[mappedFields[field.label]]) === null ? 
+                    '' : validateInput(field,self[mappedFields[field.label]]) ? 
                             'success':'wrong'"
                 :label-for="field.label" :label="field.mandatory === 'mandatory'? field.label+' *':field.label"  v-for="field in groups[index].fields" 
                 :key="field.label" :description="field.description">
@@ -41,9 +40,9 @@
                     <b-form-select
                         :id="field.label"
                         :ref="field.label"
-                        v-model="self()[mappedFields[field.label]]"
+                        v-model="self[mappedFields[field.label]]"
                         :options="field.options"
-                        :state="validateInput(field,self()[mappedFields[field.label]])"
+                        :state="validateInput(field,self[mappedFields[field.label]])"
                     >
                     </b-form-select>
                 </div>
@@ -62,22 +61,31 @@
                         <b-form-input v-else
                             :ref="field.label"
                             :id="field.label"
-                            v-model="self()[mappedFields[field.label]]"
-                            :state="validateInput(field,self()[mappedFields[field.label]])">
+                            v-model="self[mappedFields[field.label]]"
+                            :state="validateInput(field,self[mappedFields[field.label]])">
                         </b-form-input>
                         <b-input-group-append v-if="field.label===taxIdField">
                             <b-button @click="getTaxon()">Get Taxon</b-button>
                         </b-input-group-append>
-                        <b-input-group-append v-if="Boolean(scientificName)">
+                        <b-input-group-append v-if="Boolean(scientificName) && field.label===taxIdField">
                             <b-button @click="resetTaxon()">Reset taxon</b-button>
                         </b-input-group-append>
                     </b-input-group>
                 </div>
                 <div v-if="isTextAreaInput(field)">
                     <b-form-textarea
+                    v-if="field.label == 'local names'"
                     :id="field.label"
-                    v-model="self()[mappedFields[field.label]]"
-                    :state="validateInput(field,self()[mappedFields[field.label]])"
+                    v-model="commonNames"
+                    :state="validateCommonNames"
+                    rows="3"
+                    max-rows="6"
+                    ></b-form-textarea>
+                    <b-form-textarea
+                    v-else
+                    :id="field.label"
+                    v-model="self[mappedFields[field.label]]"
+                    :state="validateInput(field,self[mappedFields[field.label]])"
                     rows="3"
                     max-rows="6"
                     ></b-form-textarea>
@@ -91,7 +99,7 @@
             </b-button-group>
             <b-button-group class="mx-1"> 
                 <b-button v-if="index < groups.length-1"  @click="updatePage(1)">Next</b-button>
-                <b-button :disabled="!validSample" v-else @click="submit()" variant="primary">Submit to ENA</b-button>
+                <b-button :disabled="!validSample" v-else @click="submit()" variant="primary">Submit sample</b-button>
             </b-button-group>
         </b-button-toolbar>
     </template>
@@ -100,31 +108,28 @@
         </b-col>
     </b-row>
     </b-container>
-</b-overlay>
 </template>
 <script>
 
-import enaService from "../services/ENAClientService"
-import { mapCheckListFields,showConfirmationModal,mapFields } from '../helper'
-import {checklistFieldGroups, mappedFields} from '../static-config'
+import enaService from "../../services/ENAClientService"
+import { mapCheckListFields,showConfirmationModal,mapFields } from '../../utils/helper'
+import {checklistFieldGroups, mappedFields} from '../../utils/static-config'
 // import submissionService from "../services/SubmissionService"
-import { BOverlay,BButton,BButtonToolbar, BButtonGroup, 
-BFormGroup,BCard,BBadge,BDropdownItemButton, BFormSelect, 
-BFormInput, BFormTextarea, BProgressBar,
-BDropdown, BInputGroup} from 'bootstrap-vue'
-import SubmissionService from '../services/SubmissionService'
+import {BButton, BButtonGroup, BButtonToolbar,
+BFormGroup,BCard, BFormSelect, 
+BFormInput, BFormTextarea, BProgressBar, BInputGroup} from 'bootstrap-vue'
+import SubmissionService from '../../services/SubmissionService'
 
 // 
 
 
 
-const SampleToSubmitModal = () => import(/* webpackPrefetch: true */ './modal/SampleToSubmitModal.vue')
+const SampleToSubmitModal = () => import(/* webpackPrefetch: true */ '../modal/SampleToSubmitModal.vue')
 
 export default {
-    components:{SampleToSubmitModal,BOverlay,BButton,BButtonToolbar, BButtonGroup, 
-    BFormGroup,BCard,BBadge,BDropdownItemButton, BFormSelect, 
-    BFormInput, BFormTextarea,BProgressBar,
-    BDropdown, BInputGroup},
+    components:{SampleToSubmitModal,BButton, BButtonGroup, 
+    BFormGroup,BCard, BFormSelect,BButtonToolbar,
+    BFormInput, BFormTextarea,BProgressBar, BInputGroup},
     data(){
         return {
              // use taxonId for ENA request and taxId from parent for validation/store model
@@ -132,6 +137,7 @@ export default {
             groups: checklistFieldGroups,
             mappedFields: mappedFields,
             taxIdField: 'taxon ID',
+            self: this,
         }
     },
     computed: {
@@ -139,13 +145,20 @@ export default {
             return this.$store.getters['form/getIndex']
         },
         validSample(){
-            return this.sample_unique_name && this.scientificName
+            return this.specimen_id && this.scientificName
         },
         samplesToSubmit(){
             return this.$store.getters['submission/getSamplesToSubmit']
         },
+        validateCommonNames(){
+            if(!this.commonNames){
+                return null
+            }
+            const arr = this.commonNames.split(',').map(name => name.trim())
+            return arr && arr.length && new Set(arr).size === arr.length
+        },
         ...mapFields({
-            fields:['scientificName','taxid'],
+            fields:['scientificName','taxid', 'commonNames'],
             module: 'form',
             mutation: 'form/setField'
         }),
@@ -158,8 +171,7 @@ export default {
                 'sex','relationship','symbiont',
                 'collecting_institution','GAL',
                 'specimen_voucher','specimen_id','GAL_sample_id',
-                'culture_or_strain_id',
-                'sample_unique_name',
+                'culture_or_strain_id','sample_unique_name',
             ],
             base: "sampleForm",
             mutation: "form/updateform"
@@ -167,9 +179,6 @@ export default {
     },
     methods:{
         //can't call this on template, every time self method is called it triggers all the computed properties
-        self() {
-            return this
-        },
         isTextInput(field){
             return field.type == 'text_field'
         },
@@ -208,6 +217,8 @@ export default {
         },
         getTaxon(){
             this.$store.dispatch('portal/showLoading')
+            // first look if taxon already exists in db
+
             enaService.getTaxon(this.taxid)
             .then(response => {
                 this.scientificName = response.data[0].description
@@ -229,15 +240,11 @@ export default {
             const form = this.$store.getters['form/getSampleForm']
             const metadata = {}
             Object.keys(form).forEach(key => {
-                if (form[key].text !== ''){
+                if ((form[key].text && form[key].text !== '') || (form[key] !== 'object' && form[key] !== '')){
                     metadata[key] = form[key]
                 }
             })
             return metadata
-            // const sample = JSON.parse(JSON.stringify(Object.(this.$store.getters['form/getSampleForm'])
-            // .filter((key) => this.$store.getters['form/getSampleForm'][key].text !== '')))
-            // // .reduce((a, k) => ({ ...a, [Object.keys(mappedFields).find(keyk => mappedFields[key] === k)]: this.$store.getters['form/getSampleForm'][k]}), {})))
-            // return sample
         },
         addSample(){
             this.$store.commit('submission/addSample', this.parseSample()) // push sample to store samples list
@@ -251,38 +258,31 @@ export default {
             })
         },
         submit(){
-            showConfirmationModal(this.$bvModal,`Save the sample with ID ${this.sample_unique_name}?`)
+            showConfirmationModal(this.$bvModal,`Save the sample with ID ${this.specimen_id}?`)
             .then(value => {
-                this.$store.dispatch('portal/showLoading')
                 if(value){
-                    return this.parseSample()
-                }
-                return null  
-            })
-            .then(sample => {
-                if (sample){
-                    const sampleToSubmit = {
-                        metadata: sample,
+                    this.$store.dispatch('portal/showLoading')
+                    return SubmissionService.createSample({
+                        metadata: this.parseSample(),
                         taxid: this.taxid,
-                        name: this.scientificName
-                    }
-                    return SubmissionService.createSample(sampleToSubmit)
+                        name: this.scientificName,
+                        commonNames: this.commonNames.split(',')
+                    })
                 }
                 return null
-            })
+            })                  
             .then(response => {
-                if(response.data){
-                    this.$store.dispatch('portal/hideLoading')
-                    this.$store.commit('submission/setAlert',{variant: 'success',message: response.data})
-                    this.$store.dispatch('submission/showAlert')
-                }                
-                return null
+                console.log(response)
+                this.$store.dispatch('portal/hideLoading')
+                this.$store.commit('submission/setAlert', {variant: 'success', message: response.data})
+                this.$store.dispatch('submission/showAlert')
+                this.$store.dispatch('form/reset')
             })
             .catch(error => {
                 console.log(error.response)
                 this.$store.dispatch('portal/hideLoading')
-                this.$store.commit('submission/setAlert',{variant: 'danger',message: error})
-                this.$store.dispatch('submission/showAlert')
+                this.$store.commit('submission/setAlert', {variant: 'danger', message: error.response.data.message})
+                this.$store.dispatch('submission/showAlert')               
             })
         }
     }

@@ -7,7 +7,7 @@
 
 </template>
 <script>
-import OrganismDetailsComponent from '../components/OrganismDetailsComponent.vue'
+import OrganismDetailsComponent from '../components/organism/OrganismDetailsComponent.vue'
 import portalService from '../services/DataPortalService'
 
 export default {

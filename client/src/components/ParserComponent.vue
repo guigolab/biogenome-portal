@@ -1,15 +1,16 @@
 <template>
 <div>
-    <b-card class="card-container" v-if="errors.length > 0" no-body
+    <!-- <b-card class="card-container" v-if="errors.length > 0" no-body
         border-variant="danger"
         header="Errors"
         header-border-variant="danger"
         header-text-variant="danger"
         text-variant="danger"
         title-tag="h3"
-        >
-        <b-tabs style="min-height:50vh" v-model="tabIndex" small pills card vertical>
-            <b-tab :title-link-class="linkClass(index)" v-for="(sample, index) in errors" :key="sample" :title="'Row '+sample.index" >
+        > -->
+        <b-card no-body text-variant="danger">
+        <b-tabs v-if="errors && errors.length > 0" style="min-height:50vh" v-model="tabIndex" small pills card vertical>
+            <b-tab :title-link-class="linkClass(index)" v-for="(sample,index) in errors" :key="sample" :title="'Row '+sample.index" >
                 <b-card-text v-for="er in sample.errors" :key="er">
                         <strong>{{er.label}}: </strong> {{er.message}}
                 </b-card-text>
@@ -82,25 +83,24 @@ export default {
             this.loading=true
             var formData = new FormData()
             formData.append('excelFile', this.excelFile)
-            submissionService.parseExcel(formData).then(response => {
-                if(response.data.length > 0){
-                    this.errors = response.data.filter(sample => sample.errors)
-                    if (this.errors.length > 0){
-                        this.loading=false
-                        return
-                    } else{
-                        this.isValid=true
-                        this.samples = response.data
-                        console.log(this.samples)
-                    }
-                }
-                this.loading=false
-                
+            this.$store.dispatch('portal/showLoading')
+            submissionService.parseExcel(formData)
+            .then(response => {
+                this.errors=[]
+                this.$store.commit('submission/setAlert',{variant:'success', message: 'samples IDs correctly saved: ' + response.data.join()})
+                this.$store.dispatch('submission/showAlert') 
+                this.$store.dispatch('portal/hideLoading')
+            })
+            .catch(e => {
+                console.log(e.response)
+                this.errors = e.response.data.message
+                this.$store.dispatch('portal/hideLoading')
             })
 
         },
         onSubmit() {
-            submissionService.sendForm(this.samples).then(response => {
+            submissionService.sendForm(this.samples)
+            .then(response => {
                 const blob = new Blob([response.data], { type: 'application/octet-stream'})
                 const file = new File([blob],"samples.xml",{type:"xml"})
                 this.$emit('xml-generated', file)

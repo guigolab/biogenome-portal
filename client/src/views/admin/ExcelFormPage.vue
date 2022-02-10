@@ -7,7 +7,7 @@
 </template>
 
 <script>
-import ExcelSampleParser from '../components/ParserComponent.vue'
+import ExcelSampleParser from '../../components/ParserComponent.vue'
 // import SampleFormComponent from '../components/SampleFormComponent.vue'
 // import MultiForm from '../components/MultiForm.vue'
 

@@ -1,4 +1,4 @@
-import http from "../http-axios";
+import http from "../utils/http-axios"
 
 const base = http.base
 

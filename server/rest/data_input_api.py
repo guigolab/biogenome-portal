@@ -7,8 +7,9 @@ from flask_jwt_extended import create_access_token
 from datetime import timedelta
 import xml.etree.ElementTree as ET
 import os
-
-
+from flask import jsonify
+import json
+from db.models import TaxonNode, SecondaryOrganism, Organism, Assembly, Experiment
 
 #Endpoint to drop db collections
 
@@ -28,13 +29,7 @@ import os
 #         raise InternalServerError
 
 # #Endpoint to drop db collections
-#     def delete(self):
-#         TaxonNode.drop_collection()
-#         SecondaryOrganism.drop_collection()
-#         Organism.drop_collection()
-#         Assembly.drop_collection()
-#         Experiment.drop_collection()
-#         return 200
+
 
 class Login(Resource):
     def post(self):
@@ -46,6 +41,14 @@ class Login(Resource):
             password = request.form["password"]
         if user == os.getenv('USER') and password == os.getenv('RESTKEY'):
             access_token = create_access_token(identity=user,expires_delta=timedelta(minutes=30))
-            return Response(access_token, mimetype="application/json", status=201)
+            return Response(json.dumps(access_token), mimetype="application/json", status=201)
         else:
             return Response("Bad User or Password", mimetype="application/json", status=401)
+    
+    def delete(self):
+        TaxonNode.drop_collection()
+        SecondaryOrganism.drop_collection()
+        Organism.drop_collection()
+        Assembly.drop_collection()
+        Experiment.drop_collection()
+        return 200

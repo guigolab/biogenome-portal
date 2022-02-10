@@ -11,8 +11,8 @@
 </template>
 
 <script>
-import TaxonComponent from '../components/TaxonComponent.vue';
-import TreeBrowserComponent from '../components/TreeBrowserComponent.vue'
+import TaxonComponent from '../components/organism/OrganismsComponent.vue';
+import TreeBrowserComponent from '../components/taxon/TreeBrowserComponent.vue'
 
 export default {
     name: 'home-page',

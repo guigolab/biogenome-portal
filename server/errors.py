@@ -6,10 +6,10 @@ class InternalServerError(HTTPException):
 class SchemaValidationError(HTTPException):
 	pass
 
-class UserNotFoundError(HTTPException):
+class TaxonNotFoundError(HTTPException):
     pass
 
-class EmailAlreadyExistError(HTTPException):
+class RecordAlreadyExistError(HTTPException):
     pass
 
 class Unauthorized(HTTPException):
@@ -22,6 +22,10 @@ class NotFound(HTTPException):
     pass
 
 errors = {
+    "RecordAlreadyExistError": {
+         "message": "specimen_id already exists",
+         "status": 400
+     },
 	"InternalServerError": {
         "message": "Oops something wrong",
         "status": 500
@@ -30,10 +34,11 @@ errors = {
          "message": "Required fields missing",
          "status": 400
      },
-    "UserNotFoundError": {
-        "message": "User not found in database",
+    "TaxxonNotFoundError": {
+        "message": "TaxID not found in ENA database",
         "status": 400
     },
+
     "Unauthorized": {
         "message": "Unauthorized",
         "status": 401

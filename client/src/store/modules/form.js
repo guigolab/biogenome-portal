@@ -1,44 +1,45 @@
-import {mappedFields} from '../../static-config'
+import {mappedFields} from '../../utils/helper'
 
 const getDefaultState = () => {
     return {
         sampleForm: {
-            organism_part:{text:''},
-            lifestage:{text:''},
-            project_name:{text:'CBP'}, //should get project name from env variable
-            tolid:{text:''},
-            barcoding_center:{text:''},
-            collected_by:{text:''},
-            collection_date:{text:''},
-            geographic_location_country:{text:''},
+            organism_part:'',
+            lifestage:'',
+            project_name:'', //should get project name from env variable
+            tolid:'',
+            barcoding_center:'',
+            collected_by:'',
+            collection_date:'',
+            geographic_location_country:'',
             geographic_location_latitude:{text:'',unit: 'DD'},
             geographic_location_longitude:{text:'',unit: 'DD'},
-            geographic_location_region_and_locality:{text:''},
-            identified_by:{text:'',},
+            geographic_location_region_and_locality:'',
+            identified_by:'',
             geographic_location_depth:{text:'',unit: 'm'},
             geographic_location_elevation:{text:'', unit: 'm'},
-            habitat:{text:''},
-            identifier_affiliation:{text:''},
-            original_collection_date:{text:''},
-            original_geographic_location:{text:''},
-            sample_derived_from:{text:''},
-            sample_same_as:{text:''},
-            sample_symbiont_of:{text:''},
-            sample_coordinator:{text:''},
-            sample_coordinator_affiliation:{text:''},
-            sex:{text:''},
-            relationship:{text:''},
-            symbiont:{text:''},
-            collecting_institution:{text:''},
-            GAL:{text:''},
-            specimen_voucher:{text:''},
-            specimen_id:{text:''},
-            GAL_sample_id:{text:'',},
-            culture_or_strain_id:{text:''},
-            sample_unique_name: {text:''},
+            habitat:'',
+            identifier_affiliation:'',
+            original_collection_date:'',
+            original_geographic_location:'',
+            sample_derived_from:'',
+            sample_same_as:'',
+            sample_symbiont_of:'',
+            sample_coordinator:'',
+            sample_coordinator_affiliation:'',
+            sex:'',
+            relationship:'',
+            symbiont:'',
+            collecting_institution:'',
+            GAL:'',
+            specimen_voucher:'',
+            specimen_id:'',
+            GAL_sample_id:'',
+            culture_or_strain_id:'',
+            sample_unique_name: '',
         },
         taxid: '',
         scientificName: '',
+        commonNames:'',
         index: 0
     }
   }
@@ -47,7 +48,11 @@ const state = getDefaultState()
 
 const mutations= {
     updateform (state, payload){
-        state.sampleForm[payload.label].text = payload.value
+        if (state.sampleForm[payload.label].unit){
+            state.sampleForm[payload.label].text = payload.value
+        }else{
+            state.sampleForm[payload.label] = payload.value
+        }
     },
     increment(state){
         state.index++

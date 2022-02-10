@@ -7,7 +7,7 @@
 
 </template>
 <script>
-import SampleDetailsComponent from '../components/SampleDetailsComponent.vue'
+import SampleDetailsComponent from '../components/sample/SampleDetailsComponent.vue'
 import portalService from '../services/DataPortalService'
 
 export default {

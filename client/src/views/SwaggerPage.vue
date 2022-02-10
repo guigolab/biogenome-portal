@@ -9,7 +9,7 @@ import 'swagger-ui/dist/swagger-ui.css';
 export default {
     name: "Swagger",
     mounted() {
-        const spec = require('../swagger.json');
+        const spec = require('../utils/swagger.json');
         SwaggerUI({
             spec: spec,
             dom_id: '#swagger'

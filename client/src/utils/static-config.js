@@ -58,7 +58,7 @@ module.exports = {
         
         {'fields': [
             {'label': 'project name', 'description': 'Name of the project within which the sequencing was organized', 'type': 'text_field', 'mandatory': 'mandatory', 'multiplicity': 'single'}, 
-            {'label': 'tolid', 'description': 'A ToLID (Tree of Life ID) is a unique and easy to communicate sample identifier that provides species recognition, differentiates between specimen of the same species and adds taxonomic context. ToLIDs are endorsed by the EarthBioGenome Project (EBP) and should be assigned to any sample with association to the EBP. More information at id.tol.sanger.ac.uk.', 'regex': '(^[a-z]{1}[A-Z]{1}[a-z]{2}[A-Z]{1}[a-z]{2}[0-9]*$)|(^[a-z]{2}[A-Z]{1}[a-z]{2}[A-Z]{1}[a-z]{3}[0-9]*$)', 'type': 'text_field', 'mandatory': 'mandatory', 'multiplicity': 'single'}, 
+            {'label': 'tolid', 'description': 'A ToLID (Tree of Life ID) is a unique and easy to communicate sample identifier that provides species recognition, differentiates between specimen of the same species and adds taxonomic context. ToLIDs are endorsed by the EarthBioGenome Project (EBP) and should be assigned to any sample with association to the EBP. More information at id.tol.sanger.ac.uk.', 'regex': '(^[a-z]{1}[A-Z]{1}[a-z]{2}[A-Z]{1}[a-z]{2}[0-9]*$)|(^[a-z]{2}[A-Z]{1}[a-z]{2}[A-Z]{1}[a-z]{3}[0-9]*$)', 'type': 'text_field', 'mandatory': 'optional', 'multiplicity': 'single'}, 
             {'label': 'barcoding center', 'description': 'Center where DNA barcoding was/will be performed.', 'type': 'text_field', 'mandatory': 'optional', 'multiplicity': 'single'}
         ],
         'name': 'non-sample terms'},
@@ -106,24 +106,26 @@ module.exports = {
         
         {'fields': [
             {'label': 'specimen_voucher', 'description': 'Unique identifier that references the physical specimen that remains after the sequence has been obtained and that ideally exists in a curated collection.', 'type': 'text_field', 'mandatory': 'recommended', 'multiplicity': 'single'}, 
+            {'label': 'GAL_sample_id', 'description': 'unique name assigned to the sample by the genome acquisition lab.', 'type': 'text_field', 'mandatory': 'optional', 'multiplicity': 'single'},
             {'label': 'specimen_id', 'description': 'Unique identifier used to link all data for the recorded specimen.', 'type': 'text_field', 'mandatory': 'optional', 'multiplicity': 'single'}, 
-            {'label': 'GAL_sample_id', 'description': 'unique name assigned to the sample by the genome acquisition lab.', 'type': 'text_field', 'mandatory': 'optional', 'multiplicity': 'single'}], 
+        ], 
         'name': 'Pointer to physical material', 'description': 'References to sample or sample source material in physical resources'}, 
         
         {'fields': [
             {'label': 'culture_or_strain_id', 'description': 'living, culturable, named laboratory strain that sequenced material is derived from.', 'type': 'text_field', 'mandatory': 'optional', 'multiplicity': 'single'}
         ], 
         'name': 'Infraspecies information', 'description': 'Formal and informal infraspecies taxonomic information'},
-        
         {'fields': [
                 {'label': 'taxon ID', 'description':'The Taxon ID of the NCBI Taxonomy database, visit https://ena-docs.readthedocs.io/en/latest/faq/taxonomy_requests.html','type': 'text_field', 'mandatory': 'mandatory', 'multiplicity': 'single'},
-                {'label': 'sample unique name', 'description':'the sample unique name will be the ID of the submission to the ENA','type': 'text_field', 'mandatory': 'mandatory', 'multiplicity': 'single'},
+                {'label': 'local names', 'description':'A list of comma separated local names','type': 'text_area_field', 'mandatory': 'optional', 'multiplicity': 'single'},
+                {'label': 'sample unique name', 'description':'this field will be the unique identifier of the record','type': 'text_field', 'mandatory': 'mandatory', 'multiplicity': 'single'},
             ],
-            'name': 'Submission Informations',
+        'name': 'Submission Informations',
         },
     ],
     mappedFields: {
         "organism part":"organism_part",
+        'sample unique name':'sample_unique_name',
         "lifestage": "lifestage",
         "project name": "project_name",
         "tolid":"tolid",
@@ -155,7 +157,6 @@ module.exports = {
         "specimen_id":"specimen_id",
         "GAL_sample_id":"GAL_sample_id",
         "culture_or_strain_id":"culture_or_strain_id",
-        "sample unique name":"sample_unique_name",
         }
 
 

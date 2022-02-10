@@ -1,5 +1,5 @@
 from .organisms import OrganismsApi, OrganismApi, OrganismsSearchApi
-from .parser_api import ExcelParserApi, XMLParserApi
+from .parser_api import ExcelParserApi
 from .tree_api import TreeApi,TaxNodesApi
 # from .statistics_api import StatisticsApi
 from .data_input_api import Login
@@ -26,6 +26,6 @@ def initialize_routes(api):
 
 	##parser endpoint
 	api.add_resource(ExcelParserApi, '/api/excel')
-	api.add_resource(XMLParserApi, '/api/xml', '/api/xml/<value>')
+	# api.add_resource(XMLParserApi, '/api/xml', '/api/xml/<value>')
 
 

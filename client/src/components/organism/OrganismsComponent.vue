@@ -47,6 +47,13 @@
             {{data.item.organism}}
           </b-link>
         </template>
+        <!-- <template #cell(common_names)="data">
+          <ul>
+            <li v-for="name in data.item.common_names" :key="name">
+              {{name}}
+            </li>
+          <ul>
+        </template> -->
         <template #cell(trackingSystem)="data">
           <status-badge-component :status="data.item.trackingSystem"/>
         </template>
@@ -59,13 +66,13 @@
 </template>
 
 <script>
-import portalService from "../services/DataPortalService"
+import portalService from "../../services/DataPortalService"
 import { BIconXCircle, BBadge,  BButton, BLink, BFormSelect } from 'bootstrap-vue'
-import TableComponent from './base/TableComponent.vue';
-import FilterComponent from './base/FilterComponent.vue';
-import PaginationComponent from './base/PaginationComponent.vue';
-import {mapFields} from '../helper'
-import StatusBadgeComponent from './base/StatusBadgeComponent.vue';
+import TableComponent from '../base/TableComponent.vue';
+import FilterComponent from '../base/FilterComponent.vue';
+import PaginationComponent from '../base/PaginationComponent.vue';
+import {mapFields} from '../../utils/helper'
+import StatusBadgeComponent from '../base/StatusBadgeComponent.vue';
 
 export default {
   components: 
@@ -99,7 +106,7 @@ export default {
       fields: [
         {key: 'taxid', label: 'TaxId',sortable: true},
         {key: 'organism',label:'Scientific Name',sortable: true},
-        {key:'commonName', label: 'Common Name', sortable: true},
+        {key:'common_names', label: 'Common Names', sortable: true},
         {key: 'trackingSystem', label:'Status', sortalble: false},
         {key: 'externalReferences', label:'External References'}
       ]

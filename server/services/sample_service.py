@@ -26,19 +26,11 @@ def update_sample(sample):
     sample.save()
     update_status(organism)
 
-def create_sample(metadata):
-    sample = SecondaryOrganism.objects(**metadata).save()
+def create_sample_object(metadata):
+    #convert dicts in geolocation objects
+    sample = SecondaryOrganism(**metadata)
     return sample
-    # else:
-    #     sample = SecondaryOrganism.objects(accession= metadata['accession']).first() | SecondaryOrganism(accession=sample_metadata['accession'])
-    #     utils.update_references(Experiment, sample.experiments, ena_client.get_reads(sample.accession))
-    #     utils.update_references(Assembly, sample.assemblies, ena_client.parse_assemblies(sample.accession))
-    #     # sample.assemblies
-    # if not sample.taxonId:
-    #     sample.taxonId = int(metadata['taxid'])
-    # utils.parse_sample_metadata(sample, metadata)
-    # sample.save()
-    # return sample
+
 
 
 # def create_sample(sample, accession, taxon_id):

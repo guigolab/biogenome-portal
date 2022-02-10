@@ -37,7 +37,7 @@
 <script>
 import { BLink, BIconSlashCircle, BIconPlusCircle,
  BIconDiagram3, BBadge } from 'bootstrap-vue'
-import portalService from '../services/DataPortalService'
+import portalService from '../../services/DataPortalService'
 
 export default {
     name: 'tree-list-component',
