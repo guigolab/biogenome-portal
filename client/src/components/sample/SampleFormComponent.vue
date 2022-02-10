@@ -62,13 +62,15 @@
                             :ref="field.label"
                             :id="field.label"
                             v-model="self[mappedFields[field.label]]"
-                            :state="validateInput(field,self[mappedFields[field.label]])">
+                            :state="validateInput(field,self[mappedFields[field.label]])"
+                            :disabled="disableUniqueFields(field.label)"
+                            >
                         </b-form-input>
                         <b-input-group-append v-if="field.label===taxIdField">
-                            <b-button @click="getTaxon()">Get Taxon</b-button>
+                            <b-button :disabled="disableUniqueFields(field.label)" @click="getTaxon()">Get Taxon</b-button>
                         </b-input-group-append>
                         <b-input-group-append v-if="Boolean(scientificName) && field.label===taxIdField">
-                            <b-button @click="resetTaxon()">Reset taxon</b-button>
+                            <b-button :disabled="disableUniqueFields(field.label)" @click="resetTaxon()">Reset taxon</b-button>
                         </b-input-group-append>
                     </b-input-group>
                 </div>
@@ -112,7 +114,7 @@
 <script>
 
 import enaService from "../../services/ENAClientService"
-import { mapCheckListFields,showConfirmationModal,mapFields } from '../../utils/helper'
+import { mapCheckListFields,showConfirmationModal} from '../../utils/helper'
 import {checklistFieldGroups, mappedFields} from '../../utils/static-config'
 // import submissionService from "../services/SubmissionService"
 import {BButton, BButtonGroup, BButtonToolbar,
@@ -157,11 +159,6 @@ export default {
             const arr = this.commonNames.split(',').map(name => name.trim())
             return arr && arr.length && new Set(arr).size === arr.length
         },
-        ...mapFields({
-            fields:['scientificName','taxid', 'commonNames'],
-            module: 'form',
-            mutation: 'form/setField'
-        }),
         ...mapCheckListFields({
             fields: [
                 'organism_part','lifestage',
@@ -172,6 +169,7 @@ export default {
                 'collecting_institution','GAL',
                 'specimen_voucher','specimen_id','GAL_sample_id',
                 'culture_or_strain_id','sample_unique_name',
+                'scientificName','taxid', 'commonNames'
             ],
             base: "sampleForm",
             mutation: "form/updateform"
@@ -181,6 +179,13 @@ export default {
         //can't call this on template, every time self method is called it triggers all the computed properties
         isTextInput(field){
             return field.type == 'text_field'
+        },
+        disableUniqueFields(label){
+            if ((label === 'sample unique name' || label === 'taxon ID') &&
+            this.$store.getters['form/getToUpdate']){
+                return true
+            }
+            return false
         },
         isTextAreaInput(field){
             return field.type == 'text_area_field'
@@ -217,8 +222,6 @@ export default {
         },
         getTaxon(){
             this.$store.dispatch('portal/showLoading')
-            // first look if taxon already exists in db
-
             enaService.getTaxon(this.taxid)
             .then(response => {
                 this.scientificName = response.data[0].description
@@ -246,11 +249,11 @@ export default {
             })
             return metadata
         },
-        addSample(){
-            this.$store.commit('submission/addSample', this.parseSample()) // push sample to store samples list
-            this.$store.dispatch('form/reset') //reset form fields and index
-            this.taxonId = ''
-        },
+        // addSample(){
+        //     this.$store.commit('submission/addSample', this.parseSample()) // push sample to store samples list
+        //     this.$store.dispatch('form/reset') //reset form fields and index
+        //     this.taxonId = ''
+        // },
         showDetails(sample){
             this.sample = sample
             this.$nextTick(() => {
@@ -258,12 +261,16 @@ export default {
             })
         },
         submit(){
-            showConfirmationModal(this.$bvModal,`Save the sample with ID ${this.specimen_id}?`)
+            showConfirmationModal(this.$bvModal,`Save the sample with ID ${this.sample_unique_name}?`)
             .then(value => {
                 if(value){
+                    const metadata = this.parseSample()
                     this.$store.dispatch('portal/showLoading')
+                    if(this.$store.getters['form/getToUpdate']){
+                        return SubmissionService.updateSample(metadata.sample_unique_name, metadata)
+                    }
                     return SubmissionService.createSample({
-                        metadata: this.parseSample(),
+                        metadata: metadata,
                         taxid: this.taxid,
                         name: this.scientificName,
                         commonNames: this.commonNames.split(',')
@@ -279,7 +286,7 @@ export default {
                 this.$store.dispatch('form/reset')
             })
             .catch(error => {
-                console.log(error.response)
+                console.log(error)
                 this.$store.dispatch('portal/hideLoading')
                 this.$store.commit('submission/setAlert', {variant: 'danger', message: error.response.data.message})
                 this.$store.dispatch('submission/showAlert')               

@@ -22,7 +22,7 @@ const routes = [
     path: "/admin",
     name: "admin",
     component: () => import(/* webpackPrefetch: true */ '../views/admin/AdminPage.vue'),
-          // children: [
+    // children: [
     //   {
     //     path: "/login",
     //     name: "login",

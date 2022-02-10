@@ -9,7 +9,6 @@ const state = () => ({
         message: '',
     },
     user: null,
-    token: null,
 })
 const mutations= {
     addSample (state, payload){
@@ -57,6 +56,7 @@ const actions = {
         context.commit('hideAlert')
     },
     showLoginModal(context){
+        console.log(context)
         context.commit('showLoginModal')
     },
     hideLoginModal(context){
@@ -74,9 +74,6 @@ const getters= {
     },
     showLoginModal(state){
         return state.showLoginModal
-    },
-    getToken(state){
-        return state.token
     },
     getAlert(state){
         return state.alert

@@ -1,5 +1,8 @@
 from db.models import Organism,SecondaryOrganism,Experiment,Assembly
+from services import organisms_service
 from utils import utils,ena_client
+from mongoengine.queryset.visitor import Q
+
 
 def update_sample(sample):
     organism = Organism.objects(taxid = str(sample.taxonId)).first()
@@ -31,7 +34,24 @@ def create_sample_object(metadata):
     sample = SecondaryOrganism(**metadata)
     return sample
 
+def update_sample(accession):
+    sample = SecondaryOrganism((Q(accession=id)| Q(sample_unique_name=id))).first()
+    if not sample:
+        raise 
 
+
+def delete_samples(samples_ids):
+    for id in samples_ids:
+        sample = SecondaryOrganism((Q(accession=id)| Q(sample_unique_name=id)))
+        if sample:
+            sample.delete()
+            return 200
+            # organism = organisms_service.get_or_create_organism(sample.taxid, list())
+
+    #should implement way to drop everything --> delete in root_organisms
+    #retrieve samples
+    #retrieve organism
+    #if organism doesnt contain other samples delete it and trigger taxon update(leaves counter and delete taxon)
 
 # def create_sample(sample, accession, taxon_id):
 #     organism = Organism.objects(taxid=taxon_id).first() if Organism.objects(taxid=taxon_id).first() else get_organism(taxon_id)

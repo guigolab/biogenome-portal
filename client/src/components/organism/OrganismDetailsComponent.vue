@@ -10,7 +10,14 @@
             <b-row>
                 <b-col>
                     <div style="display:flex;width:fit-content;">
-                        <h2 style="margin-bottom:0px">{{organism.organism}}</h2><status-badge-component :status="organism.trackingSystem"/>
+                        <h2 style="margin-bottom:0px">{{organism.organism}}</h2>
+                        <div style="margin-left: 10px;margin-right:10px;">
+                            <status-badge-component :status="organism.trackingSystem"/>
+                        </div>
+                    </div>
+                </b-col>
+            </b-row>
+            <b-row>
                 <b-col style="font-size: 0.85rem">
                     <b-link v-for="node in reverseItems(organism.taxon_lineage)" :key="node.taxid" 
                     :to="{name: 'tree-of-life', params: {node: node.name}}"
@@ -65,7 +72,7 @@ import StatusBadgeComponent from '../base/StatusBadgeComponent.vue'
 import MapContainer from '../base/MapContainer.vue'
 import ExperimentsComponent from '../ExperimentsComponent.vue'
 import AssembliesComponent from '../AssembliesComponent.vue'
-import SampleComponent from '../SampleComponent.vue'
+import SampleComponent from '../sample/SampleComponent.vue'
 export default {
     components: {BTabs, ExperimentsComponent,BTab, BLink, BBadge, StatusBadgeComponent, MapContainer, AssembliesComponent, SampleComponent},
     props:['organism'],

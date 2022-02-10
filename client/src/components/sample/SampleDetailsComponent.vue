@@ -84,7 +84,7 @@ import {BTabs,BLink,BTab, BBadge,BIconCalendar, BIconGeoAltFill} from 'bootstrap
 import MapContainer from '../base/MapContainer.vue'
 import AssembliesComponent from '../AssembliesComponent.vue'
 import ExperimentsComponent from '../ExperimentsComponent.vue'
-import SampleComponent from '../SampleComponent.vue'
+import SampleComponent from './SampleComponent.vue'
 import TableComponent from '../base/TableComponent.vue'
 // import Feature from 'ol/Feature'
 export default {

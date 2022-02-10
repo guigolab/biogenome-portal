@@ -128,6 +128,8 @@ module.exports = {
         'sample unique name':'sample_unique_name',
         "lifestage": "lifestage",
         "project name": "project_name",
+        'taxon ID': 'taxid',
+        'local names': 'local_names',
         "tolid":"tolid",
         "barcoding center": "barcoding_center",
         "collected_by":"collected_by",

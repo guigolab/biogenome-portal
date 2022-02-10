@@ -1,4 +1,3 @@
-import {mappedFields} from '../../utils/helper'
 
 const getDefaultState = () => {
     return {
@@ -36,11 +35,12 @@ const getDefaultState = () => {
             GAL_sample_id:'',
             culture_or_strain_id:'',
             sample_unique_name: '',
+            taxid: '',
+            scientificName: '',
+            commonNames:'',
         },
-        taxid: '',
-        scientificName: '',
-        commonNames:'',
-        index: 0
+        index: 0,
+        toUpdate:false,
     }
   }
 
@@ -65,11 +65,26 @@ const mutations= {
     },
     //load sample into form
     loadSample(state, payload){
-        Object.keys(mappedFields).forEach(key => {
-            if(payload[key]){
-                state.sampleForm[mappedFields[key]].text = payload[key].text
+        console.log(Object.keys(payload))
+        console.log(Object.keys(state.sampleForm))
+        Object.keys(state.sampleForm).forEach(key => {
+            if (key in payload){
+                state.sampleForm[key] = payload[key]
+            }else{
+                if(state.sampleForm[key].unit){
+                    state.sampleForm[key].text = ''
+                }else{
+                    state.sampleForm[key] = ''
+                }
             }
         })
+        // Object.assign(state.sampleForm, payload)
+        // console.log(state.form)
+        // Object.keys(mappedFields).forEach(key => {
+        //     if(payload[key]){
+        //         state.sampleForm[mappedFields[key]] = payload[key].text
+        //     }
+        // })
     },
     setField(state, payload){
         state[payload.label] = payload.value
@@ -92,6 +107,9 @@ const getters = {
     },
     getSampleForm(state){
         return state.sampleForm
+    },
+    getToUpdate(state){
+        return state.toUpdate
     }
 }
 export default {

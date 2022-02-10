@@ -8,8 +8,8 @@
         text-variant="danger"
         title-tag="h3"
         > -->
-        <b-card no-body text-variant="danger">
-        <b-tabs v-if="errors && errors.length > 0" style="min-height:50vh" v-model="tabIndex" small pills card vertical>
+        <b-card text-variant="danger">
+        <b-tabs v-if="errors && errors.length > 0" v-model="tabIndex" small pills card vertical>
             <b-tab :title-link-class="linkClass(index)" v-for="(sample,index) in errors" :key="sample" :title="'Row '+sample.index" >
                 <b-card-text v-for="er in sample.errors" :key="er">
                         <strong>{{er.label}}: </strong> {{er.message}}
@@ -18,7 +18,6 @@
         </b-tabs>
     </b-card>
     <b-card class="card-container" bg-variant="light">
-        <b-alert dismissible variant="success" :show="isValid">The excel is valid!</b-alert>
         <b-form-group
         label-cols-lg="3"
         label="Upload an Excel File"
@@ -53,7 +52,7 @@
 </div>
 </template>
 <script>
-import {BCard,BButton,BFormGroup,BFormFile,BTabs,BTab,BCardText,BAlert} from 'bootstrap-vue'
+import {BCard,BButton,BFormGroup,BFormFile,BTabs,BTab,BCardText} from 'bootstrap-vue'
 import submissionService from '../services/SubmissionService'
 export default {
     data(){
@@ -67,7 +66,7 @@ export default {
         }
     },
     components:{
-        BCard,BButton,BFormGroup,BFormFile,BTabs,BTab,BCardText,BAlert
+        BCard,BButton,BFormGroup,BFormFile,BTabs,BTab,BCardText
     },
     mounted(){
     },

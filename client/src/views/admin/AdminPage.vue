@@ -8,7 +8,10 @@
             </b-button-group>
             <b-dropdown class="mx-1" right text="menu">
                 <b-dropdown-item :disabled="show.sampleForm" :active="show.excelForm" @click="show.excelForm = !show.excelForm">Insert/Update from excel</b-dropdown-item>
-                <b-dropdown-item>Download samples</b-dropdown-item>
+                <b-dropdown-item>Download samples to submit to COPO</b-dropdown-item>
+                <b-dropdown-item>Edit species Status</b-dropdown-item>
+                <b-dropdown-item>Edit species Names</b-dropdown-item>
+
             </b-dropdown>
         </b-button-toolbar>
         <b-col>

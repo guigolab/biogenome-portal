@@ -8,7 +8,9 @@
       @ok="handleOk"
       hide-header-close
       v-model="showModal"
+      :body-text-variant="isTokenExpired? 'danger':'dark'"
     >
+    <p v-if="isTokenExpired">Token has Expired</p>
       <b-form ref="form" @submit.stop.prevent="handleSubmit">
         <b-form-group
           label="User"
@@ -62,6 +64,7 @@ export default {
             mutation: 'submission/setField'      
         }),
         showModal(){
+            console.log('show modal computer prop')
             return this.$store.getters['submission/showLoginModal']
         },
         isTokenExpired(){
@@ -82,6 +85,8 @@ export default {
             localStorage.setItem('token',resp.data)
             this.$nextTick(() => {
                 this.$store.dispatch('submission/hideLoginModal')
+                this.$store.commit('submission/setAlert',{variant:'success',message:'Welcome back '+ this.user+'!'})
+                this.$store.dispatch('submission/showAlert')
             })
             }).catch(e => {
                 console.log(e)

@@ -6,8 +6,13 @@ const submission = http.submission
 
 submission.interceptors.response.use(undefined, (error) => {
   if (error) {
+    // const originalRequest = error.config;
+    console.log(error.response)
     if (error.response.status === 401) {
+      console.log(store.getters['submission/showLoginModal'])
         store.dispatch('submission/showLoginModal')
+
+
     }
     return Promise.reject(error)
   }
@@ -47,8 +52,8 @@ class SubmissionService {
   updateSample(accession, formData){
     return submission.put(`/organisms/${accession}`,formData)
   }
-  deleteSamples(samples){
-    return submission.delete('/organisms', samples)
+  deleteSamples(samplesIDs){
+    return submission.delete('/organisms', samplesIDs)
   }
 
 }

@@ -3,7 +3,7 @@ from .parser_api import ExcelParserApi
 from .tree_api import TreeApi,TaxNodesApi
 # from .statistics_api import StatisticsApi
 from .data_input_api import Login
-from .samples_api import SamplesApi,SampleApi
+from .samples_api import SamplesApi
 
 def initialize_routes(api):
 
@@ -18,8 +18,7 @@ def initialize_routes(api):
 	api.add_resource(OrganismsSearchApi, '/api/root_organisms/search')
 	api.add_resource(OrganismApi, '/api/root_organisms/<name>') 
 	api.add_resource(TaxNodesApi, '/api/taxons/<name>')
-	api.add_resource(SampleApi, '/api/organisms/<accession>')
-	api.add_resource(SamplesApi, '/api/organisms')
+	api.add_resource(SamplesApi, '/api/organisms', '/api/organisms/<accession>')
 	api.add_resource(TreeApi,'/api/tree/<node>') 
 	# api.add_resource(StatisticsApi, '/api/statistics')
 

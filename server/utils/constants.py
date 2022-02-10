@@ -97,7 +97,7 @@ EXCEL_PARSER= {
         'RELATIONSHIP':'relationship',
         'SAMPLE_DERIVED_FROM':'sample derived from',
         'COLLECTED_BY':'collected_by',
-        'COLLECTING_INSTITUTION':'collecting institution',
+        'COLLECTOR_AFFILIATION':'collecting institution',
         'DATE_OF_COLLECTION':'collection date',
         'COLLECTION_COUNTRY_OR_SEA':'geographic location (country and/or sea)',
         'COLLECTION_LOCATION':'geographic location (region and locality)',

@@ -35,9 +35,9 @@ def full_text_search(params,model):
     query_status = query_by_status(resolved_params['status']) if resolved_params['status'] else None
     query = query_by_taxid(resolved_params['filter']) if resolved_params['filter'].isnumeric() else query_by_name(resolved_params['filter'])
     if query_status:
-        organisms = model.objects(query_tax & query_status & query).only('common_names','taxid','organism', 'trackingSystem')
+        organisms = model.objects(query_tax & query_status & query).only('local_names','taxid','organism', 'trackingSystem')
     else:
-        organisms = model.objects(query_tax & query).only('common_names','taxid','organism', 'trackingSystem')
+        organisms = model.objects(query_tax & query).only('local_names','taxid','organism', 'trackingSystem')
     if resolved_params['sortColumn']:
         sort = '-'+resolved_params['sortColumn'] if resolved_params['sortOrder'] == 'true' else resolved_params['sortColumn']
         organisms = organisms.order_by(sort)
@@ -65,9 +65,9 @@ def default_query_params(params,model):
     query_tax = query_by_taxNode(tax_node)
     query_status = query_by_status(resolved_params['status']) if resolved_params['status'] else None
     if query_status:
-        organisms = model.objects(query_tax & query_status).only('common_names','taxid','organism', 'trackingSystem')
+        organisms = model.objects(query_tax & query_status).only('local_names','taxid','organism', 'trackingSystem')
     else:
-        organisms = model.objects(query_tax).only('common_names','taxid','organism', 'trackingSystem')
+        organisms = model.objects(query_tax).only('local_names','taxid','organism', 'trackingSystem')
     if resolved_params['sortColumn']:
         sort = '-'+resolved_params['sortColumn'] if resolved_params['sortOrder'] == 'true' else resolved_params['sortColumn']
         organisms = organisms.order_by(sort)

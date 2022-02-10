@@ -120,6 +120,7 @@ class SecondaryOrganism(db.Document):
     accession = db.StringField()
     specimen_id = db.StringField() ##this field must be the same between local and esternal sources
     taxid = db.StringField(required=True)
+    scientificName = db.StringField(required=True)
     sample_unique_name = db.StringField(required=True, unique=True)
     customFields = db.ListField(db.StringField())
     specimens = db.ListField(db.LazyReferenceField('self', passthrough=True))
@@ -164,7 +165,7 @@ class Organism(db.Document):
     assemblies = db.ListField(db.LazyReferenceField(Assembly))
     experiments = db.ListField(db.LazyReferenceField(Experiment))
     # common_names = db.ListField(db.LazyReferenceField(NameOntology))
-    common_names = db.ListField(db.StringField())
+    local_names = db.ListField(db.StringField())
     organism = db.StringField(required=True,unique=True)
     records = db.ListField(db.LazyReferenceField(SecondaryOrganism))
     taxid = db.StringField(required= True)
@@ -174,7 +175,7 @@ class Organism(db.Document):
     meta = {
         'indexes': [
             'organism',
-            'common_names',
+            'local_names',
             'taxid'
         ]
     }

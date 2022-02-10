@@ -2,6 +2,7 @@ from flask import Response, request
 from db.models import  SecondaryOrganism
 from flask_restful import Resource
 from errors import NotFound,SchemaValidationError,RecordAlreadyExistError
+from services import sample_service
 import services.submission_service as service
 from flask_jwt_extended import jwt_required
 from mongoengine.queryset.visitor import Q
@@ -10,31 +11,40 @@ from utils.constants import SamplePipeline
 import json
 
 #CRUD operations on sample
-class SampleApi(Resource):
+class SamplesApi(Resource):
 
-    def get(self,accession):
+    def get(self,accession=None):
         sample = SecondaryOrganism.objects((Q(accession=accession) | Q(sample_unique_name=accession)))
         if len(sample) > 0:
             result = sample.aggregate(*SamplePipeline).next()
+            return Response(json.dumps(result),mimetype="application/json", status=200)
         else:
             raise NotFound
-        return Response(json.dumps(result),mimetype="application/json", status=200)
 
-    @jwt_required
+    @jwt_required()
+    def delete(self):
+        data = request.json if request.is_json else request.form
+        if not data:
+            raise SchemaValidationError
+        else:
+            sample_service.delete_samples(data)
+
+    @jwt_required()
     def put(self,accession):
-        params = request.args
-        sample = SecondaryOrganism.objects(accession=accession)
+        data = request.json if request.is_json else request.form
+        app.logger.info('HELLOOOO')
+        sample = SecondaryOrganism.objects((Q(accession=accession) | Q(sample_unique_name=accession))).first()
         if not sample:
             raise NotFound
+        else:
+            sample.update(**data)
+        if sample.accession:
+            id = sample.accession
+        else:
+            id = sample.sample_unique_name
+        return Response(json.dumps(f'sample with id {id} has been saved'),mimetype="application/json", status=200)
 		#update sample
 
-class SamplesApi(Resource):
-
-    def get(self,accession):
-        sample = SecondaryOrganism.objects(accession=accession).aggregate(*SamplePipeline).next()
-        if not sample:
-            raise NotFound
-        return Response(json.dumps(sample),mimetype="application/json", status=200)
 
     @jwt_required()
     def post(self):
@@ -53,9 +63,6 @@ class SamplesApi(Resource):
    
 
 		#update sample
-	
-	# @jwt_required()
-	# def delete(self):
 
 	
 		# if not sample:

@@ -15,6 +15,7 @@ def create_sample(data, localSource=False):
     organism = organisms_service.get_or_create_organism(taxid, common_names)
     if not organism:
         raise TaxonNotFoundError
+    metadata['scientificName'] = organism.organism
     sample = sample_service.create_sample_object(metadata)
     #behind the scenes it creates the taxonomic hierarchy
     #manage records locally(no experiments and assemblies)
