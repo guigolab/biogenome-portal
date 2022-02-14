@@ -3,7 +3,7 @@ from utils import ena_client,utils
 from services import taxon_service
 
 
-def get_or_create_organism(taxid, common_names):
+def get_or_create_organism(taxid, common_names=None):
     organism = Organism.objects(taxid=taxid).first()
     if not organism:
         taxon_xml = ena_client.get_taxon_from_ena(taxid)

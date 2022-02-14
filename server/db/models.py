@@ -121,7 +121,7 @@ class SecondaryOrganism(db.Document):
     specimen_id = db.StringField() ##this field must be the same between local and esternal sources
     taxid = db.StringField(required=True)
     scientificName = db.StringField(required=True)
-    sample_unique_name = db.StringField(required=True, unique=True)
+    sample_unique_name = db.StringField()
     customFields = db.ListField(db.StringField())
     specimens = db.ListField(db.LazyReferenceField('self', passthrough=True))
     organism_part = db.StringField()

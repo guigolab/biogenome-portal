@@ -1,6 +1,8 @@
 from lxml import etree
 # from .constants import CHECKLIST_PARSER
 from flask import make_response,jsonify
+from .constants import CHECKLIST_PARSER
+
 
 def parse_taxon(xml):
     root = etree.fromstring(xml)
@@ -13,15 +15,16 @@ def parse_taxon(xml):
     lineage.insert(0,species)
     return lineage
 
-# def parse_sample_metadata(sample_object, metadata):
-#     for key in metadata.keys():
-#         if key in CHECKLIST_PARSER.keys():
-#             sample_object[CHECKLIST_PARSER[key]] = {}
-#             sample_object[CHECKLIST_PARSER[key]]['text'] = metadata[key]['text']
-#             if 'unit' in metadata[key].keys():
-#                 sample_object[CHECKLIST_PARSER[key]]['unit'] = metadata[key]['unit']
-#     return sample_object
-
+def parse_sample_metadata(sample, metadata):
+    for key in metadata.keys():
+        if key in CHECKLIST_PARSER:
+            if 'unit' in metadata[key][0].keys():
+                sample[CHECKLIST_PARSER[key]] = dict(text = metadata[key][0]['text'], unit= metadata[key][0]['unit'])
+            else:
+                sample[CHECKLIST_PARSER[key]] = metadata[key][0]['text']
+        else:
+            #add custom fields here
+            continue
 
 ##IMPORTANT the reference must be a lazy load reference!!
 def update_references(ref_model, current_list, new_list):
