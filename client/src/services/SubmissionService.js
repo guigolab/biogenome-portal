@@ -9,10 +9,9 @@ submission.interceptors.response.use(undefined, (error) => {
     // const originalRequest = error.config;
     console.log(error.response)
     if (error.response.status === 401) {
-      console.log(store.getters['submission/showLoginModal'])
-        store.dispatch('submission/showLoginModal')
-
-
+        store.dispatch('submission/showLoginModal').then(value => {
+          console.log(value)
+        })
     }
     return Promise.reject(error)
   }
@@ -52,8 +51,10 @@ class SubmissionService {
   updateSample(accession, formData){
     return submission.put(`/organisms/${accession}`,formData)
   }
-  deleteSamples(samplesIDs){
-    return submission.delete('/organisms', samplesIDs)
+  deleteSamples(params){
+    return submission.delete('/organisms', {
+      params:params
+    })
   }
 
 }

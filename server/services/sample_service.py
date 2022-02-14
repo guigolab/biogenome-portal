@@ -1,7 +1,9 @@
-from db.models import Organism,SecondaryOrganism,Experiment,Assembly
-from services import organisms_service
-from utils import utils,ena_client
+from db.models import Organism,SecondaryOrganism,Experiment,Assembly, TaxonNode
+from services import organisms_service,taxon_service
+from utils import utils,ena_client,constants
 from mongoengine.queryset.visitor import Q
+from flask import current_app as app
+import json
 
 
 def update_sample(sample):
@@ -34,18 +36,36 @@ def create_sample_object(metadata):
     sample = SecondaryOrganism(**metadata)
     return sample
 
-def update_sample(accession):
-    sample = SecondaryOrganism((Q(accession=id)| Q(sample_unique_name=id))).first()
-    if not sample:
-        raise 
+# def update_sample(accession):
+#     sample = SecondaryOrganism((Q(accession=id)| Q(sample_unique_name=id))).first()
+#     if not sample:
+#         raise 
 
+## delete samples species specific, doesn't support multi species deletion
+def delete_samples(ids):
+    samples_to_delete = SecondaryOrganism.objects((Q(accession__in=ids)|Q(sample_unique_name__in=ids)))
+    taxid = samples_to_delete[0].taxid
+    if any([taxid != sample.taxid for sample in samples_to_delete]):
+        return {'error':'Can only delete samples related to one organism'}
+    #first delete organism and taxons
+    organism = Organism.objects(taxid=taxid)
+    
+    organism.update_one(pull_all__records=[sample.pk for sample in samples_to_delete])
+    if len(organism.first().records) == 0:
+        #delete organism and update taxons leafes
+        taxons_to_update=list()
+        for taxon in organism.first().taxon_lineage:
+            fetched_taxon = taxon.fetch()
+            if fetched_taxon.leaves <= 1:
+                fetched_taxon.delete()
+            else:
+                taxons_to_update.append(fetched_taxon)
+        app.logger.info(taxons_to_update)
+        taxon_service.leaves_counter(taxons_to_update)
+        organism.delete()
+    samples_to_delete.delete()
+    return {'success':'samples '+ ','.join(ids) + 'succesfully deleted'}
 
-def delete_samples(samples_ids):
-    for id in samples_ids:
-        sample = SecondaryOrganism((Q(accession=id)| Q(sample_unique_name=id)))
-        if sample:
-            sample.delete()
-            return 200
             # organism = organisms_service.get_or_create_organism(sample.taxid, list())
 
     #should implement way to drop everything --> delete in root_organisms

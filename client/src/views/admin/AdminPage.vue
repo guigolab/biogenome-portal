@@ -18,7 +18,6 @@
             <sample-form-component v-if="show.sampleForm"/>
             <parser-component v-if="show.excelForm" />
         </b-col>
-        <login-modal/>
 </b-row>
 </template>
 
@@ -28,7 +27,6 @@ import {mapFields} from '../../utils/helper'
 import axios from 'axios'
 import SampleFormComponent from '../../components/sample/SampleFormComponent.vue'
 import ParserComponent from '../../components/ParserComponent.vue'
-import LoginModal from '../../components/modal/LoginModal.vue'
 // import TableComponent from '../components/TableComponent.vue'
 
 export default {
@@ -51,7 +49,7 @@ export default {
     components: {
         BButtonToolbar,BButtonGroup,BButton,
         SampleFormComponent,ParserComponent,
-        LoginModal,BDropdown, BDropdownItem,
+        BDropdown, BDropdownItem,
         // TableComponent
     },
     mounted(){

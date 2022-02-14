@@ -1,5 +1,10 @@
 <template>
     <div>
+        <div v-if="hasToken">
+            <b-button style="float:left" @click="deleteSamples(samples)"  variant="primary">
+                delete all
+            </b-button>
+        </div>
         <table-component :sticky-header="stickyHeader" :fields="sampleFields" :items="samples">
             <template #cell(accession)="data">
                 <b-link v-if="data.value" :to="{name: 'sample-details', params: {accession: data.value}}">{{data.value}}</b-link>
@@ -20,7 +25,7 @@
                 <b-link class="actions-link" @click="editSample(data['item'])">
                     <b-icon-pen-fill variant="primary"></b-icon-pen-fill>
                 </b-link>
-                <b-link @click="deleteSample(data['item'])">
+                <b-link @click="deleteSamples([data['item']])">
                     <b-icon-trash-fill variant="danger"></b-icon-trash-fill>
                 </b-link>
             </template>
@@ -28,14 +33,14 @@
     </div>
 </template>
 <script>
-import {BLink,BIconPenFill,BIconTrashFill} from 'bootstrap-vue'
+import {BLink,BIconPenFill,BIconTrashFill, BButton} from 'bootstrap-vue'
 import TableComponent from '../base/TableComponent.vue'
 import { showConfirmationModal } from '../../utils/helper'
 import submissionService from '../../services/SubmissionService'
 
 export default {
-  components: { TableComponent,BLink,BIconPenFill,BIconTrashFill },
-    props:['samples'],
+  components: { TableComponent,BLink,BIconPenFill,BIconTrashFill,BButton },
+    props:['samples', 'name'],
     data(){
         return {
             sampleStaticFields: [
@@ -50,30 +55,36 @@ export default {
     },
     computed:{
         sampleFields(){
-            if(localStorage.getItem('token')){
+            if(this.hasToken){
                 return this.sampleStaticFields.concat([{key:'actions',label:'Actions'}])
             }
             return this.sampleStaticFields
+        },
+        isLastSample(){
+            return this.samples.length > 0 && this.samples.length === 1
+        },
+        hasToken(){
+            return localStorage.getItem('token')
         }
     },
     methods:{
-        deleteSample(sample){
-            showConfirmationModal(this.$bvModal,'Please confirm that you want to delete the sample with id: '+sample.sample_unique_name)
+        deleteSamples(samples){
+            const message = samples.length === this.samples.length ? 'Delete all samples and the species?' : 'Delete sample?'
+            showConfirmationModal(this.$bvModal, message)
             .then(value => {
                 if(value){
-                    if (sample.accession){
-                        return submissionService.deleteSamples([sample.accession])
-                    }
-                    return submissionService.deleteSamples([sample.sample_unique_name])
-                    // delete sample in db
-                    // this.$store.commit('submission/removeSample', this.sample)
-                    // this.$nextTick(() => {
-                    //     this.$root.$emit('bv::hide::modal', 'sample-to-submit')
-                    // })
+                    const ids = samples.map(sample => {
+                        return sample.accession ? sample.accession : sample.sample_unique_name
+                    }).join()
+                    return submissionService.deleteSamples({ids: ids})
                 } 
             })
             .then(response => {
                 console.log(response.data)
+                if (samples.length === this.samples.length){
+                    this.$router.push('/')
+                }
+                this.$router.go()
             })
             .catch(err => {
                 console.log(err)
@@ -87,11 +98,6 @@ export default {
                     this.$store.commit('form/loadSample', sample)
                     this.$store.commit('form/setField',{label:'toUpdate',value:true})
                     this.$router.push('/submit-sample')
-
-                    // this.$store.commit('submission/removeSample', this.sample)
-                    // this.$nextTick(() => {
-                    //     this.$root.$emit('bv::hide::modal', 'sample-to-submit')
-                    // })
                 }      
             })
             .catch(err => {

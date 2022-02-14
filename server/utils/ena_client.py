@@ -4,6 +4,20 @@ def get_taxon_from_ena(taxon_id):
     response = requests.get(f"https://www.ebi.ac.uk/ena/browser/api/xml/{taxon_id}?download=false") ## 
     if response.status_code != 200:
         return None
+    # if response.is_json:
+    return response.content
+
+def check_taxons_from_NCBI(taxids):
+    params = ','.join(taxids)
+    response = requests.get(f'https://api.ncbi.nlm.nih.gov/datasets/v1/taxonomy/taxon/{params}')
+    if response.status_code != 200:
+        return None
+    return response.json()
+
+def check_taxon_from_ENA(taxon_id):
+    response = requests.get(f'https://www.ebi.ac.uk/ena/portal/api/links/taxon?accession={taxon_id}&format=JSON&result=taxon')
+    if response.status_code != 200:
+        return
     return response.content
 
 def get_samples(project):

@@ -17,17 +17,23 @@ class SamplesApi(Resource):
         sample = SecondaryOrganism.objects((Q(accession=accession) | Q(sample_unique_name=accession)))
         if len(sample) > 0:
             result = sample.aggregate(*SamplePipeline).next()
-            return Response(json.dumps(result),mimetype="application/json", status=200)
+            return 
         else:
             raise NotFound
 
     @jwt_required()
     def delete(self):
-        data = request.json if request.is_json else request.form
-        if not data:
-            raise SchemaValidationError
+        if 'ids' in request.args.keys():
+            ids = request.args['ids'].split(',')
+            resp = sample_service.delete_samples(ids)
+            return Response(json.dumps(resp),mimetype="application/json", status=200)
         else:
-            sample_service.delete_samples(data)
+            raise SchemaValidationError
+        # sample = SecondaryOrganism.objects((Q(accession=accession) | Q(sample_unique_name=accession)))
+        # if len(sample) > 0:
+        #     sample_service.delete_sample(sample.first())
+        # else:
+
 
     @jwt_required()
     def put(self,accession):
@@ -42,7 +48,7 @@ class SamplesApi(Resource):
             id = sample.accession
         else:
             id = sample.sample_unique_name
-        return Response(json.dumps(f'sample with id {id} has been saved'),mimetype="application/json", status=200)
+        return Response(json.dumps(f'sample with id {id} has been saved'),mimetype="application/json", status=204)
 		#update sample
 
 
@@ -57,14 +63,7 @@ class SamplesApi(Resource):
                 raise RecordAlreadyExistError
             else:
                 sample = service.create_sample(data)
-                return Response(json.dumps(f'sample with id {sample.sample_unique_name} has been saved'),mimetype="application/json", status=200)
+                return Response(json.dumps(f'sample with id {sample.sample_unique_name} has been saved'),mimetype="application/json", status=201)
         else:
             raise SchemaValidationError
    
-
-		#update sample
-
-	
-		# if not sample:
-		# 	raise NotFound
-##endpoint to retrieve checklist fields

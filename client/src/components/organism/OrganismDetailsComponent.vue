@@ -46,7 +46,7 @@
                     <template #title>
                         <strong>Samples  </strong><b-badge :variant="linkVariant(0)" pill>{{organism.records.length}}</b-badge>
                     </template>
-                    <sample-component :samples="organism.records"/>
+                    <sample-component :name="organism.organism" :samples="organism.records"/>
                 </b-tab>
                 <b-tab :title-link-class="linkClass(1)" class="tab-element" v-if="organism.assemblies && organism.assemblies.length" lazy>
                     <template #title>
@@ -67,14 +67,14 @@
 </template>
 
 <script>
-import {BTabs,BLink,BTab,BBadge,} from 'bootstrap-vue'
+import {BTabs,BLink,BTab,BBadge} from 'bootstrap-vue'
 import StatusBadgeComponent from '../base/StatusBadgeComponent.vue'
 import MapContainer from '../base/MapContainer.vue'
 import ExperimentsComponent from '../ExperimentsComponent.vue'
 import AssembliesComponent from '../AssembliesComponent.vue'
 import SampleComponent from '../sample/SampleComponent.vue'
 export default {
-    components: {BTabs, ExperimentsComponent,BTab, BLink, BBadge, StatusBadgeComponent, MapContainer, AssembliesComponent, SampleComponent},
+    components: {BTabs,ExperimentsComponent,BTab, BLink, BBadge, StatusBadgeComponent, MapContainer, AssembliesComponent, SampleComponent},
     props:['organism'],
     computed:{
         expIndex(){
@@ -90,7 +90,7 @@ export default {
             && record.geographic_location_longitude.text 
             && record.geographic_location_latitude.text
             && !isNaN(record.geographic_location_latitude.text) && !isNaN(record.geographic_location_longitude.text))
-        }
+        },
     },
     data(){
         return {

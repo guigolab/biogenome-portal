@@ -13,7 +13,7 @@ from utils import ena_client, utils, constants
 #     leaves_counter(taxon_lineage)
 #     return taxon_lineage
 
-def delete_taxons(taxid_list):
+def delete_taxons_c(taxid_list):
     length = len(TaxonNode.objects(taxid__in=taxid_list))
     TaxonNode.objects(taxid__in=taxid_list).delete()
     return length
