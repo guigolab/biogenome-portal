@@ -1,6 +1,6 @@
 # from typing_extensions import Required
 from . import db
-from enum import Enum, unique
+from enum import Enum
 
 class TrackStatus(Enum):
     SAMPLE = 'Biosample Submitted'

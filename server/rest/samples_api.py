@@ -14,10 +14,12 @@ import json
 class SamplesApi(Resource):
 
     def get(self,accession=None):
+        app.logger.info('HERE')
         sample = SecondaryOrganism.objects((Q(accession=accession) | Q(sample_unique_name=accession)))
+        app.logger.info(sample)
         if len(sample) > 0:
             result = sample.aggregate(*SamplePipeline).next()
-            return 
+            return Response(json.dumps(result),mimetype="application/json", status=200)
         else:
             raise NotFound
 
