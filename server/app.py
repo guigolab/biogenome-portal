@@ -4,6 +4,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from config import BaseConfig
 from db import initialize_db
 from rest import initialize_api
+from datetime import datetime,timedelta
 from cronjobs.import_from_biosample import import_records
 import os
 from flask_jwt_extended import JWTManager
@@ -23,7 +24,7 @@ if os.getenv('PROJECTS'):
     TIME= os.getenv('EXEC_TIME')
     PROJECTS = os.getenv('PROJECTS').split(',')
     sched = BackgroundScheduler(daemon=True)
-    sched.add_job(import_records,"interval", [PROJECTS], seconds=int(TIME))
+    sched.add_job(import_records, "interval", id="interval-job", start_date=datetime.now()+timedelta(seconds=30), args=[PROJECTS], seconds=int(TIME))
     sched.start()
 
 if __name__ == '__main__':

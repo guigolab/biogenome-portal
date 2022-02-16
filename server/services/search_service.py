@@ -52,7 +52,7 @@ def query_by_status(status):
     return Q(trackingSystem=status)
 
 def query_by_name(filter):
-    return (Q(organism__iexact=filter) | Q(organism__icontains=filter) | Q(commonName__icontains=filter) | Q(commonName__iexact=filter))
+    return (Q(organism__iexact=filter) | Q(organism__icontains=filter))
 
 def query_by_taxid(filter):
     return (Q(taxid__iexact=filter) | Q(taxid__icontains=filter))

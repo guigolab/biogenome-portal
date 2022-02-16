@@ -22,6 +22,7 @@ class ExcelParserApi(Resource):
                 if len(errors) > 0:
                     return custom_response(errors, 400)
                 else:
+                    app.logger.info(len(samples))
                     app.logger.info('INSIDE ELSE')
                     saved_samples = submission_service.import_samples(samples)
                 return Response(json.dumps([sample.sample_unique_name for sample in saved_samples]), mimetype="application/json", status=200)
