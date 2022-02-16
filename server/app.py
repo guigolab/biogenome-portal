@@ -24,7 +24,7 @@ if os.getenv('PROJECTS'):
     TIME= os.getenv('EXEC_TIME')
     PROJECTS = os.getenv('PROJECTS').split(',')
     sched = BackgroundScheduler(daemon=True)
-    sched.add_job(import_records, "interval", id="interval-job", start_date=datetime.now()+timedelta(seconds=30), args=[PROJECTS], seconds=int(TIME))
+    sched.add_job(import_records, "interval", id="interval-job", start_date=datetime.now()+timedelta(seconds=120), args=[PROJECTS], seconds=int(TIME))
     sched.start()
 
 if __name__ == '__main__':

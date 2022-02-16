@@ -24,6 +24,8 @@ def import_records(PROJECTS):
     if len(samples) == 0:
         return
     samples_to_save= get_new_samples(samples)
+    print('SAMPLES TO SAVE LENGHT')
+    print(len(samples))
     if len(samples_to_save) > 0:
         print('NUMBER OF SAMPLES TO SAVE:')
         print(len(samples_to_save))
@@ -130,7 +132,6 @@ def bulk_insert_experiments(samples_accessions):
     return exps_to_save
 
 def update_organisms(organisms_to_update, samples_to_save):
-    print(organisms_to_update)
     for organism in organisms_to_update:
         organism_records = SecondaryOrganism.objects(Q(taxid=organism.taxid) & Q(accession__in=[sample.accession for sample in samples_to_save if sample.taxid == organism.taxid]))
         experiments = Experiment.objects(sample_accession__in=[rec.accession for rec in organism_records])

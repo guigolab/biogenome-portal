@@ -6,7 +6,7 @@ from errors import NotFound
 from flask import current_app as app
 import json
 from utils.constants import OrganismPipeline
-
+from utils.utils import sort_lineage
 class OrganismsApi(Resource):
 	def get(self):
 		return Response(service.default_query_params(request.args,Organism),mimetype="application/json", status=200)
@@ -18,6 +18,7 @@ class OrganismsSearchApi(Resource):
 class OrganismApi(Resource):
 	def get(self,name):
 		organism = Organism.objects(organism=name).aggregate(*OrganismPipeline).next()
+		sort_lineage(organism['taxon_lineage']) #sort lineage (aggregation pipeline returns unordered list)
 		if not organism:
 			raise NotFound
 		return Response(json.dumps(organism),mimetype="application/json", status=200)

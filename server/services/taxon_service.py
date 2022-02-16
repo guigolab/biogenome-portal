@@ -13,7 +13,7 @@ from utils import ena_client, utils, constants
 #     leaves_counter(taxon_lineage)
 #     return taxon_lineage
 
-def delete_taxons_c(taxid_list):
+def delete_taxons(taxid_list):
     length = len(TaxonNode.objects(taxid__in=taxid_list))
     TaxonNode.objects(taxid__in=taxid_list).delete()
     return length
@@ -22,7 +22,10 @@ def create_taxons_from_lineage(lineage):
     taxon_lineage = []
     for node in lineage:
         if ('rank' in node.keys() and node['rank'] in constants.RANKS) or node['taxId'] == 1:
-            taxon_node = TaxonNode.objects(taxid=node['taxId']).upsert_one(set__taxid=node['taxId'], set__name=node['scientificName'], set__rank=node['rank'])
+            taxon_node = TaxonNode.objects(taxid=node['taxId']).first()
+            if not taxon_node:
+                taxon_node = TaxonNode(taxid=node['taxId'], name=node['scientificName'], rank=node['rank']).save()
+            # taxon_node = TaxonNode.objects(taxid=node['taxId']).upsert_one(set__taxid=node['taxId'], set__name=node['scientificName'], set__rank=node['rank'])
             taxon_lineage.append(taxon_node)
     #create relationship
     create_relationship(taxon_lineage)
@@ -30,7 +33,7 @@ def create_taxons_from_lineage(lineage):
     return taxon_lineage
 
 def create_relationship(lineage):
-    for index in range(len(list(reversed(lineage)))-1):
+    for index in range(len(lineage)-1):
         child_taxon = lineage[index]
         father_taxon = lineage[index + 1]
         if not any(child_node.id == child_taxon.id for child_node in father_taxon.children):
