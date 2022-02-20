@@ -23,7 +23,7 @@ class NotFound(HTTPException):
 
 errors = {
     "RecordAlreadyExistError": {
-         "message": "specimen_id already exists",
+         "message": "sample unique name already exists",
          "status": 400
      },
 	"InternalServerError": {

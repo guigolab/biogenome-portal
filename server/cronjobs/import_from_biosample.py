@@ -1,21 +1,9 @@
-from enum import unique
 from db.models import Organism, SecondaryOrganism,TrackStatus,Assembly,Experiment
 from utils import ena_client,utils
 from services import sample_service,organisms_service
 from mongoengine.queryset.visitor import Q
 
 
-#cronjob steps
-#-retrieve and save samples from biosamples
-#-retrieve and save assemblies and experiments
-#-update organisms
-#
-#
-
-# save all samples
-# create taxons
-# create relationships
-# retrieve assemblies and experiments
 
 #import biosamples
 def import_records(PROJECTS):
@@ -23,37 +11,58 @@ def import_records(PROJECTS):
     samples = collect_samples(PROJECTS)
     if len(samples) == 0:
         return
-    samples_to_save= get_new_samples(samples)
+    #create new sample objects
+    samples_objects = get_new_samples(samples)
     print('SAMPLES TO SAVE LENGHT')
-    print(len(samples))
-    if len(samples_to_save) > 0:
-        print('NUMBER OF SAMPLES TO SAVE:')
-        print(len(samples_to_save))
-        samples_accessions = [sample.accession for sample in samples_to_save]
-        SecondaryOrganism.objects.insert(samples_to_save, load_bulk=False)
+    print(len(samples_objects))
+    if len(samples_objects) > 0:
+        samples_accessions = [sample.accession for sample in samples_objects]
+        print('SAVING SAMPLES..')
+        SecondaryOrganism.objects.insert(samples_objects, load_bulk=False)
+        print('NEW SAMPLES SAVED')
         print('APPENDING SPECIMENS TO SAMPLES')
         append_specimens(samples_accessions)
-        taxids = set([str(sample.taxid) for sample in samples_to_save])
-        new_taxids = [taxid for taxid in taxids if taxid not in [org.taxid for org in Organism.objects(taxid__in=list(taxids))]]
-        print(len(new_taxids))
-        #create new organisms
-        print('CREATING NEW ORGANISMS')
-        for taxid in new_taxids:
-            organisms_service.get_or_create_organism(taxid)
-        print('APPENDING SAMPLES TO SPECIES CONTAINER')
-        organisms_to_update = Organism.objects(taxid__in=list(taxids))
-        for org in organisms_to_update:
-            organism_records = SecondaryOrganism.objects(Q(taxid=org.taxid) & Q(sample_derived_from=None) & Q(accession__in=[sample.accession for sample in samples_to_save if sample.taxid == org.taxid]))
-            if len(organism_records) > 0:
-                org.modify(push_all__records=organism_records)
+        print('SPECIMENS APPENDED')
     else:
-        samples_accessions = [sample.accession for sample in SecondaryOrganism.objects()]
+        #check for new taxids , fix potentials cronjob crashes
+        print('UPDATING SAMPLES..')
+        samples_objects = SecondaryOrganism.objects(accession__ne=None)
+        samples_accessions = [sample.accession for sample in samples_objects]
+    
+    print('UPDATING ORGANISMS')
+    unique_taxids = set([sample.taxid for sample in samples_objects])
+    new_taxids =  [taxid for taxid in unique_taxids if taxid not in [org.taxid for org in Organism.objects(taxid__in=list(unique_taxids))]]
+    
+    print('NEW TAXONS LENGHT')
+    print(len(new_taxids))
+    for taxid in new_taxids:
+
+        all_names = [sample.common_name for sample in samples_objects if sample.taxid == taxid and sample.common_name]
+        if len(all_names) > 0:
+            common_names = ''.join(list(set(all_names)))
+            organisms_service.get_or_create_organism(taxid, common_names)
+        else:
+            organisms_service.get_or_create_organism(taxid)
+    print('APPENDING SAMPLES TO ORGANISM CONTAINER')
+    organisms_to_update = Organism.objects(taxid__in=list(unique_taxids))
+    for org in organisms_to_update:
+        if len(org.records) > 0:
+            organism_records = SecondaryOrganism.objects(Q(taxid=org.taxid) & Q(id__not__in=[record.id for record in org.records]) & Q(sample_derived_from=None) & Q(accession__in=[sample.accession for sample in samples_objects if sample.taxid == org.taxid]))
+        else:
+            organism_records = SecondaryOrganism.objects(Q(taxid=org.taxid) & Q(sample_derived_from=None) & Q(accession__in=[sample.accession for sample in samples_objects if sample.taxid == org.taxid]))
+        if len(organism_records) > 0:
+            org.modify(push_all__records=organism_records)
+    print('ORGANISMS UPDATED')
+
     print('BULK INSERTION EXPERIMENTS')
-    new_experiments = bulk_insert_experiments(samples_accessions)        
+    new_experiments = bulk_insert_experiments(samples_accessions)
+    print('EXPERIMENTS INSERTED')       
     print('BULK INSERTION ASSEMBLIES')
     new_assemblies = bulk_insert_assemblies(samples_accessions)
+    print('ASSEMBLIES INSERTED')
+
     samples_accessions = get_samples_accessions(new_assemblies,new_experiments)
-    print('SAMPLES WITH DATA:')
+    print('SAMPLES WITH NEW DATA:')
     print(len(samples_accessions))
     if len(samples_accessions) > 0:
         samples_to_update = SecondaryOrganism.objects(accession__in=list(set(samples_accessions)))
@@ -76,6 +85,7 @@ def import_records(PROJECTS):
                 org.modify(push_all__assemblies=[ass for ass in assemblies if not ass.id in org.assemblies], trackingSystem = TrackStatus.ASSEMBLIES)
             else:
                 continue
+    print('DONE')
     # update_organisms(organisms_to_update,samples_to_update)
 
 def get_samples_accessions(new_assemblies, new_experiments):
@@ -88,6 +98,11 @@ def get_samples_accessions(new_assemblies, new_experiments):
     else:
         accessions = list()
     return accessions
+
+#expects unique taxids
+def get_new_taxons(taxids):
+    unique_taxids = set([str(taxid) for taxid in taxids])
+    return [taxid for taxid in unique_taxids if taxid not in [org.taxid for org in Organism.objects(taxid__in=list(unique_taxids))]]
 
 def collect_samples(PROJECTS):
     samples = list()
@@ -131,26 +146,13 @@ def bulk_insert_experiments(samples_accessions):
         Experiment.objects.insert(exps_to_save,load_bulk=False)
     return exps_to_save
 
-def update_organisms(organisms_to_update, samples_to_save):
-    for organism in organisms_to_update:
-        organism_records = SecondaryOrganism.objects(Q(taxid=organism.taxid) & Q(accession__in=[sample.accession for sample in samples_to_save if sample.taxid == organism.taxid]))
-        experiments = Experiment.objects(sample_accession__in=[rec.accession for rec in organism_records])
-        assemblies = Assembly.objects(sample_accession__in=[rec.accession for rec in organism_records])
-        if len(assemblies) > 0 and len(experiments) > 0:
-            organism.modify(push_all__assemblies=assemblies, push_all__experiments=experiments, trackingSystem=TrackStatus.MAP_READS)
-        elif len(experiments) > 0:
-            organism.modify(push_all__experiments=experiments, trackingSystem = TrackStatus.RAW_DATA)
-        elif len(assemblies) > 0:
-            organism.modify(push_all__assemblies=assemblies, trackingSystem = TrackStatus.ASSEMBLIES)
-        else:
-            continue
-    print('DONE')
-    # organism.save()
-
 # def append_specimens():
 def get_new_samples(samples):
+    samples_accessions = [sample['accession'] for sample in samples]
     samples_to_save=list()
-    existing_samples = SecondaryOrganism.objects(accession__in=[sample['accession'] for sample in samples])
+    existing_samples = SecondaryOrganism.objects(accession__in=samples_accessions)
+    if len(samples) == len(existing_samples):
+        return samples_to_save
     for sample in samples:
         if sample['accession'] in [ex_sample.accession for ex_sample in existing_samples]:
             #update sample in another job

@@ -11,11 +11,7 @@ export function mapCheckListFields(options) {
       const field = options.fields[x];
       object[field] = {
         get() {
-          if(this.$store.state.form[options.base][field].unit){
-            return this.$store.state.form[options.base][field].text
-          }else{
             return this.$store.state.form[options.base][field]
-          }
         },
         set(value) {
             this.$store.commit(options.mutation, {value: value, label:field})

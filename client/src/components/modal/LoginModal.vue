@@ -64,7 +64,6 @@ export default {
             mutation: 'submission/setField'      
         }),
         showModal(){
-            console.log('show modal computer prop')
             return this.$store.getters['submission/showLoginModal']
         },
         isTokenExpired(){

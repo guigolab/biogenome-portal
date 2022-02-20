@@ -47,69 +47,47 @@
           <a class="no-underline" target="_blank" :href="url+data.value">{{data.value}}</a>
       </template>
       <template #cell(fastq_ftp)="data">
-        <ul>
-            <li v-for="elem in data.value.split(';')" :key="elem">
-                <a class="no-underline" target="_blank" :href="'ftp://'+elem">{{elem}}</a>
-            </li>
-        </ul>
-      </template>
-      <template #cell(fastq_aspera)="data">
-        <ul>
-            <li v-for="elem in data.value.split(';')" :key="elem">
-                <a class="no-underline" target="_blank" :href="elem">{{elem}}</a>
-            </li>
-        </ul>
-      </template>
-       <template #cell(fastq_galaxy)="data">
-        <ul>
-            <li v-for="elem in data.value.split(';')" :key="elem">
-                <a class="no-underline" target="_blank" :href="elem">{{elem}}</a>
-            </li>
-        </ul>
+            <div v-for="elem in data.value.split(';')" :key="elem">
+                <a class="no-underline" target="_blank" :href="'http://'+elem">{{elem}}</a>
+            </div>
       </template>
       <template #cell(submitted_ftp)="data">
-        <ul>
-            <li v-for="elem in data.value.split(';')" :key="elem">
-                <a class="no-underline" target="_blank" :href="'ftp://'+elem">{{elem}}</a>
-            </li>
-        </ul>
+            <div v-for="elem in data.value.split(';')" :key="elem">
+                <a class="no-underline" target="_blank" :href="'http://'+elem">{{elem}}</a>
+            </div>
       </template>
-      <template #cell(submitted_aspera)="data">
-        <ul>
-            <li v-for="elem in data.value.split(';')" :key="elem">
-                <a class="no-underline" target="_blank" :href="elem">{{elem}}</a>
-            </li>
-        </ul>
-      </template>
-       <template #cell(submitted_galaxy)="data">
+      <!-- <template #cell(submitted_aspera)="data">
         <ul>
             <li v-for="elem in data.value.split(';')" :key="elem">
                 <a class="no-underline" target="_blank" :href="elem">{{elem}}</a>
             </li>
         </ul>
-      </template>
+      </template> -->
+       <!-- <template #cell(submitted_galaxy)="data">
+        <ul>
+            <li v-for="elem in data.value.split(';')" :key="elem">
+                <a class="no-underline" target="_blank" :href="elem">{{elem}}</a>
+            </li>
+        </ul>
+      </template> -->
        <template #cell(sra_ftp)="data">
+            <div v-for="elem in data.value.split(';')" :key="elem">
+                <a class="no-underline" target="_blank" :href="'http://'+elem">{{elem}}</a>
+            </div>
+      </template>
+      <!-- <template #cell(sra_galaxy)="data">
         <ul>
             <li v-for="elem in data.value.split(';')" :key="elem">
                 <a class="no-underline" target="_blank" :href="'ftp://'+elem">{{elem}}</a>
             </li>
         </ul>
-      </template>
-      <template #cell(sra_galaxy)="data">
-        <ul>
-            <li v-for="elem in data.value.split(';')" :key="elem">
-                <a class="no-underline" target="_blank" :href="'ftp://'+elem">{{elem}}</a>
-            </li>
-        </ul>
-      </template>
+      </template> -->
       <template #cell(cram_index_ftp)="data">
-        <ul>
-            <li v-for="elem in data.value.split(';')" :key="elem">
-                <a class="no-underline" target="_blank" :href="'ftp://'+elem">{{elem}}</a>
-            </li>
-        </ul>
+            <div v-for="elem in data.value.split(';')" :key="elem">
+                <a class="no-underline" target="_blank" :href="'http://'+elem">{{elem}}</a>
+            </div>
       </template>
-      <template #cell(cram_index_aspera)="data">
+      <!-- <template #cell(cram_index_aspera)="data">
         <ul>
             <li v-for="elem in data.value.split(';')" :key="elem">
                 <a class="no-underline" target="_blank" :href="elem">{{elem}}</a>
@@ -122,7 +100,7 @@
                 <a class="no-underline" target="_blank" :href="elem">{{elem}}</a>
             </li>
         </ul>
-      </template>
+      </template> -->
 </table-component>
 </div>
 

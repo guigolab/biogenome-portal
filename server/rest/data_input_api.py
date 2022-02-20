@@ -1,35 +1,10 @@
-from flask import current_app as app
 from flask_restful import Resource
-import services.taxon_service as service
-from errors import InternalServerError
 from flask import Response, request
 from flask_jwt_extended import create_access_token
 from datetime import timedelta
-import xml.etree.ElementTree as ET
 import os
-from flask import jsonify
 import json
 from db.models import TaxonNode, SecondaryOrganism, Organism, Assembly, Experiment
-
-#Endpoint to drop db collections
-
-
-# class InputDataApi(Resource):
-#     def get(self, value):
-#         submission_file = service.create_submission_xml(value)
-#         return Response(ET.tostring(submission_file), mimetype='application/xml', status=200)
-    
-#     def post(self):
-#         try:
-#             data = request.get_json()
-#             sample_xml = service.create_xml(data)
-#             return Response(ET.tostring(sample_xml), mimetype='application/xml', status=200)
-#         except Exception as e:
-#             app.logger.error(e)
-#         raise InternalServerError
-
-# #Endpoint to drop db collections
-
 
 class Login(Resource):
     def post(self):

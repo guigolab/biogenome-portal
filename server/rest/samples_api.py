@@ -14,9 +14,7 @@ import json
 class SamplesApi(Resource):
 
     def get(self,accession=None):
-        app.logger.info('HERE')
         sample = SecondaryOrganism.objects((Q(accession=accession) | Q(sample_unique_name=accession)))
-        app.logger.info(sample)
         if len(sample) > 0:
             result = sample.aggregate(*SamplePipeline).next()
             return Response(json.dumps(result),mimetype="application/json", status=200)
@@ -40,7 +38,6 @@ class SamplesApi(Resource):
     @jwt_required()
     def put(self,accession):
         data = request.json if request.is_json else request.form
-        app.logger.info('HELLOOOO')
         sample = SecondaryOrganism.objects((Q(accession=accession) | Q(sample_unique_name=accession))).first()
         if not sample:
             raise NotFound
@@ -59,9 +56,10 @@ class SamplesApi(Resource):
         ## TODO add metadata validation for different clients
         # SecondaryOrganism._get_collection().drop_index('accession_1')
         data = request.json if request.is_json else request.form
-        if all (k in data.keys() for k in ("taxid","metadata")) and 'sample_unique_name' in data['metadata'].keys():
-            specimen_id= data['metadata']['sample_unique_name']
-            if SecondaryOrganism.objects(specimen_id=specimen_id).first():
+        app.logger.info(data)
+        if all (k in data.keys() for k in ("taxid","sample_unique_name")):
+            sample_unique_name= data['sample_unique_name']
+            if len(SecondaryOrganism.objects(sample_unique_name=sample_unique_name)) > 0:
                 raise RecordAlreadyExistError
             else:
                 sample = service.create_sample(data)

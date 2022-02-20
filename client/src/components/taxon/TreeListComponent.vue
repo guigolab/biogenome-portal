@@ -15,7 +15,7 @@
             {{item.name}}
             </div>
             <div class="icons-container" v-if="isFolder">
-                <b-link class="to-tree-link" :to="{name: 'tree-of-life', params: {node: item.name}}">
+                <b-link @click.stop class="to-tree-link" :to="{name: 'tree-of-life', params: {node: item.name}}">
                     <b-icon-diagram3 icon='diagram3' font-scale="1"></b-icon-diagram3>
                 </b-link>
                 <b-badge @click.stop="toTable(item.name)" variant="success" pill>{{item.leaves}} </b-badge>
@@ -51,11 +51,14 @@ export default {
         },
     methods: {
         toggle(item){
+            if(item.name !== 'Eukaryota')
+            {
             portalService.getTaxonChildren(item.name)
             .then(response => {
                 const children = response.data['children']
                 this.$store.commit('portal/assignChildren', {label: item.name, value: children})
             })
+            }
             this.$store.commit('portal/toggleNode', {value: item.name})
 
         },

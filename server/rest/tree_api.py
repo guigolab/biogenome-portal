@@ -1,12 +1,9 @@
-# from rest.taxon_files import TaxonFilesApi
-# from logging import root
+
 import services.tree_service as service
 from flask import Response
 from flask import current_app as app
 from db.models import TaxonNode
 from flask_restful import Resource
-# from mongoengine.errors import DoesNotExist, NotUniqueError, ValidationError
-# from errors import InternalServerError, SchemaValidationError, UserNotFoundError, EmailAlreadyExistError
 import json
 from utils.constants import TaxonPipeline
 

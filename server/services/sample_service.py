@@ -44,19 +44,20 @@ def create_sample_object(metadata):
 ## delete samples species specific, doesn't support multi species deletion
 def delete_samples(ids):
     samples_to_delete = SecondaryOrganism.objects((Q(accession__in=ids)|Q(sample_unique_name__in=ids)))
-    taxid = samples_to_delete[0].taxid
+    taxid = next(samples_to_delete).taxid
     if any([taxid != sample.taxid for sample in samples_to_delete]):
         return {'error':'Can only delete samples related to one organism'}
     #first delete organism and taxons
     organism = Organism.objects(taxid=taxid)
     
-    organism.update_one(pull_all__records=[sample.pk for sample in samples_to_delete])
+    organism.update_one(pull_all__records=[sample.id for sample in samples_to_delete])
     if len(organism.first().records) == 0:
         #delete organism and update taxons leafes
         taxons_to_update=list()
         for taxon in organism.first().taxon_lineage:
             fetched_taxon = taxon.fetch()
             if fetched_taxon.leaves <= 1:
+                TaxonNode.objects(children=fetched_taxon.id).update_one(pull_children=fetched_taxon.id)
                 fetched_taxon.delete()
             else:
                 taxons_to_update.append(fetched_taxon)

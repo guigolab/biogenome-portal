@@ -11,6 +11,12 @@ const submitInstance = axios.create({
   baseURL:baseURL
 })
 
+
+const download =  axios.create({
+  baseURL: process.env.BASE_URL + "api",
+  responseType: 'blob'
+});
+
 const ena = {
   enaApi : axios.create({
   baseURL: "https://www.ebi.ac.uk"
@@ -30,5 +36,6 @@ const ena = {
 export default {
   submission: submitInstance,
   base: base,
+  download: download,
   ena: ena
 }

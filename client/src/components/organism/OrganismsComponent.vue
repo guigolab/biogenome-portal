@@ -47,13 +47,9 @@
             {{data.item.organism}}
           </b-link>
         </template>
-        <!-- <template #cell(common_names)="data">
-          <ul>
-            <li v-for="name in data.item.common_names" :key="name">
-              {{name}}
-            </li>
-          <ul>
-        </template> -->
+          <template #cell(common_name)="data">
+            {{data.item.common_name.toString()}}
+        </template>
         <template #cell(trackingSystem)="data">
           <status-badge-component :status="data.item.trackingSystem"/>
         </template>
@@ -106,7 +102,7 @@ export default {
       fields: [
         {key: 'taxid', label: 'TaxId',sortable: true},
         {key: 'organism',label:'Scientific Name',sortable: true},
-        {key:'common_names', label: 'Common Names', sortable: true},
+        {key:'common_name', label: 'Common Names', sortable: true},
         {key: 'trackingSystem', label:'Status', sortalble: false},
         {key: 'externalReferences', label:'External References'}
       ]

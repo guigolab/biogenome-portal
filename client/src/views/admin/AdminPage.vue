@@ -8,10 +8,10 @@
             </b-button-group>
             <b-dropdown class="mx-1" right text="menu">
                 <b-dropdown-item :disabled="show.sampleForm" :active="show.excelForm" @click="show.excelForm = !show.excelForm">Insert/Update from excel</b-dropdown-item>
-                <b-dropdown-item>Download samples to submit to COPO</b-dropdown-item>
+                <b-dropdown-item href="https://github.com/ERGA-consortium/COPO-manifest/raw/main/ERGA_SAMPLE_MANIFEST_V1.xlsx">Download ERGA sample manifest</b-dropdown-item>
+                <b-dropdown-item @click="downloadExcel()">Download samples to submit to COPO</b-dropdown-item>
                 <b-dropdown-item>Edit species Status</b-dropdown-item>
                 <b-dropdown-item>Edit species Names</b-dropdown-item>
-
             </b-dropdown>
         </b-button-toolbar>
         <b-col>
@@ -28,6 +28,7 @@ import axios from 'axios'
 import SampleFormComponent from '../../components/sample/SampleFormComponent.vue'
 import ParserComponent from '../../components/ParserComponent.vue'
 // import TableComponent from '../components/TableComponent.vue'
+import submissionService from '../../services/SubmissionService'
 
 export default {
     data(){
@@ -77,7 +78,19 @@ export default {
                 }
             })
         },
-        updateSample(){
+        downloadExcel(){
+            submissionService.downloadExcel()
+            .then(response => {
+                console.log(response)
+                const url = window.URL.createObjectURL(new Blob([response.data], { type: { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }}));
+                const link = document.createElement('a');
+                link.href = url;
+                link.setAttribute('download', 'ERGA manifest.xlsx');
+                link.click();
+            })
+            .catch(e =>{
+                console.log(e)
+            })
             
         },
         deleteSample(){

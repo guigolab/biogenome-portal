@@ -31,8 +31,8 @@
                 label-align-sm="right" :label-class="field.label === 'taxon ID' ? 
                     Boolean(scientificName) ? 'success': 'wrong' 
                     : 
-                    validateInput(field,self[mappedFields[field.label]]) === null ? 
-                    '' : validateInput(field,self[mappedFields[field.label]]) ? 
+                    validateInput(field,self[field.model]) === null ? 
+                    '' : validateInput(field,self[field.model]) ? 
                             'success':'wrong'"
                 :label-for="field.label" :label="field.mandatory === 'mandatory'? field.label+' *':field.label"  v-for="field in groups[index].fields" 
                 :key="field.label" :description="field.description">
@@ -40,17 +40,17 @@
                     <b-form-select
                         :id="field.label"
                         :ref="field.label"
-                        v-model="self[mappedFields[field.label]]"
+                        v-model="self[field.model]"
                         :options="field.options"
-                        :state="validateInput(field,self[mappedFields[field.label]])"
+                        :state="validateInput(field,self[field.model])"
                     >
                     </b-form-select>
                 </div>
                 <div v-if="isTextInput(field)">
-                    <b-input-group :prepend="field.label===taxIdField? scientificName : null"
+                    <b-input-group :prepend="field.model==='taxid'? scientificName : null"
                     :append="field.units? field.units: null">
                         <b-form-input
-                            v-if="field.label===taxIdField"
+                            v-if="field.model==='taxid'"
                             :disabled="Boolean(scientificName)"
                             ref="taxid"
                             id="taxid"
@@ -61,33 +61,24 @@
                         <b-form-input v-else
                             :ref="field.label"
                             :id="field.label"
-                            v-model="self[mappedFields[field.label]]"
-                            :state="validateInput(field,self[mappedFields[field.label]])"
-                            :disabled="disableUniqueFields(field.label)"
+                            v-model="self[field.model]"
+                            :state="validateInput(field,self[field.model])"
+                            :disabled="disableUniqueFields(field.model)"
                             >
                         </b-form-input>
-                        <b-input-group-append v-if="field.label===taxIdField">
-                            <b-button :disabled="disableUniqueFields(field.label)" @click="getTaxon()">Get Taxon</b-button>
+                        <b-input-group-append v-if="field.model==='taxid'">
+                            <b-button :disabled="disableUniqueFields(field.model) || Boolean(scientificName)" @click="getTaxon()">Get Taxon</b-button>
                         </b-input-group-append>
-                        <b-input-group-append v-if="Boolean(scientificName) && field.label===taxIdField">
-                            <b-button :disabled="disableUniqueFields(field.label)" @click="resetTaxon()">Reset taxon</b-button>
+                        <b-input-group-append v-if="Boolean(scientificName) && field.model==='taxid'">
+                            <b-button :disabled="disableUniqueFields(field.model)" @click="resetTaxon()">Reset taxon</b-button>
                         </b-input-group-append>
                     </b-input-group>
                 </div>
                 <div v-if="isTextAreaInput(field)">
                     <b-form-textarea
-                    v-if="field.label == 'local names'"
                     :id="field.label"
-                    v-model="commonNames"
-                    :state="validateCommonNames"
-                    rows="3"
-                    max-rows="6"
-                    ></b-form-textarea>
-                    <b-form-textarea
-                    v-else
-                    :id="field.label"
-                    v-model="self[mappedFields[field.label]]"
-                    :state="validateInput(field,self[mappedFields[field.label]])"
+                    v-model="self[field.model]"
+                    :state="validateInput(field,self[field.model])"
                     rows="3"
                     max-rows="6"
                     ></b-form-textarea>
@@ -115,7 +106,7 @@
 
 import enaService from "../../services/ENAClientService"
 import { mapCheckListFields,showConfirmationModal} from '../../utils/helper'
-import {checklistFieldGroups, mappedFields} from '../../utils/static-config'
+import {checklistFieldGroups, } from '../../utils/static-config'
 // import submissionService from "../services/SubmissionService"
 import {BButton, BButtonGroup, BButtonToolbar,
 BFormGroup,BCard, BFormSelect, 
@@ -125,7 +116,8 @@ import SubmissionService from '../../services/SubmissionService'
 // 
 
 
-
+const modelFields = [].concat.apply(checklistFieldGroups.map(group => group.fields).map(fields => fields.map(field => field.model))).flat(1)
+modelFields.push('scientificName')
 const SampleToSubmitModal = () => import(/* webpackPrefetch: true */ '../modal/SampleToSubmitModal.vue')
 
 export default {
@@ -137,8 +129,6 @@ export default {
              // use taxonId for ENA request and taxId from parent for validation/store model
             sample: null,
             groups: checklistFieldGroups,
-            mappedFields: mappedFields,
-            taxIdField: 'taxon ID',
             self: this,
         }
     },
@@ -147,30 +137,13 @@ export default {
             return this.$store.getters['form/getIndex']
         },
         validSample(){
-            return this.specimen_id && this.scientificName
+            return this.sample_unique_name && this.scientificName
         },
         samplesToSubmit(){
             return this.$store.getters['submission/getSamplesToSubmit']
         },
-        validateCommonNames(){
-            if(!this.commonNames){
-                return null
-            }
-            const arr = this.commonNames.split(',').map(name => name.trim())
-            return arr && arr.length && new Set(arr).size === arr.length
-        },
         ...mapCheckListFields({
-            fields: [
-                'organism_part','lifestage',
-                'project_name','tolid','barcoding_center',
-                'collected_by','collection_date','geographic_location_country','geographic_location_latitude','geographic_location_longitude','geographic_location_region_and_locality','identified_by','geographic_location_depth','geographic_location_elevation','habitat','identifier_affiliation','original_collection_date','original_geographic_location',
-                'sample_derived_from','sample_same_as','sample_symbiont_of','sample_coordinator','sample_coordinator_affiliation',
-                'sex','relationship','symbiont',
-                'collecting_institution','GAL',
-                'specimen_voucher','specimen_id','GAL_sample_id',
-                'culture_or_strain_id','sample_unique_name',
-                'scientificName','taxid', 'commonNames'
-            ],
+            fields: modelFields,
             base: "sampleForm",
             mutation: "form/updateform"
         }),
@@ -180,8 +153,8 @@ export default {
         isTextInput(field){
             return field.type == 'text_field'
         },
-        disableUniqueFields(label){
-            if ((label === 'sample unique name' || label === 'taxon ID') &&
+        disableUniqueFields(model){
+            if ((model === 'sample_unique_name' || model === 'taxid') &&
             this.$store.getters['form/getToUpdate']){
                 return true
             }
@@ -227,7 +200,13 @@ export default {
                 this.scientificName = response.data[0].description
                 this.$store.dispatch('portal/hideLoading')
                 return showConfirmationModal(this.$bvModal,this.scientificName)
-                // return xmlParser(response.data)
+            })
+            .then(value => {
+                if(value && this.scientificName){
+                    return null
+                }
+                this.scientificName = ''
+                return null
             })
             .catch(e => {
                 this.$store.dispatch('portal/hideLoading')
@@ -240,14 +219,14 @@ export default {
             this.scientificName = ''
         },
         parseSample(){
+            const formData = new FormData()
             const form = this.$store.getters['form/getSampleForm']
-            const metadata = {}
             Object.keys(form).forEach(key => {
-                if ((form[key].text && form[key].text !== '') || (form[key] !== 'object' && form[key] !== '')){
-                    metadata[key] = form[key]
+                if (form[key] !== ''){
+                    formData.append(key, form[key])
                 }
             })
-            return metadata
+            return formData
         },
         // addSample(){
         //     this.$store.commit('submission/addSample', this.parseSample()) // push sample to store samples list
@@ -269,12 +248,7 @@ export default {
                     if(this.$store.getters['form/getToUpdate']){
                         return SubmissionService.updateSample(metadata.sample_unique_name, metadata)
                     }
-                    return SubmissionService.createSample({
-                        metadata: metadata,
-                        taxid: this.taxid,
-                        name: this.scientificName,
-                        commonNames: this.commonNames.split(',')
-                    })
+                    return SubmissionService.createSample(metadata)
                 }
                 return null
             })                  

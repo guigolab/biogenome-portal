@@ -86,10 +86,7 @@ export default {
         validRecords(){
             return this.organism.records.filter(record => 
             record.geographic_location_longitude 
-            && record.geographic_location_latitude 
-            && record.geographic_location_longitude.text 
-            && record.geographic_location_latitude.text
-            && !isNaN(record.geographic_location_latitude.text) && !isNaN(record.geographic_location_longitude.text))
+            && record.geographic_location_latitude)
         },
     },
     data(){
@@ -122,7 +119,7 @@ export default {
                     'type': 'Feature',
                     'geometry': {
                         'type': 'Point',
-                        'coordinates': [record.geographic_location_longitude.text, record.geographic_location_latitude.text]
+                        'coordinates': [record.geographic_location_longitude, record.geographic_location_latitude]
                     }
                 }
                 geoJson.features.push(feature)
@@ -131,6 +128,7 @@ export default {
                   
         },
         reverseItems(items) {
+            console.log(items)
             return items.slice().reverse();
         },
         haveItems(arr){

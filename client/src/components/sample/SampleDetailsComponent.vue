@@ -24,7 +24,7 @@
                     <div>
                         <p class="info-icons">
                             <b-icon-geo-alt-fill/> 
-                            {{validCoordinates ? sample.geographic_location_region_and_locality + ' (' + sample.geographic_location_longitude.text + ', '+ sample.geographic_location_latitude.text + ') ': sample.geographic_location_region_and_locality }}
+                            {{validCoordinates ? sample.geographic_location_region_and_locality + ' (' + sample.geographic_location_longitude + ', '+ sample.geographic_location_latitude + ') ': sample.geographic_location_region_and_locality }}
                         </p>
                     </div>
                 </b-col>
@@ -47,7 +47,7 @@
             >
                 <b-tab :title-link-class="linkClass(0)" active class="tab-element">
                     <template #title>
-                        <strong>Details  </strong>
+                        <strong>Details</strong>
                     </template>
                     <table-component :sticky-header="stickyHeader" :items="[metadata()]" :stacked="true">
                         <template #cell(accession)="data">
@@ -94,9 +94,7 @@ export default {
         validCoordinates(){
             return this.sample.geographic_location_longitude 
             && this.sample.geographic_location_latitude 
-            && this.sample.geographic_location_longitude.text 
-            && this.sample.geographic_location_latitude.text
-            && !isNaN(this.sample.geographic_location_latitude.text) && !isNaN(this.sample.geographic_location_longitude.text)
+            //add numeric control isNaN and isNan(parseFloat)
         },
         expIndex(){
             if(this.haveItems(this.sample.assemblies) && this.haveItems(this.sample.specimens)){
@@ -136,13 +134,10 @@ export default {
             Object.keys(this.sample)
             .filter(key => !this.excludedFields.includes(key) && (this.sample[key]))
             .forEach(key => {
-                if(this.sample[key] && this.sample[key].unit){
-                    mappedSample[key] = this.sample[key].text
-                }
-                else {
+                if(this.sample[key] && key !== 'custom_fields'){
                     mappedSample[key] = this.sample[key]
                 }
-                })
+            })
             return mappedSample
         },
         createGeoJson(){
@@ -160,7 +155,7 @@ export default {
                     'type': 'Feature',
                     'geometry': {
                         'type': 'Point',
-                        'coordinates': [this.sample.geographic_location_longitude.text, this.sample.geographic_location_latitude.text]
+                        'coordinates': [this.sample.geographic_location_longitude, this.sample.geographic_location_latitude]
                     }
                 }
             geoJson.features.push(feature)

@@ -1,7 +1,7 @@
 from lxml import etree
 # from .constants import CHECKLIST_PARSER
 from flask import make_response,jsonify
-from .constants import CHECKLIST_PARSER,RANKS
+from .constants import RANKS, CHECKLIST_FIELD_GROUPS
 
 
 def parse_taxon(xml):
@@ -15,13 +15,23 @@ def parse_taxon(xml):
     lineage.insert(0,species)
     return lineage
 
+def get_checklist_fields(groups):
+    fields = list()
+    #upper case model to match excel fields
+    for group in groups:
+        fields.extend(group['fields'])
+    return fields
+
 def parse_sample_metadata(sample, metadata):
+    fields = get_checklist_fields(CHECKLIST_FIELD_GROUPS)
     for key in metadata.keys():
-        if key in CHECKLIST_PARSER:
-            if 'unit' in metadata[key][0].keys():
-                sample[CHECKLIST_PARSER[key]] = dict(text = metadata[key][0]['text'], unit= metadata[key][0]['unit'])
-            else:
-                sample[CHECKLIST_PARSER[key]] = metadata[key][0]['text']
+        if key == 'collection date':
+            sample['collection_date'] = metadata[key][0]['text']
+        elif key in [field['label'] for field in fields]:
+            model_attr = next(field['model'] for field in fields if field['label'] == key)
+            sample[model_attr] = metadata[key][0]['text']
+        elif key in [field['model'] for field in fields]:
+            model_attr = next(field['model'] for field in fields if field['model'] == key)
         else:
             #add custom fields here
             continue
