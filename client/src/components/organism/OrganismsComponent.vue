@@ -42,6 +42,12 @@
           >
           </b-form-select>
         </template>
+        <template v-if="hasToken" #head(actions)>
+          <b-dropdown class="mx-1" right text="Actions">
+              <b-dropdown-item @click="deleteOrganisms(samples)" variant="danger">Delete selected organisms</b-dropdown-item>
+              <b-dropdown-item @click="downloadExcel()">Download samples of selected Organisms</b-dropdown-item>
+          </b-dropdown>         
+        </template>
         <template #cell(organism)="data">
           <b-link :to="{name: 'organism-details', params: {name: data.item.organism}}">
             {{data.item.organism}}
@@ -56,6 +62,14 @@
          <template #cell(externalReferences)="data">
             <b-badge pill variant='info' target="_blank" :href="'https://goat.genomehubs.org/records?record_id='+data.item.taxid+'&result=taxon&taxonomy=ncbi#'+data.item.organism">GoaT</b-badge>
         </template>
+        <template #cell(actions)="data">
+            <b-link class="actions-link" @click="editOrganism(data['item'])">
+                <b-icon-pen-fill variant="primary"></b-icon-pen-fill>
+            </b-link>
+            <b-link @click="deleteOrganisms([data['item']])">
+                <b-icon-trash-fill variant="danger"></b-icon-trash-fill>
+            </b-link>
+        </template>
       </table-component>
       <pagination-component :per-page="perPage" :page-options="pageOptions" :total-rows="totalRows" :current-page="currentPage" :table-id="tableId"/>
     </b-container>
@@ -63,7 +77,7 @@
 
 <script>
 import portalService from "../../services/DataPortalService"
-import { BIconXCircle, BBadge,  BButton, BLink, BFormSelect } from 'bootstrap-vue'
+import { BIconXCircle, BBadge, BIconPenFill,BIconTrashFill, BButton, BLink, BFormSelect, BDropdown, BDropdownItem } from 'bootstrap-vue'
 import TableComponent from '../base/TableComponent.vue';
 import FilterComponent from '../base/FilterComponent.vue';
 import PaginationComponent from '../base/PaginationComponent.vue';
@@ -75,13 +89,16 @@ export default {
     {BLink, BIconXCircle, BBadge,
      BButton, BFormSelect,TableComponent,PaginationComponent,
       FilterComponent,
-      StatusBadgeComponent},
+      StatusBadgeComponent,BDropdown, BDropdownItem,BIconPenFill,BIconTrashFill, },
   computed: {
     ...mapFields({
       fields: ['filter','taxName','perPage', 'totalRows','currentPage'],
       module: 'portal',
       mutation: 'portal/setField'      
-    })
+    }),
+    hasToken(){
+      return localStorage.getItem('token')
+    }
   },
   data() {
     return {
@@ -104,13 +121,9 @@ export default {
         {key: 'organism',label:'Scientific Name',sortable: true},
         {key:'common_name', label: 'Common Names', sortable: true},
         {key: 'trackingSystem', label:'Status', sortalble: false},
-        {key: 'externalReferences', label:'External References'}
+        {key: 'externalReferences', label:'External References'},
+        {key: 'actions'}
       ]
-        // {key: 'kingdom',label:'Kingdom', sortable: true,
-        // formatter: (value, key, item) => {
-        // return item.lineage['kingdom']}, sortByFormatted: true},
-        // {key: 'family',label:'Family', sortable: true, formatter: (value, key, item) => {
-        // return item.lineage['family']},sortByFormatted: true},],
     }
   },
   watch: {
@@ -119,11 +132,15 @@ export default {
     }
   },
   methods: {
+    // deleteOrganisms(samples){
+
+    // },
     resetTaxName(){
       this.taxName = 'Eukaryota'
       this.$store.commit('portal/setTree',{value: 'Eukaryota'})
       this.$root.$emit('bv::refresh::table', this.tableId)
     },
+
     filterSearch(params,callback){
       portalService.getFilteredOrganisms(params).then(response => {
         this.totalRows = response.data.total

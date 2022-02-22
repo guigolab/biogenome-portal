@@ -1,34 +1,31 @@
 <template>
  <b-row>
+     <b-col>
         <b-button-toolbar>
             <b-button-group class="mx-1">
-                <b-button :disabled="show.excelForm" :pressed="show.sampleForm" @click="show.sampleForm = !show.sampleForm">Create sample</b-button>
-                <b-button :disabled="show.excelForm" @click="updateSample()">Edit sample</b-button>
-                <b-button @click="deleteSamples()">Delete samples</b-button>
+                <b-button :to="{name: 'sample-form'}">Create sample</b-button>
+                <b-button :to="{name: 'excel-import'}">Import samples</b-button>
             </b-button-group>
-            <b-dropdown class="mx-1" right text="menu">
-                <b-dropdown-item :disabled="show.sampleForm" :active="show.excelForm" @click="show.excelForm = !show.excelForm">Insert/Update from excel</b-dropdown-item>
+            <b-dropdown class="mx-1" right text="Actions">
                 <b-dropdown-item href="https://github.com/ERGA-consortium/COPO-manifest/raw/main/ERGA_SAMPLE_MANIFEST_V1.xlsx">Download ERGA sample manifest</b-dropdown-item>
                 <b-dropdown-item @click="downloadExcel()">Download samples to submit to COPO</b-dropdown-item>
-                <b-dropdown-item>Edit species Status</b-dropdown-item>
-                <b-dropdown-item>Edit species Names</b-dropdown-item>
             </b-dropdown>
         </b-button-toolbar>
+     </b-col>
+    <b-row>
         <b-col>
-            <sample-form-component v-if="show.sampleForm"/>
-            <parser-component v-if="show.excelForm" />
+            <organisms-component/>
         </b-col>
+    </b-row>
 </b-row>
 </template>
 
 <script>
 import {BButtonToolbar,BButtonGroup,BButton, BDropdown, BDropdownItem} from 'bootstrap-vue'
 import {mapFields} from '../../utils/helper'
-import axios from 'axios'
-import SampleFormComponent from '../../components/sample/SampleFormComponent.vue'
-import ParserComponent from '../../components/ParserComponent.vue'
-// import TableComponent from '../components/TableComponent.vue'
 import submissionService from '../../services/SubmissionService'
+import OrganismsComponent from '../../components/organism/OrganismsComponent.vue';
+
 
 export default {
     data(){
@@ -49,8 +46,8 @@ export default {
     },
     components: {
         BButtonToolbar,BButtonGroup,BButton,
-        SampleFormComponent,ParserComponent,
         BDropdown, BDropdownItem,
+        OrganismsComponent
         // TableComponent
     },
     mounted(){
@@ -59,25 +56,6 @@ export default {
         }
     },
     methods: {
-        createSample(){
-            const data = new FormData
-            data.append('test', this.test)
-            axios.post(process.env.BASE_URL + "api"+"/organisms", data, {
-                headers: {
-                    Authorization: `Bearer ${this.token}`,
-                }
-            })
-            // submissionService.createSample(data, this.token)
-            .then(response => {
-                console.log(response)
-            })
-            .catch(error => {
-                if(error.response && error.response.status === 401){
-                    this.user = ''
-                    this.token = null
-                }
-            })
-        },
         downloadExcel(){
             submissionService.downloadExcel()
             .then(response => {
@@ -93,17 +71,6 @@ export default {
             })
             
         },
-        deleteSample(){
-
-        },
-        uploadExcel(){
-
-
-        },
-        deleteSamples(){
-
-
-        }
     }
 }
 </script>

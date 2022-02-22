@@ -69,9 +69,6 @@ class SubmissionService {
   downloadExcel(){
     return download.get('/excel')
   }
-  // submitSamples(url, formData, auth){
-  //   return ena.submitXML(url,formData,auth)
-  // }
   login(formData){
     return base.post('/login',formData)
   }

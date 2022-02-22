@@ -1,9 +1,7 @@
 from db.models import Organism,SecondaryOrganism,Experiment,Assembly, TaxonNode
-from services import organisms_service,taxon_service
-from utils import utils,ena_client,constants
+from services import taxon_service
 from mongoengine.queryset.visitor import Q
 from flask import current_app as app
-import json
 
 
 def update_sample(sample):

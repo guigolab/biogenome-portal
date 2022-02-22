@@ -82,8 +82,8 @@
 <script>
 import {BTabs,BLink,BTab, BBadge,BIconCalendar, BIconGeoAltFill} from 'bootstrap-vue'
 import MapContainer from '../base/MapContainer.vue'
-import AssembliesComponent from '../AssembliesComponent.vue'
-import ExperimentsComponent from '../ExperimentsComponent.vue'
+import AssembliesComponent from '../data/AssembliesComponent.vue'
+import ExperimentsComponent from '../data/ExperimentsComponent.vue'
 import SampleComponent from './SampleComponent.vue'
 import TableComponent from '../base/TableComponent.vue'
 // import Feature from 'ol/Feature'
@@ -94,6 +94,8 @@ export default {
         validCoordinates(){
             return this.sample.geographic_location_longitude 
             && this.sample.geographic_location_latitude 
+            && !isNaN(this.sample.geographic_location_longitude)
+            && !isNaN(this.sample.geographic_location_latitude)
             //add numeric control isNaN and isNan(parseFloat)
         },
         expIndex(){

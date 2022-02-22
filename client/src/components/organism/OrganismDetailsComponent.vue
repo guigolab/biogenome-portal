@@ -17,6 +17,11 @@
                     </div>
                 </b-col>
             </b-row>
+            <b-row v-if="organism.common_name.length">
+                <b-col>
+                    <h5>{{organism.common_name.join()}}</h5>
+                </b-col>
+            </b-row>
             <b-row>
                 <b-col style="font-size: 0.85rem">
                     <b-link v-for="node in reverseItems(organism.taxon_lineage)" :key="node.taxid" 
@@ -70,8 +75,8 @@
 import {BTabs,BLink,BTab,BBadge} from 'bootstrap-vue'
 import StatusBadgeComponent from '../base/StatusBadgeComponent.vue'
 import MapContainer from '../base/MapContainer.vue'
-import ExperimentsComponent from '../ExperimentsComponent.vue'
-import AssembliesComponent from '../AssembliesComponent.vue'
+import ExperimentsComponent from '../data/ExperimentsComponent.vue'
+import AssembliesComponent from '../data/AssembliesComponent.vue'
 import SampleComponent from '../sample/SampleComponent.vue'
 export default {
     components: {BTabs,ExperimentsComponent,BTab, BLink, BBadge, StatusBadgeComponent, MapContainer, AssembliesComponent, SampleComponent},
@@ -86,7 +91,9 @@ export default {
         validRecords(){
             return this.organism.records.filter(record => 
             record.geographic_location_longitude 
-            && record.geographic_location_latitude)
+            && record.geographic_location_latitude 
+            && !isNaN(record.geographic_location_longitude)
+            && !isNaN(record.geographic_location_latitude))
         },
     },
     data(){
@@ -128,7 +135,6 @@ export default {
                   
         },
         reverseItems(items) {
-            console.log(items)
             return items.slice().reverse();
         },
         haveItems(arr){

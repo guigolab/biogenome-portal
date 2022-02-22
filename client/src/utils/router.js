@@ -31,6 +31,16 @@ const routes = [
     // ]
   },
   {
+    path:"/form",
+    name:"sample-form",
+    component: () => import(/* webpackPrefetch: true */  '../views/admin/SampleFormPage.vue')
+  },
+  {
+    path:"/excel",
+    name:"excel-import",
+    component: () => import(/* webpackPrefetch: true */  '../views/admin/ExcelFormPage.vue')
+  },
+  {
     path: "/docs",
     name: "docs",
     component: () => import(/* webpackPrefetch: true */ '../views/SwaggerPage.vue')

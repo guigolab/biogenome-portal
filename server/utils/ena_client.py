@@ -14,18 +14,13 @@ def check_taxons_from_NCBI(taxids):
         return
     return response.json()
 
-def check_taxon_from_ENA(taxon_id):
-    response = requests.get(f'https://www.ebi.ac.uk/ena/portal/api/links/taxon?accession={taxon_id}&format=JSON&result=taxon')
-    if response.status_code != 200:
-        return
-    return response.content
-
 def get_samples(project):
     resp = requests.get(
     f"https://www.ebi.ac.uk/biosamples/samples?size=100000&"
     f"filter=attr%3Aproject%20name%3A{project}")
     if resp.status_code != 200:
         print('Request failed!')
+        print(resp.status_code)
         return
     return resp.json()
 

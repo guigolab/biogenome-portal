@@ -9,7 +9,7 @@
 </template>
 
 <script>
-import TableComponent from './base/TableComponent.vue'
+import TableComponent from '../base/TableComponent.vue'
 
 export default{
   components: { TableComponent },

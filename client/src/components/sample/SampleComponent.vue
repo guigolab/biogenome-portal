@@ -1,15 +1,17 @@
 <template>
     <div>
-        <div v-if="hasToken">
-            <b-button style="float:left" @click="deleteSamples(samples)"  variant="primary">
-                delete all
-            </b-button>
-        </div>
         <table-component :sticky-header="stickyHeader" :fields="sampleFields" :items="samples">
+            <template v-if="hasToken" #head(actions)>
+                <b-dropdown class="mx-1" right text="Actions">
+                    <!-- <b-dropdown-item @click="deleteSelectedSamples(samples)" variant="danger">Delete selected samples</b-dropdown-item> -->
+                    <b-dropdown-item @click="deleteSamples(samples)" variant="danger">Delete selected samples</b-dropdown-item>
+                    <b-dropdown-item @click="downloadExcel()">Download selected samples</b-dropdown-item>
+                </b-dropdown>         
+            </template>
             <template #cell(accession)="data">
                 <b-link v-if="data.value" :to="{name: 'sample-details', params: {accession: data.value}}">{{data.value}}</b-link>
             </template>
-            <template #cell(sample_unique_name)="data">
+            <template  #cell(sample_unique_name)="data">
                 <b-link v-if="data.value" :to="{name: 'sample-details', params: {accession: data.value}}">{{data.value}}</b-link>
             </template>
             <template #cell(organism_part)="data">
@@ -33,21 +35,21 @@
     </div>
 </template>
 <script>
-import {BLink,BIconPenFill,BIconTrashFill, BButton} from 'bootstrap-vue'
+import {BLink,BIconPenFill,BIconTrashFill, BDropdown, BDropdownItem} from 'bootstrap-vue'
 import TableComponent from '../base/TableComponent.vue'
 import { showConfirmationModal } from '../../utils/helper'
 import submissionService from '../../services/SubmissionService'
 
 export default {
-  components: { TableComponent,BLink,BIconPenFill,BIconTrashFill,BButton },
+  components: { TableComponent,BLink,BIconPenFill,BIconTrashFill,BDropdown,BDropdownItem },
     props:['samples', 'name'],
     data(){
         return {
             sampleStaticFields: [
                 {key: 'sample_unique_name', label: 'Sample unique name'},
-                {key: 'accession', label: 'BioSamples accession'},
-                {key: 'organism_part', label: 'Organism Part'},
-                {key: 'sex', label: 'Sex'},
+                {key: 'accession', label: 'accession'},
+                {key: 'organism_part', label: 'organism part'},
+                {key: 'sex', label: 'sex'},
                 {key: 'GAL', label: 'GAL'},
             ],
             stickyHeader: '60vh',

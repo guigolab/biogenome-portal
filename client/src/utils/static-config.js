@@ -1,5 +1,5 @@
 module.exports = {
-
+  
     checklistFieldGroups : [
         {'fields': [
             {'label': 'organism part','model':'organism_part', 'description': "The part of organism's anatomy or substance arising from an organism from which the biomaterial was derived, excludes cells.", 'type': 'text_choice_field', 'mandatory': 'mandatory', 'multiplicity': 'single', 'options': ['WHOLE_ORGANISM', 'HEAD', 'THORAX', 'ABDOMEN', 'CEPHALOTHORAX', 'BRAIN', 'EYE', 'FAT_BODY', 'INTESTINE', 'BODYWALL', 'TERMINAL_BODY', 'ANTERIOR_BODY', 'MID_BODY', 'POSTERIOR_BODY', 'HEPATOPANCREAS', 'LEG', 'BLOOD', 'LUNG', 'HEART', 'KIDNEY', 'LIVER', 'ENDOCRINE_TISSUE', 'SPLEEN', 'STOMACH', 'PANCREAS', 'MUSCLE', 'MODULAR_COLONY', 'TENTACLE', 'FIN', 'SKIN', 'SCAT', 'EGGSHELL', 'SCALES', 'MOLLUSC_FOOT', 'HAIR', 'GILL_ANIMAL', '**OTHER_SOMATIC_ANIMAL_TISSUE**', 'OVIDUCT', 'GONAD', 'OVARY_ANIMAL', 'TESTIS', 'SPERM_SEMINAL_FLUID', 'EGG', '**OTHER_REPRODUCTIVE_ANIMAL_TISSUE**', 'WHOLE_PLANT', 'SEEDLING', 'SEED', 'LEAF', 'FLOWER', 'BLADE', 'STEM', 'PETIOLE', 'SHOOT', 'BUD', 'THALLUS_PLANT', 'BRACT', '**OTHER_PLANT_TISSUE**', 'MYCELIUM', 'MYCORRHIZA', 'SPORE_BEARING_STRUCTURE', 'HOLDFAST_FUNGI', 'STIPE', 'CAP', 'GILL_FUNGI', 'THALLUS_FUNGI', 'SPORE', '**OTHER_FUNGAL_TISSUE**', 'NOT_COLLECTED', 'NOT_APPLICABLE', 'NOT_PROVIDED', 'UNICELLULAR_ORGANISMS_IN_CULTURE', 'MULTICELLULAR_ORGANISMS_IN_CULTURE']}, 
@@ -17,7 +17,7 @@ module.exports = {
         
         {'fields': [
             {'label': 'collected by', 'model': 'collected_by', 'description': 'name of persons or institute who collected the specimen', 'type': 'text_area_field', 'mandatory': 'mandatory', 'multiplicity': 'single'},
-            {'label': 'collector ORCID ID','model': 'collector_orcid_id', 'description':'Enter the 16 digits ORCID ID of the person or people who is responsible for the genome project of the sample','type': 'text_field', 'mandatory': 'mandatory', 'multiplicity': 'single'},
+            {'label': 'collector ORCID ID','model': 'collector_orcid_id', 'description':'Enter the 16 digits ORCID ID of the person or people who is responsible for the genome project of the sample','type': 'text_field', 'mandatory': 'optional', 'multiplicity': 'single'},
             {'label': 'date of collection','model': 'collection_date', 'description': 'The date of sampling, either as an instance (single point in time) or interval. In case no exact time is available, the date/time can be right truncated i.e. all of these are valid ISO8601 compliant times: 2008-01-23T19:23:10+00:00; 2008-01-23T19:23:10; 2008-01-23; 2008-01; 2008.', 'regex': '(^[12][0-9]{3}(-(0[1-9]|1[0-2])(-(0[1-9]|[12][0-9]|3[01])(T[0-9]{2}:[0-9]{2}(:[0-9]{2})?Z?([+-][0-9]{1,2})?)?)?)?(/[0-9]{4}(-[0-9]{2}(-[0-9]{2}(T[0-9]{2}:[0-9]{2}(:[0-9]{2})?Z?([+-][0-9]{1,2})?)?)?)?)?$)|(^not collected$)|(^not provided$)|(^restricted access$)', 'type': 'text_field', 'mandatory': 'mandatory', 'multiplicity': 'single'}, 
             {'label': 'time of collection','model': 'time_of_collection', 'description': 'Time of day of sample collection in 24-hour clock format, with hours and minutes separated by colon e.g., 13:35, 04:53, etc. This should be in GMT/UTC. This field may be particularly relevant for RNAseq', 'type': 'text_field', 'mandatory': 'optional', 'multiplicity': 'single'}, 
             {'label': 'description of collection method','model': 'description_of_collection_method', 'description': 'A detailed as possible description of the sample collection methods, e.g., “caught with fibre net within densely wooded area, and immediately placed into the collection container', 'type': 'text_area_field', 'mandatory': 'optional', 'multiplicity': 'single'}, 
@@ -45,10 +45,9 @@ module.exports = {
             {'label': 'sample derived from','model':'sample_derived_from', 'description': 'Reference to parental sample(s) or original run(s) that the assembly is derived from. The referenced samples or runs should already be registered in INSDC. This should be formatted as one of the following. A single sample/run e.g. ERSxxxxxx OR a comma separated list e.g. ERSxxxxxx,ERSxxxxxx OR a range e.g. ERSxxxxxx-ERSxxxxxx', 'regex': '(^[ESD]R[SR]\\d{6,}(,[ESD]R[SR]\\d{6,})*$)|(^SAM[END][AG]?\\d+(,SAM[END][AG]?\\d+)*$)|(^EGA[NR]\\d{11}(,EGA[NR]\\d{11})*$)|(^[ESD]R[SR]\\d{6,}-[ESD]R[SR]\\d{6,}$)|(^SAM[END][AG]?\\d+-SAM[END][AG]?\\d+$)|(^EGA[NR]\\d{11}-EGA[NR]\\d{11}$)', 'type': 'text_field', 'mandatory': 'optional', 'multiplicity': 'single'}, 
             {'label': 'sample same as','model':'sample_same_as', 'description': 'Reference to sample(s) that are equivalent. The referenced sample(s) should already be registered in INSDC. This should be formatted as one of the following. A single sample e.g. ERSxxxxxx OR a comma separated list e.g. ERSxxxxxx,ERSxxxxxx', 'regex': '(^[ESD]RS\\d{6,}(,[ESD]RS\\d{6,})*$)|(^SAM[END][AG]?\\d+(,SAM[END][AG]?\\d+)*$)|(^EGAN\\d{11}(,EGAN\\d{11})*$)', 'type': 'text_field', 'mandatory': 'optional', 'multiplicity': 'single'}, 
             {'label': 'sample symbiont of','model':'sample_symbiont_of', 'description': 'Reference to host sample from symbiont. The referenced sample should already be registered in INSDC. E.g. ERSxxxxxx', 'regex': '(^[ESD]RS\\d{6,}$)|(^SAM[END][AG]?\\d+$)|(^EGAN\\d{11}$)', 'type': 'text_field', 'mandatory': 'optional', 'multiplicity': 'single'}, 
-            {'label': 'sample coordinator','model':'sample_coordinator', 'type': 'text_field', 'mandatory': 'mandatory', 'multiplicity': 'single'},
+            {'label': 'sample coordinator','model':'sample_coordinator', 'type': 'text_field', 'mandatory': 'optional', 'multiplicity': 'single'},
             {'label': 'sample coordinator affiliation', 'model':'sample_coordinator_affiliation','type': 'text_field', 'mandatory': 'optional', 'multiplicity': 'single'},
-            {'label': 'sample coordinator orcid id', 'model':'sample_coordinator_orcid_id','description':'Enter the 16 digits ORCID ID of the person or people who is responsible for the genome project of the sample','type': 'text_field', 'mandatory': 'mandatory', 'multiplicity': 'single'},
-
+            {'label': 'sample coordinator orcid id', 'model':'sample_coordinator_orcid_id','description':'Enter the 16 digits ORCID ID of the person or people who is responsible for the genome project of the sample','type': 'text_field', 'mandatory': 'optional', 'multiplicity': 'single'},
         ], 
         'name': 'Sample collection'}, 
         {'fields': [
@@ -101,12 +100,12 @@ module.exports = {
             {'label': 'dna removed from biobanking','model': 'dna_removed_from_biobanking', 'type': 'text_choice_field', 'mandatory': 'optional', 'multiplicity': 'single', 'options':['Y','N','NOT_COLLECTED','NOT_APPLICABLE','NOT_PROVIDED']},
             {'label': 'purpose of specimen','model': 'purpose_of_specimen', 'type': 'text_choice_field', 'mandatory': 'optional', 'multiplicity': 'single', 'options':['REFERENCE_GENOME','SHORT_READ_SEQUENCING','DNA_BARCODING_ONLY','RNA_SEQUENCING','PROXY_VOUCHERING_ONLY']},
             {'label': 'hazard group','model': 'hazard_group', 'description': 'If the specimen needs to be processed in a containment level 1,2, or 3 lab', 'type': 'text_choice_field', 'mandatory': 'optional', 'multiplicity': 'single', 'options':['HG1','HG2','HG3']},
-            {'label': 'regulatory compliance','model': 'regulatory_compliance', 'description': 'Note that ERGA will not be able to process further any samples where N is entered', 'type': 'text_choice_field', 'mandatory': 'optional', 'multiplicity': 'single', 'options':['Y','N','NOT_APPLICABLE']},
+            {'label': 'regulatory compliance','model': 'regulatory_compliance', 'description': 'Note that ERGA will not be able to process further any samples where N is entered', 'type': 'text_choice_field', 'mandatory': 'mandatory', 'multiplicity': 'single', 'options':['Y','N','NOT_APPLICABLE']},
             {'label': 'indigenous rights applicable','model': 'indigenous_rights_applicable', 'description': 'Mandatory information upon if indigenious rights are applicable to the sample/the species the sample was derived from', 'type': 'text_choice_field', 'mandatory': 'mandatory', 'multiplicity': 'single', 'options':['Y','N']},
             {'label': 'associated traditional knowledge applicable','model': 'associated_traditional_knowledge_applicable', 'description': 'Mandatory information upon if indigenious rights are applicable to the sample/the species the sample was derived from', 'type': 'text_choice_field', 'mandatory': 'mandatory', 'multiplicity': 'single', 'options':['Y','N']},
             {'label': 'ethics permits mandatory','model': 'ethics_permits_mandatory', 'description': 'Mandatory information upon if an ethics permit is needed to sample/sequence/voucher/biobank the sample/the species the sample was derived from', 'type': 'text_choice_field', 'mandatory': 'mandatory', 'multiplicity': 'single', 'options':['Y','N']},
-            {'label': 'sampling permits mandatory', 'model': 'sampling_permits_mandatory', 'description': 'Mandatory information upon if sampling permits are needed to sample/sequence/voucher/biobank the sample/the species the sample was derived from', 'type': 'text_choice_field', 'mandatory': 'optional', 'multiplicity': 'single', 'options':['Y','N']},
-            {'label': 'nagoya permits mandatory','model': 'nagoya_permits_mandatory', 'description': 'Mandatory information upon if a permit in compliance with the Nagoya Protocol on Access to Genetic Resources and the Fair and Equitable Sharing of Benefits Arising from their Utilization to the Convention on Biological Diversity is needed for the sample in question/the species the sample was derived from', 'type': 'text_choice_field', 'mandatory': 'optional', 'multiplicity': 'single', 'options':['Y','N']},
+            {'label': 'sampling permits mandatory', 'model': 'sampling_permits_mandatory', 'description': 'Mandatory information upon if sampling permits are needed to sample/sequence/voucher/biobank the sample/the species the sample was derived from', 'type': 'text_choice_field', 'mandatory': 'mandatory', 'multiplicity': 'single', 'options':['Y','N']},
+            {'label': 'nagoya permits mandatory','model': 'nagoya_permits_mandatory', 'description': 'Mandatory information upon if a permit in compliance with the Nagoya Protocol on Access to Genetic Resources and the Fair and Equitable Sharing of Benefits Arising from their Utilization to the Convention on Biological Diversity is needed for the sample in question/the species the sample was derived from', 'type': 'text_choice_field', 'mandatory': 'mandatory', 'multiplicity': 'single', 'options':['Y','N']},
             {'label': 'other informations','model': 'other_informations',  'description': 'further relevant information not captured by the other fields', 'type': 'text_area_field', 'mandatory': 'optional', 'multiplicity': 'single'},
 
         ],
@@ -128,43 +127,7 @@ module.exports = {
         },
     ],
 
-    // mappedFields: {
-    //     "organism part":"organism_part",
-    //     'sample unique name':'sample_unique_name',
-    //     "lifestage": "lifestage",
-    //     "project name": "project_name",
-    //     'taxon ID': 'taxid',
-    //     'local names': 'local_names',
-    //     "tolid":"tolid",
-    //     "barcoding center": "barcoding_center",
-    //     "collected_by":"collected_by",
-    //     "collection date": "collection_date",
-    //     "geographic location (country and/or sea)": "geographic_location_country",
-    //     "geographic location (latitude)": "geographic_location_latitude",
-    //     "geographic location (longitude)": "geographic_location_longitude",
-    //     "geographic location (region and locality)": "geographic_location_region_and_locality",
-    //     "identified_by":"identified_by",
-    //     "geographic location (depth)":"geographic_location_depth",
-    //     "geographic location (elevation)":"geographic_location_elevation",
-    //     "habitat":"habitat",
-    //     "identifier_affiliation":"identifier_affiliation",
-    //     "original collection date":"original_collection_date",
-    //     "original geographic location" : "original_geographic_location",
-    //     "sample derived from":"sample_derived_from",
-    //     "sample same as":"sample_same_as",
-    //     "sample symbiont of":"sample_symbiont_of",
-    //     "sample coordinator": "sample_coordinator",
-    //     "sample coordinator affiliation": "sample_coordinator_affiliation",
-    //     "sex":"sex",
-    //     "relationship":"relationship",
-    //     "symbiont":"symbiont",
-    //     "collecting institution":"collecting_institution",
-    //     "GAL":"GAL",
-    //     "specimen_voucher":"specimen_voucher",
-    //     "specimen_id":"specimen_id",
-    //     "GAL_sample_id":"GAL_sample_id",
-    //     "culture_or_strain_id":"culture_or_strain_id",
-    //     }
-
+    // all the fields mandatory for COPO submission but not present in the ENA-checklist/submitted samples
+    mandatoryCOPOLabels: ['regulatory compliance','taxon ID','sample unique name','indigenous rights applicable','associated traditional knowledge applicable','ethics permits mandatory','sampling permits mandatory','nagoya permits mandatory']
 
 }

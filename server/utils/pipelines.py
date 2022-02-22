@@ -1,3 +1,4 @@
+
 TaxonPipeline = [
 	{"$lookup":
 		{"from": "taxon_node",
@@ -42,7 +43,7 @@ OrganismPipeline = [
 	},
 	{"$project": 
 		{"_id":0, 
-		"records": {"_id":0,"assemblies":0,"experiments":0,"specimens":0},
+		"records": {"_id":0,"assemblies":0,"experiments":0,"specimens":0, "created":0},
 		"taxon_lineage" : {"_id":0,"children":0},
 		"assemblies" : {"_id":0},
 		"experiments": {"_id":0}
@@ -74,9 +75,11 @@ SamplePipeline = [
 	},
 	{"$project": 
 		{"_id":0, 
+        "created":0,
 		"specimens": {"_id":0,"assemblies":0,"experiments":0,"specimens":0},
 		"assemblies" : {"_id":0},
 		"experiments": {"_id":0}
+
 		}
 	}
 ]

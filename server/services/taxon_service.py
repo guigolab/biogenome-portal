@@ -1,17 +1,12 @@
 from db.models import TaxonNode
 from flask import current_app as app
-from utils import ena_client, utils, constants
+from utils import constants
+import os
 
 
-# def 
 
-# def create_taxons(taxid):
-#     taxon = ena_client.get_taxon_from_ena(taxid)
-#     lineage = utils.parse_taxon(taxon)
-#     app.logger.info(lineage)
-#     taxon_lineage = create_taxons_from_lineage(lineage)
-#     leaves_counter(taxon_lineage)
-#     return taxon_lineage
+RANKS = os.getenv('RANKS').split(',')
+
 
 def delete_taxons(taxid_list):
     length = len(TaxonNode.objects(taxid__in=taxid_list))

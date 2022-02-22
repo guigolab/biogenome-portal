@@ -100,6 +100,7 @@ class SecondaryOrganism(db.Document):
     assemblies = db.ListField(db.LazyReferenceField(Assembly))
     experiments = db.ListField(db.LazyReferenceField(Experiment))
     accession = db.StringField()
+    created = db.DateTimeField()
     taxid = db.StringField(required=True)
     scientificName = db.StringField(required=True)
     sample_unique_name = db.StringField()

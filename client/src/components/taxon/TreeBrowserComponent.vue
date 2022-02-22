@@ -43,11 +43,4 @@ export default {
     list-style-type: none;
     overflow: auto;
 }
- /* .tree-viewer {
-    width: 100%;
-    height: 75vh;
-    display: inline-block;
-    overflow: auto;
-    padding: 15px; 
-} */
 </style>

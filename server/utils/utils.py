@@ -2,7 +2,9 @@ from lxml import etree
 # from .constants import CHECKLIST_PARSER
 from flask import make_response,jsonify
 from .constants import RANKS, CHECKLIST_FIELD_GROUPS
+import os
 
+RANKS = os.getenv('RANKS').split(',')
 
 def parse_taxon(xml):
     root = etree.fromstring(xml)
