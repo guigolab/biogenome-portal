@@ -29,7 +29,8 @@ def import_records(PROJECTS):
     else:
         #check for new taxids , fix potentials cronjob crashes
         print('UPDATING SAMPLES..')
-        samples_objects = SecondaryOrganism.objects(Q(accession__ne=None) & Q(created__lte=datetime.utcnow()) & Q(created__gte=datetime.now()- timedelta(days=15)))
+        #update samples created more than 15 days ago
+        samples_objects = SecondaryOrganism.objects(Q(accession__ne=None) & Q(created__lte=datetime.now()- timedelta(days=15)))
         if len(samples_objects) == 0:
             print('NO SAMPLES TO UPDATE')
             return
@@ -76,7 +77,7 @@ def import_records(PROJECTS):
     samples_accessions = get_samples_accessions(new_assemblies,new_experiments)
     print('SAMPLES WITH NEW DATA:')
     print(len(samples_accessions))
-    
+
     if len(samples_accessions) > 0:
         samples_to_update = SecondaryOrganism.objects(accession__in=list(set(samples_accessions)))
         print('ADDING DATA TO SAMPLES')

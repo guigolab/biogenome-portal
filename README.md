@@ -7,7 +7,7 @@
   <h3 align="center">Biogenome data portal</h3>
 
   <p align="center">
-    A web app for genomic biodiversity!
+    A web interface for biodiversity!
     <br />
     <br />
     <a href="https://github.com/emiliorighi/biogenome-portal/issues">Report Bug</a>
@@ -90,17 +90,22 @@ Before building the application it is necessary to configure the .env file in th
 The .env file contains many parts that have to be configured depending on the needs:
 
 	The API KEY part:
+  Configure this part if you want to enter samples locally
+
 	USER=admin --> Define the user name that will be inserted to access the admin area
 	JWT_SECRET_KEY=secret_restKey #change this in production!! --> key to encrypt the RESTKEY (below)
 	RESTKEY=secretPassword #change this in production!! --> password that will be inserted to access the admin area
 
 	The CRONJOB part:
+  Configure this part if you want to retrieve public data from ENA/BioSamples (the sample metadata format must be compliant with the ENA checklist)
 	PROJECTS=  --> list of projects (comma separated) wich name figures in the sample metadata submitted to the ENA/BioSamples
 	EXEC_TIME=600 --> how often, in seconds, the job should be performed
 
 	The DATA PORTAL part:
+  This part have some default values that can be modified
+
 	RANKS=superkingdom,kingdom,phylum,subphylum,class,order,family,genus,species,subspecies --> ordered, descending list of taxonomic ranks you want to display. Note that is a rank is not present in the species' lineage it will be skipped, for instance you may find phylum nodes that has as a children class nodes.
-	MAX_NODES=90 --> number of max leaves to display in the tree of life page
+	MAX_NODES=90 --> number of max leaves to display in the tree of life page (numbers greaters than 150 may affect performance and visualization)
 
 
 
@@ -112,6 +117,13 @@ To add a custom logo and an icon follow this steps:
 
 To modify themes and layout read carefully https://bootstrap-vue.org/
 
+To add a custom links to the navigation menu follow this steps:
+-go to client/src/components/base/NavBarComponent.vue
+-add the code snippet below after line 17   
+        <b-nav-item  active-class="active" class="nav-link" href="PUT YOUR LINK HERE">
+            PUT THE NAME YOU WANT HERE 
+        </b-nav-item>
+You can add as many navigation items as you need
 
 
 To get a local copy up and running follow these simple example steps.
@@ -140,15 +152,15 @@ Here is a list of the APIs consumed:
 
 
 ## Sequencing Project
-For sequencing projects with the aim to sequence species within a geographical context, it is strongly recommended to submit public samples to the ENA via the COPO web service, this service ensure that all the submitted samples share the same format before submission to ENA. It will, then, be responsibility of the single project to upload assemblies and reads to ENA/NCBI and associate them with the sample accession submitted through COPO. 
-To facilitate the sample submission to COPO this project provides the possibility to download the samples inserted locally in an excel compliant with the ERGA manifesto. The generate excel will be then submitted to COPO. Once the samples will be pubblicly available in BioSamples the data portal will link the accession to the sample unique name and will start checking for new assemlies and/or reads every time the cronjob will be executed (changing the EXEC_TIME env variable).
+For sequencing projects with the aim to sequence species within a geographical context, it is strongly recommended to submit public samples to the ENA via the [COPO web service](https://copo-project.org/), this service ensure that all the submitted samples share the same format before submission to ENA. It will, then, be responsibility of the single project to upload assemblies and reads to ENA/NCBI and associate them with the sample accession submitted through COPO. 
+To facilitate the sample submission to COPO this project provides the possibility to download the samples inserted locally in an excel compliant with the [ERGA submission manifest](https://github.com/ERGA-consortium/COPO-manifest). The generated excel will be then submitted to COPO. Once the samples will be pubblicly available in BioSamples the data portal will link the accession to the sample unique name and will start checking for new assemlies and/or reads every time the cronjob will be executed (the EXEC_TIME env variable).
 
 The importance of the sample unique name:
-This field is used to uniquely identified the sample entity, within this scope a sample can be a living entity or part of it, imagine a sample as the set of metadata(from the sample collection event, the sample preservation and the sample charateristics) related to an assembly or an experiment.
+This field is used to uniquely identified the sample entity, within this scope a sample can be a whole organism or part of it, imagine a sample as the set of metadata (from the sample collection event, the sample preservation and the sample charateristics) related to an assembly or an experiment.
 
 
 IMPORTANT:
-If for any reason you have to manage sample submission on your own, you could still use this data portal as a backup/status tracking service if you are compliant with this ENA-checklist (remember that the samples need to be public in order to be displayed in the data portal and it is recommended to submit the samples in BioSamples and then link the genomic data to its accession.
+If for any reason you have to manage sample submission on your own, you could still use this data portal as a backup/status tracking service if you are compliant with this [ENA-checklist](https://www.ebi.ac.uk/ena/browser/view/ERC000053) (remember that the samples need to be public in order to be displayed in the data portal, it is recommended to submit the samples first in BioSamples and then link the genomic data to their respective accession.
 
 ## The import of samples from BioSamples
 The cronjob function allows to download all the samples (with this metadata checklist) related to one or more projects. By declaring the various project names it is possible to import samples at every layer of a biogenome project/effort. 

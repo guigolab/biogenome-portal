@@ -212,7 +212,7 @@ def create_excel():
         return tmp.read()
 
 def sample_to_excel(sample, header):
-    formatted_sample=dict()
+    formatted_sample=dict(TAXON_ID=sample['taxid'])
     fields_converter = dict(
         scientificName='scientific_name',
         geographic_location_country='collection_location',

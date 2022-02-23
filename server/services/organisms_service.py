@@ -20,4 +20,8 @@ def get_or_create_organism(taxid, common_names=None):
         organism.modify(push_all__common_name=names_arr)
     return organism
 
+# def update_organism_names(names):
 
+
+def delete_organisms(taxids):
+    organisms_to_delete = Organism.objects(taxid__in=taxids)

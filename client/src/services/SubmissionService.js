@@ -72,6 +72,9 @@ class SubmissionService {
   login(formData){
     return base.post('/login',formData)
   }
+  deleteAll(){
+    return submission.delete('/login')
+  }
   createSample(formData){
     return submission.post('/organisms', formData)
   }

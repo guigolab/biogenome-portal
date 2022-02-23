@@ -1,6 +1,6 @@
 from flask_restful import Resource
 from flask import Response, request
-from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_access_token, jwt_required
 from datetime import timedelta
 import os
 import json
@@ -20,6 +20,7 @@ class Login(Resource):
         else:
             return Response("Bad User or Password", mimetype="application/json", status=401)
     
+    @jwt_required()
     def delete(self):
         TaxonNode.drop_collection()
         SecondaryOrganism.drop_collection()

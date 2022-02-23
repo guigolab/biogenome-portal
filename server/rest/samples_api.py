@@ -25,6 +25,7 @@ class SamplesApi(Resource):
     def delete(self):
         if 'ids' in request.args.keys():
             ids = request.args['ids'].split(',')
+            app.logger.info(ids)
             resp = sample_service.delete_samples(ids)
             return Response(json.dumps(resp),mimetype="application/json", status=200)
         else:

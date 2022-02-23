@@ -15,12 +15,6 @@
           <b-nav-item  active-class="active" class="nav-link" :to="{name: 'tree-of-life', params: {node: 'Eukaryota'}}">
             TREE OF LIFE 
           </b-nav-item>
-          <b-nav-item  active-class="active" class="nav-link" :to="{name: 'Submit sample'}">
-          SUBMIT SAMPLE 
-          </b-nav-item>
-          <b-nav-item  active-class="active" class="nav-link" :to="{name: 'Submit excel'}">
-          SUBMIT EXCEL
-        </b-nav-item>
       </b-nav>
     </div>
     </b-sidebar>

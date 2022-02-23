@@ -2,7 +2,7 @@
     <div>
         <table-component :sticky-header="stickyHeader" :fields="sampleFields" :items="samples">
             <template v-if="hasToken" #head(actions)>
-                <b-dropdown class="mx-1" right text="Actions">
+                <b-dropdown class="mx-1" dropup right text="Actions">
                     <!-- <b-dropdown-item @click="deleteSelectedSamples(samples)" variant="danger">Delete selected samples</b-dropdown-item> -->
                     <b-dropdown-item @click="deleteSamples(samples)" variant="danger">Delete selected samples</b-dropdown-item>
                     <b-dropdown-item @click="downloadExcel()">Download selected samples</b-dropdown-item>
@@ -47,9 +47,9 @@ export default {
         return {
             sampleStaticFields: [
                 {key: 'sample_unique_name', label: 'Sample unique name'},
-                {key: 'accession', label: 'accession'},
-                {key: 'organism_part', label: 'organism part'},
-                {key: 'sex', label: 'sex'},
+                {key: 'accession', label: 'Accession'},
+                {key: 'organism_part', label: 'Organism part'},
+                {key: 'sex', label: 'Sex'},
                 {key: 'GAL', label: 'GAL'},
             ],
             stickyHeader: '60vh',

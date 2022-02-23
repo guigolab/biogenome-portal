@@ -43,7 +43,7 @@
           </b-form-select>
         </template>
         <template v-if="hasToken" #head(actions)>
-          <b-dropdown class="mx-1" right text="Actions">
+          <b-dropdown dropup class="mx-1" right text="Actions">
               <b-dropdown-item @click="deleteOrganisms(samples)" variant="danger">Delete selected organisms</b-dropdown-item>
               <b-dropdown-item @click="downloadExcel()">Download samples of selected Organisms</b-dropdown-item>
           </b-dropdown>         
