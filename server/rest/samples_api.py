@@ -14,7 +14,7 @@ import json
 class SamplesApi(Resource):
 
     def get(self,accession=None):
-        sample = SecondaryOrganism.objects((Q(accession=accession) | Q(sample_unique_name=accession)))
+        sample = SecondaryOrganism.objects((Q(accession=accession) | Q(tube_or_well_id=accession)))
         if len(sample) > 0:
             result = sample.aggregate(*SamplePipeline).next()
             return Response(json.dumps(result),mimetype="application/json", status=200)
@@ -29,16 +29,13 @@ class SamplesApi(Resource):
             return Response(json.dumps(resp),mimetype="application/json", status=200)
         else:
             raise SchemaValidationError
-        # sample = SecondaryOrganism.objects((Q(accession=accession) | Q(sample_unique_name=accession)))
-        # if len(sample) > 0:
-        #     sample_service.delete_sample(sample.first())
-        # else:
+
 
 
     @jwt_required()
     def put(self,accession):
         data = request.json if request.is_json else request.form
-        sample = SecondaryOrganism.objects((Q(accession=accession) | Q(sample_unique_name=accession))).first()
+        sample = SecondaryOrganism.objects((Q(accession=accession) | Q(tube_or_well_id=accession))).first()
         if not sample:
             raise NotFound
         else:
@@ -46,7 +43,7 @@ class SamplesApi(Resource):
         if sample.accession:
             id = sample.accession
         else:
-            id = sample.sample_unique_name
+            id = sample.tube_or_well_id
         return Response(json.dumps(f'sample with id {id} has been saved'),mimetype="application/json", status=204)
 		#update sample
 
@@ -57,13 +54,13 @@ class SamplesApi(Resource):
         # SecondaryOrganism._get_collection().drop_index('accession_1')
         data = request.json if request.is_json else request.form
         app.logger.info(data)
-        if all (k in data.keys() for k in ("taxid","sample_unique_name")):
-            sample_unique_name= data['sample_unique_name']
-            if len(SecondaryOrganism.objects(sample_unique_name=sample_unique_name)) > 0:
+        if all (k in data.keys() for k in ("taxid","tube_or_well_id")):
+            tube_or_well_id= data['tube_or_well_id']
+            if len(SecondaryOrganism.objects(tube_or_well_id=tube_or_well_id)) > 0:
                 raise RecordAlreadyExistError
             else:
                 sample = service.create_sample(data)
-                return Response(json.dumps(f'sample with id {sample.sample_unique_name} has been saved'),mimetype="application/json", status=201)
+                return Response(json.dumps(f'sample with id {sample.tube_or_well_id} has been saved'),mimetype="application/json", status=201)
         else:
             raise SchemaValidationError
    

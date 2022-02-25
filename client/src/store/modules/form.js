@@ -73,7 +73,6 @@ const getDefaultState = () => {
             GAL_sample_id:'',
             collector_sample_id:'',
             culture_or_strain_id:'',
-            sample_unique_name: '',
             taxid: '',
             scientificName: '',
             common_name:'',

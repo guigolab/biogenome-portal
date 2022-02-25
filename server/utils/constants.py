@@ -80,7 +80,6 @@ CHECKLIST_FIELD_GROUPS = [
             {'label': 'GAL sample id','model': 'GAL_sample_id', 'description': 'unique name assigned to the sample by the genome acquisition lab.', 'type': 'text_field', 'mandatory': 'optional', 'multiplicity': 'single'},
             {'label': 'collector sample id','model': 'collector_sample_id', 'description': 'unique name assigned to the sample by the COLLECTOR or COLLECTOR_AFFILIATION.', 'type': 'text_field', 'mandatory': 'optional', 'multiplicity': 'single'},
             {'label': 'specimen id','model': 'specimen_id', 'description': 'Unique identifier used to link all data for the recorded specimen.', 'type': 'text_field', 'mandatory': 'optional', 'multiplicity': 'single'},
-            {'label': 'tube or well id','model': 'tube_or_well_id', 'description': 'This field should record the FluidX barcode for each tube in a rack (or each well in a plate, where relevant) if available, else the position of the well if submitted in a well plate or the label on the submitted tubes. If barcodes are entered, use a barcode scanner in advance of preparing samples to reduce errors – do not enter barcodes manually', 'type': 'text_field', 'mandatory': 'optional', 'multiplicity': 'single'},
             {'label': 'tube or well id for barcoding','model': 'tube_or_well_id_for_barcoding', 'description': 'This is either the well number on a plate (there are 96 wells per tissue plate) OR the barcode/unique identifier on the tube containing the tissue sample', 'type': 'text_field', 'mandatory': 'optional', 'multiplicity': 'single'},
             {'label': 'tissue voucher id for biobanking','model': 'tissue_voucher_id_for_biobanking', 'description': 'Accession number of frozen, biobanked material from the sequenced specimen. This ID should be prefixed by the name of the collection (e.g., ATCC:12345)', 'type': 'text_field', 'mandatory': 'optional', 'multiplicity': 'single'},
             {'label': 'dna voucher id for biobanking','model': 'dna_voucher_id_for_biobanking', 'description': 'Accession number of DNA biobanked from the sequenced specimen. This ID should be prefixed by the name of the collection (e.g. ATCC:12345)', 'type': 'text_field', 'mandatory': 'optional', 'multiplicity': 'single'},
@@ -116,14 +115,15 @@ CHECKLIST_FIELD_GROUPS = [
         {'fields': [
                 {'label': 'taxon ID','model':'taxid', 'description':'The Taxon ID of the NCBI Taxonomy database, visit https://ena-docs.readthedocs.io/en/latest/faq/taxonomy_requests.html','type': 'text_field', 'mandatory': 'mandatory', 'multiplicity': 'single'},
                 {'label': 'common name','model':'common_name', 'description':'Vernacular name, if the species has one. If multiple names are required, separate names with a | (vertical pipe) character','type': 'text_area_field', 'mandatory': 'optional', 'multiplicity': 'single'},
-                {'label': 'sample unique name', 'model':'sample_unique_name','description':'this field will be the unique identifier of the record','type': 'text_field', 'mandatory': 'mandatory', 'multiplicity': 'single'},
+                {'label': 'tube or well id','model': 'tube_or_well_id', 'description': 'This field should record the FluidX barcode for each tube in a rack (or each well in a plate, where relevant) if available, else the position of the well if submitted in a well plate or the label on the submitted tubes. If barcodes are entered, use a barcode scanner in advance of preparing samples to reduce errors, do not enter barcodes manually. IMPORTANT: this field will be the unique identifier to track the sample status when published', 'type': 'text_field', 'mandatory': 'mandatory', 'multiplicity': 'single'},
             ],
         'name': 'Submission Informations',
         }
     ]
 
-EXCEL_MANDATORY_FIELDS=['TAXON_ID','SAMPLE_UNIQUE_NAME']
+EXCEL_MANDATORY_FIELDS=['TAXON_ID','TUBE_OR_WELL_ID']
 
+IMPORT_OPTIONS = ['SKIP','UPDATE_ALL','UPDATE_NON_EMPTY']
 # RANKS = ['root','superkingdom','kingdom','phylum','subphylum','class','order','family','genus','species','subspecies']
 
 RANKS = os.getenv('RANKS').split(',')

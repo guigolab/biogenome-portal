@@ -11,7 +11,7 @@
             <template #cell(accession)="data">
                 <b-link v-if="data.value" :to="{name: 'sample-details', params: {accession: data.value}}">{{data.value}}</b-link>
             </template>
-            <template  #cell(sample_unique_name)="data">
+            <template  #cell(tube_or_well_id)="data">
                 <b-link v-if="data.value" :to="{name: 'sample-details', params: {accession: data.value}}">{{data.value}}</b-link>
             </template>
             <template #cell(organism_part)="data">
@@ -46,7 +46,7 @@ export default {
     data(){
         return {
             sampleStaticFields: [
-                {key: 'sample_unique_name', label: 'Sample unique name'},
+                {key: 'tube_or_well_id', label: 'Tube/Well ID'},
                 {key: 'accession', label: 'Accession'},
                 {key: 'organism_part', label: 'Organism part'},
                 {key: 'sex', label: 'Sex'},
@@ -77,7 +77,7 @@ export default {
             .then(value => {
                 if(value){
                     const ids = samples.map(sample => {
-                        return sample.accession ? sample.accession : sample.sample_unique_name
+                        return sample.accession ? sample.accession : sample.tube_or_well_id
                     }).join()
                     console.log(ids)
                     return submissionService.deleteSamples({ids: ids})

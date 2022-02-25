@@ -10,7 +10,7 @@
             <b-row>
                 <b-col>
                     <div>
-                        <h2>{{sample.accession || sample.sample_unique_name}}</h2>
+                        <h2>{{sample.accession || sample.tube_or_well_id}}</h2>
                     </div>
                 </b-col>
             </b-row>

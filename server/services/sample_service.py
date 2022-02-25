@@ -1,4 +1,4 @@
-from db.models import Organism,SecondaryOrganism,Experiment,Assembly, TaxonNode, TrackStatus
+from db.models import Organism,SecondaryOrganism,Experiment,Assembly, TrackStatus
 from services import taxon_service
 from mongoengine.queryset.visitor import Q
 from flask import current_app as app
@@ -12,7 +12,7 @@ def create_sample_object(metadata):
 ## delete samples species specific, doesn't support multi species deletion
 ##should check is sample derived from, experiment and assemblies
 def delete_samples(ids):
-    samples_to_delete = SecondaryOrganism.objects((Q(accession__in=ids) | Q(sample_unique_name__in=ids)))
+    samples_to_delete = SecondaryOrganism.objects((Q(accession__in=ids) | Q(tube_or_well_id__in=ids)))
     assemblies_to_delete=list()
     experiments_to_delete=list()
     for sample in samples_to_delete:

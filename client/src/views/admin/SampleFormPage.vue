@@ -136,7 +136,7 @@ export default {
             return this.$store.getters['form/getToUpdate']
         },
         validSample(){
-            return this.sample_unique_name && this.scientificName
+            return this.tube_or_well_id && this.scientificName
         },
         samplesToSubmit(){
             return this.$store.getters['submission/getSamplesToSubmit']
@@ -169,7 +169,7 @@ export default {
             return field.type == 'text_field'
         },
         disableUniqueFields(model){
-            if ((model === 'sample_unique_name' || model === 'taxid') &&
+            if ((model === 'tube_or_well_id' || model === 'taxid') &&
             this.toUpdate){
                 return true
             }
@@ -250,13 +250,13 @@ export default {
             })
         },
         submit(){
-            showConfirmationModal(this.$bvModal,`Save the sample with ID ${this.sample_unique_name}?`)
+            showConfirmationModal(this.$bvModal,`Save the sample with ID ${this.tube_or_well_id}?`)
             .then(value => {
                 if(value){
                     const metadata = this.parseSample()
                     this.$store.dispatch('portal/showLoading')
                     if(this.$store.getters['form/getToUpdate']){
-                        return SubmissionService.updateSample(metadata.sample_unique_name, metadata)
+                        return SubmissionService.updateSample(metadata.tube_or_well_id, metadata)
                     }
                     return SubmissionService.createSample(metadata)
                 }

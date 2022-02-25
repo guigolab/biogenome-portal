@@ -5,7 +5,7 @@ from openpyxl.utils import get_column_letter
 from openpyxl import Workbook
 import re
 from db.models import Organism, SecondaryOrganism
-from utils.constants import CHECKLIST_FIELD_GROUPS,MANIFEST_HEADER
+from utils.constants import CHECKLIST_FIELD_GROUPS,MANIFEST_HEADER,IMPORT_OPTIONS
 from utils.ena_client import check_taxons_from_NCBI
 
 def get_sample_values(header,row):
@@ -18,10 +18,13 @@ def get_sample_values(header,row):
     return values
 
 # return samples(rows)
-def parse_excel(excel):
+def parse_excel(excel, opts):
+    header_index = int(opts['headerIndex']) if 'headerIndex' in opts.keys() else 1
+    insert_accessions = opts['importAccessions'] if 'importAccessions' in opts.keys() else False
+    import_option= opts['importOption'] if 'importOption' in opts.keys() else 'SKIP'
     wb_obj = openpyxl.load_workbook(excel,data_only=True)
     sheet_obj = wb_obj.active
-    header = [cell.value.lower() for cell in sheet_obj[1]]
+    header = [cell.value.lower() for cell in sheet_obj[header_index]]
     samples = list()
     fields = get_checklist_fields(CHECKLIST_FIELD_GROUPS)
     #retrieve all taxids to be validated
@@ -32,10 +35,10 @@ def parse_excel(excel):
         response = check_taxons_from_NCBI(taxids_to_validate)
         if response and 'taxonomy_nodes' in response.keys():
             NCBI_validation = response['taxonomy_nodes']
-    for index, row in enumerate(list(sheet_obj.rows)[1:]):
+    for index, row in enumerate(list(sheet_obj.rows)[header_index:]):
         values = get_sample_values(header,row)
         if len(values.keys()) > 2:
-            errors = validate_sample(index+2,values,fields,NCBI_validation)
+            errors = validate_sample(index+header_index+1,values,fields,NCBI_validation)
             if 'errors' in errors.keys():
                 samples_with_errors.append(errors)
             else:

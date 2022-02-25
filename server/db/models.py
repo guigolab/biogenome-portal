@@ -103,7 +103,7 @@ class SecondaryOrganism(db.Document):
     created = db.DateTimeField()
     taxid = db.StringField(required=True)
     scientificName = db.StringField(required=True)
-    sample_unique_name = db.StringField()
+    tube_or_well_id=db.StringField()
     custom_fields = db.DictField(db.StringField())
     specimens = db.ListField(db.LazyReferenceField('self', passthrough=True))
     organism_part=db.StringField()
@@ -150,7 +150,6 @@ class SecondaryOrganism(db.Document):
     specimen_voucher=db.StringField()
     specimen_id=db.StringField()
     specimen_id_risk=db.StringField()
-    tube_or_well_id=db.StringField()
     tissue_for_barcoding=db.StringField()
     purpose_of_specimen=db.StringField()
     hazard_group=db.StringField()
@@ -178,7 +177,7 @@ class SecondaryOrganism(db.Document):
     common_name=db.StringField()
     meta = {
         'indexes': [
-            {'fields':('accession','sample_unique_name'), 'unique':True}
+            {'fields':('accession','tube_or_well_id'), 'unique':True}
         ]
     }
 

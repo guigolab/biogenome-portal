@@ -16,7 +16,7 @@ def check_taxons_from_NCBI(taxids):
 
 def get_samples(project):
     resp = requests.get(
-    f"https://www.ebi.ac.uk/biosamples/samples?size=100000&"
+    f"https://www.ebi.ac.uk/biosamples/samples?size=10000&"
     f"filter=attr%3Aproject%20name%3A{project}")
     if resp.status_code != 200:
         print('Request failed!')

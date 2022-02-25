@@ -147,7 +147,7 @@ export default {
         }
       })
       .then(response=>{
-          this.$store.commit('submission/setAlert',{variant:'success', message: 'samples IDs correctly deleted: ' + response.data.join()})
+          this.$store.commit('submission/setAlert',{variant:'success', message: 'organisms correctly deleted: ' + response.data.join()})
           this.$store.dispatch('submission/showAlert')
           this.$router.go()
       })

@@ -17,13 +17,14 @@ class ExcelParserApi(Resource):
     def post(self):
         try:
             files = request.files
+            opts = request.args
             if 'excelFile' in files.keys():
-                samples, errors = parser_service.parse_excel(BytesIO(files['excelFile'].read()))
+                samples, errors = parser_service.parse_excel(BytesIO(files['excelFile'].read()),opts)
                 if len(errors) > 0:
                     return custom_response(errors, 400)
                 else:
                     saved_samples = submission_service.import_samples(samples)
-                return Response(json.dumps([sample.sample_unique_name for sample in saved_samples]), mimetype="application/json", status=200)
+                return Response(json.dumps([sample.tube_or_well_id for sample in saved_samples]), mimetype="application/json", status=200)
             else:
                 raise SchemaValidationError
         except Exception as e:

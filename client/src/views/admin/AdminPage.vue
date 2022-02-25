@@ -84,7 +84,7 @@ export default {
                 if (response){
                     this.$store.commit('submission/setAlert',{variant:'success', message: 'All data have been deleted'})
                     this.$store.dispatch('submission/showAlert') 
-                    console.log(response)
+                    this.$router.go()
                 }
 
             })
