@@ -13,7 +13,6 @@ def create_sample_object(metadata):
 ##should check is sample derived from, experiment and assemblies
 def delete_samples(ids):
     samples_to_delete = SecondaryOrganism.objects((Q(accession__in=ids) | Q(sample_unique_name__in=ids)))
-    app.logger.info(len(samples_to_delete))
     assemblies_to_delete=list()
     experiments_to_delete=list()
     for sample in samples_to_delete:
@@ -51,15 +50,7 @@ def delete_samples(ids):
 
     if len(organism.records) == 0:
         #delete organism and update taxons leafes
-        taxons_to_update=list()
-        for taxon in organism.taxon_lineage:
-            fetched_taxon = taxon.fetch()
-            if fetched_taxon.leaves <= 1:
-                TaxonNode.objects(children=fetched_taxon.id).update_one(pull__children=fetched_taxon.id)
-                fetched_taxon.delete()
-            else:
-                taxons_to_update.append(fetched_taxon)
-        taxon_service.leaves_counter(taxons_to_update)
+        taxon_service.delete_taxons(organism.taxon_lineage)
         organism.delete()
     samples_to_delete.delete()
-    return {'success':'samples '+ ','.join(ids) + 'succesfully deleted'}
+    return {'success':'samples: '+ ','.join(ids) + ' deleted'}

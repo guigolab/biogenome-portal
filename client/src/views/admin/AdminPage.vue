@@ -62,7 +62,6 @@ export default {
         downloadExcel(){
             submissionService.downloadExcel()
             .then(response => {
-                console.log(response)
                 const url = window.URL.createObjectURL(new Blob([response.data], { type: { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }}));
                 const link = document.createElement('a');
                 link.href = url;
@@ -79,9 +78,15 @@ export default {
                 if(value){
                     return submissionService.deleteAll()
                 } 
+                return null
             })
             .then(response => {
-                console.log(response)
+                if (response){
+                    this.$store.commit('submission/setAlert',{variant:'success', message: 'All data have been deleted'})
+                    this.$store.dispatch('submission/showAlert') 
+                    console.log(response)
+                }
+
             })
             .catch(e => {
                 console.log(e)

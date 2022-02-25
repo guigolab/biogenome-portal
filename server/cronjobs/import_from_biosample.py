@@ -76,7 +76,7 @@ def import_records(PROJECTS):
 
     samples_accessions = get_samples_accessions(new_assemblies,new_experiments)
     print('SAMPLES WITH NEW DATA:')
-    print(len(samples_accessions))
+    print(len(list(set(samples_accessions))))
 
     if len(samples_accessions) > 0:
         samples_to_update = SecondaryOrganism.objects(accession__in=list(set(samples_accessions)))
@@ -170,11 +170,11 @@ def bulk_insert_experiments(samples_accessions):
 def get_new_samples(samples):
     samples_accessions = [sample['accession'] for sample in samples]
     samples_to_save=list()
-    existing_samples = SecondaryOrganism.objects(accession__in=samples_accessions).only('accession')
+    existing_samples = SecondaryOrganism.objects(accession__in=samples_accessions).only('accession').as_pymongo()
     if len(samples) == len(existing_samples):
         return samples_to_save
     for sample in samples:
-        if sample['accession'] in existing_samples:
+        if sample['accession'] in [smp['accession'] for smp in existing_samples]:
             #update sample in another job
             continue
         else:

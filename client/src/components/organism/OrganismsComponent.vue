@@ -32,6 +32,9 @@
         :custom-fields="customFields"
         :id="tableId"
         :sticky-header="stickyHeader"
+        @row-selected="onRowSelected"
+        :selectable="hasToken"
+        :selectMode="'multi'"
         >
         <template #head(trackingSystem)>
           <b-form-select
@@ -44,8 +47,8 @@
         </template>
         <template v-if="hasToken" #head(actions)>
           <b-dropdown dropup class="mx-1" right text="Actions">
-              <b-dropdown-item @click="deleteOrganisms(samples)" variant="danger">Delete selected organisms</b-dropdown-item>
-              <b-dropdown-item @click="downloadExcel()">Download samples of selected Organisms</b-dropdown-item>
+              <b-dropdown-item :disabled="selectedOrganisms.lenght === 0" @click="deleteOrganisms(selectedOrganisms)" variant="danger">Delete selected organisms</b-dropdown-item>
+              <b-dropdown-item :disabled="selectedOrganisms.lenght === 0" @click="downloadExcel()">Download samples of selected Organisms</b-dropdown-item>
           </b-dropdown>         
         </template>
         <template #cell(organism)="data">
@@ -81,8 +84,9 @@ import { BIconXCircle, BBadge, BIconPenFill,BIconTrashFill, BButton, BLink, BFor
 import TableComponent from '../base/TableComponent.vue';
 import FilterComponent from '../base/FilterComponent.vue';
 import PaginationComponent from '../base/PaginationComponent.vue';
-import {mapFields} from '../../utils/helper'
+import {mapFields, showConfirmationModal} from '../../utils/helper'
 import StatusBadgeComponent from '../base/StatusBadgeComponent.vue';
+import SubmissionService from '../../services/SubmissionService';
 
 export default {
   components: 
@@ -123,7 +127,8 @@ export default {
         {key: 'trackingSystem', label:'Status', sortalble: false},
         {key: 'externalReferences', label:'External References'},
         {key: 'actions'}
-      ]
+      ],
+      selectedOrganisms:[],
     }
   },
   watch: {
@@ -132,15 +137,32 @@ export default {
     }
   },
   methods: {
-    // deleteOrganisms(samples){
-
-    // },
+    deleteOrganisms(organisms){
+      const message = 'This will permanently delete the organism and its related data. Are you sure?'
+      showConfirmationModal(this.$bvModal, message)
+      .then(value => {
+        if(value){
+          const taxids = organisms.map(organism => {return organism.taxid}).join()
+          return SubmissionService.deleteOrganisms({tax_ids:taxids})
+        }
+      })
+      .then(response=>{
+          this.$store.commit('submission/setAlert',{variant:'success', message: 'samples IDs correctly deleted: ' + response.data.join()})
+          this.$store.dispatch('submission/showAlert')
+          this.$router.go()
+      })
+      .catch(e=>{
+        console.log(e)
+      })
+    },
+    onRowSelected(value){
+      this.selectedOrganisms = value
+    },
     resetTaxName(){
       this.taxName = 'Eukaryota'
       this.$store.commit('portal/setTree',{value: 'Eukaryota'})
       this.$root.$emit('bv::refresh::table', this.tableId)
     },
-
     filterSearch(params,callback){
       portalService.getFilteredOrganisms(params).then(response => {
         this.totalRows = response.data.total

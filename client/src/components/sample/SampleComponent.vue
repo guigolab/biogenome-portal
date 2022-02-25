@@ -1,10 +1,10 @@
 <template>
     <div>
-        <table-component :sticky-header="stickyHeader" :fields="sampleFields" :items="samples">
+        <table-component @row-selected="onRowSelected" :sticky-header="stickyHeader" :selectable="hasToken" :selectMode="'multi'" :fields="sampleFields" :items="samples">
             <template v-if="hasToken" #head(actions)>
                 <b-dropdown class="mx-1" dropup right text="Actions">
-                    <!-- <b-dropdown-item @click="deleteSelectedSamples(samples)" variant="danger">Delete selected samples</b-dropdown-item> -->
-                    <b-dropdown-item @click="deleteSamples(samples)" variant="danger">Delete selected samples</b-dropdown-item>
+                    <b-dropdown-item @click="deleteSamples(selectedSamples)" variant="danger">Delete selected samples</b-dropdown-item>
+                    <b-dropdown-item @click="deleteSamples(samples)" variant="danger">Delete all samples</b-dropdown-item>
                     <b-dropdown-item @click="downloadExcel()">Download selected samples</b-dropdown-item>
                 </b-dropdown>         
             </template>
@@ -53,6 +53,7 @@ export default {
                 {key: 'GAL', label: 'GAL'},
             ],
             stickyHeader: '60vh',
+            selectedSamples:[]
         } 
     },
     computed:{
@@ -78,11 +79,14 @@ export default {
                     const ids = samples.map(sample => {
                         return sample.accession ? sample.accession : sample.sample_unique_name
                     }).join()
+                    console.log(ids)
                     return submissionService.deleteSamples({ids: ids})
                 } 
             })
             .then(response => {
-                console.log(response.data)
+                this.$store.commit('submission/setAlert',{variant:'success', message: 'samples IDs correctly deleted: ' + response.data.success})
+                this.$store.dispatch('submission/showAlert') 
+                this.$store.commit('portal/setTree', {value: 'Eukaryota'}) //update tree
                 if (samples.length === this.samples.length){
                     this.$router.push('/')
                 }
@@ -105,6 +109,9 @@ export default {
             .catch(err => {
                 console.log(err)
             })
+        },
+        onRowSelected(value){
+            this.selectedSamples = value
         }
     }
 }

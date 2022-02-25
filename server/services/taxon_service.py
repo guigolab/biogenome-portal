@@ -7,11 +7,17 @@ import os
 
 RANKS = os.getenv('RANKS').split(',')
 
-
-def delete_taxons(taxid_list):
-    length = len(TaxonNode.objects(taxid__in=taxid_list))
-    TaxonNode.objects(taxid__in=taxid_list).delete()
-    return length
+#expects lazy references
+def delete_taxons(lineage):
+    taxons_to_update=list()
+    for taxon in lineage:
+        fetched_taxon = taxon.fetch()
+        if fetched_taxon.leaves <= 1:
+            TaxonNode.objects(children=fetched_taxon.id).update_one(pull__children=fetched_taxon.id)
+            fetched_taxon.delete()
+        else:
+            taxons_to_update.append(fetched_taxon)
+    leaves_counter(taxons_to_update)
 
 def create_taxons_from_lineage(lineage):
     taxon_lineage = []

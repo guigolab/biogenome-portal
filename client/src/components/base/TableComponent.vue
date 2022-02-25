@@ -19,9 +19,12 @@
                 :filter="filter"
                 :filter-included-fields="filterOn"
                 :sort-direction="sortDirection"
+                :selectable="selectable"
+                :selectMode="selectMode"
                 :primary-key="primaryKey"
                 :sticky-header="stickyHeader"
                 :borderless="borderless"
+                @row-selected="onRowSelected"
             >
 
                 <template v-for="(_, slotName) of $scopedSlots" v-slot:[slotName]="scope">
@@ -40,9 +43,14 @@ export default {
     props: ['stacked','fields','primaryKey','items','isBusy',
     'ref','currentPage', 'perPage','ignoredFields',
     'borderless','filter','filterOn','sortDirection',
-    'customFields','stickyHeader','id'],
+    'customFields','stickyHeader','id','selectable','selectMode'],
     components: {
         BTable,
+    },
+    methods:{
+    onRowSelected(items) {
+        this.$emit('row-selected', items)
+      }
     }
 }
 </script>

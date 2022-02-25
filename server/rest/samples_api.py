@@ -23,9 +23,8 @@ class SamplesApi(Resource):
 
     @jwt_required()
     def delete(self):
-        if 'ids' in request.args.keys():
+        if 'ids' in request.args.keys() and len(request.args['ids'].split(',')) > 0:
             ids = request.args['ids'].split(',')
-            app.logger.info(ids)
             resp = sample_service.delete_samples(ids)
             return Response(json.dumps(resp),mimetype="application/json", status=200)
         else:

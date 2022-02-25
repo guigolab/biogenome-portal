@@ -86,6 +86,11 @@ class SubmissionService {
       params:params
     })
   }
+  deleteOrganisms(params){
+    return submission.delete('/root_organisms', {
+      params:params
+    })
+  }
 
 }
 

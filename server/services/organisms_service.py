@@ -1,4 +1,4 @@
-from db.models import Organism
+from db.models import Assembly, Experiment, Organism, SecondaryOrganism
 from utils import ena_client,utils
 from services import taxon_service
 
@@ -23,5 +23,18 @@ def get_or_create_organism(taxid, common_names=None):
 # def update_organism_names(names):
 
 
+
 def delete_organisms(taxids):
     organisms_to_delete = Organism.objects(taxid__in=taxids)
+    deleted_organisms=list()
+    for organism in organisms_to_delete:
+        SecondaryOrganism.objects(taxid=organism.taxid).delete()
+        if len(organism.experiments)>0:
+            Experiment.objects(id__in=[exp.id for exp in organism.experiments]).delete()
+        if len(organism.assemblies)>0:
+            Assembly.objects(id__in=[ass.id for ass in organism.assemblies]).delete()
+        taxon_service.delete_taxons(organism.taxon_lineage)
+        name = organism.organism
+        organism.delete()
+        deleted_organisms.append(name)
+    return deleted_organisms
