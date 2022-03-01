@@ -3,6 +3,7 @@ import portalService from '../../services/DataPortalService'
 const state = () => ({
     loading: false,
     taxName: 'Eukaryota',
+    taxNameHistory: [],
     organism: null, //default value for tree browser and d3 tree
     option: 'organisms', //default option for filter bar
     filter: null,
@@ -57,6 +58,19 @@ const mutations = {
     },
     hideLoading(state){
         state.loading = false
+    },
+    addTaxNameH(state){
+        const index = state.taxNameHistory.indexOf(state.taxName)
+        if(index === -1 && state.taxName !== 'Eukaryota'){
+            state.taxNameHistory.push(state.taxName)
+        }
+    },
+    removeTaxNameH(state, index){
+        if (state.taxNameHistory.length > 1){
+            state.taxNameHistory = state.taxNameHistory.slice(0, index+1)
+        }else{
+            state.taxNameHistory = []
+        }
     }
 }
 const getters= {
@@ -65,6 +79,9 @@ const getters= {
     },
     getNode:(state)=>(name)=>{
         return findObj(state.tree.children,name);
+    },
+    getTaxNameHistory(state){
+        return state.taxNameHistory
     }
 }
 const actions= {
@@ -73,7 +90,11 @@ const actions= {
     },
     hideLoading(context){
         context.commit('hideLoading')
-    }
+    },
+    addTaxHistory(context){
+        context.commit('addTaxNameH')
+    },
+
 }
 
 export default {

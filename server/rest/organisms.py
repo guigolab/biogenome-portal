@@ -18,7 +18,6 @@ class OrganismsApi(Resource):
 	
 	@jwt_required()
 	def delete(self):
-		app.logger.info(request.args)
 		if 'tax_ids' in request.args.keys() and len(request.args['tax_ids'].split(',')) > 0:
 			taxids = request.args['tax_ids'].split(',')
 			deleted_taxons = organism_service.delete_organisms(taxids)

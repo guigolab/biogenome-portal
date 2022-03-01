@@ -3,12 +3,14 @@ import time
 from utils import ena_client,utils
 from services import sample_service,organisms_service
 from db.models import Assembly, Experiment, Organism, SecondaryOrganism,TrackStatus
+from mongoengine.queryset.visitor import Q
+from datetime import datetime, timedelta
 
 REL_FIELDS=['sample_same_as','sample_symbiont_of','sample_derived_from',]
 
 def import_from_NCBI(project_accession):
     assemblies=list()
-    result = requests.get(f"https://api.ncbi.nlm.nih.gov/datasets/v1/genome/bioproject/{project_accession}?filters.reference_only=false&filters.assembly_source=all&filters.has_annotation=false&filters.assembly_level=chromosome&filters.assembly_level=scaffold&filters.assembly_level=contig&filters.assembly_level=complete_genome&&page_size=100").json()
+    result = requests.get(f"https://api.ncbi.nlm.nih.gov/datasets/v1/genome/bioproject/{project_accession}?filters.reference_only=false&filters.assembly_source=all&filters.has_annotation=false&&page_size=100").json()
     counter = 1
     if 'assemblies' in result.keys():
         while 'next_page_token' in result.keys():
@@ -18,12 +20,13 @@ def import_from_NCBI(project_accession):
             if counter >= 3:
                 time.sleep(1)
                 counter = 0
-            result = requests.get(f"https://api.ncbi.nlm.nih.gov/datasets/v1/genome/bioproject/{project_accession}?filters.reference_only=false&filters.assembly_source=all&filters.has_annotation=false&filters.assembly_level=chromosome&filters.assembly_level=scaffold&filters.assembly_level=contig&filters.assembly_level=complete_genome&&page_size=1000&page_token={next_page_token}").json()
+            result = requests.get(f"https://api.ncbi.nlm.nih.gov/datasets/v1/genome/bioproject/{project_accession}?filters.reference_only=false&filters.assembly_source=all&filters.has_annotation=false&&page_size=1000&page_token={next_page_token}").json()
             counter+=1
         if 'assemblies' in result.keys():
             assemblies.extend([ass['assembly'] for ass in result['assemblies']])
     if len(assemblies) > 0:
         print(len(assemblies))
+        # print(len(list(set([ass['org']['tax_id'] for ass in assemblies]))))
         ##bulk insert than link
         parse_data(assemblies)
     print('DONE')
@@ -64,15 +67,17 @@ def parse_data(assemblies):
         if organism.trackingSystem not in ['Assemblies Submitted','Annotation Submitted']:
             organism.modify(trackingSystem=TrackStatus.ASSEMBLIES)
     #get reads from ENA portal API
+    print('SAMPLES NOT FOUND IN BIOSAMPLES')
     print(samples_not_found)
     for accession in list(samples_accessions):
+        sample =SecondaryOrganism.objects(Q(accession=accession) & Q(created__lte=datetime.now()- timedelta(days=15))).first()
+        if not sample:
+            continue
         experiments = ena_client.get_reads(accession)
         if len(experiments) > 0:
-            print(accession)
-            print([exp['experiment_accession'] for exp in experiments])
-            existing_exps = Experiment.objects(experiment_accession__in=[exp['experiment_accession'] for exp in experiments]).only('experiment_accession')
-            print(len(existing_exps))
-            new_exps = [Experiment(**exp) for exp in experiments if exp['experiment_accession'] not in existing_exps] if len(existing_exps) > 0 else [Experiment(**exp) for exp in experiments]
+            unique_exps=list({v['experiment_accession']:v for v in experiments}.values())
+            existing_exps = Experiment.objects(experiment_accession__in=[exp['experiment_accession'] for exp in unique_exps])
+            new_exps = [Experiment(**exp) for exp in unique_exps if exp['experiment_accession'] not in [exp['experiment_accession'] for exp in existing_exps]] if len(existing_exps) > 0 else [Experiment(**exp) for exp in unique_exps]
             if len(new_exps)>0:
                 Experiment.objects.insert(new_exps, load_bulk=False)
                 sample = SecondaryOrganism.objects(accession=accession).first()

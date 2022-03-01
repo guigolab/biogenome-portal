@@ -14,8 +14,8 @@ export default {
                 'Annotation Complete': 'success',
                 'Annotation Submitted': 'info',
                 'Assemblies Submitted': 'primary',
-                'Mapped Reads Submitted': 'warning',
-                'Biosample Submitted': 'secondary',
+                'Reads Submitted': 'warning',
+                'Biosample Submitted': 'secondary'
             }
         }
     }

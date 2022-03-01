@@ -1,7 +1,29 @@
 <template>
     <b-container class="router-container" fluid>
-      <b-row >
-        <b-col> 
+      <b-row>
+        <b-col style="overflow: scroll;">
+          <b-button-group size="sm">
+            <b-button
+              v-for="(taxNameRecord, idx) in taxNameHistory"
+              :key="idx"
+              @click="updateTaxName(idx)"
+              :pressed="taxNameRecord === taxName"
+              :disabled="idx <= taxNameHistory.lenght - 1"
+              variant="outline-success"
+            >
+              <b-row style="margin-bottom:0px">
+                  <b-col style="text-align:start" cols="2">
+                    <b-icon-x-circle></b-icon-x-circle>
+                  </b-col>
+                  <b-col style="text-align:center">
+                    <strong> {{taxNameRecord}} </strong>
+                  </b-col>
+                  <b-col cols="2"/>
+                </b-row>
+            </b-button>
+          </b-button-group>
+        </b-col>
+        <!-- <b-col> 
               <b-button :disabled="taxName === 'Eukaryota'" 
                 @click="resetTaxName()"
                 block
@@ -17,7 +39,7 @@
                   <b-col cols="2"/>
                 </b-row>
               </b-button>
-        </b-col>
+        </b-col> -->
       </b-row>
       <filter-component :filter="filter" :placeholder="'Search an organism in ' + taxName"/>
       <table-component 
@@ -45,11 +67,16 @@
           >
           </b-form-select>
         </template>
-        <template v-if="hasToken" #head(actions)>
+        <template #head(actions)>
           <b-dropdown dropup class="mx-1" right text="Actions">
               <b-dropdown-item :disabled="selectedOrganisms.lenght === 0" @click="deleteOrganisms(selectedOrganisms)" variant="danger">Delete selected organisms</b-dropdown-item>
               <b-dropdown-item :disabled="selectedOrganisms.lenght === 0" @click="downloadExcel()">Download samples of selected Organisms</b-dropdown-item>
           </b-dropdown>         
+        </template>
+        <template #head(data)>
+          <b-icon-info-circle variant="primary-info" id="data-info"/>
+          <b-tooltip target="data-info" variant="warning">Reads</b-tooltip>
+          <b-tooltip target="data-info" placement="right" variant="primary">Assemblies</b-tooltip>
         </template>
         <template #cell(organism)="data">
           <b-link :to="{name: 'organism-details', params: {name: data.item.organism}}">
@@ -73,6 +100,10 @@
                 <b-icon-trash-fill variant="danger"></b-icon-trash-fill>
             </b-link>
         </template>
+            <template #cell(data)="data">
+            <b-badge variant="warning" :id="data['item'].taxid + '-reads'">{{data['item'].experiments.length}}</b-badge>
+            <b-badge variant="primary" :id="data['item'].taxid + '-assemblies'">{{data['item'].assemblies.length}}</b-badge>
+        </template>
       </table-component>
       <pagination-component :per-page="perPage" :page-options="pageOptions" :total-rows="totalRows" :current-page="currentPage" :table-id="tableId"/>
     </b-container>
@@ -80,7 +111,7 @@
 
 <script>
 import portalService from "../../services/DataPortalService"
-import { BIconXCircle, BBadge, BIconPenFill,BIconTrashFill, BButton, BLink, BFormSelect, BDropdown, BDropdownItem } from 'bootstrap-vue'
+import { BIconXCircle,BIconInfoCircle,BTooltip, BBadge, BIconPenFill,BIconTrashFill, BButton,BButtonGroup, BLink, BFormSelect, BDropdown, BDropdownItem } from 'bootstrap-vue'
 import TableComponent from '../base/TableComponent.vue';
 import FilterComponent from '../base/FilterComponent.vue';
 import PaginationComponent from '../base/PaginationComponent.vue';
@@ -91,9 +122,9 @@ import SubmissionService from '../../services/SubmissionService';
 export default {
   components: 
     {
-      BLink, BIconXCircle, BBadge,
+      BLink, BIconXCircle, BBadge,BTooltip,
       BButton, BFormSelect,TableComponent,PaginationComponent,
-      FilterComponent,
+      FilterComponent, BButtonGroup,BIconInfoCircle,
       StatusBadgeComponent,BDropdown, BDropdownItem,BIconPenFill,BIconTrashFill
     },
   computed: {
@@ -102,9 +133,18 @@ export default {
       module: 'portal',
       mutation: 'portal/setField'      
     }),
+    taxNameHistory(){
+      return this.$store.getters['portal/getTaxNameHistory']
+    },
     hasToken(){
       return localStorage.getItem('token')
-    }
+    },
+    organismFields(){
+      if(this.hasToken){
+          return this.fields.concat([{key:'actions',label:'Actions'}])
+      }
+      return this.fields
+    },
   },
   data() {
     return {
@@ -128,7 +168,7 @@ export default {
         {key:'common_name', label: 'Common Names', sortable: true},
         {key: 'trackingSystem', label:'Status', sortalble: false},
         {key: 'externalReferences', label:'External References'},
-        {key: 'actions'}
+        {key: 'data'}
       ],
       selectedOrganisms:[],
     }
@@ -160,17 +200,25 @@ export default {
     onRowSelected(value){
       this.selectedOrganisms = value
     },
-    resetTaxName(){
-      this.taxName = 'Eukaryota'
-      this.$store.commit('portal/setTree',{value: 'Eukaryota'})
-      this.$root.$emit('bv::refresh::table', this.tableId)
+    updateTaxName(idx){
+      if(this.taxName !== this.taxNameHistory[idx]){
+        this.taxName = this.taxNameHistory[idx]
+      }
+      else {
+        this.taxName = this.taxNameHistory[idx-1]?this.taxNameHistory[idx-1]:'Eukaryota'
+      }
+        this.$store.commit('portal/removeTaxNameH', idx)
+        this.$store.commit('portal/setTree',{value: this.taxName})
+        this.$root.$emit('bv::refresh::table', this.tableId)
+
     },
     filterSearch(params,callback){
       portalService.getFilteredOrganisms(params).then(response => {
         this.totalRows = response.data.total
         const items = Object.freeze(response.data.data)
-            callback(items)
-        }).catch(() => {
+        callback(items)
+        })
+        .catch(() => {
         callback([])
         })
       return null
