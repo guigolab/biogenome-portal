@@ -90,10 +90,12 @@ import SubmissionService from '../../services/SubmissionService';
 
 export default {
   components: 
-    {BLink, BIconXCircle, BBadge,
-     BButton, BFormSelect,TableComponent,PaginationComponent,
+    {
+      BLink, BIconXCircle, BBadge,
+      BButton, BFormSelect,TableComponent,PaginationComponent,
       FilterComponent,
-      StatusBadgeComponent,BDropdown, BDropdownItem,BIconPenFill,BIconTrashFill, },
+      StatusBadgeComponent,BDropdown, BDropdownItem,BIconPenFill,BIconTrashFill
+    },
   computed: {
     ...mapFields({
       fields: ['filter','taxName','perPage', 'totalRows','currentPage'],

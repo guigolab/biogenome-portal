@@ -98,8 +98,6 @@ export default {
             selectedOption:'SKIP',
             headerIndex:1,
             importAccessions:false
-
-            
         }
     },
     components:{
@@ -126,7 +124,7 @@ export default {
             submissionService.parseExcel(formData)
             .then(response => {
                 this.errors=[]
-                this.$store.commit('submission/setAlert',{variant:'success', message: 'samples IDs correctly saved: ' + response.data.join()})
+                this.$store.commit('submission/setAlert',{variant:'success', message: 'sample IDs correctly saved: ' + response.data.join()})
                 this.$store.dispatch('submission/showAlert') 
                 this.$store.dispatch('portal/hideLoading')
             })

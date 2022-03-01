@@ -154,8 +154,7 @@ export default {
                     : 
                     this.validateInput(field,this[field.model]) === null || (this.toUpdate && mandatoryCOPOLabels.includes(field.label)) ? 
                     '' : this.validateInput(field,this[field.model]) ? 
-                            'success':'wrong'            
-
+                            'success':'wrong'
         },
         resetForm(){
             showConfirmationModal(this.$bvModal,'This will reset the form and delete any unsaved progress')

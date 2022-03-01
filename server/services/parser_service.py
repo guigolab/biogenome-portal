@@ -29,6 +29,7 @@ def parse_excel(excel, opts):
     fields = get_checklist_fields(CHECKLIST_FIELD_GROUPS)
     #retrieve all taxids to be validated
     taxids_to_validate = get_taxids_to_validate(sheet_obj, 'TAXON_ID')
+    #check uniqueness of tube or well id
     samples_with_errors=list()
     NCBI_validation = list()
     if len(taxids_to_validate) > 0:
@@ -44,6 +45,8 @@ def parse_excel(excel, opts):
             else:
                 parsed_sample = parse_sample(values,fields,NCBI_validation)
                 samples.append(parsed_sample)
+    #check for duplicates if yes send error at index
+    ids = [sample.tube_or_well_id for sample in samples]
     return samples, samples_with_errors
 
 #return unique taxids
@@ -60,7 +63,6 @@ def get_taxids_to_validate(sheet_obj, column_name):
         existing_taxids = [org.taxid for org in Organism.objects(taxid__in=taxids_to_validate)]
         taxids_to_validate = [taxid for taxid in taxids_to_validate if taxid not in existing_taxids]
     return taxids_to_validate
-
 
 def get_checklist_fields(groups):
     fields = list()
@@ -134,7 +136,6 @@ def validate_sample(index, sample, fields, NCBI_response):
         sample_with_error['errors'] = errors
     return sample_with_error
 
-
 def parse_sample(sample,fields,NCBI_response):
     parsed_sample=dict()
     for key, value in sample.items():
@@ -191,7 +192,6 @@ def is_number(string):
     except ValueError:
         return False
 
-
 def create_excel():
     samples = SecondaryOrganism.objects(accession=None).as_pymongo()
     wb = Workbook()
@@ -209,7 +209,6 @@ def create_excel():
             else:
                 ordered_list.append('')
         ws.append(ordered_list)
-
     with NamedTemporaryFile() as tmp:
         wb.save(tmp.name)
         return tmp.read()

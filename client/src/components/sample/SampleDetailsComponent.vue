@@ -15,12 +15,12 @@
                 </b-col>
             </b-row>
             <b-row>
-                <b-col cols="2">
+                <b-col cols="2" v-if="sample.collection_date">
                     <div>
                         <p class="info-icons"><b-icon-calendar/> {{sample.collection_date}}</p>
                     </div>
                 </b-col>
-                <b-col>
+                <b-col v-if="sample.geographic_location_region_and_locality">
                     <div>
                         <p class="info-icons">
                             <b-icon-geo-alt-fill/> 
@@ -138,6 +138,11 @@ export default {
             .forEach(key => {
                 if(this.sample[key] && key !== 'custom_fields'){
                     mappedSample[key] = this.sample[key]
+                }else if (key === 'custom_fields'){
+                    Object.keys(this.sample[key])
+                    .forEach(attr => {
+                        mappedSample[attr] = this.sample[key][attr]
+                    })
                 }
             })
             return mappedSample
@@ -197,9 +202,6 @@ export default {
     width: 100%;
     height: 100%;
     min-height: 150px
-    /* min-height:300px;
-    min-width:200px;
-    margin-bottom:20px */
 }
 .info-icons{
     color: #545b62;

@@ -1,13 +1,12 @@
 # from typing_extensions import Required
 from . import db
 from enum import Enum
+from datetime import datetime
 
 class TrackStatus(Enum):
     SAMPLE = 'Biosample Submitted'
-    MAP_READS = 'Mapped Reads Submitted'
-    ASSEMBLIES = 'Assemblies Submitted'
     RAW_DATA = 'Raw Data Submitted'
-    ANN_COMPLETE = 'Annotation Complete'
+    ASSEMBLIES = 'Assemblies Submitted'
     ANN_SUBMITTED = 'Annotation Submitted'
     
 class TargetListStatus(Enum):
@@ -100,7 +99,7 @@ class SecondaryOrganism(db.Document):
     assemblies = db.ListField(db.LazyReferenceField(Assembly))
     experiments = db.ListField(db.LazyReferenceField(Experiment))
     accession = db.StringField()
-    created = db.DateTimeField()
+    created = db.DateTimeField(default=datetime.utcnow())
     taxid = db.StringField(required=True)
     scientificName = db.StringField(required=True)
     tube_or_well_id=db.StringField()
@@ -175,6 +174,7 @@ class SecondaryOrganism(db.Document):
     collector_sample_id=db.StringField()
     culture_or_strain_id=db.StringField()
     common_name=db.StringField()
+    custom_fields = db.DictField()
     meta = {
         'indexes': [
             {'fields':('accession','tube_or_well_id'), 'unique':True}

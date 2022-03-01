@@ -1,3 +1,4 @@
+from curses import meta
 import requests
 
 def get_taxon_from_ena(taxon_id):
@@ -14,6 +15,13 @@ def check_taxons_from_NCBI(taxids):
         return
     return response.json()
 
+def get_sample_from_biosamples(accession):
+    metadata=dict()
+    resp = requests.get(f"https://www.ebi.ac.uk/biosamples/samples?filter=acc:{accession}").json()
+    if '_embedded' in resp.keys() and 'samples' in resp.keys():
+        metadata = resp['_embedded']['samples'][0]['characteristics']
+    return metadata
+        
 def get_samples(project):
     resp = requests.get(
     f"https://www.ebi.ac.uk/biosamples/samples?size=10000&"

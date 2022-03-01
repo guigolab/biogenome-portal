@@ -13,6 +13,7 @@ def get_or_create_organism(taxid, common_names=None):
         species = lineage[0]
         taxon_lineage = taxon_service.create_taxons_from_lineage(lineage)
         organism = Organism(taxid = taxid, organism= species['scientificName'], taxon_lineage = taxon_lineage).save()
+        taxon_service.leaves_counter(taxon_lineage)
     if common_names and len(common_names.split('|')) > 0:
         names_arr = common_names.split('|')
         if len(organism.common_name) > 0:

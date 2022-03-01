@@ -1,4 +1,4 @@
-from db.models import TaxonNode
+from db.models import Organism, TaxonNode
 from flask import current_app as app
 from utils import constants
 import os
@@ -26,17 +26,16 @@ def create_taxons_from_lineage(lineage):
             taxon_node = TaxonNode.objects(taxid=node['taxId']).first()
             if not taxon_node:
                 taxon_node = TaxonNode(taxid=node['taxId'], name=node['scientificName'], rank=node['rank']).save()
-            # taxon_node = TaxonNode.objects(taxid=node['taxId']).upsert_one(set__taxid=node['taxId'], set__name=node['scientificName'], set__rank=node['rank'])
             taxon_lineage.append(taxon_node)
     #create relationship
     create_relationship(taxon_lineage)
-    leaves_counter(taxon_lineage)
     return taxon_lineage
 
+#put species and subspecies at the same level for navigation purpose
 def create_relationship(lineage):
     for index in range(len(lineage)-1):
         child_taxon = lineage[index]
-        father_taxon = lineage[index + 1]
+        father_taxon = lineage[index + 1] if child_taxon.rank != 'subspecies' else lineage[index+2]
         if not any(child_node.id == child_taxon.id for child_node in father_taxon.children):
             father_taxon.children.append(child_taxon)
             father_taxon.save()
@@ -45,18 +44,19 @@ def create_relationship(lineage):
 
 def leaves_counter(lineage_list):
     for node in lineage_list:
-        node.leaves=count_species(node)
+        # node.leaves=count_species(node)
+        node.leaves=Organism.objects(taxon_lineage=node.id, taxid__ne=node.taxid).count()
         node.save()
 
-def count_species(tax_node):
-    leaves = 0
-    if not tax_node:
-        return 0
-    elif len(tax_node.children) == 0:
-        return 1
-    else:
-        children = TaxonNode.objects(id__in=[lz_ref.id for lz_ref in tax_node.children])
-        for child in children:
-            leaves += count_species(child)
-        return leaves
+# def count_species(tax_node):
+#     leaves = 0
+#     if not tax_node:
+#         return 0
+#     elif len(tax_node.children) == 0:
+#         return 1
+#     else:
+#         children = TaxonNode.objects(id__in=[lz_ref.id for lz_ref in tax_node.children])
+#         for child in children:
+#             leaves += count_species(child)
+#         return leaves
 

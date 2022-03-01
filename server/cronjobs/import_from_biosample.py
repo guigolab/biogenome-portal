@@ -178,8 +178,9 @@ def get_new_samples(samples):
             #update sample in another job
             continue
         else:
-            sample_obj = dict(accession = sample['accession'], taxid=str(sample['taxId']), created=datetime.utcnow())
-            utils.parse_sample_metadata(sample_obj, sample['characteristics'])
+            sample_obj = utils.parse_sample_metadata(sample['characteristics'])
+            sample_obj['accession'] = sample['accession']
+            sample_obj['taxid'] = str(sample['taxid'])
             samples_to_save.append(sample_service.create_sample_object(sample_obj))
     return samples_to_save
 

@@ -24,8 +24,10 @@ def get_checklist_fields(groups):
         fields.extend(group['fields'])
     return fields
 
-def parse_sample_metadata(sample, metadata):
+def parse_sample_metadata(metadata):
+    sample=dict()
     fields = get_checklist_fields(CHECKLIST_FIELD_GROUPS)
+    custom_fields=dict()
     for key in metadata.keys():
         if key == 'collection date':
             sample['collection_date'] = metadata[key][0]['text']
@@ -34,10 +36,13 @@ def parse_sample_metadata(sample, metadata):
             sample[model_attr] = metadata[key][0]['text']
         elif key in [field['model'] for field in fields]:
             model_attr = next(field['model'] for field in fields if field['model'] == key)
+            sample[model_attr] = metadata[key][0]['text']
         else:
-            #add custom fields here
-            continue
-
+            custom_fields[key] = metadata[key][0]['text']
+    if len(custom_fields.keys()) > 0:
+        sample['custom_fields'] = custom_fields
+    return sample
+    
 #aggregation pipeline returns unordered list of taxon lineage
 def sort_lineage(lineage):
     values_obj=dict()

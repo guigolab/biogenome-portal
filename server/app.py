@@ -6,6 +6,7 @@ from db import initialize_db
 from rest import initialize_api
 from datetime import datetime,timedelta
 from cronjobs.import_from_biosample import import_records
+from cronjobs.import_from_NCBI import import_from_NCBI
 import os
 from flask_jwt_extended import JWTManager
 
@@ -20,11 +21,18 @@ initialize_api(app)
 
 jwt = JWTManager(app)
 
+
+TIME= os.getenv('EXEC_TIME')
 if os.getenv('PROJECTS'):
-    TIME= os.getenv('EXEC_TIME')
     PROJECTS = os.getenv('PROJECTS').split(',')
     sched = BackgroundScheduler(daemon=True)
     sched.add_job(import_records, "interval", id="interval-job", start_date=datetime.now()+timedelta(seconds=20), args=[PROJECTS], seconds=int(TIME))
+    sched.start()
+
+if os.getenv('PROJECT_ACCESSION'):
+    ACCESSION = os.getenv('PROJECT_ACCESSION')
+    sched = BackgroundScheduler(daemon=True)
+    sched.add_job(import_from_NCBI, "interval", id="interval-job", start_date=datetime.now()+timedelta(seconds=20), args=[ACCESSION], seconds=int(TIME))
     sched.start()
 
 if __name__ == '__main__':
