@@ -39,3 +39,7 @@ def delete_organisms(taxids):
         organism.delete()
         deleted_organisms.append(name)
     return deleted_organisms
+
+def get_data(organism, model):
+    if model == 'assemblies':
+        return 

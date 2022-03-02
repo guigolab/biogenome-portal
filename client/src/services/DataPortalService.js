@@ -26,6 +26,9 @@ class DataPortalService {
     getTaxonChildren(name) {
         return base.get(`/taxons/${name}`)
     }
+    getData(model,ids){
+        return base.post(`/data/${model}`, ids)
+    }
 }
 
 export default new DataPortalService();

@@ -15,10 +15,16 @@
             </b-button-group>
         </b-button-toolbar>
      </b-col>
-    <b-row>
-        <b-col>
+     <b-row>
+         <b-col lg="4"/>
+        <tree-bread-crumb-component/>
+        <b-col lg="4">
+            <tree-browser-component/>
+        </b-col>
+        <b-col lg="8">
             <organisms-component/>
         </b-col>
+        <router-view/>
     </b-row>
 </b-row>
 </template>
@@ -28,6 +34,8 @@ import {BButtonToolbar,BButtonGroup,BButton, BDropdown, BDropdownItem} from 'boo
 import {mapFields, showConfirmationModal} from '../../utils/helper'
 import submissionService from '../../services/SubmissionService'
 import OrganismsComponent from '../../components/organism/OrganismsComponent.vue';
+import TreeBrowserComponent from '../../components/taxon/TreeBrowserComponent.vue';
+import TreeBreadCrumbComponent from '../../components/taxon/TreeBreadCrumbComponent.vue';
 
 
 export default {
@@ -50,7 +58,9 @@ export default {
     components: {
         BButtonToolbar,BButtonGroup,BButton,
         BDropdown, BDropdownItem,
-        OrganismsComponent
+        OrganismsComponent,
+        TreeBrowserComponent,
+        TreeBreadCrumbComponent
         // TableComponent
     },
     mounted(){

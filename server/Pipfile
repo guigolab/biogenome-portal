@@ -16,6 +16,8 @@ requests = "*"
 openpyxl = "*"
 flask-httpauth = "*"
 flask-jwt-extended = "*"
+blinker = "*"
+tzlocal = "<3.0"
 
 [dev-packages]
 

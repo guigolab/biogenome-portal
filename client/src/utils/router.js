@@ -10,25 +10,11 @@ const routes = [
     path: "/",
     name: "home-page",
     component: () => import(/* webpackPrefetch: true */ '../views/HomePage.vue'),
-    // children: [
-    //   {
-    //     path: "/login",
-    //     name: "login",
-    //     component: () => import(/* webpackPrefetch: true */ '../src/components/modal/LoginModal.vue')
-    //   },
-    // ]
   },
   {
     path: "/admin",
     name: "admin",
     component: () => import(/* webpackPrefetch: true */ '../views/admin/AdminPage.vue'),
-    // children: [
-    //   {
-    //     path: "/login",
-    //     name: "login",
-    //     component: () => import(/* webpackPrefetch: true */ '../src/components/modal/LoginModal.vue')
-    //   },
-    // ]
   },
   {
     path:"/form",
@@ -72,16 +58,7 @@ const routes = [
     name: "Submit sample",
     component:() => import(/* webpackPrefetch: true */ '../views/admin/SampleFormPage.vue'),
   },
-  // {
-  //   path: "/submit-excel",
-  //   name: "Submit excel",
-  //   component: () => import(/* webpackPrefetch: true */ '../views/ExcelFormPage.vue')
-  // },
-  // {
-  //   path: '/submit-ena',
-  //   name: 'ENA submission',
-  //   component: () => import(/* webpackPrefetch: true */ '../views/ENASubmissionPage.vue')
-  // }
+
 ]
 const router = new Router({
     base: process.env.BASE_URL,

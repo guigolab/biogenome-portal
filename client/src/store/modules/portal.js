@@ -50,7 +50,6 @@ const mutations = {
     //save tree browser JSON into state
     assignChildren(state, payload){
         const item = findObj(state.tree.children, payload.label)
-        console.log(item)
         item.children = payload.value
     },
     showLoading(state){

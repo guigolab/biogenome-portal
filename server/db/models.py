@@ -107,7 +107,7 @@ class SecondaryOrganism(db.Document):
     specimens = db.ListField(db.LazyReferenceField('self', passthrough=True))
     organism_part=db.StringField()
     lifestage=db.StringField()
-    project_name=db.StringField() 
+    project_name=db.StringField()
     tolid=db.StringField()
     barcoding_center=db.StringField()
     collected_by=db.StringField()
@@ -191,7 +191,7 @@ class Organism(db.Document):
     taxid = db.StringField(required= True)
     image = db.FileField()
     taxon_lineage = db.ListField(db.LazyReferenceField(TaxonNode))
-    trackingSystem = db.EnumField(TrackStatus, default=TrackStatus.SAMPLE)
+    trackingSystem = db.EnumField(TrackStatus)
     meta = {
         'indexes': [
             'organism',
@@ -199,3 +199,12 @@ class Organism(db.Document):
             'taxid'
         ]
     }
+    @classmethod
+    def pre_save(cls, sender, document, **kwargs):
+        if len(document.assemblies) > 0:
+            document.trackingSystem= TrackStatus.ASSEMBLIES
+        elif len(document.experiments) > 0:
+            document.trackingSystem= TrackStatus.RAW_DATA
+        else:
+            document.trackingSystem=TrackStatus.SAMPLE
+db.pre_save.connect(Organism.pre_save,sender=Organism)

@@ -1,5 +1,7 @@
 <template>
     <b-row>
+        <b-col lg="4"/>
+        <tree-bread-crumb-component/>
         <b-col lg="4">
             <tree-browser-component/>
         </b-col>
@@ -12,6 +14,7 @@
 
 <script>
 import OrganismsComponent from '../components/organism/OrganismsComponent.vue';
+import TreeBreadCrumbComponent from '../components/taxon/TreeBreadCrumbComponent.vue';
 import TreeBrowserComponent from '../components/taxon/TreeBrowserComponent.vue'
 
 export default {
@@ -19,7 +22,9 @@ export default {
     components: {
         TreeBrowserComponent,
         OrganismsComponent,
+        TreeBreadCrumbComponent,
     }
+
 
 }
 </script>
