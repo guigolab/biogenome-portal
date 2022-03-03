@@ -90,21 +90,23 @@ Before building the application it is necessary to configure the .env file in th
 The .env file contains many parts that have to be configured depending on the needs:
 
 	The API KEY part:
-  Configure this part if you want to enter samples locally
+  	Configure this part if you want to enter samples locally
 
 	USER=admin --> Define the user name that will be inserted to access the admin area
 	JWT_SECRET_KEY=secret_restKey #change this in production!! --> key to encrypt the RESTKEY (below)
 	RESTKEY=secretPassword #change this in production!! --> password that will be inserted to access the admin area
 
 	The CRONJOB part:
-  Configure this part if you want to retrieve public data from ENA/BioSamples (the sample metadata format must be compliant with the ENA checklist)
+  	Configure this part if you want to retrieve public data from ENA/BioSamples and/or NCBI (the sample metadata format must be compliant with the ENA checklist)
+	the cronjob will automatically check for read data in ENA if PROJECTS and/or PROJECT_ACCESSION are present
 	PROJECTS=  --> list of projects (comma separated) wich name figures in the sample metadata submitted to the ENA/BioSamples
+	PROJECT_ACCESSION --> bioproject accession to retrieve data from NCBI 
 	EXEC_TIME=600 --> how often, in seconds, the job should be performed
 
 	The DATA PORTAL part:
-  This part have some default values that can be modified
+  	This part have some default values that can be modified
 
-	RANKS=superkingdom,kingdom,phylum,subphylum,class,order,family,genus,species,subspecies --> ordered, descending list of taxonomic ranks you want to display. Note that is a rank is not present in the species' lineage it will be skipped, for instance you may find phylum nodes that has as a children class nodes.
+	RANKS=--> ordered, descending list of taxonomic ranks you want to display. Note that is a rank is not present in the species' lineage it will be skipped, for instance you may find phylum nodes that has as a children class nodes.
 	MAX_NODES=90 --> number of max leaves to display in the tree of life page (numbers greaters than 150 may affect performance and visualization)
 
 
@@ -154,16 +156,20 @@ Here is a list of the APIs consumed:
 ## Sequencing Project
 For sequencing projects with the aim to sequence species within a geographical context, it is strongly recommended to submit public samples to the ENA via the [COPO web service](https://copo-project.org/), this service ensure that all the submitted samples share the same format before submission to ENA. It will, then, be responsibility of the single project to upload assemblies and reads to ENA/NCBI and associate them with the sample accession submitted through COPO. 
 To facilitate the sample submission to COPO this project provides the possibility to download the samples inserted locally in an excel compliant with the [ERGA submission manifest](https://github.com/ERGA-consortium/COPO-manifest). The generated excel will be then submitted to COPO. Once the samples will be pubblicly available in BioSamples the data portal will link the accession to the sample unique name and will start checking for new assemlies and/or reads every time the cronjob will be executed (the EXEC_TIME env variable).
+IMPORTANT: the ERGA manifest will change during time, this portal will try to keep it up to date.
 
-The importance of the sample unique name:
-This field is used to uniquely identified the sample entity, within this scope a sample can be a whole organism or part of it, imagine a sample as the set of metadata (from the sample collection event, the sample preservation and the sample charateristics) related to an assembly or an experiment.
+The importance of the TUBE_OR_WELL_ID field:
+This field is used to uniquely identify the sample entity, within this scope a sample can be a whole organism or part of it, imagine a sample as the set of metadata (from the sample collection event, the sample preservation and the sample charateristics) related to an assembly or an experiment. It will be used to retrieve the sample accession from the COPO's API (feature not implemented yet: waiting for COPO to implement the API for ERGA).
 
 
 IMPORTANT:
 If for any reason you have to manage sample submission on your own, you could still use this data portal as a backup/status tracking service if you are compliant with this [ENA-checklist](https://www.ebi.ac.uk/ena/browser/view/ERC000053) (remember that the samples need to be public in order to be displayed in the data portal, it is recommended to submit the samples first in BioSamples and then link the genomic data to their respective accession.
 
 ## The import of samples from BioSamples
-The cronjob function allows to download all the samples (with this metadata checklist) related to one or more projects. By declaring the various project names it is possible to import samples at every layer of a biogenome project/effort. 
+The cronjob function allows to download all the samples (with this metadata checklist) related to one or more projects. By declaring the various project names it is possible to import samples at every layer of a biogenome project/effort.
+
+## The import of BioProject data from NCBI
+The cronjob function allows to download all the data published under a bioproject, it will automatically create the sample's metadata from NCBI or from EBI/BioSamples, then the cronjob will retrieve public reads linked to the sample accession in ENA.
 
 Note: 
 The import function uses the BioSamples API to retrieve samples metadata via the project_name attribute. If your project have already submitted the samples and linked some genomic data to this samples it is still possible to insert this sample in the data portal via excel or form, by adding the correct accession field, the program will then seek for all the genomic data related to this sample
@@ -173,7 +179,11 @@ The import function uses the BioSamples API to retrieve samples metadata via the
 
 - [ ] Add Changelog
 - [ ] Add JSON schema (OAS docs)
+- [ ] Add local names management
+- [ ] Add organism photo management
+- [ ] Add sample accession import feature
 - [ ] Add custom fields management
+
 
 
 See the [open issues](https://github.com/othneildrew/Best-README-Template/issues) for a full list of proposed features (and known issues).
