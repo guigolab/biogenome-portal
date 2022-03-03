@@ -10,8 +10,8 @@
     A web interface for biodiversity!
     <br />
     <br />
-    <a href="https://github.com/emiliorighi/biogenome-portal/issues">Report Bug</a>
-    <a href="https://github.com/emiliorighi/biogenome-portal/issues">Request Feature</a>
+    <a href="/../../issues">Report Bug</a>
+    <a href="/../../issues">Request Feature</a>
   </p>
 </div>
 
@@ -224,7 +224,7 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 
 Emilio Righi - emilio.righi@crg.eu
 
-Project Link: [https://github.com/emiliorighi/biogenome-portal](https://github.com/emiliorighi/biogenome-portal)
+Project Link: https://github.com/guigolab/biogenome-portal
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
