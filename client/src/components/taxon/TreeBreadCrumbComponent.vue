@@ -1,5 +1,6 @@
 <template>
-    <b-col lg="8" style="overflow: scroll;">
+<b-row>
+    <b-col style="overflow: auto;min-height:50px">
         <b-button-group>
             <b-button
                 v-for="(taxNameRecord, idx) in taxNameHistory"
@@ -16,6 +17,7 @@
             </b-button>
         </b-button-group>
     </b-col>
+</b-row>
 </template>
 <script>
 import {BButtonGroup,BButton} from 'bootstrap-vue'
@@ -39,11 +41,13 @@ export default {
     updateTaxName(idx){
       if(this.taxName !== this.taxNameHistory[idx]){
         this.taxName = this.taxNameHistory[idx]
+        this.$store.commit('portal/removeTaxNameH', idx+1)
       }
       else {
-        this.taxName = this.taxNameHistory[idx-1]?this.taxNameHistory[idx-1]:'Eukaryota'
-      }
+        const previousName = this.taxNameHistory[idx-1]
+        this.taxName =  previousName ? previousName : 'Eukaryota'
         this.$store.commit('portal/removeTaxNameH', idx)
+      }
         this.$store.commit('portal/setTree',{value: this.taxName})
         this.$root.$emit('bv::refresh::table', 'organisms-table')
 

@@ -8,6 +8,8 @@ from datetime import datetime, timedelta
 
 REL_FIELDS=['sample_same_as','sample_symbiont_of','sample_derived_from',]
 
+SAMPLE_QUERY = (Q(last_check=None) | Q(last_check__lte=datetime.now()- timedelta(days=15)))
+
 def import_from_NCBI(project_accession):
     assemblies=list()
     result = requests.get(f"https://api.ncbi.nlm.nih.gov/datasets/v1/genome/bioproject/{project_accession}?filters.reference_only=false&filters.assembly_source=all&filters.has_annotation=false&&page_size=100").json()
@@ -26,33 +28,30 @@ def import_from_NCBI(project_accession):
             assemblies.extend([ass['assembly'] for ass in result['assemblies']])
     if len(assemblies) > 0:
         print(len(assemblies))
-        # print(len(list(set([ass['org']['tax_id'] for ass in assemblies]))))
-        ##bulk insert than link
         parse_data(assemblies)
     print('DONE')
 
 ## get biosample accession from assemblies
-## avoid too many db calls parsing data in bulk one iteration per model
 def parse_data(assemblies):
+    existing_assemblies = Assembly.objects(accession__in=[assembly['assembly_accession'] for assembly in assemblies])
+    if len(existing_assemblies) > 0:
+        assemblies = [ass for ass in assemblies if ass['assembly_accession'] not in [ex['accession'] for ex in existing_assemblies]]
+    if len(assemblies) == 0:
+        print('NO NEW ASSEMBLIES')
+        return
     samples_accessions=set()
-    samples_not_found=set()
+    samples_not_found=set() #samples not found are stored with basic fields
     for assembly in assemblies:
         sample_accession=assembly['biosample_accession']
         samples_accessions.add(sample_accession)
         organism = organisms_service.get_or_create_organism(str(assembly['org']['tax_id']))
-        sample_obj = SecondaryOrganism.objects(accession=sample_accession).upsert_one(accession=sample_accession,taxid=organism.taxid,scientificName=organism.organism)
-        if not sample_obj.id in [rec.id for rec in organism.records]:
-            organism.modify(push__records=sample_obj)
+        sample_obj = SecondaryOrganism.objects(accession=sample_accession).first()
+        if not sample_obj:
+            sample_obj = SecondaryOrganism(accession=sample_accession,taxid=organism.taxid,scientificName=organism.organism).save()
+            organism.records.append(sample_obj)
             if not 'biosample' in assembly.keys() or not 'attributes' in assembly['biosample'].keys():
-            #retrieve sample metadata from EBI/BioSamples
-                resp = requests.get(f"https://www.ebi.ac.uk/biosamples/samples?size=1000&filter=acc:{sample_accession}").json()
-                if '_embedded' in resp.keys():
-                    metadata = utils.parse_sample_metadata(resp['_embedded']['samples'][0]['characteristics'])
-                    sample_obj.modify(**metadata)
-                else:
-                    print('SAMPLE NOT FOUND')
-                    samples_not_found.add(sample_accession)
-                    print(sample_accession)
+                #retrieve sample metadata from EBI/BioSamples
+                create_sample_from_biosamples(sample_obj, samples_not_found)
             else:
                 biosample = assembly['biosample']
                 sample_metadata=dict()
@@ -62,15 +61,29 @@ def parse_data(assemblies):
                 sample_obj.modify(**metadata)
         ass_obj = Assembly.objects(accession = assembly['assembly_accession']).upsert_one(accession = assembly['assembly_accession'],assembly_name= assembly['display_name'], sample_accession= sample_obj.accession)
         if len(organism.assemblies) == 0 or not ass_obj.id in [ass.id for ass in organism.assemblies]:
-            organism.modify(push__assemblies=ass_obj)
+            organism.assemblies.append(ass_obj)
             sample_obj.modify(push__assemblies=ass_obj)
-        if organism.trackingSystem not in ['Assemblies Submitted','Annotation Submitted']:
-            organism.modify(trackingSystem=TrackStatus.ASSEMBLIES)
-    #get reads from ENA portal API
-    print('SAMPLES NOT FOUND IN BIOSAMPLES')
-    print(samples_not_found)
+        #save triggers status tracking
+        organism.save()
+    if len(list(samples_not_found))>0:
+        print('SAMPLES NOT FOUND IN BIOSAMPLES')
+        print(samples_not_found)
+    get_reads(samples_accessions)
+
+
+def create_sample_from_biosamples(sample_obj, samples_not_found):
+    resp = ena_client.get_sample_from_biosamples(sample_obj.accession)
+    if '_embedded' in resp.keys():
+        metadata = utils.parse_sample_metadata(resp['_embedded']['samples'][0]['characteristics'])
+        sample_obj.modify(**metadata)
+    else:
+        print('SAMPLE NOT FOUND')
+        samples_not_found.add(sample_obj.accession)
+        print(sample_obj.accession)
+
+def get_reads(samples_accessions):
     for accession in list(samples_accessions):
-        sample =SecondaryOrganism.objects(Q(accession=accession) & Q(created__lte=datetime.now()- timedelta(days=15))).first()
+        sample = SecondaryOrganism.objects(Q(accession=accession) & SAMPLE_QUERY).first()
         if not sample:
             continue
         experiments = ena_client.get_reads(accession)
@@ -81,5 +94,8 @@ def parse_data(assemblies):
             if len(new_exps)>0:
                 Experiment.objects.insert(new_exps, load_bulk=False)
                 sample = SecondaryOrganism.objects(accession=accession).first()
-                sample.modify(push_all__experiments=new_exps)
-                organism = Organism.objects(taxid=sample.taxid).update_one(push_all__experiments=new_exps)
+                sample.modify(push_all__experiments=new_exps, last_check=datetime.utcnow())
+                org = Organism.objects(taxid=sample.taxid).first()
+                org.experiments.extend(new_exps)
+                #trigger status update
+                org.save()

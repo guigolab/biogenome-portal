@@ -1,6 +1,7 @@
 <template>
     <b-container class="router-container" fluid>
-      <filter-component :filter="filter" :placeholder="'Search an organism in ' + taxName"/>
+      <tree-bread-crumb-component/>
+      <filter-component :filter="filter" :placeholder="'Search in ' + taxName"/>
       <table-component 
         :items="organismsProvider"
         :busy.sync="isBusy"
@@ -61,8 +62,8 @@
             </b-link>
         </template>
         <template #cell(data)="data">
-            <b-badge v-if="data['item'].experiments.length" @click.stop="getData(data['item'], 'experiments')" pill variant="warning">{{data['item'].experiments.length}}</b-badge>
-            <b-badge v-if="data['item'].assemblies.length" @click.stop="getData(data['item'], 'assemblies')" pill variant="primary">{{data['item'].assemblies.length}}</b-badge>
+            <b-badge style="cursor:pointer" v-if="data['item'].experiments.length" @click.stop="getData(data['item'], 'experiments')" pill variant="warning">{{data['item'].experiments.length}}</b-badge>
+            <b-badge style="cursor:pointer" v-if="data['item'].assemblies.length" @click.stop="getData(data['item'], 'assemblies')" pill variant="primary">{{data['item'].assemblies.length}}</b-badge>
         </template>
       </table-component>
       <data-modal :data="data" :model="model" :organism="organism"/>
@@ -80,13 +81,15 @@ import {mapFields, showConfirmationModal} from '../../utils/helper'
 import StatusBadgeComponent from '../base/StatusBadgeComponent.vue';
 import SubmissionService from '../../services/SubmissionService';
 import DataModal from '../modal/DataModal.vue';
+import TreeBreadCrumbComponent from '../taxon/TreeBreadCrumbComponent.vue';
 
 export default {
   components: 
     {
       BLink,BBadge, BFormSelect,TableComponent,PaginationComponent,FilterComponent,
       StatusBadgeComponent,BDropdown, BDropdownItem,BIconPenFill,BIconTrashFill,
-      DataModal
+      DataModal,
+        TreeBreadCrumbComponent
     },
   computed: {
     ...mapFields({

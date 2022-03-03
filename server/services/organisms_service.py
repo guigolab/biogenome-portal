@@ -8,6 +8,8 @@ def get_or_create_organism(taxid, common_names=None):
     if not organism:
         taxon_xml = ena_client.get_taxon_from_ena(taxid)
         if not taxon_xml:
+            print('TAXID NOT FOUND')
+            print(taxid)
             return
         lineage = utils.parse_taxon(taxon_xml)
         species = lineage[0]

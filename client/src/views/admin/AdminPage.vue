@@ -16,8 +16,6 @@
         </b-button-toolbar>
      </b-col>
      <b-row>
-         <b-col lg="4"/>
-        <tree-bread-crumb-component/>
         <b-col lg="4">
             <tree-browser-component/>
         </b-col>
@@ -35,7 +33,6 @@ import {mapFields, showConfirmationModal} from '../../utils/helper'
 import submissionService from '../../services/SubmissionService'
 import OrganismsComponent from '../../components/organism/OrganismsComponent.vue';
 import TreeBrowserComponent from '../../components/taxon/TreeBrowserComponent.vue';
-import TreeBreadCrumbComponent from '../../components/taxon/TreeBreadCrumbComponent.vue';
 
 
 export default {
@@ -60,8 +57,6 @@ export default {
         BDropdown, BDropdownItem,
         OrganismsComponent,
         TreeBrowserComponent,
-        TreeBreadCrumbComponent
-        // TableComponent
     },
     mounted(){
         if(!localStorage.getItem('token')){

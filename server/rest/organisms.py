@@ -35,5 +35,6 @@ class OrganismApi(Resource):
 		sort_lineage(organism['taxon_lineage']) #sort lineage (aggregation pipeline returns unordered list)
 		if not organism:
 			raise NotFound
-		return Response(json.dumps(organism, default='str'),mimetype="application/json", status=200)
+		app.logger.info(organism)
+		return Response(json.dumps(organism),mimetype="application/json", status=200)
 

@@ -70,13 +70,10 @@ export default {
             this.$router.push({name:'organism-details', params: {name: name}})
         },
         toTable(name) {
-            if(name !== 'Eukaryota'){
             this.$store.commit('portal/setField', {label: 'taxName', value: name})
             this.$store.dispatch('portal/addTaxHistory')
             this.$store.commit('portal/setTree', {value: name})
             this.$root.$emit('bv::refresh::table', 'organisms-table')
-            }
-
         }
     },
 }

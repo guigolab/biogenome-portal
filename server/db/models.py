@@ -14,18 +14,28 @@ class TargetListStatus(Enum):
     CBP_OTHER = 'cbp_other_priority'
     CBP = 'cbp'
 
+def handler(event):
+    """Signal decorator to allow use of callback functions as class decorators."""
 
+    def decorator(fn):
+        def apply(cls):
+            event.connect(fn, sender=cls)
+            return cls
+
+        fn.apply = apply
+        return fn
+
+    return decorator
 
 class TaxonNode(db.Document):
     children = db.ListField(db.LazyReferenceField('self', passthrough=True))
-    name = db.StringField(required=True,unique=True)
+    name = db.StringField(required=True)
     taxid = db.StringField(required= True)
     rank = db.StringField()
     leaves = db.IntField()
     meta = {
-        'indexes': [
-            'name',  
-            'taxid'
+          'indexes': [
+            {'fields':('name','taxid'), 'unique':True}
         ]
     }
 
@@ -100,6 +110,7 @@ class SecondaryOrganism(db.Document):
     experiments = db.ListField(db.LazyReferenceField(Experiment))
     accession = db.StringField()
     created = db.DateTimeField(default=datetime.utcnow())
+    last_check = db.DateTimeField()
     taxid = db.StringField(required=True)
     scientificName = db.StringField(required=True)
     tube_or_well_id=db.StringField()
@@ -181,6 +192,16 @@ class SecondaryOrganism(db.Document):
         ]
     }
 
+@handler(db.pre_save)
+def update_modified(sender, document):
+    if len(document.assemblies) > 0:
+        document.trackingSystem= TrackStatus.ASSEMBLIES
+    elif len(document.experiments) > 0:
+        document.trackingSystem= TrackStatus.RAW_DATA
+    else:
+        document.trackingSystem=TrackStatus.SAMPLE
+
+@update_modified.apply
 class Organism(db.Document):
     assemblies = db.ListField(db.LazyReferenceField(Assembly))
     experiments = db.ListField(db.LazyReferenceField(Experiment))
@@ -199,12 +220,3 @@ class Organism(db.Document):
             'taxid'
         ]
     }
-    @classmethod
-    def pre_save(cls, sender, document, **kwargs):
-        if len(document.assemblies) > 0:
-            document.trackingSystem= TrackStatus.ASSEMBLIES
-        elif len(document.experiments) > 0:
-            document.trackingSystem= TrackStatus.RAW_DATA
-        else:
-            document.trackingSystem=TrackStatus.SAMPLE
-db.pre_save.connect(Organism.pre_save,sender=Organism)

@@ -60,13 +60,16 @@ const mutations = {
     },
     addTaxNameH(state){
         const index = state.taxNameHistory.indexOf(state.taxName)
-        if(index === -1 && state.taxName !== 'Eukaryota'){
+        if(state.taxName === 'Eukaryota'){
+            state.taxNameHistory = []
+        }
+        else if(index === -1){
             state.taxNameHistory.push(state.taxName)
         }
     },
     removeTaxNameH(state, index){
         if (state.taxNameHistory.length > 1){
-            state.taxNameHistory = state.taxNameHistory.slice(0, index+1)
+            state.taxNameHistory = state.taxNameHistory.slice(0, index)
         }else{
             state.taxNameHistory = []
         }
