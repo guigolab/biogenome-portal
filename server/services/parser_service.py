@@ -8,6 +8,7 @@ from db.models import Organism, SecondaryOrganism
 from utils.constants import CHECKLIST_FIELD_GROUPS,MANIFEST_HEADER,IMPORT_OPTIONS
 from utils.ena_client import check_taxons_from_NCBI
 
+
 def get_sample_values(header,row):
     values = {}
     for key, cell in zip(header, row):
@@ -21,7 +22,7 @@ def get_sample_values(header,row):
 def parse_excel(excel, opts):
     header_index = int(opts['headerIndex']) if 'headerIndex' in opts.keys() else 1
     insert_accessions = opts['importAccessions'] if 'importAccessions' in opts.keys() else False
-    import_option= opts['importOption'] if 'importOption' in opts.keys() else 'SKIP'
+    import_option= opts['importOption'] if 'importOption' in opts.keys() and opts['importOption'] in IMPORT_OPTIONS else 'SKIP'
     wb_obj = openpyxl.load_workbook(excel,data_only=True)
     sheet_obj = wb_obj.active
     header = [cell.value.lower() for cell in sheet_obj[header_index]]
@@ -29,7 +30,13 @@ def parse_excel(excel, opts):
     fields = get_checklist_fields(CHECKLIST_FIELD_GROUPS)
     #retrieve all taxids to be validated
     taxids_to_validate = get_taxids_to_validate(sheet_obj, 'TAXON_ID')
-    #check uniqueness of tube or well id
+    #check uniqueness of tube or well id in the excel
+
+    ids,duplicated_ids = get_ids(sheet_obj, 'TUBE_OR_WELL_ID') #manage ids for updating samples
+    exsisting_samples=SecondaryOrganism.objects(tube_or_well_id__in=ids)
+    existing_ids= list()
+    if len(exsisting_samples) > 0:
+        existing_ids = [sample['tube_or_well_id'] for sample in exsisting_samples]
     samples_with_errors=list()
     NCBI_validation = list()
     if len(taxids_to_validate) > 0:
@@ -39,14 +46,16 @@ def parse_excel(excel, opts):
     for index, row in enumerate(list(sheet_obj.rows)[header_index:]):
         values = get_sample_values(header,row)
         if len(values.keys()) > 2:
-            errors = validate_sample(index+header_index+1,values,fields,NCBI_validation)
-            if 'errors' in errors.keys():
+            if 'tube_or_well_id' in values.keys() and values['tube_or_well_id'] in existing_ids:
+                if import_option == 'SKIP':
+                    continue
+            errors = validate_sample(index+header_index+1,values,fields,NCBI_validation,duplicated_ids)
+            if 'errors' in errors.keys() and len(errors['errors'])>0:
                 samples_with_errors.append(errors)
             else:
                 parsed_sample = parse_sample(values,fields,NCBI_validation)
                 samples.append(parsed_sample)
     #check for duplicates if yes send error at index
-    ids = [sample.tube_or_well_id for sample in samples]
     return samples, samples_with_errors
 
 #return unique taxids
@@ -63,6 +72,19 @@ def get_taxids_to_validate(sheet_obj, column_name):
         existing_taxids = [org.taxid for org in Organism.objects(taxid__in=taxids_to_validate)]
         taxids_to_validate = [taxid for taxid in taxids_to_validate if taxid not in existing_taxids]
     return taxids_to_validate
+
+def get_ids(sheet_obj, column_name):
+    ids = list()
+    duplicated_ids=list()
+    column_index = [get_column_letter(cell.column) for cell in sheet_obj[1] if cell.value == column_name]
+    if len(column_index) == 1:
+        column = sheet_obj[column_index[0]]
+        for cell in column[1:]:
+            if cell.value:
+                ids.append(str(cell.value))
+    if ids > list(set(ids)):
+        duplicated_ids = [id for id in ids if id not in list(set(ids))]
+    return ids, duplicated_ids
 
 def get_checklist_fields(groups):
     fields = list()
@@ -102,10 +124,13 @@ def check_mandatory_fields(errors,NCBI_response,sample,fields):
             errors.append({'label':mandatory_field,'message':f'the {mandatory_field} field is mandatory'})
     return errors
 
-def validate_sample(index, sample, fields, NCBI_response):
+def validate_sample(index, sample, fields, NCBI_response, duplicated_ids):
     sample_with_error = {'index': index}
     errors = list()
     check_mandatory_fields(errors, NCBI_response, sample, fields)
+    if 'tube_or_well_id' in sample.keys() and sample['tube_or_well_id'] in duplicated_ids:
+        id = sample['tube_or_well_id']
+        errors.append({'index': index, 'label': 'tube_or_well_id', 'message': f'this tube_or_well_id: {id} is duplicated!'})
     for key, value in sample.items():
         model_fields = [field['model'] for field in fields]
         #erga manifest/ena checklist validation

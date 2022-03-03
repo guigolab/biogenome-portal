@@ -92,8 +92,7 @@ export default {
             showOptions:false,
             importOptions: [
                 {value: 'SKIP', text:'Skip already existing samples'},
-                {value: 'UPDATE_ALL', text: 'Update all fields'},
-                {value: 'UPDATE_NON_EMPTY',text: 'Update only non-empty fields'}
+                {value: 'UPDATE', text: 'Update all fields'},
             ],
             selectedOption:'SKIP',
             headerIndex:1,
