@@ -1,4 +1,5 @@
 import datetime
+from socket import dup
 from tempfile import NamedTemporaryFile
 import openpyxl
 from openpyxl.utils import get_column_letter
@@ -7,7 +8,8 @@ import re
 from db.models import Organism, SecondaryOrganism
 from utils.constants import CHECKLIST_FIELD_GROUPS,MANIFEST_HEADER,IMPORT_OPTIONS
 from utils.ena_client import check_taxons_from_NCBI
-
+from flask import current_app as app
+import collections
 
 def get_sample_values(header,row):
     values = {}
@@ -33,6 +35,7 @@ def parse_excel(excel, opts):
     #check uniqueness of tube or well id in the excel
 
     ids,duplicated_ids = get_ids(sheet_obj, 'TUBE_OR_WELL_ID') #manage ids for updating samples
+    app.logger.info(duplicated_ids)
     exsisting_samples=SecondaryOrganism.objects(tube_or_well_id__in=ids)
     existing_ids= list()
     if len(exsisting_samples) > 0:
@@ -82,8 +85,8 @@ def get_ids(sheet_obj, column_name):
         for cell in column[1:]:
             if cell.value:
                 ids.append(str(cell.value))
-    if ids > list(set(ids)):
-        duplicated_ids = [id for id in ids if id not in list(set(ids))]
+    duplicated_ids = [id for id, count in collections.Counter(ids).items() if count > 1]
+    print(duplicated_ids)
     return ids, duplicated_ids
 
 def get_checklist_fields(groups):

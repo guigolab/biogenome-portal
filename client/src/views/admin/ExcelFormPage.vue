@@ -123,7 +123,12 @@ export default {
             submissionService.parseExcel(formData)
             .then(response => {
                 this.errors=[]
-                this.$store.commit('submission/setAlert',{variant:'success', message: 'sample IDs correctly saved: ' + response.data.join()})
+                const ids = response.data
+                if (ids.length > 0){
+                    this.$store.commit('submission/setAlert',{variant:'success', message: 'sample IDs correctly saved: ' + ids.join()})
+                }else {
+                    this.$store.commit('submission/setAlert',{variant:'warning', message: 'no samples have been saved'})
+                }
                 this.$store.dispatch('submission/showAlert') 
                 this.$store.dispatch('portal/hideLoading')
             })

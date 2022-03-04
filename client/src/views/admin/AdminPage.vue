@@ -6,6 +6,21 @@
                 <b-button :to="{name: 'sample-form'}">Create sample</b-button>
                 <b-button :to="{name: 'excel-import'}">Import samples</b-button>
             </b-button-group>
+              <b-button-group class="mx-1">
+                <b-button :to="{name: 'excel-import'}">Import samples</b-button>
+            </b-button-group>
+            <b-dropdown id="dropdown-form" right text="Insert a BioSample Accession" ref="dropdown" class="mx-1">
+                <b-dropdown-form>
+                    <b-form-group label="BioSamples accession" label-for="biosample-accession" @submit.stop.prevent>
+                    <b-form-input
+                        id="biosample-accession"
+                        size="sm"
+                        v-model="accession"
+                    ></b-form-input>
+                    </b-form-group>
+                    <b-button :disabled="!accession" variant="primary" size="sm" @click="insertSample()">Insert sample</b-button>
+                </b-dropdown-form>
+            </b-dropdown>
             <b-dropdown class="mx-1" right text="Actions">
                 <b-dropdown-item href="https://github.com/ERGA-consortium/COPO-manifest/raw/main/ERGA_SAMPLE_MANIFEST_V1.xlsx">Download ERGA sample manifest</b-dropdown-item>
                 <b-dropdown-item @click="downloadExcel()">Download samples to submit to COPO</b-dropdown-item>
@@ -24,16 +39,18 @@
         </b-col>
         <router-view/>
     </b-row>
+    <sample-to-submit-modal :sample="sampleToSubmit"/>
 </b-row>
 </template>
 
 <script>
-import {BButtonToolbar,BButtonGroup,BButton, BDropdown, BDropdownItem} from 'bootstrap-vue'
+import {BButtonToolbar,BButtonGroup,BButton, BDropdown,BDropdownForm,BFormGroup,BFormInput, BDropdownItem} from 'bootstrap-vue'
 import {mapFields, showConfirmationModal} from '../../utils/helper'
 import submissionService from '../../services/SubmissionService'
 import OrganismsComponent from '../../components/organism/OrganismsComponent.vue';
 import TreeBrowserComponent from '../../components/taxon/TreeBrowserComponent.vue';
-
+import enaService from '../../services/ENAClientService'
+import SampleToSubmitModal from '../../components/modal/SampleToSubmitModal.vue';
 
 export default {
     data(){
@@ -42,7 +59,8 @@ export default {
             show:{
                 excelForm:false,
                 sampleForm: false,
-            }
+            },
+            accession:'',
         }
        },
     computed: {
@@ -53,10 +71,9 @@ export default {
         })
     },
     components: {
-        BButtonToolbar,BButtonGroup,BButton,
-        BDropdown, BDropdownItem,
-        OrganismsComponent,
-        TreeBrowserComponent,
+        BButtonToolbar,BButtonGroup,BButton,BDropdownForm,BFormGroup,BFormInput,
+        BDropdown, BDropdownItem,OrganismsComponent,TreeBrowserComponent,
+        SampleToSubmitModal,
     },
     mounted(){
         if(!localStorage.getItem('token')){
@@ -75,6 +92,28 @@ export default {
             })
             .catch(e =>{
                 console.log(e)
+            })
+        },
+        insertSample(){
+            enaService.getBioSample(this.accession)
+            .then(response => {
+                const data = response.data
+                console.log(data)
+                if(data && data._embedded && data._embedded.samples){
+                    const characteristics = data._embedded.samples[0].characteristics
+                    const metadata = Object.keys(characteristics)
+                    .map(key => {
+                        return { key : key, value : characteristics[key][0].text}
+                    })
+                    metadata.push({key:'accession', value: data._embedded.samples[0].accession})
+                    metadata.push({key:'taxId', value: data._embedded.samples[0].taxId})
+                    metadata.push({key:'name', value: data._embedded.samples[0].name})
+                    this.sampleToSubmit = metadata
+                    this.$bvModal.show(sample-to-submit)
+                }else {
+                    this.$store.commit('submission/setAlert',{variant:'warning', message: this.accession+ ' not found in EBI/BioSamples'})
+                    this.$store.dispatch('submission/showAlert') 
+                }
             })
         },
         dropData(){

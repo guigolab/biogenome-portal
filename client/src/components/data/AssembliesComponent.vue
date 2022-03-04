@@ -1,6 +1,6 @@
 <template>
-<div>
-  <table-component :sticky-header="stickyHeader" :items="assemblies" :fields="assemblyFields">
+<div ref="assembliesTable">
+  <table-component  :sticky-header="stickyHeader" :items="assemblies" :fields="assemblyFields">
     <template #cell(accession)="data">
         <a class="no-underline" target="_blank" :href="'https://www.ebi.ac.uk/ena/browser/view/' + data.value">{{data.value}}</a>
     </template>
@@ -24,7 +24,12 @@ export default{
         {key:'assembly_name', label: 'Name'}
       ],
     }
-  }
+  },
+    computed:{
+      stacked(){
+          return this.$refs.assembliesTable? this.$refs.assembliesTable.clientWidth <= 350 : false
+      },
+    },
 }
 </script>
 <style>

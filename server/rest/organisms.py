@@ -9,7 +9,7 @@ from flask_jwt_extended import jwt_required
 from utils.constants import OrganismPipeline
 from utils.utils import sort_lineage
 from flask import current_app as app
-
+import base64
 
 
 class OrganismsApi(Resource):
@@ -31,10 +31,36 @@ class OrganismsSearchApi(Resource):
 
 class OrganismApi(Resource):
 	def get(self,name):
-		organism = Organism.objects(organism=name).aggregate(*OrganismPipeline).next()
-		sort_lineage(organism['taxon_lineage']) #sort lineage (aggregation pipeline returns unordered list)
+		organism_obj = Organism.objects(organism=name)
+		if organism_obj.count() == 0:
+			raise NotFound
+		organism_response = organism_obj.aggregate(*OrganismPipeline).next()
+		if 'image' in organism_response.keys():
+			encoded_image = base64.b64encode(organism_obj.first().image.read())
+			organism_response['image'] = encoded_image.decode('utf-8')
+		sort_lineage(organism_response['taxon_lineage']) #sort lineage (aggregation pipeline returns unordered list)
+		return Response(json.dumps(organism_response),mimetype="application/json", status=200)
+
+	@jwt_required()
+	def post(self,name):
+		organism = Organism.objects(organism=name).first()
 		if not organism:
 			raise NotFound
-		app.logger.info(organism)
-		return Response(json.dumps(organism),mimetype="application/json", status=200)
+		if request.form:
+			if 'delete_image' in request.form.keys():
+				organism.image.delete()
+			if 'image' in request.files.keys():
+				if organism.image:
+					organism.image.replace(request.files['image'], content_type = 'image/jpeg')
+				else:
+					organism.image.put(request.files['image'], content_type = 'image/jpeg')
+			if 'image_url' in request.form.keys():
+				organism.image_url = request.form['image_url']
+			if 'common_name' in request.form.keys():
+				common_names = request.form['common_name'].split(',')
+				organism.common_name = (common_names)
+			organism.save()
+		else:
+			raise SchemaValidationError	# organism.common_name.extend
+
 

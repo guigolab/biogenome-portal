@@ -1,5 +1,5 @@
 <template>
-<div>
+<div ref="experimentsTable">
     <b-button style="margin-bottom:15px"  variant="outline-primary" block @click="showFields = !showFields">
         Column Selection 
     </b-button>
@@ -21,6 +21,7 @@
         :sticky-header="stickyHeader"
         :items="experiments"
         :fields="experimentFields"
+        
     >
         <template #cell(experiment_accession)="data">
           <a class="no-underline" target="_blank" :href="url+data.value">{{data.value}}</a>
@@ -122,6 +123,11 @@ export default {
             stickyHeader: '50vh',
             url: 'https://www.ebi.ac.uk/ena/browser/view/'
         }
+    },
+    computed:{
+        stacked(){
+            return this.$refs.experimentsTable? this.$refs.experimentsTable.clientWidth <= 350  : false
+        },
     },
     methods: {
         experimentKeys(){

@@ -24,6 +24,9 @@ class Login(Resource):
     def delete(self):
         TaxonNode.drop_collection()
         SecondaryOrganism.drop_collection()
+        images = Organism.objects(image__ne=None)
+        for org in images:
+            org.image.delete()
         Organism.drop_collection()
         Assembly.drop_collection()
         Experiment.drop_collection()

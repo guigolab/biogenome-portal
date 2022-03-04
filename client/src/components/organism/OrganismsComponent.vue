@@ -2,6 +2,7 @@
     <b-container class="router-container" fluid>
       <tree-bread-crumb-component/>
       <filter-component :filter="filter" :placeholder="'Search in ' + taxName"/>
+      <div ref="organismsTable">
       <table-component 
         :items="organismsProvider"
         :busy.sync="isBusy"
@@ -12,10 +13,12 @@
         :primary-key="'id'"
         :custom-fields="customFields"
         :id="tableId"
+        :stacked="stacked"
         :sticky-header="stickyHeader"
         @row-selected="onRowSelected"
         :selectable="hasToken"
         :selectMode="'multi'"
+        
         >
         <template #head(trackingSystem)>
           <b-form-select
@@ -66,7 +69,9 @@
             <b-badge style="cursor:pointer" v-if="data['item'].assemblies.length" @click.stop="getData(data['item'], 'assemblies')" pill variant="primary">{{data['item'].assemblies.length}}</b-badge>
         </template>
       </table-component>
+      </div>
       <data-modal :data="data" :model="model" :organism="organism"/>
+      <edit-organism-modal :organism="organism" :commonNames="commonNames"/>
       <pagination-component :per-page="perPage" :page-options="pageOptions" :total-rows="totalRows" :current-page="currentPage" :table-id="tableId"/>
     </b-container>
 </template>
@@ -82,14 +87,14 @@ import StatusBadgeComponent from '../base/StatusBadgeComponent.vue';
 import SubmissionService from '../../services/SubmissionService';
 import DataModal from '../modal/DataModal.vue';
 import TreeBreadCrumbComponent from '../taxon/TreeBreadCrumbComponent.vue';
+import EditOrganismModal from '../modal/EditOrganismModal.vue';
 
 export default {
   components: 
     {
       BLink,BBadge, BFormSelect,TableComponent,PaginationComponent,FilterComponent,
       StatusBadgeComponent,BDropdown, BDropdownItem,BIconPenFill,BIconTrashFill,
-      DataModal,
-        TreeBreadCrumbComponent
+      DataModal,TreeBreadCrumbComponent,EditOrganismModal
     },
   computed: {
     ...mapFields({
@@ -97,6 +102,9 @@ export default {
       module: 'portal',
       mutation: 'portal/setField'      
     }),
+    stacked(){
+      return this.$refs.organismsTable ? this.$refs.organismsTable.clientWidth <= 350 : false
+    },
     hasToken(){
       return localStorage.getItem('token')
     },
@@ -117,10 +125,10 @@ export default {
       selectedStatus: '',
       statuses: [
         { value: '', text: 'All' },
-        { value: 'Biosample Submitted', text: 'Biosample Submitted'},
-        { value: 'Mapped Reads Submitted', text: 'Mapped Reads Submitted' },
+        { value: 'Local Sample', text: 'Local Samples'},
+        { value: 'Biosample Submitted', text: 'Biosamples Submitted'},
+        { value: 'Reads Submitted', text: 'Reads Submitted' },
         { value: 'Assemblies Submitted', text: 'Assemblies Submitted' },
-        { value: 'Raw Data Submitted', text: 'Raw Data Submitted' },
         { value: 'Annotation Complete', text: 'Annotation Complete' },
         { value: 'Annotation Submitted', text: 'Annotation Submitted' }
       ],
@@ -135,6 +143,7 @@ export default {
       selectedOrganisms:[],
       data:[],
       organism:null,
+      commonNames: '',
       model:''
     }
   },
@@ -162,6 +171,11 @@ export default {
         console.log(e)
       })
     },
+    editOrganism(organism){
+      this.organism = organism
+      this.commonNames = organism.common_name.join()
+      this.$bvModal.show('organism-modal')
+    },
     getData(organism, model){
       const ids = organism[model].map(dt => {return dt.$oid})
       portalService.getData(model,{ids:ids})
@@ -171,8 +185,6 @@ export default {
         this.organism = organism.organism
         this.$bvModal.show('data-modal')
       })
-
-
     },
     onRowSelected(value){
       this.selectedOrganisms = value

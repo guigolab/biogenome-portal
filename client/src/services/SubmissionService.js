@@ -59,7 +59,7 @@ submission.interceptors.request.use(
 class SubmissionService {
   generateXML(form) {
       return base.post("/xml", form)
-    }
+  }
   getSubmissionFile(value) {
     return base.get(`/xml/${value}`)
   }
@@ -81,6 +81,9 @@ class SubmissionService {
   updateSample(accession, formData){
     return submission.put(`/organisms/${accession}`,formData)
   }
+  updateOrganism(name, formData){
+    return submission.post(`/root_organisms/${name}`, formData)
+  }
   deleteSamples(params){
     return submission.delete('/organisms', {
       params:params
@@ -91,6 +94,7 @@ class SubmissionService {
       params:params
     })
   }
+  
 
 }
 

@@ -63,12 +63,14 @@ def parse_data(assemblies):
         if len(organism.assemblies) == 0 or not ass_obj.id in [ass.id for ass in organism.assemblies]:
             organism.assemblies.append(ass_obj)
             sample_obj.modify(push__assemblies=ass_obj)
+        sample_service.get_reads(list(sample_obj))
         #save triggers status tracking
         organism.save()
     if len(list(samples_not_found))>0:
         print('SAMPLES NOT FOUND IN BIOSAMPLES')
         print(samples_not_found)
-    get_reads(samples_accessions)
+    print('NCBI DATA IMPORTED')
+    # get_reads(samples_accessions)
 
 
 def create_sample_from_biosamples(sample_obj, samples_not_found):
@@ -81,21 +83,3 @@ def create_sample_from_biosamples(sample_obj, samples_not_found):
         samples_not_found.add(sample_obj.accession)
         print(sample_obj.accession)
 
-def get_reads(samples_accessions):
-    for accession in list(samples_accessions):
-        sample = SecondaryOrganism.objects(Q(accession=accession) & SAMPLE_QUERY).first()
-        if not sample:
-            continue
-        experiments = ena_client.get_reads(accession)
-        if len(experiments) > 0:
-            unique_exps=list({v['experiment_accession']:v for v in experiments}.values())
-            existing_exps = Experiment.objects(experiment_accession__in=[exp['experiment_accession'] for exp in unique_exps])
-            new_exps = [Experiment(**exp) for exp in unique_exps if exp['experiment_accession'] not in [exp['experiment_accession'] for exp in existing_exps]] if len(existing_exps) > 0 else [Experiment(**exp) for exp in unique_exps]
-            if len(new_exps)>0:
-                Experiment.objects.insert(new_exps, load_bulk=False)
-                sample = SecondaryOrganism.objects(accession=accession).first()
-                sample.modify(push_all__experiments=new_exps, last_check=datetime.utcnow())
-                org = Organism.objects(taxid=sample.taxid).first()
-                org.experiments.extend(new_exps)
-                #trigger status update
-                org.save()

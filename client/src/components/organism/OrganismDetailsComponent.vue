@@ -9,15 +9,18 @@
         <b-col>
             <b-row>
                 <b-col>
-                    <div style="display:flex;width:fit-content;">
-                        <h2 style="margin-bottom:0px">{{organism.organism}}</h2>
-                        <div style="margin-left: 10px;margin-right:10px;">
-                            <status-badge-component :status="organism.trackingSystem"/>
-                        </div>
-                    </div>
+                    <b-row>
+                        <b-col>
+                            <div v-if="hasImage" class="mb-2" style="float:left">
+                                <b-avatar id="species-image" :src="organism.image? 'data:image/jpeg;base64,'+organism.image : organism.image_url" size="7rem"></b-avatar>
+                            </div>
+                             <h2 >{{organism.organism}}</h2>
+                             <status-badge-component :status="organism.trackingSystem"/>
+                        </b-col>
+                    <b-row>
                 </b-col>
             </b-row>
-            <b-row v-if="organism.common_name.length">
+            <b-row v-if="organism.common_name.length && organism.common_name[0]">
                 <b-col>
                     <h5>{{organism.common_name.join()}}</h5>
                 </b-col>
@@ -72,14 +75,14 @@
 </template>
 
 <script>
-import {BTabs,BLink,BTab,BBadge} from 'bootstrap-vue'
+import {BTabs,BLink,BTab,BBadge,BAvatar} from 'bootstrap-vue'
 import StatusBadgeComponent from '../base/StatusBadgeComponent.vue'
 import MapContainer from '../base/MapContainer.vue'
 import ExperimentsComponent from '../data/ExperimentsComponent.vue'
 import AssembliesComponent from '../data/AssembliesComponent.vue'
 import SampleComponent from '../sample/SampleComponent.vue'
 export default {
-    components: {BTabs,ExperimentsComponent,BTab, BLink, BBadge, StatusBadgeComponent, MapContainer, AssembliesComponent, SampleComponent},
+    components: {BTabs,ExperimentsComponent,BTab,BAvatar, BLink, BBadge, StatusBadgeComponent, MapContainer, AssembliesComponent, SampleComponent},
     props:['organism'],
     computed:{
         expIndex(){
@@ -95,6 +98,9 @@ export default {
             && !isNaN(record.geographic_location_longitude)
             && !isNaN(record.geographic_location_latitude))
         },
+        hasImage(){
+            return this.organism && (this.organism.image || this.organism.image_url)
+        }
     },
     data(){
         return {
@@ -134,6 +140,12 @@ export default {
             this.geojson = geoJson
                   
         },
+        editImage(){
+
+        },
+        editCommonNames(){
+
+        },
         reverseItems(items) {
             return items.slice().reverse();
         },
@@ -167,6 +179,10 @@ export default {
     min-height: 66vh;
 }
 
+#species-image{
+margin-right: 10px;
+margin-left: 10px
+}
 .map-container{
     width: 100%;
     height: 100%;

@@ -1,5 +1,5 @@
 <template>
-   <b-modal size="xl" id="data-modal" scrollable :title="organism +' '+model">
+   <b-modal :size="size" id="data-modal" scrollable :title="organism +' '+model">
         <experiments-component v-if="model === 'experiments'" :experiments="data"/>
         <assemblies-component v-if="model === 'assemblies'" :assemblies="data"/>
   </b-modal>
@@ -11,6 +11,14 @@ import ExperimentsComponent from '../data/ExperimentsComponent.vue'
 export default {
     props: ['organism', 'model', 'data'],
     components: {AssembliesComponent,ExperimentsComponent},
+    computed: {
+        size(){
+            if (this.model === 'experiments' ){
+                return 'xl'
+            }
+            return 'lg'
+        }
+    }
     }
 
 </script>

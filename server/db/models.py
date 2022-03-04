@@ -2,10 +2,13 @@
 from . import db
 from enum import Enum
 from datetime import datetime
+from mongoengine.queryset.visitor import Q
+
 
 class TrackStatus(Enum):
+    LOCAL_SAMPLE = 'Local Sample'
     SAMPLE = 'Biosample Submitted'
-    RAW_DATA = 'Raw Data Submitted'
+    READS = 'Reads Submitted'
     ASSEMBLIES = 'Assemblies Submitted'
     ANN_SUBMITTED = 'Annotation Submitted'
     
@@ -197,9 +200,12 @@ def update_modified(sender, document):
     if len(document.assemblies) > 0:
         document.trackingSystem= TrackStatus.ASSEMBLIES
     elif len(document.experiments) > 0:
-        document.trackingSystem= TrackStatus.RAW_DATA
-    else:
+        document.trackingSystem= TrackStatus.READS
+    elif len(document.records) > 0 and \
+        len(SecondaryOrganism.objects(Q(id__in=[rec.id for rec in document.records]) & Q(accession__ne=None))) >0:
         document.trackingSystem=TrackStatus.SAMPLE
+    else:
+        document.trackingSystem=TrackStatus.LOCAL_SAMPLE
 
 @update_modified.apply
 class Organism(db.Document):
@@ -211,6 +217,7 @@ class Organism(db.Document):
     records = db.ListField(db.LazyReferenceField(SecondaryOrganism))
     taxid = db.StringField(required= True)
     image = db.FileField()
+    image_url = db.StringField()
     taxon_lineage = db.ListField(db.LazyReferenceField(TaxonNode))
     trackingSystem = db.EnumField(TrackStatus)
     meta = {

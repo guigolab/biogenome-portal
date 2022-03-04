@@ -1,6 +1,6 @@
 <template>
-    <div>
-        <table-component @row-selected="onRowSelected" :sticky-header="stickyHeader" :selectable="hasToken" :selectMode="'multi'" :fields="sampleFields" :items="samples">
+    <div ref="samplesTable">
+        <table-component @row-selected="onRowSelected"  :sticky-header="stickyHeader" :selectable="hasToken" :selectMode="'multi'" :fields="sampleFields" :items="samples">
             <template v-if="hasToken" #head(actions)>
                 <b-dropdown class="mx-1" dropup right text="Actions">
                     <b-dropdown-item @click="deleteSamples(selectedSamples)" variant="danger">Delete selected samples</b-dropdown-item>
@@ -62,6 +62,9 @@ export default {
                 return this.sampleStaticFields.concat([{key:'actions',label:'Actions'}])
             }
             return this.sampleStaticFields
+        },
+        stacked(){
+            return this.$refs.samplesTable ? this.$refs.samplesTableclientWidth <= 350 : false
         },
         isLastSample(){
             return this.samples.length > 0 && this.samples.length === 1

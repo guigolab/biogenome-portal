@@ -1,7 +1,11 @@
 from db.models import Organism,SecondaryOrganism,Experiment,Assembly, TrackStatus
 from services import taxon_service
+from utils import ena_client
 from mongoengine.queryset.visitor import Q
+from datetime import datetime
+
 from flask import current_app as app
+
 
 
 def create_sample_object(metadata):
@@ -54,3 +58,23 @@ def delete_samples(ids):
         organism.delete()
     samples_to_delete.delete()
     return {'success':'samples: '+ ','.join(ids) + ' deleted'}
+
+def get_reads(samples):
+    for sample in samples:
+        accession = sample.accession
+        experiments = ena_client.get_reads(sample.accession)
+        if len(experiments) > 0:
+            unique_exps=list({v['experiment_accession']:v for v in experiments}.values())
+            existing_exps = Experiment.objects(experiment_accession__in=[exp['experiment_accession'] for exp in unique_exps])
+            if len(existing_exps) > 0:
+                new_exps = [Experiment(**exp) for exp in unique_exps if exp['experiment_accession'] not in [exp['experiment_accession'] for exp in existing_exps]] 
+            else:
+                new_exps=[Experiment(**exp) for exp in unique_exps]
+            if len(new_exps)>0:
+                Experiment.objects.insert(new_exps, load_bulk=False)
+                sample = SecondaryOrganism.objects(accession=accession).first()
+                sample.modify(push_all__experiments=new_exps, last_check=datetime.utcnow())
+                org = Organism.objects(taxid=sample.taxid).first()
+                org.experiments.extend(new_exps)
+                #trigger status update
+                org.save()

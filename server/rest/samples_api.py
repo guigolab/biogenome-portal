@@ -30,14 +30,14 @@ class SamplesApi(Resource):
         else:
             raise SchemaValidationError
 
-
-
     @jwt_required()
     def put(self,accession):
         data = request.json if request.is_json else request.form
         sample = SecondaryOrganism.objects((Q(accession=accession) | Q(tube_or_well_id=accession))).first()
-        if not sample:
-            raise NotFound
+        if not sample and not data:
+            raise SchemaValidationError
+        elif not sample and 'accession' in data.keys():
+            app.logger.info('UPDATE SAMPLE')
         else:
             sample.update(**data)
         if sample.accession:
