@@ -125,7 +125,7 @@ export default {
       selectedStatus: '',
       statuses: [
         { value: '', text: 'All' },
-        { value: 'Local Sample', text: 'Local Samples'},
+        { value: 'Sample Acquired', text: 'Sample Acquired'},
         { value: 'Biosample Submitted', text: 'Biosamples Submitted'},
         { value: 'Reads Submitted', text: 'Reads Submitted' },
         { value: 'Assemblies Submitted', text: 'Assemblies Submitted' },

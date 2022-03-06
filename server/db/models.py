@@ -6,7 +6,7 @@ from mongoengine.queryset.visitor import Q
 
 
 class TrackStatus(Enum):
-    LOCAL_SAMPLE = 'Local Sample'
+    LOCAL_SAMPLE = 'Sample Acquired'
     SAMPLE = 'Biosample Submitted'
     READS = 'Reads Submitted'
     ASSEMBLIES = 'Assemblies Submitted'

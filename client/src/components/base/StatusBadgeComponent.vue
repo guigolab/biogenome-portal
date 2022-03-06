@@ -16,7 +16,7 @@ export default {
                 'Assemblies Submitted': 'primary',
                 'Reads Submitted': 'warning',
                 'Biosample Submitted': 'secondary',
-                'Local Sample':'info'
+                'Sample Acquired':'info'
             }
         }
     }

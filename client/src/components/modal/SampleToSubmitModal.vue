@@ -30,7 +30,7 @@ export default {
             showConfirmationModal(this.$bvModal, 'Submit this sample?')
             .then(value => {
                 if(value){
-                    return submissionService.updateSample(sample.accession, this.sample)
+                    return submissionService.updateSample(this.sample.accession, this.sample)
                 } return null   
             })
             .then(response => {

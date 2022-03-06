@@ -109,7 +109,7 @@ export default {
                     metadata.push({key:'taxId', value: data._embedded.samples[0].taxId})
                     metadata.push({key:'name', value: data._embedded.samples[0].name})
                     this.sampleToSubmit = metadata
-                    this.$bvModal.show(sample-to-submit)
+                    this.$bvModal.show('sample-to-submit')
                 }else {
                     this.$store.commit('submission/setAlert',{variant:'warning', message: this.accession+ ' not found in EBI/BioSamples'})
                     this.$store.dispatch('submission/showAlert') 
