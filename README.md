@@ -45,7 +45,7 @@
   </ol>
 </details>
 
-HERE is the live demo: [https://genome.crg.cat/portal-dev/#/](url)
+HERE is the live demo: https://genome.crg.cat/portal-dev/#/
 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
