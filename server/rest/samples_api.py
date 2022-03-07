@@ -62,7 +62,6 @@ class SamplesApi(Resource):
                     metadata['taxid'] = taxid
                     # metadata['accession'] =
                     sample = service.create_sample(metadata)
-                    app.logger.info(sample)
                     sample_service.get_reads([sample])
                     assemblies = ena_client.parse_assemblies(sample.accession)
                     if len(assemblies) > 0:

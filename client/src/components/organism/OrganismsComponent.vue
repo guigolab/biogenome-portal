@@ -156,11 +156,14 @@ export default {
           const taxids = organisms.map(organism => {return organism.taxid}).join()
           return SubmissionService.deleteOrganisms({tax_ids:taxids})
         }
+        return null
       })
       .then(response=>{
+        if(response){
           this.$store.commit('submission/setAlert',{variant:'success', message: 'organisms correctly deleted: ' + response.data.join()})
           this.$store.dispatch('submission/showAlert')
           this.$router.go()
+          }
       })
       .catch(e=>{
           this.$store.commit('submission/setAlert',{variant:'danger', message: e})
@@ -173,6 +176,7 @@ export default {
       this.$bvModal.show('organism-modal')
     },
     getData(organism, model){
+      this.$store.dispatch('portal/showLoading')
       const ids = organism[model].map(dt => {return dt.$oid})
       portalService.getData(model,{ids:ids})
       .then(response => {
@@ -180,6 +184,7 @@ export default {
         this.model = model
         this.organism = organism.organism
         this.$bvModal.show('data-modal')
+        this.$store.dispatch('portal/hideLoading')
       })
     },
     onRowSelected(value){

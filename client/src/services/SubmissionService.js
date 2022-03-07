@@ -8,11 +8,8 @@ const download = http.download
 download.interceptors.response.use(undefined, (error) => {
   if (error) {
     // const originalRequest = error.config;
-    console.log(error.response)
     if (error.response.status === 401) {
-        store.dispatch('submission/showLoginModal').then(value => {
-          console.log(value)
-        })
+        store.dispatch('submission/showLoginModal')
     }
     return Promise.reject(error)
   }
@@ -34,11 +31,8 @@ download.interceptors.request.use(
 submission.interceptors.response.use(undefined, (error) => {
   if (error) {
     // const originalRequest = error.config;
-    console.log(error.response)
     if (error.response.status === 401) {
-        store.dispatch('submission/showLoginModal').then(value => {
-          console.log(value)
-        })
+        store.dispatch('submission/showLoginModal')
     }
     return Promise.reject(error)
   }

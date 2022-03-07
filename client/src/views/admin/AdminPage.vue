@@ -97,19 +97,16 @@ export default {
             })
         },
         insertSample(){
+            this.$store.dispatch('portal/showLoading')
             enaService.getBioSample(this.accession)
             .then(response => {
                 const data = response.data
                 if(data && data._embedded && data._embedded.samples){
                     this.metadata = data._embedded.samples[0]
                     this.metadata.taxid = this.metadata.taxId
-                    // this.metadata.accession = data._embedded.samples[0].accession
-                    // this.metadata.name =  data._embedded.samples[0].name
-                    // Object.keys(characteristics).forEach(key=>{
-                    //     this.metadata[key] = characteristics[key][0].text
-                    // })
                     this.$nextTick(() => {
                         this.$bvModal.show('sample-to-submit')
+                        this.$store.dispatch('portal/hideLoading')
                     })
                 }else {
                     this.$store.commit('submission/setAlert',{variant:'warning', message: this.accession+ ' not found in EBI/BioSamples'})

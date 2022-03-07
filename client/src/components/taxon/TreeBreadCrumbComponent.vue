@@ -34,7 +34,7 @@ export default {
         mutation: 'portal/setField'      
         }),
         taxNameHistory(){
-        return this.$store.getters['portal/getTaxNameHistory']
+            return this.$store.getters['portal/getTaxNameHistory']
         }
     },
     methods:{
