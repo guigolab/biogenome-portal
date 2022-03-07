@@ -4,7 +4,6 @@
         <b-button-toolbar>
             <b-button-group class="mx-1">
                 <b-button :to="{name: 'sample-form'}">Create sample</b-button>
-                <b-button :to="{name: 'excel-import'}">Import samples</b-button>
             </b-button-group>
               <b-button-group class="mx-1">
                 <b-button :to="{name: 'excel-import'}">Import samples</b-button>

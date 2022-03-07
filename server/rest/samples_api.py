@@ -56,11 +56,11 @@ class SamplesApi(Resource):
             if len(SecondaryOrganism.objects(Q(tube_or_well_id=id) | Q(accession=id))) > 0:
                 raise RecordAlreadyExistError
             else:
+                #import data from accession number
                 if 'accession' in data.keys():
                     metadata = parse_sample_metadata(data['characteristics'])
                     metadata['accession'] = data['accession']
                     metadata['taxid'] = taxid
-                    # metadata['accession'] =
                     sample = service.create_sample(metadata)
                     sample_service.get_reads([sample])
                     assemblies = ena_client.parse_assemblies(sample.accession)
@@ -83,6 +83,7 @@ class SamplesApi(Resource):
                             sample.last_checked=datetime.utcnow()
                             sample.save()
                 else:
+                    #create local sample
                     sample = service.create_sample(data)
                 return Response(json.dumps(f'sample with id {id} has been saved'),mimetype="application/json", status=201)
         else:
