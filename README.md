@@ -180,8 +180,8 @@ The import function uses the BioSamples API to retrieve samples metadata via the
 - [ ] Add Changelog
 - [ ] Add JSON schema (OAS docs)
 - [ ] Add local names management
-- [ ] Add organism photo management
-- [ ] Add sample accession import feature
+- [X] Add organism photo management
+- [X] Add sample accession import feature
 - [ ] Add custom fields management
 
 
