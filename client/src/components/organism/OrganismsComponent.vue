@@ -132,8 +132,8 @@ export default {
         {key: 'organism',label:'Name',sortable: true},
         {key:'common_name', label: 'Common Name', sortable: true},
         {key: 'trackingSystem', label:'Status', sortalble: false},
+        {key: 'data'},
         {key: 'externalReferences', label:'Links'},
-        {key: 'data'}
       ],
       selectedOrganisms:[],
       data:[],

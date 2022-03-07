@@ -95,6 +95,7 @@ ul{
     background-color: rgb(233, 236, 239);
     padding: 0.5rem;
     margin: 0.25rem;
+    border-radius: 1.25rem;
 }
 #tree-leaves-button {
     margin-left: 0.3rem;
