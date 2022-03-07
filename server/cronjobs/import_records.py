@@ -8,7 +8,7 @@ from utils import ena_client
 
 
 import os
-SAMPLE_QUERY = Q(accession__ne=None) & (Q(last_check=None) | Q(last_check__lte=datetime.now()- timedelta(hours=1)))
+SAMPLE_QUERY = Q(accession__ne=None) & (Q(last_check=None) | Q(last_check__lte=datetime.now()- timedelta(days=15)))
 
 def import_records():
     PROJECTS = os.getenv('PROJECTS').split(',')
