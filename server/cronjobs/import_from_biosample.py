@@ -45,14 +45,14 @@ def import_from_EBI_biosamples(PROJECTS):
                     for ass in assemblies:
                         if not 'sample_accession' in ass.keys():
                             ass['sample_accession'] = sample_obj.accession
-                    assemblies = Assembly.objects.insert(assemblies)
+                    assemblies = Assembly.objects.insert([Assembly(**ass) for ass in assemblies])
                     organism.assemblies.extend(assemblies)
                     organism.save()
                     sample_obj.assemblies.extend(assemblies)
                     sample_obj.last_checked=datetime.utcnow()
                     sample_obj.save()
             print('GETTING READS')
-            sample_service.get_reads(list(sample_obj))
+            sample_service.get_reads([sample_obj])
         print('APPENDING SPECIMENS')
         append_specimens(samples_accessions)
     print('DATA FROM ENA/BIOSAMPLES IMPORTED')

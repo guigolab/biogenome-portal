@@ -63,7 +63,7 @@ def parse_data(assemblies):
         if len(organism.assemblies) == 0 or not ass_obj.id in [ass.id for ass in organism.assemblies]:
             organism.assemblies.append(ass_obj)
             sample_obj.modify(push__assemblies=ass_obj)
-        sample_service.get_reads(list(sample_obj))
+        sample_service.get_reads([sample_obj])
         #save triggers status tracking
         organism.save()
     if len(list(samples_not_found))>0:

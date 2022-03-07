@@ -1,7 +1,10 @@
 from flask import Response, request
-from db.models import  SecondaryOrganism
+from db.models import  Organism, SecondaryOrganism,Assembly
 from flask_restful import Resource
-from errors import NotFound,SchemaValidationError,RecordAlreadyExistError
+from errors import NotFound,SchemaValidationError,RecordAlreadyExistError,TaxonNotFoundError
+from utils.utils import parse_sample_metadata
+from utils import ena_client
+from datetime import datetime
 from services import sample_service
 import services.submission_service as service
 from flask_jwt_extended import jwt_required
@@ -34,33 +37,55 @@ class SamplesApi(Resource):
     def put(self,accession):
         data = request.json if request.is_json else request.form
         sample = SecondaryOrganism.objects((Q(accession=accession) | Q(tube_or_well_id=accession))).first()
-        if not sample and not data:
+        if not sample:
+            raise NotFound
+        elif not data:
             raise SchemaValidationError
-        elif not sample and 'accession' in data.keys():
-            app.logger.info('UPDATE SAMPLE')
         else:
             sample.update(**data)
-        if sample.accession:
-            id = sample.accession
-        else:
             id = sample.tube_or_well_id
         return Response(json.dumps(f'sample with id {id} has been saved'),mimetype="application/json", status=204)
 		#update sample
 
-
     @jwt_required()
     def post(self):
-        ## TODO add metadata validation for different clients
-        # SecondaryOrganism._get_collection().drop_index('accession_1')
         data = request.json if request.is_json else request.form
-        app.logger.info(data)
-        if all (k in data.keys() for k in ("taxid","tube_or_well_id")):
-            tube_or_well_id= data['tube_or_well_id']
-            if len(SecondaryOrganism.objects(tube_or_well_id=tube_or_well_id)) > 0:
+        if 'taxid' in data.keys() and ('tube_or_well_id' in data.keys() or 'accession' in data.keys()):
+            taxid = str(data['taxid'])
+            id = data['tube_or_well_id'] if 'tube_or_well_id' in data.keys() else data['accession']
+            if len(SecondaryOrganism.objects(Q(tube_or_well_id=id) | Q(accession=id))) > 0:
                 raise RecordAlreadyExistError
             else:
-                sample = service.create_sample(data)
-                return Response(json.dumps(f'sample with id {sample.tube_or_well_id} has been saved'),mimetype="application/json", status=201)
+                if 'accession' in data.keys():
+                    metadata = parse_sample_metadata(data['characteristics'])
+                    metadata['accession'] = data['accession']
+                    metadata['taxid'] = taxid
+                    # metadata['accession'] =
+                    sample = service.create_sample(metadata)
+                    app.logger.info(sample)
+                    sample_service.get_reads([sample])
+                    assemblies = ena_client.parse_assemblies(sample.accession)
+                    if len(assemblies) > 0:
+                        existing_assemblies=Assembly.objects(accession__in=[ass['accession'] for ass in assemblies])
+                        if len(existing_assemblies) > 0:
+                            assemblies= [ass for ass in assemblies if ass['accession'] not in [ex_as['accession'] for ex_as in existing_assemblies]]
+                        if len(assemblies) > 0:
+                            for ass in assemblies:
+                                if not 'sample_accession' in ass.keys():
+                                    ass['sample_accession'] = sample.accession
+                            app.logger.info(assemblies)
+                            assemblies = Assembly.objects.insert([Assembly(**ass) for ass in assemblies])
+                            organism = Organism.objects(taxid=sample.taxid).first()
+                            if not organism:
+                                raise TaxonNotFoundError
+                            organism.assemblies.extend(assemblies)
+                            organism.save()
+                            sample.assemblies.extend(assemblies)
+                            sample.last_checked=datetime.utcnow()
+                            sample.save()
+                else:
+                    sample = service.create_sample(data)
+                return Response(json.dumps(f'sample with id {id} has been saved'),mimetype="application/json", status=201)
         else:
             raise SchemaValidationError
    

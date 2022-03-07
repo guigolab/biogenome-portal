@@ -14,8 +14,8 @@
                             <div v-if="hasImage" class="mb-2" style="float:left">
                                 <b-avatar id="species-image" :src="organism.image? 'data:image/jpeg;base64,'+organism.image : organism.image_url" size="7rem"></b-avatar>
                             </div>
-                             <h2 >{{organism.organism}}</h2>
-                             <status-badge-component :status="organism.trackingSystem"/>
+                            <h2 >{{organism.organism}}</h2>
+                            <status-badge-component :status="organism.trackingSystem"/>
                         </b-col>
                     <b-row>
                 </b-col>
@@ -32,13 +32,6 @@
                     >
                         {{node.name}} (<strong>{{node.rank}}</strong>)
                     </b-link>
-                </b-col>
-            </b-row>
-            <b-row>
-                <b-col>
-                    <b-badge style="margin-right:5px" variant='info' pill><strong>{{organism.taxid}}</strong></b-badge>
-                    <b-badge style="margin-right:5px" pill variant='dark' target="_blank" :href="'https://goat.genomehubs.org/records?record_id='+organism.taxid+'&result=taxon&taxonomy=ncbi#'+organism.organism">GoaT</b-badge>
-                    <b-badge style="margin-right:5px" pill target="_blank" :href="'https://www.ebi.ac.uk/ena/browser/view/'+ organism.taxid">ENA</b-badge>
                 </b-col>
             </b-row>
         </b-col>
@@ -140,12 +133,6 @@ export default {
             this.geojson = geoJson
                   
         },
-        editImage(){
-
-        },
-        editCommonNames(){
-
-        },
         reverseItems(items) {
             return items.slice().reverse();
         },
@@ -187,10 +174,6 @@ margin-left: 10px
     width: 100%;
     height: 100%;
     min-height: 150px
-    /* min-height:300px;
-    min-width:200px;
-    margin-bottom:20px */
-}
-/* not supported in IE, but is anybody still using it? */
 
+}
 </style>

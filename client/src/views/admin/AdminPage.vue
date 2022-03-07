@@ -39,7 +39,7 @@
         </b-col>
         <router-view/>
     </b-row>
-    <sample-to-submit-modal :sample="sampleToSubmit"/>
+    <sample-to-submit-modal :sample="metadata"/>
 </b-row>
 </template>
 
@@ -61,6 +61,8 @@ export default {
                 sampleForm: false,
             },
             accession:'',
+            metadata:{},
+
         }
        },
     computed: {
@@ -98,18 +100,17 @@ export default {
             enaService.getBioSample(this.accession)
             .then(response => {
                 const data = response.data
-                console.log(data)
                 if(data && data._embedded && data._embedded.samples){
-                    const characteristics = data._embedded.samples[0].characteristics
-                    const metadata = Object.keys(characteristics)
-                    .map(key => {
-                        return { key : key, value : characteristics[key][0].text}
+                    this.metadata = data._embedded.samples[0]
+                    this.metadata.taxid = this.metadata.taxId
+                    // this.metadata.accession = data._embedded.samples[0].accession
+                    // this.metadata.name =  data._embedded.samples[0].name
+                    // Object.keys(characteristics).forEach(key=>{
+                    //     this.metadata[key] = characteristics[key][0].text
+                    // })
+                    this.$nextTick(() => {
+                        this.$bvModal.show('sample-to-submit')
                     })
-                    metadata.push({key:'accession', value: data._embedded.samples[0].accession})
-                    metadata.push({key:'taxId', value: data._embedded.samples[0].taxId})
-                    metadata.push({key:'name', value: data._embedded.samples[0].name})
-                    this.sampleToSubmit = metadata
-                    this.$bvModal.show('sample-to-submit')
                 }else {
                     this.$store.commit('submission/setAlert',{variant:'warning', message: this.accession+ ' not found in EBI/BioSamples'})
                     this.$store.dispatch('submission/showAlert') 

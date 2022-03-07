@@ -13,7 +13,6 @@
         :primary-key="'id'"
         :custom-fields="customFields"
         :id="tableId"
-        :stacked="stacked"
         :sticky-header="stickyHeader"
         @row-selected="onRowSelected"
         :selectable="hasToken"
@@ -38,9 +37,6 @@
         <template #head(data)>
           <b-badge variant="warning">Reads</b-badge>
           <b-badge variant="primary">Assemblies</b-badge>
-          <!-- <b-icon-info-circle variant="primary-info" id="data-info"/>
-          <b-tooltip target="data-info" variant="warning">Reads</b-tooltip>
-          <b-tooltip target="data-info" placement="right" variant="primary">Assemblies</b-tooltip> -->
         </template>
         <template #cell(organism)="data">
           <b-link :to="{name: 'organism-details', params: {name: data.item.organism}}">
@@ -54,7 +50,9 @@
           <status-badge-component :status="data.item.trackingSystem"/>
         </template>
          <template #cell(externalReferences)="data">
-            <b-badge pill variant='info' target="_blank" :href="'https://goat.genomehubs.org/records?record_id='+data.item.taxid+'&result=taxon&taxonomy=ncbi#'+data.item.organism">GoaT</b-badge>
+            <b-badge class="link-badge" pill variant='dark' target="_blank" :href="'https://goat.genomehubs.org/records?record_id='+data.item.taxid+'&result=taxon&taxonomy=ncbi#'+data.item.organism">GoaT</b-badge>
+            <b-badge class="link-badge" variant="info" pill target="_blank" :href="'https://www.ebi.ac.uk/ena/browser/view/'+ data.item.taxid">ENA</b-badge>
+            <b-badge class="link-badge" pill target="_blank" :href="'https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id='+data.item.taxid">NCBI</b-badge>
         </template>
         <template #cell(actions)="data">
             <b-link class="actions-link" @click="editOrganism(data['item'])">
@@ -102,9 +100,6 @@ export default {
       module: 'portal',
       mutation: 'portal/setField'      
     }),
-    stacked(){
-      return this.$refs.organismsTable ? this.$refs.organismsTable.clientWidth <= 350 : false
-    },
     hasToken(){
       return localStorage.getItem('token')
     },
@@ -134,17 +129,17 @@ export default {
       ],
       fields: [
         {key: 'taxid', label: 'TaxId',sortable: true},
-        {key: 'organism',label:'Scientific Name',sortable: true},
-        {key:'common_name', label: 'Common Names', sortable: true},
+        {key: 'organism',label:'Name',sortable: true},
+        {key:'common_name', label: 'Common Name', sortable: true},
         {key: 'trackingSystem', label:'Status', sortalble: false},
-        {key: 'externalReferences', label:'External References'},
+        {key: 'externalReferences', label:'Links'},
         {key: 'data'}
       ],
       selectedOrganisms:[],
       data:[],
       organism:null,
       commonNames: '',
-      model:''
+      model:'',
     }
   },
   watch: {
@@ -168,7 +163,8 @@ export default {
           this.$router.go()
       })
       .catch(e=>{
-        console.log(e)
+          this.$store.commit('submission/setAlert',{variant:'danger', message: e})
+          this.$store.dispatch('submission/showAlert')
       })
     },
     editOrganism(organism){
@@ -225,3 +221,8 @@ export default {
   }
 }
 </script>
+<style>
+.link-badge{
+  margin-right:5px
+}
+</style>

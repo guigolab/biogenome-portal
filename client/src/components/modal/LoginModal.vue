@@ -88,7 +88,6 @@ export default {
                 this.$store.dispatch('submission/showAlert')
             })
             }).catch(e => {
-                console.log(e)
                 this.$store.dispatch('submission/hideLoginModal')
                 this.$store.commit('submission/setAlert',{variant:'danger',message:e})
                 this.$store.dispatch('submission/showAlert')

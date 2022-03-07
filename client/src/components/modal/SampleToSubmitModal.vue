@@ -1,13 +1,15 @@
 <template>
-   <b-modal v-if="Boolean(sample)" no-close-on-backdrop ok-only id="sample-to-submit" scrollable :title="sample.accession">
-    <p class="my-4" v-for="fieldObj in sample" :key="fieldObj.key">
-      <strong>{{fieldObj.key}}: </strong>{{fieldObj.value}}
-    </p>
+   <b-modal v-if="hasValues" no-close-on-backdrop ok-only id="sample-to-submit" scrollable :title="sample.accession">
+        <table-component :sticky-header="stickyHeader" :items="[metadata()]" :stacked="true">
+            <template #cell(accession)="data">
+                <b-link v-if="data.value" :href="'https://www.ebi.ac.uk/ena/browser/view/'+ data.value" target="_blank">{{data.value}}</b-link>
+            </template>
+        </table-component>
     <template #modal-footer="{hide}">
         <div>
             <b-button-toolbar justify>
                 <b-button-group class="mx-1">
-                    <b-button @click="submitSample()" variant="primary">submit Sample</b-button>
+                    <b-button @click="submitSample()" variant="primary">Submit Sample</b-button>
                 </b-button-group>
                 <b-button-group class="mx-1">
                     <b-button @click="hide()">Cancel</b-button>
@@ -18,19 +20,27 @@
   </b-modal>
 </template>
 <script>
-import {BButton,BButtonToolbar, BButtonGroup} from 'bootstrap-vue'
+
+import {BButton,BButtonToolbar, BButtonGroup, BLink} from 'bootstrap-vue'
 import {showConfirmationModal} from '../../utils/helper'
 import submissionService from '../../services/SubmissionService'
+import TableComponent from '../base/TableComponent.vue'
 
 export default {
     props: ['sample'],
-    components: {BButton,BButtonToolbar, BButtonGroup},
+    components: {BButton,BButtonToolbar, BButtonGroup, TableComponent, BLink},
+    computed:{
+        hasValues(){
+            return Object.entries(this.sample).length
+        }
+    },
     methods: {
         submitSample(){
             showConfirmationModal(this.$bvModal, 'Submit this sample?')
             .then(value => {
                 if(value){
-                    return submissionService.updateSample(this.sample.accession, this.sample)
+                    console.log(this.sample)
+                    return submissionService.createSample(this.sample)
                 } return null   
             })
             .then(response => {
@@ -41,6 +51,22 @@ export default {
             .catch(err => {
                 console.log(err)
             })
+        },
+        //parse sample to display but use back end parser to save it
+        metadata(){
+            const metadata={}
+            if(this.hasValues){
+                console.log(this.sample)
+                const characteristics = this.sample.characteristics
+                metadata.accession = this.sample.accession
+                metadata.taxid = this.sample.taxid
+                metadata.name = this.sample.name
+                Object.keys(characteristics).forEach(key=>{
+                    metadata[key] = characteristics[key][0].text
+                })
+            }
+            console.log(metadata)
+            return metadata
         }
     },
 }

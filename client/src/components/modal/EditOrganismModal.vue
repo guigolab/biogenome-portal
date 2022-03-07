@@ -63,7 +63,6 @@ export default {
         BForm,BFormGroup,BFormInput,BButton,BFormCheckbox,BFormTextarea, BFormFile,BInputGroup,BInputGroupAppend
     },
     mounted(){
-        console.log(this.organism && this.organism.commonNames)
         this.commonNames = this.organism && this.organism.commonNames ? 
             this.organism.commonNames.join() : ''
         this.imageUrl = this.organism && this.organism.image_url ? 
@@ -81,14 +80,12 @@ export default {
             formData.append('common_name', this.commonNames)
 
             submissionService.updateOrganism(this.organism.organism, formData)
-            .then(resp => {
-                console.log(resp)
+            .then(() => {
                 this.$store.commit('submission/setAlert',{variant:'success',message: this.organism.organism + ' has been successfully modified!'})
                 this.$store.dispatch('submission/showAlert')
                 this.resetModal()
                 this.$bvModal.hide('organism-modal')
             }).catch(e => {
-                console.log(e)
                 this.$store.commit('submission/setAlert',{variant:'warning',message:e})
                 this.$store.dispatch('submission/showAlert')
             })

@@ -82,7 +82,6 @@ export default {
                     const ids = samples.map(sample => {
                         return sample.accession ? sample.accession : sample.tube_or_well_id
                     }).join()
-                    console.log(ids)
                     return submissionService.deleteSamples({ids: ids})
                 } 
             })
@@ -96,7 +95,8 @@ export default {
                 this.$router.go()
             })
             .catch(err => {
-                console.log(err)
+                this.$store.commit('submission/setAlert',{variant:'danger', message: err})
+                this.$store.dispatch('submission/showAlert') 
             })
         },
         editSample(sample){
@@ -110,7 +110,8 @@ export default {
                 }      
             })
             .catch(err => {
-                console.log(err)
+                this.$store.commit('submission/setAlert',{variant:'danger', message: err})
+                this.$store.dispatch('submission/showAlert') 
             })
         },
         onRowSelected(value){

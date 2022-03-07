@@ -10,7 +10,7 @@ services:
     environment: 
       - APP_NAME=PORTAL
     expose:
-      - "8686"
+      - "3000"
     volumes:
       - ./server:/server
       - ./tmp:/tmp
@@ -19,17 +19,17 @@ services:
 
   nginx:
     build: ./client
-    container_name:  "portal_nginx"
+    container_name: "portal_nginx"
     restart: always
     volumes:
       - ./client:/client
       - node_modules:/client/node_modules
       - ./tmp:/tmp
     ports:
-        - "89:89"
+        - "89:80"
     environment:
         - API_HOST=portal_server
-        - API_PORT=8686
+        - API_PORT=3000
         
   cbp-db:
     image: mongo:latest
