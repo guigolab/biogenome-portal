@@ -10,7 +10,7 @@ services:
     environment: 
       - APP_NAME=PORTAL
     expose:
-      - "3000"
+      - "80"
     volumes:
       - ./server:/server
       - ./tmp:/tmp
@@ -29,7 +29,7 @@ services:
         - "89:80"
     environment:
         - API_HOST=portal_server
-        - API_PORT=3000
+        - API_PORT=80
         
   cbp-db:
     image: mongo:latest

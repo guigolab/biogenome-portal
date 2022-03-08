@@ -11,7 +11,7 @@ module.exports = {
         {'fields': [
             {'label': 'project name','model':'project_name', 'description': 'Name of the project within which the sequencing was organized', 'type': 'text_field', 'mandatory': 'mandatory', 'multiplicity': 'single'}, 
             {'label': 'tolid', 'model': 'tolid','description': 'A ToLID (Tree of Life ID) is a unique and easy to communicate sample identifier that provides species recognition, differentiates between specimen of the same species and adds taxonomic context. ToLIDs are endorsed by the EarthBioGenome Project (EBP) and should be assigned to any sample with association to the EBP. More information at id.tol.sanger.ac.uk.', 'regex': '(^[a-z]{1}[A-Z]{1}[a-z]{2}[A-Z]{1}[a-z]{2}[0-9]*$)|(^[a-z]{2}[A-Z]{1}[a-z]{2}[A-Z]{1}[a-z]{3}[0-9]*$)', 'type': 'text_field', 'mandatory': 'optional', 'multiplicity': 'single'}, 
-            {'label': 'barcoding amples/SAMN16442762center', 'model':'barcoding_center','description': 'Center where DNA barcoding was/will be performed.', 'type': 'text_field', 'mandatory': 'optional', 'multiplicity': 'single'}
+            {'label': 'barcoding center', 'model':'barcoding_center','description': 'Center where DNA barcoding was/will be performed.', 'type': 'text_field', 'mandatory': 'optional', 'multiplicity': 'single'}
         ],
         'name': 'Non-sample terms'},
         
