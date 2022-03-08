@@ -24,10 +24,8 @@ def handler(event):
         def apply(cls):
             event.connect(fn, sender=cls)
             return cls
-
         fn.apply = apply
         return fn
-
     return decorator
 
 class TaxonNode(db.Document):
@@ -202,7 +200,7 @@ def update_modified(sender, document):
     elif len(document.experiments) > 0:
         document.trackingSystem= TrackStatus.READS
     elif len(document.records) > 0 and \
-        len(SecondaryOrganism.objects(Q(id__in=[rec.id for rec in document.records]) & Q(accession__ne=None))) >0:
+        len(SecondaryOrganism.objects(Q(id__in=[rec.id for rec in document.records]) & Q(accession__ne=None))) > 0:
         document.trackingSystem=TrackStatus.SAMPLE
     else:
         document.trackingSystem=TrackStatus.LOCAL_SAMPLE

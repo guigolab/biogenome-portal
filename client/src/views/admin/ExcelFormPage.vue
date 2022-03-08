@@ -5,7 +5,7 @@
             <b-tabs  v-model="tabIndex" small pills card vertical>
                 <b-tab :title-link-class="linkClass(index)" v-for="(sample,index) in errors" :key="sample" :title="'Row '+sample.index" >
                     <b-card-text v-for="er in sample.errors" :key="er">
-                            <strong>{{er.label}}: </strong> {{er.message}}
+                        <strong>{{er.label}}: </strong> {{er.message}}
                     </b-card-text>
                 </b-tab>
             </b-tabs>
@@ -27,20 +27,7 @@
                     size="sm"
                     v-model="headerIndex"
                 ></b-form-input>
-                </b-form-group>
-                <div id="accession-infos" style="width: fit-content">
-                    <b-form-checkbox
-                        switch
-                        id="accessions-import"
-                        v-model="importAccessions"
-                        name="checkbox-1"
-                        >
-                        Import accessions
-                    </b-form-checkbox>
-                </div>
-                  <b-tooltip target="accession-infos" triggers="hover">
-                    This expects an accession column in the excel file containing the accession of samples already public
-                </b-tooltip>               
+                </b-form-group>             
             </b-dropdown-form>
         </b-dropdown>
         <b-card class="card-container" bg-variant="light">
@@ -78,7 +65,7 @@
 </b-row>
 </template>
 <script>
-import {BCard,BButton,BDropdown,BDropdownForm,BFormGroup,BFormFile,BTooltip,BTabs,BTab,BCardText,BFormInput,BFormCheckbox,BFormSelect} from 'bootstrap-vue'
+import {BCard,BButton,BDropdown,BDropdownForm,BFormGroup,BFormFile,BTabs,BTab,BCardText,BFormInput,BFormSelect} from 'bootstrap-vue'
 import submissionService from '../../services/SubmissionService'
 export default {
     data(){
@@ -100,7 +87,7 @@ export default {
         }
     },
     components:{
-        BCard,BButton,BFormGroup,BFormFile,BTabs,BTab,BCardText,BTooltip,BFormInput,BFormSelect,BFormCheckbox,BDropdown,BDropdownForm
+        BCard,BButton,BFormGroup,BFormFile,BTabs,BTab,BCardText,BFormInput,BFormSelect,BDropdown,BDropdownForm
     },
     mounted(){
     },
@@ -137,7 +124,6 @@ export default {
                 this.errors = e.response.data.message
                 this.$store.dispatch('portal/hideLoading')
             })
-
         },
         resetInput(){
             this.excelFile = null

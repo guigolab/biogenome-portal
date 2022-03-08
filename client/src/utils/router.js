@@ -65,28 +65,5 @@ const router = new Router({
     routes: routes
 })
 
-// router.beforeEach((to, from, next) => {
-//   if (to.matched.some((record) => record.meta.requiresAuth)) {
-//     if (store.getters.isAuthenticated) {
-//       next();
-//       return;
-//     }
-//     next("/login");
-//   } else {
-//     next();
-//   }
-// });
-
-// router.beforeEach((to, from, next) => {
-//   if (to.matched.some((record) => record.meta.guest)) {
-//     if (store.getters.isAuthenticated) {
-//       next("/posts");
-//       return;
-//     }
-//     next();
-//   } else {
-//     next();
-//   }
-// });
 
 export default router

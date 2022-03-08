@@ -27,10 +27,12 @@ export default {
     },
     methods:{
         getOrganism(name){
+            this.$store.dispatch('portal/showLoading')
             portalService.getOrganism(name)
             .then(response => {
                 this.organism = response.data
                 this.$store.commit('portal/setBreadCrumb', {value: {text: name, to: {name: 'organism-details', params:{name: name}}}})
+                this.$store.dispatch('portal/hideLoading')
             })
         }
     },

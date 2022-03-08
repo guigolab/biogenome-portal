@@ -64,6 +64,7 @@ def get_reads(samples):
         accession = sample.accession
         experiments = ena_client.get_reads(sample.accession)
         if len(experiments) > 0:
+            print('EXPERIMENTS PRESENT')
             unique_exps=list({v['experiment_accession']:v for v in experiments}.values())
             existing_exps = Experiment.objects(experiment_accession__in=[exp['experiment_accession'] for exp in unique_exps])
             if len(existing_exps) > 0:

@@ -23,7 +23,6 @@ def get_sample_values(header,row):
 # return samples(rows)
 def parse_excel(excel, opts):
     header_index = int(opts['headerIndex']) if 'headerIndex' in opts.keys() else 1
-    insert_accessions = opts['importAccessions'] if 'importAccessions' in opts.keys() else False
     import_option= opts['importOption'] if 'importOption' in opts.keys() and opts['importOption'] in IMPORT_OPTIONS else 'SKIP'
     wb_obj = openpyxl.load_workbook(excel,data_only=True)
     sheet_obj = wb_obj.active

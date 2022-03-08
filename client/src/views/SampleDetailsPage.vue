@@ -27,10 +27,12 @@ export default {
     },
     methods:{
         getSample(accession){
+        this.$store.dispatch('portal/showLoading')
         portalService.getSample(accession)
         .then(response => {
             this.sample = response.data
             this.$store.commit('portal/setBreadCrumb', {value: {text: accession, to: {name: 'sample-details', params:{accession: accession}}}})
+            this.$store.dispatch('portal/hideLoading')
         })
         }
     },

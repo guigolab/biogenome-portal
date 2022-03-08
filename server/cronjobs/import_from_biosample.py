@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from db.models import Organism, SecondaryOrganism,Assembly,Experiment
+from db.models import SecondaryOrganism,Assembly
 from utils import ena_client,utils
 from services import sample_service,organisms_service
 from mongoengine.queryset.visitor import Q
@@ -33,11 +33,13 @@ def import_from_EBI_biosamples(PROJECTS):
             metadata['taxid'] = taxid
             metadata['accession'] = sample['accession']
             sample_obj = SecondaryOrganism(**metadata).save()
-            organism.records.append(sample_obj)
-            organism.save()
+            if not sample_obj.sample_derived_from:
+                organism.records.append(sample_obj)
+                organism.save()
             print('GETTING ASSEMBLIES')
             assemblies = ena_client.parse_assemblies(sample_obj.accession)
             if len(assemblies) > 0:
+                print('ASSEMBLY PRESENT')
                 existing_assemblies=Assembly.objects(accession__in=[ass['accession'] for ass in assemblies])
                 if len(existing_assemblies) > 0:
                     assemblies=[ass for ass in assemblies if ass['accession'] not in [ex_as['accession'] for ex_as in existing_assemblies]]
