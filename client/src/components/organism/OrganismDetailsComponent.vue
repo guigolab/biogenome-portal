@@ -168,7 +168,6 @@ export default {
 
 #species-image{
 margin-right: 10px;
-margin-left: 10px
 }
 .map-container{
     width: 100%;
