@@ -40,24 +40,24 @@ export default {
             .then(value => {
                 if(value){
                     this.$store.dispatch('portal/showLoading')
-                    return submissionService.createSample(this.sample)
+                    return submissionService.insertBioSample(this.sample)
                 } 
                 return null   
             })
             .then(response => {
+                this.$bvModal.hide('sample-to-submit')
                 if(response){
                     this.$store.commit('submission/setAlert',{variant:'success', message: response.data})
                     this.$store.dispatch('submission/showAlert')
-                    
+                    this.$store.dispatch('portal/hideLoading')
                 }
             })
             .catch(err => {
                     this.$store.commit('submission/setAlert',{variant:'danger', message: err})
                     this.$store.dispatch('submission/showAlert')
+                    this.$store.dispatch('portal/hideLoading')
 
             })
-            this.$bvModal.hide('sample-to-submit')
-            this.$store.dispatch('portal/hideLoading')
         },
         //parse sample to display but use back end parser to save it
         metadata(){

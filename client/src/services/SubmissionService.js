@@ -72,6 +72,9 @@ class SubmissionService {
   createSample(formData){
     return submission.post('/organisms', formData)
   }
+  insertBioSample(formData){
+    return submission.post('/biosamples', formData)
+  }
   updateSample(accession, formData){
     return submission.put(`/organisms/${accession}`,formData)
   }

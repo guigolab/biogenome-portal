@@ -26,7 +26,7 @@ def parse_excel(excel, opts):
     import_option= opts['importOption'] if 'importOption' in opts.keys() and opts['importOption'] in IMPORT_OPTIONS else 'SKIP'
     wb_obj = openpyxl.load_workbook(excel,data_only=True)
     sheet_obj = wb_obj.active
-    header = [cell.value.lower() for cell in sheet_obj[header_index]]
+    header = [cell.value.lower() for cell in sheet_obj[header_index] if cell.value]
     samples = list()
     fields = get_checklist_fields(CHECKLIST_FIELD_GROUPS)
     #retrieve all taxids to be validated
