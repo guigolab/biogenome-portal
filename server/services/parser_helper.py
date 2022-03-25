@@ -1,16 +1,10 @@
 import datetime
-from tempfile import NamedTemporaryFile
-import openpyxl
-from openpyxl import Workbook
 import re
-from db.models import Organism, SecondaryOrganism
-from utils.constants import CHECKLIST_FIELD_GROUPS,MANIFEST_HEADER,IMPORT_OPTIONS,MANIFEST_TO_MODEL
+from db.models import SecondaryOrganism
+from utils.constants import CHECKLIST_FIELD_GROUPS,MANIFEST_TO_MODEL
 from utils.ena_client import check_taxons_from_NCBI
 from flask import current_app as app
 
-#implement parser modularity
-# validation module
-# parser module
 def get_sample_values(header,row):
     values = {}
     for key, cell in zip(header, row):
@@ -20,24 +14,14 @@ def get_sample_values(header,row):
             values[key] = cell.value
     return values
 
-# return samples(rows)
-def parse_excel(excel, opts):
-    header_index = int(opts['headerIndex']) if 'headerIndex' in opts.keys() else 1
-    import_option= opts['importOption'] if 'importOption' in opts.keys() and opts['importOption'] in IMPORT_OPTIONS else 'SKIP'
-    wb_obj = openpyxl.load_workbook(excel,data_only=True)
-    sheet_obj = wb_obj.active
-    header = [cell.value.lower() for cell in sheet_obj[header_index] if cell.value]
-    fields = get_checklist_fields(CHECKLIST_FIELD_GROUPS) #retrieve manifest in future
-    #retrieve all taxids to be validated
-    #check uniqueness of tube or well id in the excel
-    valid_samples=list()
-    samples_with_errors={}
-    #save samples only if all of them are valid, otherwise return errors
-    samples_to_save={}
+def validator_helper(sheet_obj, header_index, header):
+    fields = get_checklist_fields(CHECKLIST_FIELD_GROUPS)
+    samples_mapper={}
+    errors_mapper={}
     for index, row in enumerate(list(sheet_obj.rows)[header_index:]):
         row_position = str(index+header_index+1)
         values = get_sample_values(header,row)
-        samples_to_save[str(row_position)] = values
+        samples_mapper[str(row_position)] = values
         if len(values.keys()) > 2: #some value is present
             ##check if mandatory fields are empty
             errors=list()
@@ -49,40 +33,60 @@ def parse_excel(excel, opts):
                 model_fields = [field for field in fields if field['model'] == key]
                 for field in model_fields:
                     errors.extend(validate_value(field, key, value))
-            samples_with_errors[str(row_position)] = errors
+            errors_mapper[str(row_position)] = errors
     #check duplicated ids and validate tax ids
-    taxids_to_validate=[str(int(samples_to_save[key]['taxon_id'])) for key in samples_to_save.keys() if 'taxon_id' in samples_to_save[key].keys()]
+    taxids_to_validate=[str(int(samples_mapper[key]['taxon_id'])) for key in samples_mapper.keys() if 'taxon_id' in samples_mapper[key].keys()]
     if len(taxids_to_validate) > 0:
-        NCBI_errors(taxids_to_validate, samples_with_errors)
-    ids = [samples_to_save[key]['tube_or_well_id'] for key in samples_to_save.keys() if 'tube_or_well_id' in samples_to_save[key].keys()]
+        NCBI_errors(taxids_to_validate, errors_mapper)
+    ids = [samples_mapper[key]['tube_or_well_id'] for key in samples_mapper.keys() if 'tube_or_well_id' in samples_mapper[key].keys()]
     if len(ids) > 0:
-        check_dups(ids, samples_to_save, samples_with_errors)
-    #return if errors are present
-    filtered_errors = {key: value for key, value in samples_with_errors.items() if len(value) > 0}
-    if len(filtered_errors.keys()) > 0:
-        return [], filtered_errors
-    
-    ##parse and save sample
-    ##controls what to do with already existing samples
+        check_dups(ids, samples_mapper, errors_mapper)
+    filtered_errors = {key: value for key, value in errors_mapper.items() if len(value) > 0}
+    return filtered_errors
 
+def sample_parser_helper(sheet_obj, header_index, header):
+    fields = get_checklist_fields(CHECKLIST_FIELD_GROUPS)
+    samples=list()
+    for row in enumerate(list(sheet_obj.rows)[header_index:]):
+        values = get_sample_values(header,row)
+        if len(values.keys()) > 2: #some value is present
+            for key, value in values.items():
+                sample=dict()
+                if key in MANIFEST_TO_MODEL.keys():
+                    if len(MANIFEST_TO_MODEL[key]) > 1 and len(values) > 1:
+                        values = value.split('|')
+                        app.logger.info(values)
+                        sample[MANIFEST_TO_MODEL[key][0]] = values[0]
+                        sample[MANIFEST_TO_MODEL[key][1]] = values[1:]
+                    else:
+                        sample[MANIFEST_TO_MODEL[key][0]] = value
+                elif key in [field['model'] for field in fields]:
+                    if isinstance(value, type(datetime.datetime(2021,12,30))):
+                        sample[key] = value.date().isoformat()
+                    else:
+                        sample[key] = str(value)
+                else:
+                    continue ##custom fields??
+        samples.append(sample)
+    return samples
 
-def check_dups(ids, samples_to_save, samples_with_errors):
+def check_dups(ids, samples_mapper, errors_mapper):
     unique_ids=set()
     if len(ids) != len(set(ids)):
         duplicates = [id for id in ids if id in unique_ids or unique_ids.add(id)]
-        for key in samples_to_save.keys():
-            if 'tube_or_well_id' in samples_to_save[key].keys() and \
-                samples_to_save[key]['tube_or_well_id'] in duplicates:
+        for key in samples_mapper.keys():
+            if 'tube_or_well_id' in samples_mapper[key].keys() and \
+                samples_mapper[key]['tube_or_well_id'] in duplicates:
                 error={'label': 'tube_or_well_id', 'message': f'this tube_or_well_id: is duplicated!'}
-                samples_with_errors[key].append(error)
+                errors_mapper[key].append(error)
 
-def NCBI_errors(taxids_to_validate, samples_with_errors):
+def NCBI_errors(taxids_to_validate, errors_mapper):
     response = check_taxons_from_NCBI(taxids_to_validate)
     if response and 'taxonomy_nodes' in response.keys():
         NCBI_validation = response['taxonomy_nodes']
         for ncbi_taxa in NCBI_validation:
             if 'errors' in ncbi_taxa.keys():
-                sample = next([samples_with_errors[key] for key in samples_with_errors.keys() if str(int(samples_with_errors[key]['taxon_id'])) == ncbi_taxa['query'][0]])
+                sample = next([errors_mapper[key] for key in errors_mapper.keys() if str(int(errors_mapper[key]['taxon_id'])) == ncbi_taxa['query'][0]])
                 sample['errors'].append({'label':'taxon_id','message':ncbi_taxa['errors'][0]['reason']})
 
 def validate_value(field, key, value):
@@ -106,6 +110,19 @@ def validate_value(field, key, value):
                 errors.append({'label': key, 'message': f'this field must contain one of the following values: {options}, got {val}'})
     return errors
 
+#return samples to create
+def manage_existing_samples(samples, import_option):
+    new_samples=list()
+    for sample in samples:
+        sec_organism = SecondaryOrganism.objects(sample['tube_or_well_id']).first()
+        if sec_organism:
+            if import_option == 'SKIP':
+                continue
+            else:
+                sec_organism.modify(**sample)
+        else:
+            new_samples.append(sample)
+    return new_samples
 #return unique taxids
 def get_checklist_fields(groups):
     fields = list()
