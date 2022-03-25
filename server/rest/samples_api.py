@@ -50,46 +50,19 @@ class SamplesApi(Resource):
     @jwt_required()
     def post(self):
         data = request.json if request.is_json else request.form
-        if 'taxid' in data.keys() and ('tube_or_well_id' in data.keys() or 'accession' in data.keys()):
+        if 'taxid' in data.keys() and 'tube_or_well_id' in data.keys():
             taxid = str(data['taxid'])
-            id = data['tube_or_well_id'] if 'tube_or_well_id' in data.keys() else data['accession']
-            if len(SecondaryOrganism.objects(Q(tube_or_well_id=id) | Q(accession=id))) > 0:
+            id = data['tube_or_well_id']
+            if len(SecondaryOrganism.objects(tube_or_well_id=id)) > 0:
                 raise RecordAlreadyExistError
             else:
-                #import data from accession number
-                if 'accession' in data.keys():
-                    metadata = parse_sample_metadata(data['characteristics'])
-                    metadata['accession'] = data['accession']
-                    metadata['taxid'] = taxid
-                    sample = service.create_sample(metadata)
-                    sample_service.get_reads([sample])
-                    assemblies = ena_client.parse_assemblies(sample.accession)
-                    if len(assemblies) > 0:
-                        existing_assemblies=Assembly.objects(accession__in=[ass['accession'] for ass in assemblies])
-                        if len(existing_assemblies) > 0:
-                            assemblies= [ass for ass in assemblies if ass['accession'] not in [ex_as['accession'] for ex_as in existing_assemblies]]
-                        if len(assemblies) > 0:
-                            for ass in assemblies:
-                                if not 'sample_accession' in ass.keys():
-                                    ass['sample_accession'] = sample.accession
-                            app.logger.info(assemblies)
-                            assemblies = Assembly.objects.insert([Assembly(**ass) for ass in assemblies])
-                            organism = Organism.objects(taxid=sample.taxid).first()
-                            if not organism:
-                                raise TaxonNotFoundError
-                            organism.assemblies.extend(assemblies)
-                            organism.save()
-                            sample.assemblies.extend(assemblies)
-                            sample.last_checked=datetime.utcnow()
-                            sample.save()
-                else:
-                    #create local sample
-                    sample = service.create_sample(data)
+                #create local sample
+                sample = service.create_sample(data)
+                id = sample.tube_or_well_id
                 return Response(json.dumps(f'sample with id {id} has been saved'),mimetype="application/json", status=201)
         else:
             raise SchemaValidationError
    
-
 
 class BioSampleApi(Resource):
     @jwt_required()

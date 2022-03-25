@@ -1,4 +1,3 @@
-from enum import Enum
 from flask import json
 from flask import current_app as app
 from mongoengine.queryset.visitor import Q

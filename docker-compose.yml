@@ -1,11 +1,11 @@
 version: '3'
 
 services:
-  cbp-server:
+  biogenome_server:
     build: 
       context: .
       dockerfile: ./server/Dockerfile
-    container_name: "portal_server"
+    container_name: "biogenome_server"
     restart: always
     environment: 
       - APP_NAME=PORTAL
@@ -17,24 +17,24 @@ services:
     env_file: 
       - .env
 
-  nginx:
+  biogenome_nginx:
     build: ./client
-    container_name: "portal_nginx"
+    container_name: "biogenome_nginx"
     restart: always
     volumes:
       - ./client:/client
       - node_modules:/client/node_modules
       - ./tmp:/tmp
     ports:
-        - "89:80"
+        - "91:80"
     environment:
-        - API_HOST=portal_server
+        - API_HOST=biogenome_server
         - API_PORT=80
         
-  cbp-db:
+  biogenome_mongo:
     image: mongo:latest
-    container_name: "portal_mongo"
-    command: mongod --port 27013
+    container_name: "biogenome_mongo"
+    command: mongod --port 27015
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: root
@@ -44,7 +44,7 @@ services:
     volumes:
      - mongodb-data:/var/lib/mongodb-data
     ports:
-      - "27013:27013"
+      - "27015:27015"
 
 volumes:
   app:

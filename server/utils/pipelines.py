@@ -76,6 +76,8 @@ SamplePipeline = [
 	{"$project": 
 		{"_id":0, 
         "created":0,
+		"collector_orcid_id":0,
+		"sample_coordinator_orcid_id":0,
 		"specimens": {"_id":0,"assemblies":0,"experiments":0,"specimens":0},
 		"assemblies" : {"_id":0},
 		"experiments": {"_id":0}

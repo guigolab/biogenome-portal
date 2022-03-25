@@ -41,19 +41,7 @@ def create_relationship(lineage):
 
 def leaves_counter(lineage_list):
     for node in lineage_list:
-        # node.leaves=count_species(node)
         node.leaves=Organism.objects(taxon_lineage=node.id, taxid__ne=node.taxid).count()
         node.save()
 
-# def count_species(tax_node):
-#     leaves = 0
-#     if not tax_node:
-#         return 0
-#     elif len(tax_node.children) == 0:
-#         return 1
-#     else:
-#         children = TaxonNode.objects(id__in=[lz_ref.id for lz_ref in tax_node.children])
-#         for child in children:
-#             leaves += count_species(child)
-#         return leaves
 

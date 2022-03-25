@@ -1,18 +1,24 @@
 <template>
 <b-row>
     <b-col>
-        <b-card v-if="errors && errors.length > 0" text-variant="danger">
-            <b-tabs  v-model="tabIndex" small pills card vertical>
-                <b-tab :title-link-class="linkClass(index)" v-for="(sample,index) in errors" :key="sample" :title="'Row '+sample.index" >
-                    <b-card-text v-for="er in sample.errors" :key="er">
+        <b-card v-if="Object.keys(errors).length" text-variant="danger">
+            <b-tabs v-model="tabIndex" small pills card vertical>
+                <b-tab :title-link-class="linkClass(index)" v-for="(key,index) in Object.keys(errors)" :key="key" :title="'Row '+key" >
+                    <b-card-text v-for="er in errors[key]" :key="er">
                         <strong>{{er.label}}: </strong> {{er.message}}
                     </b-card-text>
                 </b-tab>
             </b-tabs>
         </b-card>
-        <b-dropdown id="dropdown-form" text="Advanced Options" ref="dropdown" class="m-2">
-            <b-dropdown-form>
-                <b-form-group label="Existing samples" label-for="import-options">
+        <b-card class="card-container" bg-variant="light">
+            <b-form-group
+                label-cols-lg="3"
+                label="Advanced Options"
+                label-size="lg"
+                label-class="font-weight-bold pt-0"
+                class="mb-0"
+                >
+                <b-form-group label="Existing samples" label-cols-sm="3" label-for="import-options">
                     <b-form-select
                         v-model="selectedOption"
                         :options="importOptions"
@@ -20,23 +26,21 @@
                         size="sm"
                     />
                 </b-form-group>
-                <b-form-group label="Header row" label-for="header-row">
+                <b-form-group label="Header row" label-cols-sm="3" label-for="header-row">
                 <b-form-input
                     id="header-row"
                     type="number"
                     size="sm"
                     v-model="headerIndex"
                 ></b-form-input>
-                </b-form-group>             
-            </b-dropdown-form>
-        </b-dropdown>
-        <b-card class="card-container" bg-variant="light">
+                </b-form-group>          
+            </b-form-group>
             <b-form-group
-            label-cols-lg="3"
-            label="Upload an Excel File"
-            label-size="lg"
-            label-class="font-weight-bold pt-0"
-            class="mb-0"
+                label-cols-lg="3"
+                label="Upload an Excel File"
+                label-size="lg"
+                label-class="font-weight-bold pt-0"
+                class="mb-0"
             >
                 <b-form-group label-cols-sm="3"
                     label-align-sm="right" 
@@ -121,7 +125,13 @@ export default {
             })
             .catch(e => {
                 console.log(e.response)
-                this.errors = e.response.data.message
+                if(e.response.status === 400){
+                    this.$store.commit('submission/setAlert',{variant:'danger', message: 'validation errors'})
+                    this.errors = e.response.data.message
+                }else{
+                    this.$store.commit('submission/setAlert',{variant:'danger', message: e.response})
+                }
+                this.$store.dispatch('submission/showAlert') 
                 this.$store.dispatch('portal/hideLoading')
             })
         },

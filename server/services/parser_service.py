@@ -14,10 +14,8 @@ import collections
 def get_sample_values(header,row):
     values = {}
     for key, cell in zip(header, row):
-        if not cell.value:
-            continue
-        else:
-            values[key] = cell.value
+        if cell.value:
+            values[key] = cell.value            
     return values
 
 # return samples(rows)
@@ -48,6 +46,7 @@ def parse_excel(excel, opts):
     for index, row in enumerate(list(sheet_obj.rows)[header_index:]):
         values = get_sample_values(header,row)
         if len(values.keys()) > 2:
+            app.logger.info(values.keys())
             if 'tube_or_well_id' in values.keys() and values['tube_or_well_id'] in existing_ids:
                 if import_option == 'SKIP':
                     continue
@@ -68,7 +67,7 @@ def get_taxids_to_validate(sheet_obj, column_name):
         column = sheet_obj[column_index[0]]
         for cell in column[1:]:
             if cell.value and is_number(cell.value):
-                taxids_to_validate.append(str(cell.value))
+                taxids_to_validate.append(str(int(cell.value)))
     taxids_to_validate=list(set(taxids_to_validate))
     if len(Organism.objects()) > 0:
         existing_taxids = [org.taxid for org in Organism.objects(taxid__in=taxids_to_validate)]
@@ -173,7 +172,8 @@ def parse_sample(sample,fields,NCBI_response):
             parsed_sample['geographic_location_region_and_locality'] = ''.join(locations[1:])
         elif key == 'taxon_id':
             parsed_sample['taxid'] = str(value)
-            taxid = str(sample['taxon_id'])
+            taxid = str(int(sample['taxon_id']))
+            app.logger.info(taxid)
             if any(taxid == ncbi_taxa['query'][0] for ncbi_taxa in NCBI_response):
                 taxon_name = next(ncbi_taxa['taxonomy']['organism_name'] for ncbi_taxa in NCBI_response if ncbi_taxa['query'][0] == taxid)
                 parsed_sample['scientificName'] = taxon_name

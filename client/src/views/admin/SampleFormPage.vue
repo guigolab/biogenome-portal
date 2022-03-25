@@ -255,7 +255,7 @@ export default {
                     const metadata = this.parseSample()
                     this.$store.dispatch('portal/showLoading')
                     if(this.$store.getters['form/getToUpdate']){
-                        return SubmissionService.updateSample(metadata.tube_or_well_id, metadata)
+                        return SubmissionService.updateSample(this.tube_or_well_id, metadata)
                     }
                     return SubmissionService.createSample(metadata)
                 }

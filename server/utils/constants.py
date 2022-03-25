@@ -9,7 +9,7 @@ CHECKLIST_FIELD_GROUPS = [
         'description': 'Anatomical and developmental descriptions of the sample site or source material'},
         
         {'fields': [
-            {'label': 'project name','model':'project_name', 'description': 'Name of the project within which the sequencing was organized', 'type': 'text_field', 'mandatory': 'mandatory', 'multiplicity': 'single'}, 
+            {'label': 'project name','model':'project_name', 'description': 'Name of the project within which the sequencing was organized', 'type': 'text_field', 'mandatory': 'optional', 'multiplicity': 'single'}, 
             {'label': 'tolid', 'model': 'tolid','description': 'A ToLID (Tree of Life ID) is a unique and easy to communicate sample identifier that provides species recognition, differentiates between specimen of the same species and adds taxonomic context. ToLIDs are endorsed by the EarthBioGenome Project (EBP) and should be assigned to any sample with association to the EBP. More information at id.tol.sanger.ac.uk.', 'regex': '(^[a-z]{1}[A-Z]{1}[a-z]{2}[A-Z]{1}[a-z]{2}[0-9]*$)|(^[a-z]{2}[A-Z]{1}[a-z]{2}[A-Z]{1}[a-z]{3}[0-9]*$)', 'type': 'text_field', 'mandatory': 'optional', 'multiplicity': 'single'}, 
             {'label': 'barcoding center', 'model':'barcoding_center','description': 'Center where DNA barcoding was/will be performed.', 'type': 'text_field', 'mandatory': 'optional', 'multiplicity': 'single'}
         ],
@@ -108,7 +108,7 @@ CHECKLIST_FIELD_GROUPS = [
         },
         {'fields': [
             {'label': 'taxon remarks','model': 'taxon_remarks', 'description': 'Free text to summarise any known issues with the mapping of TAXON_ID to SCIENTIFIC_NAME or add other taxon database identifiers here e.g.,EukRef. Here you can also comment on STRAIN availabilit', 'type': 'text_area_field', 'mandatory': 'optional', 'multiplicity': 'single'},
-            {'label': 'infraspecific epithet','model': 'infraspecific_epithet', 'description': 'Where the sample is from a formally named infraspecific taxon, give the infraspecific name here, with prefixes in the following format: ssp. (for subspecies), var. (for variety), cv. (for cultivar), br. (for breed)', 'type': 'text_choice_field', 'mandatory': 'optional', 'multiplicity': 'single', 'options':['ssp','var','cv','vr']},
+            {'label': 'infraspecific epithet','model': 'infraspecific_epithet', 'description': 'Where the sample is from a formally named infraspecific taxon, give the infraspecific name here, with prefixes in the following format: ssp. (for subspecies), var. (for variety), cv. (for cultivar), br. (for breed)', 'type': 'text_field', 'mandatory': 'optional', 'multiplicity': 'single'},
             {'label': 'culture or strain id','model': 'culture_or_strain_id', 'description': 'living, culturable, named laboratory strain that sequenced material is derived from.', 'type': 'text_field', 'mandatory': 'optional', 'multiplicity': 'single'},
         ], 
         'name': 'Infraspecies information', 'description': 'Formal and informal infraspecies taxonomic information'},
@@ -129,6 +129,19 @@ IMPORT_OPTIONS = ['SKIP','UPDATE_ALL','UPDATE_NON_EMPTY']
 RANKS = os.getenv('RANKS').split(',')
 #ERGA SAMPLE MANIFEST_V1 HEADER
 MANIFEST_HEADER=['TUBE_OR_WELL_ID', 'SAMPLE_COORDINATOR', 'SAMPLE_COORDINATOR_AFFILIATION', 'SAMPLE_COORDINATOR_ORCID_ID', 'SPECIMEN_ID', 'ORDER_OR_GROUP', 'FAMILY', 'GENUS', 'TAXON_ID', 'SCIENTIFIC_NAME', 'TAXON_REMARKS', 'INFRASPECIFIC_EPITHET', 'CULTURE_OR_STRAIN_ID', 'COMMON_NAME', 'LIFESTAGE', 'SEX', 'ORGANISM_PART', 'SYMBIONT', 'RELATIONSHIP', 'GAL', 'GAL_SAMPLE_ID', 'COLLECTOR_SAMPLE_ID', 'COLLECTED_BY', 'COLLECTOR_AFFILIATION', 'COLLECTOR_ORCID_ID', 'DATE_OF_COLLECTION', 'COLLECTION_LOCATION', 'ORIGINAL_COLLECTION_DATE', 'ORIGINAL_GEOGRAPHIC_LOCATION', 'DECIMAL_LATITUDE', 'DECIMAL_LONGITUDE', 'GRID_REFERENCE', 'HABITAT', 'DEPTH', 'ELEVATION', 'TIME_OF_COLLECTION', 'DESCRIPTION_OF_COLLECTION_METHOD', 'DIFFICULT_OR_HIGH_PRIORITY_SAMPLE', 'IDENTIFIED_BY', 'IDENTIFIER_AFFILIATION', 'IDENTIFIED_HOW', 'SPECIMEN_ID_RISK', 'PRESERVED_BY', 'PRESERVER_AFFILIATION', 'PRESERVATION_APPROACH', 'PRESERVATIVE_SOLUTION', 'TIME_ELAPSED_FROM_COLLECTION_TO_PRESERVATION', 'DATE_OF_PRESERVATION', 'SIZE_OF_TISSUE_IN_TUBE', 'TISSUE_REMOVED_FOR_BARCODING', 'TUBE_OR_WELL_ID_FOR_BARCODING', 'TISSUE_FOR_BARCODING', 'BARCODE_PLATE_PRESERVATIVE', 'TISSUE_REMOVED_FOR_BIOBANKING', 'TISSUE_VOUCHER_ID_FOR_BIOBANKING', 'TISSUE_FOR_BIOBANKING', 'DNA_REMOVED_FOR_BIOBANKING', 'DNA_VOUCHER_ID_FOR_BIOBANKING', 'PURPOSE_OF_SPECIMEN', 'HAZARD_GROUP', 'REGULATORY_COMPLIANCE', 'VOUCHER_ID', 'INDIGENOUS_RIGHTS_APPLICABLE', 'INDIGENOUS_RIGHTS_DEF', 'ASSOCIATED_TRADITIONAL_KNOWLEDGE_APPLICABLE', 'ASSOCIATED_TRADITIONAL_KNOWLEDGE_LABEL', 'ASSOCIATED_TRADITIONAL_KNOWLEDGE_CONTACT', 'ETHICS_PERMITS_MANDATORY', 'ETHICS_PERMITS_DEF', 'SAMPLING_PERMITS_MANDATORY', 'SAMPLING_PERMITS_DEF', 'NAGOYA_PERMITS_MANDATORY', 'NAGOYA_PERMITS_DEF', 'OTHER_INFORMATION']
+
+
+MANIFEST_TO_MODEL= {
+    "collection_location": [
+        "geographic_location_country",
+        "geographic_location_region_and_locality"
+    ],
+    "collector_affiliation":["collecting_institution"],
+    "taxon_id": ['taxid'],
+    "decimal_longitude": ['geographic_location_longitude'],
+    "decimal_latitude":['geographic_location_latitude'],
+    "date_of_collection":['collection_date']
+}
 
 TaxonPipeline = [
 	{"$lookup":

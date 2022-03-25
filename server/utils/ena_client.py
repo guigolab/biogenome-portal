@@ -1,5 +1,6 @@
 from curses import meta
 import requests
+from flask import current_app as app
 
 def get_taxon_from_ena(taxon_id):
     response = requests.get(f"https://www.ebi.ac.uk/ena/browser/api/xml/{taxon_id}?download=false") ## 
@@ -10,6 +11,7 @@ def get_taxon_from_ena(taxon_id):
 
 def check_taxons_from_NCBI(taxids):
     params = ','.join(taxids)
+    app.logger.info(params)
     response = requests.get(f'https://api.ncbi.nlm.nih.gov/datasets/v1/taxonomy/taxon/{params}')
     if response.status_code != 200:
         return
