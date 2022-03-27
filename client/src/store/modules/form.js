@@ -1,6 +1,3 @@
-import {checklistFieldGroups} from '../../utils/static-config'
-
-
 
 const getDefaultState = () => {
     return {
@@ -99,20 +96,10 @@ const mutations= {
     },
     //load sample into form
     loadSample(state, payload){
-        const checklistFields = [].concat.apply(checklistFieldGroups.map(group => group.fields)).flat(1)
         console.log(payload)
         Object.keys(state.sampleForm).forEach(key => {
             if (key in payload){
-                const modelField = checklistFields.filter(field => field.model === key)
-                if (modelField.length && modelField[0].options && modelField[0].model !== 'geographic_location_country'){
-                    const options = modelField[0].options.map(option => option.replaceAll('_', ' '))
-                    if (options.includes(payload[key])) {
-                        state.sampleForm[key] = options.filter(option => option === payload[key]).map(opt => opt.replaceAll(' ','_'))[0]
-                    }
-                }else {
-                    state.sampleForm[key] = payload[key]
-                }
-                
+                state.sampleForm[key] = payload[key]
             }else{
                 state.sampleForm[key] = ''
             }

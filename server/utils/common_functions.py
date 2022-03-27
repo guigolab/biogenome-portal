@@ -6,3 +6,9 @@ def resolve_params(allowed_params, **params):
         allowed_params[k] = v
   return allowed_params
     
+#parse payload for post requests
+def request_parser(request): 
+  if request.is_json:
+    return request.json
+  else:
+    return request.form

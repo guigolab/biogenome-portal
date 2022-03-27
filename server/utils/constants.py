@@ -121,9 +121,8 @@ CHECKLIST_FIELD_GROUPS = [
         }
     ]
 
-EXCEL_MANDATORY_FIELDS=['TAXON_ID','TUBE_OR_WELL_ID']
 
-IMPORT_OPTIONS = ['SKIP','UPDATE_ALL','UPDATE_NON_EMPTY']
+IMPORT_OPTIONS = ['SKIP','UPDATE']
 # RANKS = ['root','superkingdom','kingdom','phylum','subphylum','class','order','family','genus','species','subspecies']
 
 RANKS = os.getenv('RANKS').split(',')

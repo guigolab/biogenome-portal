@@ -47,27 +47,25 @@ def validator_helper(sheet_obj, header_index, header):
 def sample_parser_helper(sheet_obj, header_index, header):
     fields = get_checklist_fields(CHECKLIST_FIELD_GROUPS)
     samples=list()
-    for row in enumerate(list(sheet_obj.rows)[header_index:]):
+    for index, row in enumerate(list(sheet_obj.rows)[header_index:]):
         values = get_sample_values(header,row)
         if len(values.keys()) > 2: #some value is present
+            sample=dict()
             for key, value in values.items():
-                sample=dict()
                 if key in MANIFEST_TO_MODEL.keys():
                     if len(MANIFEST_TO_MODEL[key]) > 1 and len(values) > 1:
                         values = value.split('|')
-                        app.logger.info(values)
-                        sample[MANIFEST_TO_MODEL[key][0]] = values[0]
-                        sample[MANIFEST_TO_MODEL[key][1]] = values[1:]
+                        sample[MANIFEST_TO_MODEL[key][0]] = str(values[0])
+                        sample[MANIFEST_TO_MODEL[key][1]] = str(','.join(values[1:]))
                     else:
-                        sample[MANIFEST_TO_MODEL[key][0]] = value
-                elif key in [field['model'] for field in fields]:
+                        sample[MANIFEST_TO_MODEL[key][0]] = str(value)
+                if key in [field['model'] for field in fields]:
                     if isinstance(value, type(datetime.datetime(2021,12,30))):
                         sample[key] = value.date().isoformat()
                     else:
                         sample[key] = str(value)
-                else:
-                    continue ##custom fields??
-        samples.append(sample)
+                #     continue ##custom fields??
+            samples.append(sample)
     return samples
 
 def check_dups(ids, samples_mapper, errors_mapper):
@@ -113,13 +111,16 @@ def validate_value(field, key, value):
 #return samples to create
 def manage_existing_samples(samples, import_option):
     new_samples=list()
+    app.logger.info(import_option)
     for sample in samples:
-        sec_organism = SecondaryOrganism.objects(sample['tube_or_well_id']).first()
+        sec_organism = SecondaryOrganism.objects(tube_or_well_id=sample['tube_or_well_id']).first()
         if sec_organism:
             if import_option == 'SKIP':
                 continue
             else:
                 sec_organism.modify(**sample)
+                app.logger.info('hereeee')
+                app.logger.info(sec_organism.to_json())
         else:
             new_samples.append(sample)
     return new_samples

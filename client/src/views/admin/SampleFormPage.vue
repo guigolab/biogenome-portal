@@ -138,9 +138,6 @@ export default {
         validSample(){
             return this.tube_or_well_id && this.scientificName
         },
-        samplesToSubmit(){
-            return this.$store.getters['submission/getSamplesToSubmit']
-        },
         ...mapCheckListFields({
             fields: modelFields,
             base: "sampleForm",
@@ -235,6 +232,7 @@ export default {
         parseSample(){
             const formData = new FormData()
             const form = this.$store.getters['form/getSampleForm']
+            console.log(form)
             Object.keys(form).forEach(key => {
                 if (form[key] !== ''){
                     formData.append(key, form[key])
@@ -262,10 +260,13 @@ export default {
                 return null
             })                  
             .then(response => {
-                this.$store.dispatch('portal/hideLoading')
-                this.$store.commit('submission/setAlert', {variant: 'success', message: response.data})
-                this.$store.dispatch('submission/showAlert')
-                this.$store.dispatch('form/reset')
+                if(response){
+                    this.$store.dispatch('portal/hideLoading')
+                    this.$store.commit('submission/setAlert', {variant: 'success', message: response.data})
+                    this.$store.dispatch('submission/showAlert')
+                    this.$store.dispatch('form/reset')
+                }
+
             })
             .catch(error => {
                 console.log(error)

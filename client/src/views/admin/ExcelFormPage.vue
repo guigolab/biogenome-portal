@@ -23,14 +23,12 @@
                         v-model="selectedOption"
                         :options="importOptions"
                         id="import-options"
-                        size="sm"
                     />
                 </b-form-group>
                 <b-form-group label="Header row" label-cols-sm="3" label-for="header-row">
                 <b-form-input
                     id="header-row"
                     type="number"
-                    size="sm"
                     v-model="headerIndex"
                 ></b-form-input>
                 </b-form-group>          
@@ -69,7 +67,7 @@
 </b-row>
 </template>
 <script>
-import {BCard,BButton,BDropdown,BDropdownForm,BFormGroup,BFormFile,BTabs,BTab,BCardText,BFormInput,BFormSelect} from 'bootstrap-vue'
+import {BCard,BButton,BFormGroup,BFormFile,BTabs,BTab,BCardText,BFormInput,BFormSelect} from 'bootstrap-vue'
 import submissionService from '../../services/SubmissionService'
 export default {
     data(){
@@ -87,11 +85,10 @@ export default {
             ],
             selectedOption:'SKIP',
             headerIndex:1,
-            importAccessions:false
         }
     },
     components:{
-        BCard,BButton,BFormGroup,BFormFile,BTabs,BTab,BCardText,BFormInput,BFormSelect,BDropdown,BDropdownForm
+        BCard,BButton,BFormGroup,BFormFile,BTabs,BTab,BCardText,BFormInput,BFormSelect
     },
     mounted(){
     },
@@ -109,7 +106,6 @@ export default {
             formData.append('excelFile', this.excelFile)
             formData.append('headerIndex', this.headerIndex)
             formData.append('importOption', this.selectedOption)
-            formData.append('importAccessions', this.importAccessions)
             this.$store.dispatch('portal/showLoading')
             submissionService.parseExcel(formData)
             .then(response => {
@@ -124,12 +120,15 @@ export default {
                 this.$store.dispatch('portal/hideLoading')
             })
             .catch(e => {
-                console.log(e.response)
                 if(e.response.status === 400){
                     this.$store.commit('submission/setAlert',{variant:'danger', message: 'validation errors'})
                     this.errors = e.response.data.message
-                }else{
-                    this.$store.commit('submission/setAlert',{variant:'danger', message: e.response})
+                }
+                else if(e.response.status === 304){
+                    this.$store.commit('submission/setAlert',{variant:'info', message: 'No samples created'})
+                }
+                else{
+                    this.$store.commit('submission/setAlert',{variant:'danger', message: e})
                 }
                 this.$store.dispatch('submission/showAlert') 
                 this.$store.dispatch('portal/hideLoading')

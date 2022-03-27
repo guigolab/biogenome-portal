@@ -44,7 +44,7 @@ class SamplesApi(Resource):
         else:
             sample.update(**data)
             id = sample.tube_or_well_id
-        return Response(json.dumps(f'sample with id {id} has been saved'),mimetype="application/json", status=204)
+        return Response(json.dumps(f'sample with id {id} has been saved'),mimetype="application/json", status=200)
 		#update sample
 
     @jwt_required()

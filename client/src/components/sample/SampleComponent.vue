@@ -100,7 +100,7 @@ export default {
             })
         },
         editSample(sample){
-            showConfirmationModal(this.$bvModal, 'Edit sample?')
+            showConfirmationModal(this.$bvModal, 'Edit sample? If the sample has been imported via Excel some fields may not correspond with the input options presents in the form, please update this sample via excel if this is the case')
             .then(value => {
                 if(value){
                     //edit sample
