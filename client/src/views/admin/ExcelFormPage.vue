@@ -110,14 +110,20 @@ export default {
             submissionService.parseExcel(formData)
             .then(response => {
                 this.errors=[]
-                const ids = response.data
-                if (ids.length > 0){
-                    this.$store.commit('submission/setAlert',{variant:'success', message: 'sample IDs correctly saved: ' + ids.join()})
-                }else {
-                    this.$store.commit('submission/setAlert',{variant:'warning', message: 'no samples have been saved'})
+                const resp = response.data
+                console.log(resp)
+                if(resp){
+                    const updated = resp.updated ? 'Updated ids: '+ resp.updated.join()+'; ': null
+                    const saved = resp.saved? 'Saved ids: '+resp.saved.join()+'; ': null
+                    const message = saved && updated ? saved + updated : saved ? saved : updated ? updated : null
+                    if(message){
+                        this.$store.commit('submission/setAlert',{variant:'success', message: message})
+                    }else {
+                        this.$store.commit('submission/setAlert',{variant:'warning', message: 'no samples have been saved'})
+                    }
+                    this.$store.dispatch('submission/showAlert') 
+                    this.$store.dispatch('portal/hideLoading')
                 }
-                this.$store.dispatch('submission/showAlert') 
-                this.$store.dispatch('portal/hideLoading')
             })
             .catch(e => {
                 if(e.response.status === 400){

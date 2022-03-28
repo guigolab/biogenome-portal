@@ -45,25 +45,24 @@ export default {
                 return null   
             })
             .then(response => {
-                this.$bvModal.hide('sample-to-submit')
                 if(response){
                     this.$store.commit('submission/setAlert',{variant:'success', message: response.data})
                     this.$store.dispatch('submission/showAlert')
+                    this.$bvModal.hide('sample-to-submit')
                     this.$store.dispatch('portal/hideLoading')
                 }
             })
             .catch(err => {
-                    this.$store.commit('submission/setAlert',{variant:'danger', message: err})
-                    this.$store.dispatch('submission/showAlert')
-                    this.$store.dispatch('portal/hideLoading')
-
+                this.$store.commit('submission/setAlert',{variant:'danger', message: err.message})
+                this.$store.dispatch('submission/showAlert')
+                this.$bvModal.hide('sample-to-submit')
+                this.$store.dispatch('portal/hideLoading')
             })
         },
         //parse sample to display but use back end parser to save it
         metadata(){
             const metadata={}
             if(this.hasValues){
-                console.log(this.sample)
                 const characteristics = this.sample.characteristics
                 metadata.accession = this.sample.accession
                 metadata.taxid = this.sample.taxid
@@ -72,7 +71,6 @@ export default {
                     metadata[key] = characteristics[key][0].text
                 })
             }
-            console.log(metadata)
             return metadata
         }
     },

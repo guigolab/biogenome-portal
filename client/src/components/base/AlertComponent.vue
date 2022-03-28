@@ -7,7 +7,9 @@
         :variant="alert.variant"
         v-if="alert.message"
         >
-        {{alert.message}}
+        <p style="overflow-wrap: break-word" class="mb-0">
+            {{alert.message}}
+        </p>
     </b-alert>
 </template>
 <script>

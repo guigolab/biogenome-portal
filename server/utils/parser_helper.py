@@ -111,6 +111,7 @@ def validate_value(field, key, value):
 #return samples to create
 def manage_existing_samples(samples, import_option):
     new_samples=list()
+    updated_samples=list()
     app.logger.info(import_option)
     for sample in samples:
         sec_organism = SecondaryOrganism.objects(tube_or_well_id=sample['tube_or_well_id']).first()
@@ -119,11 +120,10 @@ def manage_existing_samples(samples, import_option):
                 continue
             else:
                 sec_organism.modify(**sample)
-                app.logger.info('hereeee')
-                app.logger.info(sec_organism.to_json())
+                updated_samples.append(sec_organism.tube_or_well_id)
         else:
             new_samples.append(sample)
-    return new_samples
+    return new_samples, updated_samples
 #return unique taxids
 def get_checklist_fields(groups):
     fields = list()
