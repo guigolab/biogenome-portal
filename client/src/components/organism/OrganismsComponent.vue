@@ -31,7 +31,6 @@
         <template #head(actions)>
           <b-dropdown dropup class="mx-1" right text="Actions">
               <b-dropdown-item :disabled="selectedOrganisms.lenght === 0" @click="deleteOrganisms(selectedOrganisms)" variant="danger">Delete selected organisms</b-dropdown-item>
-              <b-dropdown-item :disabled="selectedOrganisms.lenght === 0" @click="downloadExcel()">Download samples of selected Organisms</b-dropdown-item>
           </b-dropdown>         
         </template>
         <template #head(data)>

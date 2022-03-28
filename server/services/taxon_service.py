@@ -12,8 +12,10 @@ def delete_taxons(lineage):
     taxons = [tax.fetch() for tax in lineage]
     leaves_counter(taxons)
     for taxon in taxons:
-        if taxon.leaves < 2:
-            app.logger.info(TaxonNode.objects(children=taxon.id).update_one(pull__children=taxon.id))
+        if taxon.leaves == 0:
+            app.logger.info(taxon.name)
+            TaxonNode.objects(children=taxon.id).update_one(pull__children=taxon.id)
+            Organism.objects(taxon_lineage=taxon.id).update(pull__taxon_lineage=taxon.id)
             taxon.delete()
 
 def create_taxons_from_lineage(lineage):
@@ -41,7 +43,19 @@ def create_relationship(lineage):
 
 def leaves_counter(lineage_list):
     for node in lineage_list:
-        node.leaves=Organism.objects(taxon_lineage=node.id, taxid__ne=node.taxid).count()
+        # node.leaves=count_species(node)
+        node.leaves=Organism.objects(taxon_lineage=node.id).count()
         node.save()
 
+# def count_species(tax_node):
+#     leaves = 0
+#     if not tax_node:
+#         return 0
+#     elif len(tax_node.children) == 0:
+#         return 1
+#     else:
+#         children = TaxonNode.objects(id__in=[lz_ref.id for lz_ref in tax_node.children])
+#         for child in children:
+#             leaves += count_species(child)
+#         return leaves
 

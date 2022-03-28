@@ -18,14 +18,14 @@
                 label-class="font-weight-bold pt-0"
                 class="mb-0"
                 >
-                <b-form-group label="Existing samples" label-cols-sm="3" label-for="import-options">
+                <b-form-group label="Existing samples"  label-align-sm="right"  label-cols-sm="3" label-for="import-options">
                     <b-form-select
                         v-model="selectedOption"
                         :options="importOptions"
                         id="import-options"
                     />
                 </b-form-group>
-                <b-form-group label="Header row" label-cols-sm="3" label-for="header-row">
+                <b-form-group label="Header row"  label-align-sm="right"  label-cols-sm="3" label-for="header-row">
                 <b-form-input
                     id="header-row"
                     type="number"
@@ -80,8 +80,8 @@ export default {
             loading:false,
             showOptions:false,
             importOptions: [
-                {value: 'SKIP', text:'Skip already existing samples'},
-                {value: 'UPDATE', text: 'Update all fields'},
+                {value: 'SKIP', text:'SKIP'},
+                {value: 'UPDATE', text: 'UPDATE'},
             ],
             selectedOption:'SKIP',
             headerIndex:1,

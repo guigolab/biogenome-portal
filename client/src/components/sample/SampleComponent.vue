@@ -5,7 +5,6 @@
                 <b-dropdown class="mx-1" dropup right text="Actions">
                     <b-dropdown-item @click="deleteSamples(selectedSamples)" variant="danger">Delete selected samples</b-dropdown-item>
                     <b-dropdown-item @click="deleteSamples(samples)" variant="danger">Delete all samples</b-dropdown-item>
-                    <b-dropdown-item @click="downloadExcel()">Download selected samples</b-dropdown-item>
                 </b-dropdown>         
             </template>
             <template #cell(accession)="data">
