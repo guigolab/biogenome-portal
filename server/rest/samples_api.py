@@ -8,18 +8,23 @@ from datetime import datetime
 from services import sample_service
 import services.submission_service as service
 from flask_jwt_extended import jwt_required
+from flask_jwt_extended import get_jwt_identity
 from mongoengine.queryset.visitor import Q
 from flask import current_app as app
-from utils.constants import SamplePipeline
+from utils.constants import SamplePipeline,SamplePipelinePrivate
 import json
 
 #CRUD operations on sample
 class SamplesApi(Resource):
 
+    @jwt_required(optional=True)
     def get(self,accession=None):
         sample = SecondaryOrganism.objects((Q(accession=accession) | Q(tube_or_well_id=accession)))
         if len(sample) > 0:
-            result = sample.aggregate(*SamplePipeline).next()
+            if(get_jwt_identity()):
+                result = sample.aggregate(*SamplePipelinePrivate).next()
+            else:
+                result = sample.aggregate(*SamplePipeline).next()
             return Response(json.dumps(result),mimetype="application/json", status=200)
         else:
             raise NotFound
@@ -51,7 +56,6 @@ class SamplesApi(Resource):
     def post(self):
         data = request.json if request.is_json else request.form
         if 'taxid' in data.keys() and 'tube_or_well_id' in data.keys():
-            taxid = str(data['taxid'])
             id = data['tube_or_well_id']
             if len(SecondaryOrganism.objects(tube_or_well_id=id)) > 0:
                 raise RecordAlreadyExistError

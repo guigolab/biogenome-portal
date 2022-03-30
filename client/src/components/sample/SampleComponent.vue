@@ -103,10 +103,17 @@ export default {
             .then(value => {
                 if(value){
                     //edit sample
-                    this.$store.commit('form/loadSample', sample)
+                    return submissionService.getSample(sample.accession || sample.tube_or_well_id)
+                   
+                }
+                return null      
+            })
+            .then(response => {
+                if(response){
+                    this.$store.commit('form/loadSample', response.data)
                     this.$store.commit('form/setField',{label:'toUpdate',value:true})
                     this.$router.push('/submit-sample')
-                }      
+                }
             })
             .catch(err => {
                 this.$store.commit('submission/setAlert',{variant:'danger', message: err})

@@ -200,6 +200,40 @@ OrganismPipeline = [
 	}
 ]
 
+#pipeline for sample editing
+SamplePipelinePrivate = [
+	{"$lookup":
+		{"from": "secondary_organism",
+		"localField": "specimens",
+		"foreignField": "_id",
+		"as": "specimens",
+		}
+	},
+	{"$lookup":
+		{"from": "experiment",
+		"localField": "experiments",
+		"foreignField": "_id",
+		"as": "experiments",
+		}
+	},
+	{"$lookup":
+		{"from": "assembly",
+		"localField": "assemblies",
+		"foreignField": "_id",
+		"as": "assemblies",
+		}
+	},
+	{"$project": 
+		{"_id":0, 
+        "created":0,
+        "last_check":0,
+		"assemblies" : {"_id":0},
+		"experiments": {"_id":0}
+
+		}
+	}
+]
+
 SamplePipeline = [
 	{"$lookup":
 		{"from": "secondary_organism",
