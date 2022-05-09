@@ -79,3 +79,29 @@ def get_reads(samples):
                 org.experiments.extend(new_exps)
                 #trigger status update
                 org.save()
+
+def geoloc_samples():
+    samples = SecondaryOrganism.objects(Q(geographic_location_latitude__ne=None) & Q(geographic_location_longitude__ne=None)).only('accession','tube_or_well_id','scientificName','geographic_location_latitude', 'geographic_location_longitude')
+    geoJson=dict()
+    if len(samples):
+        geoJson = {
+            'type': 'FeatureCollection',
+            'crs': {
+                'type': 'name',
+                'properties': {
+                    'name': 'EPSG:3857'
+                }
+            },
+            'features' : []
+        }   
+        for sample in samples:
+            feature = {
+                'type': 'Feature',
+                'geometry': {
+                    'type': 'Point',
+                    'coordinates': [sample.geographic_location_longitude, sample.geographic_location_latitude]
+                }
+            }
+            geoJson['features'].append(feature)
+    return geoJson
+    # for sample in samples:

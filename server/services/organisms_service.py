@@ -9,13 +9,16 @@ def get_or_create_organism(taxid, common_names=None):
     if not organism:
         taxon_xml = ena_client.get_taxon_from_ena(taxid)
         if not taxon_xml:
+            ##TODO add call to NCBI
             print('TAXID NOT FOUND')
             print(taxid)
             return
         lineage = utils.parse_taxon(taxon_xml)
         species = lineage[0]
         taxon_lineage = taxon_service.create_taxons_from_lineage(lineage)
-        organism = Organism(taxid = taxid, organism= species['scientificName'], taxon_lineage = taxon_lineage).save()
+        taxon_list = [dict(taxid=tax.taxid,rank=tax.rank,name=tax.name) for tax in taxon_lineage]
+        insdc_common_name = species['commonName'] if 'commonName' in species.keys() else ''
+        organism = Organism(taxid = taxid, insdc_common_name=insdc_common_name,organism= species['scientificName'], taxon_lineage = taxon_lineage, ordered_lineage=taxon_list).save()
         taxon_service.leaves_counter(taxon_lineage)
     if common_names and len(common_names.split('|')) > 0:
         names_arr = common_names.split('|')
@@ -25,8 +28,6 @@ def get_or_create_organism(taxid, common_names=None):
     return organism
 
 # def update_organism_names(names):
-
-
 
 def delete_organisms(taxids):
     organisms_to_delete = Organism.objects(taxid__in=taxids)

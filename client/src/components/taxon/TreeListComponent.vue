@@ -38,6 +38,7 @@
 import { BLink, BIconSlashCircle, BIconPlusCircle,
  BIconDiagram3, BBadge } from 'bootstrap-vue'
 import portalService from '../../services/DataPortalService'
+import {ROOTNODE} from '../../utils/static-config'
 
 export default {
     name: 'tree-list-component',
@@ -51,7 +52,7 @@ export default {
         },
     methods: {
         toggle(item){
-            if(item.name !== 'Eukaryota')
+            if(item.name !== ROOTNODE)
             {
             portalService.getTaxonChildren(item.name)
             .then(response => {

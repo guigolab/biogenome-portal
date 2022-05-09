@@ -25,6 +25,7 @@
                 :sticky-header="stickyHeader"
                 :borderless="borderless"
                 @row-selected="onRowSelected"
+                filter-debounce="500"
             >
 
                 <template v-for="(_, slotName) of $scopedSlots" v-slot:[slotName]="scope">

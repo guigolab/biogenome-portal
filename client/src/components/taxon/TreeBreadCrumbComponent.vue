@@ -22,6 +22,7 @@
 <script>
 import {BButtonGroup,BButton} from 'bootstrap-vue'
 import {mapFields} from '../../utils/helper'
+import {ROOTNODE} from '../../utils/static-config'
 
 export default {
     components:{
@@ -45,7 +46,7 @@ export default {
       }
       else {
         const previousName = this.taxNameHistory[idx-1]
-        this.taxName =  previousName ? previousName : 'Eukaryota'
+        this.taxName =  previousName ? previousName : ROOTNODE
         this.$store.commit('portal/removeTaxNameH', idx)
       }
         this.$store.commit('portal/setTree',{value: this.taxName})

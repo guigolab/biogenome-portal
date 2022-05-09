@@ -109,8 +109,13 @@ export default {
                     })
                 }else {
                     this.$store.commit('submission/setAlert',{variant:'warning', message: this.accession+ ' not found in EBI/BioSamples'})
-                    this.$store.dispatch('submission/showAlert') 
+                    this.$store.dispatch('submission/showAlert')
+                    this.$store.dispatch('portal/hideLoading')
                 }
+            })
+            .catch(e => {
+                console.log(e)
+                this.$store.dispatch('portal/hideLoading')
             })
         },
         dropData(){

@@ -9,7 +9,7 @@
 </template>
 <script>
 import TreeListComponent from "./TreeListComponent.vue"
-
+import {ROOTNODE} from '../../utils/static-config'
 
 export default {
     computed: {
@@ -19,7 +19,7 @@ export default {
     },
     mounted(){
         if(this.tree === null){
-            this.$store.commit('portal/setTree',{value: 'Eukaryota'})
+            this.$store.commit('portal/setTree',{value: ROOTNODE})
         }
     },
     components:{

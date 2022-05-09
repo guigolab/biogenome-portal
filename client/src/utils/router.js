@@ -1,6 +1,6 @@
 import Vue from "vue";
 import Router from "vue-router";
-
+import {ROOTNODE} from '../utils/static-config'
 
 
 Vue.use(Router);
@@ -32,6 +32,11 @@ const routes = [
     component: () => import(/* webpackPrefetch: true */ '../views/SwaggerPage.vue')
   },
   {
+    path: "/map",
+    name: "Map",
+    component:() => import(/* webpackPrefetch: true */ '../views/MapPage.vue'),
+  },
+  {
     path: "/organisms/:name",
     name: "organism-details",
     props: true,
@@ -45,7 +50,7 @@ const routes = [
   },
   {
     path: '/tree-of-life',
-    redirect: {name: 'tree-of-life', params: {node: 'Eukaryota'}}
+    redirect: {name: 'tree-of-life', params: {node: ROOTNODE}}
   },
   {
     path: "/tree-of-life/:node",

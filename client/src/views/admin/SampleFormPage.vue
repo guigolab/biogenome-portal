@@ -240,12 +240,6 @@ export default {
             })
             return formData
         },
-        showDetails(sample){
-            this.sample = sample
-            this.$nextTick(() => {
-                this.$root.$emit('bv::show::modal', 'sample-to-submit')
-            })
-        },
         submit(){
             showConfirmationModal(this.$bvModal,`Save the sample with ID ${this.tube_or_well_id}?`)
             .then(value => {

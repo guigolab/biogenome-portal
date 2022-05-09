@@ -3,11 +3,15 @@ from flask import current_app as app
 from mongoengine.queryset.visitor import Q
 from db.models import TaxonNode
 from utils.common_functions import resolve_params
+import os 
+
+ROOT_NODE=os.getenv('ROOT_NODE')
+
 
 DefaultParams = {
     'sortOrder': '',
     'sortColumn': '',
-    'taxName': 'Eukaryota',
+    'taxName': ROOT_NODE,
     'status': ' '
 }
 FilterParams = { **DefaultParams,

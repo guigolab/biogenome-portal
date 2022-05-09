@@ -12,7 +12,7 @@
            <b-nav-item  active-class="active" class="nav-link" to="/" >
             HOME 
           </b-nav-item>
-          <b-nav-item  active-class="active" class="nav-link" :to="{name: 'tree-of-life', params: {node: 'Eukaryota'}}">
+          <b-nav-item  active-class="active" class="nav-link" :to="{name: 'tree-of-life', params: {node: root}}">
             TREE OF LIFE 
           </b-nav-item>
       </b-nav>
@@ -23,8 +23,14 @@
 </template>
 <script>
 import { BNavbar, BSidebar, BNav, BNavbarToggle, BNavItem} from 'bootstrap-vue'
+import {ROOTNODE} from '../../utils/static-config'
 
 export default {
+  data(){
+    return {
+      root : ROOTNODE
+    }
+  },
   components: {
     BNavbar, BSidebar, BNav, BNavbarToggle, BNavItem
   }

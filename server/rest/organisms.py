@@ -7,7 +7,6 @@ from errors import NotFound, SchemaValidationError
 import json
 from flask_jwt_extended import jwt_required
 from utils.constants import OrganismPipeline
-from utils.utils import sort_lineage
 from flask import current_app as app
 import base64
 
@@ -38,7 +37,6 @@ class OrganismApi(Resource):
 		if 'image' in organism_response.keys():
 			encoded_image = base64.b64encode(organism_obj.first().image.read())
 			organism_response['image'] = encoded_image.decode('utf-8')
-		sort_lineage(organism_response['taxon_lineage']) #sort lineage (aggregation pipeline returns unordered list)
 		return Response(json.dumps(organism_response),mimetype="application/json", status=200)
 
 	@jwt_required()

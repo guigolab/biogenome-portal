@@ -1,10 +1,9 @@
 from lxml import etree
 # from .constants import CHECKLIST_PARSER
 from flask import make_response,jsonify
-from .constants import RANKS, CHECKLIST_FIELD_GROUPS
+from .constants import CHECKLIST_FIELD_GROUPS
 import os
 
-RANKS = os.getenv('RANKS').split(',')
 
 def parse_taxon(xml):
     root = etree.fromstring(xml)
@@ -43,13 +42,6 @@ def parse_sample_metadata(metadata):
         sample['custom_fields'] = custom_fields
     return sample
     
-#aggregation pipeline returns unordered list of taxon lineage
-def sort_lineage(lineage):
-    values_obj=dict()
-    for idx, rank in enumerate(RANKS):
-        values_obj[rank] = idx
-    lineage.sort(key=lambda x: values_obj[x['rank']],reverse=True)
-    return lineage
 
 ##IMPORTANT the reference must be a lazy load reference!!
 def update_references(ref_model, current_list, new_list):

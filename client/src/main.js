@@ -6,9 +6,9 @@ import 'bootstrap-vue/dist/bootstrap-vue.css'
 import {LayoutPlugin, ModalPlugin} from 'bootstrap-vue'
 import store from './store'
 // import submission from './store/modules/submission'
-
 Vue.use(LayoutPlugin)
 Vue.use(ModalPlugin)
+
 
 // Vue.config.productionTip = false
 

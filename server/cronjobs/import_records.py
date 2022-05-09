@@ -5,14 +5,13 @@ from db.models import SecondaryOrganism,Experiment,Organism
 from mongoengine.queryset.visitor import Q
 from datetime import datetime, timedelta
 from utils import ena_client
-
-
 import os
+
+
 SAMPLE_QUERY = Q(accession__ne=None) & (Q(last_check=None) | Q(last_check__lte=datetime.now()- timedelta(days=15)))
 
 def import_records():
     PROJECTS = os.getenv('PROJECTS').split(',')
-    print(PROJECTS)
     ACCESSION = os.getenv('PROJECT_ACCESSION')
     if ACCESSION and len(PROJECTS)>0 and PROJECTS[0] != '':
         import_from_NCBI(ACCESSION)

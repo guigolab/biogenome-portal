@@ -27,7 +27,7 @@
             </b-row>
             <b-row>
                 <b-col style="font-size: 0.85rem">
-                    <b-link v-for="node in reverseItems(organism.taxon_lineage)" :key="node.taxid" 
+                    <b-link v-for="node in reverseItems(organism.ordered_lineage)" :key="node.taxid" 
                     :to="{name: 'tree-of-life', params: {node: node.name}}"
                     >
                         {{node.name}} (<strong>{{node.rank}}</strong>)

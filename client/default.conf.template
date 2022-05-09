@@ -1,6 +1,6 @@
 
 server {
-    listen 80;
+    listen ${API_PORT};
 
     location / {
         root /usr/share/nginx/html;

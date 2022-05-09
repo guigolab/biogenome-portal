@@ -211,12 +211,14 @@ class Organism(db.Document):
     experiments = db.ListField(db.LazyReferenceField(Experiment))
     # common_names = db.ListField(db.LazyReferenceField(NameOntology))
     common_name = db.ListField(db.StringField())
+    insdc_common_name = db.StringField()
     organism = db.StringField(required=True,unique=True)
     records = db.ListField(db.LazyReferenceField(SecondaryOrganism))
     taxid = db.StringField(required= True)
     image = db.FileField()
     image_url = db.StringField()
     taxon_lineage = db.ListField(db.LazyReferenceField(TaxonNode))
+    ordered_lineage = db.ListField() ##TODO fix duplicated lineage 
     trackingSystem = db.EnumField(TrackStatus)
     meta = {
         'indexes': [

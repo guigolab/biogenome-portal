@@ -106,3 +106,9 @@ class BioSampleApi(Resource):
                 return Response(json.dumps(f'sample with id {id} has been saved'),mimetype="application/json", status=201)
         else:
             raise SchemaValidationError
+
+class GeoLocApi(Resource):
+    ##get all samples with coordinates
+    def get(self):
+        return Response(json.dumps(sample_service.geoloc_samples()), mimetype="application/json", status=200)
+ 

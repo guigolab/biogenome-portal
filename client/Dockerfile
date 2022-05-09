@@ -1,5 +1,7 @@
 FROM node@sha256:8229a1f3580d32fa18b2304fa23df6e9e3d53fdb958fd8ffe812ca7a0a26bb69 as build-stage
 
+ARG ROOT_NODE
+
 WORKDIR /client
 
 COPY package*.json ./
@@ -7,6 +9,8 @@ COPY package*.json ./
 RUN npm install
 
 COPY . .
+
+ENV VUE_APP_ROOT_NODE=${ROOT_NODE}
 
 RUN npm run build
 

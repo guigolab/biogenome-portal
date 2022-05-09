@@ -1,8 +1,9 @@
 import portalService from '../../services/DataPortalService'
+import {ROOTNODE} from '../../utils/static-config'
 
 const state = () => ({
     loading: false,
-    taxName: 'Eukaryota',
+    taxName: ROOTNODE,
     taxNameHistory: [],
     organism: null, //default value for tree browser and d3 tree
     option: 'organisms', //default option for filter bar
@@ -12,7 +13,9 @@ const state = () => ({
     currentPage: 1,
     tree: null,
     position: '',
-    breadcrumbs: [{text: 'Home', to: {name: 'home-page'}}] // home as default
+    breadcrumbs: [{text: 'Home', to: {name: 'home-page'}}], // home as default
+    maxLeaves:90
+
 })
 
 const findObj = (arr, idToFind) => {
@@ -58,9 +61,12 @@ const mutations = {
     hideLoading(state){
         state.loading = false
     },
+    setMaxNodes(state,payload){
+        state.maxLeaves = payload.value
+    },
     addTaxNameH(state){
         const index = state.taxNameHistory.indexOf(state.taxName)
-        if(state.taxName === 'Eukaryota'){
+        if(state.taxName === ROOTNODE){
             state.taxNameHistory = []
         }
         else if(index === -1){
@@ -84,6 +90,9 @@ const getters= {
     },
     getTaxNameHistory(state){
         return state.taxNameHistory
+    },
+    getMaxNodes(state){
+        return state.maxLeaves
     }
 }
 const actions= {

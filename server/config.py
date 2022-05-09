@@ -1,7 +1,6 @@
 import os
 
 class BaseConfig(object):
-    SECRET_KEY = os.environ['SECRET_KEY']
     DEBUG = True
     MONGODB_DB = os.environ['DB_NAME']
     MONGODB_HOST = os.environ['DB_HOST']

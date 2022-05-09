@@ -5,8 +5,10 @@
           <b-row>
             <b-col style="min-height:600px">
               <h1 style="text-align:center">{{node}}</h1>
-              <!-- <svg ref="legend"/> -->
-                <svg ref="svg"  class="tree-svg"/>
+              <b-form-input debounce="500" id="range-1" v-model="maxNodes" type="range" :disabled="data && data.leaves < 30" :min="data && data.leaves < 30 ? data.leaves : '30'" :max="data && data.leaves < 150 ? data.leaves : '150'"></b-form-input>
+              <div class="mt-2">Leaves limit: {{ maxNodes }}</div>
+              <div ref="tooltip" class="tooltip"></div>
+              <svg ref="svg"  class="tree-svg"/>
             </b-col>
           </b-row>
       </b-container>
@@ -17,10 +19,12 @@
 <script>
 import * as d3 from "d3";
 import portalService from "../services/DataPortalService";
+import {BFormInput} from "bootstrap-vue"
 
 export default {
   name: "tree-of-life",
   props: ['node'],
+  components:{BFormInput},
   data() {
     return {
         clusterAttr: null,
@@ -47,6 +51,18 @@ export default {
     },
     legendPosition(){
       return this.width <= 450 ? -(this.width + this.outerRadius) : -this.outerRadius
+    },
+    maxNodes:{
+      //add wait before triggering request
+      get(){
+        return this.$store.getters['portal/getMaxNodes']
+      },
+      set(value){
+        this.$store.commit('portal/setMaxNodes',{value:value})
+        if(value <= this.data.leaves){
+          this.getTree(this.node, value)
+        }
+      }
     }
   },
   watch: {
@@ -59,17 +75,29 @@ export default {
   },
   methods: {
     getTree(node){
-      this.$store.commit('portal/setField', {value: true, label: 'loading'})
-      portalService.getTree(node)
+      this.$store.dispatch('portal/showLoading')
+      portalService.getTree(node, this.maxNodes)
       .then(response => {
           this.data = response.data
-          this.legendDomains = this.getDomains(this.data, []).slice(0,9)
+          const firstFork = this.getFirstFork(this.data)
+          if (firstFork && firstFork.children.length > 1){
+            const leftDomains =this.getDomains(firstFork.children[0], []).slice(0,4)
+            const rightDomains = this.getDomains(firstFork.children[1], []).slice(0,4)
+            this.legendDomains = [this.data].concat([...leftDomains,...rightDomains])
+          }else{
+            this.legendDomains = [this.data]
+          }
           this.domains = this.legendDomains.map(value => value.name)
           this.$store.commit('portal/setBreadCrumb', {value: {text: node, to: {name: 'tree-of-life', params:{node: node}}}})
           if(this.data){
             this.chart = this.createD3Tree();
-            this.$store.commit('portal/setField', {value: false, label: 'loading'})
+            this.$store.dispatch('portal/hideLoading')
           }
+          this.$store.dispatch('portal/hideLoading')
+      })
+      .catch(e => {
+        console.log(e)
+        this.$store.dispatch('portal/hideLoading')
       })
     },
     createD3Tree(){
@@ -100,8 +128,10 @@ export default {
   .label--active {
     font-weight: bold;
   }
-  
   `);
+    var div = d3.select(this.$refs.tooltip)
+    .style("opacity", 0)
+
     this.legend(svg);
     this.linkExtension =svg.append("g")
         .attr("fill", "none")
@@ -119,10 +149,24 @@ export default {
       .selectAll("path")
       .data(root.links())
       .join("path")
-        .each(function(d) { d.target.linkNode = this; })
-        .attr("d", this.linkConstant)
-        .attr("stroke", d => d.target.color);
-  
+      .each(function(d) { d.target.linkNode = this; })
+      .attr("d", this.linkConstant)
+      .attr("stroke", d => d.target.color)
+      .on("mouseover", function(event, d){
+          div.transition()		
+            .duration(200)		
+            .style("opacity", .9);		
+          div.html(d.target.data.name+' :'+d.target.data.leaves)	
+            .style("left", (event.layerX) + "px")		
+            .style("top", (event.layerY-15) + "px");	
+      })
+      .on("mouseout", function() {
+          div.transition()		
+              .duration(500)		
+              .style("opacity", 0);	
+      })
+      .on("click", this.info(this));
+
     svg.append("g")
       .selectAll("text")
       .data(root.leaves())
@@ -146,7 +190,10 @@ export default {
     },
    info(component) {
      return function(_, d){
-       if(d.data){
+       if(d.target && d.target.data){
+         component.getData(d.target.data)
+       }
+       else if(d.data){
         component.getData(d.data)
         }
         else {
@@ -154,7 +201,17 @@ export default {
         }
      }
     },
-
+    getFirstFork(node) {
+      if(node.children.length > 1){
+        return node
+      }else if(node.children){
+        var childNode = null
+        node.children.forEach(n => {
+          childNode = this.getFirstFork(n)
+          })
+        return childNode
+      }
+    },
     getDomains(node,domains) {
       if(node.children){
         node.children.forEach(n => {
@@ -168,7 +225,7 @@ export default {
 
     getData(taxon){
       const name = taxon.name || taxon
-      if(name.split(" ").length > 1){
+      if(taxon.rank === 'species' || taxon.rank === 'subspecies'){
         this.$router.push({name:'organism-details', params: {name: name}})
       }
       else {
@@ -274,5 +331,15 @@ export default {
     height: 100%;
     /* max-width: 100%; */
     overflow: visible;
+}
+.tooltip {	
+  position: absolute;			
+  text-align: center;			
+  width: min-content;					
+  background: black;	
+  border: 0px;		
+  color: white;
+  border-radius: 8px;			
+  pointer-events: none;			
 }
 </style>

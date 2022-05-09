@@ -20,8 +20,13 @@ class DataPortalService {
     getSample(accession) {
         return base.get(`/organisms/${accession}`)
     }
-    getTree(node){
-        return base.get(`/tree/${node}`);    
+    getGeoLocSamples() {
+        return base.get('/coordinates')
+    }
+    getTree(node, maxLeaves){
+        return base.get(`/tree/${node}`,{
+            params: {maxLeaves:maxLeaves}
+        });    
     }
     getTaxonChildren(name) {
         return base.get(`/taxons/${name}`)

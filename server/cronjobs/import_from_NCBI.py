@@ -10,6 +10,10 @@ REL_FIELDS=['sample_same_as','sample_symbiont_of','sample_derived_from',]
 
 SAMPLE_QUERY = (Q(last_check=None) | Q(last_check__lte=datetime.now()- timedelta(days=15)))
 
+##import from NCBI
+##retrieve assemblies with bioprojects
+
+
 def import_from_NCBI(project_accession):
     assemblies=list()
     result = requests.get(f"https://api.ncbi.nlm.nih.gov/datasets/v1/genome/bioproject/{project_accession}?filters.reference_only=false&filters.assembly_source=all&filters.has_annotation=false&&page_size=100").json()

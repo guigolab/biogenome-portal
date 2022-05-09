@@ -127,7 +127,6 @@ export default {
         { value: 'Annotation Submitted', text: 'Annotation Submitted' }
       ],
       fields: [
-        {key: 'taxid', label: 'TaxId',sortable: true},
         {key: 'organism',label:'Name',sortable: true},
         {key:'common_name', label: 'Common Name', sortable: true},
         {key: 'trackingSystem', label:'Status', sortalble: false},

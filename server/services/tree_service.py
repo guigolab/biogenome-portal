@@ -1,9 +1,6 @@
-import os
 from db.models import TaxonNode
 
-NODE_LIMIT = int(os.getenv('MAX_NODES'))
-
-def bfs(root,nodes):
+def bfs(root,nodes, max_leaves):
     queue = [(root,0)]
     while queue:
         node, level = queue.pop(0)
@@ -13,7 +10,7 @@ def bfs(root,nodes):
             for child in node.children:
                 queue.append((child, level+1))
                 nodes[level+1] = nodes.setdefault(level+1, 0) + 1
-        if nodes[level] > NODE_LIMIT:
+        if nodes[level] > max_leaves:
             return level-1
 
 def dfs(stack, tree, max_level):
@@ -38,9 +35,9 @@ def get_max_level(counts, limit):
         if nodes > limit:
             return level-1
 
-def create_tree(node):
+def create_tree(node, max_leaves):
     node_counts={}
-    max_level = bfs(node,node_counts)
+    max_level = bfs(node,node_counts, max_leaves)
     tree={}
     dfs([(node,0)],tree,max_level)
     return tree

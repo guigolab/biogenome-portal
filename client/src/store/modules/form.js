@@ -96,7 +96,6 @@ const mutations= {
     },
     //load sample into form
     loadSample(state, payload){
-        console.log(payload)
         Object.keys(state.sampleForm).forEach(key => {
             if (key in payload){
                 state.sampleForm[key] = payload[key]
@@ -104,6 +103,10 @@ const mutations= {
                 state.sampleForm[key] = ''
             }
         })
+        if (payload.accession){
+            state.sampleForm['tube_or_well_id'] = payload.accession
+        }
+        // use tube_or_well_id as a placeholder for accession in case of already public samples
         state.index = 0
     },
     setField(state, payload){

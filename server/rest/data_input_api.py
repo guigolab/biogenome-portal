@@ -14,7 +14,7 @@ class Login(Resource):
         else:
             user = request.form["user"]
             password = request.form["password"]
-        if user == os.getenv('USER') and password == os.getenv('RESTKEY'):
+        if user == os.getenv('USR') and password == os.getenv('RESTKEY'):
             access_token = create_access_token(identity=user,expires_delta=timedelta(minutes=30))
             return Response(json.dumps(access_token), mimetype="application/json", status=201)
         else:

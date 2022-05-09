@@ -38,6 +38,7 @@ import {BLink,BIconPenFill,BIconTrashFill, BDropdown, BDropdownItem} from 'boots
 import TableComponent from '../base/TableComponent.vue'
 import { showConfirmationModal } from '../../utils/helper'
 import submissionService from '../../services/SubmissionService'
+import {ROOTNODE} from '../../utils/static-config'
 
 export default {
   components: { TableComponent,BLink,BIconPenFill,BIconTrashFill,BDropdown,BDropdownItem },
@@ -87,7 +88,7 @@ export default {
             .then(response => {
                 this.$store.commit('submission/setAlert',{variant:'success', message: 'samples IDs correctly deleted: ' + response.data.success})
                 this.$store.dispatch('submission/showAlert') 
-                this.$store.commit('portal/setTree', {value: 'Eukaryota'}) //update tree
+                this.$store.commit('portal/setTree', {value: ROOTNODE}) //update tree
                 if (samples.length === this.samples.length){
                     this.$router.push('/')
                 }

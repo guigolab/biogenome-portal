@@ -1,17 +1,29 @@
 
 import services.tree_service as service
-from flask import Response
-from flask import current_app as app
+from flask import Response,request
 from db.models import TaxonNode
 from flask_restful import Resource
 import json
-from utils.constants import TaxonPipeline
+
+TaxonPipeline = [
+	{"$lookup":
+		{"from": "taxon_node",
+		"localField": "children",
+		"foreignField": "_id",
+		"as": "children",
+		}
+	},
+	{"$project": 
+		{"_id":0}
+	}
+]
 
 class TreeApi(Resource):
     def get(self, node):
+        max_nodes = int(request.args['maxLeaves'])
         tax_node = TaxonNode.objects(name=node).first()
         ##render tree on the fly
-        tree = service.create_tree(tax_node)
+        tree = service.create_tree(tax_node, max_nodes)
         return Response(json.dumps(tree), mimetype="application/json", status=200)
 
 
