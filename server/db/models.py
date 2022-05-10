@@ -1,7 +1,7 @@
 # from typing_extensions import Required
 from . import db
 from enum import Enum
-from datetime import datetime
+import datetime
 from mongoengine.queryset.visitor import Q
 
 
@@ -102,15 +102,22 @@ class Assembly(db.Document):
     assembly_name = db.StringField()
     description = db.StringField()
     sample_accession = db.StringField()
+    created = db.DateTimeField(default=datetime.datetime.utcnow)
     meta = {
         'indexes': ['accession']
     }
+
+class BioProject(db.Document):
+    accession = db.StringField(required=True, unique=True)
+    title = db.StringField()
+
 
 class SecondaryOrganism(db.Document):
     assemblies = db.ListField(db.LazyReferenceField(Assembly))
     experiments = db.ListField(db.LazyReferenceField(Experiment))
     accession = db.StringField()
-    created = db.DateTimeField(default=datetime.utcnow())
+    bioproject = db.LazyReferenceField(BioProject)
+    created = db.DateTimeField(default=datetime.datetime.utcnow)
     last_check = db.DateTimeField()
     taxid = db.StringField(required=True)
     scientificName = db.StringField(required=True)
@@ -205,10 +212,23 @@ def update_modified(sender, document):
     else:
         document.trackingSystem=TrackStatus.LOCAL_SAMPLE
 
+# ##TODO Migrate samples geo attributes to this model -> test 
+class GeoCoordinates(db.Document):
+    geo_loc = db.StringField(unique=True,required=True)
+    biosamples = db.ListField(db.StringField())
+    geographic_location_latitude=db.StringField()
+    geographic_location_longitude=db.StringField()
+    meta = {
+        'indexes': [
+            'geo_loc',
+        ]
+    }
+
 @update_modified.apply
 class Organism(db.Document):
     assemblies = db.ListField(db.LazyReferenceField(Assembly))
     experiments = db.ListField(db.LazyReferenceField(Experiment))
+    bioprojects = db.ListField(db.StringField())
     # common_names = db.ListField(db.LazyReferenceField(NameOntology))
     common_name = db.ListField(db.StringField())
     insdc_common_name = db.StringField()

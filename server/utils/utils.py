@@ -3,7 +3,7 @@ from lxml import etree
 from flask import make_response,jsonify
 from .constants import CHECKLIST_FIELD_GROUPS
 import os
-
+from db.models import GeoCoordinates
 
 def parse_taxon(xml):
     root = etree.fromstring(xml)
@@ -37,7 +37,16 @@ def parse_sample_metadata(metadata):
             model_attr = next(field['model'] for field in fields if field['model'] == key)
             sample[model_attr] = metadata[key][0]['text']
         else:
-            custom_fields[key] = metadata[key][0]['text']
+            if key == 'lat_lon':
+                values = metadata[key][0]['text'].split(' ')
+                if len(values) == 4:
+                    lat,lat_value,long,long_value = values
+                    sample['geographic_location_latitude'] = '-'+lat if lat_value == 'S' else lat
+                    sample['geographic_location_longitude'] = '-'+long if long_value == 'W' else long 
+            elif key == 'geo_loc_name':
+                sample['geographic_location_country'] = metadata[key][0]['text']
+            else:
+                custom_fields[key] = metadata[key][0]['text']
     if len(custom_fields.keys()) > 0:
         sample['custom_fields'] = custom_fields
     return sample
@@ -56,3 +65,4 @@ def custom_response(message,code):
     return response
 
 
+    

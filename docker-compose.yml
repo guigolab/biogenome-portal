@@ -12,7 +12,7 @@ services:
     networks:
       - default
       - biogenome-network
-
+      
   biogenome_nginx:
     build: 
       context: ./client
@@ -29,6 +29,20 @@ services:
       - API_HOST=${API_HOST}
     ports:
         - "91:${API_PORT}"   
+  # api-worker:
+  #   build: .
+  #   command: celery worker --workdir=. -A tasks.celery --loglevel=info
+  #   environment:
+  #     - APP_ENV=${APP_ENV}
+  #   depends_on:
+  #     - broker-rabbitmq
+
+  # broker-rabbitmq:
+  #   image: "rabbitmq:3.7.14-management"
+  #   environment:
+  #     - RABBITMQ_DEFAULT_USER=rabbit_user
+  #     - RABBITMQ_DEFAULT_PASS=rabbit_password
+
 networks:
   default:
     driver: bridge

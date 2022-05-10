@@ -11,19 +11,19 @@ import os
 SAMPLE_QUERY = Q(accession__ne=None) & (Q(last_check=None) | Q(last_check__lte=datetime.now()- timedelta(days=15)))
 
 def import_records():
-    PROJECTS = os.getenv('PROJECTS').split(',')
+    PROJECTS = [p.strip() for p in os.getenv('PROJECTS').split(',') if p]
     ACCESSION = os.getenv('PROJECT_ACCESSION')
-    if ACCESSION and len(PROJECTS)>0 and PROJECTS[0] != '':
+    if ACCESSION:
         import_from_NCBI(ACCESSION)
+    if len(PROJECTS)>0:
         import_from_EBI_biosamples(PROJECTS)
-    elif ACCESSION:
-        import_from_NCBI(ACCESSION)
-    elif len(PROJECTS)>0:
-        import_from_EBI_biosamples(PROJECTS)
+    update_samples()
+
+
+def update_samples():
     samples = SecondaryOrganism.objects(SAMPLE_QUERY)
     if len(samples) > 0:
-        print('SAMPLES TO UPDATE')
-        print(len(samples))
+        print('SAMPLES TO UPDATE: ',len(samples))
         for sample in samples:
             accession = sample.accession
             experiments = ena_client.get_reads(accession)
@@ -41,7 +41,3 @@ def import_records():
                     org.save()
     else:
         print('NO SAMPLES TO UPDATE')
-
-        #check for samples between the past 15 days or recently created
-    #get orphan samples (those without taxon and organism)
-    #and retrieve taxons from sources

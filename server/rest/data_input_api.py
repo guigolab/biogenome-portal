@@ -4,7 +4,7 @@ from flask_jwt_extended import create_access_token, jwt_required
 from datetime import timedelta
 import os
 import json
-from db.models import TaxonNode, SecondaryOrganism, Organism, Assembly, Experiment
+from db.models import GeoCoordinates, TaxonNode, SecondaryOrganism, Organism, Assembly, Experiment
 
 class Login(Resource):
     def post(self):
@@ -23,6 +23,7 @@ class Login(Resource):
     @jwt_required()
     def delete(self):
         TaxonNode.drop_collection()
+        GeoCoordinates.drop_collection()
         SecondaryOrganism.drop_collection()
         images = Organism.objects(image__ne=None)
         for org in images:

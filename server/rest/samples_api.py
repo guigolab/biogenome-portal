@@ -5,7 +5,7 @@ from errors import NotFound,SchemaValidationError,RecordAlreadyExistError,TaxonN
 from utils.utils import parse_sample_metadata
 from utils import ena_client
 from datetime import datetime
-from services import sample_service
+from services import sample_service, geo_loc_service
 import services.submission_service as service
 from flask_jwt_extended import jwt_required
 from flask_jwt_extended import get_jwt_identity
@@ -25,6 +25,7 @@ class SamplesApi(Resource):
                 result = sample.aggregate(*SamplePipelinePrivate).next()
             else:
                 result = sample.aggregate(*SamplePipeline).next()
+                app.logger.info(result)
             return Response(json.dumps(result),mimetype="application/json", status=200)
         else:
             raise NotFound
@@ -83,6 +84,7 @@ class BioSampleApi(Resource):
                 metadata['accession'] = data['accession']
                 metadata['taxid'] = taxid
                 sample = service.create_sample(metadata)
+                geo_loc_service.get_or_create_coordinates(sample.to_mongo())
                 sample_service.get_reads([sample])
                 assemblies = ena_client.parse_assemblies(sample.accession)
                 if len(assemblies) > 0:
@@ -93,7 +95,6 @@ class BioSampleApi(Resource):
                         for ass in assemblies:
                             if not 'sample_accession' in ass.keys():
                                 ass['sample_accession'] = sample.accession
-                        app.logger.info(assemblies)
                         assemblies = Assembly.objects.insert([Assembly(**ass) for ass in assemblies])
                         organism = Organism.objects(taxid=sample.taxid).first()
                         if not organism:
@@ -107,8 +108,12 @@ class BioSampleApi(Resource):
         else:
             raise SchemaValidationError
 
+
 class GeoLocApi(Resource):
     ##get all samples with coordinates
     def get(self):
-        return Response(json.dumps(sample_service.geoloc_samples()), mimetype="application/json", status=200)
+        if 'ids' in request.args.keys():
+            app.logger.info(request.args['ids'])
+            return Response(json.dumps(geo_loc_service.geoloc_samples()), mimetype="application/json", status=200)
+        return Response(json.dumps(geo_loc_service.geoloc_samples()), mimetype="application/json", status=200)
  

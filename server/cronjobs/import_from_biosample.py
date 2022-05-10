@@ -1,15 +1,11 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 from db.models import SecondaryOrganism,Assembly
 from utils import ena_client,utils
-from services import sample_service,organisms_service
+from services import sample_service,organisms_service,geo_loc_service
 from mongoengine.queryset.visitor import Q
 
-
-SAMPLE_QUERY = (Q(last_check=None) | Q(last_check__lte=datetime.now() - timedelta(days=15)))
-
-
 def import_from_EBI_biosamples(PROJECTS):
-    print('STARTING IMPORT RECORDS JOB')
+    print('STARTING IMPORT BIOSAMPLES JOB')
     samples = collect_samples(PROJECTS)
     if len(samples) == 0:
         print('NO SAMPLES FOUND')
@@ -18,25 +14,26 @@ def import_from_EBI_biosamples(PROJECTS):
     existing_samples = SecondaryOrganism.objects(accession__in=samples_accessions)
     if existing_samples.count() > 0:
         samples = [sample for sample in samples if sample['accession'] not in [ex_sam['accession'] for ex_sam in existing_samples]]
-        print('NEW SAMPLES')
-        print(len(samples))
+        print('NEW SAMPLES: ',len(samples))
     if len(samples) > 0:
         samples_accessions=[sample['accession'] for sample in samples]
         for sample in samples:
             taxid = str(sample['taxId'])
             metadata = utils.parse_sample_metadata(sample['characteristics'])
+
             organism = organisms_service.get_or_create_organism(taxid) ##add common names
             if not organism:
+                #TODO CALL NCBI
                 continue
             if not 'scientifiName' in metadata.keys():
                 metadata['scientificName'] = organism.organism
             metadata['taxid'] = taxid
             metadata['accession'] = sample['accession']
+            geo_loc_service.get_or_create_coordinates(metadata)
             sample_obj = SecondaryOrganism(**metadata).save()
             if not sample_obj.sample_derived_from:
                 organism.records.append(sample_obj)
                 organism.save()
-            print('GETTING ASSEMBLIES')
             assemblies = ena_client.parse_assemblies(sample_obj.accession)
             if len(assemblies) > 0:
                 print('ASSEMBLY PRESENT')
@@ -69,17 +66,14 @@ def collect_samples(PROJECTS):
 
 def append_specimens(samples_accessions):
     specimens = SecondaryOrganism.objects(sample_derived_from__ne=None, accession__in=samples_accessions)
-    containers_accessions = [rec.sample_derived_from for rec in specimens]
-    for accession in containers_accessions:
-        sample_container = SecondaryOrganism.objects(accession=accession).first()
-        if sample_container:
-            new_specimens = [spec for spec in specimens \
-                if spec.sample_derived_from == accession and \
-                    not spec.accession in [spec.fetch().accession for spec in sample_container.specimens]]
+    containers = SecondaryOrganism.objects(accession__in=[rec.sample_derived_from for rec in specimens])
+    for container in containers:
+        new_specimens = [spec for spec in specimens \
+            if spec.sample_derived_from == container.accession and \
+                not spec.accession in [spec.fetch().accession for spec in container.specimens]]
             # new_specimens = list(set(sample_specimens)-set([spec.fetch() for spec in sample_container.specimens]))
-            sample_container.modify(push_all__specimens=new_specimens)
-        else:
-            continue
+        container.modify(push_all__specimens=new_specimens)
+
 
 
 

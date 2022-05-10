@@ -1,7 +1,5 @@
 from db.models import Organism, TaxonNode
 from flask import current_app as app
-from utils import constants
-import os
 
 #expects lazy references
 def delete_taxons(lineage):
