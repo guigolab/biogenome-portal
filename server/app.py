@@ -22,12 +22,12 @@ initialize_api(app)
 
 jwt = JWTManager(app)
 
-# TIME= os.getenv('EXEC_TIME')
-# if os.getenv('PROJECTS') or os.getenv('PROJECT_ACCESSION'):
-#     PROJECTS = os.getenv('PROJECTS').split(',')
-#     sched = BackgroundScheduler(daemon=True)
-#     sched.add_job(import_records, "interval", id="interval-job", start_date=datetime.now()+timedelta(seconds=20),seconds=int(TIME))
-#     sched.start()
+TIME= os.getenv('EXEC_TIME')
+if os.getenv('PROJECTS') or os.getenv('PROJECT_ACCESSION'):
+    PROJECTS = os.getenv('PROJECTS').split(',')
+    sched = BackgroundScheduler(daemon=True)
+    sched.add_job(import_records, "interval", id="interval-job", start_date=datetime.now()+timedelta(seconds=20),seconds=int(TIME))
+    sched.start()
 
 # TIME= os.getenv('EXEC_TIME')
 # if os.getenv('PROJECTS') or os.getenv('PROJECT_ACCESSION'):

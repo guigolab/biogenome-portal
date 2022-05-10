@@ -15,6 +15,9 @@
           <b-nav-item  active-class="active" class="nav-link" :to="{name: 'tree-of-life', params: {node: root}}">
             TREE OF LIFE 
           </b-nav-item>
+          <b-nav-item  active-class="active" class="nav-link" :to="{name:'Map'}" >
+            MAP 
+          </b-nav-item>
       </b-nav>
     </div>
     </b-sidebar>

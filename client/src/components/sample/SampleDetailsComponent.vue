@@ -1,44 +1,6 @@
 <template>
 <b-container class="router-container" fluid>
     <b-row>
-        <b-col v-if="validCoordinates" lg="5">
-            <b-row class="map-container">
-                <map-container :geojson="geojson"/>
-            </b-row>
-        </b-col>
-        <b-col>
-            <b-row>
-                <b-col>
-                    <div>
-                        <h2>{{sample.accession || sample.tube_or_well_id}}</h2>
-                    </div>
-                </b-col>
-            </b-row>
-            <b-row>
-                <b-col cols="2" v-if="sample.collection_date">
-                    <div>
-                        <p class="info-icons"><b-icon-calendar/> {{sample.collection_date}}</p>
-                    </div>
-                </b-col>
-                <b-col v-if="sample.geographic_location_region_and_locality">
-                    <div>
-                        <p class="info-icons">
-                            <b-icon-geo-alt-fill/> 
-                            {{validCoordinates ? sample.geographic_location_region_and_locality + ' (' + sample.geographic_location_longitude + ', '+ sample.geographic_location_latitude + ') ': sample.geographic_location_region_and_locality }}
-                        </p>
-                    </div>
-                </b-col>
-            </b-row>
-            <b-row>
-                <b-col>
-                    <b-badge style="margin-right:5px" variant='info' pill><strong> {{sample.taxid}} </strong></b-badge>
-                    <b-badge v-if="sample.tolid" style="margin-right:5px" pill variant='secondary'><strong> {{sample.tolid}}</strong></b-badge>
-                    <b-badge v-if="sample.accession" style="margin-right:5px" pill variant="success" :href="'https://www.ebi.ac.uk/biosamples/samples/'+sample.accession" target="_blank">BioSamples</b-badge>
-                </b-col>
-            </b-row>
-         </b-col>
-    </b-row>
-    <b-row>
         <b-col>
             <b-tabs
                 pills
@@ -80,24 +42,16 @@
 </template>
 
 <script>
-import {BTabs,BLink,BTab, BBadge,BIconCalendar, BIconGeoAltFill} from 'bootstrap-vue'
-import MapContainer from '../base/MapContainer.vue'
+import {BTabs,BTab,BBadge} from 'bootstrap-vue'
 import AssembliesComponent from '../data/AssembliesComponent.vue'
 import ExperimentsComponent from '../data/ExperimentsComponent.vue'
 import SampleComponent from './SampleComponent.vue'
 import TableComponent from '../base/TableComponent.vue'
 // import Feature from 'ol/Feature'
 export default {
-    components: {BTabs,BTab,BIconCalendar, BIconGeoAltFill,BLink,TableComponent, BBadge, MapContainer, AssembliesComponent, ExperimentsComponent, SampleComponent},
+    components: {BTabs,BTab,BBadge,TableComponent, AssembliesComponent, ExperimentsComponent, SampleComponent},
     props:['sample'],
     computed:{
-        validCoordinates(){
-            return this.sample.geographic_location_longitude 
-            && this.sample.geographic_location_latitude 
-            && !isNaN(this.sample.geographic_location_longitude)
-            && !isNaN(this.sample.geographic_location_latitude)
-            //add numeric control isNaN and isNan(parseFloat)
-        },
         expIndex(){
             if(this.haveItems(this.sample.assemblies) && this.haveItems(this.sample.specimens)){
                 return 3
@@ -117,14 +71,8 @@ export default {
     },
     data(){
         return {
-            geojson:null,
             excludedFields: ['_id', 'experiments', 'assemblies', 'specimens'],
             tabIndex:0,
-        }
-    },
-    mounted(){
-        if(this.validCoordinates){
-            this.createGeoJson()
         }
     },
     methods: {
@@ -146,27 +94,6 @@ export default {
                 }
             })
             return mappedSample
-        },
-        createGeoJson(){
-            const geoJson = {
-                'type': 'FeatureCollection',
-                'crs': {
-                    'type': 'name',
-                    'properties': {
-                        'name': 'EPSG:3857'
-                    }
-                },
-                'features': []
-            }
-                const feature = {
-                    'type': 'Feature',
-                    'geometry': {
-                        'type': 'Point',
-                        'coordinates': [this.sample.geographic_location_longitude, this.sample.geographic_location_latitude]
-                    }
-                }
-            geoJson.features.push(feature)
-            this.geojson = geoJson                 
         },
         linkClass(idx) {
             if (this.tabIndex === idx) {
@@ -194,15 +121,7 @@ export default {
     padding-bottom: 10px;
     min-height: 66vh;
 }
-
-
 /* not supported in IE, but is anybody still using it? */
-
-.map-container{
-    width: 100%;
-    height: 100%;
-    min-height: 150px
-}
 .info-icons{
     color: #545b62;
     font-size: 0.85rem;

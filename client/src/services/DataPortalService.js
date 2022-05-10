@@ -20,8 +20,8 @@ class DataPortalService {
     getSample(accession) {
         return base.get(`/organisms/${accession}`)
     }
-    getGeoLocSamples() {
-        return base.get('/coordinates')
+    getGeoLocSamples(ids) {
+        return base.get('/coordinates', {params:{ids:ids}})
     }
     getTree(node, maxLeaves){
         return base.get(`/tree/${node}`,{

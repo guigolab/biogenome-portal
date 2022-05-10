@@ -1,8 +1,8 @@
 <template>
   <div ref="map-root">
       <div id="popup" ref="olpopup" class="ol-popup">
-      <a @click="closePopup()" href="#" id="popup-closer" ref="popupcloser" class="ol-popup-closer"></a>
       <div id="popup-content"></div>
+      </div>
   </div>
 </template>
 
@@ -30,8 +30,16 @@ export default {
         vectorSource: null,
     }
   },
+  mounted(){
+    if(this.geojson){
+      this.vectorLayer = this.createVectorLayer()
+      this.olMap = this.createMap(this.vectorLayer)
+      this.updateSource(this.geojson)
+    }
+  },
   watch:{
       geojson(value) {
+      console.log(value)
       this.vectorLayer = this.createVectorLayer()
       this.olMap = this.createMap(this.vectorLayer)
       this.updateSource(value)
@@ -44,7 +52,6 @@ export default {
       const features = new GeoJSON({
         featureProjection: 'EPSG:3857',
       }).readFeatures(geojson)
-      console.log(features[0].get('biosamples'))
       source.clear();
       source.addFeatures(features);
       // this zooms the view on the created object
@@ -126,7 +133,7 @@ export default {
 }
 }
 </script>
-<style>
+<style scoped>
 .ol-popup {
   position: absolute;
   overflow: scroll;

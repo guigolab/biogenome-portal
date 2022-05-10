@@ -112,8 +112,9 @@ class BioSampleApi(Resource):
 class GeoLocApi(Resource):
     ##get all samples with coordinates
     def get(self):
-        if 'ids' in request.args.keys():
-            app.logger.info(request.args['ids'])
-            return Response(json.dumps(geo_loc_service.geoloc_samples()), mimetype="application/json", status=200)
+        app.logger.info(request.args.keys())
+        if 'ids[]' in request.args.keys():
+            ids = request.args['ids[]'].split(',')
+            return Response(json.dumps(geo_loc_service.geoloc_samples(ids)), mimetype="application/json", status=200)
         return Response(json.dumps(geo_loc_service.geoloc_samples()), mimetype="application/json", status=200)
  
