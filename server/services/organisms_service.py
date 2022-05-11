@@ -15,7 +15,6 @@ def get_or_create_organism(taxid, common_names=None):
             return
         lineage = utils.parse_taxon(taxon_xml)
         species = lineage[0]
-        print(species)
         tolid = ena_client.get_tolid(taxid)
         taxon_lineage = taxon_service.create_taxons_from_lineage(lineage)
         taxon_list = [dict(taxid=tax.taxid,rank=tax.rank,name=tax.name) for tax in taxon_lineage]

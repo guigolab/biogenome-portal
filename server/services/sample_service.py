@@ -74,11 +74,11 @@ def get_reads(samples):
             if len(new_exps)>0:
                 Experiment.objects.insert(new_exps, load_bulk=False)
                 sample = SecondaryOrganism.objects(accession=accession).first()
-                sample.modify(push_all__experiments=new_exps, last_check=datetime.utcnow())
+                sample.modify(push_all__experiments=new_exps)
                 org = Organism.objects(taxid=sample.taxid).first()
                 org.experiments.extend(new_exps)
                 #trigger status update
                 org.save()
-
+        sample.modify(last_check=datetime.utcnow())
 
     # for sample in samples:

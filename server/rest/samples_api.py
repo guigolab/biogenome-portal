@@ -19,16 +19,21 @@ class SamplesApi(Resource):
 
     @jwt_required(optional=True)
     def get(self,accession=None):
-        sample = SecondaryOrganism.objects((Q(accession=accession) | Q(tube_or_well_id=accession)))
-        if len(sample) > 0:
-            if(get_jwt_identity()):
-                result = sample.aggregate(*SamplePipelinePrivate).next()
+        if accession:
+            sample = SecondaryOrganism.objects((Q(accession=accession) | Q(tube_or_well_id=accession)))
+            if sample:
+                if(get_jwt_identity()):
+                    result = sample.aggregate(*SamplePipelinePrivate).next()
+                else:
+                    result = sample.aggregate(*SamplePipeline).next()
+                return Response(json.dumps(result),mimetype="application/json", status=200)
             else:
-                result = sample.aggregate(*SamplePipeline).next()
-                app.logger.info(result)
-            return Response(json.dumps(result),mimetype="application/json", status=200)
+                raise NotFound
+        if request.args.keys():
+            ids = request.args.values()
+            return Response(SecondaryOrganism.objects(id__in=ids).exclude('last_check').to_json(),mimetype="application/json", status=200)
         else:
-            raise NotFound
+            return Response(SecondaryOrganism.objects().exclude('last_check').to_json(), mimetype="application/json", status=200)
 
     @jwt_required()
     def delete(self):
@@ -112,9 +117,9 @@ class BioSampleApi(Resource):
 class GeoLocApi(Resource):
     ##get all samples with coordinates
     def get(self):
-        app.logger.info(request.args.keys())
-        if 'ids[]' in request.args.keys():
-            ids = request.args['ids[]'].split(',')
+        app.logger.info(request.args)
+        if request.args.keys():
+            ids = request.args.values()
             return Response(json.dumps(geo_loc_service.geoloc_samples(ids)), mimetype="application/json", status=200)
         return Response(json.dumps(geo_loc_service.geoloc_samples()), mimetype="application/json", status=200)
  

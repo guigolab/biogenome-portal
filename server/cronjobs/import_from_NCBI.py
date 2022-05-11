@@ -46,11 +46,9 @@ def get_assemblies(project_accession):
 
 ## get biosample accession from assemblies
 def parse_data(assemblies):
-    samples_accessions=set()
     samples_not_found=set()
     for assembly in assemblies:
         sample_accession=assembly['biosample_accession']
-        samples_accessions.add(sample_accession)
         organism = organisms_service.get_or_create_organism(str(assembly['org']['tax_id']))
         sample_obj = SecondaryOrganism.objects(accession=sample_accession).first()
         if not sample_obj:
@@ -68,7 +66,7 @@ def parse_data(assemblies):
                 sample_obj.modify(**metadata)
                 geo_loc_service.get_or_create_coordinates(sample_obj.to_mongo())
         ass_obj = Assembly.objects(accession = assembly['assembly_accession']).upsert_one(accession = assembly['assembly_accession'],assembly_name= assembly['display_name'], sample_accession= sample_obj.accession)
-        if len(organism.assemblies) == 0 or not ass_obj.id in [ass.id for ass in organism.assemblies]:
+        if not organism.assemblies or not ass_obj.id in [ass.id for ass in organism.assemblies]:
             organism.assemblies.append(ass_obj)
             sample_obj.modify(push__assemblies=ass_obj)
         sample_service.get_reads([sample_obj])

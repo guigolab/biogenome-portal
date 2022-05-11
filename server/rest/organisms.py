@@ -24,17 +24,12 @@ class OrganismsApi(Resource):
 		else:
 			raise SchemaValidationError
 
-# class OrganismsSearchApi(Resource):
-# 	def get(self):
-# 		return Response(service.full_text_search(request.args,Organism),mimetype="application/json", status=200)
-
 class OrganismApi(Resource):
 	def get(self,name):
 		organism_obj = Organism.objects(organism=name)
 		if organism_obj.count() == 0:
 			raise NotFound
 		organism_response = organism_obj.aggregate(*OrganismPipeline).next()
-		app.logger.info(organism_response)
 		if 'image' in organism_response.keys():
 			encoded_image = base64.b64encode(organism_obj.first().image.read())
 			organism_response['image'] = encoded_image.decode('utf-8')

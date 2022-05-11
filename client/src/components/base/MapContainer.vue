@@ -96,8 +96,8 @@ export default {
       map.on('singleclick', function(e){
         var biosamples = ''
         this.getFeaturesAtPixel(e.pixel).forEach(ft => {
-          ft.get('biosamples').forEach(sample => {
-            biosamples = biosamples+`<a href="#/samples/${sample}">${sample}</a><br/>`
+          Object.entries(ft.get('biosamples')).forEach(entry => {
+            biosamples = biosamples+`<a class="ft-map-link" href="#/samples/${entry[0]}">${entry[0]}</a> <a href="#/organisms/${entry[1]}">(${entry[1]})</a><br/>`
           })
         })
         if(biosamples){
@@ -107,9 +107,6 @@ export default {
         }else{
           this.getOverlayById('pop-up').setPosition(undefined)
         }
-
-          // content.innerHTML = '<p>You clicked here:</p><code>' + hdms + '</code>';
-          // this.overlay.setPosition(coordinate);
       })
       return map
     },
@@ -118,8 +115,6 @@ export default {
         source: new VectorSource(),
         style: new Style({
             image: new Icon({
-            // size:[10,10],
-            // scale: 0.5,
             anchor: [0.5, 0.5],
             anchorXUnits: "fraction",
             anchorYUnits: "fraction",
@@ -144,6 +139,9 @@ export default {
   bottom: 12px;
   left: -50px;
   max-height:200px;
+}
+.ft-map-link{
+  font-size: 0.85rem
 }
 /* .ol-popup:after, .ol-popup:before {
   top: 100%;

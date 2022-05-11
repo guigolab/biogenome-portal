@@ -22,9 +22,9 @@
                     <b-row>
                 </b-col>
             </b-row>
-            <b-row v-if="organism.common_name.length && organism.common_name[0]">
+            <b-row v-if="(organism.common_name.length && organism.common_name[0]) || organism.insdc_common_name">
                 <b-col>
-                    <h5>{{organism.common_name.join()}}</h5>
+                    <h5>{{organism.common_name.join() || organism.insdc_common_name}}</h5>
                 </b-col>
             </b-row>
             <b-row>
@@ -84,13 +84,18 @@ export default {
                 this.$store.commit('portal/setBreadCrumb', {value: {text: name, to: {name: 'organism-details', params:{name: name}}}})
                 this.$store.dispatch('portal/hideLoading')
                 const records = [...this.organism.insdc_samples,...this.organism.local_samples]
-                const ids = records.map(rec => {return rec.accession || rec.tube_or_well_id})
-                return portalService.getGeoLocSamples(ids)
+                const ids = records.map(rec => {
+                    if(rec.geographic_location_latitude && rec.geographic_location_longitude){
+                        return rec.geographic_location_latitude+','+rec.geographic_location_longitude
+                    }
+                }).filter(id => id)
+                console.log(ids)
+                return ids.length ? portalService.getGeoLocSamples(ids) : null
             })
             .then(response =>{
-                this.$nextTick(()=>{
+                if(response){
                     this.geojson = {...response.data}
-                })
+                }
             })
         }
     },

@@ -39,10 +39,8 @@ def query_search(offset=0, limit=20,
     query['taxon_lineage'] = tax_node if tax_node else TaxonNode.objects(name=ROOT_NODE).first()
     insdc_dict = dict(insdc_samples=insdc_samples,local_samples=local_samples,assemblies=assemblies,experiments=experiments)
     get_insdc_query(insdc_dict,query)
-    if filter_query:
-        organisms = Organism.objects(filter_query, **query)
-    else:
-        organisms = Organism.objects.filter(**query)
+    app.logger.info(query)
+    organisms = Organism.objects(filter_query, **query) if filter_query else Organism.objects.filter(**query)
     if sortColumn:
         sort = '-'+sortColumn if sortOrder == 'true' else sortColumn
         organisms = organisms.order_by(sort)
@@ -52,10 +50,12 @@ def query_search(offset=0, limit=20,
 
 def get_insdc_query(insdc_dict, query):
     values = insdc_dict.values()
-    if all(value == 'true' for value in values) or all(value=='false' for value in values):
+    if all(value=='false' for value in values):
         return
     for key in insdc_dict.keys():
-        if insdc_dict[key] == 'false':
+        if insdc_dict[key] == 'true':
+            query[key+'__not__size'] = 0
+        else:
             query[key] = []
     
 def query_by_taxNode(taxNode,query):

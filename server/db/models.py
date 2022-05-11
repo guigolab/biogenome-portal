@@ -2,7 +2,6 @@
 from . import db
 from enum import Enum
 import datetime
-from mongoengine.queryset.visitor import Q
 
 
 class TrackStatus(Enum):
@@ -215,7 +214,7 @@ def update_modified(sender, document):
 # ##TODO Migrate samples geo attributes to this model -> test 
 class GeoCoordinates(db.Document):
     geo_loc = db.StringField(unique=True,required=True)
-    biosamples = db.ListField(db.StringField())
+    biosamples = db.DictField()
     geographic_location_latitude=db.StringField()
     geographic_location_longitude=db.StringField()
     meta = {

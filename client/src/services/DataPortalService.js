@@ -17,11 +17,17 @@ class DataPortalService {
     getOrganism(name) {
         return base.get(`/root_organisms/${name}`)
     }
-    getSample(accession) {
-        return base.get(`/organisms/${accession}`)
+    getSamples(accession, ids) {
+        if(accession){
+            return base.get(`/organisms/${accession}`)
+        }
+        return base.get(`/organisms?${ids.map((n, index) => `${index}=${n}`).join('&')}`)
     }
     getGeoLocSamples(ids) {
-        return base.get('/coordinates', {params:{ids:ids}})
+        if (ids){
+            return base.get(`/coordinates?${ids.map((n, index) => `${index}=${n}`).join('&')}`)
+        }
+        return base.get('/coordinates')
     }
     getTree(node, maxLeaves){
         return base.get(`/tree/${node}`,{

@@ -15,7 +15,6 @@
         @row-selected="onRowSelected"
         :selectable="hasToken"
         :selectMode="'multi'"
-        :fixed="true"
         >
         <template #thead-top>
             <b-tr>
@@ -196,9 +195,7 @@ export default {
       this.$root.$emit('bv::refresh::table', this.tableId)
     },
     option(){
-      if (this.filter){
-        this.$root.$emit('bv::refresh::table', this.tableId)
-      }
+      this.filter=''
     }
   },
   methods: {
@@ -232,7 +229,9 @@ export default {
     getData(organism, model){
       this.$store.dispatch('portal/showLoading')
       const ids = organism[model].map(dt => {return dt.$oid})
-      portalService.getData(model,{ids:ids})
+      const bool = model==='insdc_samples' || model === 'local_samples'
+      const resp = bool ? portalService.getSamples(null, ids) : portalService.getData(model,{ids:ids})
+      resp
       .then(response => {
         this.data = response.data
         this.model = model

@@ -18,7 +18,7 @@
                 <b-link @click.stop class="to-tree-link" :to="{name: 'tree-of-life', params: {node: item.name}}">
                     <b-icon-diagram3 icon='diagram3' :id="item.name" font-scale="1"></b-icon-diagram3>
                 </b-link>
-                <b-badge @click.stop="toTable(item.name)" variant="success" pill>{{item.leaves}} </b-badge>
+                <b-badge href="#" @click.stop="toTable(item.name)" variant="success" pill>{{item.leaves}} </b-badge>
             </div>
         </div>
     </div>

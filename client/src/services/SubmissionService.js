@@ -75,7 +75,7 @@ class SubmissionService {
   insertBioSample(formData){
     return submission.post('/biosamples', formData)
   }
-  getSample(accession){
+  getSamples(accession){
     return submission.get(`/organisms/${accession}`)
   }
   updateSample(accession, formData){
