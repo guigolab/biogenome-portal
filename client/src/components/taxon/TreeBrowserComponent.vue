@@ -1,11 +1,9 @@
 <template>
-    <b-container class="router-container" fluid>
-        <b-row>
-            <b-col>
-                <tree-list-component v-if="tree" class="tree-wrapper" :item="tree"></tree-list-component>
-            </b-col>
-        </b-row>
-    </b-container>
+    <b-row>
+        <b-col>
+            <tree-list-component v-if="tree" class="tree-wrapper" :item="tree"></tree-list-component>
+        </b-col>
+    </b-row>
 </template>
 <script>
 import TreeListComponent from "./TreeListComponent.vue"

@@ -15,10 +15,12 @@ def get_or_create_organism(taxid, common_names=None):
             return
         lineage = utils.parse_taxon(taxon_xml)
         species = lineage[0]
+        print(species)
+        tolid = ena_client.get_tolid(taxid)
         taxon_lineage = taxon_service.create_taxons_from_lineage(lineage)
         taxon_list = [dict(taxid=tax.taxid,rank=tax.rank,name=tax.name) for tax in taxon_lineage]
         insdc_common_name = species['commonName'] if 'commonName' in species.keys() else ''
-        organism = Organism(taxid = taxid, insdc_common_name=insdc_common_name,organism= species['scientificName'], taxon_lineage = taxon_lineage, ordered_lineage=taxon_list).save()
+        organism = Organism(taxid = taxid, insdc_common_name=insdc_common_name,organism= species['scientificName'], taxon_lineage = taxon_lineage, ordered_lineage=taxon_list, tolid_prefix=tolid).save()
         taxon_service.leaves_counter(taxon_lineage)
     if common_names and len(common_names.split('|')) > 0:
         names_arr = common_names.split('|')

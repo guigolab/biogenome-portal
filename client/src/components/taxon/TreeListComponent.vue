@@ -81,7 +81,7 @@ export default {
 </script>
 <style scoped>
 ul{
-    padding-left:1rem !important;
+    padding-left:0.33rem !important;
 }
 
 .item {
@@ -94,6 +94,7 @@ ul{
 }
 .node-container {
     background-color: rgb(233, 236, 239);
+    color: #495057;
     padding: 0.5rem;
     margin: 0.25rem;
     border-radius: 1.25rem;

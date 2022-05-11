@@ -6,7 +6,7 @@ const state = () => ({
     taxName: ROOTNODE,
     taxNameHistory: [],
     organism: null, //default value for tree browser and d3 tree
-    option: 'organisms', //default option for filter bar
+    option: 'species_name', //default option for filter bar
     filter: null,
     perPage: 20,
     totalRows: 1,

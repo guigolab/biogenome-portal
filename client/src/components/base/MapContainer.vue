@@ -94,7 +94,6 @@ export default {
       })
       map.addOverlay(overlay)
       map.on('singleclick', function(e){
-        console.log(e)
         var biosamples = ''
         this.getFeaturesAtPixel(e.pixel).forEach(ft => {
           ft.get('biosamples').forEach(sample => {

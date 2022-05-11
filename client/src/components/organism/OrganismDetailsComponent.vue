@@ -1,5 +1,4 @@
 <template>
-<b-container class="router-container" fluid>
     <b-row>
         <b-col>
             <b-tabs
@@ -9,9 +8,9 @@
             >
                 <b-tab :title-link-class="linkClass(0)" active class="tab-element" lazy>
                     <template #title>
-                        <strong>Samples  </strong><b-badge :variant="linkVariant(0)" pill>{{organism.records.length}}</b-badge>
+                        <strong>Samples  </strong><b-badge :variant="linkVariant(0)" pill>{{samples.length}}</b-badge>
                     </template>
-                    <sample-component :name="organism.organism" :samples="organism.records"/>
+                    <sample-component :name="organism.organism" :samples="samples"/>
                 </b-tab>
                 <b-tab :title-link-class="linkClass(1)" class="tab-element" v-if="organism.assemblies && organism.assemblies.length" lazy>
                     <template #title>
@@ -28,7 +27,6 @@
             </b-tabs>
         </b-col>
     </b-row>
-</b-container>
 </template>
 
 <script>
@@ -45,6 +43,9 @@ export default {
                 return 2
             }
             return 1
+        },
+        samples(){
+            return [...this.organism.insdc_samples, ...this.organism.local_samples]
         }
     },
     data(){

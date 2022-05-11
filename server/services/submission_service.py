@@ -18,7 +18,10 @@ def create_sample(data):
     sample = sample_service.create_sample_object(data).save()
     #behind the scenes it creates the taxonomic hierarchy
     #manage records locally(no experiments and assemblies)
-    organism.modify(push__records=sample)
+    if sample.accession:
+        organism.modify(push__insdc_samples=sample)
+    else:
+        organism.modify(push__local_samples=sample)
     return sample
     
 def import_samples(samples):

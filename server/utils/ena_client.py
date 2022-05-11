@@ -1,4 +1,3 @@
-from curses import meta
 import requests
 from flask import current_app as app
 
@@ -18,7 +17,13 @@ def check_taxons_from_NCBI(taxids):
 def get_sample_from_biosamples(accession):
     return requests.get(f"https://www.ebi.ac.uk/biosamples/samples?size=1000&filter=acc:{accession}").json()
 
-        
+def get_tolid(taxid):
+    response = requests.get(f"https://id.tol.sanger.ac.uk/api/v2/species/{taxid}").json()
+    if not isinstance(response, list):
+        return ''
+    else:
+        return response[0]['prefix']
+
 def get_samples(project):
     resp = requests.get(
     f"https://www.ebi.ac.uk/biosamples/samples?size=10000&"

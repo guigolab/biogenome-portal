@@ -1,6 +1,4 @@
 <template>
-<b-row>
-    <b-col style="overflow: auto;min-height:50px">
         <b-button-group>
             <b-button
                 v-for="(taxNameRecord, idx) in taxNameHistory"
@@ -16,8 +14,6 @@
                 </b-row>
             </b-button>
         </b-button-group>
-    </b-col>
-</b-row>
 </template>
 <script>
 import {BButtonGroup,BButton} from 'bootstrap-vue'

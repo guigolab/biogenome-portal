@@ -1,9 +1,3 @@
-import {Parser} from 'xml2js'
-
-
-export function xmlParser(xmlData){
-    return new Parser().parseStringPromise(xmlData)
-}
 
 export function mapCheckListFields(options) {
     const object = {};
@@ -40,8 +34,6 @@ export function showConfirmationModal(bvModal,description){
     // return a promise
     return bvModal.msgBoxConfirm(description, {
         title: 'Confirm',
-        // size: 'sm',
-        // buttonSize: 'sm',
         okVariant: 'danger',
         okTitle: 'Yes',
         cancelTitle: 'No',

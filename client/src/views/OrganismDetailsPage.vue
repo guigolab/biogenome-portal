@@ -1,4 +1,5 @@
 <template>
+<b-container fluid class="router-container">
 <b-row>
     <b-col>
         <b-row>
@@ -40,6 +41,7 @@
     <organism-details-component v-if="organism" :organism="organism"/>
     </b-col>
 </b-row>
+</b-container>
 
 </template>
 <script>
@@ -47,6 +49,7 @@ import {BLink,BAvatar} from 'bootstrap-vue'
 import OrganismDetailsComponent from '../components/organism/OrganismDetailsComponent.vue'
 import portalService from '../services/DataPortalService'
 import MapContainer from '../components/base/MapContainer.vue'
+import StatusBadgeComponent from '../components/base/StatusBadgeComponent.vue'
 
 export default {
     props: ['name'],
@@ -80,7 +83,8 @@ export default {
                 this.organism = response.data
                 this.$store.commit('portal/setBreadCrumb', {value: {text: name, to: {name: 'organism-details', params:{name: name}}}})
                 this.$store.dispatch('portal/hideLoading')
-                const ids = this.organism.records.map(rec => {return rec.accession || rec.tube_or_well_id})
+                const records = [...this.organism.insdc_samples,...this.organism.local_samples]
+                const ids = records.map(rec => {return rec.accession || rec.tube_or_well_id})
                 return portalService.getGeoLocSamples(ids)
             })
             .then(response =>{
@@ -92,7 +96,7 @@ export default {
     },
     components: {
         OrganismDetailsComponent,BLink,BAvatar,
-        MapContainer
+        MapContainer,StatusBadgeComponent
     }
 }
 </script>

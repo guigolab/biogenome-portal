@@ -1,8 +1,6 @@
 <template>
-    <b-container class="router-container" fluid>
-      <tree-bread-crumb-component/>
-      <filter-component :filter="filter" :placeholder="'Search in ' + taxName"/>
-      <div ref="organismsTable">
+<b-row>
+  <b-col>
       <table-component 
         :items="organismsProvider"
         :busy.sync="isBusy"
@@ -17,41 +15,83 @@
         @row-selected="onRowSelected"
         :selectable="hasToken"
         :selectMode="'multi'"
-        
+        :fixed="true"
         >
-        <template #head(trackingSystem)>
-          <b-form-select
-            id="status-select"
-            v-model="selectedStatus"
-            :options="statuses"
-            size="sm"
-          >
-          </b-form-select>
+        <template #thead-top>
+            <b-tr>
+              <b-th class="extra-th" colspan="4">Taxonomic Informations</b-th>
+              <b-th class="extra-th my-left-border" colspan="4">INSDC Submission Status</b-th>
+            </b-tr>
+        </template>
+        <template #head(local_samples)>
+            <b-form-checkbox
+              v-model="showLocalSamples"
+              name="local_samples-checkbox"
+            >
+            Loc.Samples
+            </b-form-checkbox>
+        </template>
+        <template #head(insdc_samples)>
+            <b-form-checkbox
+              v-model="showBiosamples"
+              name="insdc-samples-checkbox"
+            >
+              BioSamples
+            </b-form-checkbox>
+        </template>
+        <template #head(assemblies)>
+            <b-form-checkbox
+              v-model="showAssemblies"
+              name="ass-checkbox"
+            >
+              Assemblies
+            </b-form-checkbox>
+        </template>
+        <template #head(experiments)>
+            <b-form-checkbox
+              v-model="showReads"
+              name="exp-checkbox"
+            >
+              Experiments
+            </b-form-checkbox>
         </template>
         <template #head(actions)>
           <b-dropdown dropup class="mx-1" right text="Actions">
               <b-dropdown-item :disabled="selectedOrganisms.lenght === 0" @click="deleteOrganisms(selectedOrganisms)" variant="danger">Delete selected organisms</b-dropdown-item>
           </b-dropdown>         
         </template>
-        <template #head(data)>
-          <b-badge variant="warning">Reads</b-badge>
-          <b-badge variant="primary">Assemblies</b-badge>
-        </template>
         <template #cell(organism)="data">
           <b-link :to="{name: 'organism-details', params: {name: data.item.organism}}">
             {{data.item.organism}}
           </b-link>
         </template>
-          <template #cell(common_name)="data">
+        <template #cell(common_name)="data">
             {{data.item.common_name.toString()}}
         </template>
-        <template #cell(trackingSystem)="data">
-          <status-badge-component :status="data.item.trackingSystem"/>
+        <template #cell(local_samples)="data">
+          <div class="badge-wrapper">
+            <b-badge href="#" style="cursor:pointer" v-if="data['item'].local_samples.length" @click.stop="getData(data['item'], 'local_samples')" pill variant="info">{{data['item'].local_samples.length}}</b-badge>
+          </div>
+        </template>
+        <template #cell(insdc_samples)="data">
+          <div class="badge-wrapper">
+            <b-badge href="#" pill style="cursor:pointer" v-if="data['item'].insdc_samples.length" @click.stop="getData(data['item'], 'insdc_samples')"  variant="success">{{data['item'].insdc_samples.length}}</b-badge>
+          </div>
+        </template>
+        <template #cell(assemblies)="data">
+          <div class="badge-wrapper">
+            <b-badge href="#" pill style="cursor:pointer" v-if="data['item'].assemblies.length" @click.stop="getData(data['item'], 'assemblies')"  variant="primary">{{data['item'].assemblies.length}}</b-badge>
+          </div>
+        </template>outline-success
+        <template #cell(experiments)="data">
+          <div class="badge-wrapper">
+            <b-badge href="#" v-if="data['item'].experiments.length" @click.stop="getData(data['item'], 'experiments')" pill variant="warning">{{data['item'].experiments.length}}</b-badge>
+          </div>
         </template>
          <template #cell(externalReferences)="data">
-            <b-badge class="link-badge" pill variant='dark' target="_blank" :href="'https://goat.genomehubs.org/records?record_id='+data.item.taxid+'&result=taxon&taxonomy=ncbi#'+data.item.organism">GoaT</b-badge>
-            <b-badge class="link-badge" variant="info" pill target="_blank" :href="'https://www.ebi.ac.uk/ena/browser/view/'+ data.item.taxid">ENA</b-badge>
-            <b-badge class="link-badge" pill target="_blank" :href="'https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id='+data.item.taxid">NCBI</b-badge>
+            <b-badge pill variant="dark" target="_blank" :href="'https://goat.genomehubs.org/records?record_id='+data.item.taxid+'&result=taxon&taxonomy=ncbi#'+data.item.organism">GoaT</b-badge>
+            <b-badge pill variant="info" target="_blank" :href="'https://www.ebi.ac.uk/ena/browser/view/'+ data.item.taxid">ENA</b-badge>
+            <b-badge pill variant="secondary" target="_blank" :href="'https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id='+data.item.taxid">NCBI</b-badge>
         </template>
         <template #cell(actions)="data">
             <b-link class="actions-link" @click="editOrganism(data['item'])">
@@ -61,41 +101,34 @@
                 <b-icon-trash-fill variant="danger"></b-icon-trash-fill>
             </b-link>
         </template>
-        <template #cell(data)="data">
-            <b-badge style="cursor:pointer" v-if="data['item'].experiments.length" @click.stop="getData(data['item'], 'experiments')" pill variant="warning">{{data['item'].experiments.length}}</b-badge>
-            <b-badge style="cursor:pointer" v-if="data['item'].assemblies.length" @click.stop="getData(data['item'], 'assemblies')" pill variant="primary">{{data['item'].assemblies.length}}</b-badge>
-        </template>
       </table-component>
-      </div>
       <data-modal :data="data" :model="model" :organism="organism"/>
       <edit-organism-modal :organism="organism" :commonNames="commonNames"/>
       <pagination-component :per-page="perPage" :page-options="pageOptions" :total-rows="totalRows" :current-page="currentPage" :table-id="tableId"/>
-    </b-container>
+      </b-col>
+    </b-row>
 </template>
 
 <script>
 import portalService from "../../services/DataPortalService"
-import {BBadge, BIconPenFill,BIconTrashFill, BLink, BFormSelect, BDropdown, BDropdownItem } from 'bootstrap-vue'
+import {BTr,BBadge,BTh,BFormCheckbox, BIconPenFill,BIconTrashFill, BLink, BDropdown, BDropdownItem } from 'bootstrap-vue'
 import TableComponent from '../base/TableComponent.vue';
-import FilterComponent from '../base/FilterComponent.vue';
 import PaginationComponent from '../base/PaginationComponent.vue';
 import {mapFields, showConfirmationModal} from '../../utils/helper'
-import StatusBadgeComponent from '../base/StatusBadgeComponent.vue';
 import SubmissionService from '../../services/SubmissionService';
 import DataModal from '../modal/DataModal.vue';
-import TreeBreadCrumbComponent from '../taxon/TreeBreadCrumbComponent.vue';
 import EditOrganismModal from '../modal/EditOrganismModal.vue';
 
 export default {
   components: 
     {
-      BLink,BBadge, BFormSelect,TableComponent,PaginationComponent,FilterComponent,
-      StatusBadgeComponent,BDropdown, BDropdownItem,BIconPenFill,BIconTrashFill,
-      DataModal,TreeBreadCrumbComponent,EditOrganismModal
+      BLink,BBadge,TableComponent,PaginationComponent,
+      BDropdown, BDropdownItem,BIconPenFill,BIconTrashFill,
+      DataModal,EditOrganismModal,BTr,BTh,BFormCheckbox
     },
   computed: {
     ...mapFields({
-      fields: ['filter','perPage', 'taxName','totalRows','currentPage'],
+      fields: ['filter','perPage', 'option','taxName','totalRows','currentPage'],
       module: 'portal',
       mutation: 'portal/setField'      
     }),
@@ -116,7 +149,10 @@ export default {
       props:['isAdmin'],
       isBusy: false,
       stickyHeader: '70vh',
-      selectedStatus: '',
+      showBiosamples:false,
+      showLocalSamples:false,
+      showAssemblies:false,
+      showReads:false,
       statuses: [
         { value: '', text: 'All' },
         { value: 'Sample Acquired', text: 'Sample Acquired'},
@@ -127,11 +163,17 @@ export default {
         { value: 'Annotation Submitted', text: 'Annotation Submitted' }
       ],
       fields: [
-        {key: 'organism',label:'Name',sortable: true},
-        {key:'common_name', label: 'Common Name', sortable: true},
-        {key: 'trackingSystem', label:'Status', sortalble: false},
-        {key: 'data'},
+        {key: 'tolid_prefix', label: 'ToLID'},
+        {key: 'organism',label:'Name',sortable: true,stickyColumn: true},
+        {key:'insdc_common_name', label: 'Common Name', sortable: true},
+        // {key: 'annotations', label: 'Annotations'},
         {key: 'externalReferences', label:'Links'},
+        {key: 'local_samples', label: 'Acquired Samples', class:'my-left-border'},
+        {key: 'insdc_samples', label: 'BioSamples'},
+        {key: 'experiments', label: 'Reads'},
+        {key: 'assemblies', label: 'Assemblies'},
+        // {key: 'trackingSystem', label:'INSDC Status', sortable: false},
+
       ],
       selectedOrganisms:[],
       data:[],
@@ -141,8 +183,22 @@ export default {
     }
   },
   watch: {
-    selectedStatus(){
+    showBiosamples(){
       this.$root.$emit('bv::refresh::table', this.tableId)
+    },
+    showLocalSamples(){
+      this.$root.$emit('bv::refresh::table', this.tableId)
+    },
+    showAssemblies(){
+      this.$root.$emit('bv::refresh::table', this.tableId)
+    },
+    showReads(){
+      this.$root.$emit('bv::refresh::table', this.tableId)
+    },
+    option(){
+      if (this.filter){
+        this.$root.$emit('bv::refresh::table', this.tableId)
+      }
     }
   },
   methods: {
@@ -188,18 +244,7 @@ export default {
     onRowSelected(value){
       this.selectedOrganisms = value
     },
-    filterSearch(params,callback){
-      portalService.getFilteredOrganisms(params).then(response => {
-        this.totalRows = response.data.total
-        const items = Object.freeze(response.data.data)
-        callback(items)
-        })
-        .catch(() => {
-        callback([])
-        })
-      return null
-    },
-    defaultSearch(params,callback){
+    defaultSearch(params, callback){
       portalService.getOrganisms(params).then(response => {
           this.totalRows = response.data.total
           const items = Object.freeze(response.data.data)
@@ -211,21 +256,39 @@ export default {
     },
     organismsProvider(ctx,callback){
       const fromParam = (ctx.currentPage - 1) * ctx.perPage
-      const status = this.selectedStatus
-      if(ctx.filter){
-        const params = {filter: ctx.filter,from: fromParam, size: ctx.perPage,sortColumn: ctx.sortBy, sortOrder: ctx.sortDesc,taxName: this.taxName, status: status }
-        this.filterSearch(params,callback)          
-      }
-      else {
-        const params = {offset: fromParam , limit: ctx.perPage, sortColumn: ctx.sortBy, sortOrder: ctx.sortDesc,taxName: this.taxName, status: status}
-        this.defaultSearch(params,callback)
-      }
-    },
+      const params = {
+        filter: ctx.filter,
+        offset: fromParam,
+        limit: ctx.perPage,
+        sortColumn: ctx.sortBy,
+        sortOrder: ctx.sortDesc,
+        taxName: this.taxName,
+        insdc_samples: this.showBiosamples,
+        local_samples: this.showLocalSamples,
+        assemblies: this.showAssemblies,
+        experiments: this.showReads,
+        option: this.option
+        }
+      this.defaultSearch(params,callback)
+    }
   }
 }
 </script>
 <style>
+
 .link-badge{
   margin-right:5px
+}
+.badge-wrapper, .extra-th{
+  text-align: center;
+}
+.b-table .my-left-border {
+  border-left: 1px solid #e9ecef;
+}
+.th-text-color{
+  color: black !important
+}
+.organism-data-table{
+  border-radius: 1.25rem;
 }
 </style>

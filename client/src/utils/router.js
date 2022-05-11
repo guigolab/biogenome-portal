@@ -1,7 +1,7 @@
 import Vue from "vue";
 import Router from "vue-router";
 import {ROOTNODE} from '../utils/static-config'
-
+import HomePage from '../views/HomePage.vue'
 
 Vue.use(Router);
 
@@ -9,7 +9,7 @@ const routes = [
   {
     path: "/",
     name: "home-page",
-    component: () => import(/* webpackPrefetch: true */ '../views/HomePage.vue'),
+    component: HomePage,
   },
   {
     path: "/admin",
@@ -26,11 +26,11 @@ const routes = [
     name:"excel-import",
     component: () => import(/* webpackPrefetch: true */  '../views/admin/ExcelFormPage.vue')
   },
-  {
-    path: "/docs",
-    name: "docs",
-    component: () => import(/* webpackPrefetch: true */ '../views/SwaggerPage.vue')
-  },
+  // {
+  //   path: "/docs",
+  //   name: "docs",
+  //   component: () => import(/* webpackPrefetch: true */ '../views/SwaggerPage.vue')
+  // },
   {
     path: "/map",
     name: "Map",

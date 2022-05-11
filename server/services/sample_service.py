@@ -32,17 +32,17 @@ def delete_samples(ids):
     #first delete organism and taxons
     organism = Organism.objects(taxid=taxid)
     if len(assemblies_to_delete) > 0 and len(experiments_to_delete) > 0:
-        organism.update_one(pull_all__records=[sample.id for sample in samples_to_delete], pull_all__assemblies=assemblies_to_delete, pull_all__experiments=experiments_to_delete)
+        organism.update_one(pull_all__local_records=[sample.id for sample in samples_to_delete], pull_all__assemblies=assemblies_to_delete, pull_all__experiments=experiments_to_delete)
         Experiment.objects(id__in=experiments_to_delete).delete()
         Assembly.objects(id__in=assemblies_to_delete).delete()
     elif len(assemblies_to_delete)>0:
-        organism.update_one(pull_all__records=[sample.id for sample in samples_to_delete], pull_all__assemblies=assemblies_to_delete)
+        organism.update_one(pull_all__local_records=[sample.id for sample in samples_to_delete], pull_all__assemblies=assemblies_to_delete)
         Assembly.objects(id__in=assemblies_to_delete).delete()
     elif len(experiments_to_delete) > 0:
-        organism.update_one(pull_all__records=[sample.id for sample in samples_to_delete], pull_all__experiments=experiments_to_delete)
+        organism.update_one(pull_all__local_records=[sample.id for sample in samples_to_delete], pull_all__experiments=experiments_to_delete)
         Experiment.objects(id__in=experiments_to_delete).delete()
     else:
-        organism.update_one(pull_all__records=[sample.id for sample in samples_to_delete])
+        organism.update_one(pull_all__local_records=[sample.id for sample in samples_to_delete])
     
     organism = organism.first() #fetch organism
     if len(organism.assemblies) == 0 and len(organism.experiments) == 0:
@@ -52,7 +52,7 @@ def delete_samples(ids):
     elif len(organism.assemblies) == 0:
         organism.update(trackingSystem=TrackStatus.RAW_DATA)
 
-    if len(organism.records) == 0:
+    if len(organism.local_records) == 0 and len(organism.insdc_records) == 0:
         #delete organism and update taxons leafes
         taxon_service.delete_taxons(organism.taxon_lineage)
         organism.delete()

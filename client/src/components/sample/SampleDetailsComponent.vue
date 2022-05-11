@@ -1,5 +1,4 @@
 <template>
-<b-container class="router-container" fluid>
     <b-row>
         <b-col>
             <b-tabs
@@ -38,7 +37,6 @@
             </b-tabs>
         </b-col>
     </b-row>
-</b-container>
 </template>
 
 <script>

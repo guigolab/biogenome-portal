@@ -202,12 +202,12 @@ class SecondaryOrganism(db.Document):
 
 @handler(db.pre_save)
 def update_modified(sender, document):
-    if len(document.assemblies) > 0:
+    if document.assemblies:
         document.trackingSystem= TrackStatus.ASSEMBLIES
-    elif len(document.experiments) > 0:
+    elif document.experiments:
         document.trackingSystem= TrackStatus.READS
-    elif len(document.records) > 0 and \
-        len(SecondaryOrganism.objects(Q(id__in=[rec.id for rec in document.records]) & Q(accession__ne=None))) > 0:
+    elif document.insdc_samples and \
+        SecondaryOrganism.objects(id__in=[rec.id for rec in document.insdc_samples]):
         document.trackingSystem=TrackStatus.SAMPLE
     else:
         document.trackingSystem=TrackStatus.LOCAL_SAMPLE
@@ -228,12 +228,14 @@ class GeoCoordinates(db.Document):
 class Organism(db.Document):
     assemblies = db.ListField(db.LazyReferenceField(Assembly))
     experiments = db.ListField(db.LazyReferenceField(Experiment))
-    bioprojects = db.ListField(db.StringField())
+    # bioprojects = db.ListField(db.StringField())
+    tolid_prefix = db.StringField()
     # common_names = db.ListField(db.LazyReferenceField(NameOntology))
     common_name = db.ListField(db.StringField())
     insdc_common_name = db.StringField()
+    local_samples = db.ListField(db.LazyReferenceField(SecondaryOrganism))
+    insdc_samples = db.ListField(db.LazyReferenceField(SecondaryOrganism))
     organism = db.StringField(required=True,unique=True)
-    records = db.ListField(db.LazyReferenceField(SecondaryOrganism))
     taxid = db.StringField(required= True)
     image = db.FileField()
     image_url = db.StringField()

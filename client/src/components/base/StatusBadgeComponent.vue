@@ -15,7 +15,7 @@ export default {
                 'Annotation Submitted': 'info',
                 'Assemblies Submitted': 'primary',
                 'Reads Submitted': 'warning',
-                'Biosample Submitted': 'secondary',
+                'Biosample Submitted': 'success',
                 'Sample Acquired':'info'
             }
         }

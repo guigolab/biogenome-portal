@@ -55,7 +55,7 @@ def parse_data(assemblies):
         sample_obj = SecondaryOrganism.objects(accession=sample_accession).first()
         if not sample_obj:
             sample_obj = SecondaryOrganism(accession=sample_accession,taxid=organism.taxid,scientificName=organism.organism).save()
-            organism.records.append(sample_obj)
+            organism.insdc_samples.append(sample_obj)
             if not 'biosample' in assembly.keys() or not 'attributes' in assembly['biosample'].keys():
                 #retrieve sample metadata from EBI/BioSamples
                 create_sample_from_biosamples(sample_obj, samples_not_found)

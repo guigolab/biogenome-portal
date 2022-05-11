@@ -1,7 +1,7 @@
 <template>
+  <b-container>
   <b-row>
     <b-col>
-      <b-container>
           <b-row>
             <b-col style="min-height:600px">
               <h1 style="text-align:center">{{node}}</h1>
@@ -11,9 +11,9 @@
               <svg ref="svg"  class="tree-svg"/>
             </b-col>
           </b-row>
-      </b-container>
     </b-col>
   </b-row>
+</b-container>
 </template>
 
 <script>

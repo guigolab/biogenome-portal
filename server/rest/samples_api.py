@@ -11,7 +11,7 @@ from flask_jwt_extended import jwt_required
 from flask_jwt_extended import get_jwt_identity
 from mongoengine.queryset.visitor import Q
 from flask import current_app as app
-from utils.constants import SamplePipeline,SamplePipelinePrivate
+from utils.pipelines import SamplePipeline,SamplePipelinePrivate
 import json
 
 #CRUD operations on sample

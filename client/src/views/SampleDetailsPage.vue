@@ -1,4 +1,5 @@
 <template>
+<b-container fluid class="router-container">
 <b-row>
     <b-col>
         <b-row>
@@ -42,7 +43,7 @@
     <sample-details-component v-if="sample" :sample="sample"/>
     </b-col>
 </b-row>
-
+</b-container>
 </template>
 <script>
 import {BBadge,BIconCalendar, BIconGeoAltFill} from 'bootstrap-vue'

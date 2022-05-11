@@ -32,7 +32,7 @@ def import_from_EBI_biosamples(PROJECTS):
             geo_loc_service.get_or_create_coordinates(metadata)
             sample_obj = SecondaryOrganism(**metadata).save()
             if not sample_obj.sample_derived_from:
-                organism.records.append(sample_obj)
+                organism.insdc_samples.append(sample_obj)
                 organism.save()
             assemblies = ena_client.parse_assemblies(sample_obj.accession)
             if len(assemblies) > 0:
