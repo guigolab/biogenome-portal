@@ -1,9 +1,6 @@
 from lxml import etree
-# from .constants import CHECKLIST_PARSER
 from flask import make_response,jsonify
 from .constants import CHECKLIST_FIELD_GROUPS
-import os
-from db.models import GeoCoordinates
 
 def parse_taxon(xml):
     root = etree.fromstring(xml)

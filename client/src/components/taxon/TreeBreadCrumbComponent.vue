@@ -6,6 +6,7 @@
                 @click="updateTaxName(idx)"
                 :pressed="taxNameRecord === taxName"
                 variant="outline-success"
+                pill
             >
                 <b-row style="margin-bottom:0px">
                     <b-col style="text-align:center">

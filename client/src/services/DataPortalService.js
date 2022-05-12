@@ -24,9 +24,9 @@ class DataPortalService {
     }
     getGeoLocSamples(ids) {
         if (ids){
-            return base.get(`/coordinates?${ids.map((n, index) => `${index}=${n}`).join('&')}`)
+            return base.post('/coordinates',ids)
         }
-        return base.post('/coordinates', ids)
+        return base.get('/coordinates')
     }
     
     getTree(node, maxLeaves){

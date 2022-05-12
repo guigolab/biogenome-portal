@@ -46,7 +46,3 @@ def get_or_create_coordinates(sample):
         if not sample_accession in geo_object.biosamples:
             geo_object.biosamples[sample_accession] = name_or_taxid
             geo_object.save()
-
-
-# def get_coordinates(ids):
-#     geo_objs = 

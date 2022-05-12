@@ -53,19 +53,21 @@ def import_from_EBI_biosamples(PROJECTS):
             print('GETTING READS')
             sample_service.get_reads([sample_obj])
         print('APPENDING SPECIMENS')
-        append_specimens(samples_accessions)
+    ##append specimens as a backup if biosamples api fails
+    append_specimens()
     print('DATA FROM ENA/BIOSAMPLES IMPORTED')
 
 def collect_samples(PROJECTS):
     samples = list()
     for project in PROJECTS:
-        biosamples = ena_client.get_samples(project)
+        biosamples = ena_client.get_biosamples(project)
+        print('lenght ebi biosamples', len(biosamples))
         if biosamples:
             samples.extend(biosamples)
     return samples
 
-def append_specimens(samples_accessions):
-    specimens = SecondaryOrganism.objects(sample_derived_from__ne=None, accession__in=samples_accessions)
+def append_specimens():
+    specimens = SecondaryOrganism.objects(sample_derived_from__ne=None)
     containers = SecondaryOrganism.objects(accession__in=[rec.sample_derived_from for rec in specimens])
     for container in containers:
         new_specimens = [spec for spec in specimens \

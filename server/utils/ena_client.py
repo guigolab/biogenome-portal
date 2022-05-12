@@ -1,5 +1,6 @@
 import requests
 from flask import current_app as app
+import time
 
 def get_taxon_from_ena(taxon_id):
     response = requests.get(f"https://www.ebi.ac.uk/ena/browser/api/xml/{taxon_id}?download=false") ## 
@@ -24,21 +25,21 @@ def get_tolid(taxid):
     else:
         return response[0]['prefix']
 
-def get_samples(project):
-    samples = list()
-    resp = requests.get(
-    f"https://www.ebi.ac.uk/biosamples/samples?size=10000&"
-    f"filter=attr%3Aproject%20name%3A{project}")
-    if resp.status_code != 200:
-        print('Request failed!')
-        print(resp.status_code)
-        return
-    response = resp.json()
-    samples.extend(response['_embedded']['samples'])
-    while 'next' in response['_links']:
-        response = requests.get(response['_links']['next']['href']).json()
-        samples.extend(response['_embedded']['samples'])
+def get_biosamples_page(url , samples):
+    response = requests.get(url)
+    if response.status_code !=  200:
+        print('ERROR CALLING BIOSAMPLES API',response.content)
+        return samples
+    data = response.json()
+    if '_embedded' in data.keys() and 'samples' in data['_embedded'].keys():
+        samples.extend(data['_embedded']['samples'])
+    if 'next' in data['_links'].keys():
+        get_biosamples_page(data['_links']['next']['href'],samples)
     return samples
+
+def get_biosamples(project):
+    return get_biosamples_page(f"https://www.ebi.ac.uk/biosamples/samples?size=10000&filter=attr%3Aproject%20name%3A{project}", [])
+
 
 def parse_assemblies(accession):
     assemblies_data = requests.get(f"https://www.ebi.ac.uk/ena/portal/api/"

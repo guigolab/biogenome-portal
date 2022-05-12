@@ -24,6 +24,8 @@
         </template>
         <template #head(local_samples)>
             <b-form-checkbox
+            size="sm"
+              switch
               v-model="showLocalSamples"
               name="local_samples-checkbox"
             >
@@ -32,6 +34,8 @@
         </template>
         <template #head(insdc_samples)>
             <b-form-checkbox
+            size="sm"
+              switch
               v-model="showBiosamples"
               name="insdc-samples-checkbox"
             >
@@ -40,6 +44,8 @@
         </template>
         <template #head(assemblies)>
             <b-form-checkbox
+            size="sm"
+            switch
               v-model="showAssemblies"
               name="ass-checkbox"
             >
@@ -48,6 +54,8 @@
         </template>
         <template #head(experiments)>
             <b-form-checkbox
+            size="sm"
+            switch
               v-model="showReads"
               name="exp-checkbox"
             >
@@ -152,26 +160,15 @@ export default {
       showLocalSamples:false,
       showAssemblies:false,
       showReads:false,
-      statuses: [
-        { value: '', text: 'All' },
-        { value: 'Sample Acquired', text: 'Sample Acquired'},
-        { value: 'Biosample Submitted', text: 'Biosamples Submitted'},
-        { value: 'Reads Submitted', text: 'Reads Submitted' },
-        { value: 'Assemblies Submitted', text: 'Assemblies Submitted' },
-        { value: 'Annotation Complete', text: 'Annotation Complete' },
-        { value: 'Annotation Submitted', text: 'Annotation Submitted' }
-      ],
       fields: [
         {key: 'tolid_prefix', label: 'ToLID'},
         {key: 'organism',label:'Name',sortable: true,stickyColumn: true},
         {key:'insdc_common_name', label: 'Common Name', sortable: true},
-        // {key: 'annotations', label: 'Annotations'},
         {key: 'externalReferences', label:'Links'},
         {key: 'local_samples', label: 'Acquired Samples', class:'my-left-border'},
         {key: 'insdc_samples', label: 'BioSamples'},
         {key: 'experiments', label: 'Reads'},
         {key: 'assemblies', label: 'Assemblies'},
-        // {key: 'trackingSystem', label:'INSDC Status', sortable: false},
 
       ],
       selectedOrganisms:[],

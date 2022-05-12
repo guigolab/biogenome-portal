@@ -22,7 +22,7 @@
             </div>
         </div>
     </div>
-    <Transition>
+    <Transition name="slide-fade">
         <ul v-show="item.isOpen" v-if="isFolder">
             <tree-list-component
                 class="item"
@@ -98,7 +98,7 @@ ul{
     background-color: rgb(233, 236, 239);
     color: #495057;
     padding: 0.5rem;
-    margin: 0.25rem;
+    margin: 0 0 .25rem 0;
     border-radius: 1.25rem 0 0 1.25rem;
 }
 #tree-leaves-button {
@@ -113,5 +113,15 @@ ul{
 .to-tree-link{
     margin-right: 0.5rem
 }
-
+.slide-fade-enter-active {
+  transition: all .2s cubic-bezier(1.0, 0.5, 0.8, 1.0);
+}
+.slide-fade-leave-active {
+  transition: all .2s cubic-bezier(1.0, 0.5, 0.8, 1.0);
+}
+.slide-fade-enter, .slide-fade-leave-to
+/* .slide-fade-leave-active below version 2.1.8 */ {
+  transform: translateX(10px);
+  opacity: 0;
+}
 </style>
