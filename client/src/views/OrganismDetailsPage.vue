@@ -61,6 +61,7 @@ export default {
     },
     watch:{
         name: function(name){
+            console.log(name)
             this.getOrganism(name)
         }
     },
@@ -94,7 +95,9 @@ export default {
             })
             .then(response =>{
                 if(response){
-                    this.geojson = {...response.data}
+                    this.$nextTick(()=>{
+                        this.geojson = {...response.data}
+                    })
                 }
             })
         }

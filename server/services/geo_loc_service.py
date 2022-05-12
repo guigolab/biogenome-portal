@@ -1,18 +1,15 @@
 from re import A
 from db.models import GeoCoordinates
 from flask import current_app as app
-
+#TODO use post to ids retrieval
 def geoloc_samples(ids=None):
     if ids:
-        app.logger.info(ids)
         geo_objs = GeoCoordinates.objects(geo_loc__in=ids)
     else:
         geo_objs = GeoCoordinates.objects()
         # app.logger.info(geo_objs[0].to_json())
     geoJson=dict()
-    app.logger.info(geo_objs)
     if geo_objs:
-        app.logger.info('here')
         geoJson = {
             'type': 'FeatureCollection',
             'crs': {
@@ -33,7 +30,6 @@ def geoloc_samples(ids=None):
                 'properties': {'biosamples': geo_ob.biosamples}
             }
             geoJson['features'].append(feature)
-    app.logger.info(geoJson)
     return geoJson
 
 def get_or_create_coordinates(sample):

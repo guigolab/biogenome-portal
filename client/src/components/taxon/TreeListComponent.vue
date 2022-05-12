@@ -12,7 +12,7 @@
                 </div>
             </div>       
             <div :class="{bold: isFolder}" class="taxon-title">
-            {{item.name}}
+            {{item.name}} ({{item.rank}})
             </div>
             <div class="icons-container" v-if="isFolder">
                 <b-link @click.stop class="to-tree-link" :to="{name: 'tree-of-life', params: {node: item.name}}">
@@ -22,15 +22,17 @@
             </div>
         </div>
     </div>
-    <ul v-show="item.isOpen" v-if="isFolder">
-        <tree-list-component
-            class="item"
-            v-for="(child, index) in item.children"
-            :key="index"
-            :item="child"
-        >
-        </tree-list-component>
-    </ul>   
+    <Transition>
+        <ul v-show="item.isOpen" v-if="isFolder">
+            <tree-list-component
+                class="item"
+                v-for="(child, index) in item.children"
+                :key="index"
+                :item="child"
+            >
+            </tree-list-component>
+        </ul>
+    </Transition>
 </li>
 </div>
 </template>
@@ -54,11 +56,11 @@ export default {
         toggle(item){
             if(item.name !== ROOTNODE)
             {
-            portalService.getTaxonChildren(item.name)
-            .then(response => {
-                const children = response.data['children']
-                this.$store.commit('portal/assignChildren', {label: item.name, value: children})
-            })
+                portalService.getTaxonChildren(item.name)
+                .then(response => {
+                    const children = response.data['children']
+                    this.$store.commit('portal/assignChildren', {label: item.name, value: children})
+                })
             }
             this.$store.commit('portal/toggleNode', {value: item.name})
 
@@ -97,7 +99,7 @@ ul{
     color: #495057;
     padding: 0.5rem;
     margin: 0.25rem;
-    border-radius: 1.25rem;
+    border-radius: 1.25rem 0 0 1.25rem;
 }
 #tree-leaves-button {
     margin-left: 0.3rem;

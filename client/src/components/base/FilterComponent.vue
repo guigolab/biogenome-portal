@@ -18,7 +18,7 @@
         >
         </b-form-input>
         <b-input-group-append>
-            <b-button style="border-radius: 0 1.25rem 1.25rem 0" variant="primary" :disabled="!filter" @click="filter = ''">Clear</b-button>
+            <b-button variant="primary" :disabled="!filter" @click="filter = ''">Clear</b-button>
         </b-input-group-append>
     </b-input-group>
 </template>

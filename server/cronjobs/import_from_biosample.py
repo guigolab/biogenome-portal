@@ -25,7 +25,7 @@ def import_from_EBI_biosamples(PROJECTS):
             if not organism:
                 #TODO CALL NCBI
                 continue
-            if not 'scientifiName' in metadata.keys():
+            if not 'scientificName' in metadata.keys():
                 metadata['scientificName'] = organism.organism
             metadata['taxid'] = taxid
             metadata['accession'] = sample['accession']
@@ -59,9 +59,9 @@ def import_from_EBI_biosamples(PROJECTS):
 def collect_samples(PROJECTS):
     samples = list()
     for project in PROJECTS:
-        resp = ena_client.get_samples(project)
-        if resp and '_embedded' in resp.keys():
-            samples.extend(resp['_embedded']['samples'])
+        biosamples = ena_client.get_samples(project)
+        if biosamples:
+            samples.extend(biosamples)
     return samples
 
 def append_specimens(samples_accessions):

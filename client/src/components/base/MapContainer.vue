@@ -39,9 +39,8 @@ export default {
   },
   watch:{
       geojson(value) {
-      console.log(value)
-      this.vectorLayer = this.createVectorLayer()
-      this.olMap = this.createMap(this.vectorLayer)
+      this.vectorLayer = this.vectorLayer || this.createVectorLayer()
+      this.olMap = this.olMap || this.createMap(this.vectorLayer)
       this.updateSource(value)
     }
   },
@@ -139,6 +138,7 @@ export default {
   bottom: 12px;
   left: -50px;
   max-height:200px;
+  width: max-content;
 }
 .ft-map-link{
   font-size: 0.85rem

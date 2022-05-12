@@ -5,7 +5,7 @@ const state = () => ({
     loading: false,
     taxName: ROOTNODE,
     taxNameHistory: [],
-    organism: null, //default value for tree browser and d3 tree
+    organism: null, 
     option: 'species_name', //default option for filter bar
     filter: null,
     perPage: 20,
@@ -44,7 +44,6 @@ const mutations = {
     sliceBreadcrumbs(state,payload){
         const index = payload.index + 1
         state.breadcrumbs = state.breadcrumbs.slice(0,index)
-        // Object.assign(state.breadcrumbs,state.breadcrumbs.slice(0,payload.index+1))
     },
     toggleNode(state,payload){
         const item = state.tree.name === payload.value ? state.tree :  findObj(state.tree.children, payload.value)

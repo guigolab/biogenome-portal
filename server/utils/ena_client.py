@@ -25,6 +25,7 @@ def get_tolid(taxid):
         return response[0]['prefix']
 
 def get_samples(project):
+    samples = list()
     resp = requests.get(
     f"https://www.ebi.ac.uk/biosamples/samples?size=10000&"
     f"filter=attr%3Aproject%20name%3A{project}")
@@ -32,7 +33,12 @@ def get_samples(project):
         print('Request failed!')
         print(resp.status_code)
         return
-    return resp.json()
+    response = resp.json()
+    samples.extend(response['_embedded']['samples'])
+    while 'next' in response['_links']:
+        response = requests.get(response['_links']['next']['href']).json()
+        samples.extend(response['_embedded']['samples'])
+    return samples
 
 def parse_assemblies(accession):
     assemblies_data = requests.get(f"https://www.ebi.ac.uk/ena/portal/api/"
