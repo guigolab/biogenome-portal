@@ -91,7 +91,7 @@ export default {
                     }
                 }).filter(id => id)
                 console.log(ids)
-                return ids.length ? portalService.getGeoLocSamples(ids) : null
+                return ids.length ? portalService.getGeoLocSamples({ids:ids}) : null
             })
             .then(response =>{
                 if(response){

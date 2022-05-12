@@ -229,9 +229,7 @@ export default {
     getData(organism, model){
       this.$store.dispatch('portal/showLoading')
       const ids = organism[model].map(dt => {return dt.$oid})
-      const bool = model==='insdc_samples' || model === 'local_samples'
-      const resp = bool ? portalService.getSamples(null, ids) : portalService.getData(model,{ids:ids})
-      resp
+      portalService.getData(model,{ids:ids})
       .then(response => {
         this.data = response.data
         this.model = model

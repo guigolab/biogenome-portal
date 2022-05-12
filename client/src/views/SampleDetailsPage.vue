@@ -77,7 +77,7 @@ export default {
                 this.$store.dispatch('portal/hideLoading')
                 if(this.sample.geographic_location_latitude && this.sample.geographic_location_longitude){
                     const geoloc = this.sample.geographic_location_latitude+','+this.sample.geographic_location_longitude
-                    return portalService.getGeoLocSamples([geoloc])
+                    return portalService.getGeoLocSamples({ids: [geoloc]})
                 }
                 return null
             })

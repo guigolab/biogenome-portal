@@ -1,6 +1,7 @@
 from re import A
 from db.models import GeoCoordinates
 from flask import current_app as app
+
 #TODO use post to ids retrieval
 def geoloc_samples(ids=None):
     if ids:

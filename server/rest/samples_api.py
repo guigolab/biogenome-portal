@@ -10,7 +10,6 @@ import services.submission_service as service
 from flask_jwt_extended import jwt_required
 from flask_jwt_extended import get_jwt_identity
 from mongoengine.queryset.visitor import Q
-from flask import current_app as app
 from utils.pipelines import SamplePipeline,SamplePipelinePrivate
 import json
 
@@ -18,23 +17,16 @@ import json
 class SamplesApi(Resource):
 
     @jwt_required(optional=True)
-    def get(self,accession=None):
-        if accession:
-            sample = SecondaryOrganism.objects((Q(accession=accession) | Q(tube_or_well_id=accession)))
-            if sample:
-                if(get_jwt_identity()):
-                    result = sample.aggregate(*SamplePipelinePrivate).next()
-                else:
-                    result = sample.aggregate(*SamplePipeline).next()
-                return Response(json.dumps(result),mimetype="application/json", status=200)
+    def get(self,accession):
+        sample = SecondaryOrganism.objects((Q(accession=accession) | Q(tube_or_well_id=accession)))
+        if sample:
+            if(get_jwt_identity()):
+                result = sample.aggregate(*SamplePipelinePrivate).next()
             else:
-                raise NotFound
-        if request.args.keys():
-            ids = request.args.values()
-            return Response(SecondaryOrganism.objects(id__in=ids).exclude('last_check').to_json(),mimetype="application/json", status=200)
-        else:
-            return Response(SecondaryOrganism.objects().exclude('last_check').to_json(), mimetype="application/json", status=200)
-
+                result = sample.aggregate(*SamplePipeline).next()
+            return Response(json.dumps(result),mimetype="application/json", status=200)
+        raise NotFound
+        
     @jwt_required()
     def delete(self):
         if 'ids' in request.args.keys() and len(request.args['ids'].split(',')) > 0:
@@ -56,7 +48,6 @@ class SamplesApi(Resource):
             sample.update(**data)
             id = sample.tube_or_well_id
         return Response(json.dumps(f'sample with id {id} has been saved'),mimetype="application/json", status=200)
-		#update sample
 
     @jwt_required()
     def post(self):
@@ -117,9 +108,14 @@ class BioSampleApi(Resource):
 class GeoLocApi(Resource):
     ##get all samples with coordinates
     def get(self):
-        app.logger.info(request.args)
-        if request.args.keys():
-            ids = request.args.values()
-            return Response(json.dumps(geo_loc_service.geoloc_samples(ids)), mimetype="application/json", status=200)
         return Response(json.dumps(geo_loc_service.geoloc_samples()), mimetype="application/json", status=200)
- 
+    
+    ##post request to handle large collection of geo_loc ids (format: lat,loc string)
+    def post(self):
+        if request.is_json and 'ids' in request.json.keys(): 
+            ids = request.json['ids']
+        elif request.form and 'ids' in request.form.keys():
+            ids = request.form
+        else:
+            raise SchemaValidationError
+        return Response(json.dumps(geo_loc_service.geoloc_samples(ids)), mimetype="application/json", status=200)
