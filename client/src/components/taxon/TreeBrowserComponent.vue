@@ -13,10 +13,10 @@ export default {
     computed: {
         tree(){
             return this.$store.getters['portal/getState'].tree
-        }
+        },
     },
     mounted(){
-        if(this.tree === null){
+        if(this.tree === null || this.tree.name === ROOTNODE){
             this.$store.commit('portal/setTree',{value: ROOTNODE})
         }
     },
