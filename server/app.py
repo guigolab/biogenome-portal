@@ -29,14 +29,5 @@ if os.getenv('PROJECTS') or os.getenv('PROJECT_ACCESSION'):
     sched.add_job(import_records, "interval", id="interval-job", start_date=datetime.now()+timedelta(seconds=20),seconds=int(TIME))
     sched.start()
 
-# TIME= os.getenv('EXEC_TIME')
-# if os.getenv('PROJECTS') or os.getenv('PROJECT_ACCESSION'):
-#     PROJECTS = os.getenv('PROJECTS').split(',')
-#     scheduler = APScheduler()
-#     scheduler.api_enabled = True
-#     scheduler.init_app(app)
-#     scheduler.add_job(id = import_records, "interval", id="interval-job", start_date=datetime.now()+timedelta(seconds=20),seconds=int(TIME))
-#     scheduler.start()
-
 # if __name__ == '__main__':
 #     app.run(debug=True,host='0.0.0.0')

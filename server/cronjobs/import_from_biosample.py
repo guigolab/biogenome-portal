@@ -52,7 +52,7 @@ def import_from_EBI_biosamples(PROJECTS):
                     sample_obj.save()
             print('GETTING READS')
             sample_service.get_reads([sample_obj])
-        print('APPENDING SPECIMENS')
+    print('APPENDING SPECIMENS')
     ##append specimens as a backup if biosamples api fails
     append_specimens()
     print('DATA FROM ENA/BIOSAMPLES IMPORTED')

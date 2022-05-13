@@ -4,7 +4,6 @@ from utils import ena_client
 from mongoengine.queryset.visitor import Q
 from datetime import datetime
 
-from flask import current_app as app
 
 
 

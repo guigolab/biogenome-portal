@@ -18,24 +18,32 @@
         >
         <template #thead-top>
             <b-tr>
-              <b-th class="extra-th" colspan="4">Taxonomic Informations</b-th>
-              <b-th class="extra-th my-left-border" colspan="4">INSDC Submission Status</b-th>
+              <b-th class="extra-th" colspan="4">Taxonomic Information</b-th>
+              <b-th class="extra-th my-left-border" colspan="4">
+                INSDC submitted data
+                <div class="indsc-action-wrapper">
+                  <b-form-checkbox
+                    id="select-mode-opt"
+                    size="sm"
+                    inline
+                    switch
+                    v-model="onlySelectedData"
+                    name="local_samples-checkbox"
+                  >Filter only</b-form-checkbox>
+                </div>
+              </b-th>
             </b-tr>
         </template>
         <template #head(local_samples)>
             <b-form-checkbox
-            size="sm"
-              switch
               v-model="showLocalSamples"
               name="local_samples-checkbox"
             >
-            Loc.Samples
+            Acq. Samples
             </b-form-checkbox>
         </template>
         <template #head(insdc_samples)>
             <b-form-checkbox
-            size="sm"
-              switch
               v-model="showBiosamples"
               name="insdc-samples-checkbox"
             >
@@ -44,8 +52,6 @@
         </template>
         <template #head(assemblies)>
             <b-form-checkbox
-            size="sm"
-            switch
               v-model="showAssemblies"
               name="ass-checkbox"
             >
@@ -54,8 +60,6 @@
         </template>
         <template #head(experiments)>
             <b-form-checkbox
-            size="sm"
-            switch
               v-model="showReads"
               name="exp-checkbox"
             >
@@ -131,7 +135,7 @@ export default {
     {
       BLink,BBadge,TableComponent,PaginationComponent,
       BDropdown, BDropdownItem,BIconPenFill,BIconTrashFill,
-      DataModal,EditOrganismModal,BTr,BTh,BFormCheckbox
+      DataModal,EditOrganismModal,BTr,BTh,BFormCheckbox,
     },
   computed: {
     ...mapFields({
@@ -160,6 +164,7 @@ export default {
       showLocalSamples:false,
       showAssemblies:false,
       showReads:false,
+      onlySelectedData:false,
       fields: [
         {key: 'tolid_prefix', label: 'ToLID'},
         {key: 'organism',label:'Name',sortable: true,stickyColumn: true},
@@ -179,6 +184,9 @@ export default {
     }
   },
   watch: {
+    onlySelectedData(){
+      this.$root.$emit('bv::refresh::table', this.tableId)
+    },
     showBiosamples(){
       this.$root.$emit('bv::refresh::table', this.tableId)
     },
@@ -261,7 +269,8 @@ export default {
         local_samples: this.showLocalSamples,
         assemblies: this.showAssemblies,
         experiments: this.showReads,
-        option: this.option
+        option: this.option,
+        onlySelectedData: this.onlySelectedData
         }
       this.defaultSearch(params,callback)
     }
@@ -269,11 +278,13 @@ export default {
 }
 </script>
 <style>
-
+.indsc-action-wrapper{
+  float: right;
+}
 .link-badge{
   margin-right:5px
 }
-.badge-wrapper, .extra-th{
+.badge-wrapper{
   text-align: center;
 }
 .b-table .my-left-border {

@@ -2,6 +2,7 @@ from flask import json
 from mongoengine.queryset.visitor import Q
 from db.models import TaxonNode,Organism
 import os 
+from flask import current_app as app
 
 ROOT_NODE=os.getenv('ROOT_NODE')
 
@@ -11,14 +12,14 @@ def query_search(offset=0, limit=20,
                 sortOrder=None, sortColumn=None,
                 taxName=ROOT_NODE, insdc_samples='false', 
                 local_samples='false', assemblies='false', 
-                experiments='false', filter=None, option=None):
+                experiments='false', filter=None, option=None, onlySelectedData='false'):
     query=dict()
     json_resp=dict()     
     filter_query = get_query_filter(filter, option) if filter else None
     tax_node = TaxonNode.objects(name=taxName).first()
     query['taxon_lineage'] = tax_node if tax_node else TaxonNode.objects(name=ROOT_NODE).first()
     insdc_dict = dict(insdc_samples=insdc_samples,local_samples=local_samples,assemblies=assemblies,experiments=experiments)
-    get_insdc_query(insdc_dict,query)
+    get_insdc_query(insdc_dict,query,onlySelectedData)
     organisms = Organism.objects(filter_query, **query) if filter_query else Organism.objects.filter(**query)
     if sortColumn:
         sort = '-'+sortColumn if sortOrder == 'true' else sortColumn
@@ -27,15 +28,20 @@ def query_search(offset=0, limit=20,
     json_resp['data'] = organisms[int(offset):int(offset)+int(limit)].as_pymongo()
     return json.dumps(json_resp)    
 
-def get_insdc_query(insdc_dict, query):
+def get_insdc_query(insdc_dict, query, only_selected_data):
     values = insdc_dict.values()
     if all(value=='false' for value in values):
         return
-    for key in insdc_dict.keys():
-        if insdc_dict[key] == 'true':
-            query[key+'__not__size'] = 0
-        else:
-            query[key] = []
+    if only_selected_data == 'false':
+        for key in insdc_dict.keys():
+            if insdc_dict[key] == 'true':
+                query[key+'__not__size'] = 0
+    else:
+        for key in insdc_dict.keys():
+            if insdc_dict[key] == 'true':
+                query[key+'__not__size'] = 0
+            else:
+                query[key] = []
     
 def query_by_taxNode(taxNode,query):
     query['taxon_lineage'] = taxNode
