@@ -1,13 +1,14 @@
 <template>
     <b-container class="router-container" fluid>
         <b-row>
-            <b-jumbotron header-tag="h2" bg-variant="white">
+            <b-jumbotron style="padding: 2rem 2rem !important" header-tag="h2" bg-variant="white">
                 <template #header>World Map</template>
                 <template #lead>
-                    This map shows the unique coordinates of all samples (samples acquired and samples submitted to INSDC)                </template>
+                    Coordinates of submitted samples        
+                </template>
                 <hr class="my-4">
                 <p>
-                    Click on the <img src="/red-dot.svg"/> to see all the samples in those coordinates
+                    Click on the <img src="/red-dot.svg"/> to see the list of samples collected there
                 </p>
             </b-jumbotron>
         </b-row>
@@ -17,6 +18,8 @@
                     <map-container :geojson="geoJson"/>
                 </b-row>
             </b-col>
+        </b-row>
+        <b-row style="min-height:200px">
         </b-row>
     </b-container>
 </template>
