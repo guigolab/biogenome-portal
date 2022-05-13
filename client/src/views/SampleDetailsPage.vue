@@ -75,7 +75,8 @@ export default {
                 this.sample = response.data
                 this.$store.commit('portal/setBreadCrumb', {value: {text: accession, to: {name: 'sample-details', params:{accession: accession}}}})
                 this.$store.dispatch('portal/hideLoading')
-                if(this.sample.geographic_location_latitude && this.sample.geographic_location_longitude){
+                const hasNumber = /\d/
+                if(this.sample.geographic_location_latitude && this.sample.geographic_location_longitude && hasNumber.test(this.sample.geographic_location_latitude) && hasNumber.test(this.sample.geographic_location_longitude)){
                     const geoloc = this.sample.geographic_location_latitude+','+this.sample.geographic_location_longitude
                     return portalService.getGeoLocSamples({ids: [geoloc]})
                 }

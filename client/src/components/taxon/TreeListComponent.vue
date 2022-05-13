@@ -2,7 +2,7 @@
 <div>
 <li class="tree-container" :id="item.name">
     <div class="node-wrapper">
-        <div @click="isFolder ? toggle(item) : toOrganismPage(item.name) " class="d-flex justify-content-between align-items-center node-container">
+        <div @click="toggle(item)" class="d-flex justify-content-between align-items-center node-container">
             <div v-if="isFolder">
                 <div v-if="item.isOpen">
                     <b-icon-slash-circle font-scale="1" rotate="45"></b-icon-slash-circle>
@@ -11,8 +11,11 @@
                     <b-icon-plus-circle font-scale="1"></b-icon-plus-circle>
                 </div>
             </div>       
-            <div :class="{bold: isFolder}" class="taxon-title">
-            {{item.name}} ({{item.rank}})
+            <div v-if="isFolder" class="taxon-title bold">
+                {{item.name}} <p class="node-rank">({{item.rank}})</p>
+            </div>
+            <div v-else>
+                <b-link :to="{name:'organism-details', params: {name: item.name}}">{{item.name}} ({{item.rank}})</b-link>
             </div>
             <div class="icons-container" v-if="isFolder">
                 <b-link @click.stop class="to-tree-link" :to="{name: 'tree-of-life', params: {node: item.name}}">
@@ -65,13 +68,6 @@ export default {
             this.$store.commit('portal/toggleNode', {value: item.name})
 
         },
-        toOrganismPage(name){
-            portalService.getOrganism(name)
-            .then(response => {
-                this.$store.commit('portal/setField', {label: 'organism', value: response.data})
-            })
-            this.$router.push({name:'organism-details', params: {name: name}})
-        },
         toTable(name) {
             this.$store.commit('portal/setField', {label: 'taxName', value: name})
             this.$store.dispatch('portal/addTaxHistory')
@@ -83,7 +79,7 @@ export default {
 </script>
 <style scoped>
 ul{
-    padding-left:0.33rem !important;
+    padding-left:0.4rem !important;
 }
 
 .item {
@@ -95,15 +91,12 @@ ul{
   width: 100%;
 }
 .node-container {
-    background-color: rgb(233, 236, 239);
-    color: #495057;
+    border: 3px solid #dee2e6;
     padding: 0.5rem;
     margin: 0 0 .25rem 0;
     border-radius: 1.25rem 0 0 1.25rem;
 }
-#tree-leaves-button {
-    margin-left: 0.3rem;
-}
+
 .taxon-title{
     margin-left: 0.2rem
 }
@@ -112,6 +105,12 @@ ul{
 }
 .to-tree-link{
     margin-right: 0.5rem
+}
+.node-rank{
+margin: 0 !important;
+width: fit-content;
+font-weight: initial;
+display: contents;
 }
 .slide-fade-enter-active {
   transition: all .2s cubic-bezier(1.0, 0.5, 0.8, 1.0);
@@ -124,4 +123,5 @@ ul{
   transform: translateX(10px);
   opacity: 0;
 }
+
 </style>

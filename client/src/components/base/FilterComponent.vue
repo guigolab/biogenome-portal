@@ -2,7 +2,7 @@
     <b-input-group>
         <b-input-group-prepend v-if="prependSelect">
             <b-form-select
-                style="border-radius: 1.25rem 0 0 1.25rem"
+                style="border-radius: 1.25rem 0 0 1.25rem; font-weight:bold; color:black"
                 value-field="item"
                 text-field="name"
                 v-model="option"

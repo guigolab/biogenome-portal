@@ -85,8 +85,9 @@ export default {
                 this.$store.commit('portal/setBreadCrumb', {value: {text: name, to: {name: 'organism-details', params:{name: name}}}})
                 this.$store.dispatch('portal/hideLoading')
                 const records = [...this.organism.insdc_samples,...this.organism.local_samples]
+                const hasNumber = /\d/
                 const ids = records.map(rec => {
-                    if(rec.geographic_location_latitude && rec.geographic_location_longitude){
+                    if(rec.geographic_location_latitude && rec.geographic_location_longitude && hasNumber.test(rec.geographic_location_latitude) && hasNumber.test(rec.geographic_location_longitude)){
                         return rec.geographic_location_latitude+','+rec.geographic_location_longitude
                     }
                 }).filter(id => id)

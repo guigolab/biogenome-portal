@@ -1,6 +1,17 @@
 <template>
     <b-container class="router-container" fluid>
         <b-row>
+            <b-jumbotron header-tag="h2" bg-variant="white">
+                <template #header>World Map</template>
+                <template #lead>
+                    This map shows the unique coordinates of all samples (samples acquired and samples submitted to INSDC)                </template>
+                <hr class="my-4">
+                <p>
+                    Click on the <img src="/red-dot.svg"/> to see all the samples in those coordinates
+                </p>
+            </b-jumbotron>
+        </b-row>
+        <b-row>
             <b-col>
                 <b-row class="map-container">
                     <map-container :geojson="geoJson"/>
@@ -13,7 +24,7 @@
 
 import portalService from '../services/DataPortalService'
 import MapContainer from '../components/base/MapContainer.vue'
-
+import {BJumbotron} from 'bootstrap-vue'
 export default {
     data(){
         return {
@@ -21,7 +32,7 @@ export default {
         }
     },
     components:{
-        MapContainer
+        MapContainer,BJumbotron
     },
     mounted(){
         this.show=true

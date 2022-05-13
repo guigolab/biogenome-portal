@@ -20,8 +20,6 @@
             <b-tr>
               <b-th class="extra-th" colspan="4">Taxonomic Information</b-th>
               <b-th class="extra-th my-left-border" colspan="4">
-                INSDC submitted data
-                <div class="indsc-action-wrapper">
                   <b-form-checkbox
                     id="select-mode-opt"
                     size="sm"
@@ -29,8 +27,7 @@
                     switch
                     v-model="onlySelectedData"
                     name="local_samples-checkbox"
-                  >Filter only</b-form-checkbox>
-                </div>
+                  >Only selected data</b-form-checkbox>
               </b-th>
             </b-tr>
         </template>
@@ -39,7 +36,7 @@
               v-model="showLocalSamples"
               name="local_samples-checkbox"
             >
-            Acq. Samples
+            Acquired Samples
             </b-form-checkbox>
         </template>
         <template #head(insdc_samples)>
@@ -47,7 +44,7 @@
               v-model="showBiosamples"
               name="insdc-samples-checkbox"
             >
-              BioSamples
+             Submitted Samples
             </b-form-checkbox>
         </template>
         <template #head(assemblies)>
@@ -55,7 +52,7 @@
               v-model="showAssemblies"
               name="ass-checkbox"
             >
-              Assemblies
+              Submitted Assemblies
             </b-form-checkbox>
         </template>
         <template #head(experiments)>
@@ -63,7 +60,7 @@
               v-model="showReads"
               name="exp-checkbox"
             >
-              Experiments
+              Submitted Reads
             </b-form-checkbox>
         </template>
         <template #head(actions)>
@@ -166,10 +163,10 @@ export default {
       showReads:false,
       onlySelectedData:false,
       fields: [
-        {key: 'tolid_prefix', label: 'ToLID'},
-        {key: 'organism',label:'Name',sortable: true,stickyColumn: true},
+        {key: 'tolid_prefix', label: 'ToLID Prefix'},
+        {key: 'organism',label:'Scientific Name',sortable: true,stickyColumn: true},
         {key:'insdc_common_name', label: 'Common Name', sortable: true},
-        {key: 'externalReferences', label:'Links'},
+        {key: 'externalReferences', label:'External Links'},
         {key: 'local_samples', label: 'Acquired Samples', class:'my-left-border'},
         {key: 'insdc_samples', label: 'BioSamples'},
         {key: 'experiments', label: 'Reads'},
@@ -187,17 +184,37 @@ export default {
     onlySelectedData(){
       this.$root.$emit('bv::refresh::table', this.tableId)
     },
-    showBiosamples(){
+    showBiosamples(value){
       this.$root.$emit('bv::refresh::table', this.tableId)
+      if (value){
+        this.fields.filter(f => f.key === 'insdc_samples').forEach(f => f.variant = "success")
+      }else{
+        this.fields.filter(f => f.key === 'insdc_samples').forEach(f => f.variant = "")
+      }
     },
-    showLocalSamples(){
+    showLocalSamples(value){
       this.$root.$emit('bv::refresh::table', this.tableId)
+      if (value){
+        this.fields.filter(f => f.key === 'local_samples').forEach(f => f.variant = "info")
+      }else{
+        this.fields.filter(f => f.key === 'local_samples').forEach(f => f.variant = "")
+      }
     },
-    showAssemblies(){
+    showAssemblies(value){
       this.$root.$emit('bv::refresh::table', this.tableId)
+      if (value){
+        this.fields.filter(f => f.key === 'assemblies').forEach(f => f.variant = "primary")
+      }else{
+        this.fields.filter(f => f.key === 'assemblies').forEach(f => f.variant = "")
+      }
     },
-    showReads(){
+    showReads(value){
       this.$root.$emit('bv::refresh::table', this.tableId)
+      if (value){
+        this.fields.filter(f => f.key === 'experiments').forEach(f => f.variant = "warning")
+      }else{
+        this.fields.filter(f => f.key === 'experiments').forEach(f => f.variant = "")
+      }
     },
     option(){
       this.filter=''

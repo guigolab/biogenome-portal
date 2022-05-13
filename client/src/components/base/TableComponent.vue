@@ -9,7 +9,7 @@
                 small
                 responsive
                 :stacked="stacked"
-                :head-variant="hVariant? hVariant: 'light'"
+                :head-variant="hVariant"
                 :busy="isBusy"
                 :ref="ref"
                 show-empty
