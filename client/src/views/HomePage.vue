@@ -1,10 +1,10 @@
 <template>
     <b-container fluid class="router-container">
         <b-row>
-            <b-col lg="6" style="overflow: auto;min-height:50px">
+            <b-col lg="8" style="overflow: auto;min-height:50px">
                 <tree-bread-crumb-component/>
             </b-col>
-            <b-col lg="6">
+            <b-col lg="4">
                 <filter-component :prependSelect="true" :options="options"/>
             </b-col>
         </b-row>

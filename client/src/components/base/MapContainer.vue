@@ -53,6 +53,7 @@ export default {
       }).readFeatures(geojson)
       source.clear();
       source.addFeatures(features);
+      
       // this zooms the view on the created object
       view.fit(source.getExtent(), {
         size: this.olMap.getSize(),
@@ -63,11 +64,6 @@ export default {
       this.overlay.setPosition(undefined)
       this.$refs.popupcloser.blur()
     },
-    // onSelect(){
-    //   this.selectClick.on('select', function(e){
-    //     console.log(e)
-    //   })
-    // },
     createMap(layer){
       const map =  new Map({
       // the map will be created using the 'map-root' ref

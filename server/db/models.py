@@ -95,6 +95,7 @@ class Experiment(db.Document):
         'indexes': ['experiment_accession']
     }
 
+#TODO ADD last published assembly banner
 class Assembly(db.Document):
     accession = db.StringField(unique=True)
     version = db.StringField()
@@ -109,6 +110,7 @@ class Assembly(db.Document):
 class BioProject(db.Document):
     accession = db.StringField(required=True, unique=True)
     title = db.StringField()
+    parent = db.LazyReferenceField('self')
 
 
 class SecondaryOrganism(db.Document):

@@ -2,27 +2,25 @@
 <div>
 <li class="tree-container" :id="item.name">
     <div class="node-wrapper">
-        <div @click="toggle(item)" class="d-flex justify-content-between align-items-center node-container">
-            <div v-if="isFolder">
-                <div v-if="item.isOpen">
-                    <b-icon-slash-circle font-scale="1" rotate="45"></b-icon-slash-circle>
-                </div>
-                <div v-else>
-                    <b-icon-plus-circle font-scale="1"></b-icon-plus-circle>
-                </div>
-            </div>       
-            <div v-if="isFolder" class="taxon-title bold">
-                {{item.name}} <p class="node-rank">({{item.rank}})</p>
+        <div v-if="isFolder" @click="toggle(item)" class="d-flex justify-content-between align-items-center node-container">
+            <div v-if="item.isOpen">
+                <b-icon-slash-circle variant="success" font-scale="1" rotate="45"></b-icon-slash-circle>
             </div>
             <div v-else>
-                <b-link :to="{name:'organism-details', params: {name: item.name}}">{{item.name}} ({{item.rank}})</b-link>
+                <b-icon-plus-circle variant="success" font-scale="1"></b-icon-plus-circle>
             </div>
-            <div class="icons-container" v-if="isFolder">
+            <div class="taxon-title bold">
+            {{item.name}} <p class="node-rank">{{'('+item.rank+')'}}</p>
+            </div>
+            <div class="icons-container">
                 <b-link @click.stop class="to-tree-link" :to="{name: 'tree-of-life', params: {node: item.name}}">
                     <b-icon-diagram3 icon='diagram3' :id="item.name" font-scale="1"></b-icon-diagram3>
                 </b-link>
                 <b-badge href="#" @click.stop="toTable(item.name)" variant="success" pill>{{item.leaves}} </b-badge>
             </div>
+        </div>
+        <div v-else class="node-container">
+            <b-link v-if="item" :to="{name:'organism-details', params: {name: item.name}}">{{item.name + ' ('+ item.rank+')'}}</b-link>
         </div>
     </div>
     <Transition name="slide-fade">
@@ -43,7 +41,6 @@
 import { BLink, BIconSlashCircle, BIconPlusCircle,
  BIconDiagram3, BBadge } from 'bootstrap-vue'
 import portalService from '../../services/DataPortalService'
-import {ROOTNODE} from '../../utils/static-config'
 
 export default {
     name: 'tree-list-component',
@@ -57,7 +54,7 @@ export default {
         },
     methods: {
         toggle(item){
-            if(item.name !== ROOTNODE)
+            if(!item.children.filter(ch => ch.name).length)
             {
                 portalService.getTaxonChildren(item.name)
                 .then(response => {
@@ -105,6 +102,9 @@ ul{
 }
 .to-tree-link{
     margin-right: 0.5rem
+}
+.node-container:hover{
+border-color: #28a745;
 }
 .node-rank{
 margin: 0 !important;

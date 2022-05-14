@@ -18,7 +18,7 @@ def create_taxons_from_lineage(lineage):
             continue
         taxon_node = TaxonNode.objects(taxid=node['taxId']).first()
         if not taxon_node:
-            rank = node['rank'] if 'rank' in node.keys() else 'other'
+            rank = node['rank']
             taxon_node = TaxonNode(taxid=node['taxId'], name=node['scientificName'], rank=rank).save()
         taxon_lineage.append(taxon_node)
     #create relationship

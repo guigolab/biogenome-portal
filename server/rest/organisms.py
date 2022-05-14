@@ -11,6 +11,7 @@ from flask import current_app as app
 import base64
 
 
+#TODO unit test this 
 class OrganismsApi(Resource):
 	def get(self):
 		return Response(service.query_search(**request.args),mimetype="application/json", status=200)

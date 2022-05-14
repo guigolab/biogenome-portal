@@ -2,13 +2,13 @@
     <b-container class="router-container" fluid>
         <b-row>
             <b-jumbotron style="padding: 2rem 2rem !important" header-tag="h2" bg-variant="white">
-                <template #header>World Map</template>
+                <template #header>Samples Map</template>
                 <template #lead>
-                    Coordinates of submitted samples        
+                    Geographical coordinates of samples    
                 </template>
                 <hr class="my-4">
                 <p>
-                    Click on the <img src="/red-dot.svg"/> to see the list of samples collected there
+                    Click on the <img src="/red-dot.svg"/> to see the list of samples collected at that geographical location
                 </p>
             </b-jumbotron>
         </b-row>

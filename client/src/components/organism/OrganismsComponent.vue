@@ -18,16 +18,18 @@
         >
         <template #thead-top>
             <b-tr>
-              <b-th class="extra-th" colspan="4">Taxonomic Information</b-th>
-              <b-th class="extra-th my-left-border" colspan="4">
+              <b-th class="extra-th" variant="success" colspan="4">Taxonomic Information</b-th>
+              <b-th class="extra-th my-left-border" variant="success" colspan="4">
+                Data
                   <b-form-checkbox
                     id="select-mode-opt"
+                    style="float: inline-end;"
                     size="sm"
                     inline
                     switch
                     v-model="onlySelectedData"
                     name="local_samples-checkbox"
-                  >Only selected data</b-form-checkbox>
+                  >organisms with only the selected data</b-form-checkbox>
               </b-th>
             </b-tr>
         </template>
@@ -97,9 +99,9 @@
           </div>
         </template>
          <template #cell(externalReferences)="data">
-            <b-badge pill variant="dark" target="_blank" :href="'https://goat.genomehubs.org/records?record_id='+data.item.taxid+'&result=taxon&taxonomy=ncbi#'+data.item.organism">GoaT</b-badge>
-            <b-badge pill variant="info" target="_blank" :href="'https://www.ebi.ac.uk/ena/browser/view/'+ data.item.taxid">ENA</b-badge>
-            <b-badge pill variant="secondary" target="_blank" :href="'https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id='+data.item.taxid">NCBI</b-badge>
+            <b-badge pill variant="light" target="_blank" :href="'https://goat.genomehubs.org/records?record_id='+data.item.taxid+'&result=taxon&taxonomy=ncbi#'+data.item.organism">GoaT</b-badge>
+            <b-badge pill variant="light" target="_blank" :href="'https://www.ebi.ac.uk/ena/browser/view/'+ data.item.taxid">ENA</b-badge>
+            <b-badge pill variant="light" target="_blank" :href="'https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id='+data.item.taxid">NCBI</b-badge>
         </template>
         <template #cell(actions)="data">
             <b-link class="actions-link" @click="editOrganism(data['item'])">

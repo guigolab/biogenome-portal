@@ -12,23 +12,21 @@
         </b-input-group-prepend>
         <b-form-input ref="filter"
             id="filter-input"
+            style="border-radius: 0 1.25rem 1.25rem 0"
             v-model="filter"
             type="search"
             :placeholder="'in ' + taxName"
         >
         </b-form-input>
-        <b-input-group-append>
-            <b-button variant="primary" :disabled="!filter" @click="filter = ''">Clear</b-button>
-        </b-input-group-append>
     </b-input-group>
 </template>
 <script>
-import {BInputGroup,BInputGroupAppend, BButton, BFormInput, BFormSelect,BInputGroupPrepend} from 'bootstrap-vue'
+import {BInputGroup, BFormInput, BFormSelect,BInputGroupPrepend} from 'bootstrap-vue'
 import {mapFields} from '../../utils/helper'
 
 export default {
     props:['placeholder', 'prependSelect', 'options'],
-    components: {BInputGroup, BInputGroupAppend, BInputGroupPrepend, BFormSelect,BButton, BFormInput},
+    components: {BInputGroup, BInputGroupPrepend, BFormSelect, BFormInput},
     computed: {
         ...mapFields({
             fields: ['filter','option', 'taxName'],
