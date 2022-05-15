@@ -95,10 +95,10 @@ export default {
         },
         linkClass(idx) {
             if (this.tabIndex === idx) {
-                return ['bg-secondary', 'text-light']
+                return ['bg-success', 'text-light']
             } 
             else {
-                return ['bg-light', 'text-dark']
+                return ['bg-light', 'text-success']
             }
         },
         linkVariant(idx){
@@ -106,7 +106,7 @@ export default {
                 return 'light'
             } 
             else {
-                return 'secondary'
+                return 'success'
             }
         }
 }

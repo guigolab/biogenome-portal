@@ -29,5 +29,5 @@ jwt = JWTManager(app)
 #     sched.add_job(import_records, "interval", id="interval-job", start_date=datetime.now()+timedelta(seconds=20),seconds=int(TIME))
 #     sched.start()
 
-# if __name__ == '__main__':
+# # if __name__ == '__main__':
 #     app.run(debug=True,host='0.0.0.0')

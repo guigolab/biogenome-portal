@@ -1,7 +1,7 @@
 import portalService from '../../services/DataPortalService'
-import {ROOTNODE} from '../../utils/static-config'
+import {ROOTNODE, PROJECT_ACCESSION} from '../../utils/static-config'
 
-const state = () => ({
+const getDefaultState = () => ({
     loading: false,
     taxName: ROOTNODE,
     taxNameHistory: [],
@@ -14,15 +14,21 @@ const state = () => ({
     tree: null,
     position: '',
     breadcrumbs: [{text: 'Home', to: {name: 'home-page'}}], // home as default
-    maxLeaves:90
-
+    maxLeaves:90,
+    insdc_samples:false,
+    local_samples:false,
+    experiments:false,
+    assemblies:false,
+    selectedBioproject:PROJECT_ACCESSION,
+    onlySelectedData:false,
 })
+const state = getDefaultState()
 
-const findObj = (arr, idToFind) => {
+const findObj = (arr, nameToFind) => {
     for (const item of arr) {
-       if (item.name === idToFind) return item;
+       if (item.name === nameToFind) return item;
        if (item.children) {
-          const recursiveResult = findObj(item.children, idToFind);
+          const recursiveResult = findObj(item.children, nameToFind);
           if (recursiveResult) return recursiveResult;
        }
     }
@@ -32,10 +38,13 @@ const mutations = {
     setField(state, payload){
         state[payload.label] = payload.value
     },
-    setTree(state,payload) {
+    setTree(state, payload) {
         portalService.getTaxonChildren(payload.value)
         .then(response => {
             state.tree = response.data
+        })
+        .catch(()=>{
+            state.loading=false
         })
     },
     pushBreadcrumb(state,payload){
@@ -78,6 +87,17 @@ const mutations = {
         }else{
             state.taxNameHistory = []
         }
+    },
+    resetFilters(state){
+        Object.assign(state, getDefaultState())
+        portalService.getTaxonChildren(ROOTNODE)
+        .then(response => {
+            state.tree = response.data
+        })
+        .catch(()=>{
+            state.loading=false
+        })
+        // state = {...getDefaultState()}
     }
 }
 const getters= {
@@ -104,6 +124,9 @@ const actions= {
     addTaxHistory(context){
         context.commit('addTaxNameH')
     },
+    resetFilters(context){
+        context.commit('resetFilters')
+    }
 
 }
 

@@ -1,12 +1,17 @@
 from db.models import Assembly, Experiment, SecondaryOrganism
 
+DB_MODEL_MAPPER={
+ 'assemblies': Assembly,
+ 'experiments':Experiment,
+ 'local_samples':SecondaryOrganism,
+ 'insdc_samples':SecondaryOrganism
+}
 
 def get_data(model, ids):
-    data = list()
-    if model == 'assemblies':
-        data = Assembly.objects(id__in=ids).to_json()
-    elif model == 'experiments':
-        data = Experiment.objects(id__in=ids).to_json()
-    elif model == 'insdc_samples' or model == 'local_samples':
-        data = SecondaryOrganism.objects(id__in=ids).to_json()
-    return data
+    return DB_MODEL_MAPPER[model].objects(id__in=ids).to_json()
+
+def get_last_created(model):
+    return DB_MODEL_MAPPER[model].objects.order_by('-id').first().to_json()
+
+
+

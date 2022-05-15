@@ -14,13 +14,15 @@
             </div>
             <div class="icons-container">
                 <b-link @click.stop class="to-tree-link" :to="{name: 'tree-of-life', params: {node: item.name}}">
-                    <b-icon-diagram3 icon='diagram3' :id="item.name" font-scale="1"></b-icon-diagram3>
+                    <b-icon-diagram3 :id="item.name" font-scale="1"></b-icon-diagram3>
                 </b-link>
                 <b-badge href="#" @click.stop="toTable(item.name)" variant="success" pill>{{item.leaves}} </b-badge>
             </div>
         </div>
-        <div v-else class="node-container">
-            <b-link v-if="item" :to="{name:'organism-details', params: {name: item.name}}">{{item.name + ' ('+ item.rank+')'}}</b-link>
+        <!-- trick to avoid undefined display on vue transition -->
+        <div v-else-if="isFolder === 0"
+         class="node-container">
+            <b-link :to="{name:'organism-details', params: {name: item.name}}">{{item.name + ' ('+ item.rank+')'}}</b-link>
         </div>
     </div>
     <Transition name="slide-fade">
@@ -49,7 +51,7 @@ export default {
             BIconDiagram3, BBadge},
     computed: {
           isFolder() {
-            return this.item.children && this.item.children.length;
+            return this.item.children && this.item.children.length
           }
         },
     methods: {
@@ -76,7 +78,7 @@ export default {
 </script>
 <style scoped>
 ul{
-    padding-left:0.4rem !important;
+  padding-left:0.4rem !important;
 }
 
 .item {
@@ -92,8 +94,8 @@ ul{
     padding: 0.5rem;
     margin: 0 0 .25rem 0;
     border-radius: 1.25rem 0 0 1.25rem;
+    cursor: pointer;
 }
-
 .taxon-title{
     margin-left: 0.2rem
 }

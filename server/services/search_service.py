@@ -1,26 +1,28 @@
 from flask import json
 from mongoengine.queryset.visitor import Q
-from db.models import TaxonNode,Organism
+from db.models import BioProject, TaxonNode,Organism
 import os 
 from flask import current_app as app
 
 ROOT_NODE=os.getenv('ROOT_NODE')
-
-
+PROJECT_ACCESSION=os.getenv('PROJECT_ACCESSION')
+FIELDS_TO_EXCLUDE=['id', 'taxon_lineage', 'ordered_lineage', 'trackingSystem']
 
 def query_search(offset=0, limit=20, 
                 sortOrder=None, sortColumn=None,
                 taxName=ROOT_NODE, insdc_samples='false', 
                 local_samples='false', assemblies='false', 
-                experiments='false', filter=None, option=None, onlySelectedData='false'):
+                experiments='false', filter=None, option=None, onlySelectedData='false', bioproject=PROJECT_ACCESSION):
     query=dict()
     json_resp=dict()     
     filter_query = get_query_filter(filter, option) if filter else None
     tax_node = TaxonNode.objects(name=taxName).first()
     query['taxon_lineage'] = tax_node if tax_node else TaxonNode.objects(name=ROOT_NODE).first()
+    if bioproject and not bioproject==PROJECT_ACCESSION:
+        query['bioprojects'] = bioproject
     insdc_dict = dict(insdc_samples=insdc_samples,local_samples=local_samples,assemblies=assemblies,experiments=experiments)
     get_insdc_query(insdc_dict,query,onlySelectedData)
-    organisms = Organism.objects(filter_query, **query) if filter_query else Organism.objects.filter(**query)
+    organisms = Organism.objects(filter_query, **query).exclude(*FIELDS_TO_EXCLUDE) if filter_query else Organism.objects.filter(**query).exclude(*FIELDS_TO_EXCLUDE)
     if sortColumn:
         sort = '-'+sortColumn if sortOrder == 'true' else sortColumn
         organisms = organisms.order_by(sort)

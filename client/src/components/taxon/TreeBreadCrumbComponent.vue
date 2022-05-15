@@ -1,5 +1,5 @@
 <template>
-        <b-button-group>
+        <b-button-group style="display:block">
             <b-button
                 v-for="(taxNameRecord, idx) in taxNameHistory"
                 :key="idx"

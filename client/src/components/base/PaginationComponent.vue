@@ -1,49 +1,43 @@
 <template>
     <b-row>
-        <b-col class="my-1">
-          <b-form-group
-            label="Per page"
-            label-for="per-page-select"
-            label-cols-sm="6"
-            label-cols-md="4"
-            label-cols-lg="3"
-            label-align-sm="right"
-            label-size="sm"
-            class="mb-0"
-          >
+        <b-col lg="3">
+          <b-input-group>
+              <b-input-group-prepend>
+                  <b-input-group-text id="per-page-text">Per page:</b-input-group-text>
+              </b-input-group-prepend>
             <b-form-select
               id="per-page-select"
               v-model="perPage"
               :options="pageOptions"
-              size="sm"
             ></b-form-select>
-          </b-form-group>
+          </b-input-group>
         </b-col>
-        <b-col class="my-1">
+        <b-col lg="7">
           <b-pagination
+            class="organism-table-pagination"
+            pills
+
             v-model="currentPage"
             :total-rows="totalRows"
             :per-page="perPage"
             align="fill"
-            size="sm"
-            class="my-0"
             :aria-controls="tableId"
           ></b-pagination>
         </b-col>
-        <b-col cols="2" class="my-1">
-          <p><strong>Total items: {{totalRows}} </strong></p>
+        <b-col lg="2">
+          <p style="float:right;"><strong>Total organisms: {{totalRows}} </strong></p>
         </b-col>
     </b-row>
 </template>
 <script>
-import {BPagination,BFormGroup,BFormSelect} from 'bootstrap-vue'
+import {BPagination,BFormSelect,BInputGroupPrepend,BInputGroup,BInputGroupText} from 'bootstrap-vue'
 import {mapFields} from '../../utils/helper'
 
 export default {
     props: 
         ['pageOptions','tableId'],
     components: {
-        BPagination,BFormGroup,BFormSelect
+        BPagination,BFormSelect,BInputGroupPrepend,BInputGroup,BInputGroupText
     },
     computed: {
         ...mapFields({
@@ -54,3 +48,14 @@ export default {
     }
 }
 </script>
+<style scoped>
+#per-page-text{
+    background: white;
+    color: black;
+    font-weight: bold;
+    border-radius: 1.25rem 0 0 1.25rem;
+}
+#per-page-select{
+  border-radius: 0 1.25rem 1.25rem 0;
+}
+</style>

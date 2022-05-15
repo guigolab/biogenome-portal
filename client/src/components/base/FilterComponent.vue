@@ -25,7 +25,7 @@ import {BInputGroup, BFormInput, BFormSelect,BInputGroupPrepend} from 'bootstrap
 import {mapFields} from '../../utils/helper'
 
 export default {
-    props:['placeholder', 'prependSelect', 'options'],
+    props:['placeholder', 'prependSelect','options'],
     components: {BInputGroup, BInputGroupPrepend, BFormSelect, BFormInput},
     computed: {
         ...mapFields({

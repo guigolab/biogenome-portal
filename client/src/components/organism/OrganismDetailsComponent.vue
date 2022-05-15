@@ -2,7 +2,6 @@
     <b-row>
         <b-col>
             <b-tabs
-                pills
                 content-class="mt-3" fill
                 v-model="tabIndex"
             >
@@ -60,10 +59,10 @@ export default {
         },
         linkClass(idx) {
             if (this.tabIndex === idx) {
-                return ['bg-secondary', 'text-light']
+                return ['bg-success', 'text-light']
             } 
             else {
-                return ['bg-light', 'text-dark']
+                return ['bg-light', 'text-success']
             }
         },
         linkVariant(idx){
@@ -71,10 +70,10 @@ export default {
                 return 'light'
             } 
             else {
-                return 'secondary'
-            }
+                return 'success'
         }
-}
+        }
+    }
 }
 
 </script>
@@ -87,5 +86,4 @@ export default {
 #species-image{
 margin-right: 10px;
 }
-
 </style>

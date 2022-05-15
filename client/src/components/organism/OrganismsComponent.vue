@@ -16,9 +16,9 @@
         :selectable="hasToken"
         :selectMode="'multi'"
         >
-        <template #thead-top>
+        <!-- <template #thead-top>
             <b-tr>
-              <b-th class="extra-th" variant="success" colspan="4">Taxonomic Information</b-th>
+              <b-th class="extra-th" variant="success" colspan="5">Taxonomic Information</b-th>
               <b-th class="extra-th my-left-border" variant="success" colspan="4">
                 Data
                   <b-form-checkbox
@@ -32,44 +32,18 @@
                   >organisms with only the selected data</b-form-checkbox>
               </b-th>
             </b-tr>
-        </template>
-        <template #head(local_samples)>
-            <b-form-checkbox
-              v-model="showLocalSamples"
-              name="local_samples-checkbox"
-            >
-            Acquired Samples
-            </b-form-checkbox>
-        </template>
-        <template #head(insdc_samples)>
-            <b-form-checkbox
-              v-model="showBiosamples"
-              name="insdc-samples-checkbox"
-            >
-             Submitted Samples
-            </b-form-checkbox>
-        </template>
-        <template #head(assemblies)>
-            <b-form-checkbox
-              v-model="showAssemblies"
-              name="ass-checkbox"
-            >
-              Submitted Assemblies
-            </b-form-checkbox>
-        </template>
-        <template #head(experiments)>
-            <b-form-checkbox
-              v-model="showReads"
-              name="exp-checkbox"
-            >
-              Submitted Reads
-            </b-form-checkbox>
-        </template>
+        </template> -->
+
         <template #head(actions)>
           <b-dropdown dropup class="mx-1" right text="Actions">
               <b-dropdown-item :disabled="selectedOrganisms.lenght === 0" @click="deleteOrganisms(selectedOrganisms)" variant="danger">Delete selected organisms</b-dropdown-item>
           </b-dropdown>         
         </template>
+        <template #cell(bioprojects)="data">
+          <b-link target="_blank" v-for="bioproject in data.item.bioprojects" :key="bioproject" :href="'https://www.ebi.ac.uk/ena/browser/view/'+bioproject">
+            {{bioproject}}
+          </b-link>
+        </template>javascript 
         <template #cell(organism)="data">
           <b-link :to="{name: 'organism-details', params: {name: data.item.organism}}">
             {{data.item.organism}}
@@ -112,33 +86,39 @@
             </b-link>
         </template>
       </table-component>
+      <pagination-component :pageOptions="[20,50,100]"/>
       <data-modal :data="data" :model="model" :organism="organism"/>
       <edit-organism-modal :organism="organism" :commonNames="commonNames"/>
-      <pagination-component :per-page="perPage" :page-options="pageOptions" :total-rows="totalRows" :current-page="currentPage" :table-id="tableId"/>
       </b-col>
     </b-row>
 </template>
 
 <script>
 import portalService from "../../services/DataPortalService"
-import {BTr,BBadge,BTh,BFormCheckbox, BIconPenFill,BIconTrashFill, BLink, BDropdown, BDropdownItem } from 'bootstrap-vue'
+import {BBadge, BIconPenFill,BIconTrashFill, BLink, BDropdown, BDropdownItem } from 'bootstrap-vue'
 import TableComponent from '../base/TableComponent.vue';
-import PaginationComponent from '../base/PaginationComponent.vue';
 import {mapFields, showConfirmationModal} from '../../utils/helper'
 import SubmissionService from '../../services/SubmissionService';
 import DataModal from '../modal/DataModal.vue';
 import EditOrganismModal from '../modal/EditOrganismModal.vue';
+import PaginationComponent from '../base/PaginationComponent.vue';
 
 export default {
   components: 
     {
-      BLink,BBadge,TableComponent,PaginationComponent,
+      BLink,BBadge,TableComponent,
       BDropdown, BDropdownItem,BIconPenFill,BIconTrashFill,
-      DataModal,EditOrganismModal,BTr,BTh,BFormCheckbox,
+      DataModal,EditOrganismModal,
+        PaginationComponent
     },
   computed: {
     ...mapFields({
-      fields: ['filter','perPage', 'option','taxName','totalRows','currentPage'],
+      fields: ['filter','perPage',
+       'onlySelectedData','selectedBioproject',
+       'option','taxName',
+       'totalRows','currentPage',
+       'insdc_samples','local_samples',
+       'experiments','assemblies'],
       module: 'portal',
       mutation: 'portal/setField'      
     }),
@@ -159,20 +139,16 @@ export default {
       props:['isAdmin'],
       isBusy: false,
       stickyHeader: '70vh',
-      showBiosamples:false,
-      showLocalSamples:false,
-      showAssemblies:false,
-      showReads:false,
-      onlySelectedData:false,
       fields: [
         {key: 'tolid_prefix', label: 'ToLID Prefix'},
         {key: 'organism',label:'Scientific Name',sortable: true,stickyColumn: true},
         {key:'insdc_common_name', label: 'Common Name', sortable: true},
+        {key:'bioprojects', label: 'Bioprojects'},
         {key: 'externalReferences', label:'External Links'},
         {key: 'local_samples', label: 'Acquired Samples', class:'my-left-border'},
-        {key: 'insdc_samples', label: 'BioSamples'},
-        {key: 'experiments', label: 'Reads'},
-        {key: 'assemblies', label: 'Assemblies'},
+        {key: 'insdc_samples', label: 'Submitted BioSamples'},
+        {key: 'experiments', label: 'Submitted Reads'},
+        {key: 'assemblies', label: 'Submitted Assemblies'},
 
       ],
       selectedOrganisms:[],
@@ -183,35 +159,28 @@ export default {
     }
   },
   watch: {
-    onlySelectedData(){
-      this.$root.$emit('bv::refresh::table', this.tableId)
-    },
-    showBiosamples(value){
-      this.$root.$emit('bv::refresh::table', this.tableId)
+      insdc_samples(value){
       if (value){
         this.fields.filter(f => f.key === 'insdc_samples').forEach(f => f.variant = "success")
       }else{
         this.fields.filter(f => f.key === 'insdc_samples').forEach(f => f.variant = "")
       }
     },
-    showLocalSamples(value){
-      this.$root.$emit('bv::refresh::table', this.tableId)
+    local_samples(value){
       if (value){
         this.fields.filter(f => f.key === 'local_samples').forEach(f => f.variant = "info")
       }else{
         this.fields.filter(f => f.key === 'local_samples').forEach(f => f.variant = "")
       }
     },
-    showAssemblies(value){
-      this.$root.$emit('bv::refresh::table', this.tableId)
+    assemblies(value){
       if (value){
         this.fields.filter(f => f.key === 'assemblies').forEach(f => f.variant = "primary")
       }else{
         this.fields.filter(f => f.key === 'assemblies').forEach(f => f.variant = "")
       }
     },
-    showReads(value){
-      this.$root.$emit('bv::refresh::table', this.tableId)
+    experiments(value){
       if (value){
         this.fields.filter(f => f.key === 'experiments').forEach(f => f.variant = "warning")
       }else{
@@ -284,12 +253,13 @@ export default {
         sortColumn: ctx.sortBy,
         sortOrder: ctx.sortDesc,
         taxName: this.taxName,
-        insdc_samples: this.showBiosamples,
-        local_samples: this.showLocalSamples,
-        assemblies: this.showAssemblies,
-        experiments: this.showReads,
+        insdc_samples: this.insdc_samples,
+        local_samples: this.local_samples,
+        assemblies: this.assemblies,
+        experiments: this.experiments,
         option: this.option,
-        onlySelectedData: this.onlySelectedData
+        onlySelectedData: this.onlySelectedData,
+        bioproject:this.selectedBioproject
         }
       this.defaultSearch(params,callback)
     }

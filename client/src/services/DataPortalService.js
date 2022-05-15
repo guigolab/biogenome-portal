@@ -22,13 +22,15 @@ class DataPortalService {
             return base.get(`/organisms/${accession}`)
         }
     }
+    getRootProjectChildren(){
+        return base.get('/bioprojects')
+    }
     getGeoLocSamples(ids) {
         if (ids){
             return base.post('/coordinates',ids)
         }
         return base.get('/coordinates')
     }
-    
     getTree(node, maxLeaves){
         return base.get(`/tree/${node}`,{
             params: {maxLeaves:maxLeaves}
@@ -39,6 +41,9 @@ class DataPortalService {
     }
     getData(model,ids){
         return base.post(`/data/${model}`, ids)
+    }
+    getLastCreated(model){
+        return base.get(`/data/${model}`)
     }
 }
 

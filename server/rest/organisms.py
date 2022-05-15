@@ -7,7 +7,6 @@ from errors import NotFound, SchemaValidationError
 import json
 from flask_jwt_extended import jwt_required
 from utils.pipelines import OrganismPipeline
-from flask import current_app as app
 import base64
 
 

@@ -1,18 +1,23 @@
 <template>
     <b-container fluid class="router-container">
         <b-row>
-            <b-col lg="8" style="overflow: auto;min-height:50px">
-                <tree-bread-crumb-component/>
-            </b-col>
-            <b-col lg="4">
-                <filter-component :prependSelect="true" :options="options"/>
+            <b-col lg="6">
+                <last-published-banner/>
             </b-col>
         </b-row>
         <b-row>
-            <b-col lg="3">
+            <b-col lg="4" style="overflow: auto;max-height:120px">
+                <tree-bread-crumb-component/>
+            </b-col>
+            <b-col lg="8">
+                <organism-filter-component/>
+            </b-col>
+        </b-row>
+        <b-row>
+            <b-col lg="3" md="4">
                 <tree-browser-component/>
             </b-col>
-            <b-col lg="9">
+            <b-col lg="9" md="8">
                 <organisms-component/>
             </b-col>
             <router-view/>
@@ -21,25 +26,20 @@
 </template>
 
 <script>
-import FilterComponent from '../components/base/FilterComponent.vue';
+import LastPublishedBanner from '../components/base/LastPublishedBanner.vue';
+import OrganismFilterComponent from '../components/organism/OrganismFilterComponent.vue';
 import OrganismsComponent from '../components/organism/OrganismsComponent.vue';
 import TreeBreadCrumbComponent from '../components/taxon/TreeBreadCrumbComponent.vue';
 import TreeBrowserComponent from '../components/taxon/TreeBrowserComponent.vue'
 
 export default {
     name: 'home-page',
-    data(){
-        return {
-            options: [{name:'Species name',item:'species_name'},{name:'TaxID',item:'taxid'}, {name:'Common name',item:'common_name'},{name:'ToLID', item:'tolid'}]
-        }
-    },
     components: {
         TreeBrowserComponent,
         OrganismsComponent,
         TreeBreadCrumbComponent,
-        FilterComponent
+        OrganismFilterComponent,
+        LastPublishedBanner,
     }
-
-
 }
 </script>

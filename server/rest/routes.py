@@ -4,6 +4,7 @@ from .tree_api import TreeApi,TaxNodesApi
 from .data_input_api import Login
 from .samples_api import SamplesApi,BioSampleApi, GeoLocApi
 from .data_api import OrganismData
+from .bioprojects_api import BioProjectApi
 
 def initialize_routes(api):
 
@@ -12,6 +13,7 @@ def initialize_routes(api):
 	api.add_resource(Login, '/api/login')
 
 	##data portal endpoints
+	api.add_resource(BioProjectApi, '/api/bioprojects')
 	api.add_resource(OrganismsApi, '/api/root_organisms')
 	api.add_resource(OrganismApi, '/api/root_organisms/<name>') 
 	api.add_resource(OrganismData, '/api/data/<model>')

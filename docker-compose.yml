@@ -19,6 +19,7 @@ services:
       dockerfile: Dockerfile
       args:
         - ROOT_NODE=$ROOT_NODE
+        - PROJECT_ACCESSION=$PROJECT_ACCESSION
     container_name: "biogenome_nginx"
     restart: always
     volumes:
@@ -29,20 +30,6 @@ services:
       - API_HOST=${API_HOST}
     ports:
         - "91:${API_PORT}"   
-  # api-worker:
-  #   build: .
-  #   command: celery worker --workdir=. -A tasks.celery --loglevel=info
-  #   environment:
-  #     - APP_ENV=${APP_ENV}
-  #   depends_on:
-  #     - broker-rabbitmq
-
-  # broker-rabbitmq:
-  #   image: "rabbitmq:3.7.14-management"
-  #   environment:
-  #     - RABBITMQ_DEFAULT_USER=rabbit_user
-  #     - RABBITMQ_DEFAULT_PASS=rabbit_password
-
 networks:
   default:
     driver: bridge
@@ -53,11 +40,11 @@ networks:
   # biogenome_mongo:
   #   image: mongo:latest
   #   container_name: "biogenome_mongo"
-  #   command: mongod --port 27015
+  #   command: mongod --port 27015 #change default port 
   #   environment:
   #     MONGO_INITDB_ROOT_USERNAME: root
   #     MONGO_INITDB_ROOT_PASSWORD: root
-  #     MONGO_INITDB_DATABASE: flask_db
+  #     MONGO_INITDB_DATABASE: biogenome_db
   #     MONGODB_DATA_DIR: /var/lib/mongodb-data
   #     MONDODB_LOG_DIR: /dev/null
   #   volumes:

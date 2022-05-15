@@ -1,12 +1,11 @@
 import requests
 import time
 from utils import ena_client,utils
-from services import sample_service,organisms_service,geo_loc_service
+from services import sample_service,organisms_service,geo_loc_service, bioproject_service
 from db.models import Assembly,SecondaryOrganism
 from mongoengine.queryset.visitor import Q
 from datetime import datetime, timedelta
 
-REL_FIELDS=['sample_same_as','sample_symbiont_of','sample_derived_from',]
 
 SAMPLE_QUERY = (Q(last_check=None) | Q(last_check__lte=datetime.now()- timedelta(days=2)))
 
@@ -21,7 +20,7 @@ def import_from_NCBI(project_accession):
         if not assemblies:
             print('NO NEW ASSEMBLIES')
             return
-        parse_data(assemblies)
+        parse_data(assemblies, project_accession)
         print('DONE')
 
 
@@ -45,7 +44,7 @@ def get_assemblies(project_accession):
     return assemblies
 
 ## get biosample accession from assemblies
-def parse_data(assemblies):
+def parse_data(assemblies, project_accession):
     samples_not_found=set()
     for assembly in assemblies:
         sample_accession=assembly['biosample_accession']
@@ -70,7 +69,14 @@ def parse_data(assemblies):
             organism.assemblies.append(ass_obj)
             sample_obj.modify(push__assemblies=ass_obj)
         sample_service.get_reads([sample_obj])
+        bioproject_accessions = [bioproject.accession for bioproject in bioproject_service.create_bioprojects(assembly['bioproject_lineages']) if bioproject.accession != project_accession]
+        for b_acc in bioproject_accessions:
+            if not b_acc in organism.bioprojects:
+                organism.bioprojects.append(b_acc)
+            if not b_acc in sample_obj.bioprojects:
+                sample_obj.bioprojects.append(b_acc)
         #save triggers status tracking
+        sample_obj.save()
         organism.save()
     if len(list(samples_not_found))>0:
         print('SAMPLES NOT FOUND IN BIOSAMPLES: ', samples_not_found)

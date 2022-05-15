@@ -10,11 +10,6 @@ class TrackStatus(Enum):
     READS = 'Reads Submitted'
     ASSEMBLIES = 'Assemblies Submitted'
     ANN_SUBMITTED = 'Annotation Submitted'
-    
-class TargetListStatus(Enum):
-    CBP_RAP = 'cbp_family_representative'
-    CBP_OTHER = 'cbp_other_priority'
-    CBP = 'cbp'
 
 def handler(event):
     """Signal decorator to allow use of callback functions as class decorators."""
@@ -110,14 +105,16 @@ class Assembly(db.Document):
 class BioProject(db.Document):
     accession = db.StringField(required=True, unique=True)
     title = db.StringField()
-    parent = db.LazyReferenceField('self')
-
+    parents = db.ListField(db.LazyReferenceField('self', passthrough=True))
+    meta = {
+        'indexes': ['accession']
+    }
 
 class SecondaryOrganism(db.Document):
     assemblies = db.ListField(db.LazyReferenceField(Assembly))
     experiments = db.ListField(db.LazyReferenceField(Experiment))
     accession = db.StringField()
-    bioproject = db.LazyReferenceField(BioProject)
+    bioprojects = db.ListField(db.StringField())
     created = db.DateTimeField(default=datetime.datetime.utcnow)
     last_check = db.DateTimeField()
     taxid = db.StringField(required=True)
@@ -229,9 +226,8 @@ class GeoCoordinates(db.Document):
 class Organism(db.Document):
     assemblies = db.ListField(db.LazyReferenceField(Assembly))
     experiments = db.ListField(db.LazyReferenceField(Experiment))
-    # bioprojects = db.ListField(db.StringField())
     tolid_prefix = db.StringField()
-    # common_names = db.ListField(db.LazyReferenceField(NameOntology))
+    bioprojects = db.ListField(db.StringField())
     common_name = db.ListField(db.StringField())
     insdc_common_name = db.StringField()
     local_samples = db.ListField(db.LazyReferenceField(SecondaryOrganism))

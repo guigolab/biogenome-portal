@@ -21,7 +21,7 @@ export default {
         }
     },
     components:{
-        TreeListComponent
+        TreeListComponent,
     }
 }
 </script>
@@ -30,6 +30,7 @@ export default {
     .tree-wrapper{
         height: 33vh;
     }
+
 }
 @media screen and (min-width: 992px){
 .tree-wrapper  {
@@ -37,7 +38,6 @@ export default {
 }
 }
 .tree-wrapper  {
-    cursor: pointer;
     list-style-type: none;
     overflow: auto;
 }
