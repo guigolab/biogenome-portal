@@ -16,34 +16,16 @@
         :selectable="hasToken"
         :selectMode="'multi'"
         >
-        <!-- <template #thead-top>
-            <b-tr>
-              <b-th class="extra-th" variant="success" colspan="5">Taxonomic Information</b-th>
-              <b-th class="extra-th my-left-border" variant="success" colspan="4">
-                Data
-                  <b-form-checkbox
-                    id="select-mode-opt"
-                    style="float: inline-end;"
-                    size="sm"
-                    inline
-                    switch
-                    v-model="onlySelectedData"
-                    name="local_samples-checkbox"
-                  >organisms with only the selected data</b-form-checkbox>
-              </b-th>
-            </b-tr>
-        </template> -->
-
         <template #head(actions)>
           <b-dropdown dropup class="mx-1" right text="Actions">
               <b-dropdown-item :disabled="selectedOrganisms.lenght === 0" @click="deleteOrganisms(selectedOrganisms)" variant="danger">Delete selected organisms</b-dropdown-item>
           </b-dropdown>         
         </template>
-        <template #cell(bioprojects)="data">
+        <template v-if="bioprojects.lenght" #cell(bioprojects)="data">
           <b-link target="_blank" v-for="bioproject in data.item.bioprojects" :key="bioproject" :href="'https://www.ebi.ac.uk/ena/browser/view/'+bioproject">
             {{bioproject}}
           </b-link>
-        </template>javascript 
+        </template>
         <template #cell(organism)="data">
           <b-link :to="{name: 'organism-details', params: {name: data.item.organism}}">
             {{data.item.organism}}

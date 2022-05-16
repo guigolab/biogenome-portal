@@ -1,7 +1,3 @@
-import os
-
-
-ROOTNODE = 'Aves'
 
 CHECKLIST_FIELD_GROUPS = [
         {'fields': [

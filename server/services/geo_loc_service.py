@@ -26,7 +26,7 @@ def geoloc_samples(bioproject=None):
         geo_objs = list(GeoCoordinates.objects.aggregate(*GeoCoordinatesPipeline))
     else:
         sample_ids = [sample.id for sample in SecondaryOrganism.objects(bioprojects=bioproject)]
-        geo_objs = json.loads(GeoCoordinates.objects(biosamples__in=sample_ids).to_json())
+        geo_objs = list(GeoCoordinates.objects(biosamples__in=sample_ids).aggregate(*GeoCoordinatesPipeline))
     if geo_objs:
         FEATURE_COLLECTION_OBJECT['features'] = geo_objs
         return FEATURE_COLLECTION_OBJECT
