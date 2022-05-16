@@ -21,7 +21,7 @@
               <b-dropdown-item :disabled="selectedOrganisms.lenght === 0" @click="deleteOrganisms(selectedOrganisms)" variant="danger">Delete selected organisms</b-dropdown-item>
           </b-dropdown>         
         </template>
-        <template v-if="bioprojects.lenght" #cell(bioprojects)="data">
+        <template #cell(bioprojects)="data">
           <b-link target="_blank" v-for="bioproject in data.item.bioprojects" :key="bioproject" :href="'https://www.ebi.ac.uk/ena/browser/view/'+bioproject">
             {{bioproject}}
           </b-link>

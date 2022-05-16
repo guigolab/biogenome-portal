@@ -52,6 +52,9 @@ export default {
                 if(resp && resp.data){
                     this.geoJson = resp.data         
                 }
+                else{
+                    this.geoJson = null
+                }
                 this.$store.dispatch('portal/hideLoading')
             })
             .catch(e=>{

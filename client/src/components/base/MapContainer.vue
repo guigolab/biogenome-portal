@@ -48,17 +48,19 @@ export default {
       updateSource(geojson) {
       const view = this.olMap.getView()
       const source = this.vectorLayer.getSource()
-      const features = new GeoJSON({
+      const features = geojson ? new GeoJSON({
         featureProjection: 'EPSG:3857',
-      }).readFeatures(geojson)
+      }).readFeatures(geojson) : null
       source.clear();
-      source.addFeatures(features);
+      if(features){
+        source.addFeatures(features);
+        // this zooms the view on the created object
+        view.fit(source.getExtent(), {
+          size: this.olMap.getSize(),
+          maxZoom: 4
+        });
+      }
 
-      // this zooms the view on the created object
-      view.fit(source.getExtent(), {
-        size: this.olMap.getSize(),
-        maxZoom: 4
-      });
     },
     closePopup(){
       this.overlay.setPosition(undefined)
