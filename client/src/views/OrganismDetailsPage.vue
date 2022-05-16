@@ -83,16 +83,9 @@ export default {
             .then(response => {
                 this.organism = response.data
                 this.$store.commit('portal/setBreadCrumb', {value: {text: name, to: {name: 'organism-details', params:{name: name}}}})
+                const records = [...this.organism.insdc_samples,...this.organism.local_samples].map(rec => rec._id)
                 this.$store.dispatch('portal/hideLoading')
-                const records = [...this.organism.insdc_samples,...this.organism.local_samples]
-                const hasNumber = /\d/
-                const ids = records.map(rec => {
-                    if(rec.geographic_location_latitude && rec.geographic_location_longitude && hasNumber.test(rec.geographic_location_latitude) && hasNumber.test(rec.geographic_location_longitude)){
-                        return rec.geographic_location_latitude+','+rec.geographic_location_longitude
-                    }
-                }).filter(id => id)
-                console.log(ids)
-                return ids.length ? portalService.getGeoLocSamples({ids:ids}) : null
+                return portalService.getCoordinatesBySampleIds({ids:records})
             })
             .then(response =>{
                 if(response){
@@ -100,6 +93,10 @@ export default {
                         this.geojson = {...response.data}
                     })
                 }
+            })
+            .catch(e => {
+                this.$store.dispatch('portal/hideLoading')
+                console.log(e)
             })
         }
     },

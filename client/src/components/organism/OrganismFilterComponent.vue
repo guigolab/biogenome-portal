@@ -1,13 +1,7 @@
 <template>
     <b-row>
         <b-col lg="7">
-            <b-input-group>
-                <b-input-group-prepend>
-                    <b-input-group-text id="bioprojects-select" class="prepend-custom-text">INSDC Bioproject</b-input-group-text>
-                </b-input-group-prepend>
-                <b-form-select style="border-radius: 0 1.25rem 1.25rem 0" v-model="selectedBioproject" :options="bioprojects">
-                </b-form-select>
-            </b-input-group>
+            <multi-select-component/>
         </b-col>
         <b-col lg="5">
             <filter-component :options="options" :prependSelect="true"/>
@@ -29,20 +23,20 @@
             <b-form-checkbox-group :options="checkboxOptions" v-model="selectedCheckboxes"/>
             <b-icon-arrow-clockwise @mouseenter="animation='spin-pulse'" @mouseleave="animation=''" :animation="animation" font-scale="2" id="refresh-action" @click="resetFilters()"/>
             <b-tooltip target="refresh-action">
-                Clear all filters
+                Refresh filters
             </b-tooltip>
         </b-col>
     </b-row>
 </template>
 <script>
-import {BFormSelect, BFormCheckboxGroup, BFormCheckbox,BInputGroupText,
-BInputGroup, BInputGroupPrepend,BTooltip,BIconArrowClockwise
+import {BFormCheckboxGroup, BFormCheckbox,BTooltip,BIconArrowClockwise
 // BInputGroupAppend,BFormGroup
 } from 'bootstrap-vue'
 import {mapFields} from '../../utils/helper'
 import FilterComponent from '../base/FilterComponent.vue'
 import portalService from '../../services/DataPortalService'
 import {PROJECT_ACCESSION} from '../../utils/static-config'
+import MultiSelectComponent from '../base/MultiSelectComponent.vue'
 
 export default {
     data(){
@@ -55,7 +49,6 @@ export default {
                 {text: 'Submitted assemblies', value: 'assemblies'},
             ],
             selectedCheckboxes:[],
-            bioprojects:[],
             animation:''
         }
     },
@@ -86,10 +79,10 @@ export default {
             this.$root.$emit('bv::refresh::table', 'organisms-table')
         }
     },
-    components:{BFormSelect,BFormCheckbox, BFormCheckboxGroup,
-    BInputGroupText,BInputGroup, BInputGroupPrepend,BTooltip,BIconArrowClockwise,
-    //  BInputGroup, BInputGroupPrepend, BInputGroupAppend,BFormGroup,
-    FilterComponent},
+    components:{
+    BFormCheckbox,BFormCheckboxGroup,BTooltip,
+        BIconArrowClockwise,FilterComponent,MultiSelectComponent
+    },
     created(){
         portalService.getRootProjectChildren()
         .then(response => {
@@ -114,19 +107,12 @@ export default {
 }
 </script>
 <style scoped>
-.prepend-custom-text{
-    background: white;
-    color: black;
-    font-weight: bold;
-}
 .checkbox-wrapper{
     margin-top:25px;
     display: flex;
     justify-content: space-between;
 }
-#bioprojects-select{
-    border-radius: 1.25rem 0 0 1.25rem;
-}
+
 #refresh-action{
     cursor: pointer;
 }

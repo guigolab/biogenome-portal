@@ -12,6 +12,36 @@ TaxonPipeline = [
 	}
 ]
 
+GeoCoordinatesPipeline= [
+	{"$lookup":
+		{"from": "secondary_organism",
+		"localField": "biosamples",
+		"foreignField": "_id",
+		"as": "biosamples",
+		}
+	},
+	{"$project": 
+		{"_id":0,
+		"properties": { 
+			"biosamples" : {
+				'$map': { 
+					'input': '$biosamples', 
+					'as': 'biosample', 
+					'in': { 
+						'accession': '$$biosample.accession',
+						'tube_or_well_id': '$$biosample.tube_or_well_id',
+						'scientificName': '$$biosample.scientificName',
+					}
+				}
+			}
+		},
+		"geo_loc":1,
+		"type":1,
+		"geometry":1,
+		}
+	}
+]
+
 OrganismPipeline = [
 	{"$lookup":
 		{"from": "secondary_organism",
@@ -51,8 +81,8 @@ OrganismPipeline = [
 	{"$project": 
 		{"_id":0,
 		"created":0,
-		"insdc_samples": {"_id":0,"assemblies":0,"experiments":0,"specimens":0, "created":0,"last_check":0,},
-		"local_samples": { "_id":0,
+		"insdc_samples": {"assemblies":0,"experiments":0,"specimens":0, "created":0,"last_check":0,},
+		"local_samples": {
             "assemblies":0,"experiments":0,"specimens":0, 
             "created":0, "last_check":0, "indigenous_rights_applicable":0,
             "regulatory_compliance":0,
@@ -89,7 +119,7 @@ SamplePipeline = [
 		}
 	},
 	{"$project": 
-		{"_id":0, 
+		{
         "created":0,
         "last_check":0,
         "indigenous_rights_applicable":0,
@@ -108,7 +138,6 @@ SamplePipeline = [
             "collector_orcid_id":0,"sample_coordinator_orcid_id":0},
 		"assemblies" : {"_id":0},
 		"experiments": {"_id":0}
-
 		}
 	}
 ]
@@ -135,7 +164,7 @@ SamplePipelinePrivate = [
 		}
 	},
 	{"$project": 
-		{"_id":0, 
+		{
         "created":0,
         "last_check":0,
 		"assemblies" : {"_id":0},

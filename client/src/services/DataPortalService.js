@@ -9,11 +9,6 @@ class DataPortalService {
         params: params
         })
     }
-    getFilteredOrganisms(params){
-        return base.get("/root_organisms/search", {
-        params: params
-        })
-    }
     getOrganism(name) {
         return base.get(`/root_organisms/${name}`)
     }
@@ -25,11 +20,13 @@ class DataPortalService {
     getRootProjectChildren(){
         return base.get('/bioprojects')
     }
-    getGeoLocSamples(ids) {
-        if (ids){
-            return base.post('/coordinates',ids)
-        }
-        return base.get('/coordinates')
+    getCoordinatesBySampleIds(ids,){
+        return base.post('/coordinates',ids)
+    }
+    getAllCoordinates(params) {
+        return base.get('/coordinates',{
+            params: params
+            })
     }
     getTree(node, maxLeaves){
         return base.get(`/tree/${node}`,{

@@ -112,6 +112,9 @@ const getters= {
     },
     getMaxNodes(state){
         return state.maxLeaves
+    },
+    getSelectedBioproject(state){
+        return state.selectedBioproject
     }
 }
 const actions= {

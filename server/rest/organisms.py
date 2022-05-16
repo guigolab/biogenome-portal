@@ -8,6 +8,7 @@ import json
 from flask_jwt_extended import jwt_required
 from utils.pipelines import OrganismPipeline
 import base64
+from flask import current_app as app
 
 
 #TODO unit test this 
@@ -30,6 +31,10 @@ class OrganismApi(Resource):
 		if organism_obj.count() == 0:
 			raise NotFound
 		organism_response = organism_obj.aggregate(*OrganismPipeline).next()
+		for sample_type in ['insdc_samples', 'local_samples']:
+			if sample_type in organism_response.keys():
+				for sample in organism_response['insdc_samples']:
+					sample['_id'] = str(sample['_id'])
 		if 'image' in organism_response.keys():
 			encoded_image = base64.b64encode(organism_obj.first().image.read())
 			organism_response['image'] = encoded_image.decode('utf-8')

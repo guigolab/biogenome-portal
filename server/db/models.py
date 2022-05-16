@@ -210,12 +210,20 @@ def update_modified(sender, document):
     else:
         document.trackingSystem=TrackStatus.LOCAL_SAMPLE
 
+class Geometry(db.EmbeddedDocument):
+    type=db.StringField(default='Point')
+    coordinates=db.ListField(db.StringField())
+    meta = {
+        'indexes': [
+            'coordinates',
+        ]
+    }
 # ##TODO Migrate samples geo attributes to this model -> test 
 class GeoCoordinates(db.Document):
     geo_loc = db.StringField(unique=True,required=True)
-    biosamples = db.DictField()
-    geographic_location_latitude=db.StringField()
-    geographic_location_longitude=db.StringField()
+    type=db.StringField(default='Feature')
+    biosamples = db.ListField(db.LazyReferenceField(SecondaryOrganism))
+    geometry = db.EmbeddedDocumentField(Geometry)
     meta = {
         'indexes': [
             'geo_loc',

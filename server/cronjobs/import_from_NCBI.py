@@ -63,7 +63,7 @@ def parse_data(assemblies, project_accession):
                     sample_metadata[attr['name']] = [dict(text=attr['value'])]
                 metadata = utils.parse_sample_metadata(sample_metadata)
                 sample_obj.modify(**metadata)
-                geo_loc_service.get_or_create_coordinates(sample_obj.to_mongo())
+                geo_loc_service.get_or_create_coordinates(sample_obj)
         ass_obj = Assembly.objects(accession = assembly['assembly_accession']).upsert_one(accession = assembly['assembly_accession'],assembly_name= assembly['display_name'], sample_accession= sample_obj.accession)
         if not organism.assemblies or not ass_obj.id in [ass.id for ass in organism.assemblies]:
             organism.assemblies.append(ass_obj)
@@ -89,7 +89,7 @@ def create_sample_from_biosamples(sample_obj, samples_not_found):
     if '_embedded' in resp.keys():
         metadata = utils.parse_sample_metadata(resp['_embedded']['samples'][0]['characteristics'])
         sample_obj.modify(**metadata)
-        geo_loc_service.get_or_create_coordinates(sample_obj.to_mongo())
+        geo_loc_service.get_or_create_coordinates(sample_obj)
     else:
         print('SAMPLE NOT FOUND')
         samples_not_found.add(sample_obj.accession)

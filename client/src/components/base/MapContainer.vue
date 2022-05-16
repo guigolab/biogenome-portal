@@ -53,7 +53,7 @@ export default {
       }).readFeatures(geojson)
       source.clear();
       source.addFeatures(features);
-      
+
       // this zooms the view on the created object
       view.fit(source.getExtent(), {
         size: this.olMap.getSize(),
@@ -91,8 +91,8 @@ export default {
       map.on('singleclick', function(e){
         var biosamples = ''
         this.getFeaturesAtPixel(e.pixel).forEach(ft => {
-          Object.entries(ft.get('biosamples')).forEach(entry => {
-            biosamples = biosamples+`<a class="ft-map-link" href="#/samples/${entry[0]}">${entry[0]}</a> <a href="#/organisms/${entry[1]}">(${entry[1]})</a><br/>`
+          ft.get('biosamples').forEach(entry => {
+            biosamples = biosamples+`<a class="ft-map-link" href="#/samples/${entry.accession || entry.tube_or_well_id}">${entry.accession || entry.tube_or_well_id}</a> <a href="#/organisms/${entry.scientificName}">(${entry.scientificName})</a><br/>`
           })
         })
         if(biosamples){

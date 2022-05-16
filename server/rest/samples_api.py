@@ -12,7 +12,6 @@ from flask_jwt_extended import get_jwt_identity
 from mongoengine.queryset.visitor import Q
 from utils.pipelines import SamplePipeline,SamplePipelinePrivate
 import json
-
 #CRUD operations on sample
 class SamplesApi(Resource):
 
@@ -24,6 +23,7 @@ class SamplesApi(Resource):
                 result = sample.aggregate(*SamplePipelinePrivate).next()
             else:
                 result = sample.aggregate(*SamplePipeline).next()
+            result['_id'] = str(result['_id'])
             return Response(json.dumps(result),mimetype="application/json", status=200)
         raise NotFound
         
@@ -80,7 +80,7 @@ class BioSampleApi(Resource):
                 metadata['accession'] = data['accession']
                 metadata['taxid'] = taxid
                 sample = service.create_sample(metadata)
-                geo_loc_service.get_or_create_coordinates(sample.to_mongo())
+                geo_loc_service.get_or_create_coordinates(sample)
                 sample_service.get_reads([sample])
                 assemblies = ena_client.parse_assemblies(sample.accession)
                 if len(assemblies) > 0:
@@ -108,7 +108,8 @@ class BioSampleApi(Resource):
 class GeoLocApi(Resource):
     ##get all samples with coordinates
     def get(self):
-        return Response(json.dumps(geo_loc_service.geoloc_samples()), mimetype="application/json", status=200)
+        bioproject = request.args['bioproject'] if 'bioproject' in request.args.keys() else None
+        return Response(json.dumps(geo_loc_service.geoloc_samples(bioproject=bioproject)), mimetype="application/json", status=200)
     
     ##post request to handle large collection of geo_loc ids (format: lat,loc string)
     def post(self):
@@ -118,4 +119,4 @@ class GeoLocApi(Resource):
             ids = request.form
         else:
             raise SchemaValidationError
-        return Response(json.dumps(geo_loc_service.geoloc_samples(ids)), mimetype="application/json", status=200)
+        return Response(json.dumps(geo_loc_service.get_geoloc_by_ids(ids)), mimetype="application/json", status=200)

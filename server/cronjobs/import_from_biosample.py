@@ -29,8 +29,8 @@ def import_from_EBI_biosamples(PROJECTS):
                 metadata['scientificName'] = organism.organism
             metadata['taxid'] = taxid
             metadata['accession'] = sample['accession']
-            geo_loc_service.get_or_create_coordinates(metadata)
             sample_obj = SecondaryOrganism(**metadata).save()
+            geo_loc_service.get_or_create_coordinates(sample_obj)
             if not sample_obj.sample_derived_from:
                 organism.insdc_samples.append(sample_obj)
                 organism.save()
