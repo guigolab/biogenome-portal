@@ -15,11 +15,7 @@ const getDefaultState = () => ({
     position: '',
     breadcrumbs: [{text: 'Home', to: {name: 'home-page'}}], // home as default
     maxLeaves:90,
-    insdc_samples:false,
-    local_samples:false,
-    experiments:false,
-    assemblies:false,
-    annotations:false,
+    selectedData:[],
     selectedBioproject:PROJECT_ACCESSION,
     onlySelectedData:false,
 })
@@ -98,7 +94,6 @@ const mutations = {
         .catch(()=>{
             state.loading=false
         })
-        // state = {...getDefaultState()}
     }
 }
 const getters= {

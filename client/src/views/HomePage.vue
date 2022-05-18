@@ -1,11 +1,6 @@
 <template>
     <b-container fluid class="router-container">
         <b-row>
-            <b-col lg="6">
-                <!-- <last-published-banner/> -->
-            </b-col>
-        </b-row>
-        <b-row>
             <b-col lg="3" md="4" style="overflow: auto;max-height:120px">
                 <tree-bread-crumb-component/>
             </b-col>
@@ -39,7 +34,6 @@ export default {
         OrganismsComponent,
         TreeBreadCrumbComponent,
         OrganismFilterComponent,
-        // LastPublishedBanner,
     }
 }
 </script>

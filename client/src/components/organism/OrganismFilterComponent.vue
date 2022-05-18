@@ -20,7 +20,7 @@
             <b-tooltip target="switch-description">
                Retrieve only selected data ex: retrieve <stong>only</stong> organisms with 'Submitted Samples' or <stong>only</stong> 'Submitted Samples' and 'Submitted Assemblies'
             </b-tooltip>
-            <b-form-checkbox-group :options="checkboxOptions" v-model="selectedCheckboxes"/>
+            <b-form-checkbox-group :options="checkboxOptions" v-model="selectedData"/>
             <b-icon-arrow-clockwise variant="primary" @mouseenter="animation='spin-pulse'" @mouseleave="animation=''" :animation="animation" font-scale="2" id="refresh-action" @click="resetFilters()"/>
             <b-tooltip target="refresh-action">
                 Refresh filters
@@ -37,52 +37,36 @@ import FilterComponent from '../base/FilterComponent.vue'
 import portalService from '../../services/DataPortalService'
 import {PROJECT_ACCESSION} from '../../utils/static-config'
 import MultiSelectComponent from '../base/MultiSelectComponent.vue'
-
+import {dataOptions} from '../../utils/static-config'
 export default {
     data(){
         return {
             options: [{name:'Species name',item:'species_name'},{name:'TaxID',item:'taxid'}, {name:'Common name',item:'common_name'},{name:'ToLID', item:'tolid'}],
-            checkboxOptions:[
-                {text: 'Acquired samples', value: 'local_samples'},
-                {text: 'Submitted samples', value: 'insdc_samples'},
-                {text: 'Submitted reads', value: 'experiments'},
-                {text: 'Submitted assemblies', value: 'assemblies'},
-                {text: 'Annotations', value: 'annotations'}
-            ],
-            selectedCheckboxes:[],
+            checkboxOptions:dataOptions,
             animation:'',
             projectAccession: PROJECT_ACCESSION
         }
     },
     computed: {
         ...mapFields({
-            fields: ['onlySelectedData','selectedBioproject'],
+            fields: ['selectedData','onlySelectedData','selectedBioproject'],
             module: 'portal',
             mutation: 'portal/setField'      
-        })
+        }),
     },
     watch:{
-        selectedCheckboxes(values){
-            this.checkboxOptions
-            .map(it => {return it.value})
-            .forEach(it => {
-                if (values.filter(v => v === it).length){
-                    this.$store.commit('portal/setField', {label: it, value:true})
-                }else{
-                    this.$store.commit('portal/setField', {label: it, value:false})
-                }
-            })
-            this.$root.$emit('bv::refresh::table', 'organisms-table')
-        },
         selectedBioproject(){
             this.$root.$emit('bv::refresh::table', 'organisms-table')
         },
         onlySelectedData(){
             this.$root.$emit('bv::refresh::table', 'organisms-table')
+        },
+        selectedData(){
+            this.$root.$emit('bv::refresh::table', 'organisms-table')
         }
     },
     components:{
-    BFormCheckbox,BFormCheckboxGroup,BTooltip,
+        BFormCheckbox,BFormCheckboxGroup,BTooltip,
         BIconArrowClockwise,FilterComponent,MultiSelectComponent
     },
     created(){
@@ -101,7 +85,6 @@ export default {
     },
     methods:{
         resetFilters(){
-            this.selectedCheckboxes=[]
             this.$store.dispatch('portal/resetFilters')
         }
     }

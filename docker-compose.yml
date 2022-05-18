@@ -37,22 +37,6 @@ networks:
     external:
       name: biogenome-network     
       
-  # biogenome_mongo:
-  #   image: mongo:latest
-  #   container_name: "biogenome_mongo"
-  #   command: mongod --port 27015 #change default port 
-  #   environment:
-  #     MONGO_INITDB_ROOT_USERNAME: root
-  #     MONGO_INITDB_ROOT_PASSWORD: root
-  #     MONGO_INITDB_DATABASE: biogenome_db
-  #     MONGODB_DATA_DIR: /var/lib/mongodb-data
-  #     MONDODB_LOG_DIR: /dev/null
-  #   volumes:
-  #    - mongodb-data:/var/lib/mongodb-data
-  #   ports:
-  #     - "27015:27015"
-
 volumes:
   app:
-  mongodb-data:
   node_modules:

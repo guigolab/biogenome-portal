@@ -89,6 +89,7 @@ import SubmissionService from '../../services/SubmissionService';
 import DataModal from '../modal/DataModal.vue';
 import EditOrganismModal from '../modal/EditOrganismModal.vue';
 import PaginationComponent from '../base/PaginationComponent.vue';
+import {dataOptions} from '../../utils/static-config'
 
 export default {
   components: 
@@ -103,9 +104,7 @@ export default {
       fields: ['filter','perPage',
        'onlySelectedData','selectedBioproject',
        'option','taxName',
-       'totalRows','currentPage',
-       'insdc_samples','local_samples',
-       'experiments','assemblies','annotations'],
+       'totalRows','currentPage','selectedData'],
       module: 'portal',
       mutation: 'portal/setField'      
     }),
@@ -144,43 +143,18 @@ export default {
       organism:null,
       commonNames: '',
       model:'',
+      dataOptions: dataOptions
     }
   },
   watch: {
-      insdc_samples(value){
-      if (value){
-        this.fields.filter(f => f.key === 'insdc_samples').forEach(f => f.variant = "success")
-      }else{
-        this.fields.filter(f => f.key === 'insdc_samples').forEach(f => f.variant = "")
-      }
-    },
-    local_samples(value){
-      if (value){
-        this.fields.filter(f => f.key === 'local_samples').forEach(f => f.variant = "info")
-      }else{
-        this.fields.filter(f => f.key === 'local_samples').forEach(f => f.variant = "")
-      }
-    },
-    assemblies(value){
-      if (value){
-        this.fields.filter(f => f.key === 'assemblies').forEach(f => f.variant = "primary")
-      }else{
-        this.fields.filter(f => f.key === 'assemblies').forEach(f => f.variant = "")
-      }
-    },
-    experiments(value){
-      if (value){
-        this.fields.filter(f => f.key === 'experiments').forEach(f => f.variant = "warning")
-      }else{
-        this.fields.filter(f => f.key === 'experiments').forEach(f => f.variant = "")
-      }
-    },
-    annotations(value){
-      if (value){
-        this.fields.filter(f => f.key === 'annotations').forEach(f => f.variant = "secondary")
-      }else{
-        this.fields.filter(f => f.key === 'annotations').forEach(f => f.variant = "")
-      }
+     selectedData(values){
+        this.dataOptions.forEach(opt => {
+          if (values.includes(opt.value)){
+            this.fields.filter(f => f.key === opt.value).forEach(f => f.variant = opt.variant)
+          }else{
+              this.fields.filter(f => f.key === opt.value).forEach(f => f.variant = "")
+          }
+        })
     },
     option(){
       this.filter=''
@@ -241,6 +215,15 @@ export default {
     },
     organismsProvider(ctx,callback){
       const fromParam = (ctx.currentPage - 1) * ctx.perPage
+      const selectedData = this.dataOptions.map(opt => {
+        var data = {}
+        if (this.selectedData.includes(opt.value)){
+          data[opt.value] = true
+        }else{
+          data[opt.value] = false
+        }
+        return data
+      })
       const params = {
         filter: ctx.filter,
         offset: fromParam,
@@ -248,14 +231,10 @@ export default {
         sortColumn: ctx.sortBy,
         sortOrder: ctx.sortDesc,
         taxName: this.taxName,
-        insdc_samples: this.insdc_samples,
-        local_samples: this.local_samples,
-        assemblies: this.assemblies,
-        experiments: this.experiments,
-        annotations: this.annotations,
         option: this.option,
         onlySelectedData: this.onlySelectedData,
-        bioproject:this.selectedBioproject
+        bioproject:this.selectedBioproject,
+        ...Object.assign({}, ...selectedData)
         }
       this.defaultSearch(params,callback)
     }

@@ -4,6 +4,21 @@
     <b-overlay :show="loading">
     <b-container fluid class="router-container">
       <b-row>
+        <b-col lg="6">
+          <b-alert dismissible show variant="success">
+            <p>
+              This data portal is an instance of the <a href="https://github.com/guigolab/biogenome-portal" class="alert-link">BioGenome portal</a> software.
+            </p>
+            <p>
+              It tracks the <a href="https://www.insdc.org/" class="alert-link">INSDC</a> public data under the <a href="https://www.earthbiogenome.org/" class="alert-link">Earth BioGenome Project</a> umbrella.
+            </p>
+            <hr>
+            <p class="mb-0">
+              <strong>IMPORTANT</strong>: This is <strong>NOT</strong> the official data portal of the Earth BioGenome Project.
+              Refer to <a href="https://goat.genomehubs.org/" class="alert-link">GoaT</a> to view the Earth BioGenome Project sequencing progress.
+            </p>
+          </b-alert>
+        </b-col>
         <alert-component/>
       </b-row>
       <b-row>
@@ -25,7 +40,7 @@
 </template>
 
 <script>
-import {BOverlay} from 'bootstrap-vue'
+import {BOverlay,BAlert} from 'bootstrap-vue'
 import BreadCrumbComponent from './components/base/BreadCrumbComponent.vue';
 import NavBarComponent from './components/base/NavBarComponent.vue'
 import AlertComponent from './components/base/AlertComponent.vue';
@@ -42,6 +57,7 @@ components: {
   NavBarComponent,
   BreadCrumbComponent,
   BOverlay,
+  BAlert,
   AlertComponent,
   LoginModal,
   }

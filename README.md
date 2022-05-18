@@ -85,27 +85,31 @@ This project is built with the following stack:
 <!-- GETTING STARTED -->
 ## Getting Started
 
-Before building the application it is necessary to configure the .env file in the project's root directory:
-The .env file contains many parts that have to be configured depending on the needs:
+By default the portal is configured to retrieve public data under the EBP umbrella (https://www.earthbiogenome.org/) it will load (at building stage) and seed the database with the last dump (/dump-db directory)
 
-	The API KEY part:
-  	Configure this part if you want to enter samples locally
+If you want to customize the portal follow the steps below:
 
-	USER=admin --> Define the user name that will be inserted to access the admin area
+  General configurations:
+  - Set the ROOT_NODE env variable with the Taxon name you want to use as a root (default: Eukaryota)
+  
+  Public data management:
+  - in the .env file insert the PROJECT_ACCESSION (The INSDC BioProject accession) of the project you want to use as a root:
+      if the bioproject you want to use as a root is not under the EBP umbrella, you have to comment the volumes of the biogenome_mongo service in the docker-compose-dev file:
+                  - ./mongo-init.sh:/docker-entrypoint-initdb.d/mongo-init.sh
+                  - ./mongo-restore.sh:/docker-entrypoint-initdb.d/mongo-restore.sh
+                  - ./db-dump:/db-dump
+  - if the same project or sub projects are defined as attributes of the sample metadata (ex: project name: 'YOUR_PROJECT_NAME') submitted in INSDC, set the list of comma separated project names in the PROJECTS env variable (default values: VGP(https://vertebrategenomesproject.org/), DTOL(https://www.darwintreeoflife.org/)) 
+
+  -EXEC_TIME: how often, in seconds, the job should be performed it does nothing if PROJECTS OR PROJECT_ACCESSION are empty
+
+  NOTE: if you are just interested in local data management remove the default values of PROJECTS and PROJECT_ACCESSION
+
+  Local data management:
+
+  Configure this part if you want to enter samples locally
+	USR=admin --> Define the user name that will be inserted to access the admin area
 	JWT_SECRET_KEY=secret_restKey #change this in production!! --> key to encrypt the RESTKEY (below)
 	RESTKEY=secretPassword #change this in production!! --> password that will be inserted to access the admin area
-
-	The CRONJOB part:
-  Configure this part if you want to retrieve public data from ENA/BioSamples and/or NCBI (the sample metadata format must be compliant with the ENA checklist).
-	The cronjob will automatically check for read data in ENA if PROJECTS and/or PROJECT_ACCESSION are present
-	PROJECTS=  --> list of projects (comma separated) wich name figures in the sample metadata submitted to the ENA/BioSamples
-	PROJECT_ACCESSION --> bioproject accession to retrieve data from NCBI 
-	EXEC_TIME=600 --> how often, in seconds, the job should be performed
-
-	The DATA PORTAL part:
-  	This part have some default values that can be modified
-
-    ROOT_NODE=the INSDC bioproject acccession which will be used as the root project of the application
 
 
 To add a custom logo and an icon follow this steps:
@@ -129,12 +133,14 @@ To get a local copy up and running follow these simple example steps.
 
 ### Installation
 
-You need to have docker compose installed (https://docs.docker.com/compose/)
+You need to have docker compose installed (https://docs.docker.com/compose/). 
 
-1. Configure the .env file as above
-2. Run this command in the root directory:
-	sudo docker-compose -f docker-compose.yml up --build
-3. To start creating data go to: /admin from the home page and login
+1. Run this command in the root directory:
+	sudo docker-compose -f docker-compose.dev.yml up --build
+
+  This will load the last generated db dump containing all the public data under the EBP scope (https://www.earthbiogenome.org/)
+
+2. To start creating data go to: /admin from the home page and login
 
 
 <p align="right">(<a href="#top">back to top</a>)</p>
@@ -175,11 +181,10 @@ The import function uses the BioSamples API to retrieve samples metadata via the
 ## Roadmap
 
 - [ ] Add Changelog
-- [ ] Add JSON schema (OAS docs)
-- [X] Add local names management
-- [X] Add organism photo management
-- [X] Add sample accession import feature
-- [ ] Add custom fields management
+- [ ] Add API Documentation
+- [ ] Add tests (I know..)
+
+
 
 
 
