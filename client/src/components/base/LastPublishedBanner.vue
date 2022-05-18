@@ -1,7 +1,5 @@
 <template>
 <div v-if="assembly.assembly_name">
-    <b-button @click="show = !show" pill variant="outline-success">See last imported assembly</b-button>
-    <b-collapse :visible="show" id="collapse-1" class="mt-2">
     <b-card :title="assembly.assembly_name">
         <b-card-text>
             Created: {{recordDate}}
@@ -12,17 +10,15 @@
         <b-card-text>
             Sample Accession: <b-link :to="{name: 'sample-details', params:{accession:assembly.sample_accession}}">{{assembly.sample_accession}}</b-link>
         </b-card-text>
-
     </b-card>
-    </b-collapse>
 </div>
 </template>
 <script>
-import {BLink,BCard,BButton,BCollapse,BCardText} from 'bootstrap-vue'
+import {BLink,BCard,BCardText} from 'bootstrap-vue'
 import portalService from '../../services/DataPortalService'
 
 export default {
-    components:{BLink,BCard,BButton,BCollapse,BCardText},
+    components:{BLink,BCard,BCardText},
     data(){
         return{
             assembly:{},

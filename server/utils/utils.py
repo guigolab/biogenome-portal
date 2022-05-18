@@ -1,6 +1,13 @@
 from lxml import etree
 from flask import make_response,jsonify
 from .constants import CHECKLIST_FIELD_GROUPS
+import requests
+
+def get_annotations(org_name):
+    response = requests.get(f'https://genome.crg.cat/geneid-predictions/api/organisms/{org_name}')
+    if response.status_code != 200:
+        return
+    return response.json()    
 
 def parse_taxon(xml):
     root = etree.fromstring(xml)
@@ -44,7 +51,7 @@ def parse_sample_metadata(metadata):
                 sample['geographic_location_country'] = metadata[key][0]['text']
             else:
                 custom_fields[key] = metadata[key][0]['text']
-    if len(custom_fields.keys()) > 0:
+    if custom_fields.keys():
         sample['custom_fields'] = custom_fields
     return sample
     

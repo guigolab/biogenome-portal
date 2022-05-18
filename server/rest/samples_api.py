@@ -12,6 +12,8 @@ from flask_jwt_extended import get_jwt_identity
 from mongoengine.queryset.visitor import Q
 from utils.pipelines import SamplePipeline,SamplePipelinePrivate
 import json
+from flask import current_app as app
+
 #CRUD operations on sample
 class SamplesApi(Resource):
 
@@ -24,6 +26,7 @@ class SamplesApi(Resource):
             else:
                 result = sample.aggregate(*SamplePipeline).next()
             result['_id'] = str(result['_id'])
+            app.logger.info(result)
             return Response(json.dumps(result),mimetype="application/json", status=200)
         raise NotFound
         
@@ -98,7 +101,7 @@ class BioSampleApi(Resource):
                         organism.assemblies.extend(assemblies)
                         organism.save()
                         sample.assemblies.extend(assemblies)
-                        sample.last_checked=datetime.utcnow()
+                        sample.last_check=datetime.utcnow()
                         sample.save()
                 return Response(json.dumps(f'sample with id {id} has been saved'),mimetype="application/json", status=201)
         else:

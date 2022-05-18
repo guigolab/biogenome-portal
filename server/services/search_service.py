@@ -12,7 +12,7 @@ def query_search(offset=0, limit=20,
                 sortOrder=None, sortColumn=None,
                 taxName=ROOT_NODE, insdc_samples='false', 
                 local_samples='false', assemblies='false', 
-                experiments='false', filter=None, option=None, onlySelectedData='false', bioproject=PROJECT_ACCESSION):
+                experiments='false', annotations='false',filter=None, option=None, onlySelectedData='false', bioproject=PROJECT_ACCESSION):
     query=dict()
     json_resp=dict()     
     filter_query = get_query_filter(filter, option) if filter else None
@@ -20,7 +20,7 @@ def query_search(offset=0, limit=20,
     query['taxon_lineage'] = tax_node if tax_node else TaxonNode.objects(name=ROOT_NODE).first()
     if bioproject and not bioproject==PROJECT_ACCESSION:
         query['bioprojects'] = bioproject
-    insdc_dict = dict(insdc_samples=insdc_samples,local_samples=local_samples,assemblies=assemblies,experiments=experiments)
+    insdc_dict = dict(insdc_samples=insdc_samples,local_samples=local_samples,assemblies=assemblies,experiments=experiments,annotations=annotations)
     get_insdc_query(insdc_dict,query,onlySelectedData)
     organisms = Organism.objects(filter_query, **query).exclude(*FIELDS_TO_EXCLUDE) if filter_query else Organism.objects.filter(**query).exclude(*FIELDS_TO_EXCLUDE)
     if sortColumn:
@@ -31,9 +31,6 @@ def query_search(offset=0, limit=20,
     return json.dumps(json_resp)    
 
 def get_insdc_query(insdc_dict, query, only_selected_data):
-    values = insdc_dict.values()
-    if all(value=='false' for value in values):
-        return
     if only_selected_data == 'false':
         for key in insdc_dict.keys():
             if insdc_dict[key] == 'true':

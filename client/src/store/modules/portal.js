@@ -19,6 +19,7 @@ const getDefaultState = () => ({
     local_samples:false,
     experiments:false,
     assemblies:false,
+    annotations:false,
     selectedBioproject:PROJECT_ACCESSION,
     onlySelectedData:false,
 })

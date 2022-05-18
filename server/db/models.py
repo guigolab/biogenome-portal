@@ -9,7 +9,7 @@ class TrackStatus(Enum):
     SAMPLE = 'Biosample Submitted'
     READS = 'Reads Submitted'
     ASSEMBLIES = 'Assemblies Submitted'
-    ANN_SUBMITTED = 'Annotation Submitted'
+    ANN_SUBMITTED = 'Annotations Created'
 
 def handler(event):
     """Signal decorator to allow use of callback functions as class decorators."""
@@ -194,13 +194,15 @@ class SecondaryOrganism(db.Document):
     custom_fields = db.DictField()
     meta = {
         'indexes': [
-            {'fields':('accession','tube_or_well_id'), 'unique':True}
+            {'fields':('accession','tube_or_well_id'), 'unique':True},
         ]
     }
 
 @handler(db.pre_save)
 def update_modified(sender, document):
-    if document.assemblies:
+    if document.annotations:
+        document.trackingSystem= TrackStatus.ANN_SUBMITTED
+    elif document.assemblies:
         document.trackingSystem= TrackStatus.ASSEMBLIES
     elif document.experiments:
         document.trackingSystem= TrackStatus.READS
@@ -218,6 +220,24 @@ class Geometry(db.EmbeddedDocument):
             'coordinates',
         ]
     }
+
+class Annotation(db.Document):
+    name = db.StringField(required=True,unique=True)
+    gffGzLocation = db.StringField(required=True,unique=True)
+    pageURL=db.StringField()
+    annotationSource=db.StringField(default='https://github.com/FerriolCalvet/geneidBLASTx-nf')
+    tabIndexLocation = db.StringField()
+    targetGenome = db.StringField(required=True)
+    assemblyAccession=db.StringField()
+    lengthTreshold = db.StringField()
+    evidenceSource = db.StringField()
+    created = db.StringField()
+    meta = {
+        'indexes': [
+            'name'
+        ]
+    }
+
 # ##TODO Migrate samples geo attributes to this model -> test 
 class GeoCoordinates(db.Document):
     geo_loc = db.StringField(unique=True,required=True)
@@ -237,6 +257,7 @@ class Organism(db.Document):
     tolid_prefix = db.StringField()
     bioprojects = db.ListField(db.StringField())
     common_name = db.ListField(db.StringField())
+    annotations = db.ListField(db.LazyReferenceField(Annotation))
     insdc_common_name = db.StringField()
     local_samples = db.ListField(db.LazyReferenceField(SecondaryOrganism))
     insdc_samples = db.ListField(db.LazyReferenceField(SecondaryOrganism))

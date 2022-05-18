@@ -48,7 +48,12 @@
           <div class="badge-wrapper">
             <b-badge href="#" pill style="cursor:pointer" v-if="data['item'].assemblies.length" @click.stop="getData(data['item'], 'assemblies')"  variant="primary">{{data['item'].assemblies.length}}</b-badge>
           </div>
-        </template>outline-success
+        </template>
+        <template #cell(annotations)="data">
+          <div class="badge-wrapper">
+            <b-badge href="#" pill style="cursor:pointer" v-if="data['item'].annotations.length" @click.stop="getData(data['item'], 'annotations')"  variant="secondary">{{data['item'].annotations.length}}</b-badge>
+          </div>
+        </template>
         <template #cell(experiments)="data">
           <div class="badge-wrapper">
             <b-badge href="#" v-if="data['item'].experiments.length" @click.stop="getData(data['item'], 'experiments')" pill variant="warning">{{data['item'].experiments.length}}</b-badge>
@@ -100,7 +105,7 @@ export default {
        'option','taxName',
        'totalRows','currentPage',
        'insdc_samples','local_samples',
-       'experiments','assemblies'],
+       'experiments','assemblies','annotations'],
       module: 'portal',
       mutation: 'portal/setField'      
     }),
@@ -131,6 +136,7 @@ export default {
         {key: 'insdc_samples', label: 'Submitted BioSamples'},
         {key: 'experiments', label: 'Submitted Reads'},
         {key: 'assemblies', label: 'Submitted Assemblies'},
+        {key: 'annotations', label: 'Annotations'}
 
       ],
       selectedOrganisms:[],
@@ -167,6 +173,13 @@ export default {
         this.fields.filter(f => f.key === 'experiments').forEach(f => f.variant = "warning")
       }else{
         this.fields.filter(f => f.key === 'experiments').forEach(f => f.variant = "")
+      }
+    },
+    annotations(value){
+      if (value){
+        this.fields.filter(f => f.key === 'annotations').forEach(f => f.variant = "secondary")
+      }else{
+        this.fields.filter(f => f.key === 'annotations').forEach(f => f.variant = "")
       }
     },
     option(){
@@ -239,6 +252,7 @@ export default {
         local_samples: this.local_samples,
         assemblies: this.assemblies,
         experiments: this.experiments,
+        annotations: this.annotations,
         option: this.option,
         onlySelectedData: this.onlySelectedData,
         bioproject:this.selectedBioproject

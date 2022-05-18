@@ -13,6 +13,11 @@
             <template  #cell(tube_or_well_id)="data">
                 <b-link v-if="data.value" :to="{name: 'sample-details', params: {accession: data.value}}">{{data.value}}</b-link>
             </template>
+            <template #cell(bioprojects)="data">
+                <b-link target="_blank" v-for="bioproject in data.item.bioprojects" :key="bioproject" :href="'https://www.ebi.ac.uk/ena/browser/view/'+bioproject">
+                    {{bioproject}}
+                </b-link>
+            </template>
             <template #cell(organism_part)="data">
                 {{data.value? data.value : ''}}
             </template>
@@ -51,6 +56,7 @@ export default {
                 {key: 'organism_part', label: 'Organism part'},
                 {key: 'sex', label: 'Sex'},
                 {key: 'GAL', label: 'GAL'},
+                
             ],
             stickyHeader: '60vh',
             selectedSamples:[]

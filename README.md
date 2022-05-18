@@ -54,18 +54,17 @@ This project aims to provide an easy way to show biodiversity within a geographi
 
 Species are created from samples representing the physical or genetic entity of the species.
 
-The samples can be inserted locally via excel (following the format of the ERGA manifest) or via form.¡
+The samples can be inserted locally via excel (following the format of the ERGA manifest) or via form.
 
-This project offers additional services for sequencing projects:
+This project offers additional services for sequencing projects (under the Earth Biogenome scope):
 
-* cronjob to collect public information related to the project (genomic data)
+* cronjob to collect INSDC data related to the project (genomic data): assemblies, reads, samples metadata and taxonomy.
 * export of an excel file containing locally inserted samples to submit to COPO(https://copo-project.org/)
 
 
 IMPORTANT:
-This project uses the metadata of the ERGA manifesto (https://github.com/ERGA-consortium/COPO-manifest) and is mainly intended to retrieve data from BioSamples(https://www.ebi.ac.uk/biosamples) for samples metadata and ENA (https://www.ebi.ac.uk/ena/browser/home) for reads and assemblies. For specific project needs you can open an issue.
+This project uses the metadata of the ERGA manifest (https://github.com/ERGA-consortium/COPO-manifest) and is mainly intended to retrieve data from BioSamples(https://www.ebi.ac.uk/biosamples) for samples metadata and ENA (https://www.ebi.ac.uk/ena/browser/home) for reads and assemblies. For specific project needs you can open an issue.
 
-Use the `BLANK_README.md` to get started.
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
@@ -97,8 +96,8 @@ The .env file contains many parts that have to be configured depending on the ne
 	RESTKEY=secretPassword #change this in production!! --> password that will be inserted to access the admin area
 
 	The CRONJOB part:
-  	Configure this part if you want to retrieve public data from ENA/BioSamples and/or NCBI (the sample metadata format must be compliant with the ENA checklist)
-	the cronjob will automatically check for read data in ENA if PROJECTS and/or PROJECT_ACCESSION are present
+  Configure this part if you want to retrieve public data from ENA/BioSamples and/or NCBI (the sample metadata format must be compliant with the ENA checklist).
+	The cronjob will automatically check for read data in ENA if PROJECTS and/or PROJECT_ACCESSION are present
 	PROJECTS=  --> list of projects (comma separated) wich name figures in the sample metadata submitted to the ENA/BioSamples
 	PROJECT_ACCESSION --> bioproject accession to retrieve data from NCBI 
 	EXEC_TIME=600 --> how often, in seconds, the job should be performed
@@ -106,9 +105,7 @@ The .env file contains many parts that have to be configured depending on the ne
 	The DATA PORTAL part:
   	This part have some default values that can be modified
 
-	RANKS=--> ordered, descending list of taxonomic ranks you want to display. Note that is a rank is not present in the species' lineage it will be skipped, for instance you may find phylum nodes that has as a children class nodes.
-	MAX_NODES=90 --> number of max leaves to display in the tree of life page (numbers greaters than 150 may affect performance and visualization)
-
+    ROOT_NODE=the INSDC bioproject acccession which will be used as the root project of the application
 
 
 To add a custom logo and an icon follow this steps:
@@ -154,7 +151,7 @@ Here is a list of the APIs consumed:
 
 
 ## Sequencing Project
-For sequencing projects with the aim to sequence species within a geographical context, it is strongly recommended to submit public samples to the ENA via the [COPO web service](https://copo-project.org/), this service ensure that all the submitted samples share the same format before submission to ENA. It will, then, be responsibility of the single project to upload assemblies and reads to ENA/NCBI and associate them with the sample accession submitted through COPO. 
+For sequencing projects, it is strongly recommended to submit public samples to the ENA via the [COPO web service](https://copo-project.org/), this service ensure that all the submitted samples share the same format before submission to ENA(INSDC). It will, then, be responsibility of the single project to upload assemblies and reads to ENA/NCBI and associate them with the sample accession submitted through COPO. 
 To facilitate the sample submission to COPO this project provides the possibility to download the samples inserted locally in an excel compliant with the [ERGA submission manifest](https://github.com/ERGA-consortium/COPO-manifest). The generated excel will be then submitted to COPO. Once the samples will be pubblicly available in BioSamples the data portal will link the accession to the sample unique name and will start checking for new assemlies and/or reads every time the cronjob will be executed (the EXEC_TIME env variable).
 IMPORTANT: the ERGA manifest will change during time, this portal will try to keep it up to date.
 
@@ -179,7 +176,7 @@ The import function uses the BioSamples API to retrieve samples metadata via the
 
 - [ ] Add Changelog
 - [ ] Add JSON schema (OAS docs)
-- [ ] Add local names management
+- [X] Add local names management
 - [X] Add organism photo management
 - [X] Add sample accession import feature
 - [ ] Add custom fields management

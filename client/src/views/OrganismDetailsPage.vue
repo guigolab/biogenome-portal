@@ -88,10 +88,11 @@ export default {
                 return portalService.getCoordinatesBySampleIds({ids:records})
             })
             .then(response =>{
-                if(response){
-                    this.$nextTick(()=>{
-                        this.geojson = {...response.data}
-                    })
+                if(response.data && response.data.features.length){
+                    this.geojson = {...response.data}
+                }
+                else{
+                    this.geojson = null
                 }
             })
             .catch(e => {

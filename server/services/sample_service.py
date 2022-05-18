@@ -58,6 +58,8 @@ def delete_samples(ids):
     samples_to_delete.delete()
     return {'success':'samples: '+ ','.join(ids) + ' deleted'}
 
+#TODO handle save outsite method
+##this should only return reads 
 def get_reads(samples):
     for sample in samples:
         accession = sample.accession

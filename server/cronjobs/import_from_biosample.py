@@ -1,69 +1,59 @@
+from db.models import SecondaryOrganism,Experiment
+from utils import ena_client,utils,constants
+from services import organisms_service,geo_loc_service
 from datetime import datetime
-from db.models import SecondaryOrganism,Assembly
-from utils import ena_client,utils
-from services import sample_service,organisms_service,geo_loc_service
-from mongoengine.queryset.visitor import Q
 
 def import_from_EBI_biosamples(PROJECTS):
     print('STARTING IMPORT BIOSAMPLES JOB')
-    samples = collect_samples(PROJECTS)
-    if len(samples) == 0:
-        print('NO SAMPLES FOUND')
-        return
-    samples_accessions=[sample['accession'] for sample in samples]
-    existing_samples = SecondaryOrganism.objects(accession__in=samples_accessions)
-    if existing_samples.count() > 0:
-        samples = [sample for sample in samples if sample['accession'] not in [ex_sam['accession'] for ex_sam in existing_samples]]
-        print('NEW SAMPLES: ',len(samples))
-    if len(samples) > 0:
-        samples_accessions=[sample['accession'] for sample in samples]
-        for sample in samples:
-            taxid = str(sample['taxId'])
-            metadata = utils.parse_sample_metadata(sample['characteristics'])
-
-            organism = organisms_service.get_or_create_organism(taxid) ##add common names
-            if not organism:
-                #TODO CALL NCBI
+    sample_dict = collect_samples(PROJECTS) ##return dict with project names as keys
+    existing_samples = SecondaryOrganism.objects.scalar('accession')
+    for project in sample_dict.keys():
+        for sample in sample_dict[project]:
+            if sample['accession'] in existing_samples:
                 continue
-            if not 'scientificName' in metadata.keys():
-                metadata['scientificName'] = organism.organism
-            metadata['taxid'] = taxid
-            metadata['accession'] = sample['accession']
-            sample_obj = SecondaryOrganism(**metadata).save()
+            taxid = str(sample['taxId'])
+            characteristics = utils.parse_sample_metadata(sample['characteristics'])
+            organism = organisms_service.get_or_create_organism(taxid)
+            if not organism:
+                print('TAXID NOT FOUND:',taxid)
+                print('SKIPPING SAMPLE CREATION')
+                continue
+            characteristics['scientificName'] = organism.organism #overwrite or create scientificName
+            required_attr=dict(accession=sample['accession'],taxid=taxid)
+            sample_obj = SecondaryOrganism(**required_attr,**characteristics)
+            ##link with bioproject
+            if project in constants.BIOPROJECTS_MAPPER.keys():
+                project_accession = constants.BIOPROJECTS_MAPPER[project]
+                sample_obj.bioprojects.append(constants.BIOPROJECTS_MAPPER[project])
+                if not project_accession in organism.bioprojects:
+                    organism.bioprojects.append(project_accession)
+            ##get experiments
+            experiments = ena_client.get_reads(sample_obj.accession)
+            for exp in experiments:
+                if Experiment.objects(experiment_accession=exp['experiment_accession']).first():
+                    continue ##ena sometimes returns duplicates
+                exp_obj = Experiment(**exp).save()
+                organism.experiments.append(exp_obj)
+                sample_obj.experiments.append(exp_obj)
+            sample_obj.last_check = datetime.utcnow()
+            ## we rely on the NCBI job to retrieve assemblies
+            sample_obj.save()
             geo_loc_service.get_or_create_coordinates(sample_obj)
             if not sample_obj.sample_derived_from:
                 organism.insdc_samples.append(sample_obj)
-                organism.save()
-            assemblies = ena_client.parse_assemblies(sample_obj.accession)
-            if len(assemblies) > 0:
-                print('ASSEMBLY PRESENT')
-                existing_assemblies=Assembly.objects(accession__in=[ass['accession'] for ass in assemblies])
-                if len(existing_assemblies) > 0:
-                    assemblies=[ass for ass in assemblies if ass['accession'] not in [ex_as['accession'] for ex_as in existing_assemblies]]
-                if len(assemblies) > 0:
-                    for ass in assemblies:
-                        if not 'sample_accession' in ass.keys():
-                            ass['sample_accession'] = sample_obj.accession
-                    assemblies = Assembly.objects.insert([Assembly(**ass) for ass in assemblies])
-                    organism.assemblies.extend(assemblies)
-                    organism.save()
-                    sample_obj.assemblies.extend(assemblies)
-                    sample_obj.last_checked=datetime.utcnow()
-                    sample_obj.save()
-            print('GETTING READS')
-            sample_service.get_reads([sample_obj])
+            organism.save()
     print('APPENDING SPECIMENS')
     ##append specimens as a backup if biosamples api fails
     append_specimens()
     print('DATA FROM ENA/BIOSAMPLES IMPORTED')
 
 def collect_samples(PROJECTS):
-    samples = list()
+    samples = dict()
     for project in PROJECTS:
         biosamples = ena_client.get_biosamples(project)
         print('lenght ebi biosamples', len(biosamples))
         if biosamples:
-            samples.extend(biosamples)
+            samples[project] = biosamples
     return samples
 
 def append_specimens():
@@ -75,7 +65,6 @@ def append_specimens():
                 not spec.accession in [spec.fetch().accession for spec in container.specimens]]
             # new_specimens = list(set(sample_specimens)-set([spec.fetch() for spec in sample_container.specimens]))
         container.modify(push_all__specimens=new_specimens)
-
 
 
 

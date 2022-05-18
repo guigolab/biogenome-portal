@@ -1,28 +1,66 @@
 import requests
 import time
 from utils import ena_client,utils
-from services import sample_service,organisms_service,geo_loc_service, bioproject_service
-from db.models import Assembly,SecondaryOrganism
-from mongoengine.queryset.visitor import Q
-from datetime import datetime, timedelta
+from services import organisms_service,geo_loc_service, bioproject_service,annotations_service
+from db.models import Assembly, Experiment,SecondaryOrganism
+from datetime import datetime
 
-
-SAMPLE_QUERY = (Q(last_check=None) | Q(last_check__lte=datetime.now()- timedelta(days=2)))
-
-##import from NCBI
-##retrieve assemblies with bioprojects
 def import_from_NCBI(project_accession):
     assemblies = get_assemblies(project_accession)
-    if assemblies:
-        existing_assemblies = Assembly.objects(accession__in=[assembly['assembly_accession'] for assembly in assemblies])
-        if existing_assemblies:
-            assemblies = [ass for ass in assemblies if ass['assembly_accession'] not in [ex['accession'] for ex in existing_assemblies]]
-        if not assemblies:
-            print('NO NEW ASSEMBLIES')
-            return
-        parse_data(assemblies, project_accession)
-        print('DONE')
+    existing_assembly_accessions=Assembly.objects.scalar('accession')
+    for ass in assemblies:
+        if ass['assembly_accession'] in existing_assembly_accessions:
+            continue
+        sample_accession=ass['biosample_accession']
+        ass_obj = Assembly(accession = ass['assembly_accession'],assembly_name= ass['display_name'], sample_accession= sample_accession).save()
+        organism = organisms_service.get_or_create_organism(str(ass['org']['tax_id']))
+        sample_obj = SecondaryOrganism.objects(accession=sample_accession).first()
+        ##parse sample
+        if not sample_obj:
+            required_metadata=dict(accession=sample_accession,taxid=organism.taxid,scientificName=organism.organism)
+            sample_obj = SecondaryOrganism(**handle_biosample(ass,required_metadata))
+            ##save coordinates
+        organism.assemblies.append(ass_obj)
+        sample_obj.assemblies.append(ass_obj)
+        #get reads
+        experiments = ena_client.get_reads(sample_obj.accession)
+        for exp in experiments:
+            if Experiment.objects(experiment_accession=exp['experiment_accession']).first():
+                continue
+            exp_obj = Experiment(**exp).save()
+            organism.experiments.append(exp_obj)
+            sample_obj.experiments.append(exp_obj)
+        sample_obj.last_check = datetime.utcnow()
+        #get bioproject lineage
+        bioproject_accessions = [bioproject.accession for bioproject in bioproject_service.create_bioprojects_from_NCBI(ass['bioproject_lineages']) if bioproject.accession != project_accession]
+        for b_acc in bioproject_accessions:
+            if not b_acc in organism.bioprojects:
+                organism.bioprojects.append(b_acc)
+            if not b_acc in sample_obj.bioprojects:
+                sample_obj.bioprojects.append(b_acc)
+        #get annotations
+        annotation = annotations_service.parse_annotation(organism,ass_obj)
+        if annotation:
+            organism.annotations.append(annotation)
+            print(organism.annotations)
+        sample_obj.save()
+        geo_loc_service.get_or_create_coordinates(sample_obj)
+        if not sample_obj.id in organism.insdc_samples:
+            organism.insdc_samples.append(sample_obj)
+        organism.save()
+    print('ASSEMBLIES FROM NCBI IMPORTED')
 
+def handle_biosample(assembly, required_metadata):
+    extra_metadata=dict()
+    if not 'biosample' in assembly.keys() or not 'attributes' in assembly['biosample'].keys():
+        #retrieve sample metadata from EBI/BioSamples
+        resp = ena_client.get_sample_from_biosamples(required_metadata['accession'])
+        extra_metadata = resp['_embedded']['samples'][0]['characteristics'] if '_embedded' in resp.keys() else dict()
+    else:
+        biosample_metadata = assembly['biosample']
+        for attr in biosample_metadata['attributes']:
+            extra_metadata[attr['name']] = [dict(text=attr['value'])]
+    return {**required_metadata, **utils.parse_sample_metadata(extra_metadata)}
 
 ##retrieve assemblies by bioproject in NCBI
 def get_assemblies(project_accession):
@@ -42,56 +80,4 @@ def get_assemblies(project_accession):
         if 'assemblies' in result.keys():
             assemblies.extend([ass['assembly'] for ass in result['assemblies']])
     return assemblies
-
-## get biosample accession from assemblies
-def parse_data(assemblies, project_accession):
-    samples_not_found=set()
-    for assembly in assemblies:
-        sample_accession=assembly['biosample_accession']
-        organism = organisms_service.get_or_create_organism(str(assembly['org']['tax_id']))
-        sample_obj = SecondaryOrganism.objects(accession=sample_accession).first()
-        if not sample_obj:
-            sample_obj = SecondaryOrganism(accession=sample_accession,taxid=organism.taxid,scientificName=organism.organism).save()
-            organism.insdc_samples.append(sample_obj)
-            if not 'biosample' in assembly.keys() or not 'attributes' in assembly['biosample'].keys():
-                #retrieve sample metadata from EBI/BioSamples
-                create_sample_from_biosamples(sample_obj, samples_not_found)
-            else:
-                biosample = assembly['biosample']
-                sample_metadata=dict()
-                for attr in biosample['attributes']:
-                    sample_metadata[attr['name']] = [dict(text=attr['value'])]
-                metadata = utils.parse_sample_metadata(sample_metadata)
-                sample_obj.modify(**metadata)
-                geo_loc_service.get_or_create_coordinates(sample_obj)
-        ass_obj = Assembly.objects(accession = assembly['assembly_accession']).upsert_one(accession = assembly['assembly_accession'],assembly_name= assembly['display_name'], sample_accession= sample_obj.accession)
-        if not organism.assemblies or not ass_obj.id in [ass.id for ass in organism.assemblies]:
-            organism.assemblies.append(ass_obj)
-            sample_obj.modify(push__assemblies=ass_obj)
-        sample_service.get_reads([sample_obj])
-        bioproject_accessions = [bioproject.accession for bioproject in bioproject_service.create_bioprojects(assembly['bioproject_lineages']) if bioproject.accession != project_accession]
-        for b_acc in bioproject_accessions:
-            if not b_acc in organism.bioprojects:
-                organism.bioprojects.append(b_acc)
-            if not b_acc in sample_obj.bioprojects:
-                sample_obj.bioprojects.append(b_acc)
-        #save triggers status tracking
-        sample_obj.save()
-        organism.save()
-    if len(list(samples_not_found))>0:
-        print('SAMPLES NOT FOUND IN BIOSAMPLES: ', samples_not_found)
-    print('NCBI DATA IMPORTED')
-    # get_reads(samples_accessions)
-
-
-def create_sample_from_biosamples(sample_obj, samples_not_found):
-    resp = ena_client.get_sample_from_biosamples(sample_obj.accession)
-    if '_embedded' in resp.keys():
-        metadata = utils.parse_sample_metadata(resp['_embedded']['samples'][0]['characteristics'])
-        sample_obj.modify(**metadata)
-        geo_loc_service.get_or_create_coordinates(sample_obj)
-    else:
-        print('SAMPLE NOT FOUND')
-        samples_not_found.add(sample_obj.accession)
-        print(sample_obj.accession)
 

@@ -1,4 +1,12 @@
 
+#TODO handle mapping between biosamples attribute project name and bioproject accession
+BIOPROJECTS_MAPPER={
+    'VGP':'PRJNA489243',
+    'DTOL':'PRJEB40665'
+}
+
+
+
 CHECKLIST_FIELD_GROUPS = [
         {'fields': [
             {'label': 'organism part','model':'organism_part', 'description': "The part of organism's anatomy or substance arising from an organism from which the biomaterial was derived, excludes cells.", 'type': 'text_choice_field', 'mandatory': 'mandatory', 'multiplicity': 'single', 'options': ['WHOLE_ORGANISM', 'HEAD', 'THORAX', 'ABDOMEN', 'CEPHALOTHORAX', 'BRAIN', 'EYE', 'FAT_BODY', 'INTESTINE', 'BODYWALL', 'TERMINAL_BODY', 'ANTERIOR_BODY', 'MID_BODY', 'POSTERIOR_BODY', 'HEPATOPANCREAS', 'LEG', 'BLOOD', 'LUNG', 'HEART', 'KIDNEY', 'LIVER', 'ENDOCRINE_TISSUE', 'SPLEEN', 'STOMACH', 'PANCREAS', 'MUSCLE', 'MODULAR_COLONY', 'TENTACLE', 'FIN', 'SKIN', 'SCAT', 'EGGSHELL', 'SCALES', 'MOLLUSC_FOOT', 'HAIR', 'GILL_ANIMAL', '**OTHER_SOMATIC_ANIMAL_TISSUE**', 'OVIDUCT', 'GONAD', 'OVARY_ANIMAL', 'TESTIS', 'SPERM_SEMINAL_FLUID', 'EGG', '**OTHER_REPRODUCTIVE_ANIMAL_TISSUE**', 'WHOLE_PLANT', 'SEEDLING', 'SEED', 'LEAF', 'FLOWER', 'BLADE', 'STEM', 'PETIOLE', 'SHOOT', 'BUD', 'THALLUS_PLANT', 'BRACT', '**OTHER_PLANT_TISSUE**', 'MYCELIUM', 'MYCORRHIZA', 'SPORE_BEARING_STRUCTURE', 'HOLDFAST_FUNGI', 'STIPE', 'CAP', 'GILL_FUNGI', 'THALLUS_FUNGI', 'SPORE', '**OTHER_FUNGAL_TISSUE**', 'NOT_COLLECTED', 'NOT_APPLICABLE', 'NOT_PROVIDED', 'UNICELLULAR_ORGANISMS_IN_CULTURE', 'MULTICELLULAR_ORGANISMS_IN_CULTURE']}, 

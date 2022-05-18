@@ -1,6 +1,10 @@
 ##import data job
+from apscheduler.schedulers.background import BackgroundScheduler
+
+from services.organisms_service import get_or_create_organism
 from .import_from_NCBI import import_from_NCBI
 from .import_from_biosample import import_from_EBI_biosamples
+from services.bioproject_service import create_bioproject_from_ENA
 from db.models import SecondaryOrganism,Experiment,Organism
 from mongoengine.queryset.visitor import Q
 from datetime import datetime, timedelta
@@ -8,14 +12,14 @@ from utils import ena_client
 import os
 
 
-SAMPLE_QUERY = Q(accession__ne=None) & (Q(last_check=None) | Q(last_check__lte=datetime.now()- timedelta(days=5)))
+SAMPLE_QUERY = Q(accession__ne=None) & (Q(last_check=None) | Q(last_check__lte=datetime.now()- timedelta(days=2)))
 
 def import_records():
     PROJECTS = [p.strip() for p in os.getenv('PROJECTS').split(',') if p]
     ACCESSION = os.getenv('PROJECT_ACCESSION')
     if ACCESSION:
         import_from_NCBI(ACCESSION)
-    if len(PROJECTS)>0:
+    if PROJECTS:
         import_from_EBI_biosamples(PROJECTS)
     update_samples()
 
@@ -27,25 +31,27 @@ def update_samples():
         return
     print('SAMPLES TO UPDATE: ',len(samples))
     for sample in samples:
-        accession = sample.accession
-        experiments = ena_client.get_reads(accession)
+        experiments = ena_client.get_reads(sample.accession)
         if not experiments:
             sample.modify(last_check=datetime.utcnow())
             continue
-        unique_exps=list({v['experiment_accession']:v for v in experiments}.values()) #avoid duplicate records bug in ENA (when ranges are assigned to a biosample)
-        if sample.experiments:
-            existing_exps = Experiment.objects(experiment_accession__in=[exp['experiment_accession'] for exp in unique_exps])
-            new_exps = [Experiment(**exp) for exp in unique_exps if exp['experiment_accession'] not in [exp['experiment_accession'] for exp in existing_exps]]
-        else:
-            new_exps = [Experiment(**exp) for exp in unique_exps]
-        if not new_exps:
-            sample.modify(last_check=datetime.utcnow())
-            continue
-        Experiment.objects.insert(new_exps, load_bulk=False)
-        sample = SecondaryOrganism.objects(accession=accession).first()
-        sample.modify(push_all__experiments=new_exps, last_check=datetime.utcnow())
-        org = Organism.objects(taxid=sample.taxid).first()
-        org.experiments.extend(new_exps)
-        #trigger status update
-        org.save()
+        organism = get_or_create_organism(sample.taxid)
+        existing_experiments = Experiment.objects.scalar('experiment_accession')
+        for exp in experiments:
+            if exp['experiment_accession'] in existing_experiments:
+                continue
+            exp_obj = Experiment(**exp).save()
+            organism.experiments.append(exp_obj)
+            sample.experiments.append(exp_obj)
+        sample.last_check = datetime.utcnow()
+        organism.save()
+        sample.save()
         
+def handle_tasks():
+    PROJECT_ACCESSION=os.getenv('PROJECT_ACCESSION')
+    if PROJECT_ACCESSION:
+        create_bioproject_from_ENA(PROJECT_ACCESSION)
+        TIME= os.getenv('EXEC_TIME') if os.getenv('EXEC_TIME') else 172800 ##48h hours by default
+        sched = BackgroundScheduler(daemon=True)
+        sched.add_job(import_records, "interval", id="interval-job", start_date=datetime.now()+timedelta(seconds=20),seconds=int(TIME))
+        sched.start()

@@ -2,14 +2,14 @@
     <b-container fluid class="router-container">
         <b-row>
             <b-col lg="6">
-                <last-published-banner/>
+                <!-- <last-published-banner/> -->
             </b-col>
         </b-row>
         <b-row>
-            <b-col lg="4" style="overflow: auto;max-height:120px">
+            <b-col lg="3" md="4" style="overflow: auto;max-height:120px">
                 <tree-bread-crumb-component/>
             </b-col>
-            <b-col lg="8">
+            <b-col lg="9" md="8">
                 <organism-filter-component/>
             </b-col>
         </b-row>
@@ -26,7 +26,7 @@
 </template>
 
 <script>
-import LastPublishedBanner from '../components/base/LastPublishedBanner.vue';
+// import LastPublishedBanner from '../components/base/LastPublishedBanner.vue';
 import OrganismFilterComponent from '../components/organism/OrganismFilterComponent.vue';
 import OrganismsComponent from '../components/organism/OrganismsComponent.vue';
 import TreeBreadCrumbComponent from '../components/taxon/TreeBreadCrumbComponent.vue';
@@ -39,7 +39,7 @@ export default {
         OrganismsComponent,
         TreeBreadCrumbComponent,
         OrganismFilterComponent,
-        LastPublishedBanner,
+        // LastPublishedBanner,
     }
 }
 </script>

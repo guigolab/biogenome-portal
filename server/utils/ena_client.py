@@ -1,5 +1,5 @@
 import requests
-from flask import current_app as app
+from flask import current_app as app, request
 import time
 
 def get_taxon_from_ena(taxon_id):
@@ -24,6 +24,13 @@ def get_tolid(taxid):
         return ''
     else:
         return response[0]['prefix']
+
+def get_bioproject(project_accession):
+    resp = requests.get(f"https://www.ebi.ac.uk/ena/portal/api/filereport?accession={project_accession}&format=JSON&result=study")
+    if resp.status_code != 200:
+        return list()
+    else:
+        return resp.json()
 
 def get_biosamples_page(url , samples):
     response = requests.get(url)

@@ -1,7 +1,7 @@
 <template>
     <b-row>
         <b-col lg="7">
-            <multi-select-component/>
+            <multi-select-component  v-if="projectAccession"/>
         </b-col>
         <b-col lg="5">
             <filter-component :options="options" :prependSelect="true"/>
@@ -21,7 +21,7 @@
                Retrieve only selected data ex: retrieve <stong>only</stong> organisms with 'Submitted Samples' or <stong>only</stong> 'Submitted Samples' and 'Submitted Assemblies'
             </b-tooltip>
             <b-form-checkbox-group :options="checkboxOptions" v-model="selectedCheckboxes"/>
-            <b-icon-arrow-clockwise @mouseenter="animation='spin-pulse'" @mouseleave="animation=''" :animation="animation" font-scale="2" id="refresh-action" @click="resetFilters()"/>
+            <b-icon-arrow-clockwise variant="primary" @mouseenter="animation='spin-pulse'" @mouseleave="animation=''" :animation="animation" font-scale="2" id="refresh-action" @click="resetFilters()"/>
             <b-tooltip target="refresh-action">
                 Refresh filters
             </b-tooltip>
@@ -47,9 +47,11 @@ export default {
                 {text: 'Submitted samples', value: 'insdc_samples'},
                 {text: 'Submitted reads', value: 'experiments'},
                 {text: 'Submitted assemblies', value: 'assemblies'},
+                {text: 'Annotations', value: 'annotations'}
             ],
             selectedCheckboxes:[],
-            animation:''
+            animation:'',
+            projectAccession: PROJECT_ACCESSION
         }
     },
     computed: {
@@ -88,7 +90,7 @@ export default {
         .then(response => {
             const bioprojects = response.data.map(bp => { return {text: bp.title, value:bp.accession}})
             //create append all to root_project
-            const root_project = bioprojects.find(el => el.value === PROJECT_ACCESSION)
+            const root_project = bioprojects.find(el => el.value === this.projectAccession)
             const groupedChildren = {label: 'Children projects', options:bioprojects.filter(bp => bp.value !== root_project.value)}
             if(groupedChildren){
                 this.bioprojects = [root_project, groupedChildren]
