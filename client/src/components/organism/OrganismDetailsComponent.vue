@@ -24,7 +24,7 @@
                 </b-tab>
                 <b-tab  class="tab-element"  v-if="organism.annotations && organism.annotations.length" lazy>
                     <template #title>
-                        <strong>Annotations </strong><b-badge pill  variant="primary">{{organism.annotations.length}}</b-badge>
+                        <strong>Geneid Predictions </strong><b-badge pill  variant="primary">{{organism.annotations.length}}</b-badge>
                     </template>
                     <annotations-component :annotations="organism.annotations"/>
                 </b-tab>

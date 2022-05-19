@@ -135,7 +135,7 @@ export default {
         {key: 'insdc_samples', label: 'Submitted BioSamples',class:'my-left-border'},
         {key: 'experiments', label: 'Submitted Reads'},
         {key: 'assemblies', label: 'Submitted Assemblies'},
-        {key: 'annotations', label: 'Annotations'}
+        {key: 'annotations', label: 'Geneid Predictions'}
 
       ],
       selectedOrganisms:[],
