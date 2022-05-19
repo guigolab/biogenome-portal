@@ -131,8 +131,8 @@ export default {
         {key:'insdc_common_name', label: 'Common Name', sortable: true},
         {key:'bioprojects', label: 'Bioprojects'},
         {key: 'externalReferences', label:'External Links'},
-        {key: 'local_samples', label: 'Acquired Samples', class:'my-left-border'},
-        {key: 'insdc_samples', label: 'Submitted BioSamples'},
+        // {key: 'local_samples', label: 'Acquired Samples', class:'my-left-border'},
+        {key: 'insdc_samples', label: 'Submitted BioSamples',class:'my-left-border'},
         {key: 'experiments', label: 'Submitted Reads'},
         {key: 'assemblies', label: 'Submitted Assemblies'},
         {key: 'annotations', label: 'Annotations'}

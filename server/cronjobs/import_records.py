@@ -5,7 +5,7 @@ from services.organisms_service import get_or_create_organism
 from .import_from_NCBI import import_from_NCBI
 from .import_from_biosample import import_from_EBI_biosamples
 from services.bioproject_service import create_bioproject_from_ENA
-from db.models import SecondaryOrganism,Experiment,Organism
+from db.models import SecondaryOrganism,Experiment
 from mongoengine.queryset.visitor import Q
 from datetime import datetime, timedelta
 from utils import ena_client

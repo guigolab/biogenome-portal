@@ -2,7 +2,7 @@ module.exports = {
     ROOTNODE: process.env.VUE_APP_ROOT_NODE,
     PROJECT_ACCESSION: process.env.VUE_APP_PROJECT_ACCESSION,
     dataOptions:[
-        {text: 'Acquired samples', value: 'local_samples', variant:"info"},
+        // {text: 'Acquired samples', value: 'local_samples', variant:"info"},
         {text: 'Submitted samples', value: 'insdc_samples',variant:"success"},
         {text: 'Submitted reads', value: 'experiments',variant:"warning"},
         {text: 'Submitted assemblies', value: 'assemblies',variant:"primary"},
