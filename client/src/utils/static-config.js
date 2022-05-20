@@ -6,7 +6,7 @@ module.exports = {
         {text: 'Submitted samples', value: 'insdc_samples',variant:"success"},
         {text: 'Submitted reads', value: 'experiments',variant:"warning"},
         {text: 'Submitted assemblies', value: 'assemblies',variant:"primary"},
-        {text: 'Annotations', value: 'annotations',variant:"secondary"}
+        {text: 'Geneid predictions', value: 'annotations',variant:"secondary"}
     ],
     checklistFieldGroups : [
         {'fields': [

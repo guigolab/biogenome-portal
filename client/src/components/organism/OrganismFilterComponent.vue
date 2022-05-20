@@ -34,7 +34,6 @@ import {BFormCheckboxGroup, BFormCheckbox,BTooltip,BIconArrowClockwise
 } from 'bootstrap-vue'
 import {mapFields} from '../../utils/helper'
 import FilterComponent from '../base/FilterComponent.vue'
-import portalService from '../../services/DataPortalService'
 import {PROJECT_ACCESSION} from '../../utils/static-config'
 import MultiSelectComponent from '../base/MultiSelectComponent.vue'
 import {dataOptions} from '../../utils/static-config'
@@ -68,20 +67,6 @@ export default {
     components:{
         BFormCheckbox,BFormCheckboxGroup,BTooltip,
         BIconArrowClockwise,FilterComponent,MultiSelectComponent
-    },
-    created(){
-        portalService.getRootProjectChildren()
-        .then(response => {
-            const bioprojects = response.data.map(bp => { return {text: bp.title, value:bp.accession}})
-            //create append all to root_project
-            const root_project = bioprojects.find(el => el.value === this.projectAccession)
-            const groupedChildren = {label: 'Children projects', options:bioprojects.filter(bp => bp.value !== root_project.value)}
-            if(groupedChildren){
-                this.bioprojects = [root_project, groupedChildren]
-            }else {
-                this.bioprojects = [root_project]
-            }
-        })
     },
     methods:{
         resetFilters(){
