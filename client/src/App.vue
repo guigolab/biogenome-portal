@@ -5,17 +5,18 @@
     <b-container fluid class="router-container">
       <b-row>
         <b-col lg="6">
-          <b-alert dismissible show variant="success">
+          <b-alert style="font-size:0.8rem" dismissible show variant="success">
             <p>
               This data portal is an instance of the <a href="https://github.com/guigolab/biogenome-portal" class="alert-link">BioGenome portal</a> software.
+              It tracks the <a href="https://www.insdc.org/" class="alert-link">INSDC</a> public data under the <a href="https://www.earthbiogenome.org/" class="alert-link">Earth BioGenome Project</a> umbrella.
             </p>
             <p>
-              It tracks the <a href="https://www.insdc.org/" class="alert-link">INSDC</a> public data under the <a href="https://www.earthbiogenome.org/" class="alert-link">Earth BioGenome Project</a> umbrella.
+              The annotations are retrieved from the <a class="alert-link" href="https://genome.crg.cat/geneid-predictions/#/"> Geneid Predictions API</a>, annotations from other sources will be added soon.
             </p>
             <hr>
             <p class="mb-0">
-              <strong>IMPORTANT</strong>: This is <strong>NOT</strong> the official data portal of the Earth BioGenome Project.
-              Refer to <a href="https://goat.genomehubs.org/" class="alert-link">GoaT</a> to view the Earth BioGenome Project sequencing progress.
+             This is the official data portal of the Earth BioGenome Project.
+             Refer to <a href="https://goat.genomehubs.org/projects/EBP" class="alert-link">GoaT</a> to view the EBP's sequencing progress.
             </p>
           </b-alert>
         </b-col>
@@ -33,9 +34,15 @@
         </b-col>
         <b-col lg="1"/>
       </b-row>
+
     </b-container>
     <login-modal/>
     </b-overlay>
+    <div style="display:flex;justify-content:end">
+        <a class="footer-logo" href="https://www.biogenoma.cat/"><img width="100" :src="'./static/img/CBP-logo.png'"></a>
+        <a class="footer-logo" href="https://scb.iec.cat/"><img width="100" :src="'./static/img/logoSCB.svg'"></a>
+        <a class="footer-logo" href="https://www.crg.eu/"><img width="100" :src="'./static/img/CRG-logo.png'"></a>
+    </div>
   </div>
 </template>
 
@@ -69,5 +76,8 @@ components: {
   }
   .row{
     margin-bottom: 5px;
+  }
+  .footer-logo {
+    margin:1rem
   }
 </style>

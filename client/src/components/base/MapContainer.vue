@@ -115,7 +115,7 @@ export default {
             anchor: [0.5, 0.5],
             anchorXUnits: "fraction",
             anchorYUnits: "fraction",
-            src: "/red-dot.svg"
+            src: "./static/img/red-dot.svg"
           })
         })
       })

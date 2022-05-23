@@ -3,10 +3,10 @@ module.exports = {
     PROJECT_ACCESSION: process.env.VUE_APP_PROJECT_ACCESSION,
     dataOptions:[
         // {text: 'Acquired samples', value: 'local_samples', variant:"info"},
-        {text: 'Submitted samples', value: 'insdc_samples',variant:"success"},
-        {text: 'Submitted reads', value: 'experiments',variant:"warning"},
-        {text: 'Submitted assemblies', value: 'assemblies',variant:"primary"},
-        {text: 'Geneid predictions', value: 'annotations',variant:"secondary"}
+        {text: 'BioSamples', value: 'insdc_samples',variant:"success"},
+        {text: 'Reads', value: 'experiments',variant:"warning"},
+        {text: 'Assemblies', value: 'assemblies',variant:"primary"},
+        {text: 'Annotations', value: 'annotations',variant:"secondary"}
     ],
     checklistFieldGroups : [
         {'fields': [

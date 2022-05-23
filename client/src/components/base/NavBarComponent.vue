@@ -1,7 +1,7 @@
 <template>
     <div style="margin-bottom:15px">
   <b-navbar toggleable="lg" type="dark" variant="success">
-    <b-navbar-brand href="#"> <img :src="'./static/img/EBG-Logo.png'" id="logo-image" alt="EBP logo" width="100"/></b-navbar-brand>
+    <b-navbar-brand href="https://www.earthbiogenome.org/"> <img :src="'./static/img/EBG-Logo.png'" id="logo-image" alt="EBP logo" width="100"/></b-navbar-brand>
     <b-navbar-toggle target="nav-collapse">
     </b-navbar-toggle>
     <!-- <b-navbar-nav class="ml-auto">
@@ -11,9 +11,9 @@
       backdrop
       > -->
         <b-navbar-nav class="ml-auto">
-            <!-- <b-nav-item  active-class="active" class="nav-link" to="/" >
-              HOME 
-            </b-nav-item> -->
+            <b-nav-item  active-class="active" class="nav-link" to="/" >
+              <b-icon-house/> HOME 
+            </b-nav-item>
             <b-nav-item  active-class="active" class="nav-link" :to="{name: 'tree-of-life', params: {node: root}}">
               <b-icon-diagram3/> TREE OF LIFE 
             </b-nav-item>
@@ -27,7 +27,7 @@
 </div>
 </template>
 <script>
-import { BNavbar,BNavbarBrand, BIconMap,BIconDiagram3,BNavbarToggle, BNavItem, BNavbarNav, BCollapse} from 'bootstrap-vue'
+import { BNavbar,BNavbarBrand, BIconMap,BIconHouse,BIconDiagram3,BNavbarToggle, BNavItem, BNavbarNav, BCollapse} from 'bootstrap-vue'
 import {ROOTNODE} from '../../utils/static-config'
 
 export default {
@@ -37,7 +37,7 @@ export default {
     }
   },
   components: {
-    BNavbar, BNavbarToggle, BNavItem, BNavbarNav, BCollapse,BNavbarBrand,BIconMap,BIconDiagram3
+    BNavbar, BNavbarToggle, BIconHouse,BNavItem, BNavbarNav, BCollapse,BNavbarBrand,BIconMap,BIconDiagram3
   }
   
 }

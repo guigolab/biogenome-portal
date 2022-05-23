@@ -130,12 +130,12 @@ export default {
         {key: 'organism',label:'Scientific Name',sortable: true,stickyColumn: true},
         {key:'insdc_common_name', label: 'Common Name', sortable: true},
         {key:'bioprojects', label: 'Bioprojects'},
-        {key: 'externalReferences', label:'External Links'},
+        {key: 'externalReferences', label:'Links'},
         // {key: 'local_samples', label: 'Acquired Samples', class:'my-left-border'},
-        {key: 'insdc_samples', label: 'Submitted BioSamples',class:'my-left-border'},
-        {key: 'experiments', label: 'Submitted Reads'},
-        {key: 'assemblies', label: 'Submitted Assemblies'},
-        {key: 'annotations', label: 'Geneid Predictions'}
+        {key: 'insdc_samples', label: 'BioSamples',class:'my-left-border'},
+        {key: 'experiments', label: 'Reads'},
+        {key: 'assemblies', label: 'Assemblies'},
+        {key: 'annotations', label: 'Annotations'}
 
       ],
       selectedOrganisms:[],
