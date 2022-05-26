@@ -15,7 +15,7 @@
             </p>
             <hr>
             <p class="mb-0">
-             This is the official data portal of the Earth BioGenome Project.
+             This is not the official data portal of the Earth BioGenome Project.
              Refer to <a href="https://goat.genomehubs.org/projects/EBP" class="alert-link">GoaT</a> to view the EBP's sequencing progress.
             </p>
           </b-alert>
