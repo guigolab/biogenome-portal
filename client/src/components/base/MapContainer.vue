@@ -94,7 +94,7 @@ export default {
         var biosamples = ''
         this.getFeaturesAtPixel(e.pixel).forEach(ft => {
           ft.get('biosamples').forEach(entry => {
-            biosamples = biosamples+`<a class="ft-map-link" href="#/samples/${entry.accession || entry.tube_or_well_id}">${entry.accession || entry.tube_or_well_id}</a> <a href="#/organisms/${entry.scientificName}">(${entry.scientificName})</a><br/>`
+            biosamples = biosamples+`<a class="ft-map-link" href="#/samples/${entry.accession || entry.tube_or_well_id}">${entry.accession || entry.tube_or_well_id}</a> <a href="#/organisms/${entry.scientific_name}">(${entry.scientific_name})</a><br/>`
           })
         })
         if(biosamples){

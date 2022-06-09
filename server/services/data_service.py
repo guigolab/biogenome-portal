@@ -1,10 +1,10 @@
-from db.models import Assembly, Experiment, SecondaryOrganism,Annotation
+from db.models import Assembly, Experiment, LocalSample,BioSample,Annotation
 
 DB_MODEL_MAPPER={
  'assemblies': Assembly,
  'experiments':Experiment,
- 'local_samples':SecondaryOrganism,
- 'insdc_samples':SecondaryOrganism,
+ 'local_samples':LocalSample,
+ 'insdc_samples':BioSample,
  'annotations':Annotation
 }
 
@@ -13,6 +13,5 @@ def get_data(model, ids):
 
 def get_last_created(model):
     return DB_MODEL_MAPPER[model].objects.order_by('-id').first().to_json()
-
 
 

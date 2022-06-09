@@ -21,7 +21,7 @@ GeoCoordinatesPipeline= [
 		}
 	},
 	# {'$unwind': '$biosamples'}, 
-    # {'$sort': {'biosamples.scientificName': 1}},
+    # {'$sort': {'biosamples.scientific_name': 1}},
 	{"$project": 
 		{"_id":0,
 		"properties": { 
@@ -32,7 +32,7 @@ GeoCoordinatesPipeline= [
 					'in': { 
 						'accession': '$$biosample.accession',
 						'tube_or_well_id': '$$biosample.tube_or_well_id',
-						'scientificName': '$$biosample.scientificName',
+						'scientific_name': '$$biosample.scientific_name',
 					}
 				},
 			}

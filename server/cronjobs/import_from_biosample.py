@@ -1,4 +1,4 @@
-from db.models import SecondaryOrganism,Experiment
+from db.models import BioSample, Experiment
 from utils import ena_client,utils,constants
 from services import organisms_service,geo_loc_service
 from datetime import datetime
@@ -6,7 +6,7 @@ from datetime import datetime
 def import_from_EBI_biosamples(PROJECTS):
     print('STARTING IMPORT BIOSAMPLES JOB')
     sample_dict = collect_samples(PROJECTS) ##return dict with project names as keys
-    existing_samples = SecondaryOrganism.objects.scalar('accession')
+    existing_samples = BioSample.objects.scalar('accession')
     for project in sample_dict.keys():
         for sample in sample_dict[project]:
             if sample['accession'] in existing_samples:
@@ -18,9 +18,9 @@ def import_from_EBI_biosamples(PROJECTS):
                 print('TAXID NOT FOUND:',taxid)
                 print('SKIPPING SAMPLE CREATION')
                 continue
-            characteristics['scientificName'] = organism.organism #overwrite or create scientificName
+            characteristics['scientific_name'] = organism.organism #overwrite or create scientific_name
             required_attr=dict(accession=sample['accession'],taxid=taxid)
-            sample_obj = SecondaryOrganism(**required_attr,**characteristics)
+            sample_obj = BioSample(**required_attr,**characteristics)
             ##link with bioproject
             if project in constants.BIOPROJECTS_MAPPER.keys():
                 project_accession = constants.BIOPROJECTS_MAPPER[project]
@@ -57,8 +57,8 @@ def collect_samples(PROJECTS):
     return samples
 
 def append_specimens():
-    specimens = SecondaryOrganism.objects(sample_derived_from__ne=None)
-    containers = SecondaryOrganism.objects(accession__in=[rec.sample_derived_from for rec in specimens])
+    specimens = BioSample.objects(sample_derived_from__ne=None)
+    containers = BioSample.objects(accession__in=[rec.sample_derived_from for rec in specimens])
     for container in containers:
         new_specimens = [spec for spec in specimens \
             if spec.sample_derived_from == container.accession and \

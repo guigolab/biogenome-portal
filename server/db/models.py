@@ -1,91 +1,42 @@
-# from typing_extensions import Required
 from . import db
-from enum import Enum
 import datetime
+from enum import Enum
 
 
-class TrackStatus(Enum):
+class GoaTStatus(Enum):
+    SAMPLE_COLLECTED = 'Sample Collected'
+    SAMPLE_ACQUIRED = 'Sample Acquired'
+    DATA_GENERATION = 'Data Generation'
+    IN_ASSEMBLY = 'In Assembly'
+    INSDC_SUBMITTED = 'INSDC Submitted'
+    PUBLICATION_AVAILABLE = 'Publication Available'
+
+class INSDCStatus(Enum):
     LOCAL_SAMPLE = 'Sample Acquired'
     SAMPLE = 'Biosample Submitted'
     READS = 'Reads Submitted'
     ASSEMBLIES = 'Assemblies Submitted'
     ANN_SUBMITTED = 'Annotations Created'
 
-def handler(event):
-    """Signal decorator to allow use of callback functions as class decorators."""
-
-    def decorator(fn):
-        def apply(cls):
-            event.connect(fn, sender=cls)
-            return cls
-        fn.apply = apply
-        return fn
-    return decorator
-
 class TaxonNode(db.Document):
-    children = db.ListField(db.LazyReferenceField('self', passthrough=True))
+    children = db.ListField(db.StringField()) #stores taxids
     name = db.StringField(required=True)
-    taxid = db.StringField(required= True)
+    taxid = db.StringField(required= True,unique=True)
     rank = db.StringField()
     leaves = db.IntField()
     meta = {
-          'indexes': [
-            {'fields':('name','taxid'), 'unique':True}
+        'indexes': [
+            'taxid'
         ]
     }
 
 class Experiment(db.Document):
-    study_accession= db.StringField()
-    secondary_study_accession= db.StringField()
     sample_accession= db.StringField()
-    secondary_sample_accession= db.StringField()
     experiment_accession= db.StringField(unique=True)
-    run_accession= db.StringField()
-    submission_accession= db.StringField()
     tax_id= db.StringField()
     scientific_name= db.StringField()
-    instrument_platform= db.StringField()
-    instrument_model= db.StringField()
-    library_name= db.StringField()
-    nominal_length= db.StringField()
-    library_layout= db.StringField()
-    library_strategy= db.StringField()
-    library_source= db.StringField()
-    library_selection= db.StringField()
-    read_count= db.StringField()
-    base_count= db.StringField()
-    center_name= db.StringField()
-    first_public= db.StringField()
-    last_updated= db.StringField()
-    experiment_title= db.StringField()
-    study_title= db.StringField()
-    study_alias= db.StringField()
-    experiment_alias= db.StringField()
-    run_alias= db.StringField()
-    fastq_bytes= db.StringField()
-    fastq_md5= db.StringField()
-    fastq_ftp= db.StringField()
-    fastq_aspera= db.StringField()
-    fastq_galaxy= db.StringField()
-    submitted_bytes= db.StringField()
-    submitted_md5= db.StringField()
-    submitted_ftp= db.StringField()
-    submitted_aspera= db.StringField()
-    submitted_galaxy= db.StringField()
-    submitted_format= db.StringField()
-    sra_bytes= db.StringField()
-    sra_md5= db.StringField()
-    sra_ftp= db.StringField()
-    sra_aspera= db.StringField()
-    sra_galaxy= db.StringField()
-    cram_index_ftp= db.StringField()
-    cram_index_aspera= db.StringField()
-    cram_index_galaxy= db.StringField()
-    sample_alias= db.StringField()
-    broker_name= db.StringField()
-    sample_title= db.StringField()
-    nominal_sdev= db.StringField()
-    first_created= db.StringField()
+    created = db.DateTimeField(default=datetime.datetime.utcnow)
+    metadata=db.DictField()
     meta = {
         'indexes': ['experiment_accession']
     }
@@ -93,124 +44,19 @@ class Experiment(db.Document):
 #TODO ADD last published assembly banner
 class Assembly(db.Document):
     accession = db.StringField(unique=True)
-    version = db.StringField()
-    assembly_name = db.StringField()
-    description = db.StringField()
-    sample_accession = db.StringField()
+    assembly_name=db.StringField()
+    scientific_name= db.StringField()
+    sample_accession=db.StringField()
     created = db.DateTimeField(default=datetime.datetime.utcnow)
+    metadata=db.DictField()
+    chromosomes=db.ListField(db.StringField())
     meta = {
         'indexes': ['accession']
     }
 
-class BioProject(db.Document):
-    accession = db.StringField(required=True, unique=True)
-    title = db.StringField()
-    parents = db.ListField(db.LazyReferenceField('self', passthrough=True))
-    meta = {
-        'indexes': ['accession']
-    }
-
-class SecondaryOrganism(db.Document):
-    assemblies = db.ListField(db.LazyReferenceField(Assembly))
-    experiments = db.ListField(db.LazyReferenceField(Experiment))
-    accession = db.StringField()
-    bioprojects = db.ListField(db.StringField())
-    created = db.DateTimeField(default=datetime.datetime.utcnow)
-    last_check = db.DateTimeField()
-    taxid = db.StringField(required=True)
-    scientificName = db.StringField(required=True)
-    tube_or_well_id=db.StringField()
-    custom_fields = db.DictField(db.StringField())
-    specimens = db.ListField(db.LazyReferenceField('self', passthrough=True))
-    organism_part=db.StringField()
-    lifestage=db.StringField()
-    project_name=db.StringField()
-    tolid=db.StringField()
-    barcoding_center=db.StringField()
-    collected_by=db.StringField()
-    collector_orcid_id=db.StringField()
-    collection_date=db.StringField()
-    time_of_collection=db.StringField()
-    description_of_collection_method=db.StringField()
-    geographic_location_country=db.StringField()
-    geographic_location_latitude=db.StringField()
-    geographic_location_longitude=db.StringField()
-    geographic_location_region_and_locality=db.StringField()
-    grid_reference=db.StringField()
-    identified_by=db.StringField()
-    identified_how=db.StringField()
-    geographic_location_depth=db.StringField()
-    geographic_location_elevation=db.StringField()
-    habitat=db.StringField()
-    identifier_affiliation=db.StringField()
-    original_collection_date=db.StringField()
-    original_geographic_location=db.StringField()
-    sample_derived_from=db.StringField()
-    sample_same_as=db.StringField()
-    sample_symbiont_of=db.StringField()
-    sample_coordinator=db.StringField()
-    sample_coordinator_affiliation=db.StringField()
-    sample_coordinator_orcid_id=db.StringField()
-    preserved_by=db.StringField()
-    preserver_affiliation=db.StringField()
-    preservation_approach=db.StringField()
-    preservative_solution=db.StringField()
-    barcode_plate_preservative=db.StringField()
-    time_elapsed_from_collection_preservation=db.StringField()
-    date_of_preservation=db.StringField()
-    sex=db.StringField()
-    relationship=db.StringField()
-    symbiont=db.StringField()
-    collecting_institution=db.StringField()
-    GAL=db.StringField()
-    specimen_voucher=db.StringField()
-    specimen_id=db.StringField()
-    specimen_id_risk=db.StringField()
-    tissue_for_barcoding=db.StringField()
-    purpose_of_specimen=db.StringField()
-    hazard_group=db.StringField()
-    other_informations=db.StringField()
-    regulatory_compliance=db.StringField()
-    indigenous_rights_applicable=db.StringField()
-    associated_traditional_knowledge_applicable=db.StringField()
-    ethics_permits_mandatory=db.StringField()
-    sampling_permits_mandatory=db.StringField()
-    nagoya_permits_mandatory=db.StringField()
-    tissue_for_biobanking=db.StringField()
-    taxon_remarks=db.StringField()
-    infraspecific_epithet=db.StringField()
-    dna_removed_from_biobanking=db.StringField()
-    tissue_removed_from_barcoding=db.StringField()
-    tube_or_well_id_for_barcoding=db.StringField()
-    tissue_voucher_id_for_biobanking=db.StringField()
-    dna_voucher_id_for_biobanking=db.StringField()
-    difficult_or_high_priority_sample=db.StringField()
-    size_of_tissue_in_tube=db.StringField()
-    GAL_sample_id=db.StringField()
-    specimen_id_risk=db.StringField()
-    collector_sample_id=db.StringField()
-    culture_or_strain_id=db.StringField()
-    common_name=db.StringField()
-    custom_fields = db.DictField()
-    meta = {
-        'indexes': [
-            {'fields':('accession','tube_or_well_id'), 'unique':True},
-        ]
-    }
-
-@handler(db.pre_save)
-def update_modified(sender, document):
-    if document.annotations:
-        document.trackingSystem= TrackStatus.ANN_SUBMITTED
-    elif document.assemblies:
-        document.trackingSystem= TrackStatus.ASSEMBLIES
-    elif document.experiments:
-        document.trackingSystem= TrackStatus.READS
-    elif document.insdc_samples and \
-        SecondaryOrganism.objects(id__in=[rec.id for rec in document.insdc_samples]):
-        document.trackingSystem=TrackStatus.SAMPLE
-    else:
-        document.trackingSystem=TrackStatus.LOCAL_SAMPLE
+class Chromosome(db.Document):
+    accession_version = db.StringField(required=True,unique=True)
+    metadata=db.DictField()
 
 class Geometry(db.EmbeddedDocument):
     type=db.StringField(default='Point')
@@ -221,57 +67,109 @@ class Geometry(db.EmbeddedDocument):
         ]
     }
 
+class BioProject(db.Document):
+    accession = db.StringField(required=True, unique=True)
+    title = db.StringField()
+    parents = db.ListField(db.StringField())
+    meta = {
+        'indexes': ['accession']
+    }
+
+class SampleSubmitter(db.Document):
+    name=db.StringField()
+    password=db.StringField()
+
+class LocalSample(db.Document):
+    created = db.DateTimeField(default=datetime.datetime.utcnow)
+    local_id = db.StringField(required=True,unique=True)
+    created = db.DateTimeField(default=datetime.datetime.utcnow)
+    last_check = db.DateTimeField()
+    latitude=db.StringField()
+    longitude=db.StringField()
+    taxid = db.StringField(required=True)
+    scientific_name = db.StringField(required=True)
+    valid = db.BooleanField()
+    metadata=db.DictField()
+    meta = {
+        'indexes': [
+            'local_id'
+        ]
+    }
+
+class BioSample(db.Document):
+    assemblies = db.ListField(db.StringField())
+    experiments = db.ListField(db.StringField())
+    accession = db.StringField()
+    latitude=db.StringField()
+    longitude=db.StringField()
+    bioprojects = db.ListField(db.StringField())
+    sub_samples = db.ListField(db.StringField())
+    created = db.DateTimeField(default=datetime.datetime.utcnow)
+    last_check = db.DateTimeField()
+    metadata=db.DictField()
+    taxid = db.StringField(required=True)
+    scientific_name = db.StringField(required=True)
+    meta = {
+        'indexes': [
+            'accession'
+        ]
+    }
+
+class Geometry(db.EmbeddedDocument):
+    type=db.StringField(default='Point')
+    coordinates=db.ListField(db.StringField())
+    meta = {
+        'indexes': [
+            'coordinates',
+        ]
+    }
+
+class GeoCoordinates(db.Document):
+    geo_location=db.StringField(required=True,unique=True)
+    type=db.StringField(default='Feature')
+    species=db.ListField(db.StringField())
+    bioprojects=db.ListField(db.StringField())
+    geometry = db.EmbeddedDocumentField(Geometry)
+    meta = {
+        'indexes': [
+             'geo_location'
+        ]
+    }
+
 class Annotation(db.Document):
     name = db.StringField(required=True,unique=True)
-    gffGzLocation = db.StringField(required=True,unique=True)
-    pageURL=db.StringField()
-    annotationSource=db.StringField(default='https://github.com/FerriolCalvet/geneidBLASTx-nf')
-    tabIndexLocation = db.StringField()
-    targetGenome = db.StringField(required=True)
-    assemblyAccession=db.StringField()
-    lengthTreshold = db.StringField()
-    evidenceSource = db.StringField()
-    created = db.StringField()
+    metadata=db.DictField()
+    assembly_accession=db.StringField()
+    page_url=db.StringField()
+    created = db.DateTimeField(default=datetime.datetime.utcnow)
     meta = {
         'indexes': [
             'name'
         ]
     }
-
-# ##TODO Migrate samples geo attributes to this model -> test 
-class GeoCoordinates(db.Document):
-    geo_loc = db.StringField(unique=True,required=True)
-    type=db.StringField(default='Feature')
-    biosamples = db.ListField(db.LazyReferenceField(SecondaryOrganism))
-    geometry = db.EmbeddedDocumentField(Geometry)
-    meta = {
-        'indexes': [
-            'geo_loc',
-        ]
-    }
-
-@update_modified.apply
+    
 class Organism(db.Document):
-    assemblies = db.ListField(db.LazyReferenceField(Assembly))
-    experiments = db.ListField(db.LazyReferenceField(Experiment))
+    assemblies = db.ListField(db.StringField())
+    experiments = db.ListField(db.StringField())
+    publications_id = db.ListField(db.StringField())
     tolid_prefix = db.StringField()
     bioprojects = db.ListField(db.StringField())
-    common_name = db.ListField(db.StringField())
-    annotations = db.ListField(db.LazyReferenceField(Annotation))
+    local_names = db.ListField(db.StringField())
+    annotations = db.ListField(db.StringField())
     insdc_common_name = db.StringField()
-    local_samples = db.ListField(db.LazyReferenceField(SecondaryOrganism))
-    insdc_samples = db.ListField(db.LazyReferenceField(SecondaryOrganism))
-    organism = db.StringField(required=True,unique=True)
+    local_samples = db.ListField(db.StringField())
+    biosamples = db.ListField(db.StringField())
+    scientific_name = db.StringField(required=True)
     taxid = db.StringField(required= True)
     image = db.FileField()
     image_url = db.StringField()
-    taxon_lineage = db.ListField(db.LazyReferenceField(TaxonNode))
-    ordered_lineage = db.ListField() ##TODO fix duplicated lineage 
-    trackingSystem = db.EnumField(TrackStatus)
+    taxon_lineage = db.ListField(db.StringField())
+    insdc_status = db.EnumField(INSDCStatus)
+    goat_status = db.EnumField(GoaTStatus)
     meta = {
         'indexes': [
-            'organism',
-            'common_name',
+            'scientific_name',
+            'insdc_common_name',
             'taxid'
         ]
     }

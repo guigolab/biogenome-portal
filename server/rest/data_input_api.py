@@ -4,7 +4,7 @@ from flask_jwt_extended import create_access_token, jwt_required
 from datetime import timedelta
 import os
 import json
-from db.models import GeoCoordinates,Annotation, TaxonNode, SecondaryOrganism, Organism, Assembly, Experiment,BioProject
+from db.models import Chromosome, GeoCoordinates,Annotation, TaxonNode, BioSample,LocalSample, Organism, Assembly, Experiment,BioProject
 
 class Login(Resource):
     def post(self):
@@ -20,17 +20,19 @@ class Login(Resource):
         else:
             return Response("Bad User or Password", mimetype="application/json", status=401)
     
-    @jwt_required()
+    # @jwt_required()
     def delete(self):
         Annotation.drop_collection()
         TaxonNode.drop_collection()
         GeoCoordinates.drop_collection()
         BioProject.drop_collection()
-        SecondaryOrganism.drop_collection()
+        BioSample.drop_collection()
+        LocalSample.drop_collection()
         images = Organism.objects(image__ne=None)
         for org in images:
             org.image.delete()
         Organism.drop_collection()
         Assembly.drop_collection()
+        Chromosome.drop_collection()
         Experiment.drop_collection()
         return 200

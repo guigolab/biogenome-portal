@@ -14,8 +14,8 @@ from flask import current_app as app
 #TODO unit test this 
 class OrganismsApi(Resource):
 	def get(self):
-		return Response(service.query_search(**request.args),mimetype="application/json", status=200)
-	
+		return Response(organism_service.get_organisms(**request.args),mimetype="application/json", status=200)
+
 	@jwt_required()
 	def delete(self):
 		if 'tax_ids' in request.args.keys() and len(request.args['tax_ids'].split(',')) > 0:

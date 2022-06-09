@@ -71,7 +71,7 @@ const getDefaultState = () => {
             collector_sample_id:'',
             culture_or_strain_id:'',
             taxid: '',
-            scientificName: '',
+            scientific_name: '',
             common_name:'',
         },
         index: 0,

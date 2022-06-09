@@ -42,15 +42,15 @@
                     </b-form-select>
                 </div>
                 <div v-if="isTextInput(field)">
-                    <b-input-group :prepend="field.model==='taxid'? scientificName : null"
+                    <b-input-group :prepend="field.model==='taxid'? scientific_name : null"
                     :append="field.units? field.units: null">
                         <b-form-input
                             v-if="field.model==='taxid'"
-                            :disabled=" toUpdate ? toUpdate : Boolean(scientificName)"
+                            :disabled=" toUpdate ? toUpdate : Boolean(scientific_name)"
                             ref="taxid"
                             id="taxid"
                             v-model="taxid"
-                            :state="toUpdate ? null : Boolean(scientificName) && Boolean(taxid)"
+                            :state="toUpdate ? null : Boolean(scientific_name) && Boolean(taxid)"
                         >
                         </b-form-input>
                         <b-form-input v-else
@@ -62,9 +62,9 @@
                             >
                         </b-form-input>
                         <b-input-group-append v-if="field.model==='taxid'">
-                            <b-button :disabled="disableUniqueFields(field.model) || Boolean(scientificName)" @click="getTaxon()">Get Taxon</b-button>
+                            <b-button :disabled="disableUniqueFields(field.model) || Boolean(scientific_name)" @click="getTaxon()">Get Taxon</b-button>
                         </b-input-group-append>
-                        <b-input-group-append v-if="Boolean(scientificName) && field.model==='taxid'">
+                        <b-input-group-append v-if="Boolean(scientific_name) && field.model==='taxid'">
                             <b-button :disabled="disableUniqueFields(field.model)" @click="resetTaxon()">Reset taxon</b-button>
                         </b-input-group-append>
                     </b-input-group>
@@ -111,7 +111,7 @@ import SubmissionService from '../../services/SubmissionService'
 
 
 const modelFields = [].concat.apply(checklistFieldGroups.map(group => group.fields).map(fields => fields.map(field => field.model))).flat(1)
-modelFields.push('scientificName')
+modelFields.push('scientific_name')
 // const SampleToSubmitModal = () => import(/* webpackPrefetch: true */ '../modal/SampleToSubmitModal.vue')
 
 export default {
@@ -136,7 +136,7 @@ export default {
             return this.$store.getters['form/getToUpdate']
         },
         validSample(){
-            return this.tube_or_well_id && this.scientificName
+            return this.tube_or_well_id && this.scientific_name
         },
         ...mapCheckListFields({
             fields: modelFields,
@@ -147,7 +147,7 @@ export default {
     methods:{
         labelClass(field){
             return field.label === 'taxon ID' && !this.toUpdate ?
-                    this.scientificName ? 'success': 'wrong' 
+                    this.scientific_name ? 'success': 'wrong' 
                     : 
                     this.validateInput(field,this[field.model]) === null || (this.toUpdate && mandatoryCOPOLabels.includes(field.label)) ? 
                     '' : this.validateInput(field,this[field.model]) ? 
@@ -208,15 +208,15 @@ export default {
             this.$store.dispatch('portal/showLoading')
             enaService.getTaxon(this.taxid)
             .then(response => {
-                this.scientificName = response.data[0].description
+                this.scientific_name = response.data[0].description
                 this.$store.dispatch('portal/hideLoading')
-                return showConfirmationModal(this.$bvModal,this.scientificName)
+                return showConfirmationModal(this.$bvModal,this.scientific_name)
             })
             .then(value => {
-                if(value && this.scientificName){
+                if(value && this.scientific_name){
                     return null
                 }
-                this.scientificName = ''
+                this.scientific_name = ''
                 return null
             })
             .catch(e => {
@@ -227,7 +227,7 @@ export default {
         },
         resetTaxon(){
             this.taxid = ''
-            this.scientificName = ''
+            this.scientific_name = ''
         },
         parseSample(){
             const formData = new FormData()

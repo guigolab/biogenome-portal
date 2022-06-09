@@ -8,9 +8,6 @@ services:
     env_file:
       - .env
     volumes:
-     - ./mongo-init.sh:/docker-entrypoint-initdb.d/mongo-init.sh
-     - ./mongo-restore.sh:/docker-entrypoint-initdb.d/mongo-restore.sh
-     - ./db-dump:/db-dump
      - mongodb-data:${MONGODB_DATA_DIR}
     ports:
       - "27015:${DB_PORT}"
@@ -26,7 +23,7 @@ services:
       
   biogenome_nginx:
     build: 
-      context: ./client
+      context: ./biogenome-client
       dockerfile: Dockerfile
       args:
         - ROOT_NODE=$ROOT_NODE
@@ -34,14 +31,13 @@ services:
     container_name: "biogenome_nginx"
     restart: always
     volumes:
-      - ./client:/client
-      - node_modules:/client/node_modules
+      - ./biogenome-client:/biogenome-client
+      - node_modules:/biogenome-client/node_modules
     environment:
       - API_PORT=${API_PORT}
       - API_HOST=${API_HOST}
     ports:
         - "91:${API_PORT}"   
-
 
 volumes:
   app:

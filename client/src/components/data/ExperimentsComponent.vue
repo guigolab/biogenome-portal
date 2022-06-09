@@ -118,7 +118,7 @@ export default {
     data() {
         return {
             showFields:false,
-            experimentFields: ['study_accession','run_accession','scientificName','experiment_title'],
+            experimentFields: ['study_accession','run_accession','scientific_name','experiment_title'],
             experimentsParams: experimentsParams,
             stickyHeader: '50vh',
             url: 'https://www.ebi.ac.uk/ena/browser/view/'

@@ -20,7 +20,8 @@ initialize_api(app)
 jwt = JWTManager(app)
 
 
-handle_tasks()
+
+# handle_tasks()
 
 
 # # if __name__ == '__main__':

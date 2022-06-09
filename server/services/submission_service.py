@@ -13,8 +13,8 @@ def create_sample(data):
         organism = organisms_service.get_or_create_organism(taxid)
     if not organism:
         raise TaxonNotFoundError
-    if not 'scientificName' in data.keys():
-        data['scientificName'] = organism.organism
+    if not 'scientific_name' in data.keys():
+        data['scientific_name'] = organism.organism
     sample = sample_service.create_sample_object(data).save()
     #behind the scenes it creates the taxonomic hierarchy
     #manage records locally(no experiments and assemblies)

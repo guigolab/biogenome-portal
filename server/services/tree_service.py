@@ -23,7 +23,7 @@ def dfs(stack, tree, max_level):
     if max_level and max_level <= level:
         return
     if node.children:
-        children = TaxonNode.objects(id__in=[lz_ref.id for lz_ref in node.children])
+        children = TaxonNode.objects(taxid__in=node.children)
         for child in children:
             child_dict = {}
             dfs([(child, level+1)], child_dict, max_level)
