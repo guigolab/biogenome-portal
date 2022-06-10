@@ -11,11 +11,11 @@ PROJECT_ACCESSION=os.getenv('PROJECT_ACCESSION')
 
 def get_organisms(offset=0, limit=20, 
                 sortOrder=None, sortColumn=None,
-                taxName=ROOT_NODE, filter=None, option=None, bioproject=PROJECT_ACCESSION):
+                taxid=ROOT_NODE, filter=None, option=None, bioproject=PROJECT_ACCESSION):
     query=dict()
     json_resp=dict()     
     filter_query = get_query_filter(filter, option) if filter else None
-    taxa = TaxonNode.objects(name=taxName).first()
+    taxa = TaxonNode.objects(taxid=taxid).first()
     query['taxon_lineage'] = taxa.taxid
     if bioproject and not bioproject==PROJECT_ACCESSION:
         query['bioprojects'] = bioproject

@@ -1,11 +1,10 @@
 <script setup>
-// This starter template is using Vue 3 <script setup> SFCs
-// Check out https://vuejs.org/api/sfc-script-setup.html#script-setup
 </script>
 
 <template>
-  <router-view/>
+    <router-view/>
 </template>
+
 
 <style>
 #app {
@@ -15,6 +14,7 @@
   text-align: center;
   color: #2c3e50;
   margin-top: 60px;
+  background-color: #eff3f8;
 }
 .custom-card{
   margin:15px;

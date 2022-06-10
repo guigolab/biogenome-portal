@@ -3,7 +3,6 @@
 # from db.models import SecondaryOrganism
 # from utils.constants import CHECKLIST_FIELD_GROUPS,MANIFEST_TO_MODEL
 # from utils.ena_client import check_taxons_from_NCBI
-# from flask import current_app as app
 
 # def get_sample_values(header,row):
 #     values = {}

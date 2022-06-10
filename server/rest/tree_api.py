@@ -5,6 +5,7 @@ from db.models import TaxonNode
 from flask_restful import Resource
 from utils.pipelines import TaxonPipeline
 import json
+from flask import current_app as app
 
 
 class TreeApi(Resource):
@@ -18,9 +19,10 @@ class TreeApi(Resource):
 
 
 class TaxNodesApi(Resource):
-    def get(self,name):
-        tax_node = TaxonNode.objects(name=name).aggregate(*TaxonPipeline).next()
-        tax_node['isOpen'] = True
-        for node in tax_node['children']:
-            node['isOpen'] = False
-        return Response(json.dumps(tax_node, default=str), mimetype="application/json", status=200)
+    def get(self,taxid):
+        tax_node= TaxonNode.objects(taxid=taxid).first()
+        children = TaxonNode.objects(taxid__in=tax_node.children).to_json()
+        # tax_node['isOpen'] = False
+        # for node in tax_node['children']:
+        #     node['isOpen'] = False
+        return Response(children, mimetype="application/json", status=200)

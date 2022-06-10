@@ -3,12 +3,15 @@ TaxonPipeline = [
 	{"$lookup":
 		{"from": "taxon_node",
 		"localField": "children",
-		"foreignField": "_id",
+		"foreignField": "taxid",
 		"as": "children",
 		}
 	},
 	{"$project": 
-		{"_id":0}
+		{"_id":0,
+		"children":{
+			"_id":0
+		}}
 	}
 ]
 
