@@ -8,7 +8,7 @@
               <b-form-input debounce="500" id="range-1" v-model="maxNodes" type="range" :disabled="data && data.leaves < 30" :min="data && data.leaves < 30 ? data.leaves : '30'" :max="data && data.leaves < 150 ? data.leaves : '150'"></b-form-input>
               <div class="mt-2">Leaves limit: {{ maxNodes }}</div>
               <div ref="tooltip" class="tooltip"></div>
-              <svg ref="svg"  class="tree-svg"/>
+              <svg ref="svg"  class="tree-svg"></svg>
             </b-col>
           </b-row>
     </b-col>

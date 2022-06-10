@@ -13,11 +13,9 @@ import TreeBrowser from './TreeBrowser.vue'
 import DataPortalService from '../services/DataPortalService'
 import {organisms} from '../stores/organisms'
 import {taxons} from '../stores/taxons'
-
+import {ROOTNODE} from '../../config'
 const orgStore = organisms()
 const taxStore = taxons()
-
-const ROOTNODE = '2759'
 
 onMounted(()=>{
     DataPortalService.getTaxonChildren(ROOTNODE)

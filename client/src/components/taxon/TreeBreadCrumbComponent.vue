@@ -48,7 +48,6 @@ export default {
       }
         this.$store.commit('portal/setTree',{value: this.taxName})
         this.$root.$emit('bv::refresh::table', 'organisms-table')
-
     }
     }
 }

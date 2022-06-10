@@ -79,7 +79,7 @@
 <script setup>
 import { reactive,ref } from "@vue/reactivity";
 import { computed, onMounted, watch } from "@vue/runtime-core";
-import dataIcons from '../../config'
+import {dataIcons} from '../../config'
 import {organisms} from '../stores/organisms'
 import {taxons} from '../stores/taxons'
 import DataPortalService from '../services/DataPortalService'

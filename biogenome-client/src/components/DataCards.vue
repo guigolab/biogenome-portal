@@ -24,7 +24,7 @@
 
 <script setup>
 import { onMounted, ref } from '@vue/runtime-core'
-import dataIcons from '../../config'
+import {dataIcons} from '../../config'
 import DataPortalService from '../services/DataPortalService'
 
 

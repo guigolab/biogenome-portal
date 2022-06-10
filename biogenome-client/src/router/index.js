@@ -1,5 +1,8 @@
 import { createWebHistory, createRouter } from 'vue-router';
 import Home from '../views/Home.vue';
+import {ROOTNODE} from '../../config'
+
+const treeOfLife = () => import('../views/TreeOfLife.vue')
 // const jBrowseComponent = () => import('../views/JBrowse.vue')
 // const humanPage = () => import('../views/Human.vue')
 // const humanNew = () => import('../views/HumanNew.vue')
@@ -12,6 +15,16 @@ const routes = [
     path: "/",
     name: "home",
     component: Home,
+  },
+  {
+    path: '/tree-of-life',
+    redirect: {name: 'tree-of-life', params: {node: ROOTNODE}}
+  },
+  {
+    path: "/tree-of-life/:node",
+    name: "tree-of-life",
+    props: true,
+    component: treeOfLife
   },
   // {
   //   path: "/human",

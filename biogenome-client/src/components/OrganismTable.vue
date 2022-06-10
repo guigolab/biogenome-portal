@@ -33,7 +33,7 @@
 <script setup>
 import { reactive,ref } from "@vue/reactivity";
 import { computed, onMounted } from "@vue/runtime-core";
-import dataIcons from '../../config'
+import {dataIcons} from '../../config'
 import DataPortalService from '../services/DataPortalService'
 var items = ref([])
 const total = ref(0)

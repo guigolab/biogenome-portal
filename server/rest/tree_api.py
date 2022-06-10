@@ -10,10 +10,8 @@ from flask import current_app as app
 
 class TreeApi(Resource):
     def get(self, node):
-        max_nodes = int(request.args['maxLeaves'])
-        tax_node = TaxonNode.objects(name=node).first()
-        ##render tree on the fly
-        tree = service.create_tree(tax_node, max_nodes)
+        app.logger.info(node)
+        tree = service.create_tree(node)
         return Response(json.dumps(tree), mimetype="application/json", status=200)
 
 
