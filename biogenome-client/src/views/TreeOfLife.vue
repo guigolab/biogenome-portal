@@ -11,6 +11,12 @@
                 />
             </va-card-content>
         </va-card>
+        <button @click="zoomIn()">Zoom in</button>
+        <button @click="zoomOut()">Zoom out</button>
+        <button @click="resetZoom()">Reset zoom</button>
+        <button @click="panLeft()">Pan left</button>
+        <button @click="panRight()">Pan right</button>
+        <button @click="center()">Center</button>
     </div>
     <div class="flex">
         <va-card>
@@ -53,7 +59,7 @@ var legendDomains = reactive([])
 const props = defineProps({
     node:String
 })
-const width = ref(954)
+const width = ref(2000)
 const outerRadius = computed(()=>width.value/2)
 const innerRadius = computed(()=> outerRadius.value - 170)
 const legendPosition =  computed(()=> -outerRadius.value)
@@ -65,6 +71,9 @@ const tree=ref(null)
 const tooltip=ref(null)
 const treegroup = ref(null)
 const domainleg = ref(null)
+const zoom = d3.zoom()
+    .scaleExtent([0.25,10])
+    .on('zoom', handleZoom)
 
 watch(width, ()=>{
     createD3Tree(data)
@@ -95,6 +104,50 @@ function getTree(node){
     })
 }
 
+function initZoom() {
+	d3.select(tree.value)
+		.call(zoom);
+}
+function handleZoom(e){
+    d3.select(treegroup.value)
+    .attr('transform', e.transform);
+}
+
+function zoomIn() {
+	d3.select(tree.value)
+		.transition()
+		.call(zoom.scaleBy, 2);
+}
+
+function zoomOut() {
+	d3.select(tree.value)
+		.transition()
+		.call(zoom.scaleBy, 0.5);
+}
+
+function resetZoom() {
+	d3.select(tree.value)
+		.transition()
+		.call(zoom.scaleTo, 1);
+}
+
+function center() {
+	d3.select(tree.value)
+    .transition()
+    .call(zoom.translateTo, 0.5 * width.value, 0.5 * width.value);
+}
+
+function panLeft() {
+	d3.select(tree.value)
+		.transition()
+		.call(zoom.translateBy, -50, 0);
+}
+
+function panRight() {
+	d3.select(tree.value)
+		.transition()
+		.call(zoom.translateBy, 50, 0);
+}
 function createD3Tree(data){
     const root = d3.hierarchy(data , d => d.children)
       .sum(d => d.children ? 0 : 1)
@@ -105,8 +158,6 @@ function createD3Tree(data){
     setColor(root)
     const svg = d3.select(tree.value)
     .attr("viewBox", [-outerRadius.value, -outerRadius.value, width.value, width.value])
-
-
     const g = d3.select(treegroup.value)
     .attr("font-family", "sans-serif")
     .attr("font-size", 7);
@@ -178,6 +229,7 @@ function createD3Tree(data){
     .on("mouseover", mouseovered(true))
     .on("mouseout", mouseovered(false));
 
+    initZoom()
 }
 function info(component) {
     return function(_, d){
