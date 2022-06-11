@@ -31,7 +31,10 @@
             <va-card-title>Tree of Life</va-card-title>
             <va-card-content>
                 <div ref="tooltip" class="tooltip"></div>
-                <svg ref="tree"></svg>
+                <svg ref="tree">
+                    <g ref="domainleg"/>
+                    <g ref="treegroup"/>
+                </svg>
             </va-card-content>
         </va-card>
     </div>
@@ -39,7 +42,7 @@
 
 </template>
 <script setup>
-import { reactive, onMounted, watch , ref, nextTick, computed} from "vue";
+import {reactive, onMounted, watch, ref, nextTick, computed} from "vue";
 import * as d3 from "d3";
 import DataPortalService from '../services/DataPortalService'
 
@@ -60,6 +63,8 @@ var data = null
 var domains = reactive([])
 const tree=ref(null)
 const tooltip=ref(null)
+const treegroup = ref(null)
+const domainleg = ref(null)
 
 watch(width, ()=>{
     createD3Tree(data)
@@ -68,6 +73,8 @@ watch(width, ()=>{
 onMounted(()=>{
     tree.value.focus()
     tooltip.value.focus()
+    treegroup.value.focus()
+    domainleg.value.focus()
     getTree(props.node)
 })
 
@@ -81,7 +88,6 @@ function getTree(node){
         data = response.data
         nextTick(()=>{
           const doms = getDomains(data,[])
-          console.log(doms)
           legendDomains = doms.slice(0,9)
           domains = legendDomains.map(v => v.name)
           createD3Tree(data)
@@ -98,29 +104,35 @@ function createD3Tree(data){
     setRadius(root, root.data.length = 0, innerRadius.value / maxLength(root));
     setColor(root)
     const svg = d3.select(tree.value)
-    // .attr("viewBox", [-outerRadius.value, -outerRadius.value, width.value, width.value])
-    .attr("font-family", "sans-serif")
-    .attr("font-size", 8);
+    .attr("viewBox", [-outerRadius.value, -outerRadius.value, width.value, width.value])
 
-    svg.append("style").text(`
+
+    const g = d3.select(treegroup.value)
+    .attr("font-family", "sans-serif")
+    .attr("font-size", 7);
+
+    g.append("style").text(`
     .link--active {
         stroke: #000 !important;
         stroke-width: 1.5px;
     }
-    
     .link-extension--active {
         stroke-opacity: .6;
     }
-    
     .label--active {
         font-weight: bold;
     }
     `);
     var div = d3.select(tooltip.value)
     .style("opacity", 0)
-    legend(svg)
 
-    linkExtension = svg.append("g")
+    const gLegend = d3.select(domainleg.value)
+    .attr("font-family", "sans-serif")
+    .attr("font-size", 10);
+
+    legend(gLegend)
+
+    linkExtension = g.append("g")
     .attr("fill", "none")
     .attr("stroke", "#000")
     .attr("stroke-opacity", 0.25)
@@ -130,7 +142,7 @@ function createD3Tree(data){
     .each(function(d) { d.target.linkExtensionNode = this; })
     .attr("d", linkExtensionConstant);
 
-    link = svg.append("g")
+    link = g.append("g")
     .attr("fill", "none")
     .attr("stroke", "#000")
     .selectAll("path")
@@ -153,8 +165,8 @@ function createD3Tree(data){
             .style("opacity", 0);	
     })
     .on("click", info(this));
-    
-    svg.append("g")
+
+    g.append("g")
     .selectAll("text")
     .data(root.leaves())
     .join("text")
