@@ -10,10 +10,13 @@ from flask import current_app as app
 
 class TreeApi(Resource):
     def get(self, node):
-        app.logger.info(node)
-        tree = service.create_tree(node)
+        tree = service.create_tree(node, **request.args)
         return Response(json.dumps(tree), mimetype="application/json", status=200)
+        
 
+class TreeLevels(Resource):
+    def get(self,node):
+        return Response(json.dumps(service.get_levels(node)))
 
 
 class TaxNodesApi(Resource):

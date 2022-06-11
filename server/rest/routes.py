@@ -20,7 +20,7 @@ def initialize_routes(api):
 	api.add_resource(TaxNodesApi, '/api/taxons/<taxid>')
 	# api.add_resource(SamplesApi, '/api/organisms', '/api/organisms/<accession>')
 	# api.add_resource(BioSampleApi, '/api/biosamples')
-	api.add_resource(TreeApi,'/api/tree/<node>') 
+	api.add_resource(TreeApi,'/api/tree','/api/tree/<node>') 
 	# api.add_resource(GeoLocApi, '/api/coordinates')
 
 

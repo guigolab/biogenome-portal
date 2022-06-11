@@ -1,7 +1,42 @@
 <template>
-    <va-slider v-model="width" max="2500" min="250"/>
-    <div ref="tooltip" class="tooltip"></div>
-    <svg ref="tree"></svg>
+<div class="row">
+    <div class="flex">
+        <va-card>
+            <va-card-title>Layout</va-card-title>
+            <va-card-content>
+                <va-counter class="mx-4 my-2"
+                    v-model="width"
+                    :min="350" :max="3500" :step="50"
+                    :messages="'current width: '+width"
+                />
+            </va-card-content>
+        </va-card>
+    </div>
+    <div class="flex">
+        <va-card>
+            <va-card-title>Layout</va-card-title>
+            <va-card-content>
+                <va-counter class="mx-4 my-2"
+                    v-model="width"
+                    :min="350" :max="3500" :step="50"
+                    :messages="'current width: '+width"
+                />
+            </va-card-content>
+        </va-card>
+    </div>
+</div>
+<div class="row">
+    <div class="flex">
+        <va-card>
+            <va-card-title>Tree of Life</va-card-title>
+            <va-card-content>
+                <div ref="tooltip" class="tooltip"></div>
+                <svg ref="tree"></svg>
+            </va-card-content>
+        </va-card>
+    </div>
+</div>
+
 </template>
 <script setup>
 import { reactive, onMounted, watch , ref, nextTick, computed} from "vue";
@@ -63,9 +98,10 @@ function createD3Tree(data){
     setRadius(root, root.data.length = 0, innerRadius.value / maxLength(root));
     setColor(root)
     const svg = d3.select(tree.value)
-    .attr("viewBox", [-outerRadius.value, -outerRadius.value, width.value, width.value])
+    // .attr("viewBox", [-outerRadius.value, -outerRadius.value, width.value, width.value])
     .attr("font-family", "sans-serif")
-    .attr("font-size", 10);
+    .attr("font-size", 8);
+
     svg.append("style").text(`
     .link--active {
         stroke: #000 !important;
@@ -83,6 +119,7 @@ function createD3Tree(data){
     var div = d3.select(tooltip.value)
     .style("opacity", 0)
     legend(svg)
+
     linkExtension = svg.append("g")
     .attr("fill", "none")
     .attr("stroke", "#000")
@@ -116,6 +153,7 @@ function createD3Tree(data){
             .style("opacity", 0);	
     })
     .on("click", info(this));
+    
     svg.append("g")
     .selectAll("text")
     .data(root.leaves())

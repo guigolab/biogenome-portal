@@ -11,9 +11,8 @@ def bfs(node, nodes):
             for child in TaxonNode.objects(taxid__in=node.children):
                 queue.append((child, level+1))
                 nodes[level+1] = nodes.setdefault(level+1, 0) + 1
-    return level, nodes
-
-
+    return nodes
+    
 def dfs(stack, tree):
     node, level = stack.pop(0)
     tree["name"] = node.name
@@ -33,8 +32,11 @@ def get_max_level(counts, limit):
         if nodes > limit:
             return level-1
 
+def get_levels(taxid):
+    root = TaxonNode.objects(taxid=taxid).first()
+    return bfs(root, dict())
 
-def create_tree(taxid):
+def create_tree(taxid, levels=False):
     root = TaxonNode.objects(taxid=taxid).first()
     tree = dict()
     dfs([(root,0)],tree)
