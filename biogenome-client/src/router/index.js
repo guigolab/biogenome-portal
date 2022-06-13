@@ -3,6 +3,7 @@ import Home from '../views/Home.vue';
 import {ROOTNODE} from '../../config'
 
 const treeOfLife = () => import('../views/TreeOfLife.vue')
+const map = () => import('../views/MapPage.vue')
 // const jBrowseComponent = () => import('../views/JBrowse.vue')
 // const humanPage = () => import('../views/Human.vue')
 // const humanNew = () => import('../views/HumanNew.vue')
@@ -26,6 +27,11 @@ const routes = [
     props: true,
     component: treeOfLife
   },
+  {
+    path: "/map",
+    name: "map",
+    component: map
+  }
   // {
   //   path: "/human",
   //   name: "human",

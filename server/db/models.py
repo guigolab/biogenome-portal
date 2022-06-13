@@ -124,10 +124,12 @@ class Geometry(db.EmbeddedDocument):
         ]
     }
 
+#TODO fix many to many relationship with species and bioprojects
 class GeoCoordinates(db.Document):
     geo_location=db.StringField(required=True,unique=True)
     type=db.StringField(default='Feature')
-    species=db.ListField(db.StringField())
+    properties = db.DictField() ##duplicate field 
+    organisms=db.ListField(db.StringField()) ##list of taxids
     bioprojects=db.ListField(db.StringField())
     geometry = db.EmbeddedDocumentField(Geometry)
     meta = {

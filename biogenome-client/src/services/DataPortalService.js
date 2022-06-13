@@ -27,9 +27,12 @@ class DataPortalService {
         return base.post('/coordinates',ids)
     }
     getAllCoordinates(params) {
+        if(params){
         return base.get('/coordinates',{
             params: params
             })
+        }
+        return base.get('/coordinates')
     }
     getTree(node, maxLeaves){
         return base.get(`/tree/${node}`,{

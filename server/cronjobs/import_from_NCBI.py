@@ -1,10 +1,7 @@
-from cmath import exp
 import requests
 import time
-from utils import ena_client,utils
-from services import organisms_service,geo_loc_service, bioproject_service,annotations_service,assembly_service,biosample_service,experiment_service
-from db.models import Assembly, Experiment,BioSample,Chromosome
-from datetime import datetime
+from services import organisms_service,bioproject_service,annotations_service,assembly_service,biosample_service,experiment_service,geo_localization_service
+from db.models import Assembly
 
 def import_from_NCBI(project_accession):
     assemblies = get_assemblies(project_accession)
@@ -21,7 +18,7 @@ def import_from_NCBI(project_accession):
         experiment_service.create_experiments(sample_obj,organism)
         bioproject_service.create_bioprojects_from_NCBI(ass['bioproject_lineages'],organism, sample_obj)
         annotations_service.parse_annotation(organism,ass_obj)
-        geo_loc_service.get_or_create_coordinates(sample_obj)
+        geo_localization_service.get_or_create_coordinates(sample_obj)
     print('ASSEMBLIES FROM NCBI IMPORTED')
 
 

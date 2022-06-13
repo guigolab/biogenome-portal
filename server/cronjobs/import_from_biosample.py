@@ -1,6 +1,6 @@
 from db.models import BioSample, Experiment
 from utils import ena_client,utils,constants
-from services import organisms_service,geo_loc_service
+from services import organisms_service,geo_localization_service
 from datetime import datetime
 
 def import_from_EBI_biosamples(PROJECTS):
@@ -38,7 +38,7 @@ def import_from_EBI_biosamples(PROJECTS):
             sample_obj.last_check = datetime.utcnow()
             ## we rely on the NCBI job to retrieve assemblies
             sample_obj.save()
-            geo_loc_service.get_or_create_coordinates(sample_obj)
+            geo_localization_service.get_or_create_coordinates(sample_obj)
             if not sample_obj.sample_derived_from:
                 organism.insdc_samples.append(sample_obj)
             organism.save()
