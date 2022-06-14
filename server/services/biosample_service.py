@@ -22,3 +22,14 @@ def handle_biosample(assembly, sample_accession):
         for attr in biosample_metadata['attributes']:
             extra_metadata[attr['name']] = [dict(text=attr['value'])]
     return utils.parse_sample_metadata(extra_metadata)
+
+
+def create_biosample_from_biosamples(sample,organism,sub_samples):
+    required_metadata=dict(accession=sample['accession'],taxid=organism.taxid,scientific_name=organism.scientific_name)
+    extra_metadata = utils.parse_sample_metadata({k:sample['characteristics'][k] for k in sample['characteristics'].keys() if k not in ['taxId','scientificName','accession']})
+    new_biosample = BioSample(metadata=extra_metadata,**required_metadata).save()
+    if 'sample derived from' in new_biosample.metadata.keys():
+        sub_samples.append(new_biosample)
+    else:
+        organism.modify(add_to_set__biosamples=new_biosample.accession)
+    return new_biosample

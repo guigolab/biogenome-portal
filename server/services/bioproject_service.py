@@ -7,7 +7,6 @@ ROOT_PROJECT = os.getenv('PROJECT_ACCESSION')
 def create_bioprojects_from_NCBI(bioprojects,organism,sample):
     saved_bioprojects=list()
     for projects_container in bioprojects:
-        print(projects_container)
         for bioproject in projects_container['bioprojects']:
             saved_pr = BioProject.objects(accession=bioproject['accession']).first()
             if not saved_pr:

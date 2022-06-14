@@ -15,13 +15,14 @@ def initialize_routes(api):
 	##data portal endpoints
 	api.add_resource(BioProjectApi, '/api/bioprojects')
 	api.add_resource(OrganismsApi, '/api/root_organisms')
+
 	api.add_resource(OrganismApi, '/api/root_organisms/<name>') 
 	# api.add_resource(OrganismData, '/api/data/<model>')
 	api.add_resource(TaxNodesApi, '/api/taxons/<taxid>')
 	# api.add_resource(SamplesApi, '/api/organisms', '/api/organisms/<accession>')
 	# api.add_resource(BioSampleApi, '/api/biosamples')
 	api.add_resource(TreeApi,'/api/tree','/api/tree/<node>') 
-	api.add_resource(GeoLocApi, '/api/coordinates')
+	api.add_resource(GeoLocApi, '/api/coordinates', '/api/coordinates/<coordinates>') ##expects lat:long dd format
 
 
 	##parser endpoint

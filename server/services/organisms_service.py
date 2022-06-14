@@ -10,18 +10,26 @@ ROOT_NODE=os.getenv('ROOT_NODE')
 PROJECT_ACCESSION=os.getenv('PROJECT_ACCESSION')
 
 def get_organisms(offset=0, limit=20, 
-                sortOrder=None, sortColumn=None,
-                taxid=ROOT_NODE, filter=None, option=None, bioproject=PROJECT_ACCESSION):
+                sort_order=None, sort_column=None,
+                parent_taxid=ROOT_NODE, filter=None, 
+                filter_option=None, bioproject=PROJECT_ACCESSION,
+                coordinates=None,geo_location=None,
+                biosamples=None,local_samples=None,
+                assemblies=None,experiments=None,
+                annotations=None):
     query=dict()
     json_resp=dict()     
-    filter_query = get_query_filter(filter, option) if filter else None
-    taxa = TaxonNode.objects(taxid=taxid).first()
+    filter_query = get_query_filter(filter, filter_option) if filter else None
+    get_coordinates_filter(query,coordinates,geo_location)
+    get_data_query(query, biosamples, local_samples, assemblies, annotations, experiments)
+    app.logger.info(query)
+    taxa = TaxonNode.objects(taxid=parent_taxid).first()
     query['taxon_lineage'] = taxa.taxid
     if bioproject and not bioproject==PROJECT_ACCESSION:
         query['bioprojects'] = bioproject
     organisms = Organism.objects(filter_query, **query).exclude('id') if filter_query else Organism.objects.filter(**query).exclude('id')
-    if sortColumn:
-        sort = '-'+sortColumn if sortOrder == 'true' else sortColumn
+    if sort_column:
+        sort = '-'+sort_column if sort_order == 'true' else sort_column
         organisms = organisms.order_by(sort)
     json_resp['total'] = organisms.count()
     json_resp['data'] = organisms[int(offset):int(offset)+int(limit)].as_pymongo()
@@ -35,8 +43,26 @@ def get_query_filter(filter,option):
     elif option == 'tolid':
         return (Q(tolid_prefix__iexact=filter) | Q(tolid_prefix__icontains=filter))
     else:
-        return (Q(organism__iexact=filter) | Q(organism__icontains=filter))
+        return (Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter))
 
+def get_data_query(query, biosamples, localSamples, assemblies, annotations, experiments):
+    if biosamples:
+        query['biosamples__not__size'] = 0
+    if localSamples:
+        query['local_samples'] = 0
+    if assemblies:
+        query['assemblies__not__size'] = 0
+    if annotations:
+        query['annotations__not__size'] = 0
+    if experiments:
+        query['experiments__not__size'] = 0
+
+
+def get_coordinates_filter(query, only_coordinates, geo_location):
+    if geo_location:
+        query['coordinates'] = geo_location
+    elif only_coordinates == 'true':
+        query['coordinates__not__size'] = 0
 
 def get_or_create_organism(taxid, common_names=None):
     organism = Organism.objects(taxid=taxid).first()

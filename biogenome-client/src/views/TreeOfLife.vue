@@ -59,7 +59,7 @@ var legendDomains = reactive([])
 const props = defineProps({
     node:String
 })
-const width = ref(2000)
+const width = ref(3000)
 const outerRadius = computed(()=>width.value/2)
 const innerRadius = computed(()=> outerRadius.value - 170)
 const legendPosition =  computed(()=> -outerRadius.value)

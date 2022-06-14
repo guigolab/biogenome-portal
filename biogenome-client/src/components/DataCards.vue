@@ -1,12 +1,13 @@
 <template>
     <div class="row">
         <div v-for="dt in Object.keys(data)" :key="dt" class="flex">
-            <va-card class="custom-card">
+            <va-card @click="dataSelected(dt)" class="custom-card">
                 <va-card-title>{{dt}}</va-card-title>
                 <va-card-content>
                     <div class="row justify--space-between align--center">
                         <div class="flex">
-                            <p class="text--secondary"><strong>{{data[dt]}}</strong></p>
+                            <p style="font-size:0.8rem" class="text--secondary"><strong>{{'organisms :'+data[dt].organisms}}</strong></p>
+                            <p style="font-size:0.8rem" class="text--secondary"><strong>{{'total '+ dt +': '+data[dt].total}}</strong></p>
                         </div>
                         <div class="flex">
                             <va-icon 
@@ -28,6 +29,12 @@ import {dataIcons} from '../../config'
 import DataPortalService from '../services/DataPortalService'
 
 
+const emit = defineEmits(['onDataSelection'])
+
+function dataSelected(dataKey){
+    emit('onDataSelection',dataKey)
+}
+
 var data = ref({})
 
 onMounted(()=>{
@@ -36,4 +43,5 @@ onMounted(()=>{
         data.value = {...resp.data}
     })
 })
+
 </script>

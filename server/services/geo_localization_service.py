@@ -28,7 +28,14 @@ def geo_localization_coordinates(bioproject=None):
         FEATURE_COLLECTION_OBJECT['features'] = coordinates
         return FEATURE_COLLECTION_OBJECT
 
-def get_or_create_coordinates(sample):
+def geo_localization_object(coordinates):
+    ##expects lat:long format
+    geo_loc_obj = json.loads(GeoCoordinates.objects(geo_location=coordinates).first().to_json())
+    ##get full organism objects
+    geo_loc_obj['organisms'] = json.loads(Organism.objects(taxid__in=geo_loc_obj['organisms']).to_json())
+    return geo_loc_obj
+
+def get_or_create_coordinates(sample,organism):
     ##parse coordinates
     if 'lat_lon' in sample.metadata.keys():
         values = sample.metadata['lat_lon'].split(' ')
@@ -48,7 +55,8 @@ def get_or_create_coordinates(sample):
         geo_obj = GeoCoordinates.objects(geo_location=geo_loc).first()
         if not geo_obj:
             geo_obj = GeoCoordinates(geo_location=geo_loc).save()
-        geo_obj.modify(add_to_set__organisms=sample.taxid)
+        geo_obj.modify(add_to_set__organisms=organism.taxid)
+        organism.modify(add_to_set__coordinates=geo_obj.geo_location)
         for project in sample.bioprojects:
             geo_obj.modify(add_to_set__bioprojects=project)
         if not geo_obj.geometry:

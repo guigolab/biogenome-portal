@@ -2,7 +2,8 @@
 #TODO handle mapping between biosamples attribute project name and bioproject accession
 BIOPROJECTS_MAPPER={
     'VGP':'PRJNA489243',
-    'DTOL':'PRJEB40665'
+    'DTOL':'PRJEB40665',
+    'ERGA':'PRJEB43510'
 }
 
 

@@ -1,38 +1,38 @@
 <template>
-<va-card class="custom-card">
+<va-card>
     <va-card-title>
         organisms
     </va-card-title>
     <va-card-content>
         <div class="row justify--space-between">
-            <div class="flex">
-                <va-button-dropdown color="gray" leftIcon flat outline :label="orgStore.query.limit">
+            <div v-if="organisms.length > query.limit" class="flex">
+                <va-button-dropdown color="gray" leftIcon flat outline :label="query.limit">
                     <va-button
                         color="gray"
                         flat
-                        :disabled="orgStore.query.limit === opt"
+                        :disabled="query.limit === opt"
                         v-for="(opt,index) in [20,50,100]"
                         :key="index"
-                        @click="orgStore.query.limit=opt"
+                        @click="query.limit=opt"
                     >
                     {{opt}}
                     </va-button>
                 </va-button-dropdown>
             </div>
             <div class="flex">
-                <va-button-dropdown color="gray" leftIcon flat outline :label="(orgStore.query.offset+1)+'-'+(orgStore.query.limit+orgStore.query.offset>orgStore.total?orgStore.total:orgStore.query.limit+orgStore.query.offset)+' of '+orgStore.total">
-                    <va-button :disabled="orgStore.query.offset === 0" @click="orgStore.query.offset=0" flat color="gray">Start</va-button>
-                    <va-button :disabled="orgStore.query.offset+orgStore.query.limit >= orgStore.total" @click="orgStore.query.offset=orgStore.total-orgStore.query.limit" flat color="gray">End</va-button>
+                <va-button-dropdown color="gray" leftIcon flat outline :label="(query.offset+1)+'-'+(query.limit+query.offset>total?total:query.limit+query.offset)+' of '+total">
+                    <va-button :disabled="query.offset === 0" @click="query.offset=0" flat color="gray">Start</va-button>
+                    <va-button :disabled="query.offset+query.limit >= total" @click="query.offset=total-query.limit" flat color="gray">End</va-button>
                 </va-button-dropdown>
-                <va-button color="gray" v-if="orgStore.query.offset-orgStore.query.limit > 0" @click="orgStore.query.offset=orgStore.query.offset-orgStore.query.limit" flat icon="chevron_left"/>
-                <va-button color="gray" v-if="orgStore.query.offset+orgStore.query.limit < orgStore.total" @click="orgStore.query.offset=orgStore.query.offset+orgStore.query.limit" flat icon="chevron_right"/>
+                <va-button color="gray" v-if="query.offset-query.limit > 0" @click="query.offset=query.offset-query.limit" flat icon="chevron_left"/>
+                <va-button color="gray" v-if="query.offset+query.limit < total" @click="query.offset=query.offset+query.limit" flat icon="chevron_right"/>
             </div> 
         </div>
         <va-divider/>
         <div class="row">
             <div class="flex lg12 md12">
                 <ul style="max-height:65vh;overflow:scroll" >
-                    <li  v-for="(item, index) in orgStore.organisms"
+                    <li  v-for="(item, index) in props.organisms"
                         :key="index"
                         class="organism-item">
                         <div class="row justify--space-between align--center">
@@ -77,27 +77,30 @@
 
 </template>
 <script setup>
-import { reactive,ref } from "@vue/reactivity";
-import { computed, onMounted, watch } from "@vue/runtime-core";
+import { watch,nextTick } from 'vue'
 import {dataIcons} from '../../config'
-import {organisms} from '../stores/organisms'
-import {taxons} from '../stores/taxons'
-import DataPortalService from '../services/DataPortalService'
+import portalService from '../services/DataPortalService'
 
-const orgStore = organisms()
-const taxStore = taxons()
-
-onMounted(()=>{
-    orgStore.loadOrganisms()
+const props = defineProps({
+    organisms: Array,
+    query: Object,
+    total:String
 })
 
+watch(props.query, (oldValue,newValue)=>{
+    portalService.getOrganisms(newValue)
+    .then(resp => {
+        nextTick(()=>{
+            props.organisms = [...resp.data.data]
+            props.total = resp.data.total
+        })
+    })
+})
 function mapData(item){
     return Object.keys(item).filter(k => ['local_samples','biosamples','assemblies','experiments','annotations'].includes(k))
     .filter(key => item[key].length)
 }
-watch(orgStore.query, ()=>{
-    orgStore.loadOrganisms()
-})
+
 
 </script>
 <style scoped>

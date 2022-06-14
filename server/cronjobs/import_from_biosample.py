@@ -1,50 +1,34 @@
-from db.models import BioSample, Experiment
-from utils import ena_client,utils,constants
-from services import organisms_service,geo_localization_service
-from datetime import datetime
+from db.models import BioSample
+from utils import ena_client
+from services import organisms_service,geo_localization_service,biosample_service,experiment_service,bioproject_service
 
 def import_from_EBI_biosamples(PROJECTS):
     print('STARTING IMPORT BIOSAMPLES JOB')
-    sample_dict = collect_samples(PROJECTS) ##return dict with project names as keys
+    project_mapper = {p.split('_')[0]:p.split('_')[1] for p in PROJECTS}
+    sample_dict = collect_samples(project_mapper.keys()) ##return dict with project names as keys
     existing_samples = BioSample.objects.scalar('accession')
+    sub_samples = list()
     for project in sample_dict.keys():
         for sample in sample_dict[project]:
             if sample['accession'] in existing_samples:
                 continue
             taxid = str(sample['taxId'])
-            characteristics = utils.parse_sample_metadata(sample['characteristics'])
             organism = organisms_service.get_or_create_organism(taxid)
             if not organism:
                 print('TAXID NOT FOUND:',taxid)
                 print('SKIPPING SAMPLE CREATION')
                 continue
-            characteristics['scientific_name'] = organism.organism #overwrite or create scientific_name
-            required_attr=dict(accession=sample['accession'],taxid=taxid)
-            sample_obj = BioSample(**required_attr,**characteristics)
-            ##link with bioproject
-            if project in constants.BIOPROJECTS_MAPPER.keys():
-                project_accession = constants.BIOPROJECTS_MAPPER[project]
-                sample_obj.bioprojects.append(constants.BIOPROJECTS_MAPPER[project])
-                if not project_accession in organism.bioprojects:
-                    organism.bioprojects.append(project_accession)
+            biosample = biosample_service.create_biosample_from_biosamples(sample, organism, sub_samples)
+            experiment_service.create_experiments(biosample,organism)
+            bioproject_service.create_bioproject_from_ENA(project_mapper[project])
+            organism.modify(add_to_set__bioprojects=project_mapper[project])
+            biosample.modify(add_to_set__bioprojects=project_mapper[project])
             ##get experiments
-            experiments = ena_client.get_reads(sample_obj.accession)
-            for exp in experiments:
-                if Experiment.objects(experiment_accession=exp['experiment_accession']).first():
-                    continue ##ena sometimes returns duplicates
-                exp_obj = Experiment(**exp).save()
-                organism.experiments.append(exp_obj)
-                sample_obj.experiments.append(exp_obj)
-            sample_obj.last_check = datetime.utcnow()
             ## we rely on the NCBI job to retrieve assemblies
-            sample_obj.save()
-            geo_localization_service.get_or_create_coordinates(sample_obj)
-            if not sample_obj.sample_derived_from:
-                organism.insdc_samples.append(sample_obj)
-            organism.save()
+            geo_localization_service.get_or_create_coordinates(biosample,organism)
     print('APPENDING SPECIMENS')
     ##append specimens as a backup if biosamples api fails
-    append_specimens()
+    append_specimens(sub_samples)
     print('DATA FROM ENA/BIOSAMPLES IMPORTED')
 
 def collect_samples(PROJECTS):
@@ -56,15 +40,19 @@ def collect_samples(PROJECTS):
             samples[project] = biosamples
     return samples
 
-def append_specimens():
-    specimens = BioSample.objects(sample_derived_from__ne=None)
-    containers = BioSample.objects(accession__in=[rec.sample_derived_from for rec in specimens])
-    for container in containers:
-        new_specimens = [spec for spec in specimens \
-            if spec.sample_derived_from == container.accession and \
-                not spec.accession in [spec.fetch().accession for spec in container.specimens]]
-            # new_specimens = list(set(sample_specimens)-set([spec.fetch() for spec in sample_container.specimens]))
-        container.modify(push_all__specimens=new_specimens)
+def append_specimens(sub_samples):
+    for sample in sub_samples:
+        sample_container = BioSample.objects(accession=sample.metadata['sample derived from']).first()
+        if not sample_container:
+            ##append orphans to organism
+            organism = organisms_service.get_or_create_organism(sample.taxid)
+            if not organism:
+                print('ORGANISM DOES NOT EXIST', sample.taxid)
+                continue
+            organism.modify(add_to_set__biosamples=sample.accession)
+        else:
+            sample_container.modify(add_to_set__sub_samples=sample.accession)
+    #get orphan specimens and append to organism
 
 
 
