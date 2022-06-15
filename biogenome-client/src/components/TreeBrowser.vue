@@ -1,31 +1,33 @@
 <template>
-<ul class="tree-container">
-    <li v-for="child in children" :key="child.taxid">
-        <div @click="toggle(child)" class="child-container row justify--space-between align--center">
-            <div v-if="child.children && child.children.length" class="flex lg1 md1">
-                <va-icon color="gray" :name="child.isOpen? 'expand_less':'expand_more'"/>
+<ul class="tree-container" :id="item.name">
+    <li>
+        <div @click="toggle(item)" class="child-container row justify--space-between align--center">
+            <div v-if="item.children && item.children.length" class="flex lg1 md1">
+                <va-icon color="gray" :name="item.isOpen? 'expand_less':'expand_more'"/>
             </div>
             <div class="flex lg10 md10">
                 <div class="row align--center justify--start">
                     <div class="flex">
-                        <a class="link">{{child.name}}</a>
+                        <a class="link">{{item.name}}</a>
                     </div>
                     <div class="flex">
-                        <p class="text--secondary">{{'('+child.rank+')'}}</p>
+                        <p class="text--secondary">{{'('+item.rank+')'}}</p>
                     </div>
                 </div>
             </div>
             <div class="flex lg1 md1">
-                <va-badge @click.stop.prevent="updateOrganisms(child)" color="success" :text="child.leaves"/>
+                <va-badge @click.stop.prevent="updateOrganisms(item)" color="success" :text="item.leaves"/>
             </div>
         </div>
         <Transition name="slide-fade">
-            <TreeBrowser
-                v-show="child.isOpen" v-if="child.children && child.children.length"
-                class="item"
-                :key="index"
-                :children="child.children"
-            />
+            <ul v-show="item.isOpen" v-if="item.children && item.children.length">
+                <TreeBrowser
+                    v-for="(child, index) in item.children"
+                    class="item"
+                    :key="index"
+                    :item="child"
+                />
+            </ul>
         </Transition>
     </li>
 </ul>
@@ -41,7 +43,7 @@ const taxStore = taxons()
 const orgStore = organisms()
 
 const props = defineProps({
-    children:Object
+    item:Object
 })
 
 function toggle(item){
@@ -59,7 +61,7 @@ function toggle(item){
 }
 
 function updateOrganisms(node){
-    orgStore.query.taxid = node.taxid
+    orgStore.query.parent_taxid = node.taxid
     if(!taxStore.taxonNav.filter(el => el.taxid === node.taxid).length){
         taxStore.taxonNav.push(node)
     }

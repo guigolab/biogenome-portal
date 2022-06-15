@@ -1,8 +1,14 @@
 from db.models import BioProject
 from utils.ena_client import get_bioproject
-import os
+import json
 
-ROOT_PROJECT = os.getenv('PROJECT_ACCESSION')
+
+def get_bioproject(accession):
+    biop = BioProject.objects(accession=accession).first()
+    if biop:
+        response = json.loads(biop.to_json())
+        response['children'] = json.loads(BioProject.objects(parents=biop.accession).to_json())
+        return response
 
 def create_bioprojects_from_NCBI(bioprojects,organism,sample):
     saved_bioprojects=list()

@@ -1,5 +1,8 @@
 from db.models import TaxonNode
 from flask import current_app as app
+import json
+
+from utils.pipelines import TaxonPipeline
 
 def bfs(node, nodes):
     queue = [(node,0)]
@@ -44,12 +47,21 @@ def create_tree(taxid, levels=False):
 
     # tree = append_children(root, dict())
     # return tree
-
+def get_tree_item(taxid):
+    tree = next(TaxonNode.objects(taxid=taxid).aggregate(*TaxonPipeline))
+    tree['isOpen'] = True
+    return tree
 # def create_tree(taxid, root):
 #     taxon = TaxonNode.objects(taxid=taxid).as_pymongo()
 
 #     root.children.append(taxon)
-
+# def open_child(node, children):
+#     children = TaxonNode.objects(taxid__in=tax_node.children)
+#     node['children'] = json.loads(children.to_json())
+#     for child in node['children']:
+#         child['isOpen'] = True
+#     if len(children) == 1:
+#         open_child(node['children'],children)
 # def create_tree(node, max_leaves):
 #     node_counts={}
 #     max_level = bfs(node,node_counts, max_leaves)

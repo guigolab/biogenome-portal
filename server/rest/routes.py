@@ -13,7 +13,7 @@ def initialize_routes(api):
 	api.add_resource(Login, '/api/login')
 	api.add_resource(StatisticsApi, '/api/statistics')
 	##data portal endpoints
-	api.add_resource(BioProjectApi, '/api/bioprojects')
+	api.add_resource(BioProjectApi, '/api/bioprojects', '/api/bioprojects/<accession>')
 	api.add_resource(OrganismsApi, '/api/root_organisms')
 
 	api.add_resource(OrganismApi, '/api/root_organisms/<name>') 

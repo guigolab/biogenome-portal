@@ -12,28 +12,41 @@ PROJECT_ACCESSION=os.getenv('PROJECT_ACCESSION')
 def get_organisms(offset=0, limit=20, 
                 sort_order=None, sort_column=None,
                 parent_taxid=ROOT_NODE, filter=None, 
-                filter_option=None, bioproject=PROJECT_ACCESSION,
+                filter_option=None, bioproject=None,
                 coordinates=None,geo_location=None,
                 biosamples=None,local_samples=None,
                 assemblies=None,experiments=None,
                 annotations=None):
     query=dict()
-    json_resp=dict()     
+    json_resp=dict()
+    stats=dict()    
     filter_query = get_query_filter(filter, filter_option) if filter else None
     get_coordinates_filter(query,coordinates,geo_location)
     get_data_query(query, biosamples, local_samples, assemblies, annotations, experiments)
-    app.logger.info(query)
     taxa = TaxonNode.objects(taxid=parent_taxid).first()
     query['taxon_lineage'] = taxa.taxid
-    if bioproject and not bioproject==PROJECT_ACCESSION:
+    if bioproject:
         query['bioprojects'] = bioproject
     organisms = Organism.objects(filter_query, **query).exclude('id') if filter_query else Organism.objects.filter(**query).exclude('id')
     if sort_column:
         sort = '-'+sort_column if sort_order == 'true' else sort_column
         organisms = organisms.order_by(sort)
+    stats = get_stats(organisms)
     json_resp['total'] = organisms.count()
     json_resp['data'] = organisms[int(offset):int(offset)+int(limit)].as_pymongo()
+    json_resp['stats'] = stats
     return json.dumps(json_resp)    
+
+
+def get_stats(organisms):
+    stats = dict()
+    stats['biosamples'] = organisms.filter(biosamples__not__size=0).count()
+    stats['local_samples'] = organisms.filter(local_samples__not__size=0).count()
+    stats['assemblies'] = organisms.filter(assemblies__not__size=0).count()
+    stats['experiments'] = organisms.filter(experiments__not__size=0).count()
+    stats['annotations'] = organisms.filter(annotations__not__size=0).count()
+    return stats
+
 
 def get_query_filter(filter,option):
     if option == 'taxid':
@@ -49,13 +62,14 @@ def get_data_query(query, biosamples, localSamples, assemblies, annotations, exp
     if biosamples:
         query['biosamples__not__size'] = 0
     if localSamples:
-        query['local_samples'] = 0
+        query['local_samples__not__size'] = 0
     if assemblies:
         query['assemblies__not__size'] = 0
     if annotations:
         query['annotations__not__size'] = 0
     if experiments:
         query['experiments__not__size'] = 0
+
 
 
 def get_coordinates_filter(query, only_coordinates, geo_location):

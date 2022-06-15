@@ -31,7 +31,7 @@
         <va-divider/>
         <div class="row">
             <div class="flex lg12 md12">
-                <ul style="max-height:65vh;overflow:scroll" >
+                <ul style="max-height:80vh;overflow:scroll" >
                     <li  v-for="(item, index) in props.organisms"
                         :key="index"
                         class="organism-item">
@@ -81,21 +81,14 @@ import { watch,nextTick } from 'vue'
 import {dataIcons} from '../../config'
 import portalService from '../services/DataPortalService'
 
+
 const props = defineProps({
     organisms: Array,
     query: Object,
     total:String
 })
 
-watch(props.query, (oldValue,newValue)=>{
-    portalService.getOrganisms(newValue)
-    .then(resp => {
-        nextTick(()=>{
-            props.organisms = [...resp.data.data]
-            props.total = resp.data.total
-        })
-    })
-})
+
 function mapData(item){
     return Object.keys(item).filter(k => ['local_samples','biosamples','assemblies','experiments','annotations'].includes(k))
     .filter(key => item[key].length)

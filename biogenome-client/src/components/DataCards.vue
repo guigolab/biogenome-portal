@@ -1,13 +1,11 @@
 <template>
     <div class="row">
-        <div v-for="dt in Object.keys(data)" :key="dt" class="flex">
-            <va-card @click="dataSelected(dt)" class="custom-card">
-                <va-card-title>{{dt}}</va-card-title>
-                <va-card-content>
+        <div v-for="dt in stats" :key="dt" class="flex">
+            <va-card :stripe="orgStore.query[dt]" :stripe-color="dataIcons[dt].color" @click="dataSelected(dt)">
+                <va-card-title>
                     <div class="row justify--space-between align--center">
                         <div class="flex">
-                            <p style="font-size:0.8rem" class="text--secondary"><strong>{{'organisms :'+data[dt].organisms}}</strong></p>
-                            <p style="font-size:0.8rem" class="text--secondary"><strong>{{'total '+ dt +': '+data[dt].total}}</strong></p>
+                            {{dt}}
                         </div>
                         <div class="flex">
                             <va-icon 
@@ -15,7 +13,14 @@
                                 :color="dataIcons[dt].color"
                             >
                             </va-icon>
-                        </div>  
+                        </div>
+                    </div>
+                </va-card-title>
+                <va-card-content>
+                    <div class="row justify--start">
+                        <div class="flex">
+                            <p><strong>{{orgStore.stats[dt]}}</strong></p>
+                        </div>
                     </div>
                 </va-card-content>
             </va-card> 
@@ -24,9 +29,20 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from '@vue/runtime-core'
+import gsap from 'gsap'
+import { computed, onMounted, ref, watch } from '@vue/runtime-core'
 import {dataIcons} from '../../config'
 import DataPortalService from '../services/DataPortalService'
+import {organisms} from '../stores/organisms'
+
+const orgStore = organisms()
+
+const stats = computed(()=> Object.keys(orgStore.stats).filter(key => orgStore.stats[key]>0))
+
+watch(orgStore.stats, (stats) => {
+    console.log('HELLOOO')
+//   gsap.to(tweened, { duration: 0.5, number: Number(n) || 0 })
+},{deep:true})
 
 
 const emit = defineEmits(['onDataSelection'])
@@ -38,10 +54,7 @@ function dataSelected(dataKey){
 var data = ref({})
 
 onMounted(()=>{
-    DataPortalService.getStats()
-    .then(resp =>{
-        data.value = {...resp.data}
-    })
+
 })
 
 </script>

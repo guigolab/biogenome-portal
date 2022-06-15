@@ -1,8 +1,16 @@
 from db.models import Organism,Assembly,Annotation,Experiment,LocalSample,BioSample
 import json
+import os
+
+ROOT_NODE=os.getenv('ROOT_NODE')
 
 ##count how many organisms have data
-def get_data_count():
+def get_data_count(parent_taxid=ROOT_NODE, filter=None, 
+                filter_option=None, bioproject=None,
+                coordinates=None,geo_location=None,
+                biosamples=None,local_samples=None,
+                assemblies=None,experiments=None,
+                annotations=None):
     data_count = dict()
     ass = Assembly.objects().count()
     if ass > 0:

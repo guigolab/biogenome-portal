@@ -21,9 +21,4 @@ class TreeLevels(Resource):
 
 class TaxNodesApi(Resource):
     def get(self,taxid):
-        tax_node= TaxonNode.objects(taxid=taxid).first()
-        children = TaxonNode.objects(taxid__in=tax_node.children).to_json()
-        # tax_node['isOpen'] = False
-        # for node in tax_node['children']:
-        #     node['isOpen'] = False
-        return Response(children, mimetype="application/json", status=200)
+        return Response(json.dumps(service.get_tree_item(taxid)), mimetype="application/json", status=200)

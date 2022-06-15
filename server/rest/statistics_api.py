@@ -7,5 +7,5 @@ class StatisticsApi(Resource):
 
     ##get last created model object
     def get(self):
-        return Response(get_data_count(), mimetype="application/json", status=200)
+        return Response(get_data_count(**request.args), mimetype="application/json", status=200)
  

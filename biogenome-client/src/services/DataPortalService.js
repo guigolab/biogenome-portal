@@ -20,8 +20,8 @@ class DataPortalService {
     getStats(){
         return base.get('/statistics')
     }
-    getRootProjectChildren(){
-        return base.get('/bioprojects')
+    getBioProjectChildren(accession){
+        return base.get(`/bioprojects/${accession}`)
     }
     getCoordinatesBySampleIds(ids,){
         return base.post('/coordinates',ids)

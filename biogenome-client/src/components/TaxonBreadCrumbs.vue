@@ -1,5 +1,25 @@
 <template>
-    <div style="max-width:75%">
+<!-- <va-card >
+    <va-card-title>
+        Taxonomy scope
+    </va-card-title>
+    <va-card-content> -->
+        <div class="row">
+            <div v-for="(node,index) in taxStore.taxonNav" :key="node.taxid" class="flex">
+                <div class="row justify--space-between align--center">
+                    <div class="flex">
+                        <va-icon @click="toggle(node,index)" name="radio_button_checked" :color="index === lastElementIndex?'success':'gray'"/>
+                    </div>
+                    <div class="flex">
+                        <p style="font-size:.8rem">{{node.name+' ('+node.rank+')'}}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <!-- </va-card-content>
+</va-card> -->
+
+    <!-- <div style="max-width:75%">
         <div v-for="(node,index) in taxStore.taxonNav" :key="node.taxid" style="padding:5px;width:fit-content">
             <div class="row justify--space-between align--center">
                 <div class="flex">
@@ -10,7 +30,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div> -->
 </template>
 <script setup>
 import { organisms } from '../stores/organisms'
@@ -27,11 +47,11 @@ const lastElementIndex = computed(()=>{
 function toggle(node,index){
     if(lastElementIndex !== index){
         taxStore.taxonNav = taxStore.taxonNav.slice(0, index+1)
-        orgStore.query.taxid = taxStore.taxonNav[index].taxid
+        orgStore.query.parent_taxid = taxStore.taxonNav[index].taxid
       }
     else {
         taxStore.taxonNav = taxStore.taxonNav.slice(0, index)
-        orgStore.query.taxid = taxStore.taxonNav[index-1].taxid
+        orgStore.query.parent_taxid = taxStore.taxonNav[index-1].taxid
     }
     taxStore.taxonNav = taxStore.taxonNav.slice(0, index+1)
     DataPortalService.getTaxonChildren(node.taxid)
