@@ -20,7 +20,7 @@
             </div>
         </div>
         <Transition name="slide-fade">
-            <ul v-show="item.isOpen" v-if="item.children && item.children.length">
+            <ul v-if="item.children && item.children.length && item.isOpen">
                 <TreeBrowser
                     v-for="(child, index) in item.children"
                     class="item"
@@ -47,12 +47,13 @@ const props = defineProps({
 })
 
 function toggle(item){
+    console.log(item)
     if(!item.isOpen){
         if(!item.children.filter(ch => ch && ch.name).length){
             DataPortalService.getTaxonChildren(item.taxid)
             .then(resp => {
                 nextTick(()=>{
-                    item.children = resp.data
+                    item.children = resp.data.children
                 })
             })
         }
