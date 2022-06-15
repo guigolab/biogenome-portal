@@ -1,11 +1,11 @@
-from db.models import Assembly, Experiment, LocalSample,BioSample,Annotation
+from db.models import Assembly, BioProject, Experiment, GeoCoordinates, LocalSample,BioSample,Annotation, TaxonNode
 
 DB_MODEL_MAPPER={
- 'assemblies': Assembly,
- 'experiments':Experiment,
- 'local_samples':LocalSample,
- 'insdc_samples':BioSample,
- 'annotations':Annotation
+ 'assemblies': {'model':Assembly, 'query':'accession__in'},
+ 'experiments':{'model':Experiment, 'query':'experiment_accession__in'},
+ 'local_samples':{'model':LocalSample, 'query':'local_id__in'},
+ 'biosamples':{'model':BioSample, 'query':'accession__in'},
+ 'annotations':{'model':Annotation, 'query':'name__in'},
 }
 
 def get_data(model, ids):

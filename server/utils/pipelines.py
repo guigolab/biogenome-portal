@@ -83,6 +83,7 @@ OrganismPipeline = [
 		"as": "annotations",
 		}
 	},
+	## to mantain lineage order we query it after
 	{"$lookup":
 		{"from": "taxon_node",
 		"localField": "taxon_lineage",

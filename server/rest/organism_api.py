@@ -1,7 +1,7 @@
 import services.search_service as service
 import services.organisms_service as organism_service
 from flask import Response, request
-from db.models import Organism
+from db.models import BioProject, Organism,TaxonNode
 from flask_restful import Resource
 from errors import NotFound, SchemaValidationError
 import json
@@ -28,10 +28,17 @@ class OrganismsApi(Resource):
 class OrganismApi(Resource):
 	def get(self,taxid):
 		organism_obj = Organism.objects(taxid=taxid)
-		if organism_obj.count() == 0:
+		if not organism_obj.first():
 			raise NotFound
-		organism_response = organism_obj.aggregate(*OrganismPipeline).next()
-		app.logger.info(organism_response)
+		organism_response = next(organism_obj.aggregate(*OrganismPipeline))
+		lineage = organism_obj.first().taxon_lineage
+		full_lineage = organism_response['taxon_lineage']
+		organism_response['taxon_lineage'] = []
+		#order lineage TODO FIX THIS
+		for taxid in lineage:
+			organism_response['taxon_lineage'].append(next(f for f in full_lineage if f["taxid"] == taxid ))
+		# if len(organism_obj.bioprojects):
+		# 	organism_response['bioprojects']= BioProject.objects(accession__in=organism_obj.bioprojects),
 		# for sample_type in ['insdc_samples', 'local_samples']:
 		# 	if sample_type in organism_response.keys():
 		# 		for sample in organism_response['insdc_samples']:

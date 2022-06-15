@@ -23,5 +23,13 @@
     },
     "ROOTNODE": "2759",
 
-    "PROJECT_ACCESSION": "PRJNA533106"
+    "PROJECT_ACCESSION": "PRJNA533106",
+
+    "NavBar":{
+        "logoPath":"",
+        "bgColor":"",
+        "navItems":[
+            
+        ]
+    }
 }

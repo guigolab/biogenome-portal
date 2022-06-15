@@ -19,15 +19,15 @@
                 <div class="row justify--end align--center">
                     <div class="flex">
                         <va-icon
-                            name="device_hub"
+                            name="pattern"
                             color="gray"
                         />
                     </div>
                     <div class="flex">
                         <va-icon
-                            name="trending_flat"
+                            name="radio_button_checked"
                             @click.stop.prevent="updateOrganisms(node)"
-                            :color="taxStore.taxonNav[taxStore.taxonNav.length-1].taxid === node.taxid?'success':'gray'"
+                            :color="taxStore.taxonNav[taxStore.taxonNav.length-1].taxid === node.taxid?'primary':'gray'"
                         />
                     </div>
                 </div>

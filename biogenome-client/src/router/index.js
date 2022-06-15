@@ -19,6 +19,11 @@ const routes = [
     component: Home,
   },
   {
+    path: "/organisms",
+    name: "organisms",
+    component: Home,
+  },
+  {
     path: '/tree-of-life',
     redirect: {name: 'tree-of-life', params: {node: ROOTNODE}}
   },
@@ -38,6 +43,11 @@ const routes = [
     name: "organism-details",
     props: true,
     component: organism,
+    children: [
+      {
+        path:'taxid'
+      }
+    ]
   },
   // {
   //   path: "/human",

@@ -1,12 +1,12 @@
 <template>
-    <div width="33%" class="row">
-        <div v-for="(node,index) in taxStore.taxonNav" :key="node.taxid" class="flex">
+    <div>
+        <div v-for="(node,index) in taxStore.taxonNav" :key="node.taxid">
             <div class="row align--center">
-                <div class="flex">
+                <!-- <div class="flex">
                     <va-icon name="trending_flat" :color="index === lastElementIndex?'success':'gray'"/>
-                </div>
+                </div> -->
                 <div class="flex">
-                    <va-chip shadow @click="toggle(node,index)" size="small" :color="index === lastElementIndex?'success':'gray'">
+                    <va-chip dismissible shadow @click="toggle(node,index)" size="small" :color="index === lastElementIndex?'primary':'gray'">
                         {{node.name+' ('+node.rank+')'}}
                     </va-chip>
                 </div>

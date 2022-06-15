@@ -5,13 +5,20 @@
     </div>
     <div class="flex">
         <DataCards/>
-        <TaxonBreadCrumbs/>
         <div class="row">
-            <div class="flex lg12 md12">
+            <div class="flex">
                 <OrganismList :total="orgStore.total" :organisms="orgStore.organisms" :query="orgStore.query"/>
+            </div>
+            <div class="flex">
+                <TaxonBreadCrumbs/>
             </div>
         </div>
     </div>
+
+    <div class="flex">
+        
+    </div>
+
     <!-- <div v-if="orgStore.total > 0" class="flex">
         <BarChart/>
          <LastPublished/> 

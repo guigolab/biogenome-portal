@@ -19,7 +19,7 @@
                 <va-card-content>
                     <div class="row justify--start">
                         <div class="flex">
-                            <p><strong>{{orgStore.stats[dt]}}</strong></p><va-divider><p class="text--secondary">{{orgStore.total}}</p>
+                            <p><strong>{{orgStore.stats[dt]}}</strong></p><va-divider/><p class="text--secondary">{{orgStore.total}}</p>
                         </div>
                     </div>
                 </va-card-content>
