@@ -1,34 +1,46 @@
 <template>
-    <va-card>
-        <va-card-content>
-            <va-select
-                v-if="showBioprojectInput"
-                v-model="selectedProject"
-                label="Bioprojects"
-                :options="options"
-                clearable
-            />
-            <va-input
-                label="filter"
-                placeholder="search organism"
-                v-model="orgStore.query.filter"
-            >
-                <template #prepend>
+    <!-- <va-card class="custom-card">
+        <va-card-title>
+            Organism filters
+        </va-card-title>
+        <va-card-content> -->
+            <div class="row">
+                <div class="flex lg6 md6">
+                    <va-select
+                        v-if="showBioprojectInput"
+                        v-model="selectedProject"
+                        label="Bioprojects"
+                        :options="options"
+                        clearable
+                        style="padding:10px"
+                    />
+                </div>
+                <div class="flex lg3 md3">
                     <va-select
                         label="search field"
                         v-model="orgStore.query.filter_option"
                         :options="['tolid','taxid','common_name']"
+                        style="padding:10px"
+                        :disabled="Boolean(orgStore.query.filter)"
                         clearable
                     />
-                </template>
-                  <template #appendInner>
-                        <va-icon
-                            name="search"
-                        />
-                  </template>
-            </va-input>
-        </va-card-content>
-    </va-card>
+                </div>
+                <div class="flex lg3 md3">
+                    <va-input
+                        label="filter"
+                        placeholder="search organism"
+                        v-model="orgStore.query.filter"
+                        style="padding:10px"
+                    >
+                        <template #appendInner>
+                            <va-icon
+                                name="search"
+                            />
+                        </template>
+                    </va-input>
+                </div>
+            </div>
+
 </template>
 <script setup>
 import { onMounted, reactive, nextTick, ref, watch } from 'vue'

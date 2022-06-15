@@ -1,8 +1,14 @@
 <script setup>
+import OrganismForm from './components/OrganismForm.vue'
+import TreeSideBar from './components/TreeSideBar.vue'
 </script>
 
 <template>
-    <router-view/>
+<div class="row">
+  <div class="flex">
+      <router-view/>
+  </div>
+</div>
 </template>
 
 

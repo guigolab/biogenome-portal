@@ -1,31 +1,45 @@
 <template>
-<ul class="tree-container" :id="item.name">
+<ul class="tree-container" :id="node.name">
     <li>
-        <div @click="toggle(item)" class="child-container row justify--space-between align--center">
-            <div v-if="item.children && item.children.length" class="flex lg1 md1">
-                <va-icon color="gray" :name="item.isOpen? 'expand_less':'expand_more'"/>
-            </div>
-            <div class="flex lg10 md10">
-                <div class="row align--center justify--start">
-                    <div class="flex">
-                        <a class="link">{{item.name}}</a>
+        <div @click="toggle(node)" class="child-container row justify--space-between align--center">
+            <div class="flex">
+                <div class="row justify--start align--center">
+                    <div v-if="node.children && node.children.length" class="flex">
+                        <va-icon color="gray" :name="node.isOpen? 'expand_less':'expand_more'"/>
                     </div>
                     <div class="flex">
-                        <p class="text--secondary">{{'('+item.rank+')'}}</p>
+                        <a class="link">{{node.name}}</a>
+                    </div>
+                    <div class="flex">
+                        <p class="text--secondary">{{'('+node.rank+')'}}</p>
                     </div>
                 </div>
             </div>
-            <div class="flex lg1 md1">
-                <va-badge @click.stop.prevent="updateOrganisms(item)" color="success" :text="item.leaves"/>
+            <div class="flex">
+                <div class="row justify--space-between align--center">
+                    <div class="flex">
+                        <va-icon
+                            name="push_pin"
+                            @click.stop.prevent="updateOrganisms(node)"
+                            color="success"
+                            placement="left"
+                        />
+                    </div>
+                    <div class="flex">
+                        <va-icon
+                            name="device_hub"
+                        />
+                    </div>
+                </div>
             </div>
         </div>
         <Transition name="slide-fade">
-            <ul v-if="item.children && item.children.length && item.isOpen">
+            <ul v-if="node.children && node.children.length && node.isOpen">
                 <TreeBrowser
-                    v-for="(child, index) in item.children"
-                    class="item"
+                    v-for="(child, index) in node.children"
+                    class="node"
                     :key="index"
-                    :item="child"
+                    :node="child"
                 />
             </ul>
         </Transition>
@@ -43,22 +57,21 @@ const taxStore = taxons()
 const orgStore = organisms()
 
 const props = defineProps({
-    item:Object
+    node:Object
 })
 
-function toggle(item){
-    console.log(item)
-    if(!item.isOpen){
-        if(!item.children.filter(ch => ch && ch.name).length){
-            DataPortalService.getTaxonChildren(item.taxid)
+function toggle(node){
+    if(!node.isOpen){
+        if(!node.children.filter(ch => ch && ch.name).length){
+            DataPortalService.getTaxonChildren(node.taxid)
             .then(resp => {
                 nextTick(()=>{
-                    item.children = resp.data.children
+                    node.children = resp.data.children
                 })
             })
         }
     }
-    item.isOpen = !item.isOpen
+    node.isOpen = !node.isOpen
 }
 
 function updateOrganisms(node){

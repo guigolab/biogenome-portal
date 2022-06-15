@@ -1,38 +1,39 @@
 <template>
-<va-card>
+<va-card class="custom-card">
     <va-card-title>
         organisms
     </va-card-title>
     <va-card-content>
+        <OrganismForm/>
         <div class="row justify--space-between">
-            <div v-if="organisms.length > query.limit" class="flex">
-                <va-button-dropdown color="gray" leftIcon flat outline :label="query.limit">
+            <div v-if="total > limit" class="flex">
+                <va-button-dropdown color="gray" leftIcon flat outline :label="limit">
                     <va-button
                         color="gray"
                         flat
-                        :disabled="query.limit === opt"
+                        :disabled="limit === opt"
                         v-for="(opt,index) in [20,50,100]"
                         :key="index"
-                        @click="query.limit=opt"
+                        @click="limit=opt"
                     >
                     {{opt}}
                     </va-button>
                 </va-button-dropdown>
             </div>
             <div class="flex">
-                <va-button-dropdown color="gray" leftIcon flat outline :label="(query.offset+1)+'-'+(query.limit+query.offset>total?total:query.limit+query.offset)+' of '+total">
+                <va-button-dropdown color="gray" leftIcon flat outline :label="(query.offset+1)+'-'+(limit+query.offset>total?total:limit+query.offset)+' of '+total">
                     <va-button :disabled="query.offset === 0" @click="query.offset=0" flat color="gray">Start</va-button>
-                    <va-button :disabled="query.offset+query.limit >= total" @click="query.offset=total-query.limit" flat color="gray">End</va-button>
+                    <va-button :disabled="query.offset+limit >= total" @click="query.offset=total-limit" flat color="gray">End</va-button>
                 </va-button-dropdown>
-                <va-button color="gray" v-if="query.offset-query.limit > 0" @click="query.offset=query.offset-query.limit" flat icon="chevron_left"/>
-                <va-button color="gray" v-if="query.offset+query.limit < total" @click="query.offset=query.offset+query.limit" flat icon="chevron_right"/>
+                <va-button color="gray" v-if="query.offset-limit > 0" @click="query.offset=query.offset-limit" flat icon="chevron_left"/>
+                <va-button color="gray" v-if="query.offset+limit < total" @click="query.offset=query.offset+limit" flat icon="chevron_right"/>
             </div> 
         </div>
         <va-divider/>
         <div class="row">
-            <div class="flex lg12 md12">
-                <ul style="max-height:80vh;overflow:scroll" >
-                    <li  v-for="(item, index) in props.organisms"
+            <div v-if="props.organisms.length" class="flex lg12 md12">
+                <ul  style="max-height:80vh;overflow:scroll" >
+                    <li v-for="(item, index) in props.organisms"
                         :key="index"
                         class="organism-item">
                         <div class="row justify--space-between align--center">
@@ -71,16 +72,19 @@
                     </li>
                 </ul>    
             </div>
+            <div v-else class="flex text--secondary">
+                <p>No organisms to show</p>
+            </div>
         </div>
     </va-card-content>
 </va-card>
 
 </template>
 <script setup>
-import { watch,nextTick } from 'vue'
+import { watch,nextTick,ref } from 'vue'
 import {dataIcons} from '../../config'
 import portalService from '../services/DataPortalService'
-
+import OrganismForm from '../components/OrganismForm.vue'
 
 const props = defineProps({
     organisms: Array,
@@ -88,6 +92,7 @@ const props = defineProps({
     total:String
 })
 
+const limit = ref(props.query.limit)
 
 function mapData(item){
     return Object.keys(item).filter(k => ['local_samples','biosamples','assemblies','experiments','annotations'].includes(k))
