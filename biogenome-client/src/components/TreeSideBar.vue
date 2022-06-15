@@ -1,16 +1,19 @@
 <template>
     <va-card class="custom-card">
         <va-card-title>
-        <div class="row align--center">
-            <div class="flex">
-                <va-icon 
-                    name="menu"
-                    @click="nodeToggled(!toggle)"
-                    :color="toggle?'success':'gray'"
-                >
-                </va-icon>
+            <div class="row justify--space-between align--center">
+                <div class="flex">
+                    <va-icon 
+                        name="menu"
+                        @click="nodeToggled(!toggle)"
+                        :color="toggle?'success':'gray'"
+                    >
+                    </va-icon>
+                </div>
+                <div class="flex">
+                    taxonomy browser
+                </div>
             </div>
-        </div>
         </va-card-title>
         <Transition duration="550" name="nested">
             <va-card-content v-if="toggle">

@@ -4,6 +4,7 @@ import {ROOTNODE} from '../../config'
 
 const treeOfLife = () => import('../views/TreeOfLife.vue')
 const map = () => import('../views/MapPage.vue')
+const organism = () => import('../views/Organism.vue')
 // const jBrowseComponent = () => import('../views/JBrowse.vue')
 // const humanPage = () => import('../views/Human.vue')
 // const humanNew = () => import('../views/HumanNew.vue')
@@ -31,7 +32,13 @@ const routes = [
     path: "/map",
     name: "map",
     component: map
-  }
+  },
+  {
+    path: "/organisms/:taxid",
+    name: "organism-details",
+    props: true,
+    component: organism,
+  },
   // {
   //   path: "/human",
   //   name: "human",

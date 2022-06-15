@@ -1,25 +1,26 @@
 <template>
 <div class="row">
-    <div :class="toggle? 'flex lg4 md4': 'flex'">
+    <div class="flex">
         <TreeSideBar @on-toggle="toggleNode"  :toggle="toggle"/>
     </div>
-    <div class="flex lg8 md8">
+    <div class="flex">
         <DataCards/>
-        <div class="row align--end">
-            <div class="flex">
-                <TaxonBreadCrumbs/>
-            </div>
-        </div>
+        <TaxonBreadCrumbs/>
         <div class="row">
             <div class="flex lg12 md12">
                 <OrganismList :total="orgStore.total" :organisms="orgStore.organisms" :query="orgStore.query"/>
             </div>
         </div>
     </div>
+    <!-- <div v-if="orgStore.total > 0" class="flex">
+        <BarChart/>
+         <LastPublished/> 
+    </div> -->
 </div>
 
 </template>
 <script setup>
+import BarChart from '../components/BarChart.vue'
 import TaxonBreadCrumbs from '../components/TaxonBreadCrumbs.vue'
 import OrganismList from '../components/OrganismList.vue'
 import OrganismTable from '../components/OrganismTable.vue'
@@ -35,8 +36,6 @@ const taxStore = taxons()
 const toggle = ref(false)
 
 function toggleNode(value){
-    console.log('TAX BROWSER TOGGLED')
-    console.log(value)
     toggle.value = value
 }
 function toggleCrumb(value){
@@ -49,8 +48,10 @@ onMounted(()=>{
 })
 
 watch(orgStore.query, ()=>{
+    console.log('HELLOOOO')
     orgStore.loadOrganisms()
 },{deep:true})
+
 function updateQuery(dataKey){
     console.log(updateQuery)
     orgStore.query[dataKey] = orgStore.query[dataKey] ? null : true

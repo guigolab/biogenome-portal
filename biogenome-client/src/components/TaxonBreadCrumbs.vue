@@ -1,9 +1,9 @@
 <template>
-    <div class="row">
+    <div width="33%" class="row">
         <div v-for="(node,index) in taxStore.taxonNav" :key="node.taxid" class="flex">
-            <div class="row justify--start align--center">
-                    <div class="flex">
-                    <va-icon name="trending_flat" color="gray"/>
+            <div class="row align--center">
+                <div class="flex">
+                    <va-icon name="trending_flat" :color="index === lastElementIndex?'success':'gray'"/>
                 </div>
                 <div class="flex">
                     <va-chip shadow @click="toggle(node,index)" size="small" :color="index === lastElementIndex?'success':'gray'">
@@ -26,7 +26,6 @@ const orgStore = organisms()
 const lastElementIndex = computed(()=>{
     return taxStore.taxonNav.length -1
 })
-
 function toggle(node,index){
     DataPortalService.getTaxonChildren(node.taxid)
     .then(resp => {

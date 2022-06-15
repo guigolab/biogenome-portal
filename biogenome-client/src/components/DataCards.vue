@@ -19,7 +19,7 @@
                 <va-card-content>
                     <div class="row justify--start">
                         <div class="flex">
-                            <p><strong>{{orgStore.stats[dt]}}</strong></p>
+                            <p><strong>{{orgStore.stats[dt]}}</strong></p><va-divider><p class="text--secondary">{{orgStore.total}}</p>
                         </div>
                     </div>
                 </va-card-content>
@@ -35,7 +35,7 @@ import {organisms} from '../stores/organisms'
 
 const orgStore = organisms()
 
-const stats = computed(()=> Object.keys(orgStore.stats).filter(key => orgStore.stats[key]>0))
+const stats = computed(()=> Object.keys(orgStore.stats))
 
 function dataSelected(dataKey){
     orgStore.query[dataKey] = orgStore.query[dataKey] ? null : true

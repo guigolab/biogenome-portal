@@ -5,11 +5,11 @@ export const organisms = defineStore('organisms', {
     state: () => ({
         organisms:reactive([]),
         stats:reactive({
-            biosamples:ref(0),
-            local_samples:ref(0),
-            assemblies:ref(0),
-            experiments:ref(0),
-            annotations:ref(0),
+            biosamples:0,
+            local_samples:0,
+            assemblies:0,
+            experiments:0,
+            annotations:0,
         }),
         query:reactive({
             parent_taxid:null,
@@ -34,7 +34,7 @@ export const organisms = defineStore('organisms', {
         loadOrganisms(){
             DataPortalService.getOrganisms(this.query)
             .then(response => {
-                this.organisms = response.data.data
+                this.organisms = [...response.data.data]
                 this.stats = {...response.data.stats}
                 this.total = response.data.total
             })

@@ -16,18 +16,18 @@
                 </div>
             </div>
             <div class="flex">
-                <div class="row justify--space-between align--center">
+                <div class="row justify--end align--center">
                     <div class="flex">
                         <va-icon
-                            name="push_pin"
-                            @click.stop.prevent="updateOrganisms(node)"
-                            color="success"
-                            placement="left"
+                            name="device_hub"
+                            color="gray"
                         />
                     </div>
                     <div class="flex">
                         <va-icon
-                            name="device_hub"
+                            name="trending_flat"
+                            @click.stop.prevent="updateOrganisms(node)"
+                            :color="taxStore.taxonNav[taxStore.taxonNav.length-1].taxid === node.taxid?'success':'gray'"
                         />
                     </div>
                 </div>

@@ -49,62 +49,84 @@ GeoCoordinatesPipeline= [
 
 OrganismPipeline = [
 	{"$lookup":
-		{"from": "secondary_organism",
-		"localField": "insdc_samples",
-		"foreignField": "_id",
-		"as": "insdc_samples",
+		{"from": "bio_samples",
+		"localField": "biosamples",
+		"foreignField": "accession",
+		"as": "biosamples",
 		}
 	},
 	{"$lookup":
-		{"from": "secondary_organism",
+		{"from": "local_samples",
 		"localField": "local_samples",
-		"foreignField": "_id",
+		"foreignField": "local_id",
 		"as": "local_samples",
 		}
 	},
 	{"$lookup":
 		{"from": "experiment",
 		"localField": "experiments",
-		"foreignField": "_id",
+		"foreignField": "experiment_accession",
 		"as": "experiments",
 		}
 	},
 	{"$lookup":
 		{"from": "assembly",
 		"localField": "assemblies",
-		"foreignField": "_id",
+		"foreignField": "accession",
 		"as": "assemblies",
 		}
 	},
 	{"$lookup":
 		{"from": "annotation",
 		"localField": "annotations",
-		"foreignField": "_id",
+		"foreignField": "name",
 		"as": "annotations",
 		}
 	},
 	{"$lookup":
 		{"from": "taxon_node",
 		"localField": "taxon_lineage",
-		"foreignField": "_id",
+		"foreignField": "taxid",
 		"as": "taxon_lineage",
+		}
+	},
+	{"$lookup":
+		{"from": "bio_projects",
+		"localField": "bioprojects",
+		"foreignField": "accession",
+		"as": "bioprojects",
 		}
 	},
 	{"$project": 
 		{"_id":0,
 		"created":0,
-		"insdc_samples": {"assemblies":0,"experiments":0,"specimens":0, "created":0,"last_check":0,},
-		"local_samples": {
-            "assemblies":0,"experiments":0,"specimens":0, 
-            "created":0, "last_check":0, "indigenous_rights_applicable":0,
-            "regulatory_compliance":0,
-            "associated_traditional_knowledge_applicable":0,"ethics_permits_mandatory":0,
-            "sampling_permits_mandatory":0, "nagoya_permits_mandatory":0,
-            "collector_orcid_id":0,"sample_coordinator_orcid_id":0},
-		"taxon_lineage" : 0,
-		"assemblies" : {"_id":0, "created":0},
-		"experiments": {"_id":0},
-		"annotations":{"_id":0}
+		"biosamples":{
+			"_id":0,
+		},
+		"local_samples":{
+			"_id":0
+		},
+		"assemblies":{
+			"_id":0
+		},
+		"experiments":{
+			"_id":0
+		},
+		"annotations":{
+			"_id":0
+		},
+		# "insdc_samples": {"assemblies":0,"experiments":0,"specimens":0, "created":0,"last_check":0,},
+		# "local_samples": {
+        #     "assemblies":0,"experiments":0,"specimens":0, 
+        #     "created":0, "last_check":0, "indigenous_rights_applicable":0,
+        #     "regulatory_compliance":0,
+        #     "associated_traditional_knowledge_applicable":0,"ethics_permits_mandatory":0,
+        #     "sampling_permits_mandatory":0, "nagoya_permits_mandatory":0,
+        #     "collector_orcid_id":0,"sample_coordinator_orcid_id":0},
+		# "taxon_lineage" : 0,
+		# "assemblies" : {"_id":0, "created":0},
+		# "experiments": {"_id":0},
+		# "annotations":{"_id":0}
 		}
 	}
 ]

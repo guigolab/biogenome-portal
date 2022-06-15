@@ -5,12 +5,12 @@ const base = http.base
 class DataPortalService {
 
     getOrganisms(params) {
-        return base.get("/root_organisms", {
+        return base.get("/organisms", {
         params: params
         })
     }
-    getOrganism(name) {
-        return base.get(`/root_organisms/${name}`)
+    getOrganism(taxid) {
+        return base.get(`/organisms/${taxid}`)
     }
     getSamples(accession) {
         if(accession){

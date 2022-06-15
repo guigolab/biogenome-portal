@@ -45,7 +45,7 @@
                                         </va-avatar>
                                     </div>
                                     <div class="flex">
-                                        <a class="link">{{item.scientific_name}}</a>
+                                        <a :href="`/organisms/${item.taxid}`" class="link">{{item.scientific_name}}</a>
                                     </div>
                                 </div>
                                 <div class="row">

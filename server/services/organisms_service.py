@@ -41,7 +41,8 @@ def get_organisms(offset=0, limit=20,
 def get_stats(organisms):
     stats = dict()
     stats['biosamples'] = organisms.filter(biosamples__not__size=0).count()
-    stats['local_samples'] = organisms.filter(local_samples__not__size=0).count()
+    if os.getenv('LOCAL_MANAGEMENT'):
+        stats['local_samples'] = organisms.filter(local_samples__not__size=0).count()
     stats['assemblies'] = organisms.filter(assemblies__not__size=0).count()
     stats['experiments'] = organisms.filter(experiments__not__size=0).count()
     stats['annotations'] = organisms.filter(annotations__not__size=0).count()
