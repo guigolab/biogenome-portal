@@ -3,11 +3,6 @@
       <!-- <div id="popup" ref="olpopup" class="ol-popup">
       <div id="popup-content"></div> -->
     </div>
-    <div style="height: 300px" ref="map3d">
-      <div id="popup" ref="olpopup" class="ol-popup">
-      <div id="popup-content"></div>
-        </div>
-    </div>
 </template>
 <script setup>
 import Overlay from 'ol/Overlay';
@@ -20,19 +15,16 @@ import VectorSource from 'ol/source/Vector'
 import {Style, Icon} from 'ol/style';
 import GeoJSON from 'ol/format/GeoJSON'
 import 'ol/ol.css'
-
-import OLCesium from 'ol-cesium';
 import { onMounted, watch,ref, reactive } from 'vue';
 
 
 const map2d = ref(null)
-const map3d = ref(null)
 const olpopup = ref(null)
 var olMap = null
 var vectorLayer = null
 
 const props = defineProps({
-    geojson:ref(Object)
+    taxid: String
 })
 
 onMounted(()=>{
@@ -55,7 +47,6 @@ watch(props.geojson,(newValue, oldValue)=>{
     vectorLayer = createLayer()
     olMap = createMap(vectorLayer)
     updateSource(value)
-    const ol3d = new OLCesium({map: olMap, target: map3d.value}); // olMap is the ol.Map instance
     ol3d.setEnabled(true);
 })
 

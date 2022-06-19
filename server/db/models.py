@@ -165,7 +165,7 @@ class Organism(db.Document):
     scientific_name = db.StringField(required=True)
     taxid = db.StringField(required= True)
     image = db.FileField()
-    image_url = db.StringField()
+    image_urls = db.ListField(db.StringField())
     taxon_lineage = db.ListField(db.StringField())
     insdc_status = db.EnumField(INSDCStatus)
     goat_status = db.EnumField(GoaTStatus)

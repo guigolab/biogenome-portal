@@ -17,7 +17,7 @@ def initialize_routes(api):
 	api.add_resource(OrganismsApi, '/api/organisms')
 
 	api.add_resource(OrganismApi, '/api/organisms/<taxid>') 
-	# api.add_resource(OrganismData, '/api/data/<model>')
+	api.add_resource(OrganismData, '/api/data/<model>')
 	api.add_resource(TaxNodesApi, '/api/taxons/<taxid>')
 	# api.add_resource(SamplesApi, '/api/organisms', '/api/organisms/<accession>')
 	# api.add_resource(BioSampleApi, '/api/biosamples')

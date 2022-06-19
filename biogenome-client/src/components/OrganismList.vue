@@ -4,22 +4,7 @@
         organisms
     </va-card-title>
     <va-card-content>
-        <OrganismForm/>
-        <div class="row justify--space-between">
-            <div v-if="total > limit" class="flex">
-                <va-button-dropdown color="gray" leftIcon flat outline :label="limit">
-                    <va-button
-                        color="gray"
-                        flat
-                        :disabled="limit === opt"
-                        v-for="(opt,index) in [20,50,100]"
-                        :key="index"
-                        @click="limit=opt"
-                    >
-                    {{opt}}
-                    </va-button>
-                </va-button-dropdown>
-            </div>
+        <div class="row justify--end">
             <div class="flex">
                 <va-button-dropdown color="gray" leftIcon flat outline :label="(query.offset+1)+'-'+(limit+query.offset>total?total:limit+query.offset)+' of '+total">
                     <va-button :disabled="query.offset === 0" @click="query.offset=0" flat color="gray">Start</va-button>
@@ -30,14 +15,13 @@
             </div> 
         </div>
         <va-divider/>
-        <div class="row">
-            <div v-if="props.organisms.length" class="flex lg12 md12">
-                <ul  style="max-height:80vh;overflow:scroll" >
+            <div style="height:300px;overflow:scroll" v-if="props.organisms.length">
+                <ul>
                     <li v-for="(item, index) in props.organisms"
                         :key="index"
                         class="organism-item">
                         <div class="row justify--space-between align--center">
-                            <div class="flex">
+                            <div class="flex lg12 md12">
                                 <div class="row" style="margin-bottom:5px">
                                     <div v-if="item.image_url" class="flex">
                                         <va-avatar>
@@ -46,6 +30,7 @@
                                     </div>
                                     <div class="flex">
                                         <a :href="`/organisms/${item.taxid}`" class="link">{{item.scientific_name}}</a>
+                                        <!-- <a @click.stop.prevent="$emit('organismSelected', item.taxid)" class="link">{{item.scientific_name}}</a> -->
                                     </div>
                                 </div>
                                 <div class="row">
@@ -62,7 +47,7 @@
                                         <va-icon
                                             :name="dataIcons[dt].icon"
                                             :color="dataIcons[dt].color"
-                                            @click="console.log(dt)"
+                                            @click="$emit('dataSelected', {model:dt, ids: item[dt], name: item.scientific_name})"
                                         />
                                     </div>
                                 </div>
@@ -73,9 +58,8 @@
                 </ul>    
             </div>
             <div v-else class="flex text--secondary">
-                <p>No organisms to show</p>
+                <p>No organisms found</p>
             </div>
-        </div>
     </va-card-content>
 </va-card>
 

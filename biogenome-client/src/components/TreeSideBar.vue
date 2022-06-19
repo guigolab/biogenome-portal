@@ -1,23 +1,11 @@
 <template>
     <va-card class="custom-card">
         <va-card-title>
-            <div class="row justify--space-between align--center">
-                <div class="flex">
-                    <va-icon 
-                        name="menu"
-                        @click="nodeToggled(!toggle)"
-                        :color="toggle?'success':'gray'"
-                    >
-                    </va-icon>
-                </div>
-                <div class="flex">
-                    taxonomy browser
-                </div>
-            </div>
+            taxons
         </va-card-title>
         <Transition duration="550" name="nested">
-            <va-card-content v-if="toggle">
-                <div style="max-height:80vh;overflow:scroll">
+            <va-card-content>
+                <div style="height:300px;overflow:scroll">
                     <TreeBrowser :node="taxStore.tree"/>
                 </div>
             </va-card-content>
@@ -33,11 +21,7 @@ import {ROOTNODE} from '../../config'
 
 
 const taxStore = taxons()
-const emit = defineEmits(['onToggle'])
 
-const props = defineProps({
-    toggle:Boolean
-})
 onMounted(()=>{
     DataPortalService.getTaxonChildren(ROOTNODE)
     .then(resp => {
@@ -46,9 +30,7 @@ onMounted(()=>{
         
     })
 })
-function nodeToggled(value){
-    emit('onToggle',value)
-}
+
 </script>
 <style>
 .nested-enter-active, .nested-leave-active {

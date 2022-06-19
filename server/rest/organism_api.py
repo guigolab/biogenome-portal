@@ -30,23 +30,20 @@ class OrganismApi(Resource):
 		organism_obj = Organism.objects(taxid=taxid)
 		if not organism_obj.first():
 			raise NotFound
-		organism_response = next(organism_obj.aggregate(*OrganismPipeline))
-		lineage = organism_obj.first().taxon_lineage
-		full_lineage = organism_response['taxon_lineage']
-		organism_response['taxon_lineage'] = []
+		json_resp = next(organism_obj.aggregate(*OrganismPipeline))
+
+		##parse bioprojects and lineage
+		ordered_taxid_lineage = organism_obj.first().taxon_lineage
+		lineage_from_model = json.loads(TaxonNode.objects(taxid__in=ordered_taxid_lineage).exclude('children').to_json())
 		#order lineage TODO FIX THIS
-		for taxid in lineage:
-			organism_response['taxon_lineage'].append(next(f for f in full_lineage if f["taxid"] == taxid ))
-		# if len(organism_obj.bioprojects):
-		# 	organism_response['bioprojects']= BioProject.objects(accession__in=organism_obj.bioprojects),
-		# for sample_type in ['insdc_samples', 'local_samples']:
-		# 	if sample_type in organism_response.keys():
-		# 		for sample in organism_response['insdc_samples']:
-		# 			sample['_id'] = str(sample['_id'])
-		if 'image' in organism_response.keys():
+		parsed_lineage = list()
+		for taxid in ordered_taxid_lineage:
+			parsed_lineage.append(next(f for f in lineage_from_model if f['taxid'] == taxid ))
+		json_resp['taxon_lineage'] = list(reversed(parsed_lineage))
+		if 'image' in json_resp.keys():
 			encoded_image = base64.b64encode(organism_obj.first().image.read())
-			organism_response['image'] = encoded_image.decode('utf-8')
-		return Response(json.dumps(organism_response, default=str),mimetype="application/json", status=200)
+			json_resp['image'] = encoded_image.decode('utf-8')
+		return Response(json.dumps(json_resp, default=str),mimetype="application/json", status=200)
 
 	@jwt_required()
 	def post(self,name):

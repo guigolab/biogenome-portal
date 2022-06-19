@@ -18,11 +18,11 @@ const routes = [
     name: "home",
     component: Home,
   },
-  {
-    path: "/organisms",
-    name: "organisms",
-    component: Home,
-  },
+  // {
+  //   path: "/organisms",
+  //   name: "organisms",
+  //   component: Home,
+  // },
   {
     path: '/tree-of-life',
     redirect: {name: 'tree-of-life', params: {node: ROOTNODE}}

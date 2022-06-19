@@ -9,7 +9,9 @@ DB_MODEL_MAPPER={
 }
 
 def get_data(model, ids):
-    return DB_MODEL_MAPPER[model].objects(id__in=ids).exclude('id').to_json()
+    query = dict()
+    query[DB_MODEL_MAPPER[model]['query']] = ids
+    return DB_MODEL_MAPPER[model]['model'].objects(**query).exclude('id').to_json()
 
 def get_last_created(model):
     return DB_MODEL_MAPPER[model].objects.order_by('-id').first().to_json()

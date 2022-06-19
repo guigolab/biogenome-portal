@@ -1,11 +1,8 @@
 <template>
-    <!-- <va-card class="custom-card">
-        <va-card-title>
-            Organism filters
-        </va-card-title>
-        <va-card-content> -->
+    <div class="row">
+        <div class="flex">
             <div class="row">
-                <div class="flex lg6 md6">
+                <div class="flex lg12">
                     <va-select
                         v-if="showBioprojectInput"
                         v-model="selectedProject"
@@ -15,7 +12,9 @@
                         style="padding:10px"
                     />
                 </div>
-                <div class="flex lg3 md3">
+            </div>
+            <div class="row">
+                <div class="flex lg6">
                     <va-select
                         label="search field"
                         v-model="orgStore.query.filter_option"
@@ -25,7 +24,7 @@
                         clearable
                     />
                 </div>
-                <div class="flex lg3 md3">
+                <div class="flex lg6">
                     <va-input
                         label="filter"
                         placeholder="search organism"
@@ -40,7 +39,8 @@
                     </va-input>
                 </div>
             </div>
-
+        </div>
+    </div>
 </template>
 <script setup>
 import { onMounted, reactive, nextTick, ref, watch } from 'vue'

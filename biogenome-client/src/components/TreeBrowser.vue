@@ -27,7 +27,7 @@
                         <va-icon
                             name="radio_button_checked"
                             @click.stop.prevent="updateOrganisms(node)"
-                            :color="taxStore.taxonNav[taxStore.taxonNav.length-1].taxid === node.taxid?'primary':'gray'"
+                            :color="orgStore.query.parent_taxid === node.taxid ?'primary':'gray'"
                         />
                     </div>
                 </div>
@@ -75,30 +75,31 @@ function toggle(node){
 }
 
 function updateOrganisms(node){
-    orgStore.query.parent_taxid = node.taxid
-    if(!taxStore.taxonNav.filter(el => el.taxid === node.taxid).length){
-        taxStore.taxonNav.push(node)
-    }
-    DataPortalService.getTaxonChildren(node.taxid)
-    .then(response => {
-        nextTick(()=>{
-            taxStore.tree = response.data
-        })
-    })
-
+    orgStore.query.parent_taxid = orgStore.query.parent_taxid === node.taxid ? null : node.taxid
+    // if(!taxStore.taxonNav.filter(el => el.taxid === node.taxid).length){
+    //     taxStore.taxonNav.push(node)
+    // }
+    // DataPortalService.getTaxonChildren(node.taxid)
+    // .then(response => {
+    //     nextTick(()=>{
+    //         taxStore.tree = response.data
+    //     })
+    // })
 }
 
 </script>
 <style scoped>
 ul{
-  padding-left:0.33rem !important;
+  padding-left:0.4rem !important;
+}
+.tree-container{
+    font-size: .8rem;
 }
 .child-container:hover{
   background-color: #eff3f8;
 }
 .child-container{
     cursor: pointer;
-    padding: 10px;
 }
 .slide-fade-enter-active {
   transition: all .2s cubic-bezier(1.0, 0.5, 0.8, 1.0);

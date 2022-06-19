@@ -49,14 +49,14 @@ GeoCoordinatesPipeline= [
 
 OrganismPipeline = [
 	{"$lookup":
-		{"from": "bio_samples",
+		{"from": "bio_sample",
 		"localField": "biosamples",
 		"foreignField": "accession",
 		"as": "biosamples",
 		}
 	},
 	{"$lookup":
-		{"from": "local_samples",
+		{"from": "local_sample",
 		"localField": "local_samples",
 		"foreignField": "local_id",
 		"as": "local_samples",
@@ -92,42 +92,55 @@ OrganismPipeline = [
 		}
 	},
 	{"$lookup":
-		{"from": "bio_projects",
+		{"from": "bio_project",
 		"localField": "bioprojects",
 		"foreignField": "accession",
 		"as": "bioprojects",
 		}
 	},
 	{"$project": 
-		{"_id":0,
-		"created":0,
+		{
+		"scientific_name":1,
+		"taxid":1,
+		"tolid_prefix":1,
+		"coordinates":1,
+		"insdc_status":1,
+		"goat_status":1,
+		"insdc_common_name":1,
+		"publications_id":1,
 		"biosamples":{
-			"_id":0,
-		},
-		"local_samples":{
-			"_id":0
-		},
-		"assemblies":{
-			"_id":0
-		},
-		"experiments":{
-			"_id":0
+			"accession":1,
+			"metadata":1,
+			"latitude":1,
+			"longitude":1,
+			"sub_samples":1
 		},
 		"annotations":{
-			"_id":0
+			"name":1,
+			"metadata":1,
+			"assembly_accession":1,
 		},
-		# "insdc_samples": {"assemblies":0,"experiments":0,"specimens":0, "created":0,"last_check":0,},
-		# "local_samples": {
-        #     "assemblies":0,"experiments":0,"specimens":0, 
-        #     "created":0, "last_check":0, "indigenous_rights_applicable":0,
-        #     "regulatory_compliance":0,
-        #     "associated_traditional_knowledge_applicable":0,"ethics_permits_mandatory":0,
-        #     "sampling_permits_mandatory":0, "nagoya_permits_mandatory":0,
-        #     "collector_orcid_id":0,"sample_coordinator_orcid_id":0},
-		# "taxon_lineage" : 0,
-		# "assemblies" : {"_id":0, "created":0},
-		# "experiments": {"_id":0},
-		# "annotations":{"_id":0}
+		"local_samples":{
+			"local_id":1,
+			"metadata":1,
+			"latitude":1,
+			"longitude":1,
+			"page_url":1
+		},
+		"assemblies":{
+			"accession":1,
+			"assembly_name":1,
+			"metadata":1,
+			"chromosomes":1
+		},
+		"experiments":{
+			"experiment_accession":1,
+			"metadata":1
+		},
+		"bioprojects":{
+			"accession":1,
+			"title":1
+		},
 		}
 	}
 ]

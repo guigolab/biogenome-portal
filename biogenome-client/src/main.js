@@ -17,7 +17,7 @@ createApp(App)
     config:{
         colors:{
             primary: '#135560',
-            secondary: '#872674'
+            secondary: '#872674',
         }
     }
 }))

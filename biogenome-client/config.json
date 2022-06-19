@@ -2,7 +2,7 @@
     "dataIcons":{
         "local_samples":{
             "icon":"hub",
-            "color":"success"
+            "color":"#40e583"
         },
         "biosamples":{
             "icon":"hub",
@@ -10,15 +10,15 @@
         },
         "assemblies":{
             "icon":"library_books",
-            "color":"info"
+            "color":"#2c82e0"
         },
         "experiments":{
             "icon":"widgets",
-            "color":"warning"
+            "color":"#FFAC0A"
         },
         "annotations":{
             "icon":"query_stats",
-            "color":"gray"
+            "color":"#babfc2"
         }
     },
     "ROOTNODE": "2759",
