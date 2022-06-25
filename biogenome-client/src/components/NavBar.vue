@@ -1,13 +1,12 @@
 <template>
-    <va-navbar class="mb-2">
+    <va-navbar>
         <template #left>
-        <va-navbar-item>LOGO HERE</va-navbar-item>
-        </template>
-        <template #center>
-        <va-navbar-item>Default color (secondary)</va-navbar-item>
+        <va-navbar-item><va-icon name="list"></va-icon></va-navbar-item>
+        <va-navbar-item><va-icon name="travel_explore"></va-icon></va-navbar-item>
+        <va-navbar-item><va-icon name="call_split"></va-icon></va-navbar-item>
         </template>
         <template #right>
-        <va-navbar-item>Auto font color</va-navbar-item>
+        <va-navbar-item>LOGO</va-navbar-item>
         </template>
   </va-navbar>
 </template>

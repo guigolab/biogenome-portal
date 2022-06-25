@@ -5,7 +5,7 @@
                 <va-card-title>
                     <div class="row justify--space-between align--center">
                         <div class="flex">
-                            {{dt}}
+                            <p>{{dt}}</p>
                         </div>
                         <div class="flex">
                             <va-icon 
@@ -17,7 +17,7 @@
                     </div>
                 </va-card-title>
                 <va-card-content>
-                    <div class="row justify--space-evenly">
+                    <div class="row justify--space-between">
                         <div class="flex">
                             <va-progress-circle size="large" :thickness="0.15" :color="dataIcons[dt].color" class="mb-2" :modelValue="((orgStore.stats[dt]/orgStore.total)*100).toFixed(2)">
                                 {{ ((orgStore.stats[dt]/orgStore.total)*100).toFixed(2) + '%' }}

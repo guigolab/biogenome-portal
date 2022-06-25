@@ -1,5 +1,5 @@
 <template>
-<va-card stripe class="custom-card">
+<va-card stripe stripe-color="secondary" class="custom-card">
     <va-card-title>
         organisms
     </va-card-title>
@@ -15,7 +15,7 @@
             </div> 
         </div>
         <va-divider/>
-            <div style="height:300px;overflow:scroll" v-if="props.organisms.length">
+            <div style="height:50vh;overflow:scroll" v-if="props.organisms.length">
                 <ul>
                     <li v-for="(item, index) in props.organisms"
                         :key="index"

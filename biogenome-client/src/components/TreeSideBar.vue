@@ -39,7 +39,7 @@ onMounted(()=>{
     .then(resp => {
         taxStore.tree = resp.data
         orgStore.selectedNode.name = resp.data.name
-        orgStore.selectedNode.metadata = {taxid:resp.data.taxid, leaves: resp.data.leaves, rank: resp.data.leaves}
+        orgStore.selectedNode.metadata = {taxid:resp.data.taxid, leaves: resp.data.leaves, rank: resp.data.rank}
         if(PROJECT_ACCESSION){
           return DataPortalService.getBioProjectChildren(PROJECT_ACCESSION)
         }
@@ -102,6 +102,11 @@ ul{
 }
 .tree-container{
     font-size: .8rem;
+    border-left:2px solid transparent;
+}
+.selected{
+    border-left:2px solid #7ab615;
+
 }
 .child-container:hover{
   background-color: #eff3f8;

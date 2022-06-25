@@ -1,12 +1,12 @@
 <template>
-<li class="tree-container" :id="node.name">
+<li :class="orgStore.selectedNode.name === node.name?'tree-container'+' '+'selected':'tree-container'" :id="node.name">
     <div @click="toggle(node)" class="child-container row justify--space-between align--center">
         <div class="flex">
-            <va-icon @click.stop.prevent="updateOrganisms(node)" :name="orgStore.selectedNode.name === node.name?'radio_button_checked':'radio_button_unchecked'"/>
+            <va-icon color="secondary" @click.stop.prevent="updateOrganisms(node)" :name="orgStore.selectedNode.name === node.name?'radio_button_checked':'radio_button_unchecked'"/>
             <a class="link">{{node.name+' ('+node.rank+')'}}</a>
         </div>
         <div v-if="node.children && node.children.length" class="flex">
-            <va-icon color="gray" :name="node.isOpen? 'expand_less':'expand_more'"/>
+            <va-icon :name="node.isOpen? 'expand_less':'expand_more'"/>
         </div>
     </div>
     <Transition name="slide-fade">

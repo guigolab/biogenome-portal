@@ -14,8 +14,8 @@
                 </div>
             </div>
             <div style="padding:15px" class="flex">
-                <va-chip size="large" outline>Overview</va-chip>
-                <va-chip size="large" v-for="key in organismData.dataKeys" :key="key" @click="toggleTable(key)" :color="dataIcons[key].color" outline :icon="dataIcons[key].icon">{{key}}</va-chip>
+                <va-button  outline>Overview</va-button>
+                <va-button  v-for="key in organismData.dataKeys" :key="key" @click="toggleTable(key)" :color="dataIcons[key].color" outline :icon="dataIcons[key].icon">{{key}}</va-button>
             </div>
         </div>
         <va-divider/>

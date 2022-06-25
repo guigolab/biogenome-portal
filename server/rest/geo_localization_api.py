@@ -1,4 +1,4 @@
-from flask import Response
+from flask import Response,request
 from db.models import GeoCoordinates
 from flask_restful import Resource
 # from errors import NotFound,SchemaValidationError,RecordAlreadyExistError,TaxonNotFoundError
@@ -19,7 +19,7 @@ class GeoLocApi(Resource):
     def get(self, coordinates=None):
         if not coordinates:
         # bioproject = request.args['bioproject'] if 'bioproject' in request.args.keys() else None
-            return Response(json.dumps(geo_localization_coordinates()), mimetype="application/json", status=200)
+            return Response(json.dumps(geo_localization_coordinates(**request.args)), mimetype="application/json", status=200)
         return Response(json.dumps(geo_localization_object(coordinates)))
     
     # ##post request to handle large collection of geo_loc ids (format: lat,loc string)

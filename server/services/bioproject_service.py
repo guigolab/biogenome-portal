@@ -7,6 +7,7 @@ def get_bioproject(accession):
     biop = BioProject.objects(accession=accession).first()
     if biop:
         response = json.loads(biop.to_json())
+        response['parents'] = json.loads(BioProject.objects(accession__in=biop.parents).to_json())
         response['children'] = json.loads(BioProject.objects(parents=biop.accession).to_json())
         for child in response['children']:
             child['children'] = json.loads(BioProject.objects(parents=child['accession']).to_json())

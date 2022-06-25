@@ -34,8 +34,9 @@ const routes = [
     component: treeOfLife
   },
   {
-    path: "/map",
+    path: "/map/:accession",
     name: "map",
+    props:true,
     component: map
   },
   {

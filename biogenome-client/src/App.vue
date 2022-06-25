@@ -1,9 +1,11 @@
 <script setup>
 import OrganismForm from './components/OrganismForm.vue'
 import TreeSideBar from './components/TreeSideBar.vue'
+import NavBar from './components/NavBar.vue'
 </script>
 
 <template>
+<NavBar/>
     <router-view/>
 </template>
 
@@ -15,7 +17,6 @@ import TreeSideBar from './components/TreeSideBar.vue'
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-  margin-top: 60px;
   background-color: #eff3f8;
 }
 .custom-card{

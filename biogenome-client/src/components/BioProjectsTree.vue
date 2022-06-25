@@ -1,5 +1,5 @@
 <template>
-<li class="tree-container" :id="node.accession">
+<li :class="orgStore.selectedNode.name === node.title?'tree-container'+' '+'selected':'tree-container'" :id="node.accession">
     <div @click="toggle(node)" class="child-container row justify--space-between align--center">
         <div class="flex">
             <va-icon @click.stop.prevent="updateOrganisms(node)" :name="orgStore.selectedNode.name === node.title?'radio_button_checked':'radio_button_unchecked'"/>

@@ -13,20 +13,19 @@ FEATURE_COLLECTION_OBJECT={
 }   
 
 def geo_localization_coordinates(bioproject=None, taxid=None):
-    if not bioproject:
-        coordinates = list()
+    coordinates = list()
+    if bioproject:
+        coord_model = json.loads(GeoCoordinates.objects(bioprojects = bioproject).to_json())
+    else:
         coord_model = json.loads(GeoCoordinates.objects().to_json())
-        for coord in coord_model:
-            organisms = json.loads(Organism.objects(taxid__in=coord['organisms']).to_json())                
-            species = [dict(taxid=org['taxid'], scientific_name=org['scientific_name']) for org in organisms]
-            spec_length = len(species)
-            props = dict(organisms=species,name=coord['geo_location'])
-            # props['marker-symbol'] = spec_length
-            coord['properties'] = props
-            coordinates.append(coord)
-        # coordinates = json.loads(GeoCoordinates.objects().to_json())
-        FEATURE_COLLECTION_OBJECT['features'] = coordinates
-        return FEATURE_COLLECTION_OBJECT
+    for coord in coord_model:
+        organisms = json.loads(Organism.objects(taxid__in=coord['organisms']).to_json())                
+        species = [dict(taxid=org['taxid'], scientific_name=org['scientific_name']) for org in organisms]
+        props = dict(organisms=species,name=coord['geo_location'])
+        coord['properties'] = props
+        coordinates.append(coord)
+    FEATURE_COLLECTION_OBJECT['features'] = coordinates
+    return FEATURE_COLLECTION_OBJECT
 
 def geo_localization_object(coordinates):
     ##expects lat:long format

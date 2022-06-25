@@ -25,7 +25,7 @@ def get_organisms(offset=0, limit=20,
     get_data_query(query, biosamples, local_samples, assemblies, annotations, experiments)
     taxa = TaxonNode.objects(taxid=parent_taxid).first()
     query['taxon_lineage'] = taxa.taxid
-    if bioproject:
+    if bioproject and bioproject != PROJECT_ACCESSION:
         query['bioprojects'] = bioproject
     organisms = Organism.objects(filter_query, **query).exclude('id') if filter_query else Organism.objects.filter(**query).exclude('id')
     if sort_column:
