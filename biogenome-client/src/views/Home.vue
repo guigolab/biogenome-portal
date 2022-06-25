@@ -1,15 +1,56 @@
 <template>
 <div class="row">
+    <div class="flex lg4 md4">
+        <TreeSideBar/>
+    </div>
+    <div class="flex lg8 md8">
+        <va-card class="custom-card">
+            <va-card-title>
+                <h1 class="display-5">
+                    {{orgStore.selectedNode.name}}
+                </h1>
+            </va-card-title>
+            <va-card-content>
+            <div class="row justify--start">
+                <div style="text-align:start" class="flex lg12 md12">
+                    <va-chip v-for="key in Object.keys(orgStore.selectedNode.metadata)" :key="key" size="small">{{key +': '+orgStore.selectedNode.metadata[key]}}</va-chip>
+                </div>
+            </div>
+            </va-card-content>
+            <va-divider/>
+            <va-card-content>
+            <div class="row">
+                <div class="flex lg12 md12">
+                    <DataCards/>
+                </div>
+            </div>
+            <div class="row">
+                <div class="flex lg12 md12">
+                    <OrganismForm/>
+                </div>
+            </div>
+            <div class="row">
+                <div class="flex lg12 md12">
+                    <OrganismList @data-selected="getData" @organism-selected="getOrganism" :total="orgStore.total" :organisms="orgStore.organisms" :query="orgStore.query"/>
+                </div>
+                <!-- <div class="flex">
+                    <OrganismForm/>
+                </div> -->
+            </div>
+            </va-card-content>
+        </va-card>
+    </div>
+</div>
+<!-- <div class="row">
     <div class="flex">
         <DataCards/>
     </div>
     <div class="flex">
         <OrganismForm/>
     </div>
-</div>
-<div class="row">
+</div> -->
+<!-- <div class="row">
     <div class="flex">
-        <TreeSideBar @on-toggle="toggleNode" :toggle="toggle"/>
     </div>
     <div class="flex">
         <OrganismList @data-selected="getData" @organism-selected="getOrganism" :total="orgStore.total" :organisms="orgStore.organisms" :query="orgStore.query"/>
@@ -31,7 +72,7 @@
             </div>
         </div>
     </div>
-</div>
+</div> -->
 
 </template>
 <script setup>

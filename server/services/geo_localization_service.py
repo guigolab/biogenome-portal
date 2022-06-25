@@ -12,7 +12,7 @@ FEATURE_COLLECTION_OBJECT={
     'features' : []
 }   
 
-def geo_localization_coordinates(bioproject=None):
+def geo_localization_coordinates(bioproject=None, taxid=None):
     if not bioproject:
         coordinates = list()
         coord_model = json.loads(GeoCoordinates.objects().to_json())
@@ -22,7 +22,7 @@ def geo_localization_coordinates(bioproject=None):
             spec_length = len(species)
             props = dict(organisms=species,name=coord['geo_location'])
             # props['marker-symbol'] = spec_length
-            coord['properties'] =props
+            coord['properties'] = props
             coordinates.append(coord)
         # coordinates = json.loads(GeoCoordinates.objects().to_json())
         FEATURE_COLLECTION_OBJECT['features'] = coordinates

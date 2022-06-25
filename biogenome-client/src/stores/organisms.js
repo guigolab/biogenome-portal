@@ -4,6 +4,10 @@ import DataPortalService from '../services/DataPortalService'
 export const organisms = defineStore('organisms', {
     state: () => ({
         organisms:reactive([]),
+        selectedNode:reactive({
+            name:'',
+            metadata:{}
+        }),
         stats:reactive({
             biosamples:0,
             local_samples:0,

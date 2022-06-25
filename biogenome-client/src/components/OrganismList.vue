@@ -1,5 +1,5 @@
 <template>
-<va-card class="custom-card">
+<va-card stripe class="custom-card">
     <va-card-title>
         organisms
     </va-card-title>

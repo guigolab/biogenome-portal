@@ -1,6 +1,6 @@
 <template>
     <div class="row">
-        <div v-for="dt in stats" :key="dt" class="flex">
+        <div v-for="dt in stats" :key="dt" class="flex lg3 md3 sm6 xs6">
             <va-card class="custom-card" :stripe="orgStore.query[dt]" :stripe-color="dataIcons[dt].color" @click="dataSelected(dt, orgStore.stats[dt])">
                 <va-card-title>
                     <div class="row justify--space-between align--center">
@@ -17,7 +17,12 @@
                     </div>
                 </va-card-title>
                 <va-card-content>
-                    <div class="row justify--start">
+                    <div class="row justify--space-evenly">
+                        <div class="flex">
+                            <va-progress-circle size="large" :thickness="0.15" :color="dataIcons[dt].color" class="mb-2" :modelValue="((orgStore.stats[dt]/orgStore.total)*100).toFixed(2)">
+                                {{ ((orgStore.stats[dt]/orgStore.total)*100).toFixed(2) + '%' }}
+                            </va-progress-circle>
+                        </div>
                         <div class="flex">
                             <p><strong>{{orgStore.stats[dt]}}</strong></p><va-divider/><p class="text--secondary">{{orgStore.total}}</p>
                         </div>

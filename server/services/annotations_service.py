@@ -15,6 +15,6 @@ def parse_annotation(organism_obj, ass_obj):
             for k in ann.keys():
                 if k != 'name':
                     metadata[k] = ann[k]
-            annotation = Annotation(page_url=page_url,name=ann['name'], assembly_accession=ass_obj.accession,metadata=metadata).save()
+            annotation = Annotation(page_url=page_url,name=ann['name'], assembly_accession=ass_obj.accession,metadata=metadata, taxid=organism_obj.taxid).save()
             organism_obj.modify(add_to_set__annotations=annotation.name) 
             

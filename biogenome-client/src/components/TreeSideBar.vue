@@ -1,11 +1,21 @@
 <template>
     <va-card class="custom-card">
+        <va-card-title v-if="PROJECT_ACCESSION">
+            bioprojects
+        </va-card-title>
+        <Transition duration="550" name="nested">
+            <va-card-content v-if="PROJECT_ACCESSION">
+                <div style="max-height:300px;overflow:scroll">
+                    <BioProjectsTree :node="bioprjStore.tree"/>
+                </div>
+            </va-card-content>
+        </Transition>
         <va-card-title>
             taxons
         </va-card-title>
         <Transition duration="550" name="nested">
             <va-card-content>
-                <div style="height:300px;overflow:scroll">
+                <div style="max-height:300px;overflow:scroll">
                     <TreeBrowser :node="taxStore.tree"/>
                 </div>
             </va-card-content>
@@ -15,19 +25,30 @@
 <script setup>
 import { onMounted,ref } from 'vue'
 import TreeBrowser from './TreeBrowser.vue'
+import BioProjectsTree from '../components/BioProjectsTree.vue'
 import DataPortalService from '../services/DataPortalService'
 import {taxons} from '../stores/taxons'
-import {ROOTNODE} from '../../config'
-
-
+import {ROOTNODE,PROJECT_ACCESSION} from '../../config'
+import {bioprojects} from '../stores/bioprojects'
+import {organisms} from '../stores/organisms'
 const taxStore = taxons()
-
+const bioprjStore = bioprojects()
+const orgStore = organisms()
 onMounted(()=>{
     DataPortalService.getTaxonChildren(ROOTNODE)
     .then(resp => {
         taxStore.tree = resp.data
-        taxStore.initializeTaxNav()
-        
+        orgStore.selectedNode.name = resp.data.name
+        orgStore.selectedNode.metadata = {taxid:resp.data.taxid, leaves: resp.data.leaves, rank: resp.data.leaves}
+        if(PROJECT_ACCESSION){
+          return DataPortalService.getBioProjectChildren(PROJECT_ACCESSION)
+        }
+        return null
+    })
+    .then(resp => {
+      if(resp){
+        bioprjStore.tree = resp.data
+      }
     })
 })
 
@@ -66,5 +87,39 @@ onMounted(()=>{
     has been fixed.
   */
   opacity: 0.001;
+}
+.v-enter-active,
+.v-leave-active {
+  transition: opacity 0.5s ease;
+}
+
+.v-enter-from,
+.v-leave-to {
+  opacity: 0;
+}
+ul{
+  padding-left:1rem !important;
+}
+.tree-container{
+    font-size: .8rem;
+}
+.child-container:hover{
+  background-color: #eff3f8;
+}
+.child-container{
+    cursor: pointer;
+    padding:10px;
+    text-align: start;
+}
+.slide-fade-enter-active {
+  transition: all .2s cubic-bezier(1.0, 0.5, 0.8, 1.0);
+}
+.slide-fade-leave-active {
+  transition: all .2s cubic-bezier(1.0, 0.5, 0.8, 1.0);
+}
+.slide-fade-enter, .slide-fade-leave-to
+/* .slide-fade-leave-active below version 2.1.8 */ {
+  transform: translateX(10px);
+  opacity: 0;
 }
 </style>

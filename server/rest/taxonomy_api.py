@@ -22,3 +22,4 @@ class TaxNodesApi(Resource):
         for node in tax_node['children']:
             node['isOpen'] = False
         return Response(json.dumps(tax_node, default=str), mimetype="application/json", status=200)
+          

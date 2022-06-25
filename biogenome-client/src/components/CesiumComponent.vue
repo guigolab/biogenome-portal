@@ -47,18 +47,18 @@ function updateSource(geojson){
     Cesium.GeoJsonDataSource.load(geojson)
     .then(dataSource => {
         nextTick(()=>{
-            // dataSource.clustering.enabled=true
-            // dataSource.clustering.pixelRange = 15
-            // dataSource.clustering.minimumClusterSize = 5
-            // dataSource.clustering.clusterBillboards
-            // dataSource.clustering.clusterEvent.addEventListener(function(clusteredEntitities, cluster){
-            //     console.log(clusteredEntitities)
-            //     cluster.label.show=false
-            //     cluster.billboard.id = cluster.label.id;
-            //     cluster.billboard.show = true
-            //     cluster.billboard.verticalOrigin = Cesium.VerticalOrigin.BOTTOM;
-            //     cluster.billboard.image = pinBuilder.fromText(clusteredEntitities.length, Cesium.Color.BLUEVIOLET, 48).toDataURL()
-            // })
+            dataSource.clustering.enabled=true
+            dataSource.clustering.pixelRange = 15
+            dataSource.clustering.minimumClusterSize = 5
+            dataSource.clustering.clusterBillboards
+            dataSource.clustering.clusterEvent.addEventListener(function(clusteredEntitities, cluster){
+                console.log(clusteredEntitities)
+                cluster.label.show=false
+                cluster.billboard.id = cluster.label.id;
+                cluster.billboard.show = true
+                cluster.billboard.verticalOrigin = Cesium.VerticalOrigin.BOTTOM;
+                cluster.billboard.image = pinBuilder.fromText(clusteredEntitities.length, Cesium.Color.BLUEVIOLET, 48).toDataURL()
+            })
             const entities = dataSource.entities.values
             entities.forEach(entity => {
                 var attributes = ''

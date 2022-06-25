@@ -4,11 +4,7 @@ import TreeSideBar from './components/TreeSideBar.vue'
 </script>
 
 <template>
-<div class="row">
-  <div class="flex">
-      <router-view/>
-  </div>
-</div>
+    <router-view/>
 </template>
 
 

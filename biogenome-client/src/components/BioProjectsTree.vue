@@ -1,17 +1,17 @@
 <template>
-<li class="tree-container" :id="node.name">
+<li class="tree-container" :id="node.accession">
     <div @click="toggle(node)" class="child-container row justify--space-between align--center">
         <div class="flex">
-            <va-icon @click.stop.prevent="updateOrganisms(node)" :name="orgStore.selectedNode.name === node.name?'radio_button_checked':'radio_button_unchecked'"/>
-            <a class="link">{{node.name+' ('+node.rank+')'}}</a>
+            <va-icon @click.stop.prevent="updateOrganisms(node)" :name="orgStore.selectedNode.name === node.title?'radio_button_checked':'radio_button_unchecked'"/>
+            <a class="link">{{node.title}}</a>
         </div>
-        <div v-if="node.children && node.children.length" class="flex">
+        <div style="text-align:end" v-if="node.children && node.children.length" class="flex">
             <va-icon color="gray" :name="node.isOpen? 'expand_less':'expand_more'"/>
         </div>
     </div>
     <Transition name="slide-fade">
         <ul v-if="node.children && node.children.length && node.isOpen">
-            <TreeBrowser
+            <BioProjectsTree
                 v-for="(child, index) in node.children"
                 class="node"
                 :key="index"
@@ -22,24 +22,22 @@
 </li>
 </template>
 <script setup>
-import TreeBrowser from './TreeBrowser.vue';
-import { computed, onMounted, ref, nextTick } from 'vue';
+import BioProjectsTree from './BioProjectsTree.vue';
+import { computed, onMounted, ref, nextTick, reactive } from 'vue';
 import DataPortalService from '../services/DataPortalService'
 import {organisms} from '../stores/organisms'
-import {taxons} from '../stores/taxons'
 
-const taxStore = taxons()
 const orgStore = organisms()
-
 const props = defineProps({
     node:Object
 })
 
 
+
 function toggle(node){
     if(!node.isOpen){
-        if(node.children.length){
-            DataPortalService.getTaxonChildren(node.taxid)
+        if(!node.children.filter(ch => ch && ch.children).length){
+            DataPortalService.getBioProjectChildren(node.accession)
             .then(resp => {
                 nextTick(()=>{
                     node.children = resp.data.children
@@ -51,16 +49,16 @@ function toggle(node){
 }
 
 function updateOrganisms(node){
-    if(orgStore.selectedNode.name === node.name){
-        orgStore.query.parent_taxid = null
+    if(orgStore.selectedNode.name === node.title){
+        orgStore.query.bioproject = null
         orgStore.selectedNode.name = ''
         orgStore.selectedNode.metadata = {}
         return
     }
-    orgStore.selectedNode.name = node.name
-    orgStore.selectedNode.metadata = {taxid: node.taxid, rank: node.rank, leaves: node.leaves}
-    orgStore.query.parent_taxid = node.taxid
-    orgStore.query.bioproject = null
+    orgStore.selectedNode.name = node.title
+    orgStore.selectedNode.metadata = {accession: node.accession}
+    orgStore.query.bioproject = node.accession
+    orgStore.query.parent_taxid = null
 }
 
 </script>

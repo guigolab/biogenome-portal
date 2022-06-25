@@ -11,7 +11,7 @@ def create_experiments(sample,organism):
         for k in exp.keys():
             if k != 'experiment_accession':
                 exp_metadata[k] = exp[k]
-        exp_obj = Experiment(experiment_accession= exp['experiment_accession'], metadata=exp_metadata).save()
+        exp_obj = Experiment(experiment_accession= exp['experiment_accession'], metadata=exp_metadata, taxid=organism.taxid).save()
         organism.modify(add_to_set__experiments=exp_obj.experiment_accession)
         sample.modify(add_to_set__experiments=exp_obj.experiment_accession)
     sample.last_check = datetime.utcnow()

@@ -33,7 +33,7 @@ class TaxonNode(db.Document):
 class Experiment(db.Document):
     sample_accession= db.StringField()
     experiment_accession= db.StringField(unique=True)
-    tax_id= db.StringField()
+    taxid= db.StringField()
     scientific_name= db.StringField()
     created = db.DateTimeField(default=datetime.datetime.utcnow)
     metadata=db.DictField()
@@ -141,6 +141,7 @@ class GeoCoordinates(db.Document):
 class Annotation(db.Document):
     name = db.StringField(required=True,unique=True)
     metadata=db.DictField()
+    taxid = db.StringField()
     assembly_accession=db.StringField()
     page_url=db.StringField()
     created = db.DateTimeField(default=datetime.datetime.utcnow)

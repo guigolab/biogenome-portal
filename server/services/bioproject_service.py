@@ -8,6 +8,8 @@ def get_bioproject(accession):
     if biop:
         response = json.loads(biop.to_json())
         response['children'] = json.loads(BioProject.objects(parents=biop.accession).to_json())
+        for child in response['children']:
+            child['children'] = json.loads(BioProject.objects(parents=child['accession']).to_json())
         return response
 
 def create_bioprojects_from_NCBI(bioprojects,organism,sample):
