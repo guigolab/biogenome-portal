@@ -46,6 +46,7 @@ class Assembly(db.Document):
     accession = db.StringField(unique=True)
     assembly_name=db.StringField()
     scientific_name= db.StringField()
+    taxid=db.StringField()
     sample_accession=db.StringField()
     created = db.DateTimeField(default=datetime.datetime.utcnow)
     metadata=db.DictField()

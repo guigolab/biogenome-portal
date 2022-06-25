@@ -6,7 +6,7 @@ def create_assembly(assembly, organism, sample):
     for key in assembly.keys():
         if key not in ['display_name','chromosomes','assembly_accession','biosample','bioproject_lineages','biosample_accession','org']:
             ass_metadata[key] = assembly[key]
-    ass_obj = Assembly(accession = assembly['assembly_accession'],assembly_name= assembly['display_name'],scientific_name=organism.scientific_name, sample_accession= sample.accession,metadata=ass_metadata).save()
+    ass_obj = Assembly(accession = assembly['assembly_accession'],assembly_name= assembly['display_name'],scientific_name=organism.scientific_name, sample_accession= sample.accession,metadata=ass_metadata,taxid=organism.taxid).save()
     organism.modify(add_to_set__assemblies=ass_obj.accession)
     sample.modify(add_to_set__assemblies=ass_obj.accession)
     return ass_obj

@@ -43,6 +43,9 @@ const orgStore = organisms()
 const stats = computed(()=> Object.keys(orgStore.stats))
 
 function dataSelected(dataKey, count){
+    if(orgStore.query.offset >= count){
+        orgStore.query.offset = 0
+    }
     orgStore.query[dataKey] = orgStore.query[dataKey] ? null : true
 }
 

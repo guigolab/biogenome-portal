@@ -45,8 +45,11 @@ class DataPortalService {
     getTaxonChildren(name) {
         return base.get(`/taxons/${name}`)
     }
-    getData(model,ids){
-        return base.post(`/data/${model}`, ids)
+    // getData(model,ids){
+    //     return base.post(`/data/${model}`, ids)
+    // }
+    getData(model,taxid){
+        return base.get(`/data/${model}`, {params:{taxid:taxid}})
     }
     getLastCreated(model){
         return base.get(`/data/${model}`)

@@ -1,27 +1,31 @@
 <template>
+<va-inner-loading :loading="isLoading">
 <va-card stripe stripe-color="secondary" class="custom-card">
     <va-card-title>
         organisms
     </va-card-title>
     <va-card-content>
-        <div class="row justify--end">
+        <div class="row justify--space-between">
             <div class="flex">
                 <va-button-dropdown color="gray" leftIcon flat outline :label="(query.offset+1)+'-'+(limit+query.offset>total?total:limit+query.offset)+' of '+total">
                     <va-button :disabled="query.offset === 0" @click="query.offset=0" flat color="gray">Start</va-button>
                     <va-button :disabled="query.offset+limit >= total" @click="query.offset=total-limit" flat color="gray">End</va-button>
                 </va-button-dropdown>
+            </div>
+            <div class="flex">
                 <va-button color="gray" v-if="query.offset-limit > 0" @click="query.offset=query.offset-limit" flat icon="chevron_left"/>
                 <va-button color="gray" v-if="query.offset+limit < total" @click="query.offset=query.offset+limit" flat icon="chevron_right"/>
             </div> 
         </div>
         <va-divider/>
-            <div style="height:50vh;overflow:scroll" v-if="props.organisms.length">
+        <div class="row">
+            <div class="flex lg12 md12 sm12 xs12" style="height:50vh;overflow:scroll" v-if="props.organisms.length">
                 <ul>
                     <li v-for="(item, index) in props.organisms"
                         :key="index"
                         class="organism-item">
                         <div class="row justify--space-between align--center">
-                            <div class="flex lg12 md12">
+                            <div class="flex">
                                 <div class="row" style="margin-bottom:5px">
                                     <div v-if="item.image_url" class="flex">
                                         <va-avatar>
@@ -35,8 +39,7 @@
                                 </div>
                                 <div class="row">
                                     <div class="flex text--secondary" style="padding-left:10px">
-                                        <p style="text-align: start" v-if="item.insdc_common_name"><i>{{item.insdc_common_name}}</i></p>
-                                        <p style="text-align:start">{{item.taxid}}</p>  
+                                        <p style="text-align:start" v-if="item.insdc_common_name"><i>{{item.insdc_common_name}}</i></p>
                                         <p style="text-align:start">{{item.tolid_prefix}}</p>
                                     </div>
                                 </div>
@@ -47,7 +50,7 @@
                                         <va-icon
                                             :name="dataIcons[dt].icon"
                                             :color="dataIcons[dt].color"
-                                            @click="$emit('dataSelected', {model:dt, ids: item[dt], name: item.scientific_name})"
+                                            @click="getData(dt, item.taxid, item.scientific_name)"
                                         />
                                     </div>
                                 </div>
@@ -60,15 +63,98 @@
             <div v-else class="flex text--secondary">
                 <p>No organisms found</p>
             </div>
+        </div>
     </va-card-content>
-</va-card>
+    <va-modal v-model="showModal">
+        <template #header>
+            <va-badge :color="dataIcons[popupData.model].color" :text="popupData.data.length"><h2>{{popupData.title}}</h2></va-badge>
+        </template>
+        <va-data-table 
+            :items="popupData.data"
+            :columns="dataIcons[popupData.model].fields"
+            sticky-header
+            height="500px"
+            :style="{
+                '--va-data-table-scroll-table-color': dataIcons[popupData.model].color,
+            }"
+            >
+            <template #header(accession)>
+                accession
+            </template>
+            <template #header(metadata)>
+                metadata
+            </template>
+            <template #cell(accession)="{ rowData }">
+                <a target="_blank" :href="`https://www.ebi.ac.uk/ena/browser/view/${rowData.accession}`" class="link">{{rowData.accession}}</a>
+            </template>
+            <template #header(sub_samples)>related samples</template>
+            <template #cell(chromosomes)="{ rowData }">
+                <va-button-dropdown v-if="rowData.chromosomes && rowData.chromosomes.length" size="small" flat>
+                    <ul>
+                        <li v-for="chr in rowData.chromosomes" :key="chr">
+                            <a target="_blank" :href="`https://www.ebi.ac.uk/ena/browser/view/${chr}`" class="link">{{chr}}</a>
+                        </li>
+                    </ul>
+                </va-button-dropdown>
+            </template>
+            <template #cell(bioprojects)="{ rowData }">
+                <va-button-dropdown v-if="rowData.bioprojects && rowData.bioprojects.length" size="small" flat>
+                    <ul>
+                        <li v-for="pro in rowData.bioprojects" :key="pro">
+                            <a target="_blank" :href="`https://www.ebi.ac.uk/ena/browser/view/${pro}`" class="link">{{pro}}</a>
+                        </li>
+                    </ul>
+                </va-button-dropdown>
+            </template>
+            <template #cell(experiments)="{ rowData }">
+                <va-button-dropdown v-if="rowData.experiments && rowData.experiments.length" size="small" flat>
+                    <ul>
+                        <li v-for="exp in rowData.experiments" :key="exp">
+                            <a target="_blank" :href="`https://www.ebi.ac.uk/ena/browser/view/${exp}`" class="link">{{exp}}</a>
+                        </li>
+                    </ul>
+                </va-button-dropdown>
+            </template>
+            <template #cell(assemblies)="{ rowData }">
+                <va-button-dropdown v-if="rowData.assemblies && rowData.assemblies.length" size="small" flat>
+                    <ul>
+                        <li v-for="ass in rowData.assemblies" :key="ass">
+                            <a target="_blank" :href="`https://www.ebi.ac.uk/ena/browser/view/${ass}`" class="link">{{ass}}</a>
+                        </li>
+                    </ul>
+                </va-button-dropdown>
+            </template>
 
+            <template #cell(sub_samples)="{ rowData }">
+                <va-button-dropdown v-if="rowData.sub_samples && rowData.sub_samples.length" size="small" flat>
+                    <ul>
+                        <li v-for="acc in rowData.sub_samples" :key="acc">
+                            <a class="link">{{acc}}</a>
+                        </li>
+                    </ul>
+                </va-button-dropdown>
+            </template>
+            <template #cell(metadata)="{ rowData }"><va-icon name="search" :color="dataIcons[popupData.model].color" @click="toggleMetadata(rowData)"/></template>
+        </va-data-table>
+        <va-modal v-model="showMetadata" :title="toggledMetadata.name">
+            <ul>
+                <li style="padding:10px" v-for="key in Object.keys(toggledMetadata.metadata)" :key="key">
+                    <strong>{{key+ ': '}}</strong>{{toggledMetadata.metadata[key]}}
+                    <va-divider/>
+                </li>
+            </ul>
+        </va-modal>
+    </va-modal>
+</va-card>
+</va-inner-loading>
 </template>
 <script setup>
-import { watch,nextTick,ref } from 'vue'
+import { watch,nextTick,ref, reactive } from 'vue'
 import {dataIcons} from '../../config'
 import portalService from '../services/DataPortalService'
 import OrganismForm from '../components/OrganismForm.vue'
+
+const isLoading = ref(false)
 
 const props = defineProps({
     organisms: Array,
@@ -76,14 +162,45 @@ const props = defineProps({
     total:String
 })
 
-const limit = ref(props.query.limit)
 
+const toggledMetadata = reactive({
+    name:'',
+    metadata:{}
+})
+const showMetadata = ref(false)
+const showModal = ref(false)
+const limit = ref(props.query.limit)
+const popupData = reactive({
+    title:'',
+    model:'',
+    data:''
+})
 function mapData(item){
     return Object.keys(item).filter(k => ['local_samples','biosamples','assemblies','experiments','annotations'].includes(k))
     .filter(key => item[key].length)
 }
+function getData(model,taxid,scientific_name){
+    isLoading.value = true
+    portalService.getData(model,taxid)
+    .then(resp => {
+        popupData.title = scientific_name +' '+model
+        popupData.model=model
+        popupData.data = resp.data
+        isLoading.value = false
+        showModal.value = true
+    })
+    .catch(e => {
+        console.log(e)
+        isLoading.value=false
+    })
 
+}
 
+function toggleMetadata(rowData){
+    toggledMetadata.name = rowData.accession || rowData.experiment_accession || rowData.local_id || rowData.name
+    toggledMetadata.metadata = {...rowData.metadata}
+    showMetadata.value = true    
+}
 </script>
 <style scoped>
 li.organism-item{

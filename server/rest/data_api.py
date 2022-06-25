@@ -1,6 +1,6 @@
 from flask_restful import Resource
 from flask import Response, request
-from services.data_service import get_data,get_last_created
+from services.data_service import get_data
 from errors import SchemaValidationError
 
 ##post request to handle large list of assemblies/experiments/local_samples/biosamples/annotations ids
@@ -15,6 +15,6 @@ class OrganismData(Resource):
         return Response(get_data(model,ids), mimetype="application/json", status=200)
 
     # ##get last created model object
-    # def get(self, model):
-    #     return Response(get_last_created(model), mimetype="application/json", status=200)
+    def get(self, model):
+        return Response(get_data(model, **request.args), mimetype="application/json", status=200)
  
