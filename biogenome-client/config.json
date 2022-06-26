@@ -21,12 +21,28 @@
             "color":"#FFAC0A"
         },
         "annotations":{
-            "fields":["name","assembly_accession","page_url","metadata"],
+            "fields":["name","assembly_accession","metadata"],
             "icon":"query_stats",
             "color":"#babfc2"
         }
     },
-
+    "GoaTStatus":
+    [
+        {"SAMPLE_COLLECTED": "Sample Collected"},
+        {"SAMPLE_ACQUIRED" : "Sample Acquired"},
+        {"DATA_GENERATION" :"Data Generation"},
+        {"IN_ASSEMBLY" : "In Assembly"},
+        {"INSDC_SUBMITTED" : "INSDC Submitted"},
+        {"PUBLICATION_AVAILABLE" : "Publication Available"}
+    ],
+    "INSDCStatus":
+    [
+        {"LOCAL_SAMPLE" : "Sample Acquired"},
+        {"SAMPLE" :"Biosample Submitted"},
+        {"READS" : "Reads Submitted"},
+        {"ASSEMBLIES" : "Assemblies Submitted"},
+        {"ANN_SUBMITTED" : "Annotations Created"}
+    ],
     "ROOTNODE": "2759",
 
     "PROJECT_ACCESSION": "PRJNA533106",

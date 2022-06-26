@@ -41,6 +41,14 @@ class Experiment(db.Document):
         'indexes': ['experiment_accession']
     }
 
+class AssemblyTrack(db.EmbeddedDocument):
+    name = db.StringField()
+    insdc_accession = db.StringField()
+    fastaLocation = db.StringField()
+    faiLocation = db.StringField()
+    gziLocation = db.StringField() 
+    chromAlias = db.StringField()
+
 #TODO ADD last published assembly banner
 class Assembly(db.Document):
     accession = db.StringField(unique=True)
@@ -51,6 +59,7 @@ class Assembly(db.Document):
     created = db.DateTimeField(default=datetime.datetime.utcnow)
     metadata=db.DictField()
     chromosomes=db.ListField(db.StringField())
+    track = db.EmbeddedDocumentField(AssemblyTrack)
     meta = {
         'indexes': ['accession']
     }
@@ -141,17 +150,51 @@ class GeoCoordinates(db.Document):
 
 class Annotation(db.Document):
     name = db.StringField(required=True,unique=True)
-    metadata=db.DictField()
-    taxid = db.StringField()
-    assembly_accession=db.StringField()
-    page_url=db.StringField()
+    taxid=db.StringField()
+    gffGzLocation = db.StringField()
+    tabIndexLocation = db.StringField()
+    targetGenome = db.StringField(required=True)
+    lengthTreshold = db.StringField()
+    evidenceSource = db.StringField()
     created = db.DateTimeField(default=datetime.datetime.utcnow)
     meta = {
         'indexes': [
             'name'
         ]
     }
-    
+
+def handler(event):
+    """Signal decorator to allow use of callback functions as class decorators."""
+    def decorator(fn):
+        def apply(cls):
+            event.connect(fn, sender=cls)
+            return cls
+        fn.apply = apply
+        return fn
+    return decorator
+
+@handler(db.pre_save)
+def update_modified(sender, document):
+    if document.annotations:
+        document.insdc_status= INSDCStatus.ANN_SUBMITTED
+    elif document.assemblies:
+        document.insdc_status= INSDCStatus.ASSEMBLIES
+        document.goat_status=GoaTStatus.INSDC_SUBMITTED
+    elif document.experiments:
+        document.insdc_status= INSDCStatus.READS
+        document.goat_status=GoaTStatus.IN_ASSEMBLY
+    elif document.biosamples:
+        document.insdc_status=INSDCStatus.SAMPLE
+        document.goat_status = GoaTStatus.SAMPLE_COLLECTED
+    else:
+        document.insdc_status=INSDCStatus.LOCAL_SAMPLE
+        document.goat_status = GoaTStatus.SAMPLE_ACQUIRED
+    if document.publications_id:
+        document.goat_status = GoaTStatus.PUBLICATION_AVAILABLE
+
+
+
+@update_modified.apply   
 class Organism(db.Document):
     assemblies = db.ListField(db.StringField())
     experiments = db.ListField(db.StringField())

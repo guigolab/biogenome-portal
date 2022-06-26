@@ -1,5 +1,5 @@
 from db.models import BioProject
-from utils.ena_client import get_bioproject
+from utils import ena_client
 import json
 
 
@@ -31,7 +31,7 @@ def create_bioprojects_from_NCBI(bioprojects,organism,sample):
 def create_bioproject_from_ENA(project_accession):
     if BioProject.objects(accession=project_accession).first():
         return
-    resp = get_bioproject(project_accession)
+    resp = ena_client.get_bioproject(project_accession)
     for r in resp:
         if 'study_accession' in r.keys() and r['study_accession'] == project_accession:
             return BioProject(accession=project_accession, title=r['description']).save()

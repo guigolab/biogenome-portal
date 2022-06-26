@@ -69,82 +69,7 @@
         <template #header>
             <va-badge :color="dataIcons[popupData.model].color" :text="popupData.data.length"><h2>{{popupData.title}}</h2></va-badge>
         </template>
-        <va-data-table 
-            :items="popupData.data"
-            :columns="dataIcons[popupData.model].fields"
-            :hoverable="true"
-            sticky-header
-            height="500px"
-            :style="{
-                '--va-data-table-scroll-table-color': dataIcons[popupData.model].color,
-            }"
-            >
-            <template #header(accession)>
-                accession
-            </template>
-            <template #header(metadata)>
-                metadata
-            </template>
-            <template #cell(accession)="{ rowData }">
-                <a target="_blank" :href="`https://www.ebi.ac.uk/ena/browser/view/${rowData.accession}`" class="link">{{rowData.accession}}</a>
-            </template>
-            <template #header(sub_samples)>related samples</template>
-            <template #cell(chromosomes)="{ rowData }">
-                <va-button-dropdown v-if="rowData.chromosomes && rowData.chromosomes.length" size="small" flat>
-                    <ul>
-                        <li v-for="chr in rowData.chromosomes" :key="chr">
-                            <a target="_blank" :href="`https://www.ebi.ac.uk/ena/browser/view/${chr}`" class="link">{{chr}}</a>
-                        </li>
-                    </ul>
-                </va-button-dropdown>
-            </template>
-            <template #cell(bioprojects)="{ rowData }">
-                <va-button-dropdown v-if="rowData.bioprojects && rowData.bioprojects.length" size="small" flat>
-                    <ul>
-                        <li v-for="pro in rowData.bioprojects" :key="pro">
-                            <a target="_blank" :href="`https://www.ebi.ac.uk/ena/browser/view/${pro}`" class="link">{{pro}}</a>
-                        </li>
-                    </ul>
-                </va-button-dropdown>
-            </template>
-            <template #cell(experiments)="{ rowData }">
-                <va-button-dropdown v-if="rowData.experiments && rowData.experiments.length" size="small" flat>
-                    <ul>
-                        <li v-for="exp in rowData.experiments" :key="exp">
-                            <a target="_blank" :href="`https://www.ebi.ac.uk/ena/browser/view/${exp}`" class="link">{{exp}}</a>
-                        </li>
-                    </ul>
-                </va-button-dropdown>
-            </template>
-            <template #cell(assemblies)="{ rowData }">
-                <va-button-dropdown v-if="rowData.assemblies && rowData.assemblies.length" size="small" flat>
-                    <ul>
-                        <li v-for="ass in rowData.assemblies" :key="ass">
-                            <a target="_blank" :href="`https://www.ebi.ac.uk/ena/browser/view/${ass}`" class="link">{{ass}}</a>
-                        </li>
-                    </ul>
-                </va-button-dropdown>
-            </template>
-
-            <template #cell(sub_samples)="{ rowData }">
-                <va-button-dropdown v-if="rowData.sub_samples && rowData.sub_samples.length" size="small" flat>
-                    <ul>
-                        <li v-for="acc in rowData.sub_samples" :key="acc">
-                            <a class="link">{{acc}}</a>
-                        </li>
-                    </ul>
-                </va-button-dropdown>
-            </template>
-            <template #cell(metadata)="{ rowData }"><va-icon name="search" :color="dataIcons[popupData.model].color" @click="toggleMetadata(rowData)"/></template>
-        </va-data-table>
-        <va-modal v-model="showMetadata" :title="toggledMetadata.name">
-            <ul>
-                <li style="padding:10px" v-for="key in Object.keys(toggledMetadata.metadata)" :key="key">
-                    <strong>{{key+ ': '}}</strong>{{toggledMetadata.metadata[key]}}
-                    <va-divider/>
-                </li>
-            </ul>
-        </va-modal>
+        <DataTable :items="popupData.data" :columns="dataIcons[popupData.model].fields" :color="dataIcons[popupData.model].color"/>
     </va-modal>
 </va-card>
 </va-inner-loading>
@@ -154,6 +79,7 @@ import { watch,nextTick,ref, reactive } from 'vue'
 import {dataIcons} from '../../config'
 import portalService from '../services/DataPortalService'
 import OrganismForm from '../components/OrganismForm.vue'
+import DataTable from '../components/data/DataTable.vue'
 
 const isLoading = ref(false)
 

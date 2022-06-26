@@ -125,7 +125,6 @@ OrganismPipeline = [
 			"metadata":1,
 			"latitude":1,
 			"longitude":1,
-			"page_url":1
 		},
 		"assemblies":{
 			"accession":1,

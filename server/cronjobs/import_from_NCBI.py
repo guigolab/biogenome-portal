@@ -19,6 +19,8 @@ def import_from_NCBI(project_accession):
         bioproject_service.create_bioprojects_from_NCBI(ass['bioproject_lineages'],organism, sample_obj)
         annotations_service.parse_annotation(organism,ass_obj)
         geo_localization_service.get_or_create_coordinates(sample_obj,organism)
+        ##trigger status update
+        organism.save()
     print('ASSEMBLIES FROM NCBI IMPORTED')
 
 

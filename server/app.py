@@ -1,4 +1,3 @@
-import imp
 from flask import Flask
 from flask_cors import CORS
 from config import BaseConfig
@@ -21,7 +20,7 @@ jwt = JWTManager(app)
 
 
 
-# handle_tasks()
+handle_tasks()
 
 
 # # if __name__ == '__main__':

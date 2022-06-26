@@ -28,6 +28,32 @@
         <Transition>
             <div :key="selectedModel" v-if="selectedModel === 'overview'" class="row">
                 <div class="flex">
+                    <div class="row">
+                        <div class="flex">
+                            <h5 style="text-align:start;" class="display-5">INSDC STATUS</h5>
+                        </div>
+                        <div class="flex">
+                            <va-badge v-for="key in Object.keys(INSDCStatus)" :key="key" overlap dot color="success">
+                                <va-chip outline>
+                                    {{INSDCStatus[key]}}
+                                </va-chip>
+                            </va-badge>
+                        </div>
+                    </div>
+                    <va-divider/>
+                    <div class="row">
+                        <div class="flex">
+                            <h5 style="text-align:start;" class="display-5">GoaT STATUS</h5>
+                        </div>
+                        <div class="flex">
+                            <va-badge v-for="key in Object.keys(GoaTStatus)" :key="key" overlap dot color="success">
+                                <va-chip outline>
+                                    {{GoaTStatus[key]}}
+                                </va-chip>
+                            </va-badge>
+                        </div>
+                    </div>
+                    <va-divider/>
                 </div>
             </div>
             <div :key="selectedModel" v-if="selectedModel === 'biosamples'" class="row">
@@ -54,65 +80,6 @@
                 <div class="flex">
                 </div>
             </div>
-            <va-card >
-                <va-card-title>
-                    lineage
-                </va-card-title>
-            <va-card-content>
-            <div class="row">
-                <div class="flex lg6 md6" style="text-align:start;">
-                    <router-link style="padding:5px;font-size:.8rem" class="link" v-for="taxon in organism.taxon_lineage" :key="taxon.taxid" :to="{name:'tree-of-life',params:{node:taxon.taxid}}">{{taxon.name + ' ('+taxon.rank+')'}}</router-link>
-                </div>
-            </div>
-            </va-card-content>
-        </va-card>
-        <va-card>
-            <va-card-title>
-                bioprojects
-            </va-card-title>
-            <va-card-content>
-            <div class="row">
-                <div class="flex lg6 md6" style="text-align:start;">
-                    <router-link style="padding:5px;font-size:.8rem" class="link" v-for="proj in organism.bioprojects" :key="proj.accession" :to="{name:'map',params:{accession:proj.accession}}">{{proj.title}}</router-link>
-                </div>
-            </div>
-            </va-card-content>
-        </va-card>
-        <va-card :key="selectedModel" v-else-if="selectedModel === 'biosamples'">
-            <va-card-title>
-                {{selectedModel}}
-            </va-card-title>
-            <va-card-content>
-            </va-card-content>
-        </va-card>
-        <va-card :key="selectedModel" v-else-if="selectedModel === 'local_samples'">
-            <va-card-title>
-                {{selectedModel}}
-            </va-card-title>
-            <va-card-content>
-            </va-card-content>
-        </va-card>
-        <va-card :key="selectedModel" v-else-if="selectedModel === 'assemblies'">
-            <va-card-title>
-                {{selectedModel}}
-            </va-card-title>
-            <va-card-content>
-            </va-card-content>
-        </va-card>
-        <va-card :key="selectedModel" v-else-if="selectedModel === 'experiments'">
-            <va-card-title>
-                {{selectedModel}}
-            </va-card-title>
-            <va-card-content>
-            </va-card-content>
-        </va-card>
-        <va-card :key="selectedModel" v-else-if="selectedModel === 'coordinates'">
-            <va-card-title>
-                {{selectedModel}}
-            </va-card-title>
-            <va-card-content>
-            </va-card-content>
-        </va-card>
         </Transition>
         <!-- <div class="row">
             <div class="flex">
@@ -212,10 +179,9 @@
 <script setup>
 import OrganismDetails from '../components/OrganismDetails.vue'
 import { computed, nextTick, onMounted, reactive, ref } from '@vue/runtime-core'
-import {dataIcons} from '../../config'
+import {dataIcons,GoaTStatus,INSDCStatus} from '../../config'
 import DataPortalService from '../services/DataPortalService'
 // import MapComponent from '../components/MapComponent.vue'
-
 
 const selectedModel = ref('overview')
 

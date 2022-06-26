@@ -26,6 +26,8 @@ def import_from_EBI_biosamples(PROJECTS):
             ##get experiments
             ## we rely on the NCBI job to retrieve assemblies
             geo_localization_service.get_or_create_coordinates(biosample,organism)
+            ##trigger status update
+            organism.save()
     print('APPENDING SPECIMENS')
     ##append specimens as a backup if biosamples api fails
     append_specimens(sub_samples)
