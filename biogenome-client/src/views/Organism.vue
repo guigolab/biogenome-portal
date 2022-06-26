@@ -1,11 +1,11 @@
 <template>
 <div v-if="organismLoaded" class="row">
     <div class="flex">
-        <div class="row align--center">
-            <div style="padding:15px" class="flex">
-                <h1 class="display-3">{{organism.scientific_name}}</h1>
+        <div class="row justify--start align--center">
+            <div  style="padding:15px" class="flex">
+                <h1 style="text-align:start;" class="display-3">{{organism.scientific_name}}</h1>
                 <div class="row justify--space-between">
-                    <div class="flex">
+                    <div v-if="organism.insdc_common_name" class="flex">
                         <p class="text--secondary">{{organism.insdc_common_name}}</p>
                     </div>
                     <div class="flex">
@@ -14,12 +14,107 @@
                 </div>
             </div>
             <div style="padding:15px" class="flex">
-                <va-button  outline>Overview</va-button>
-                <va-button  v-for="key in organismData.dataKeys" :key="key" @click="toggleTable(key)" :color="dataIcons[key].color" outline :icon="dataIcons[key].icon">{{key}}</va-button>
+                <va-button  @click="selectedModel='overview'" :outline="selectedModel!=='overview'">Overview</va-button>
+                <va-button  v-for="key in organismData.dataKeys" :key="key" @click="selectedModel=key" :color="dataIcons[key].color" :outline="selectedModel!==key" :icon="dataIcons[key].icon">{{key}}</va-button>
+                <va-button  @click="selectedModel='coordinates'" v-if="organism.coordinates.length" icon="travel_explore" :outline="selectedModel!=='coordinates'">Map</va-button>
             </div>
         </div>
         <va-divider/>
-        <div class="row">
+        <!-- <div class="row">
+            <div class="flex lg6 md6" style="text-align:start;">
+                <router-link style="padding:5px;font-size:.8rem" class="link" v-for="taxon in organism.taxon_lineage" :key="taxon.taxid" :to="{name:'tree-of-life',params:{node:taxon.taxid}}">{{taxon.name + ' ('+taxon.rank+')'}}</router-link>
+            </div>
+        </div> -->
+        <Transition>
+            <div :key="selectedModel" v-if="selectedModel === 'overview'" class="row">
+                <div class="flex">
+                </div>
+            </div>
+            <div :key="selectedModel" v-if="selectedModel === 'biosamples'" class="row">
+                <div class="flex">
+                </div>
+            </div>
+            <div :key="selectedModel" v-if="selectedModel === 'local_samples'" class="row">
+                <div class="flex">
+                </div>
+            </div>
+            <div :key="selectedModel" v-if="selectedModel === 'assemblies'" class="row">
+                <div class="flex">
+                </div>
+            </div>
+            <div :key="selectedModel" v-if="selectedModel === 'experiments'" class="row">
+                <div class="flex">
+                </div>
+            </div>
+            <div :key="selectedModel" v-if="selectedModel === 'annotations'" class="row">
+                <div class="flex">
+                </div>
+            </div>
+            <div :key="selectedModel" v-if="selectedModel === 'coordinates'" class="row">
+                <div class="flex">
+                </div>
+            </div>
+            <va-card >
+                <va-card-title>
+                    lineage
+                </va-card-title>
+            <va-card-content>
+            <div class="row">
+                <div class="flex lg6 md6" style="text-align:start;">
+                    <router-link style="padding:5px;font-size:.8rem" class="link" v-for="taxon in organism.taxon_lineage" :key="taxon.taxid" :to="{name:'tree-of-life',params:{node:taxon.taxid}}">{{taxon.name + ' ('+taxon.rank+')'}}</router-link>
+                </div>
+            </div>
+            </va-card-content>
+        </va-card>
+        <va-card>
+            <va-card-title>
+                bioprojects
+            </va-card-title>
+            <va-card-content>
+            <div class="row">
+                <div class="flex lg6 md6" style="text-align:start;">
+                    <router-link style="padding:5px;font-size:.8rem" class="link" v-for="proj in organism.bioprojects" :key="proj.accession" :to="{name:'map',params:{accession:proj.accession}}">{{proj.title}}</router-link>
+                </div>
+            </div>
+            </va-card-content>
+        </va-card>
+        <va-card :key="selectedModel" v-else-if="selectedModel === 'biosamples'">
+            <va-card-title>
+                {{selectedModel}}
+            </va-card-title>
+            <va-card-content>
+            </va-card-content>
+        </va-card>
+        <va-card :key="selectedModel" v-else-if="selectedModel === 'local_samples'">
+            <va-card-title>
+                {{selectedModel}}
+            </va-card-title>
+            <va-card-content>
+            </va-card-content>
+        </va-card>
+        <va-card :key="selectedModel" v-else-if="selectedModel === 'assemblies'">
+            <va-card-title>
+                {{selectedModel}}
+            </va-card-title>
+            <va-card-content>
+            </va-card-content>
+        </va-card>
+        <va-card :key="selectedModel" v-else-if="selectedModel === 'experiments'">
+            <va-card-title>
+                {{selectedModel}}
+            </va-card-title>
+            <va-card-content>
+            </va-card-content>
+        </va-card>
+        <va-card :key="selectedModel" v-else-if="selectedModel === 'coordinates'">
+            <va-card-title>
+                {{selectedModel}}
+            </va-card-title>
+            <va-card-content>
+            </va-card-content>
+        </va-card>
+        </Transition>
+        <!-- <div class="row">
             <div class="flex">
                 <va-card>
                     <va-card-title>
@@ -30,15 +125,15 @@
                             <li v-for="taxon in organism.taxon_lineage" :key="taxon.taxid">
                                 <p class="text--secondary">{{taxon.name + ' ('+taxon.rank+')'}}</p>
                             </li>
-                            <!-- <li v-for="taxon in organism.taxon_lineage" :key="taxon.taxid">
+                           <li v-for="taxon in organism.taxon_lineage" :key="taxon.taxid">
                                 <router-link :to="{name:'tree-of-life'}"><p>{{taxon.name + ' ('+taxon.rank+')'}}</p></router-link>
-                            </li> -->
+                            </li>
                         </ul>
                     </va-card-content>
                 </va-card>
             </div>
         </div>
-        <!-- <va-card class="custom-card">
+         <va-card class="custom-card">
             <va-card-content>
                 <div class="row">
                     <div v-for="key in organismData.dataKeys" :key="key" class="flex">
@@ -122,6 +217,7 @@ import DataPortalService from '../services/DataPortalService'
 // import MapComponent from '../components/MapComponent.vue'
 
 
+const selectedModel = ref('overview')
 
 const props = defineProps({
     taxid:String
@@ -161,3 +257,14 @@ onMounted(()=>{
     })
 })
 </script>
+<style scoped>
+.v-enter-active,
+.v-leave-active {
+  transition: opacity 0.5s ease;
+}
+
+.v-enter-from,
+.v-leave-to {
+  opacity: 0;
+}
+</style>

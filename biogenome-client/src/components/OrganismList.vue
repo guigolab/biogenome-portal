@@ -72,6 +72,7 @@
         <va-data-table 
             :items="popupData.data"
             :columns="dataIcons[popupData.model].fields"
+            :hoverable="true"
             sticky-header
             height="500px"
             :style="{

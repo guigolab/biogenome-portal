@@ -1,6 +1,6 @@
 import { createWebHistory, createRouter } from 'vue-router';
 import Home from '../views/Home.vue';
-import {ROOTNODE} from '../../config'
+import {ROOTNODE,PROJECT_ACCESSION} from '../../config'
 
 const treeOfLife = () => import('../views/TreeOfLife.vue')
 const map = () => import('../views/MapPage.vue')
@@ -32,6 +32,11 @@ const routes = [
     name: "tree-of-life",
     props: true,
     component: treeOfLife
+  },
+  {
+    path: '/map',
+    name: 'static-map',
+    component: map
   },
   {
     path: "/map/:accession",
