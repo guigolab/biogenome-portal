@@ -1,5 +1,7 @@
 <template>
 <div v-if="organismLoaded" class="row">
+    <div class=flex>
+    </div>
     <div class="flex">
         <div class="row justify--start align--center">
             <div  style="padding:15px" class="flex">
@@ -27,33 +29,8 @@
         </div> -->
         <Transition>
             <div :key="selectedModel" v-if="selectedModel === 'overview'" class="row">
-                <div class="flex">
-                    <div class="row">
-                        <div class="flex">
-                            <h5 style="text-align:start;" class="display-5">INSDC STATUS</h5>
-                        </div>
-                        <div class="flex">
-                            <va-badge v-for="key in Object.keys(INSDCStatus)" :key="key" overlap dot color="success">
-                                <va-chip outline>
-                                    {{INSDCStatus[key]}}
-                                </va-chip>
-                            </va-badge>
-                        </div>
-                    </div>
-                    <va-divider/>
-                    <div class="row">
-                        <div class="flex">
-                            <h5 style="text-align:start;" class="display-5">GoaT STATUS</h5>
-                        </div>
-                        <div class="flex">
-                            <va-badge v-for="key in Object.keys(GoaTStatus)" :key="key" overlap dot color="success">
-                                <va-chip outline>
-                                    {{GoaTStatus[key]}}
-                                </va-chip>
-                            </va-badge>
-                        </div>
-                    </div>
-                    <va-divider/>
+                <div class="flex lg12 md12 sm12 xs12">
+                    <OrganismOverview :organism="organism"/>
                 </div>
             </div>
             <div :key="selectedModel" v-if="selectedModel === 'biosamples'" class="row">
@@ -181,6 +158,7 @@ import OrganismDetails from '../components/OrganismDetails.vue'
 import { computed, nextTick, onMounted, reactive, ref } from '@vue/runtime-core'
 import {dataIcons,GoaTStatus,INSDCStatus} from '../../config'
 import DataPortalService from '../services/DataPortalService'
+import OrganismOverview from '../components/OrganismOverview.vue'
 // import MapComponent from '../components/MapComponent.vue'
 
 const selectedModel = ref('overview')

@@ -28,20 +28,31 @@
     },
     "GoaTStatus":
     [
-        {"SAMPLE_COLLECTED": "Sample Collected"},
-        {"SAMPLE_ACQUIRED" : "Sample Acquired"},
-        {"DATA_GENERATION" :"Data Generation"},
-        {"IN_ASSEMBLY" : "In Assembly"},
-        {"INSDC_SUBMITTED" : "INSDC Submitted"},
-        {"PUBLICATION_AVAILABLE" : "Publication Available"}
+        {"label":"Sample Collected",
+        "icon":"hub"},
+        {"label":"Sample Acquired",
+        "icon":"hub"},
+        {"label":"Data Generation",
+        "icon":"engineering"},
+        {"label":"In Assembly",
+        "icon":"model_training"},
+        {"label":"INSDC Submitted",
+        "icon":"drive_folder_upload"},
+        {"label":"Publication Available",
+        "icon":"post_add"}
     ],
     "INSDCStatus":
     [
-        {"LOCAL_SAMPLE" : "Sample Acquired"},
-        {"SAMPLE" :"Biosample Submitted"},
-        {"READS" : "Reads Submitted"},
-        {"ASSEMBLIES" : "Assemblies Submitted"},
-        {"ANN_SUBMITTED" : "Annotations Created"}
+        {"label":"Sample Acquired",
+        "icon":"hub"},
+        {"label":"Biosample Submitted",
+        "icon":"hub"},
+        {"label":"Reads Submitted",
+        "icon":"widgets"},
+        {"label":"Assemblies Submitted",
+        "icon":"library_books"},
+        {"label":"Annotations Created",
+        "icon":"query_stats"}
     ],
     "ROOTNODE": "2759",
 

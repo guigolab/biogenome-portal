@@ -177,6 +177,7 @@ def handler(event):
 def update_modified(sender, document):
     if document.annotations:
         document.insdc_status= INSDCStatus.ANN_SUBMITTED
+        document.goat_status=GoaTStatus.INSDC_SUBMITTED
     elif document.assemblies:
         document.insdc_status= INSDCStatus.ASSEMBLIES
         document.goat_status=GoaTStatus.INSDC_SUBMITTED
