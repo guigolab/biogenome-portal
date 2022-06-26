@@ -133,4 +133,7 @@ function toggleMetadata(rowData){
 li.organism-item{
     padding: 5px;
 }
+li.organism-item:hover{
+    background-color: #eff3f8;
+}
 </style>

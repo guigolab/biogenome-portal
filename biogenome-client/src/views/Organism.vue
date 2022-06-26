@@ -1,8 +1,6 @@
 <template>
 <div v-if="organismLoaded" class="row">
-    <div class=flex>
-    </div>
-    <div class="flex">
+    <div class="flex lg12 md12 sm12 xs12">
         <div class="row justify--start align--center">
             <div  style="padding:15px" class="flex">
                 <h1 style="text-align:start;" class="display-3">{{organism.scientific_name}}</h1>
