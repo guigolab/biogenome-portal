@@ -11,7 +11,11 @@ app = Flask(__name__)
 
 CORS(app)
 app.config.from_object(BaseConfig)
+app.config["JWT_TOKEN_LOCATION"] = ["cookies"]
 
+# If true this will only allow the cookies that contain your JWTs to be sent
+# over https. In production, this should always be set to True
+app.config["JWT_COOKIE_SECURE"] = True
 initialize_db(app)
 
 initialize_api(app)

@@ -29,9 +29,9 @@
     "GoaTStatus":
     [
         {"label":"Sample Collected",
-        "icon":"hub"},
+        "icon":"hiking"},
         {"label":"Sample Acquired",
-        "icon":"hub"},
+        "icon":"biotech"},
         {"label":"Data Generation",
         "icon":"engineering"},
         {"label":"In Assembly",
@@ -44,13 +44,13 @@
     "INSDCStatus":
     [
         {"label":"Sample Acquired",
-        "icon":"hub"},
+        "icon":"biotech"},
         {"label":"Biosample Submitted",
-        "icon":"hub"},
+        "icon":"checklist_rtl"},
         {"label":"Reads Submitted",
-        "icon":"widgets"},
+        "icon":"upload_file"},
         {"label":"Assemblies Submitted",
-        "icon":"library_books"},
+        "icon":"drive_folder_upload"},
         {"label":"Annotations Created",
         "icon":"query_stats"}
     ],
@@ -64,5 +64,10 @@
         "navItems":[
             
         ]
-    }
+    },
+    "ROLES":[
+        {"value":"SampleCollector","text":"Sample Collector", "description":"Submit sample metadata"},
+        {"value":"SampleManager", "text":"Sample Manager","description":"Validate sample metadata"},
+        {"value":"Admin", "text":"Data Admin","description":"All powers"}
+    ]
 }

@@ -1,6 +1,6 @@
 <template>
     <div class="row">
-        <div class="flex">
+        <div style="overflow:scroll" class="flex lg12 md12 sm12 xs12">
             <va-data-table 
                 :items="items"
                 :columns="columns"
@@ -22,7 +22,7 @@
                 </template>
                 <template #header(sub_samples)>related samples</template>
                 <template #cell(chromosomes)="{ rowData }">
-                    <va-button-dropdown v-if="rowData.chromosomes && rowData.chromosomes.length" size="small" flat>
+                    <va-button-dropdown v-if="rowData.chromosomes && rowData.chromosomes.length" size="small" flat :label="rowData.chromosomes.length">
                         <ul>
                             <li v-for="chr in rowData.chromosomes" :key="chr">
                                 <a target="_blank" :href="`https://www.ebi.ac.uk/ena/browser/view/${chr}`" class="link">{{chr}}</a>
@@ -81,6 +81,7 @@
     </div>
 </template>
 <script setup>
+import {ref,reactive} from 'vue'
 
 const showMetadata = ref(false)
 

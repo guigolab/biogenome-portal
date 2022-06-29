@@ -1,30 +1,46 @@
 from flask_restful import Resource
 from flask import Response, request
-from flask_jwt_extended import create_access_token, jwt_required
+from flask_jwt_extended import create_access_token, jwt_required, set_access_cookies, unset_jwt_cookies
 from datetime import timedelta
 import os
 import json
-from db.models import Chromosome, GeoCoordinates,Annotation, TaxonNode, BioSample,LocalSample, Organism, Assembly, Experiment,BioProject
+from db.models import Chromosome, GeoCoordinates,Annotation, TaxonNode, BioSample,LocalSample, Organism, Assembly, Experiment,BioProject,BioGenomeUser
+from flask import current_app as app
 
 class Login(Resource):
     def post(self):
         if request.is_json:
-            user = request.json["user"]
+            name = request.json["name"]
             password = request.json["password"]
         else:
-            user = request.form["user"]
+            name = request.form["name"]
             password = request.form["password"]
-        if user == os.getenv('USR') and password == os.getenv('RESTKEY'):
-            access_token = create_access_token(identity=user,expires_delta=timedelta(minutes=30))
-            return Response(json.dumps(access_token), mimetype="application/json", status=201)
+        user_obj = BioGenomeUser.objects(name=name).first()
+        if user_obj and user_obj.password == password:
+            role = user_obj.role
+            name = user_obj.name
+        elif name == os.getenv('DB_USER') and password == os.getenv('DB_PASS'):
+            role = 'SuperAdmin' #The dev
+            name = 'The Best'
         else:
-            return Response("Bad User or Password", mimetype="application/json", status=401)
+            role = None
+        if role:
+            access_token = create_access_token(identity=name,expires_delta=timedelta(minutes=30))
+            response = Response(json.dumps(dict(msg=f"welcome {name}",role=role)), mimetype="application/json", status=201)
+            set_access_cookies(response,access_token)
+            return response
+        return Response(json.dumps({"msg":"Bad User or Password"}), mimetype="application/json", status=401)
     
-    # @jwt_required()
+    @jwt_required()
+    def get(self):
+        app.logger.info('HELLOO')
+
+  
     def delete(self):
         Annotation.drop_collection()
         TaxonNode.drop_collection()
         GeoCoordinates.drop_collection()
+        BioGenomeUser.drop_collection()
         BioProject.drop_collection()
         BioSample.drop_collection()
         LocalSample.drop_collection()
@@ -36,3 +52,48 @@ class Login(Resource):
         Chromosome.drop_collection()
         Experiment.drop_collection()
         return 200
+
+class Logout(Resource):
+    @jwt_required()
+    def get(self):
+        response = Response(json.dumps({"msg":"Logout succesfull"}), mimetype="application/json", status=201)
+        unset_jwt_cookies(response)
+        return response
+
+class Users(Resource):
+    @jwt_required()
+    def get(self):
+        response = Response(BioGenomeUser.objects().to_json(), mimetype="application/json", status=201)
+        return response
+
+    #create user
+    @jwt_required()
+    def post(self):
+        user_data = request.json  if request.is_json else request.form
+        app.logger.info(user_data)
+        user = BioGenomeUser.objects(name=user_data['name']).first()
+        if user:
+            return Response(json.dumps({"msg":f'User {user.name} already exists!'}), mimetype="application/json", status=400)
+        new_user = BioGenomeUser(**user_data).save()
+        return Response(json.dumps({"msg":f'User {user.name} saved!'}), mimetype="application/json", status=400)
+
+    #update user
+    @jwt_required()
+    def put(self, name):
+        if not name:
+            return Response(json.dumps({"msg":'user name is mandatory!'}), mimetype="application/json", status=400)
+        user = BioGenomeUser.objects(name=name).first()
+        if request.is_json:
+            user_data = request.json()
+        else:
+            user_data = request.form
+        user.update(**user_data)
+        return Response(json.dumps({"msg":f'User {user.name} updated!'}), mimetype="application/json", status=400)
+
+    @jwt_required()
+    def delete(self, name):
+        if not name:
+            return Response(json.dumps({"msg":'user name is mandatory!'}), mimetype="application/json", status=400)
+        user = BioGenomeUser.objects(name=name).first()
+        user.delete()
+        return Response(json.dumps({"msg":f'User {user.name} deleted!'}), mimetype="application/json", status=400)

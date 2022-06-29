@@ -1,7 +1,12 @@
+from email.policy import default
+from tkinter.tix import Tree
 from . import db
 import datetime
-from enum import Enum
+from enum import Enum, unique
 
+class BrokerSource(Enum):
+    LOCAL = 'local'
+    COPO = 'copo'
 
 class GoaTStatus(Enum):
     SAMPLE_COLLECTED = 'Sample Collected'
@@ -17,6 +22,11 @@ class INSDCStatus(Enum):
     READS = 'Reads Submitted'
     ASSEMBLIES = 'Assemblies Submitted'
     ANN_SUBMITTED = 'Annotations Created'
+
+class Roles(Enum):
+    SAMPLE_COLLECTOR = 'SampleCollector' #can only submit samples
+    SAMPLE_MANAGER = 'SampleManager' # submit and validate samples
+    DATA_ADMIN = 'Admin' # all actions less users CRUD
 
 class TaxonNode(db.Document):
     children = db.ListField(db.StringField()) #stores taxids
@@ -37,6 +47,7 @@ class Experiment(db.Document):
     scientific_name= db.StringField()
     created = db.DateTimeField(default=datetime.datetime.utcnow)
     metadata=db.DictField()
+    auto_imported = db.BooleanField(default=True)
     meta = {
         'indexes': ['experiment_accession']
     }
@@ -60,6 +71,7 @@ class Assembly(db.Document):
     metadata=db.DictField()
     chromosomes=db.ListField(db.StringField())
     track = db.EmbeddedDocumentField(AssemblyTrack)
+    auto_imported = db.BooleanField(default=True)
     meta = {
         'indexes': ['accession']
     }
@@ -92,13 +104,13 @@ class SampleSubmitter(db.Document):
 class LocalSample(db.Document):
     created = db.DateTimeField(default=datetime.datetime.utcnow)
     local_id = db.StringField(required=True,unique=True)
-    created = db.DateTimeField(default=datetime.datetime.utcnow)
     last_check = db.DateTimeField()
     latitude=db.StringField()
     longitude=db.StringField()
     taxid = db.StringField(required=True)
     scientific_name = db.StringField(required=True)
     valid = db.BooleanField()
+    broker=db.EnumField(BrokerSource, default=BrokerSource.LOCAL)
     metadata=db.DictField()
     meta = {
         'indexes': [
@@ -119,6 +131,7 @@ class BioSample(db.Document):
     metadata=db.DictField()
     taxid = db.StringField(required=True)
     scientific_name = db.StringField(required=True)
+    auto_imported = db.BooleanField(default=True)
     meta = {
         'indexes': [
             'accession'
@@ -157,6 +170,7 @@ class Annotation(db.Document):
     lengthTreshold = db.StringField()
     evidenceSource = db.StringField()
     created = db.DateTimeField(default=datetime.datetime.utcnow)
+    auto_imported = db.BooleanField(default=True)
     meta = {
         'indexes': [
             'name'
@@ -215,6 +229,7 @@ class Organism(db.Document):
     taxon_lineage = db.ListField(db.StringField())
     insdc_status = db.EnumField(INSDCStatus)
     goat_status = db.EnumField(GoaTStatus)
+    auto_imported = db.BooleanField(default=True)
     meta = {
         'indexes': [
             'scientific_name',
@@ -222,3 +237,8 @@ class Organism(db.Document):
             'taxid'
         ]
     }
+
+class BioGenomeUser(db.Document):
+    name=db.StringField(unique=True,required=True)
+    password=db.StringField(required=True)
+    role=db.EnumField(Roles, required=True)

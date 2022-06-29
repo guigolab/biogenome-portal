@@ -2,7 +2,7 @@
 <div v-if="organismLoaded" class="row">
     <div class="flex lg12 md12 sm12 xs12">
         <div class="row justify--start align--center">
-            <div  style="padding:15px" class="flex">
+            <div style="padding:15px" class="flex">
                 <h1 style="text-align:start;" class="display-3">{{organism.scientific_name}}</h1>
                 <div class="row justify--space-between">
                     <div v-if="organism.insdc_common_name" class="flex">
@@ -14,48 +14,39 @@
                 </div>
             </div>
             <div style="padding:15px" class="flex">
-                <va-button  @click="selectedModel='overview'" :outline="selectedModel!=='overview'">Overview</va-button>
-                <va-button  v-for="key in organismData.dataKeys" :key="key" @click="selectedModel=key" :color="dataIcons[key].color" :outline="selectedModel!==key" :icon="dataIcons[key].icon">{{key}}</va-button>
-                <va-button  @click="selectedModel='coordinates'" v-if="organism.coordinates.length" icon="travel_explore" :outline="selectedModel!=='coordinates'">Map</va-button>
+                <va-button @click="selectedModel='overview'" :outline="selectedModel!=='overview'">Overview</va-button>
+                <va-button v-for="key in organismData.dataKeys" :key="key" @click="selectedModel=key" :color="dataIcons[key].color" :outline="selectedModel!==key" :icon="dataIcons[key].icon">{{key}}</va-button>
+                <va-button @click="selectedModel='coordinates'" v-if="organism.coordinates.length" icon="travel_explore" :outline="selectedModel!=='coordinates'">Map</va-button>
             </div>
         </div>
         <va-divider/>
-        <!-- <div class="row">
-            <div class="flex lg6 md6" style="text-align:start;">
-                <router-link style="padding:5px;font-size:.8rem" class="link" v-for="taxon in organism.taxon_lineage" :key="taxon.taxid" :to="{name:'tree-of-life',params:{node:taxon.taxid}}">{{taxon.name + ' ('+taxon.rank+')'}}</router-link>
+        <div class="row">
+            <div class="flex lg4 md4 sm12 xs12">
+                <OrganismSideBar :lineage="organism.taxon_lineage" :bioprojects="organism.bioprojects"/>
             </div>
-        </div> -->
-        <Transition>
-            <div :key="selectedModel" v-if="selectedModel === 'overview'" class="row">
-                <div class="flex lg12 md12 sm12 xs12">
-                    <OrganismOverview :organism="organism"/>
-                </div>
+            <div class="flex lg8 md8 sm12 xs12">
+                <Transition name="slide-up">
+                <va-card class="custom-card" :key="selectedModel" v-if="selectedModel === 'overview'">
+                    <va-card-title>
+                        {{selectedModel}}
+                    </va-card-title>
+                    <va-card-content>
+                        <OrganismOverview :organism="organism"/>
+                    </va-card-content>
+                </va-card>
+                <va-card class="custom-card" :key="selectedModel" v-if="Object.keys(dataIcons).includes(selectedModel)">
+                    <va-card-title>
+                        {{selectedModel}}
+                    </va-card-title>
+                    <va-card-content>
+                        <DataTable :items="organism[selectedModel]" :columns="dataIcons[selectedModel].fields" :color="dataIcons[selectedModel].color"/>
+                    </va-card-content>
+                </va-card>
+                <va-card class="custom-card" :key="selectedModel" v-if="selectedModel === 'coordinates'">
+                </va-card>
+                </Transition>
             </div>
-            <div :key="selectedModel" v-if="selectedModel === 'biosamples'" class="row">
-                <div class="flex">
-                </div>
-            </div>
-            <div :key="selectedModel" v-if="selectedModel === 'local_samples'" class="row">
-                <div class="flex">
-                </div>
-            </div>
-            <div :key="selectedModel" v-if="selectedModel === 'assemblies'" class="row">
-                <div class="flex">
-                </div>
-            </div>
-            <div :key="selectedModel" v-if="selectedModel === 'experiments'" class="row">
-                <div class="flex">
-                </div>
-            </div>
-            <div :key="selectedModel" v-if="selectedModel === 'annotations'" class="row">
-                <div class="flex">
-                </div>
-            </div>
-            <div :key="selectedModel" v-if="selectedModel === 'coordinates'" class="row">
-                <div class="flex">
-                </div>
-            </div>
-        </Transition>
+        </div>
         <!-- <div class="row">
             <div class="flex">
                 <va-card>
@@ -156,7 +147,9 @@ import OrganismDetails from '../components/OrganismDetails.vue'
 import { computed, nextTick, onMounted, reactive, ref } from '@vue/runtime-core'
 import {dataIcons,GoaTStatus,INSDCStatus} from '../../config'
 import DataPortalService from '../services/DataPortalService'
+import DataTable from '../components/data/DataTable.vue'
 import OrganismOverview from '../components/OrganismOverview.vue'
+import OrganismSideBar from '../components/OrganismSideBar.vue'
 // import MapComponent from '../components/MapComponent.vue'
 
 const selectedModel = ref('overview')
@@ -200,13 +193,18 @@ onMounted(()=>{
 })
 </script>
 <style scoped>
-.v-enter-active,
-.v-leave-active {
-  transition: opacity 0.5s ease;
+.slide-up-enter-active,
+.slide-up-leave-active {
+  transition: all 0.25s ease-out;
 }
 
-.v-enter-from,
-.v-leave-to {
+.slide-up-enter-from {
   opacity: 0;
+  transform: translateY(30px);
+}
+
+.slide-up-leave-to {
+  opacity: 0;
+  transform: translateY(-30px);
 }
 </style>

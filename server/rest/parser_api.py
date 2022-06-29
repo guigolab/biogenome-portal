@@ -1,5 +1,6 @@
 from flask import Response,request
 from flask_restful import Resource
+from db.models import LocalSample
 from utils import parser_helper
 from utils.utils import custom_response
 from services import submission_service,parser_service
@@ -49,6 +50,22 @@ class ExcelParserApi(Resource):
         except Exception as e:
             app.logger.error(e)
         raise InternalServerError
+
+    @jwt_required()
+    def get(self):
+        return Response(parser_service.create_excel(), content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+
+class ExcelParser(Resource):
+## should save excel file to track history
+    def post(self):
+        excel = request.files.get('excel')
+        form_data = dict(**request.files,**request.json) if request.is_json else dict(**request.form)
+        form_data['excel'] = excel
+        messages, status = parser_service.parse_excel(**form_data)
+        app.logger.info(messages)
+        return Response(json.dumps(messages),mimetype="application/json", status=status)
+
 
     @jwt_required()
     def get(self):

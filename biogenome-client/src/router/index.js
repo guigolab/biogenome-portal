@@ -5,6 +5,13 @@ import {ROOTNODE,PROJECT_ACCESSION} from '../../config'
 const treeOfLife = () => import('../views/TreeOfLife.vue')
 const map = () => import('../views/MapPage.vue')
 const organism = () => import('../views/Organism.vue')
+const admin = () => import('../views/Admin.vue')
+const users = () => import('../components/admin/Users.vue')
+const samples = () => import('../components/admin/LocalSamples.vue')
+//form pages/components
+
+const excel = () => import('../components/admin/form/ExcelForm.vue')
+
 // const jBrowseComponent = () => import('../views/JBrowse.vue')
 // const humanPage = () => import('../views/Human.vue')
 // const humanNew = () => import('../views/HumanNew.vue')
@@ -17,6 +24,20 @@ const routes = [
     path: "/",
     name: "home",
     component: Home,
+  },
+  {
+    path: "/admin",
+    name: "admin",
+    children:[
+      {path:'/local_samples', component:samples, name:"local_samples"},
+      // {path:'/users', component:users, name:"users"}
+    ],
+    component: admin,
+  },
+  {
+    path: "/excel",
+    name: "excel",
+    component: excel
   },
   // {
   //   path: "/organisms",
