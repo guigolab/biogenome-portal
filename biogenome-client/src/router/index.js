@@ -41,7 +41,8 @@ const routes = [
     component: excel
   },
   {
-    path: "/organism-form",
+    path: "/organism-form/:taxid?",
+    props: true,
     name: "organism-form",
     component: organismForm
   },

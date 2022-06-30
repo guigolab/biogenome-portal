@@ -3,7 +3,7 @@ from services import taxon_service
 from flask import current_app as app
 from flask import json
 from mongoengine.queryset.visitor import Q
-from db.models import Organism,TaxonNode
+from db.models import CommonName, Organism, Publication,TaxonNode
 import os 
 
 ROOT_NODE=os.getenv('ROOT_NODE')
@@ -80,7 +80,7 @@ def get_coordinates_filter(query, only_coordinates, geo_location):
     elif only_coordinates == 'true':
         query['coordinates__not__size'] = 0
 
-def get_or_create_organism(taxid, common_names=None):
+def get_or_create_organism(taxid):
     organism = Organism.objects(taxid=taxid).first()
     if not organism:
         taxon_xml = ena_client.get_taxon_from_ena(taxid)
@@ -97,13 +97,32 @@ def get_or_create_organism(taxid, common_names=None):
         insdc_common_name = tax_organism['commonName'] if 'commonName' in tax_organism.keys() else ''
         organism = Organism(taxid = taxid, insdc_common_name=insdc_common_name, scientific_name= tax_organism['scientificName'], taxon_lineage = taxon_list, tolid_prefix=tolid).save()
         taxon_service.leaves_counter(taxon_lineage)
-    if common_names and len(common_names.split('|')) > 0:
-        names_arr = common_names.split('|')
-        if len(organism.common_name) > 0:
-            names_arr = [name for name in names_arr if name not in organism.common_name]
-        organism.modify(push_all__common_name=names_arr)
     return organism
 
+def create_organism_from_data(data, taxid=None):
+    app.logger.info(data)
+    if not 'scientific_name' in data.keys() or not 'taxid' in data.keys():
+        return 
+    if not taxid and Organism.objects(taxid=data['taxid']).first():
+        return
+    string_attrs = dict()
+    for key in data.keys():
+        if isinstance(data[key],str):
+            string_attrs[key] = data[key]
+    new_organism = get_or_create_organism(data['taxid'])
+    for key in string_attrs.keys():
+        new_organism[key] = string_attrs[key]
+    if 'common_names' in data.keys():
+        for c_name in data['common_names']:
+            if 'value' in c_name.keys():
+                new_organism.common_names.append(CommonName(**c_name))
+    if 'image_urls' in data.keys():
+        new_organism.image_urls = data['image_urls']
+    if 'publications' in data.keys():
+        for pub in data['publications']:
+            if 'id' in pub.keys():
+                new_organism.publications.append(Publication(**pub))
+    new_organism.save()
 # def update_organism_names(names):
 
 # def delete_organisms(taxids):

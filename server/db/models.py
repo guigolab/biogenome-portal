@@ -210,10 +210,10 @@ def update_modified(sender, document):
     elif document.biosamples:
         document.insdc_status=INSDCStatus.SAMPLE
         document.goat_status = GoaTStatus.SAMPLE_COLLECTED
-    else:
+    elif document.local_samples:
         document.insdc_status=INSDCStatus.LOCAL_SAMPLE
         document.goat_status = GoaTStatus.SAMPLE_ACQUIRED
-    if document.publications_id:
+    if document.publications:
         document.goat_status = GoaTStatus.PUBLICATION_AVAILABLE
 
 class CommonName(db.EmbeddedDocument):
@@ -229,7 +229,7 @@ class CommonName(db.EmbeddedDocument):
 
 class Publication(db.EmbeddedDocument):
     source = db.EnumField(PublicationSource)
-    url = db.StringField(required=True,unique=True)
+    id = db.StringField(required=True,unique=True)
     meta = {
         'indexes': [
             'url'
@@ -245,10 +245,10 @@ class Organism(db.Document):
     interest = db.StringField()
     distribution = db.StringField()
     funding = db.StringField()
-    links = db.ListField(db.StringField())
+    tolid_prefix = db.StringField()
+    links = db.ListField(db.URLField())
     common_names= db.ListField(db.EmbeddedDocumentField(CommonName))
     bioprojects = db.ListField(db.StringField())
-    local_names = db.ListField(db.StringField())
     annotations = db.ListField(db.StringField())
     coordinates =db.ListField(db.StringField())
     insdc_common_name = db.StringField()
@@ -256,8 +256,8 @@ class Organism(db.Document):
     biosamples = db.ListField(db.StringField())
     scientific_name = db.StringField(required=True)
     taxid = db.StringField(required= True)
-    image = db.FileField()
-    image_urls = db.ListField(db.StringField())
+    image = db.URLField()
+    image_urls = db.ListField(db.URLField())
     taxon_lineage = db.ListField(db.StringField())
     insdc_status = db.EnumField(INSDCStatus)
     goat_status = db.EnumField(GoaTStatus)

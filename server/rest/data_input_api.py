@@ -44,9 +44,6 @@ class Login(Resource):
         BioProject.drop_collection()
         BioSample.drop_collection()
         LocalSample.drop_collection()
-        images = Organism.objects(image__ne=None)
-        for org in images:
-            org.image.delete()
         Organism.drop_collection()
         Assembly.drop_collection()
         Chromosome.drop_collection()

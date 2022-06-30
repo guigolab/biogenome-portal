@@ -1,7 +1,7 @@
 import services.search_service as service
 import services.organisms_service as organism_service
 from flask import Response, request
-from db.models import BioProject, Organism,TaxonNode
+from db.models import BioProject, Organism,TaxonNode, Publication
 from flask_restful import Resource
 from errors import NotFound, SchemaValidationError
 import json
@@ -16,8 +16,9 @@ class OrganismsApi(Resource):
 	def get(self):
 		return Response(organism_service.get_organisms(**request.args),mimetype="application/json", status=200)
 
-	
-
+	def post(self):
+		data = request.json if request.is_json else request.form
+		organism_service.create_organism_from_data(data)
 	# @jwt_required()
 	# def delete(self):
 	# 	if 'tax_ids' in request.args.keys() and len(request.args['tax_ids'].split(',')) > 0:
@@ -33,7 +34,6 @@ class OrganismApi(Resource):
 		if not organism_obj.first():
 			raise NotFound
 		json_resp = next(organism_obj.aggregate(*OrganismPipeline))
-
 		##parse bioprojects and lineage
 		ordered_taxid_lineage = organism_obj.first().taxon_lineage
 		lineage_from_model = json.loads(TaxonNode.objects(taxid__in=ordered_taxid_lineage).exclude('children').to_json())
@@ -42,9 +42,6 @@ class OrganismApi(Resource):
 		for taxid in ordered_taxid_lineage:
 			parsed_lineage.append(next(f for f in lineage_from_model if f['taxid'] == taxid ))
 		json_resp['taxon_lineage'] = list(reversed(parsed_lineage))
-		if 'image' in json_resp.keys():
-			encoded_image = base64.b64encode(organism_obj.first().image.read())
-			json_resp['image'] = encoded_image.decode('utf-8')
 		return Response(json.dumps(json_resp, default=str),mimetype="application/json", status=200)
 
 	@jwt_required()
