@@ -1,12 +1,21 @@
-from email.policy import default
-from tkinter.tix import Tree
+from pkg_resources import require
 from . import db
 import datetime
-from enum import Enum, unique
+from enum import Enum
 
 class BrokerSource(Enum):
     LOCAL = 'local'
     COPO = 'copo'
+
+class PublicationSource(Enum):
+    DOI = 'DOI'
+    PMID = 'PubMed ID'
+    PMCID = 'PubMed CentralID'
+
+class TargetListStatus(Enum):
+    LONG_LIST = 'long_list'  ## Any taxa declared as a target for the project. For regional projects, this would be that the species is known to be part of the biota of a region that is the target of this particular project. For DToL this is all UKSI plus the Irish biota.
+    FAMILY_REPRESENTATIVE = 'family_representative' ## The species is a family reference species for the organisation or project. Will also receive a long_list tag on GoaT.
+    OTHER_PRIORITY = 'other_priority' ## This would include for example species of primary conservation interest,   early phase and pilot subproject targets.
 
 class GoaTStatus(Enum):
     SAMPLE_COLLECTED = 'Sample Collected'
@@ -207,14 +216,37 @@ def update_modified(sender, document):
     if document.publications_id:
         document.goat_status = GoaTStatus.PUBLICATION_AVAILABLE
 
+class CommonName(db.EmbeddedDocument):
+    value=db.StringField(unique=True,required=True)
+    lang=db.StringField()
+    locality=db.StringField(required=True)
+    meta = {
+        'indexes': [
+            'locality',
+            'value'
+        ]
+    }
 
+class Publication(db.EmbeddedDocument):
+    source = db.EnumField(PublicationSource)
+    url = db.StringField(required=True,unique=True)
+    meta = {
+        'indexes': [
+            'url'
+        ]
+    }
 
 @update_modified.apply   
 class Organism(db.Document):
     assemblies = db.ListField(db.StringField())
     experiments = db.ListField(db.StringField())
-    publications_id = db.ListField(db.StringField())
-    tolid_prefix = db.StringField()
+    publications = db.ListField(db.EmbeddedDocumentField(Publication))
+    description = db.StringField()
+    interest = db.StringField()
+    distribution = db.StringField()
+    funding = db.StringField()
+    links = db.ListField(db.StringField())
+    common_names= db.ListField(db.EmbeddedDocumentField(CommonName))
     bioprojects = db.ListField(db.StringField())
     local_names = db.ListField(db.StringField())
     annotations = db.ListField(db.StringField())
@@ -229,6 +261,7 @@ class Organism(db.Document):
     taxon_lineage = db.ListField(db.StringField())
     insdc_status = db.EnumField(INSDCStatus)
     goat_status = db.EnumField(GoaTStatus)
+    target_list_status = db.EnumField(TargetListStatus)
     auto_imported = db.BooleanField(default=True)
     meta = {
         'indexes': [

@@ -7,6 +7,7 @@ const map = () => import('../views/MapPage.vue')
 const organism = () => import('../views/Organism.vue')
 const admin = () => import('../views/Admin.vue')
 const users = () => import('../components/admin/Users.vue')
+const organismForm = () => import('../components/admin/form/OrganismForm.vue')
 const samples = () => import('../components/admin/LocalSamples.vue')
 //form pages/components
 
@@ -38,6 +39,11 @@ const routes = [
     path: "/excel",
     name: "excel",
     component: excel
+  },
+  {
+    path: "/organism-form",
+    name: "organism-form",
+    component: organismForm
   },
   // {
   //   path: "/organisms",

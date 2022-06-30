@@ -73,7 +73,9 @@ class SubmissionService {
   logout(){
     return submission.get('/logout')
   }
-    
+  createOrganism(formData){
+    return submission.post('/organisms', formData)
+  }
   //user CRUD
   getUsers(){
     return submission.get('/users')

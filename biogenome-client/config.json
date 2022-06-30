@@ -41,6 +41,16 @@
         {"label":"Publication Available",
         "icon":"post_add"}
     ],
+    "TargetListStatus":[
+        {"label":"long_list"},
+        {"label":"family_representative"},
+        {"label":"other_priority"}
+    ],
+    "PublicationSource":[
+        {"label": "DOI"},
+        {"label": "PubMed ID"},
+        {"label": "PubMed CentralID"}
+    ],
     "INSDCStatus":
     [
         {"label":"Sample Acquired",
