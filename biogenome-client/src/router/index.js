@@ -9,6 +9,7 @@ const admin = () => import('../views/Admin.vue')
 const users = () => import('../components/admin/Users.vue')
 const organismForm = () => import('../components/admin/form/OrganismForm.vue')
 const samples = () => import('../components/admin/LocalSamples.vue')
+const assembliesForm = () => import('../components/admin/form/AssemblyForm.vue')
 //form pages/components
 
 const excel = () => import('../components/admin/form/ExcelForm.vue')
@@ -45,6 +46,12 @@ const routes = [
     props: true,
     name: "organism-form",
     component: organismForm
+  },
+  {
+    path: "/assemblies",
+    props: true,
+    name: "assemblies",
+    component: assembliesForm
   },
   // {
   //   path: "/organisms",

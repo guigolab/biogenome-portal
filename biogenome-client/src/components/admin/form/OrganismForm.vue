@@ -53,6 +53,7 @@
                             <va-input label="Avatar" v-model="organismFormData.image">
                                 <template #append>
                                     <va-chip @click="previewAvatar=true">Preview</va-chip>
+                                    <va-chip @click="organismFormData.image=null">Clear</va-chip>
                                 </template>
                             </va-input>
                             <va-avatar size="large" v-show="previewAvatar" :src="organismFormData.image">
@@ -118,7 +119,7 @@
             </div>        
         </va-card-content>
         <va-card-actions>
-            <va-button @click="createSample()">Create Sample</va-button>
+            <va-button @click="organismToUpdate?updateOrganism():createOrganism()">Submit</va-button>
         </va-card-actions>
     </va-card>
 </template>
@@ -285,8 +286,15 @@ function removeImage(index){
     }
 }
 
-function createSample(){
+function createOrganism(){
     SubmissionService.createOrganism(organismFormData)
+    .then(resp => {
+        console.log(resp)
+    })
+}
+
+function updateOrganism(){
+    SubmissionService.updateOrganism(props.taxid,organismFormData)
     .then(resp => {
         console.log(resp)
     })

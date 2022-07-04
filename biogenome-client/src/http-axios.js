@@ -16,6 +16,13 @@ const download =  axios.create({
   responseType: 'blob'
 });
 
+const ncbi = axios.create({
+  baseURL:"https://api.ncbi.nlm.nih.gov/datasets/v1",
+  headers: {
+    "Content-type": "application/json"
+  }
+})
+
 const ena = {
   enaApi : axios.create({
   baseURL: "https://www.ebi.ac.uk"
@@ -36,5 +43,7 @@ export default {
   submission: submitInstance,
   base: base,
   download: download,
-  ena: ena
+  ena: ena,
+  ncbi: ncbi
+
 }

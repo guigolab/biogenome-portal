@@ -100,55 +100,30 @@ OrganismPipeline = [
 	},
 	{"$project": 
 		{
-		"scientific_name":1,
-		"taxid":1,
-		"tolid_prefix":1,
-		"target_list_status":1,
-		"common_names":1,
-		"description":1,
-		"interest":1,
-		"funding":1,
-		"distribution":1,
-		"links":1,
-		"image":1,
-		"image_urls":1,
-		"auto_imported":1,
-		"coordinates":1,
-		"insdc_status":1,
-		"goat_status":1,
-		"insdc_common_name":1,
-		"publications":1,
+		"_id":0,
 		"biosamples":{
-			"accession":1,
-			"metadata":1,
-			"latitude":1,
-			"longitude":1,
-			"sub_samples":1
+			"_id":0,
+			"created":0
 		},
 		"annotations":{
-			"name":1,
-			"metadata":1,
-			"assembly_accession":1,
+			"_id":0,
+			"created":0
 		},
 		"local_samples":{
-			"local_id":1,
-			"metadata":1,
-			"latitude":1,
-			"longitude":1,
+			"_id":0,
+			"created":0
 		},
 		"assemblies":{
-			"accession":1,
-			"assembly_name":1,
-			"metadata":1,
-			"chromosomes":1
+			"id":0,
+			"created":0
 		},
 		"experiments":{
-			"experiment_accession":1,
-			"metadata":1
+			"_id":0,
+			"created":0
 		},
 		"bioprojects":{
-			"accession":1,
-			"title":1
+			"_id":0,
+			"parents":0
 		},
 		}
 	}

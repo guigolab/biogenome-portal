@@ -48,6 +48,9 @@ class DataPortalService {
     // getData(model,ids){
     //     return base.post(`/data/${model}`, ids)
     // }
+    getAssemblies(params){
+        return base.get('/assemblies', {params:params})
+    }
     getData(model,taxid){
         return base.get(`/data/${model}`, {params:{taxid:taxid}})
     }

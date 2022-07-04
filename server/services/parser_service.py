@@ -113,7 +113,7 @@ def parse_excel(excel=None, id=None, taxid=None, scientific_name=None, header=1,
                 sample_obj.update(taxid=new_sample[taxid],local_id=new_sample[id],broker=source,metadata=new_sample['metadata'],scientific_name=new_sample[scientific_name])
                 saved_sample[index+1+header] = [f"{sample_obj.local_id} correctly updated"]
         else:
-            sample_obj = LocalSample(taxid=new_sample[taxid],local_id=new_sample[id],broker=source,metadata=new_sample['metadata'],scientific_name=new_sample[scientific_name]).save()
+            sample_obj = LocalSample(taxid=new_sample[taxid],local_id=new_sample[id],broker=source,metadata=new_sample['metadata'],scientific_name=new_sample[scientific_name],auto_imported=False).save()
             organism = get_or_create_organism(new_sample[taxid])
             organism.local_samples.append(sample_obj.local_id)
             organism.save()

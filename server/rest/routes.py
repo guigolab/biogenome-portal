@@ -5,6 +5,7 @@ from .data_input_api import Login,Logout,Users
 from .data_api import OrganismData
 from .bioprojects_api import BioProjectApi
 from .statistics_api import StatisticsApi
+from .assembly_api import AssemblyApi
 from .geo_localization_api import GeoLocApi
 def initialize_routes(api):
 
@@ -19,7 +20,7 @@ def initialize_routes(api):
 	##data portal endpoints
 	api.add_resource(BioProjectApi, '/api/bioprojects', '/api/bioprojects/<accession>')
 	api.add_resource(OrganismsApi, '/api/organisms')
-
+	api.add_resource(AssemblyApi, '/api/assemblies', '/api/assemblies/<accession>')
 	api.add_resource(OrganismApi, '/api/organisms/<taxid>') 
 	api.add_resource(OrganismData, '/api/data/<model>')
 	api.add_resource(TaxNodesApi, '/api/taxons/<taxid>')

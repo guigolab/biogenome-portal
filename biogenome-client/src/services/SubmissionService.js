@@ -115,8 +115,8 @@ class SubmissionService {
   updateSample(accession, formData){
     return submission.put(`/organisms/${accession}`,formData)
   }
-  updateOrganism(name, formData){
-    return submission.post(`/root_organisms/${name}`, formData)
+  updateOrganism(taxid, formData){
+    return submission.put(`/organisms/${taxid}`, formData)
   }
   deleteSamples(params){
     return submission.delete('/organisms', {
@@ -128,6 +128,10 @@ class SubmissionService {
       params:params
     })
   }
+  createAssemblyTrack(formData,accession){
+      return submission.post(`/assemblies/${accession}`,formData)
+  }
+  createAssembly
   /*
     submit samples
     CRUD local sample

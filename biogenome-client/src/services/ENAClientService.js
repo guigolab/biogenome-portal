@@ -12,6 +12,9 @@ class ENAClientService {
   getBioSample(accession){
     return ena.get(`/biosamples/samples?size=1000&filter=acc:${accession}`)
   }
+  getAssembly(accession){
+    return ena.get(`/biosamples/samples?size=1000&filter=acc:${accession}`)
+  }
 }
 
 export default new ENAClientService();

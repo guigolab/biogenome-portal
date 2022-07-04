@@ -64,9 +64,9 @@ class Experiment(db.Document):
 class AssemblyTrack(db.EmbeddedDocument):
     name = db.StringField()
     insdc_accession = db.StringField()
-    fastaLocation = db.StringField()
-    faiLocation = db.StringField()
-    gziLocation = db.StringField() 
+    fastaLocation = db.URLField()
+    faiLocation = db.URLField()
+    gziLocation = db.URLField() 
     chromAlias = db.StringField()
 
 #TODO ADD last published assembly banner
@@ -173,11 +173,12 @@ class GeoCoordinates(db.Document):
 class Annotation(db.Document):
     name = db.StringField(required=True,unique=True)
     taxid=db.StringField()
-    gffGzLocation = db.StringField()
-    tabIndexLocation = db.StringField()
+    gffGzLocation = db.URLField()
+    tabIndexLocation = db.URLField()
     targetGenome = db.StringField(required=True)
     lengthTreshold = db.StringField()
     evidenceSource = db.StringField()
+    metadata=db.DictField()
     created = db.DateTimeField(default=datetime.datetime.utcnow)
     auto_imported = db.BooleanField(default=True)
     meta = {
@@ -217,24 +218,13 @@ def update_modified(sender, document):
         document.goat_status = GoaTStatus.PUBLICATION_AVAILABLE
 
 class CommonName(db.EmbeddedDocument):
-    value=db.StringField(unique=True,required=True)
+    value=db.StringField()
     lang=db.StringField()
-    locality=db.StringField(required=True)
-    meta = {
-        'indexes': [
-            'locality',
-            'value'
-        ]
-    }
+    locality=db.StringField()
 
 class Publication(db.EmbeddedDocument):
     source = db.EnumField(PublicationSource)
-    id = db.StringField(required=True,unique=True)
-    meta = {
-        'indexes': [
-            'url'
-        ]
-    }
+    id = db.StringField()
 
 @update_modified.apply   
 class Organism(db.Document):

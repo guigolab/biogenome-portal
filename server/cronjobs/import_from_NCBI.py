@@ -17,7 +17,7 @@ def import_from_NCBI(project_accession):
             assembly_service.create_chromosomes(ass_obj, ass['chromosomes'])
         experiment_service.create_experiments(sample_obj,organism)
         bioproject_service.create_bioprojects_from_NCBI(ass['bioproject_lineages'],organism, sample_obj)
-        annotations_service.parse_annotation(organism,ass_obj)
+        annotations_service.parse_annotation_from_portal(organism,ass_obj)
         geo_localization_service.get_or_create_coordinates(sample_obj,organism)
         ##trigger status update
         organism.save()
@@ -27,7 +27,7 @@ def import_from_NCBI(project_accession):
 ##retrieve assemblies by bioproject in NCBI
 def get_assemblies(project_accession):
     assemblies=list()
-    result = requests.get(f"https://api.ncbi.nlm.nih.gov/datasets/v1/genome/bioproject/{project_accession}?filters.reference_only=false&filters.assembly_source=all&filters.has_annotation=false&&page_size=100").json()
+    result = requests.get(f"https://api.ncbi.nlm.nih.gov/datasets/v1/genome/bioproject/{project_accession}?filters.reference_only=false&filters.assembly_source=all&&&page_size=100").json()
     counter = 1
     if 'assemblies' in result.keys():
         while 'next_page_token' in result.keys():

@@ -44,6 +44,10 @@ class OrganismApi(Resource):
 		json_resp['taxon_lineage'] = list(reversed(parsed_lineage))
 		return Response(json.dumps(json_resp, default=str),mimetype="application/json", status=200)
 
+	def put(self,taxid):
+		data = request.json if request.is_json else request.form
+		organism_service.update_organism_from_data(data,taxid)
+
 	@jwt_required()
 	def post(self,name):
 		organism = Organism.objects(organism=name).first()

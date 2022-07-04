@@ -13,7 +13,7 @@ def get_bioproject(accession):
             child['children'] = json.loads(BioProject.objects(parents=child['accession']).to_json())
         return response
 
-def create_bioprojects_from_NCBI(bioprojects,organism,sample):
+def create_bioprojects_from_NCBI(bioprojects,organism,sample=None):
     saved_bioprojects=list()
     for projects_container in bioprojects:
         for bioproject in projects_container['bioprojects']:
@@ -26,7 +26,8 @@ def create_bioprojects_from_NCBI(bioprojects,organism,sample):
                     saved_pr.modify(add_to_set__parents=p_acc)
     for bioproject in saved_bioprojects:
         organism.modify(add_to_set__bioprojects=bioproject.accession)
-        sample.modify(add_to_set__bioprojects=bioproject.accession)
+        if sample:
+            sample.modify(add_to_set__bioprojects=bioproject.accession)
         
 def create_bioproject_from_ENA(project_accession):
     if BioProject.objects(accession=project_accession).first():
