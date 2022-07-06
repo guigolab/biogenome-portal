@@ -1,4 +1,4 @@
-import http from "../http-axios"
+import http from "../../http-axios"
 
 
 const ncbi = http.ncbi

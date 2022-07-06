@@ -48,9 +48,23 @@ class DataPortalService {
     // getData(model,ids){
     //     return base.post(`/data/${model}`, ids)
     // }
+    
     getAssemblies(params){
         return base.get('/assemblies', {params:params})
     }
+    getAnnotations(params){
+        return base.get('/annotations', {params:params})
+    }
+    getBioSamples(params){
+        return base.get('/biosamples', {params:params})
+    }
+    getLocalSamples(params){
+        return base.get('/local_samples', {params:params})
+    }
+    getReads(params){
+        return base.get('/reads', {params:params})
+    }
+
     getData(model,taxid){
         return base.get(`/data/${model}`, {params:{taxid:taxid}})
     }

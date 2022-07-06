@@ -1,4 +1,4 @@
-import http from "../http-axios"
+import http from "../../http-axios"
 
 
 const ena = http.ena.enaApi

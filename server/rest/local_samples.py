@@ -1,11 +1,11 @@
-# from flask import Response, request
+from flask import Response, request
 # from db.models import  Organism, BioSample,Assembly,LocalSample
 # from flask_restful import Resource
 # from errors import NotFound,SchemaValidationError,RecordAlreadyExistError,TaxonNotFoundError
 # from utils.utils import parse_sample_metadata
 # from utils import ena_client
 # from datetime import datetime
-# from services import sample_service, geo_loc_service
+from server.services import local_samples_service
 # import services.submission_service as service
 # from flask_jwt_extended import jwt_required
 # from flask_jwt_extended import get_jwt_identity
@@ -15,7 +15,20 @@
 # from flask import current_app as app
 
 # #CRUD operations on sample
-# class SamplesApi(Resource):
+class SampleApi(Resource):
+
+    def get(self):
+        return Response(biosample_service.get_biosamples(**request.args), mimetype="application/json", status=200)
+
+    def post(self,accession):
+        new_assembly = assembly_service.create_assembly_from_accession(accession,track_data)
+        if new_assembly:
+            return Response(new_assembly.to_json(), mimetype="application/json", status=201)
+
+    def delete(self,accession):
+        deleted_accession = biosample_service.delete_biosample(accession)
+        if deleted_accession:
+            return Response(json.dumps(deleted_accession), mimetype="application/json", status=201)
 
 #     @jwt_required(optional=True)
 #     def get(self,accession):

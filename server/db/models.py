@@ -1,4 +1,3 @@
-from pkg_resources import require
 from . import db
 import datetime
 from enum import Enum
@@ -52,6 +51,8 @@ class TaxonNode(db.Document):
 class Experiment(db.Document):
     sample_accession= db.StringField()
     experiment_accession= db.StringField(unique=True)
+    instrument_platform = db.StringField()
+    instrument_model = db.StringField()
     taxid= db.StringField()
     scientific_name= db.StringField()
     created = db.DateTimeField(default=datetime.datetime.utcnow)
@@ -64,10 +65,10 @@ class Experiment(db.Document):
 class AssemblyTrack(db.EmbeddedDocument):
     name = db.StringField()
     insdc_accession = db.StringField()
-    fastaLocation = db.URLField()
-    faiLocation = db.URLField()
-    gziLocation = db.URLField() 
-    chromAlias = db.StringField()
+    fasta_location = db.URLField()
+    fai_location = db.URLField()
+    gzi_location = db.URLField() 
+    chrom_alias = db.StringField()
 
 #TODO ADD last published assembly banner
 class Assembly(db.Document):
@@ -173,11 +174,9 @@ class GeoCoordinates(db.Document):
 class Annotation(db.Document):
     name = db.StringField(required=True,unique=True)
     taxid=db.StringField()
-    gffGzLocation = db.URLField()
-    tabIndexLocation = db.URLField()
-    targetGenome = db.StringField(required=True)
-    lengthTreshold = db.StringField()
-    evidenceSource = db.StringField()
+    gff_gz_location = db.URLField()
+    tab_index_location = db.URLField()
+    assembly_accession = db.StringField(required=True) ##assembly accession
     metadata=db.DictField()
     created = db.DateTimeField(default=datetime.datetime.utcnow)
     auto_imported = db.BooleanField(default=True)
@@ -198,7 +197,7 @@ def handler(event):
     return decorator
 
 @handler(db.pre_save)
-def update_modified(sender, document):
+def update_modified_organism(sender, document):
     if document.annotations:
         document.insdc_status= INSDCStatus.ANN_SUBMITTED
         document.goat_status=GoaTStatus.INSDC_SUBMITTED
@@ -226,7 +225,7 @@ class Publication(db.EmbeddedDocument):
     source = db.EnumField(PublicationSource)
     id = db.StringField()
 
-@update_modified.apply   
+@update_modified_organism.apply   
 class Organism(db.Document):
     assemblies = db.ListField(db.StringField())
     experiments = db.ListField(db.StringField())

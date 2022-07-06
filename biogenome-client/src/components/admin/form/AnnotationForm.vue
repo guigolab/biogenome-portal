@@ -27,7 +27,7 @@ import FormComponent from './FormComponent.vue'
 
 const annotation = reactive({
     name:'',
-    targetGenome:'',
+    assembly_accession:'',
     gffGzLocation:'',
     tabIndexLocation:'',
     evidenceSource:'',
@@ -41,4 +41,5 @@ const annotationOptions = [
     {type:'input',label:'GFF3 GZIP', key:'gffGzLocation', mandatory:true},
     {type:'input',label:'GFF3 TABIX GZIP', key:'tabIndexLocation', mandatory:true},
 ]
+
 </script>

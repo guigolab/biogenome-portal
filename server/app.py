@@ -22,7 +22,7 @@ initialize_api(app)
 
 jwt = JWTManager(app)
 
-
+## ADD JOB TO GET BIOSAMPLE ACCESSION BY LOCAL_ID (TUBE_OR_WELL_ID) FROM COPO
 
 # handle_tasks()
 

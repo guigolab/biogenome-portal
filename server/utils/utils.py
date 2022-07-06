@@ -28,6 +28,7 @@ def get_checklist_fields(groups):
         fields.extend(group['fields'])
     return fields
 
+## expect biosample model from ebi biosamples
 def parse_sample_metadata(metadata):
     sample_metadata = dict()
     for k in metadata.keys():

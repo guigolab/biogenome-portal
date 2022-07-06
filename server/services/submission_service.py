@@ -1,4 +1,5 @@
-from services import sample_service,organisms_service
+from server.services import local_samples_service
+from services import organisms_service
 from flask import current_app as app
 from errors import TaxonNotFoundError
 
@@ -15,7 +16,7 @@ def create_sample(data):
         raise TaxonNotFoundError
     if not 'scientific_name' in data.keys():
         data['scientific_name'] = organism.organism
-    sample = sample_service.create_sample_object(data).save()
+    sample = local_samples_service.create_sample_object(data).save()
     #behind the scenes it creates the taxonomic hierarchy
     #manage records locally(no experiments and assemblies)
     if sample.accession:

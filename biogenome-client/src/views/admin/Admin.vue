@@ -41,11 +41,11 @@
 
 </template>
 <script setup>
-import Login from '../components/admin/form/Login.vue'
-import LocalSamples from '../components/admin/LocalSamples.vue'
+import Login from '../../components/admin/form/Login.vue'
+import LocalSamples from '../../components/admin/LocalSamples.vue'
 import { nextTick, reactive,ref } from "vue"
-import submissionService from "../services/SubmissionService"
-import {auth} from '../stores/auth'
+import submissionService from "../../services/SubmissionService"
+import {auth} from '../../stores/auth'
 
 const authStore = auth()
 

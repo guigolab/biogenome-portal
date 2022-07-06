@@ -127,7 +127,7 @@ import { computed, onMounted, reactive, ref, watch } from "vue";
 import DataPortalService from "../../../services/DataPortalService";
 import SubmissionService from "../../../services/SubmissionService";
 import FormComponent from "./FormComponent.vue"
-import NCBIClientService from '../../../services/NCBIClientService'
+import NCBIClientService from '../../../services/clients/NCBIClientService'
 import Pagination from '../../Pagination.vue'
 
 const assemblyLoaded = ref(false)
@@ -145,10 +145,10 @@ const accession = ref(null)
 const initAssemblyTrack = {
     name:null,
     insdc_accession:null,
-    fastaLocation : null,
-    faiLocation: null,
-    gziLocation: null,
-    chromAlias: null
+    fasta_location : null,
+    fai_location: null,
+    gzi_location: null,
+    chrom_alias: null
 }
 const assemblyTrack = reactive({...initAssemblyTrack})
 
@@ -171,10 +171,10 @@ const response = reactive({...initResponse})
 const assemblyTrackOptions = [
     {type:'input',label:'Name', key:'name', mandatory:true},
     {type:'input',label:'INSDC Accession', key:'insdc_accession', mandatory:true},
-    {type:'input',label:'Fasta location', key:'fastaLocation', mandatory:true},
-    {type:'input',label:'fai location', key:'faiLocation', mandatory:true},
-    {type:'input',label:'gzi Location', key:'gziLocation', mandatory:true},
-    {type:'input',label:'chromosome aliases file url', key:'chromAlias'},
+    {type:'input',label:'Fasta location', key:'fasta_location', mandatory:true},
+    {type:'input',label:'fai location', key:'fai_location', mandatory:true},
+    {type:'input',label:'gzi Location', key:'gzi_location', mandatory:true},
+    {type:'input',label:'chromosome aliases file url', key:'chrom_alias'},
 ]
 
 const assemblies = reactive({
@@ -207,7 +207,7 @@ watch(params,()=>{
 })
 
 const validAssemblyTrack = computed(()=>{
-    return assemblyTrack.name && assemblyTrack.insdc_accession && assemblyTrack.fastaLocation && assemblyTrack.faiLocation && assemblyTrack.gziLocation
+    return assemblyTrack.name && assemblyTrack.insdc_accession && assemblyTrack.fasta_location && assemblyTrack.fai_location && assemblyTrack.gzi_location
 })
 
 function editAssembly(assembly){

@@ -77,15 +77,18 @@ class SubmissionService {
     return submission.post('/organisms', formData)
   }
   //user CRUD
-  getUsers(){
-    return submission.get('/users')
+  getUsers(params){
+    return submission.get('/users',{params:params})
   }
+
   createUser(formData){
     return submission.post('/users',formData)
   }
+
   updateUser(formData, name){
     return submission.put(`/users/${name}`,formData)
   }
+  
   deleteUser(name){
     return submission.delete(`/users/${name}`)
   }
@@ -128,10 +131,15 @@ class SubmissionService {
       params:params
     })
   }
+
   createAssemblyTrack(formData,accession){
       return submission.post(`/assemblies/${accession}`,formData)
   }
-  createAssembly
+
+  deleteAnnotation(name){
+    return submission.delete(`/annotations/${name}`)
+  }
+
   /*
     submit samples
     CRUD local sample

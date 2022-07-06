@@ -125,7 +125,7 @@
 </template>
 <script setup>
 import {nextTick, onMounted, reactive,ref} from 'vue'
-import EnaService from '../../../services/ENAClientService'
+import EnaService from '../../../services/clients/ENAClientService'
 import SubmissionService from '../../../services/SubmissionService'
 import {PROJECT_ACCESSION,GoaTStatus,TargetListStatus,PublicationSource} from '../../../../config'
 import ListInputComponent from './ListInputComponent.vue'

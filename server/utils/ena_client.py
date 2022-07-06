@@ -1,5 +1,6 @@
 import requests
 from flask import current_app as app, request
+from .common_functions import biosamples_response_parser
 import time
 
 def get_taxon_from_ena(taxon_id):
@@ -16,8 +17,15 @@ def check_taxons_from_NCBI(taxids):
     return response.json()
 
 def get_sample_from_biosamples(accession):
-    return requests.get(f"https://www.ebi.ac.uk/biosamples/samples?size=1000&filter=acc:{accession}").json()
+    response = requests.get(f"https://www.ebi.ac.uk/biosamples/samples?size=1000&filter=acc:{accession}").json()
+    samples = biosamples_response_parser(response)
+    return samples
 
+def get_samples_derived_from(accession):
+    response = requests.get(f"https://www.ebi.ac.uk/biosamples/samples?size=1000&filter=attr%3Asample%20derived%20from%3A{accession}").json()
+    samples = biosamples_response_parser(response)
+    return samples
+    
 def get_tolid(taxid):
     response = requests.get(f"https://id.tol.sanger.ac.uk/api/v2/species/{taxid}").json()
     if not isinstance(response, list):

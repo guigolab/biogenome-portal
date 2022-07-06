@@ -1,4 +1,11 @@
 import axios from 'axios'
+
+function getCookie(name) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+}
+
 const baseURL = "/api"
 const base = axios.create({
   baseURL:baseURL,
@@ -7,8 +14,21 @@ const base = axios.create({
   }
 });
 const submitInstance = axios.create({
-  baseURL:baseURL
+  baseURL:baseURL,
 })
+
+submitInstance.interceptors.request.use(
+  (config) => {
+  config.headers = {
+    'X-CSRF-TOKEN': getCookie('csrf_access_token'),
+    'Content-Type': 'application/json'
+  }
+  return config
+  },
+  (error) => {
+    return Promise.reject(error)
+  }
+)
 
 
 const download =  axios.create({
