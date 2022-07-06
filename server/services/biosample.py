@@ -1,5 +1,6 @@
 from db.models import BioSample, Organism
-from services import organisms_service,geo_localization_service,experiment_service
+from server.services import geo_localization
+from services import organisms_service,experiment_service
 from utils import ena_client,utils,common_functions
 from utils.common_functions import get_model_objects
 from mongoengine.queryset.visitor import Q

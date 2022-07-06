@@ -5,7 +5,7 @@ from flask_restful import Resource
 # from utils.utils import parse_sample_metadata
 # from utils import ena_client
 # from datetime import datetime
-from services.geo_localization_service import geo_localization_coordinates, geo_localization_object
+from server.services.geo_localization import geo_localization_coordinates, geo_localization_object
 # import services.submission_service as service
 # from flask_jwt_extended import jwt_required
 # from flask_jwt_extended import get_jwt_identity

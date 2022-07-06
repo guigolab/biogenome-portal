@@ -2,12 +2,14 @@ from db.models import Assembly, BioSample,Chromosome,AssemblyTrack, Organism,Ann
 from mongoengine.queryset.visitor import Q
 import json
 from flask import current_app as app
-from services import organisms_service,biosample_service,experiment_service,geo_localization_service,bioproject_service,annotations_service
+from server.services import bioproject, geo_localization
+from services import organisms_service,biosample_service,experiment_service,annotations_service
 from utils import ncbi_client
 from utils.common_functions import query_search,get_model_objects
 
 ASSEMBLY_FIELDS = ['display_name','chromosomes','assembly_accession','biosample','bioproject_lineages','biosample_accession','org']
 FIELDS_TO_EXCLUDE = ['id','created']
+TRACK_FIELDS = ['fasta_location','fai_location','gzi_location']
 
 def create_assembly_from_ncbi_data(assembly,sample_accession=None):
     ass_data = dict(accession = assembly['assembly_accession'],assembly_name= assembly['display_name'],scientific_name=assembly['org']['sci_name'])
@@ -22,7 +24,6 @@ def create_assembly_from_ncbi_data(assembly,sample_accession=None):
         create_chromosomes(ass_obj, assembly['chromosomes'])
     return ass_obj
     
-
 def create_chromosomes(assembly,chromosomes):
     for chr in chromosomes:
         if not 'accession_version' in chr.keys():
@@ -50,33 +51,43 @@ def get_assemblies(offset=0, limit=20, filter=None):
     json_resp['data'] = items[int(offset):int(offset)+int(limit)].as_pymongo()
     return json.dumps(json_resp)
 
-def create_assembly_from_accession(accession):
+def create_assembly_from_accession(accession,data=None):
     if get_model_objects(Assembly, dict(accession=accession)).first():
         return
     ncbi_response = ncbi_client.get_assembly(accession)
     if not ncbi_response:
         return
     assembly_obj = create_assembly_from_ncbi_data(ncbi_response)
+    assembly_track = create_assembly_track(data)
+    if assembly_track:
+        assembly_obj.track = assembly_track
+        assembly_obj.save()
     ##create data here
     return assembly_obj
 
+def create_assembly_track(data):
+    if data and [f for f in data.keys() if f in TRACK_FIELDS]:
+        return AssemblyTrack(**data)
+    
 def update_assembly_track(accession, assembly_track):
-    assembly_obj = get_model_objects(Assembly, dict(accession=accession)).first()
+    assembly_obj = Assembly.objects(accession=accession).first()
     if not assembly_obj:
         return 
-    assembly_obj.track = assembly_track
-    assembly_obj.save()
+    assembly_track = create_assembly_track(assembly_track)
+    if assembly_track:
+        assembly_obj.track = assembly_track
+        assembly_obj.save()
     return assembly_obj
 
 def delete_assembly(accession):
-    assembly_obj = get_model_objects(Assembly, dict(accession=accession)).first()
+    assembly_obj = Assembly.objects(accession=accession).first()
     if not assembly_obj:
         return 
-    get_model_objects(Annotation,dict(assembly_accession = accession)).delete()
-    sample_to_update = get_model_objects(BioSample,dict(assemblies=accession)).first()
+    Annotation.objects(assembly_accession = accession).delete()
+    sample_to_update = BioSample.objects(assemblies=accession).first()
     if sample_to_update:
         sample_to_update.modify(pull_assemblies=accession)
-    organism_to_update = get_model_objects(Organism, dict(taxid=assembly_obj.taxid)).first()
+    organism_to_update = Organism.objects(taxid=assembly_obj.taxid).first()
     if organism_to_update:
         organism_to_update.modify(pull_assemblies=accession)
         organism_to_update.save()

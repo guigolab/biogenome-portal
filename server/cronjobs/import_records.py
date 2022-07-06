@@ -2,7 +2,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from .import_from_NCBI import import_from_NCBI
 from .import_from_biosample import import_from_EBI_biosamples
 from .update_samples import update_samples
-from services.bioproject_service import create_bioproject_from_ENA
+from server.services.bioproject import create_bioproject_from_ENA
 from datetime import datetime, timedelta
 import os
 

@@ -1,6 +1,7 @@
 import requests
 import time
-from services import organisms_service,bioproject_service,annotations_service,assembly_service,biosample_service,experiment_service,geo_localization_service
+from server.services import bioproject, geo_localization
+from services import organisms_service,annotations_service,assembly_service,biosample_service,experiment_service
 from db.models import Assembly
 
 def import_from_NCBI(project_accession):
@@ -16,9 +17,9 @@ def import_from_NCBI(project_accession):
         if 'chromosomes' in ass.keys():
             assembly_service.create_chromosomes(ass_obj, ass['chromosomes'])
         experiment_service.create_experiments(sample_obj,organism)
-        bioproject_service.create_bioprojects_from_NCBI(ass['bioproject_lineages'],organism, sample_obj)
+        bioproject.create_bioprojects_from_NCBI(ass['bioproject_lineages'],organism, sample_obj)
         annotations_service.parse_annotation_from_portal(organism,ass_obj)
-        geo_localization_service.get_or_create_coordinates(sample_obj,organism)
+        geo_localization.get_or_create_coordinates(sample_obj,organism)
         ##trigger status update
         organism.save()
     print('ASSEMBLIES FROM NCBI IMPORTED')

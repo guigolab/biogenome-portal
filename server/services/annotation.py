@@ -26,19 +26,18 @@ def get_annotations(offset=0, limit=20, filter=None):
 
 def create_annotation(data):
     annotation_obj = Annotation(**data).save()
-
     ##create data here
     return annotation_obj
 
 def update_annotation(name,data):
-    annotation_obj = get_model_objects(dict(name=name)).first()
+    annotation_obj = Annotation.objects(name=name).first()
     annotation_obj.update(**data)
     return annotation_obj
 
 def delete_annotation(name):
-    annotation_obj = get_model_objects(Annotation, dict(name=name)).first()
+    annotation_obj = Annotation.objects(name=name).first()
     annotation_obj.delete()
-    organism_to_update = get_model_objects(Organism,dict(annotations=name)).first()
+    organism_to_update = Organism.objects(annotations=name).first()
     if organism_to_update:
         organism_to_update.modify(pull_annotations=name)
         organism_to_update.save()

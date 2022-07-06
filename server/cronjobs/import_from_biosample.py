@@ -1,6 +1,7 @@
 from db.models import BioSample
+from server.services import bioproject, geo_localization
 from utils import ena_client
-from services import organisms_service,geo_localization_service,biosample_service,experiment_service,bioproject_service
+from services import organisms_service,biosample_service,experiment_service
 
 def import_from_EBI_biosamples(PROJECTS):
     print('STARTING IMPORT BIOSAMPLES JOB')
@@ -20,12 +21,12 @@ def import_from_EBI_biosamples(PROJECTS):
                 continue
             biosample = biosample_service.create_biosample_from_biosamples(sample, organism, sub_samples)
             experiment_service.create_experiments(biosample,organism)
-            bioproject_service.create_bioproject_from_ENA(project_mapper[project])
+            bioproject.create_bioproject_from_ENA(project_mapper[project])
             organism.modify(add_to_set__bioprojects=project_mapper[project])
             biosample.modify(add_to_set__bioprojects=project_mapper[project])
             ##get experiments
             ## we rely on the NCBI job to retrieve assemblies
-            geo_localization_service.get_or_create_coordinates(biosample,organism)
+            geo_localization.get_or_create_coordinates(biosample,organism)
             ##trigger status update
             organism.save()
     print('APPENDING SPECIMENS')

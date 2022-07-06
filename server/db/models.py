@@ -63,8 +63,6 @@ class Experiment(db.Document):
     }
 
 class AssemblyTrack(db.EmbeddedDocument):
-    name = db.StringField()
-    insdc_accession = db.StringField()
     fasta_location = db.URLField()
     fai_location = db.URLField()
     gzi_location = db.URLField() 

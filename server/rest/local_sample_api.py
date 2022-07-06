@@ -1,34 +1,30 @@
 from flask import Response, request
 # from db.models import  Organism, BioSample,Assembly,LocalSample
-# from flask_restful import Resource
+from flask_restful import Resource
 # from errors import NotFound,SchemaValidationError,RecordAlreadyExistError,TaxonNotFoundError
 # from utils.utils import parse_sample_metadata
 # from utils import ena_client
 # from datetime import datetime
-from server.services import local_samples_service
+from services import local_sample
 # import services.submission_service as service
 # from flask_jwt_extended import jwt_required
 # from flask_jwt_extended import get_jwt_identity
 # from mongoengine.queryset.visitor import Q
 # from utils.pipelines import SamplePipeline,SamplePipelinePrivate
-# import json
+import json
 # from flask import current_app as app
 
 # #CRUD operations on sample
-class SampleApi(Resource):
+class LocalSampleApi(Resource):
 
-    def get(self):
-        return Response(biosample_service.get_biosamples(**request.args), mimetype="application/json", status=200)
+    def get(self, local_id=None):
+        return Response(local_sample.get_local_samples(**request.args), mimetype="application/json", status=200)
 
-    def post(self,accession):
-        new_assembly = assembly_service.create_assembly_from_accession(accession,track_data)
-        if new_assembly:
-            return Response(new_assembly.to_json(), mimetype="application/json", status=201)
+    def delete(self,local_id):
+        deleted_local_id = local_sample.delete_local_sample(local_id)
+        if deleted_local_id:
+            return Response(json.dumps(deleted_local_id), mimetype="application/json", status=201)
 
-    def delete(self,accession):
-        deleted_accession = biosample_service.delete_biosample(accession)
-        if deleted_accession:
-            return Response(json.dumps(deleted_accession), mimetype="application/json", status=201)
 
 #     @jwt_required(optional=True)
 #     def get(self,accession):
