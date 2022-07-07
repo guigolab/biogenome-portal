@@ -33,7 +33,7 @@ def get_organisms(offset=0, limit=20,
         organisms = organisms.order_by(sort)
     stats = get_stats(organisms)
     json_resp['total'] = organisms.count()
-    json_resp['data'] = organisms[int(offset):int(offset)+int(limit)].as_pymongo()
+    json_resp['data'] = list(organisms[int(offset):int(offset)+int(limit)].as_pymongo())
     json_resp['stats'] = stats
     return json.dumps(json_resp)    
 
@@ -83,17 +83,18 @@ def get_or_create_organism(taxid):
         taxon_xml = ena_client.get_taxon_from_ena(taxid)
         if not taxon_xml:
             ##TODO add call to NCBI
+
             print('TAXID NOT FOUND')
             print(taxid)
             return
-        lineage = utils.parse_taxon(taxon_xml)
+        lineage = utils.parse_taxon_from_ena(taxon_xml)
         tax_organism = lineage[0]
         tolid = ena_client.get_tolid(taxid)
-        taxon_lineage = taxon_service.create_taxons_from_lineage(lineage)
+        taxon_lineage = taxonomy.create_taxons_from_lineage(lineage)
         taxon_list = [tax.taxid for tax in taxon_lineage]
         insdc_common_name = tax_organism['commonName'] if 'commonName' in tax_organism.keys() else ''
         organism = Organism(taxid = taxid, insdc_common_name=insdc_common_name, scientific_name= tax_organism['scientificName'], taxon_lineage = taxon_list, tolid_prefix=tolid).save()
-        taxon_service.leaves_counter(taxon_lineage)
+        taxonomy.leaves_counter(taxon_lineage)
     return organism
 
 def create_organism_from_data(data):
@@ -125,6 +126,7 @@ def create_organism_from_data(data):
         if pub_list:
             organism.publications.append(Publication(**pub))
     organism.save()
+    return organism
 
 def update_organism_from_data(data,taxid):
     if not 'scientific_name' in data.keys() or not 'taxid' in data.keys():
@@ -153,6 +155,7 @@ def update_organism_from_data(data,taxid):
                 pub_list.append(Publication(**pub))
         organism.publications=pub_list
     organism.save()
+    return organism
 # def update_organism_names(names):
 
 def delete_organism(taxid):
@@ -170,7 +173,7 @@ def delete_organism(taxid):
     if organism_to_delete.bioprojects:
         for bioproject in organism_to_delete.bioprojects:
             organisms_in_bioprojects = Organism.objects(bioprojects=bioproject)
-            if organisms_in_bioprojects.count() == 1 and organisms_in_bioprojects.taxid == taxid:
+            if organisms_in_bioprojects.count() == 1 and organisms_in_bioprojects.first().taxid == taxid:
                 bioproject_to_delete = BioProject.objects(accession=bioproject).delete()
     organism_to_delete.delete()
     taxonomy.delete_taxons(lineage)

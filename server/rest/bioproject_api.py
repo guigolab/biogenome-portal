@@ -1,11 +1,10 @@
 from flask_restful import Resource
 from flask import Response, request
 from db.models import BioProject
-from server.services.bioproject import get_bioproject
+from services.bioproject import get_bioproject
 from flask import current_app as app
 import os
 import json
-from mongoengine.queryset.visitor import Q
 
 
 ROOT_BIOPROJECT= os.getenv('PROJECT_ACCESSION')

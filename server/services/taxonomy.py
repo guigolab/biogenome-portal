@@ -8,8 +8,8 @@ def delete_taxons(taxid_list):
     leaves_counter(taxons)
     for taxon in taxons:
         if taxon.leaves == 0:
-            TaxonNode.objects(children=taxon.id).update_one(pull__children=taxon.id)
-            Organism.objects(taxon_lineage=taxon.id).update(pull__taxon_lineage=taxon.id)
+            TaxonNode.objects(children=taxon.taxid).update_one(pull__children=taxon.taxid)
+            Organism.objects(taxon_lineage=taxon.taxid).update(pull__taxon_lineage=taxon.taxid)
             taxon.delete()
 
 def create_taxons_from_lineage(lineage):
@@ -78,9 +78,6 @@ def create_tree(taxid, maxLeaves=None):
     tree = dict()
     dfs([(root,0)],tree)
     return tree
-
-    # tree = append_children(root, dict())
-    # return tree
 
 def get_children(taxid):
     tax_node = TaxonNode.objects(taxid=taxid).aggregate(*TaxonPipeline).next()

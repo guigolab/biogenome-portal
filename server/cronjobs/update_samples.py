@@ -1,5 +1,6 @@
 ##import data job
-from services import organisms_service,experiment_service
+from services import assembly, organism, reads
+from utils import ena_client
 from db.models import BioSample
 from mongoengine.queryset.visitor import Q
 from datetime import datetime, timedelta
@@ -16,5 +17,14 @@ def update_samples():
         return
     print('SAMPLES TO UPDATE: ',len(samples))
     for sample in samples:
-        organism = organisms_service.get_or_create_organism(sample.taxid)
-        experiment_service.create_experiments(sample,organism)
+        organism_obj = organism.get_or_create_organism(sample.taxid)
+        ## check for assemblies and reads
+        response = ena_client.parse_assemblies(sample.accession)
+        if response:
+            for ass in response:
+                assembly.create_assembly_from_accession(ass['accession'])
+        else:
+            saved_reads = reads.create_reads_from_accession(sample.accession)
+            for read in saved_reads:
+                organism_obj.modify(add_to_set__experiments=read)
+                sample.modify(add_to_set__experiments=read)

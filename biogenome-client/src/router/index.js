@@ -5,11 +5,13 @@ import {ROOTNODE,PROJECT_ACCESSION} from '../../config'
 const treeOfLife = () => import('../views/TreeOfLife.vue')
 const map = () => import('../views/MapPage.vue')
 const organism = () => import('../views/Organism.vue')
-const admin = () => import('../views/Admin.vue')
+const admin = () => import('../views/AdminArea.vue')
+const adminHP = () => import('../views/admin/LandingPage.vue')
 const users = () => import('../components/admin/Users.vue')
 const organismForm = () => import('../components/admin/form/OrganismForm.vue')
 const samples = () => import('../components/admin/LocalSamples.vue')
 const assembliesForm = () => import('../components/admin/form/AssemblyForm.vue')
+
 //form pages/components
 
 const excel = () => import('../components/admin/form/ExcelForm.vue')
@@ -31,28 +33,32 @@ const routes = [
     path: "/admin",
     name: "admin",
     children:[
-      {path:'/local_samples', component:samples, name:"local_samples"},
+      {path:'', component:adminHP, name:"admin-hp"},
+      {path:'excel-form', component:excel, name:"excel"},
+      {path: "organism-form",component:organismForm, name:"organism-form"},
+      {path: "assembly-form",component:assembliesForm, name:"assembly-form"}
+
       // {path:'/users', component:users, name:"users"}
     ],
     component: admin,
   },
-  {
-    path: "/excel",
-    name: "excel",
-    component: excel
-  },
-  {
-    path: "/organism-form/:taxid?",
-    props: true,
-    name: "organism-form",
-    component: organismForm
-  },
-  {
-    path: "/assemblies",
-    props: true,
-    name: "assemblies",
-    component: assembliesForm
-  },
+  // {
+  //   path: "/excel",
+  //   name: "excel",
+  //   component: excel
+  // },
+  // {
+  //   path: "/organism-form/:taxid?",
+  //   props: true,
+  //   name: "organism-form",
+  //   component: organismForm
+  // },
+  // {
+  //   path: "/assemblies",
+  //   props: true,
+  //   name: "assemblies",
+  //   component: assembliesForm
+  // },
   // {
   //   path: "/organisms",
   //   name: "organisms",

@@ -10,7 +10,7 @@ def get_annotations(org_name):
         return
     return response.json()    
 
-def parse_taxon(xml):
+def parse_taxon_from_ena(xml):
     root = etree.fromstring(xml)
     organism = root[0].attrib
     lineage = []

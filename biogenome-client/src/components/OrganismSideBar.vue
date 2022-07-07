@@ -38,7 +38,7 @@
         <va-card-title>Lineage</va-card-title>
         <va-card-content>
             <div class="row">
-                <div class="flex lg12 md12 sm12 xs12" style="height:300px;overflow:scroll">
+                <div class="flex lg12 md12 sm12 xs12" style="max-height:300px;overflow:scroll">
                     <ul>
                         <li v-for="(item, index) in lineage"
                             :key="index"

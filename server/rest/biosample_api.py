@@ -1,12 +1,17 @@
 from flask_restful import Resource
 from flask import Response, request
 import json
+from db.models import BioSample
 from services import biosample
+from utils import common_functions
+
+FIELDS_TO_EXCLUDE = ['id','created','last_check']
+
 ##post request to handle large list of assemblies/experiments/local_samples/biosamples/annotations ids
 class BioSampleApi(Resource):
 
     def get(self):
-        return Response(biosample.get_biosamples(**request.args), mimetype="application/json", status=200)
+        return Response(common_functions.query_search(BioSample,FIELDS_TO_EXCLUDE,**request.args), mimetype="application/json", status=200)
 
     def post(self,accession):
         new_assembly = biosample.create_biosample_from_accession(accession)

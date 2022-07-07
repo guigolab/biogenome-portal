@@ -1,12 +1,17 @@
 from flask_restful import Resource
 from flask import Response, request
 import json
+from db.models import Experiment
 from services import reads
+from utils import common_functions
+
+FIELDS_TO_EXCLUDE = ['id','created']
+
 ##post request to handle large list of assemblies/experiments/local_samples/biosamples/annotations ids
 class ExperimentApi(Resource):
 
     def get(self):
-        return Response(reads.get_experiments(**request.args), mimetype="application/json", status=200)
+        return Response(common_functions.query_search(Experiment,FIELDS_TO_EXCLUDE,**request.args), mimetype="application/json", status=200)
 
     def post(self,accession):
         track_data = request.json if request.is_json else request.form

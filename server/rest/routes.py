@@ -19,7 +19,7 @@ def initialize_routes(api):
 	api.add_resource(AssemblyApi, '/api/assemblies', '/api/assemblies/<accession>')
 	api.add_resource(BioSampleApi, '/api/biosamples', '/api/biosamples/<accession>')
 	api.add_resource(LocalSampleApi, '/api/local_samples', '/api/local_samples/<local_id>')
-	api.add_resource(ExperimentApi, '/api/experiments', '/api/experiments/<accession>')
+	api.add_resource(ExperimentApi, '/api/reads', '/api/reads/<accession>')
 	
 	api.add_resource(OrganismsApi, '/api/organisms')
 	api.add_resource(OrganismApi, '/api/organisms/<taxid>') 
@@ -27,8 +27,6 @@ def initialize_routes(api):
 	api.add_resource(Users, '/api/users','/api/users/<name>')
 	##data portal endpoints
 	api.add_resource(BioProjectApi, '/api/bioprojects', '/api/bioprojects/<accession>')
-	api.add_resource(OrganismsApi, '/api/organisms')
-	api.add_resource(OrganismApi, '/api/organisms/<taxid>') 
 	api.add_resource(TaxNodesApi, '/api/taxons/<taxid>')
 	# api.add_resource(SamplesApi, '/api/organisms', '/api/organisms/<accession>')
 	# api.add_resource(BioSampleApi, '/api/biosamples')

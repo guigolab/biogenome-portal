@@ -1,10 +1,9 @@
 # from tempfile import NamedTemporaryFile
 import openpyxl
-# from db.models import SecondaryOrganism
-# from utils.constants import MANIFEST_HEADER
 from flask import current_app as app
 from db.models import BrokerSource, LocalSample
-from services.organisms_service import get_or_create_organism
+from services import geo_localization
+from .organism import get_or_create_organism
 OPTIONS = ['SKIP','UPDATE']
 
 def parse_excel(excel=None, id=None, taxid=None, scientific_name=None, header=1, option="SKIP", source=None):
@@ -113,8 +112,9 @@ def parse_excel(excel=None, id=None, taxid=None, scientific_name=None, header=1,
                 sample_obj.update(taxid=new_sample[taxid],local_id=new_sample[id],broker=source,metadata=new_sample['metadata'],scientific_name=new_sample[scientific_name])
                 saved_sample[index+1+header] = [f"{sample_obj.local_id} correctly updated"]
         else:
-            sample_obj = LocalSample(taxid=new_sample[taxid],local_id=new_sample[id],broker=source,metadata=new_sample['metadata'],scientific_name=new_sample[scientific_name],auto_imported=False).save()
+            sample_obj = LocalSample(taxid=new_sample[taxid],local_id=new_sample[id],broker=source,metadata=new_sample['metadata'],scientific_name=new_sample[scientific_name]).save()                
             organism = get_or_create_organism(new_sample[taxid])
+            geo_localization.create_coordinates(sample_obj,organism)
             organism.local_samples.append(sample_obj.local_id)
             organism.save()
             saved_sample[index+1+header] = [f"{sample_obj.local_id} correctly saved"]

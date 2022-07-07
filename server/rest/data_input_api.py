@@ -60,7 +60,7 @@ class Logout(Resource):
 class Users(Resource):
     @jwt_required()
     def get(self):
-        response = Response(BioGenomeUser.objects().to_json(), mimetype="application/json", status=201)
+        response = Response(BioGenomeUser.objects().to_json(), mimetype="application/json", status=200)
         return response
 
     #create user

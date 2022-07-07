@@ -22,8 +22,8 @@ class OrganismService {
         return submission.put(`/organisms/${taxid}`,formData)
     }
 
-    deleteOrganism(taxid,formData){
-        return submission.put(`/organisms/${taxid}`,formData)
+    deleteOrganism(taxid){
+        return submission.delete(`/organisms/${taxid}`)
     }
 }
 
