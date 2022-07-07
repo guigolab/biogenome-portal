@@ -17,7 +17,6 @@ def geo_localization_coordinates(bioproject=None, taxid=None):
         coord_model = json.loads(GeoCoordinates.objects(bioprojects = bioproject).to_json())
     else:
         coord_model = json.loads(GeoCoordinates.objects().to_json())
-    app.logger.info(coord_model)
     for coord in coord_model:
         organisms = json.loads(Organism.objects(taxid__in=coord['organisms']).to_json())                
         species = [dict(taxid=org['taxid'], scientific_name=org['scientific_name']) for org in organisms]
@@ -43,14 +42,14 @@ def create_coordinates(sample,organism):
             sample.latitude = '-'+lat if lat_value == 'S' else lat
             sample.longitude = '-'+long if long_value == 'W' else long 
     elif 'geographic location (latitude)' in sample.metadata.keys() and 'geographic location (longitude)' in sample.metadata.keys():
-        sample.latitude = sample.metadata['geographic location (latitude)']
-        sample.longitude = sample.metadata['geographic location (longitude)']
+        sample.latitude = str(sample.metadata['geographic location (latitude)'])
+        sample.longitude = str(sample.metadata['geographic location (longitude)'])
     else:
         for key in sample.metadata.keys():
             if 'latitude' in key.lower():
-                sample.latitude =sample.metadata[key]
+                sample.latitude = str(sample.metadata[key])
             elif 'longitude' in key.lower():
-                sample.longitude  = sample.metadata[key]
+                sample.longitude  = str(sample.metadata[key])
     sample.save()
     if not sample.latitude or not sample.longitude:
         return
@@ -61,8 +60,9 @@ def create_coordinates(sample,organism):
             geo_obj = GeoCoordinates(geo_location=geo_loc).save()
         geo_obj.modify(add_to_set__organisms=organism.taxid)
         organism.modify(add_to_set__coordinates=geo_obj.geo_location)
-        for project in sample.bioprojects:
-            geo_obj.modify(add_to_set__bioprojects=project)
+        if 'bioprojects' in sample._fields.keys():
+            for project in sample.bioprojects:
+                geo_obj.modify(add_to_set__bioprojects=project)
         if not geo_obj.geometry:
             geometry = Geometry(coordinates=[sample.longitude,sample.latitude])
             geo_obj.geometry = geometry

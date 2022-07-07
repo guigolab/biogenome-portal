@@ -24,7 +24,7 @@ jwt = JWTManager(app)
 
 ## ADD JOB TO GET BIOSAMPLE ACCESSION BY LOCAL_ID (TUBE_OR_WELL_ID) FROM COPO
 
-# handle_tasks()
+handle_tasks()
 
 
 # # if __name__ == '__main__':

@@ -39,11 +39,11 @@
                         />
                 </template>
                 <template #cell(actions)="{ rowData }">
-                    <div class="row">
-                        <div class="flex">
+                    <div class="row justify--space-betwenn">
+                        <div v-if="selectedModelObject && selectedModelObject.editable" class="flex">
                             <va-button @click="editItem(rowData)" icon="edit"/>
                         </div>
-                        <div class="flex">
+                        <div  class="flex">
                             <va-button color="danger" @click="confirmDeleteItem(rowData)" icon="delete"/>
                         </div>
                     </div>
@@ -129,8 +129,12 @@ const initParams = {
 const initLoadedItems = {
     data:null,
     columns:[],
-    count:0
+    total:0
 }
+
+const selectedModelObject = computed(()=>{
+    return dataModels.find(model => model.value === dataValue.value)
+})
 
 const loadedItems = reactive({...initLoadedItems})
 
@@ -152,34 +156,21 @@ onMounted(()=>{
 
 const dataModels = [
     {label:'Organisms',value:'organisms', itemProvider: OrganismService.getOrganisms,
-    columns:['scientific_name','taxid','tolid_prefix','actions'], deleteAction: OrganismService.deleteOrganism},
+    columns:['scientific_name','taxid','tolid_prefix','actions'], deleteAction: OrganismService.deleteOrganism,editable:true},
     {label:'BioSamples',value:'biosamples', itemProvider: BioSampleService.getBioSamples,
-    columns:['accession','taxid','sub_samples','actions'],deleteAction: BioSampleService.deleteBioSample},
+    columns:['accession','taxid','sub_samples','actions'],deleteAction: BioSampleService.deleteBioSample,editable:false},
     {label:'Reads',value:'reads', itemProvider: ReadService.getReads,
-    columns:['experiment_accession','instrument_platform','taxid','actions'],deleteAction: ReadService.deleteReads},
+    columns:['experiment_accession','instrument_platform','taxid','actions'],deleteAction: ReadService.deleteReads,editable:false},
     {label:'Assemblies',value:'assemblies', itemProvider: AssemblyService.getAssemblies,
-    columns:['accession','assembly_name','taxid','actions'],deleteAction: AssemblyService.deleteAssembly},
+    columns:['accession','assembly_name','taxid','actions'],deleteAction: AssemblyService.deleteAssembly,editable:true},
     {label:'Annotations',value:'annotations', itemProvider: AnnotationService.getAnnotations,
-    columns:['name','assembly_accession','actions'],deleteAction: AnnotationService.deleteAnnotation},
+    columns:['name','assembly_accession','actions'],deleteAction: AnnotationService.deleteAnnotation,editable:true},
     {label:'Local samples',value:'local_samples', itemProvider: LocalSampleService.getLocalSamples,
-    columns:['local_id','taxid','broker','actions'], deleteAction: LocalSampleService.deleteLocalSample},
+    columns:['local_id','taxid','broker','actions'], deleteAction: LocalSampleService.deleteLocalSample,editable:true},
     {label:'Portal Users',value:'users', itemProvider: UserService.getUsers,
-    columns:['name','role','actions']}
+    columns:['name','role','actions'],editable:true}
 ]
 
-const importActions = [
-    // {label:'Biosample from EBI'},
-    {label:'Organism from NCBI', path:'/organism-form'},
-    {label:'Assembly from NCBI', path:'/assembly-form'},
-    // {label:'Reads from ENA',path:},
-]
-
-const creationActions = [
-    {label:'Create organism', path:'/organism-form'},
-    // {label:'Create annotation track', path:'/annotation-form'},
-    {label:'Create assembly track', path:'/assembly-form'},
-    {label:'Import local samples from xlsx file', path:'/excel-form'},
-]
 
 function getData(){
     dataModels.forEach(m => {
@@ -189,7 +180,7 @@ function getData(){
                 console.log(resp)
                 nextTick(()=>{
                     loadedItems.data = resp.data.data
-                    loadedItems.count = resp.data.count
+                    loadedItems.total = resp.data.total
                     loadedItems.columns = m.columns
                     showTable.value = true
                 })
@@ -202,7 +193,7 @@ function getData(){
 }
 function editItem(item){
     console.log(item)
-    
+
 }
 
 function confirmDeleteItem(item){

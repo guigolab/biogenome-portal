@@ -7,11 +7,13 @@ const map = () => import('../views/MapPage.vue')
 const organism = () => import('../views/Organism.vue')
 const admin = () => import('../views/AdminArea.vue')
 const adminHP = () => import('../views/admin/LandingPage.vue')
+const biosampleForm = () => import('../components/admin/form/BioSampleForm.vue')
+const readForm = () => import('../components/admin/form/ReadForm.vue')
 const users = () => import('../components/admin/Users.vue')
 const organismForm = () => import('../components/admin/form/OrganismForm.vue')
 const samples = () => import('../components/admin/LocalSamples.vue')
 const assembliesForm = () => import('../components/admin/form/AssemblyForm.vue')
-
+const annotationForm = () => import('../components/admin/form/AnnotationForm.vue')
 //form pages/components
 
 const excel = () => import('../components/admin/form/ExcelForm.vue')
@@ -36,7 +38,11 @@ const routes = [
       {path:'', component:adminHP, name:"admin-hp"},
       {path:'excel-form', component:excel, name:"excel"},
       {path: "organism-form",component:organismForm, name:"organism-form"},
-      {path: "assembly-form",component:assembliesForm, name:"assembly-form"}
+      {path: "assembly-form",component:assembliesForm, name:"assembly-form"},
+      {path: "annotation-form",component:annotationForm, name:"annotation-form"},
+      {path: "biosample-form",component:biosampleForm, name:"biosample-form"},
+      {path: "read-form",component:readForm, name:"read-form"}
+
 
       // {path:'/users', component:users, name:"users"}
     ],

@@ -41,7 +41,6 @@ def query_search(model,fields_to_exclude, offset=0, limit=20, filter=None):
     items =  model.objects(query_filter).exclude(*fields_to_exclude)
   else:
     items = model.objects().exclude(*fields_to_exclude)
-  app.logger.info(items.to_json())
   json_resp = dict()
   json_resp['total'] = items.count()
   json_resp['data'] = list(items[int(offset):int(offset)+int(limit)].as_pymongo())
