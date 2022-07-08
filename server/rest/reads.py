@@ -14,10 +14,8 @@ class ExperimentApi(Resource):
         return Response(common_functions.query_search(Experiment,FIELDS_TO_EXCLUDE,**request.args), mimetype="application/json", status=200)
 
     def post(self,accession):
-        track_data = request.json if request.is_json else request.form
-        saved_reads = reads.create_reads_from_accession(accession)
-        if saved_reads:
-            return Response(saved_reads.to_json(), mimetype="application/json", status=201)
+        response = reads.create_read_from_experiment_accession(accession)
+        return Response(json.dumps(response), mimetype="application/json", status=201)
 
     def delete(self,accession):
         deleted_accession = reads.delete_experiment(accession)

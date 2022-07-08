@@ -10,7 +10,7 @@
         </va-card-content>
         </Transition>
         <va-card-title>
-            Import Assembly
+            Import Assembly From INDSC
         </va-card-title>
         <va-card-content>
             <va-inner-loading

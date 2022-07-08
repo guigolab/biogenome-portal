@@ -1,40 +1,46 @@
 <template>
     <va-inner-loading
-    :loading="isLoading"
+        :loading="isLoading"
     >
         <va-input 
             :label="props.label"
             :placeholder="props.placeholder"
-            v-model="props.id"
+            v-model="id"
         >
             <template #append>
-                <va-chip :disabled="!props.id" @click="getData()" outline>Get Data</va-chip>
+                <va-chip :disabled="!id" @click="getData()" outline>Get Data</va-chip>
             </template>
         </va-input>
     </va-inner-loading>
 </template>
 <script setup>
-import {ref} from 'vue'
+import {ref,defineEmits} from 'vue'
+
+const emit = defineEmits(['onResponse'])
 
 const isLoading = ref(false)
 
 const props = defineProps({
-    id:String,
     label:String,
     placeholder:String,
     request:Object,
 })
 
+const id = ref('')
+
 function getData(){
     isLoading.value = true
-    props.request(props.id)
+    props.request(id.value)
     .then(resp => {
         console.log(resp)
         isLoading.value=false
+        const isError = resp.status !== 200 ? true : false
+        emit('onResponse', {response:resp, isError:isError, id:id.value})
     })
     .catch(e => {
         console.log(e)
         isLoading.value = false
+        emit('onResponse', {response:e, isError:true, id:id.value})
     })
 }
 

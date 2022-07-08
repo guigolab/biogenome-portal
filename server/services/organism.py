@@ -39,12 +39,21 @@ def get_organisms(offset=0, limit=20,
 
 def get_stats(organisms):
     stats = dict()
-    stats['biosamples'] = organisms.filter(biosamples__not__size=0).count()
-    if os.getenv('LOCAL_MANAGEMENT'):
-        stats['local_samples'] = organisms.filter(local_samples__not__size=0).count()
-    stats['assemblies'] = organisms.filter(assemblies__not__size=0).count()
-    stats['experiments'] = organisms.filter(experiments__not__size=0).count()
-    stats['annotations'] = organisms.filter(annotations__not__size=0).count()
+    biosamples_count = organisms.filter(biosamples__not__size=0).count()
+    if biosamples_count > 0:
+        stats['biosamples'] = biosamples_count
+    local_samples_count = organisms.filter(local_samples__not__size=0).count()
+    if local_samples_count > 0:
+        stats['local_samples'] = local_samples_count
+    assemblies_count = organisms.filter(assemblies__not__size=0).count()
+    if assemblies_count > 0:
+        stats['assemblies'] = assemblies_count
+    experiments_count = organisms.filter(experiments__not__size=0).count()
+    if experiments_count > 0:
+        stats['experiments'] = experiments_count
+    annotations_count = organisms.filter(annotations__not__size=0).count()
+    if annotations_count > 0:
+        stats['annotations'] = annotations_count
     return stats
 
 def get_query_filter(filter,option):

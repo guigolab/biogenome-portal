@@ -21,6 +21,28 @@ def create_biosample_from_accession(accession):
     ##create data here
     return biosample_obj
 
+def create_biosample_from_accession_input(accession):
+    resp_obj = dict()
+    biosample_obj = BioSample.objects(accession=accession).first()
+    if biosample_obj:
+        resp_obj['success'] = False
+        resp_obj['message'] = f"{accession} already exists"
+        return resp_obj
+    biosample_response = ena_client.get_sample_from_biosamples(accession)
+    if not biosample_response:
+        resp_obj['success'] = False
+        resp_obj['message'] = f"{accession} not found in ENA"
+        return resp_obj
+    biosample_obj = create_biosample_from_ebi_data(biosample_response[0])
+    data_helper.create_data_from_biosample(biosample_obj)
+    if biosample_obj:
+        resp_obj['success'] = True
+        resp_obj['message'] = biosample_obj.accession
+        return resp_obj
+    resp_obj['success'] = False
+    resp_obj['message'] = 'Unhandled error'
+    return resp_obj
+    
 def get_biosamples_derived_from(accession):
     saved_biosamples = list()
     response = ena_client.get_samples_derived_from(accession)

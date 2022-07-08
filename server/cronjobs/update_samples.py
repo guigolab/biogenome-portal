@@ -24,7 +24,7 @@ def update_samples():
             for ass in response:
                 assembly.create_assembly_from_accession(ass['accession'])
         else:
-            saved_reads = reads.create_reads_from_accession(sample.accession)
+            saved_reads = reads.create_reads_from_biosample_accession(sample.accession)
             for read in saved_reads:
                 organism_obj.modify(add_to_set__experiments=read)
                 sample.modify(add_to_set__experiments=read)

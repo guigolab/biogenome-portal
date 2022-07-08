@@ -14,9 +14,8 @@ class BioSampleApi(Resource):
         return Response(common_functions.query_search(BioSample,FIELDS_TO_EXCLUDE,**request.args), mimetype="application/json", status=200)
 
     def post(self,accession):
-        new_assembly = biosample.create_biosample_from_accession(accession)
-        if new_assembly:
-            return Response(new_assembly.to_json(), mimetype="application/json", status=201)
+        response = biosample.create_biosample_from_accession_input(accession)
+        return Response(json.dumps(response), mimetype="application/json", status=201)
 
     def delete(self,accession):
         deleted_accession = biosample.delete_biosample(accession)

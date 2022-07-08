@@ -1,6 +1,7 @@
 from db.models import Assembly
 from . import ena_client
 from services import assembly,biosample, organism,geo_localization,bioproject,reads
+from flask import current_app as app
 
 
 def create_data_from_assembly(assembly_obj, ncbi_response):
@@ -20,7 +21,7 @@ def create_data_from_assembly(assembly_obj, ncbi_response):
             biosamples_to_update.extend(children_samples)
         for saved_biosample in biosamples_to_update:
             geo_localization.create_coordinates(saved_biosample, organism_obj)
-            saved_reads = reads.create_reads_from_accession(saved_biosample.accession)
+            saved_reads = reads.create_reads_from_biosample_accession(saved_biosample.accession)
             for read in saved_reads:
                 organism_obj.modify(add_to_set__experiments=read)
                 saved_biosample.modify(add_to_set__experiments=read)
@@ -61,13 +62,16 @@ def create_data_from_biosample(biosample_obj):
         if children_samples:
             biosamples_to_update.extend(children_samples)
         response = ena_client.parse_assemblies(biosample_obj.accession)
+        app.logger.info('ASSEMBLY IS')
+        app.logger.info(response)
         if response:
             for ass in response:
-                assembly.create_assembly_from_accession(ass['accession'])
+                assembly_accession = ass['accession']+'.'+ass['version']
+                assembly.create_assembly_from_accession(assembly_accession)
         ##check for assembly
     for saved_biosample in biosamples_to_update:
         geo_localization.create_coordinates(saved_biosample, organism_obj)
-        saved_reads = reads.create_reads_from_accession(saved_biosample.accession)
+        saved_reads = reads.create_reads_from_biosample_accession(saved_biosample.accession)
         for read in saved_reads:
             organism_obj.modify(add_to_set__experiments=read)
             saved_biosample.modify(add_to_set__experiments=read)
@@ -82,3 +86,5 @@ def create_data_from_annotation(annotation_obj):
     organism_obj = organism.get_or_create_organism(annotation_obj.taxid)
     organism_obj.modify(add_to_set__annotations=annotation_obj.name)
     organism_obj.save()
+
+    
