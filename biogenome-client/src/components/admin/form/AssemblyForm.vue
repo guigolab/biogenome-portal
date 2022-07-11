@@ -19,11 +19,13 @@
                 @on-response="parseResponse"
             />
         </va-card-content>
-        <va-divider/>
+    </va-card>
+    <va-divider/>
+    <va-card>
         <va-card-title v-if="isValidAssembly">
             <div class="row justify--space-between">
                 <div class="flex">
-                    {{assemblyToSubmit.accession}}
+                    <p class="display-5">{{assemblyToSubmit.accession}}</p>
                 </div>
                 <div class="flex">
                     <va-button v-if="showAssemblyTrackForm" outline icon="delete" @click="removeAssemblyTrack()">
@@ -51,18 +53,18 @@
         </va-card-content>
         <va-divider/>
         <va-card-actions v-if="isValidAssembly"> 
-        <div class="row justify--space-between">
-            <div class="flex">
-                <va-button @click="reset()" color="danger">
-                    Cancel
-                </va-button>
+            <div class="row justify--space-between">
+                <div class="flex">
+                    <va-button @click="reset()" color="danger">
+                        Cancel
+                    </va-button>
+                </div>
+                <div class="flex">
+                    <va-button :disabled="!(isValidAssembly && (showAssemblyTrackForm?validAssemblyTrack:!showAssemblyTrackForm))" @click="submitAssembly()">
+                        Submit Assembly
+                    </va-button>            
+                </div>
             </div>
-            <div class="flex">
-                <va-button :disabled="!(isValidAssembly && (showAssemblyTrackForm?validAssemblyTrack:!showAssemblyTrackForm))" @click="submitAssembly()">
-                    Submit Assembly
-                </va-button>            
-            </div>
-        </div>
         </va-card-actions>
     </va-card>
 </va-inner-loading>
@@ -159,21 +161,6 @@ function removeAssemblyTrack(){
 }
 
 
-// function editAssembly(assembly){
-//     Object.assign(assemblyTrack,initAssemblyTrack)
-//     response.organism_name = assembly.scientific_name
-//     response.display_name = assembly.assembly_name
-//     response.assembly_level = assembly.metadata.assembly_level || ''
-//     accession.value = assembly.accession
-//     if(assembly.track){
-//         Object.assign(assemblyTrack, assembly.track)
-//         collapse.value = true
-//     }
-//     isValidAssembly.value=true
-//     assemblyLoaded.value = true
-// }
-
-
 function promiseParser(){
     console.log(validAssemblyTrack)
     if(validAssemblyTrack){
@@ -186,13 +173,7 @@ function submitAssembly(){
     promiseParser()
     .then(resp => {
         console.log(resp)
-        // reset()
-        // if(resp.data && resp.data.msg){
-        //     alert.title = 'Success'
-        //     alert.color = 'success'
-        //     alert.message = resp.data.msg
-        //     showAlert.value = true
-        // }
+
     })
     .catch(e => {
         console.log(e)

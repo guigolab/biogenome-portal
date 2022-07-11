@@ -136,6 +136,7 @@ const props = defineProps({
     taxid:String
 })
 const organismToUpdate = ref(false)
+
 const initOrganism = {
     scientific_name:null,
     taxid:null,
@@ -196,6 +197,7 @@ const initGalleryImageOption={
 const galleryImagesOptions = reactive([
     {...initGalleryImageOption},
 ])
+
 const initVernacularName = {
     value:null,
     lang:null,

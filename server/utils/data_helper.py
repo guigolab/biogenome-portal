@@ -80,9 +80,6 @@ def create_data_from_biosample(biosample_obj):
     return organism_obj
 
 def create_data_from_annotation(annotation_obj):
-    assembly_obj = Assembly.objects(accession=annotation_obj.assembly_accession).first()
-    if not assembly_obj:
-        assembly_obj = assembly.create_assembly_from_accession(annotation_obj.assembly_accession)
     organism_obj = organism.get_or_create_organism(annotation_obj.taxid)
     organism_obj.modify(add_to_set__annotations=annotation_obj.name)
     organism_obj.save()
