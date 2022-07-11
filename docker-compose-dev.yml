@@ -21,7 +21,13 @@ services:
       - ./server:/server
     env_file: 
       - .env
+
       
+  biogenome_cron:
+    build: ./cronjobs
+    container_name: biogenome_cron
+    env_file:
+      - .env
   biogenome_nginx:
     build: 
       context: ./biogenome-client
