@@ -57,7 +57,6 @@ class Experiment(db.Document):
     scientific_name= db.StringField()
     created = db.DateTimeField(default=datetime.datetime.utcnow)
     metadata=db.DictField()
-    auto_imported = db.BooleanField(default=True)
     meta = {
         'indexes': ['experiment_accession']
     }
@@ -79,7 +78,6 @@ class Assembly(db.Document):
     metadata=db.DictField()
     chromosomes=db.ListField(db.StringField())
     track = db.EmbeddedDocumentField(AssemblyTrack)
-    auto_imported = db.BooleanField(default=True)
     meta = {
         'indexes': ['accession']
     }
@@ -139,7 +137,6 @@ class BioSample(db.Document):
     metadata=db.DictField()
     taxid = db.StringField(required=True)
     scientific_name = db.StringField(required=True)
-    auto_imported = db.BooleanField(default=True)
     meta = {
         'indexes': [
             'accession'
@@ -177,7 +174,6 @@ class Annotation(db.Document):
     assembly_accession = db.StringField(required=True) ##assembly accession
     metadata=db.DictField()
     created = db.DateTimeField(default=datetime.datetime.utcnow)
-    auto_imported = db.BooleanField(default=True)
     meta = {
         'indexes': [
             'name'
@@ -249,7 +245,6 @@ class Organism(db.Document):
     insdc_status = db.EnumField(INSDCStatus)
     goat_status = db.EnumField(GoaTStatus)
     target_list_status = db.EnumField(TargetListStatus)
-    auto_imported = db.BooleanField(default=True)
     meta = {
         'indexes': [
             'scientific_name',

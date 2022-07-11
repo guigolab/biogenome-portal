@@ -10,9 +10,12 @@ class AssemblyService {
         return base.get('/assemblies', {params:params})
     }
 
-    //create assembly by INSDC accession, expects assembly track fields
+    //create assembly by INSDC accession
     importAssembly(accession, formData){
-        return submission.post(`/assemblies/${accession}`, formData)
+        if(formData){
+            return submission.post(`/assemblies/${accession}`, formData)
+        }
+        return submission.post(`/assemblies/${accession}`)
     }
 
     updateAssembly(accession, formData){

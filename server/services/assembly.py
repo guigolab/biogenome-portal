@@ -41,6 +41,7 @@ def create_assembly_from_accession(accession,data=None):
         return assembly_obj
 
     ncbi_response = ncbi_client.get_assembly(accession)
+    app.logger.info(ncbi_response)
     if not ncbi_response:
         return
 

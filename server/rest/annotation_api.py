@@ -16,7 +16,7 @@ class AnnotationApi(Resource):
 
     def post(self):
         data = request.json if request.is_json else request.form
-        new_annotation = annotation.create_annotation_from_data(data)
+        new_annotation = annotation.create_annotation(data)
         if new_annotation:
             return Response(new_annotation.to_json(), mimetype="application/json", status=201)
 

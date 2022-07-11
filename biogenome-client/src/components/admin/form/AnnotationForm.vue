@@ -4,20 +4,12 @@
         Create Annotation
     </va-card-title>
     <va-card-content>
-        <va-inner-loading
-            :loading="isLoading"
-        >
-            <va-input 
-                label="Search Assembly accession"
-                placeholder="ex: GCA_905340225.1"
-                v-model="annotation.assembly_accession"
-                :disabled="assemblyLoaded"
-            >
-                <template #append>
-                    <va-chip :disabled="!annotation.assembly_accession" @click="getAssemblyFromNCBI()" outline>Get Assembly</va-chip>
-                </template>
-            </va-input>
-        </va-inner-loading>
+        <ClientInput 
+            :label="'Search Assembly accession'"
+            :placeholder="'ex: GCA_905340225.1'"
+            :request="NCBIClientService.getAssembly"
+            @on-response="parseResponse"
+        />
     </va-card-content>
     <va-divider/>
     <va-card-content>
@@ -28,8 +20,8 @@
         />
     </va-card-content>
     <va-card-actions>
-        <va-button>Reset Assembly</va-button>
-        <va-button>Submit Assembly</va-button>
+        <va-button>Reset Annotation</va-button>
+        <va-button>Submit Annotation</va-button>
     </va-card-actions>
 </va-card>
 </template>
@@ -42,14 +34,14 @@ const isValidAssembly = ref(false)
 
 const isLoading = ref(false)
 
-const annotation = reactive({
+const initAnnotation = {
     name:'',
     assembly_accession:'',
-    gffGzLocation:'',
-    tabIndexLocation:'',
-    evidenceSource:'',
-    lengthTreshold:'',
-})
+    gff_gz_location:'',
+    tab_index_location:'',
+}
+
+const annotation = reactive({...initAnnotation})
 
 const initResponse = {
     organism_name:'',
@@ -61,9 +53,8 @@ const response = reactive({...initResponse})
 
 const annotationOptions = [
     {type:'input',label:'Name', key:'name', mandatory:true},
-    {type:'input',label:'Target genome', key:'targetGenome', mandatory:true},
-    {type:'input',label:'GFF3 GZIP', key:'gffGzLocation', mandatory:true},
-    {type:'input',label:'GFF3 TABIX GZIP', key:'tabIndexLocation', mandatory:true},
+    {type:'input',label:'GFF3 GZIP', key:'gff_gz_location', mandatory:true},
+    {type:'input',label:'GFF3 TABIX GZIP', key:'tab_index_location', mandatory:true},
 ]
 
 function getAssemblyFromNCBI(){
@@ -96,5 +87,32 @@ function getAssemblyFromNCBI(){
         isValidAssembly.value = false
         assemblyLoaded.value=false
     })
+}
+function parseResponse(value){
+    if(value.isError){
+        alert.message = `${value.id} not found`
+        alert.color = 'danger'
+        showAlert.value = true
+        return
+    }
+    //get element in array
+    if(value.response.data && value.response.data.assemblies.length){
+        const assemblyToParse = value.response.data.assemblies[0].assembly
+        const parsedAssembly = {}
+        Object.keys(assemblyToParse)
+        .forEach(k => {
+            if(k === 'org'){
+                parsedAssembly['taxid'] = assemblyToParse[k].tax_id
+                parsedAssembly['scientific_name'] = assemblyToParse[k].sci_name
+            }else{
+                if(typeof assemblyToParse[k] === 'string'){
+                    parsedAssembly[k] = assemblyToParse[k]
+                }
+            }
+        })
+        response.value = parsedAssembly
+        assemblyToSubmit.accession = value.id
+        isValidAssembly.value = true
+    }
 }
 </script>
