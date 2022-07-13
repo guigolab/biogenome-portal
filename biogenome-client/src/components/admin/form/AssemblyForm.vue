@@ -29,20 +29,17 @@
                 </div>
                 <div class="flex">
                     <va-button v-if="showAssemblyTrackForm" outline icon="delete" @click="removeAssemblyTrack()">
-                        Remove assembly track
+                        Remove genome browser tracks
                     </va-button>   
                     <va-button v-else outline icon="add" @click="addAssemblyTrack()">
-                        Add assembly track
+                        Add genome browser tracks
                     </va-button>         
                 </div>
             </div>
         </va-card-title>
-        <FormComponent
-            v-if="showAssemblyTrackForm"
-            :title="assemblyToSubmit.accession+' Track'"
-            :listObject="assemblyTrack"
-            :formOptions="assemblyTrackOptions"
-        />
+        <va-card-content v-if="showAssemblyTrackForm">
+            <TrackForm :accession="assemblyToSubmit.accession" :assembly-track="assemblyTrack" :annotations="annotationsToSubmit.annotations"/>
+        </va-card-content>
         <va-card-content v-if="isValidAssembly">
             <ul>
                 <li style="padding:10px" v-for="key in Object.keys(response)" :key="key">
@@ -70,6 +67,7 @@
 </va-inner-loading>
 </template>
 <script setup>
+
 import { computed, onMounted, reactive, ref, watch } from "vue";
 import DataPortalService from "../../../services/DataPortalService";
 import FormComponent from "./FormComponent.vue"
@@ -77,6 +75,8 @@ import NCBIClientService from '../../../services/clients/NCBIClientService'
 import Pagination from '../../Pagination.vue'
 import ClientInput from '../../ClientInput.vue'
 import AssemblyService from "../../../services/AssemblyService";
+import TrackForm from "./TrackForm.vue"
+import AnnotationService from "../../../services/AnnotationService";
 
 const showAssemblyTrackForm = ref(false)
 
@@ -91,8 +91,12 @@ const isValidAssembly = ref(false)
 const initAssemblyObj = {
     accession:''
 }
-
+const initAnnotations = {
+    annotations: []
+}
 const assemblyToSubmit = reactive({...initAssemblyObj})
+
+const annotationsToSubmit = reactive({...initAnnotations})
 
 const initAssemblyTrack = {
     fasta_location : null,
@@ -164,7 +168,7 @@ function removeAssemblyTrack(){
 function promiseParser(){
     console.log(validAssemblyTrack)
     if(validAssemblyTrack){
-        return AssemblyService.importAssembly(assemblyToSubmit.accession,assemblyTrack)
+        return AssemblyService.importAssembly(assemblyToSubmit.accession, assemblyTrack)
     }
     return AssemblyService.importAssembly(assemblyToSubmit.accession)
 }
@@ -173,7 +177,15 @@ function submitAssembly(){
     promiseParser()
     .then(resp => {
         console.log(resp)
-
+        if(annotationsToSubmit.annotations.length){
+            return AnnotationService.createAnnotation(annotationsToSubmit.annotations)
+        }
+        return 
+    })
+    .then(resp => {
+        if(resp){
+            console.log(resp)
+        }
     })
     .catch(e => {
         console.log(e)

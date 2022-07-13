@@ -43,7 +43,7 @@
                         <div v-if="selectedModelObject && selectedModelObject.editable" class="flex">
                             <va-button @click="editItem(rowData)" icon="edit"/>
                         </div>
-                        <div  class="flex">
+                        <div class="flex">
                             <va-button color="danger" @click="confirmDeleteItem(rowData)" icon="delete"/>
                         </div>
                     </div>

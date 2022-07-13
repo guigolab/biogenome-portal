@@ -1,3 +1,4 @@
+from services import assembly
 from utils.common_functions import query_search
 from mongoengine.queryset.visitor import Q
 from db.models import Annotation,Organism
@@ -9,7 +10,15 @@ ANNOTATION_FIELDS = ['name','taxid','assembly_accession','gff_gz_location','tab_
 
 
 def create_annotation(data):
-    annotation_obj = Annotation(**data).save()
+    if not 'assembly_accession' in data.keys():
+        return
+    assembly_obj = assembly.create_assembly_from_accession(data['assembly_accession'])
+    annotation_obj = Annotation.objects(name = data['name']).first()
+    if annotation_obj:
+        return
+    annotation_obj = Annotation(**data)
+    annotation_obj.taxid = assembly_obj.taxid
+    annotation_obj.save()
     data_helper.create_data_from_annotation(annotation_obj)
     ##create data here
     return annotation_obj

@@ -32,8 +32,6 @@ const importActions = [
 const creationActions = [
     {label:'Edit/Delete data', path:'/admin'},
     {label:'Create organism', path:'/admin/organism-form'},
-    {label:'Create annotation track', path:'/admin/annotation-form'},
-    {label:'Create assembly track', path:'/admin/assembly-form'},
     {label:'Import local samples from xlsx file', path:'/admin/excel-form'},
 ]
 

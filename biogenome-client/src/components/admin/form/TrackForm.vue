@@ -2,17 +2,17 @@
 <va-inner-loading :loading="isLoading">
     <FormComponent
         :title="accession+' Track'"
-        :listObject="initJbrowseData"
+        :listObject="assemblyTrack"
         :formOptions="assemblyTrackOptions"
     />
     <ListInputComponent 
         :title="'Annotation tracks'"
         :keyLabel="'name'"
         :listObject="initAnnotation"
-        :modelList="initJbrowseData.annotations"
+        :modelList="annotations"
         :formOptions="annotationOptions"
     />
-    <Transition>
+    <!-- <Transition>
         <va-card v-if="validData" class="custom-card">
             <va-card-actions > 
                 <div class="row justify--space-between">
@@ -29,7 +29,7 @@
                 </div>
             </va-card-actions>
         </va-card>
-    </Transition>
+    </Transition> -->
 </va-inner-loading>
 </template>
 <script setup>
@@ -38,11 +38,14 @@ import { computed, reactive,ref } from "vue"
 import FormComponent from './FormComponent.vue'
 import AssemblyService from "../../../services/AssemblyService"
 import AnnotationService from "../../../services/AnnotationService"
+import ListInputComponent from "./ListInputComponent.vue"
 
 const isLoading = ref(false)
 
 const props = defineProps({
-    accession:String
+    accession:String,
+    annotations: Array,
+    assemblyTrack:Object,
 })
 
 const initJbrowseData = {
@@ -57,7 +60,7 @@ const jbrowseData = reactive({...initJbrowseData})
 
 const initAnnotation = {
     name:'',
-    assembly_accession:'',
+    assembly_accession:props.accession,
     gff_gz_location:'',
     tab_index_location:'',
 }

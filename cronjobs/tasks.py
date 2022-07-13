@@ -5,6 +5,9 @@ import time
 
 API_URL = "http://biogenome_nginx/api"
 
+
+##add db model for cronjob, to check job status before trigger the job again
+
 def import_records():
     session = requests.Session()
     session.trust_env = False
