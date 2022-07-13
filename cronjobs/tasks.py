@@ -3,24 +3,44 @@ import os
 from datetime import datetime, timedelta
 import time
 
-BIOSAMPLE_API = ""
-
+API_URL = "http://biogenome_nginx/api"
 
 def import_records():
     session = requests.Session()
     session.trust_env = False
-    resp = session.get("http://biogenome_nginx/api/organisms?offset=0&limit=20")
-    print(resp.json())
     PROJECTS = [p.strip() for p in os.getenv('PROJECTS').split(',') if p]
     ACCESSION = os.getenv('PROJECT_ACCESSION')
-    if ACCESSION:
-        import_from_NCBI(ACCESSION)
-    if PROJECTS:
-        import_from_EBI_biosamples(PROJECTS)
-    # update_samples()
+    # if ACCESSION:
+    #     import_from_NCBI(ACCESSION,session)
+    # if PROJECTS:
+    #     import_from_EBI_biosamples(PROJECTS,session)
 
-def import_from_NCBI(project_accession):
+    ##check new reads
+    update_biosamples(session)
+
+    ##convert local samples to biosample via copo api
+
+
+def import_from_NCBI(project_accession,session):
+
+    #get existing assemblies
+    assemblies = session.get(f"{API_URL}/bulk/assembly")
+    if assemblies.status_code != 200:
+        print('API ERROR, UNABLE TO RETRIEVE ASSEMBLIES')
+        return
+    if not assemblies.json():
+        print('NO ASSEMBLY PRESENT IN DB')
+        existing_assemblies = list()
+    else:
+        existing_assemblies = [assembly['accession'] for assembly in assemblies.json()]
     assemblies = get_assemblies(project_accession)
+    for assembly in assemblies:
+        accession = assembly['assembly_accession']
+        if accession in existing_assemblies:
+            continue
+        time.sleep(1)
+        response = session.post(f"{API_URL}/assemblies/{accession}")
+        print('response is', response.status_code)
     print(len(assemblies))
     # get all assemblies
     # iterate over ncbi_response
@@ -55,15 +75,30 @@ def get_assemblies(project_accession):
             assemblies.extend([ass['assembly'] for ass in result['assemblies']])
     return assemblies
 
-def import_from_EBI_biosamples(PROJECTS):
+def import_from_EBI_biosamples(PROJECTS,session):
     print('STARTING IMPORT BIOSAMPLES JOB')
     project_mapper = {p.split('_')[0]:p.split('_')[1] for p in PROJECTS}
     sample_dict = collect_samples(project_mapper.keys()) ##return dict with project names as keys
     ##get biosamples
     # sub_samples = list()
-    # for project in sample_dict.keys():
-    #     for sample in sample_dict[project]:
-    #         if sample['accession'] in existing_samples:
+    biosamples = session.get(f"{API_URL}/bulk/biosample")
+    if biosamples.status_code != 200:
+        print('API ERROR, UNABLE TO RETRIEVE BIOSAMPLES')
+        return
+    if not biosamples.json():
+        print('NO BIOSAMPLES PRESENT IN DB')
+        existing_biosamples = list()
+    else:
+        existing_biosamples = [sample['accession'] for sample in existing_biosamples.json()]
+    for project in sample_dict.keys():
+        print(len(sample_dict[project]))
+        for sample in sample_dict[project]:
+            accession = sample['accession']
+            if accession in existing_biosamples:
+                continue
+            time.sleep(1)
+            response = session.post(f"{API_URL}/biosamples/{accession}")
+            print('response is', response.status_code)
     #             continue
     #         biosample_obj = biosample.create_biosample_from_ebi_data(sample)
     #         organism_obj = data_helper.create_data_from_biosample(biosample_obj)
@@ -97,41 +132,52 @@ def get_biosamples_page(url, samples):
         get_biosamples_page(data['_links']['next']['href'],samples)
     return samples
 
-# def append_specimens(sub_samples):
-#     for sample in sub_samples:
-#         sample_container = BioSample.objects(accession=sample.metadata['sample derived from']).first()
-#         if not sample_container:
-#             ##append orphans to organism
-#             organism_obj = organism.get_or_create_organism(sample.taxid)
-#             if not organism_obj:
-#                 print('ORGANISM DOES NOT EXIST', sample.taxid)
-#                 continue
-#             organism_obj.modify(add_to_set__biosamples=sample.accession)
-#             organism_obj.save()
-#         else:
-#             sample_container.modify(add_to_set__sub_samples=sample.accession)
-    #get orphan specimens and append to organism
-
-# def update_samples():
-#     samples = BioSample.objects(SAMPLE_QUERY)
-#     if not samples:
-#         print('NO SAMPLES TO UPDATE')
-#         return
-#     print('SAMPLES TO UPDATE: ',len(samples))
-#     for sample in samples:
-#         organism_obj = organism.get_or_create_organism(sample.taxid)
-#         ## check for assemblies and reads
-#         response = ena_client.parse_assemblies(sample.accession)
-#         if response:
-#             for ass in response:
-#                 assembly.create_assembly_from_accession(ass['accession'])
-#         else:
-#             saved_reads = reads.create_reads_from_biosample_accession(sample.accession)
-#             for read in saved_reads:
-#                 organism_obj.modify(add_to_set__experiments=read)
-#                 sample.modify(add_to_set__experiments=read)
+def update_biosamples(session):
+    biosamples = session.get(f"{API_URL}/bulk/biosample")
+    for biosample in biosamples.json():
+        experiments = get_reads(biosample['accession'])
+        print(len(experiments))
+        for experiment in experiments:
+            accession = experiment['experiment_accession']
+            if accession not in biosample['experiments']:
+                response = session.post(f"{API_URL}/experiments/{accession}")
 
 
+def get_reads(accession):
+    time.sleep(1)
+    experiments_data = requests.get(f'https://www.ebi.ac.uk/ena/portal/'
+                                        f'api/filereport?result=read_run'
+                                        f'&accession={accession}'
+                                        f'&offset=0&limit=1000&format=json'
+                                        f'&fields=study_accession,'
+                                        f'secondary_study_accession,'
+                                        f'sample_accession,'
+                                        f'secondary_sample_accession,'
+                                        f'experiment_accession,run_accession,'
+                                        f'submission_accession,tax_id,'
+                                        f'scientific_name,instrument_platform,'
+                                        f'instrument_model,library_name,'
+                                        f'nominal_length,library_layout,'
+                                        f'library_strategy,library_source,'
+                                        f'library_selection,read_count,'
+                                        f'base_count,center_name,first_public,'
+                                        f'last_updated,experiment_title,'
+                                        f'study_title,study_alias,'
+                                        f'experiment_alias,run_alias,'
+                                        f'fastq_bytes,fastq_md5,fastq_ftp,'
+                                        f'fastq_aspera,fastq_galaxy,'
+                                        f'submitted_bytes,submitted_md5,'
+                                        f'submitted_ftp,submitted_aspera,'
+                                        f'submitted_galaxy,submitted_format,'
+                                        f'sra_bytes,sra_md5,sra_ftp,sra_aspera,'
+                                        f'sra_galaxy,cram_index_ftp,'
+                                        f'cram_index_aspera,cram_index_galaxy,'
+                                        f'sample_alias,broker_name,'
+                                        f'sample_title,nominal_sdev,'
+                                        f'first_created')
+    if experiments_data.status_code != 200:
+        return list()
+    return experiments_data.json()
 
 if __name__ == "__main__":
     print(f"Running script at {datetime.now()}")

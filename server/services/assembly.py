@@ -10,6 +10,7 @@ ASSEMBLY_FIELDS = ['display_name','chromosomes','assembly_accession','biosample'
 TRACK_FIELDS = ['fasta_location','fai_location','gzi_location']
 
 def create_assembly_from_ncbi_data(assembly,sample_accession=None):
+    print('CREATEING ASSEMBLY FROM NCBI DATA')
     ass_data = dict(accession = assembly['assembly_accession'],assembly_name= assembly['display_name'],scientific_name=assembly['org']['sci_name'],taxid=assembly['org']['tax_id'])
     ass_metadata=dict()
     for key in assembly.keys():
@@ -41,12 +42,12 @@ def create_assembly_from_accession(accession,data=None):
         return assembly_obj
 
     ncbi_response = ncbi_client.get_assembly(accession)
-    app.logger.info(ncbi_response)
     if not ncbi_response:
         return
 
-    sample_accession = ncbi_response['sample_accession'] if 'sample_accession' in ncbi_response.keys() else None
-        
+    sample_accession = ncbi_response['biosample_accession'] if 'biosample_accession' in ncbi_response.keys() else None
+    print('accession is:',accession)
+    
     assembly_obj = create_assembly_from_ncbi_data(ncbi_response,sample_accession)
     assembly_track = create_assembly_track(data)
     if assembly_track:

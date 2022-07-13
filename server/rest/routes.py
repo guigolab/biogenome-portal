@@ -1,3 +1,4 @@
+from .bulk_load_api import BulkLoadApi
 from .local_sample_api import LocalSampleApi
 from .organism_api import OrganismsApi, OrganismApi
 from .parser_api import ExcelParser
@@ -15,6 +16,7 @@ def initialize_routes(api):
 	api.add_resource(Login, '/api/login')
 	api.add_resource(Logout, '/api/logout')
 
+	api.add_resource(BulkLoadApi, '/api/bulk/<model>')
 	api.add_resource(AnnotationApi, '/api/annotations', '/api/annotations/<name>')
 	api.add_resource(AssemblyApi, '/api/assemblies', '/api/assemblies/<accession>')
 	api.add_resource(BioSampleApi, '/api/biosamples', '/api/biosamples/<accession>')

@@ -3,6 +3,7 @@ import time
 
 
 def get_assembly(assembly_accession):
+    time.sleep(1)
     result = requests.get(f"https://api.ncbi.nlm.nih.gov/datasets/v1/genome/accession/{assembly_accession}").json()
     if not 'assemblies' in result.keys():
         return 

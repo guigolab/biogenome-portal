@@ -4,12 +4,14 @@ from .common_functions import biosamples_response_parser
 import time
 
 def get_taxon_from_ena(taxon_id):
+    time.sleep(1)
     response = requests.get(f"https://www.ebi.ac.uk/ena/browser/api/xml/{taxon_id}?download=false") ## 
     if response.status_code != 200:
         return
     return response.content
 
 def check_taxons_from_NCBI(taxids):
+    time.sleep(1)
     params = ','.join(taxids)
     response = requests.get(f'https://api.ncbi.nlm.nih.gov/datasets/v1/taxonomy/taxon/{params}')
     if response.status_code != 200:
@@ -17,16 +19,19 @@ def check_taxons_from_NCBI(taxids):
     return response.json()
 
 def get_sample_from_biosamples(accession):
+    time.sleep(1)
     response = requests.get(f"https://www.ebi.ac.uk/biosamples/samples?size=1000&filter=acc:{accession}").json()
     samples = biosamples_response_parser(response)
     return samples
 
 def get_samples_derived_from(accession):
+    time.sleep(1)
     response = requests.get(f"https://www.ebi.ac.uk/biosamples/samples?size=1000&filter=attr%3Asample%20derived%20from%3A{accession}").json()
     samples = biosamples_response_parser(response)
     return samples
     
 def get_tolid(taxid):
+    time.sleep(1)
     response = requests.get(f"https://id.tol.sanger.ac.uk/api/v2/species/{taxid}").json()
     if not isinstance(response, list):
         return ''
@@ -34,12 +39,14 @@ def get_tolid(taxid):
         return response[0]['prefix']
 
 def get_bioproject(project_accession):
+    time.sleep(1)
     resp = requests.get(f"https://www.ebi.ac.uk/ena/portal/api/filereport?accession={project_accession}&format=JSON&result=study")
     if resp.status_code != 200:
         return list()
     return resp.json()
 
 def get_biosamples_page(url , samples):
+    time.sleep(1)
     response = requests.get(url)
     if response.status_code !=  200:
         print('ERROR CALLING BIOSAMPLES API',response.content)
@@ -56,6 +63,7 @@ def get_biosamples(project):
 
 
 def parse_assemblies(accession):
+    time.sleep(1)
     assemblies_data = requests.get(f"https://www.ebi.ac.uk/ena/portal/api/"
                                    f"links/sample?format=json"
                                    f"&accession={accession}&result=assembly"
@@ -66,6 +74,7 @@ def parse_assemblies(accession):
 
 
 def get_reads(accession):
+    time.sleep(1)
     experiments_data = requests.get(f'https://www.ebi.ac.uk/ena/portal/'
                                         f'api/filereport?result=read_run'
                                         f'&accession={accession}'

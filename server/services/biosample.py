@@ -69,6 +69,9 @@ def create_biosample_from_ncbi_data(accession, ncbi_response, organism):
     return new_biosample
 
 def create_biosample_from_ebi_data(sample):
+    existing_biosample = BioSample.objects(accession=sample['accession']).first()
+    if existing_biosample:
+        return existing_biosample
     required_metadata=dict(accession=sample['accession'],taxid=str(sample['taxId']))
     if 'scientificName' in sample.keys():
         required_metadata['scientific_name'] = sample['scientificName']

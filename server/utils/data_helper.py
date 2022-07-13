@@ -6,18 +6,17 @@ from flask import current_app as app
 
 def create_data_from_assembly(assembly_obj, ncbi_response):
     organism_obj = organism.get_or_create_organism(assembly_obj.taxid)
-    print(assembly_obj.to_json())
     if 'biosample' in ncbi_response.keys() and 'attributes' in ncbi_response['biosample'].keys():
         biosample_obj = biosample.create_biosample_from_ncbi_data(assembly_obj.sample_accession,ncbi_response,organism_obj)
     else:
+        print('CREATING BIOSAMPLE FROM ACCESSION')
+        print(assembly_obj.to_json())
         biosample_obj = biosample.create_biosample_from_accession(assembly_obj.sample_accession)
-    
     if assembly_obj.sample_accession and biosample_obj:
         organism_obj.modify(add_to_set__biosamples=biosample_obj.accession)
         biosamples_to_update = [biosample_obj]
         children_samples = biosample.get_biosamples_derived_from(biosample_obj.accession)
         if children_samples:
-            print(children_samples)
             biosamples_to_update.extend(children_samples)
         for saved_biosample in biosamples_to_update:
             geo_localization.create_coordinates(saved_biosample, organism_obj)
