@@ -37,7 +37,7 @@ const routes = [
     children:[
       {path:'', component:adminHP, name:"admin-hp"},
       {path:'excel-form', component:excel, name:"excel"},
-      {path: "organism-form",component:organismForm, name:"organism-form"},
+      {path: "organism-form/:taxid?",component:organismForm, name:"organism-form", props:true, },
       {path: "assembly-form",component:assembliesForm, name:"assembly-form"},
       {path: "annotation-form",component:annotationForm, name:"annotation-form"},
       {path: "biosample-form",component:biosampleForm, name:"biosample-form"},

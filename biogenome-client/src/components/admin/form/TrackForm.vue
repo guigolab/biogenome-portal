@@ -2,15 +2,15 @@
 <va-inner-loading :loading="isLoading">
     <FormComponent
         :title="accession+' Track'"
-        :listObject="assemblyTrack"
-        :formOptions="assemblyTrackOptions"
+        :list-object="assemblyTrack"
+        :form-options="assemblyTrackOptions"
     />
     <ListInputComponent 
         :title="'Annotation tracks'"
-        :keyLabel="'name'"
-        :listObject="initAnnotation"
-        :modelList="annotations"
-        :formOptions="annotationOptions"
+        :key-label="'name'"
+        :list-object="initAnnotation"
+        :model-list="annotations"
+        :form-options="annotationOptions"
     />
     <!-- <Transition>
         <va-card v-if="validData" class="custom-card">

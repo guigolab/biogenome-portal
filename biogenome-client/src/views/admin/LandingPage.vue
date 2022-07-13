@@ -72,7 +72,7 @@
                         </tr>
                     </template>
                 </va-data-table>
-                <va-modal v-model="showModal" hide-default-actions>
+                <va-modal v-model="showDeleteModal" hide-default-actions>
                     <div>{{`Are you sure you want to delete ${idToDelete} and its related data from ${dataValue}? This action is irreversible`}}</div>
                         <template #footer>
                             <div class="row justify--space-between">
@@ -84,6 +84,27 @@
                                 <div class="flex">
                                     <va-button @click="deleteItem()" color="danger">
                                         Delete {{idToDelete}}
+                                    </va-button>
+                                </div>
+                            </div>                            
+                        </template>
+                </va-modal>
+                <va-modal v-model="showEditModal" hide-default-actions>
+                        <FormComponent 
+                            :title="objectToEdit.title"
+                            :form-options="objectToEdit.formOptions"
+                            :list-object="objectToEdit.listObject"
+                        />
+                        <template #footer>
+                            <div class="row justify--space-between">
+                                <div class="flex">
+                                    <va-button @click="resetEditAction()"  color="info">
+                                        Cancel Action
+                                    </va-button>
+                                </div>
+                                <div class="flex">
+                                    <va-button @click="submitEditedItem()" color="danger">
+                                        update {{idToDelete}}
                                     </va-button>
                                 </div>
                             </div>                            
@@ -102,8 +123,11 @@ import ReadService from '../../services/ReadService'
 import OrganismService from '../../services/OrganismService'
 import UserService from '../../services/UserService'
 import Pagination from '../../components/Pagination.vue'
-
+import FormComponent from '../../components/admin/form/FormComponent.vue'
 import {computed, nextTick, onMounted, reactive, ref, watch} from 'vue'
+import {useRouter} from 'vue-router'
+
+const router = useRouter()
 
 const dataValue = ref('organisms')
 
@@ -115,10 +139,19 @@ const initAlert = {
 }
 const alert = reactive({...initAlert})
 
+const initObjectToEdit = {
+    title:'',
+    listObject:null,
+    formOptions: [],
+}
+
+const objectToEdit = reactive({...initObjectToEdit})
+
 const idToDelete = ref('')
 
 const showTable = ref(false)
-const showModal = ref(false)
+const showDeleteModal = ref(false)
+const showEditModal = ref(false)
 
 const initParams = {
     offset:0,
@@ -131,6 +164,18 @@ const initLoadedItems = {
     columns:[],
     total:0
 }
+
+const annotationOptions = [
+    {type:'input',label:'Name', key:'name', mandatory:true},
+    {type:'input',label:'GFF3 GZIP', key:'gff_gz_location', mandatory:true},
+    {type:'input',label:'GFF3 TABIX GZIP', key:'tab_index_location', mandatory:true},
+]
+const assemblyTrackOptions = [
+    {type:'input',label:'Fasta location', key:'fasta_location', mandatory:true},
+    {type:'input',label:'fai location', key:'fai_location', mandatory:true},
+    {type:'input',label:'gzi Location', key:'gzi_location', mandatory:true},
+    {type:'input',label:'chromosome aliases file url', key:'chrom_alias'},
+]
 
 const selectedModelObject = computed(()=>{
     return dataModels.find(model => model.value === dataValue.value)
@@ -171,6 +216,12 @@ const dataModels = [
     columns:['name','role','actions'],editable:true}
 ]
 
+const initAssemblyTrack = {
+    fasta_location : null,
+    fai_location: null,
+    gzi_location: null,
+    chrom_alias: null
+}
 
 function getData(){
     dataModels.forEach(m => {
@@ -191,19 +242,51 @@ function getData(){
         }
     })
 }
-function editItem(item){
-    console.log(item)
 
+//edit assembly track or annotation track
+function editItem(item){
+    if(dataValue.value === 'assemblies'){
+        objectToEdit.title = item.accession
+        objectToEdit.listObject = item.track || initAssemblyTrack
+        objectToEdit.formOptions = assemblyTrackOptions
+        showEditModal.value = true
+    }else if(dataValue.value === 'annotations'){
+        objectToEdit.title = item.name
+        objectToEdit.listObject = item
+        objectToEdit.formOptions = annotationOptions
+        showEditModal.value = true
+    }else if(dataValue.value === 'organisms'){
+        router.push({name: 'organism-form', params:{taxid: item.taxid}})
+    }
+}
+
+function resetEditAction(){
+    Object.assign(objectToEdit,initObjectToEdit)
+    showEditModal.value = false
+}
+
+function submitEditedItem(){
+    if(dataValue.value === 'assemblies'){
+        AssemblyService.updateAssembly(objectToEdit.title, objectToEdit.listObject)
+        .then(resp => {
+            console.log(resp)
+        })
+    }else if(dataValue.value === 'annotations'){
+        AnnotationService.updateAnnotation(objectToEdit.title, objectToEdit.listObject)
+        .then(resp => {
+            console.log(resp)
+        })
+    }
 }
 
 function confirmDeleteItem(item){
     idToDelete.value = item.accession || item.name || item.local_id || item.experiment_accession || item.taxid
-    showModal.value = true
+    showDeleteModal.value = true
 }
 
 function resetDeleteAction(){
     idToDelete.value=''
-    showModal.value=false
+    showDeleteModal.value=false
 }
 
 function deleteItem(){
@@ -211,7 +294,7 @@ function deleteItem(){
         if(m.value === dataValue.value){
             m.deleteAction(idToDelete.value)
             .then(resp => {
-                showModal.value = false
+                showDeleteModal.value = false
                 idToDelete.value = ''
                 getData()
                 alert.color = 'success'
@@ -226,12 +309,4 @@ function deleteItem(){
         }
     })
 }
-// const editableModel = [
-//     {model:'local_samples',},
-//     'organisms',
-//     'assemblies',//assembly track
-//     'annotations',
-//     'users'
-// ]
-
 </script>
