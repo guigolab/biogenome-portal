@@ -4,7 +4,6 @@
             Organism Form
         </va-card-title>
         <va-divider/>
-        {{organismFormData}}
         <va-card-content>
             <div class="row justify-space-between">
                 <div v-if="!organismToUpdate" class="flex">

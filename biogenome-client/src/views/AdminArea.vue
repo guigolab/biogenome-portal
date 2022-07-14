@@ -1,5 +1,5 @@
 <template>
-    <div class="layout">
+    <div>
         <div class="row">
             <div class="flex">
                 <va-button-dropdown label="Import data from INSDC">

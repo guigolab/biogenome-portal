@@ -10,6 +10,7 @@ from .geo_localization_api import GeoLocApi
 from .annotation_api import AnnotationApi
 from .biosample_api import BioSampleApi
 from .reads import ExperimentApi
+from .user_api import UserApi
 def initialize_routes(api):
 
 	#generate token
@@ -26,7 +27,7 @@ def initialize_routes(api):
 	api.add_resource(OrganismsApi, '/api/organisms')
 	api.add_resource(OrganismApi, '/api/organisms/<taxid>') 
 
-	api.add_resource(Users, '/api/users','/api/users/<name>')
+	api.add_resource(UserApi, '/api/users','/api/users/<name>')
 	##data portal endpoints
 	api.add_resource(BioProjectApi, '/api/bioprojects', '/api/bioprojects/<accession>')
 	api.add_resource(TaxNodesApi, '/api/taxons/<taxid>')

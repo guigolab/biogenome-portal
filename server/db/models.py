@@ -14,7 +14,11 @@ class PublicationSource(Enum):
 class TargetListStatus(Enum):
     LONG_LIST = 'long_list'  ## Any taxa declared as a target for the project. For regional projects, this would be that the species is known to be part of the biota of a region that is the target of this particular project. For DToL this is all UKSI plus the Irish biota.
     FAMILY_REPRESENTATIVE = 'family_representative' ## The species is a family reference species for the organisation or project. Will also receive a long_list tag on GoaT.
-    OTHER_PRIORITY = 'other_priority' ## This would include for example species of primary conservation interest,   early phase and pilot subproject targets.
+    OTHER_PRIORITY = 'other_priority' ## This would include for example species of primary conservation interest, early phase and pilot subproject targets.
+
+class CronJobStatus(Enum):
+    IN_PROGRESS = 'In Progress'
+    DONE = 'Done'
 
 class GoaTStatus(Enum):
     SAMPLE_COLLECTED = 'Sample Collected'
@@ -102,10 +106,6 @@ class BioProject(db.Document):
     meta = {
         'indexes': ['accession']
     }
-
-class SampleSubmitter(db.Document):
-    name=db.StringField()
-    password=db.StringField()
 
 class LocalSample(db.Document):
     created = db.DateTimeField(default=datetime.datetime.utcnow)
@@ -253,3 +253,6 @@ class BioGenomeUser(db.Document):
     name=db.StringField(unique=True,required=True)
     password=db.StringField(required=True)
     role=db.EnumField(Roles, required=True)
+
+class CronJob(db.Document):
+    status=db.EnumField(CronJobStatus, required=True)

@@ -5,9 +5,9 @@
                 {{alert.message}}
             </va-alert>
         </div>
-        <div class="row">
-            <div class="flex">
-                <va-tabs v-model="dataValue" style="width: 250px;">
+        <div class="row justify--space-evenly">
+            <div class="flex lg12 md12 sm12 xs12">
+                <va-tabs v-model="dataValue" >
                     <template #tabs>
                         <va-tab
                             v-for="model in dataModels"
@@ -20,8 +20,9 @@
                 </va-tabs>
             </div>
         </div>
+        <va-divider/>
         <div v-if="showTable" class="row">
-            <div class="flex">
+            <div class="flex lg12 md12 sm12 xs12">
                 <va-data-table
                     sticky-header
                     :style="{
@@ -39,7 +40,10 @@
                         />
                 </template>
                 <template #cell(actions)="{ rowData }">
-                    <div class="row justify--space-betwenn">
+                    <div class="row justify--space-evenly">
+                        <div class="flex">
+                            <va-button @click="showDetails(rowData)" icon="search"/>
+                        </div>
                         <div v-if="selectedModelObject && selectedModelObject.editable" class="flex">
                             <va-button @click="editItem(rowData)" icon="edit"/>
                         </div>
@@ -61,17 +65,36 @@
                         </div>
                     </div>
                 </template>
-                    <template #headerAppend>
-                        <tr style="background-color:white">
-                            <th>
-                                <Pagination
-                                    :total="loadedItems.count"
-                                    :query="params"
-                                />
-                            </th>
-                        </tr>
-                    </template>
+                <template #headerAppend>
+                    <tr style="background-color:white">
+                        <th colspan="1">
+                            <va-button v-if="dataValue === 'users'" @click="openUserForm()">
+                                Create user
+                            </va-button>
+                        </th>
+                        <th :colspan="loadedItems.columns.length - 1">
+                            <Pagination
+                                :total="loadedItems.total"
+                                :query="params"
+                            />
+                        </th>
+                    </tr>
+                </template>
                 </va-data-table>
+                <va-modal v-model="showItemDetails">
+                <va-divider>Attributes</va-divider>
+                    <ul>
+                        <li style="padding:10px" v-for="obj in objectToShow.fields" :key="obj.key">
+                            <strong>{{obj.key+ ': '}}</strong>{{obj.value}}
+                        </li>
+                    </ul>
+                <va-divider v-if="objectToShow.metadata && objectToShow.metadata.length">Metadata</va-divider>
+                    <ul v-if="objectToShow.metadata && objectToShow.metadata.length">
+                        <li style="padding:10px" v-for="obj in objectToShow.metadata" :key="obj.key">
+                            <strong>{{obj.key+ ': '}}</strong>{{obj.value}}
+                        </li>
+                    </ul>
+                </va-modal>
                 <va-modal v-model="showDeleteModal" hide-default-actions>
                     <div>{{`Are you sure you want to delete ${idToDelete} and its related data from ${dataValue}? This action is irreversible`}}</div>
                         <template #footer>
@@ -89,6 +112,27 @@
                             </div>                            
                         </template>
                 </va-modal>
+                <va-modal v-model="showCreateUserModal" hide-default-actions>
+                    <FormComponent 
+                        :title="objectToEdit.title"
+                        :form-options="objectToEdit.formOptions"
+                        :list-object="objectToEdit.listObject"
+                    />
+                    <template #footer>
+                        <div class="row justify--space-between">
+                            <div class="flex">
+                                <va-button @click="resetUser()"  color="info">
+                                    Cancel
+                                </va-button>
+                            </div>
+                            <div class="flex">
+                                <va-button @click="submitUser()" color="danger">
+                                    Submit
+                                </va-button>
+                            </div>
+                        </div>                            
+                    </template>
+                </va-modal>
                 <va-modal v-model="showEditModal" hide-default-actions>
                         <FormComponent 
                             :title="objectToEdit.title"
@@ -104,7 +148,7 @@
                                 </div>
                                 <div class="flex">
                                     <va-button @click="submitEditedItem()" color="danger">
-                                        update {{idToDelete}}
+                                        update
                                     </va-button>
                                 </div>
                             </div>                            
@@ -131,6 +175,8 @@ const router = useRouter()
 
 const dataValue = ref('organisms')
 
+const showItemDetails = ref(false)
+
 const showAlert = ref(false)
 
 const initAlert = {
@@ -152,6 +198,7 @@ const idToDelete = ref('')
 const showTable = ref(false)
 const showDeleteModal = ref(false)
 const showEditModal = ref(false)
+const showCreateUserModal = ref(false)
 
 const initParams = {
     offset:0,
@@ -164,6 +211,20 @@ const initLoadedItems = {
     columns:[],
     total:0
 }
+
+const initUser = {
+    name:'',
+    password:'',
+    role:'SampleCollector'
+}
+
+const user = reactive({...initUser})
+
+const userOptions = [
+    {type:'input',label:'Name', key:'name', mandatory:true},
+    {type:'input',label:'Password', key:'password', mandatory:true},
+    {type:'select',label:'Role',options:['SampleCollector','SampleManager','Admin'], key:'role', mandatory:true},
+]
 
 const annotationOptions = [
     {type:'input',label:'Name', key:'name', mandatory:true},
@@ -179,6 +240,11 @@ const assemblyTrackOptions = [
 
 const selectedModelObject = computed(()=>{
     return dataModels.find(model => model.value === dataValue.value)
+})
+
+const objectToShow = reactive({
+    fields:[],
+    metadata:[]
 })
 
 const loadedItems = reactive({...initLoadedItems})
@@ -211,9 +277,8 @@ const dataModels = [
     {label:'Annotations',value:'annotations', itemProvider: AnnotationService.getAnnotations,
     columns:['name','assembly_accession','actions'],deleteAction: AnnotationService.deleteAnnotation,editable:true},
     {label:'Local samples',value:'local_samples', itemProvider: LocalSampleService.getLocalSamples,
-    columns:['local_id','taxid','broker','actions'], deleteAction: LocalSampleService.deleteLocalSample,editable:true},
-    {label:'Portal Users',value:'users', itemProvider: UserService.getUsers,
-    columns:['name','role','actions'],editable:true}
+    columns:['local_id','taxid','broker','actions'], deleteAction: LocalSampleService.deleteLocalSample,editable:false},
+    {label:'Portal Users',value:'users', itemProvider: UserService.getUsers,deleteAction: UserService.deleteUser,columns:['name','role','actions'],editable:true}
 ]
 
 const initAssemblyTrack = {
@@ -222,6 +287,47 @@ const initAssemblyTrack = {
     gzi_location: null,
     chrom_alias: null
 }
+
+function showDetails(item){
+    objectToShow.fields = Object.keys(item)
+    .filter(k => k !== 'metadata')
+    .map(k => {
+        return {key: k, value: item[k]}
+    })
+    if(item.metadata){
+        objectToShow.metadata = Object.keys(item.metadata)
+        .map(k => {
+            return {key: k, value: item.metadata[k]}
+        })
+    }
+    showItemDetails.value = true
+}
+
+function openUserForm(){
+    objectToEdit.title = 'New user'
+    objectToEdit.formOptions = userOptions
+    objectToEdit.listObject = user
+    showCreateUserModal.value = true
+}
+
+function submitUser(){
+    UserService.createUser(user)
+    .then(resp => {
+        console.log(resp)
+        resetUser()
+        getData()
+    })
+    .catch(e => {
+        console.log(e)
+        showCreateUserModal.value = false
+    })
+}
+
+function resetUser(){
+    Object.assign(user,initUser)
+    showCreateUserModal.value = false
+}
+
 
 function getData(){
     dataModels.forEach(m => {
@@ -257,10 +363,16 @@ function editItem(item){
         showEditModal.value = true
     }else if(dataValue.value === 'organisms'){
         router.push({name: 'organism-form', params:{taxid: item.taxid}})
+    }else if(dataValue.value === 'users'){
+        objectToEdit.title = item.name
+        objectToEdit.listObject = item
+        objectToEdit.formOptions = userOptions
+        showEditModal.value = true
     }
 }
 
 function resetEditAction(){
+    Object.assign(user,initUser)
     Object.assign(objectToEdit,initObjectToEdit)
     showEditModal.value = false
 }
@@ -273,6 +385,11 @@ function submitEditedItem(){
         })
     }else if(dataValue.value === 'annotations'){
         AnnotationService.updateAnnotation(objectToEdit.title, objectToEdit.listObject)
+        .then(resp => {
+            console.log(resp)
+        })
+    }else if(dataValue.value === 'users'){
+        UserService.updateUser(objectToEdit.title, objectToEdit.listObject)
         .then(resp => {
             console.log(resp)
         })
