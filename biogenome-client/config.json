@@ -1,4 +1,48 @@
 {
+    "jbrowse2":{
+        "assemblyObject":
+        {
+            "name": "",
+            "sequence": {
+                "type": "ReferenceSequenceTrack",
+                "trackId": "",
+                "adapter": {
+                    "type": "BgzipFastaAdapter",
+                    "fastaLocation": {
+                        "uri": "",
+                        "locationType": "UriLocation"
+                    },
+                    "faiLocation": {
+                        "uri": "",
+                        "locationType": "UriLocation"
+                    },
+                    "gziLocation": {
+                        "uri": "",
+                        "locationType": "UriLocation"
+                    }
+                }
+            }
+        },
+        "annotationTrackObject":    
+        {
+            "type": "BasicTrack",
+            "trackId":"",
+            "name": "",
+            "assemblyNames": [],
+            "category": ["Genes"],
+            "adapter": {
+                "type": "Gff3TabixAdapter",
+                "gffGzLocation": {
+                    "uri": ""
+                },
+                "index": {
+                    "location": {
+                        "uri": ""
+                    }
+                }
+            }
+        }
+    },
     "dataIcons":{
         "local_samples":{
             "fields":["local_id","bioprojects","metadata","latitude","longitude"],

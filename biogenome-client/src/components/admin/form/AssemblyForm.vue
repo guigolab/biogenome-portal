@@ -174,26 +174,40 @@ function promiseParser(){
 }
 
 function submitAssembly(){
-    promiseParser()
-    .then(resp => {
-        console.log(resp)
-        if(annotationsToSubmit.annotations.length){
-            return AnnotationService.createAnnotation(annotationsToSubmit.annotations)
-        }
-        return 
+    let promises = []
+    let responses = []
+    promises.push(promiseParser().then(resp => {responses.push(resp)}))
+    if(annotationsToSubmit.annotations.length){
+        annotationsToSubmit.annotations.forEach(ann => {
+            promises.push(AnnotationService.createAnnotation(ann).then(resp => {responses.push(resp)}))
+        })
+    }
+    Promise.all(promises).then(() =>{
+        console.log(responses)
     })
-    .then(resp => {
-        if(resp){
-            console.log(resp)
-        }
-    })
-    .catch(e => {
-        console.log(e)
-        // alert.title = 'Error'
-        // alert.color = 'danger'
-        // alert.message = 'Something happened check the console log'
-        // showAlert.value = true
-    })
+    // .then(resp => {
+    //     console.log(resp)
+    //     if(annotationsToSubmit.annotations.length){
+    //         let promises = []
+    //         annotationsToSubmit.annotations.forEach(ann => {
+    //             promises.push(AnnotationService.createAnnotation(ann))
+    //         })
+    //         return AnnotationService.createAnnotation(annotationsToSubmit.annotations)
+    //     }
+    //     return 
+    // })
+    // .then(resp => {
+    //     if(resp){
+    //         console.log(resp)
+    //     }
+    // })
+    // .catch(e => {
+    //     console.log(e)
+    //     // alert.title = 'Error'
+    //     // alert.color = 'danger'
+    //     // alert.message = 'Something happened check the console log'
+    //     // showAlert.value = true
+    // })
 }
 
 function reset(){

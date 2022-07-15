@@ -17,8 +17,7 @@ class AnnotationApi(Resource):
     def post(self):
         data = request.json if request.is_json else request.form
         ##expects a list of annotation objects
-        for ann in data:
-            new_annotation = annotation.create_annotation(ann)
+        new_annotation = annotation.create_annotation(data)
         if new_annotation:
             return Response(new_annotation.to_json(), mimetype="application/json", status=201)
 

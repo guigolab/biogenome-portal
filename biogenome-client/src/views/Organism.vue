@@ -1,5 +1,6 @@
 <template>
 <div v-if="organismLoaded" class="row">
+{{jbrowseSession}}
     <div class="flex lg12 md12 sm12 xs12">
         <div class="row justify--start align--center">
             <div style="padding:15px" class="flex">
@@ -17,6 +18,16 @@
                 <va-button @click="selectedModel='overview'" :outline="selectedModel!=='overview'">Overview</va-button>
                 <va-button v-for="key in organismData.dataKeys" :key="key" @click="selectedModel=key" :color="dataIcons[key].color" :outline="selectedModel!==key" :icon="dataIcons[key].icon">{{key}}</va-button>
                 <va-button @click="selectedModel='coordinates'" v-if="organism.coordinates.length" icon="travel_explore" :outline="selectedModel!=='coordinates'">Map</va-button>
+                <va-button-dropdown outline color="#752061">
+                    <template #label>
+                      <va-icon name="view_timeline"/> Genome Browser 
+                    </template>
+                    <ul>
+                        <li v-for="(ass,index) in assembliesWithTrack" :key="index">
+                            <va-button @click="toJBrowse(ass)" flat squared>{{ass.assembly_name}}</va-button>
+                        </li>
+                    </ul>
+                </va-button-dropdown>
             </div>
         </div>
         <va-divider/>
@@ -43,6 +54,12 @@
                     </va-card-content>
                 </va-card>
                 <va-card class="custom-card" :key="selectedModel" v-if="selectedModel === 'coordinates'">
+                </va-card>
+                <va-card class="custom-card" :key="selectedModel" v-if="selectedModel === 'jbrowse'">
+                    <Jbrowse2 
+                        :assembly="jbrowseSession.assemblyTrack"
+                        :tracks="jbrowseSession.annotationTracks"
+                    />
                 </va-card>
                 </Transition>
             </div>
@@ -145,14 +162,17 @@
 <script setup>
 import OrganismDetails from '../components/OrganismDetails.vue'
 import { computed, nextTick, onMounted, reactive, ref } from '@vue/runtime-core'
-import {dataIcons,GoaTStatus,INSDCStatus} from '../../config'
+import {dataIcons,GoaTStatus,INSDCStatus,jbrowse2} from '../../config'
 import DataPortalService from '../services/DataPortalService'
 import DataTable from '../components/data/DataTable.vue'
 import OrganismOverview from '../components/OrganismOverview.vue'
 import OrganismSideBar from '../components/OrganismSideBar.vue'
+import Jbrowse2 from '../components/Jbrowse2.vue'
 // import MapComponent from '../components/MapComponent.vue'
 
 const selectedModel = ref('overview')
+
+const assembliesWithTrack = ref([])
 
 const props = defineProps({
     taxid:String
@@ -167,6 +187,12 @@ var geoJson = null
 const organismData = reactive({
     dataKeys:[],
     loadedItems:[]
+})
+
+
+const jbrowseSession = reactive({
+    assemblyTrack: null,
+    annotationTracks:[]
 })
 
 function toggledMetadata(value){
@@ -186,11 +212,42 @@ onMounted(()=>{
         organismData.loadedItems = organism[organismData.dataKeys[0]]
         organismLoaded.value = true
         showTable.value = true
-        if (organism.coordinates.length){
-            return DataPortalService.getCoordinates(organism.coordinates)
-        }
+        organism.assemblies.filter(ass => ass.track)
+        .forEach(ass => assembliesWithTrack.value.push(ass))
+        // if (organism.coordinates.length){
+        //     return DataPortalService.getCoordinates(organism.coordinates)
+        // }
     })
 })
+
+function toJBrowse(assembly){
+    const assToLoad = {...jbrowse2.assemblyObject}
+    console.log(assToLoad)
+    assToLoad.name = assembly.assembly_name
+    assToLoad.sequence.trackId = assembly.accession
+    assToLoad.sequence.adapter.fastaLocation.uri = assembly.track.fasta_location
+    assToLoad.sequence.adapter.faiLocation.uri = assembly.track.fai_location
+    assToLoad.sequence.adapter.gziLocation.uri = assembly.track.gzi_location
+    jbrowseSession.assemblyTrack = {...assToLoad}
+    organism.annotations.filter(ann => ann.assembly_accession === assembly.accession)
+    .forEach(ann => {
+        const annToLoad = {...jbrowse2.annotationTrackObject}
+        annToLoad.name = ann.name
+        annToLoad.trackId = ann.name
+        annToLoad.assemblyNames = [assembly.assembly_name]
+        annToLoad.adapter.gffGzLocation.uri = ann.gff_gz_location
+        annToLoad.adapter.index.location.uri = ann.tab_index_location
+        const existingAnnotation = jbrowseSession.annotationTracks.filter(annotation => ann.name === annotation.name)
+        if(!existingAnnotation.length){
+            jbrowseSession.annotationTracks.push(annToLoad)
+        }
+    })
+    selectedModel.value = 'jbrowse'
+
+    
+}
+
+
 </script>
 <style scoped>
 .slide-up-enter-active,
