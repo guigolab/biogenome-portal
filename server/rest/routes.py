@@ -11,11 +11,14 @@ from .annotation_api import AnnotationApi
 from .biosample_api import BioSampleApi
 from .reads import ExperimentApi
 from .user_api import UserApi
+from .cronjob_api import CronJobApi
+
 def initialize_routes(api):
 
 	#generate token
 	api.add_resource(Login, '/api/login')
 	api.add_resource(Logout, '/api/logout')
+	api.add_resource(CronJobApi, '/api/cronjob')
 
 	api.add_resource(BulkLoadApi, '/api/bulk/<model>')
 	api.add_resource(AnnotationApi, '/api/annotations', '/api/annotations/<name>')

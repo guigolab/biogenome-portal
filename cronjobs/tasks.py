@@ -1,3 +1,4 @@
+from urllib import response
 import requests
 import os
 from datetime import datetime, timedelta
@@ -5,29 +6,63 @@ import time
 
 API_URL = "http://biogenome_nginx/api"
 
+username = os.getenv('DB_USER')
+password = os.getenv('DB_PASS')
 
 ##add db model for cronjob, to check job status before trigger the job again
 
-def import_records():
+#return cookies
+def login():
     session = requests.Session()
-    session.trust_env = False
+    login_data = {"name": username,"password":password }
+    response = session.post(f"{API_URL}/login", data=login_data)
+    if response.status_code != 200:
+        print('LOGIN ERROR')
+        return
+    return session.cookies.get_dict()
+
+def create_data(url,cookies,is_delete=False):
+    crsf = cookies['csrf_access_token']
+    headers = {"X-CSRF-TOKEN":crsf}
+    if is_delete:
+        resp = requests.delete(url,headers=headers,cookies=cookies)
+    else:
+        resp = requests.post(url,headers=headers,cookies=cookies)
+    if resp.status_code == 401:
+        cookies = login()
+        create_data(url, cookies)
+    print("RESPONSE IS:", resp.status_code)
+    return
+
+def import_records():
+    cronjob_exists = requests.get(f"{API_URL}/cronjob").json()
+    if cronjob_exists:
+        print('A CRONJOB IS RUNNING ALREADY')
+        return
+
+    ##login to create token
+    cookies = login()
+    if not cookies:
+        print('AUTH ERROR')
+        return
+    ##create cronjob object
+    create_data(f"{API_URL}/cronjob",cookies)
     PROJECTS = [p.strip() for p in os.getenv('PROJECTS').split(',') if p]
     ACCESSION = os.getenv('PROJECT_ACCESSION')
-    # if ACCESSION:
-    #     import_from_NCBI(ACCESSION,session)
-    # if PROJECTS:
-    #     import_from_EBI_biosamples(PROJECTS,session)
-
+    if ACCESSION:
+        import_from_NCBI(ACCESSION,cookies)
+    if PROJECTS:
+        import_from_EBI_biosamples(PROJECTS,cookies)
     ##check new reads
-    update_biosamples(session)
+    update_biosamples(cookies)
+    create_data(f"{API_URL}/cronjob",cookies, is_delete=True)
 
-    ##convert local samples to biosample via copo api
+    ##TODO convert local samples to biosample via copo api
 
-
-def import_from_NCBI(project_accession,session):
+def import_from_NCBI(project_accession,cookies):
 
     #get existing assemblies
-    assemblies = session.get(f"{API_URL}/bulk/assembly")
+    assemblies = requests.get(f"{API_URL}/bulk/assembly")
     if assemblies.status_code != 200:
         print('API ERROR, UNABLE TO RETRIEVE ASSEMBLIES')
         return
@@ -41,21 +76,8 @@ def import_from_NCBI(project_accession,session):
         accession = assembly['assembly_accession']
         if accession in existing_assemblies:
             continue
-        time.sleep(1)
-        response = session.post(f"{API_URL}/assemblies/{accession}")
-        print('response is', response.status_code)
+        create_data(f"{API_URL}/assemblies/{accession}",cookies)
     print(len(assemblies))
-    # get all assemblies
-    # iterate over ncbi_response
-    # post new assembly
-    # existing_assembly_accessions=Assembly.objects.scalar('accession')
-    # for ass in assemblies:
-    #     if ass['assembly_accession'] in existing_assembly_accessions:
-    #         continue
-    #     sample_accession=ass['biosample_accession'] if 'biosample_accession' in ass.keys() else None
-    #     assembly_obj = assembly.create_assembly_from_ncbi_data(ass,sample_accession)
-    #     data_helper.create_data_from_assembly(assembly_obj,ass)
-        ##trigger status update
     print('ASSEMBLIES FROM NCBI IMPORTED')
 
 
@@ -78,13 +100,13 @@ def get_assemblies(project_accession):
             assemblies.extend([ass['assembly'] for ass in result['assemblies']])
     return assemblies
 
-def import_from_EBI_biosamples(PROJECTS,session):
+def import_from_EBI_biosamples(PROJECTS,cookies):
     print('STARTING IMPORT BIOSAMPLES JOB')
     project_mapper = {p.split('_')[0]:p.split('_')[1] for p in PROJECTS}
     sample_dict = collect_samples(project_mapper.keys()) ##return dict with project names as keys
     ##get biosamples
     # sub_samples = list()
-    biosamples = session.get(f"{API_URL}/bulk/biosample")
+    biosamples = requests.get(f"{API_URL}/bulk/biosample")
     if biosamples.status_code != 200:
         print('API ERROR, UNABLE TO RETRIEVE BIOSAMPLES')
         return
@@ -94,24 +116,11 @@ def import_from_EBI_biosamples(PROJECTS,session):
     else:
         existing_biosamples = [sample['accession'] for sample in existing_biosamples.json()]
     for project in sample_dict.keys():
-        print(len(sample_dict[project]))
         for sample in sample_dict[project]:
             accession = sample['accession']
             if accession in existing_biosamples:
                 continue
-            time.sleep(1)
-            response = session.post(f"{API_URL}/biosamples/{accession}")
-            print('response is', response.status_code)
-    #             continue
-    #         biosample_obj = biosample.create_biosample_from_ebi_data(sample)
-    #         organism_obj = data_helper.create_data_from_biosample(biosample_obj)
-    #         # biosample = biosample_service.create_biosample_from_biosamples(sample, organism, sub_samples)
-    #         bioproject.create_bioproject_from_ENA(project_mapper[project])
-    #         organism_obj.modify(add_to_set__bioprojects=project_mapper[project])
-    #         biosample_obj.modify(add_to_set__bioprojects=project_mapper[project])
-    print('APPENDING SPECIMENS')
-    ##append specimens as a backup if biosamples api fails
-    # append_specimens(sub_samples)
+            create_data(f"{API_URL}/biosamples/{accession}",cookies)
     print('DATA FROM ENA/BIOSAMPLES IMPORTED')
 
 def collect_samples(PROJECTS):
@@ -135,19 +144,17 @@ def get_biosamples_page(url, samples):
         get_biosamples_page(data['_links']['next']['href'],samples)
     return samples
 
-def update_biosamples(session):
-    biosamples = session.get(f"{API_URL}/bulk/biosample")
+def update_biosamples(cookies):
+    biosamples = requests.get(f"{API_URL}/bulk/biosample")
     for biosample in biosamples.json():
         experiments = get_reads(biosample['accession'])
         print(len(experiments))
         for experiment in experiments:
             accession = experiment['experiment_accession']
             if accession not in biosample['experiments']:
-                response = session.post(f"{API_URL}/experiments/{accession}")
-
+                create_data(f"{API_URL}/experiments/{accession}",cookies)
 
 def get_reads(accession):
-    time.sleep(1)
     experiments_data = requests.get(f'https://www.ebi.ac.uk/ena/portal/'
                                         f'api/filereport?result=read_run'
                                         f'&accession={accession}'

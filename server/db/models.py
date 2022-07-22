@@ -16,10 +16,6 @@ class TargetListStatus(Enum):
     FAMILY_REPRESENTATIVE = 'family_representative' ## The species is a family reference species for the organisation or project. Will also receive a long_list tag on GoaT.
     OTHER_PRIORITY = 'other_priority' ## This would include for example species of primary conservation interest, early phase and pilot subproject targets.
 
-class CronJobStatus(Enum):
-    IN_PROGRESS = 'In Progress'
-    DONE = 'Done'
-
 class GoaTStatus(Enum):
     SAMPLE_COLLECTED = 'Sample Collected'
     SAMPLE_ACQUIRED = 'Sample Acquired'
@@ -36,9 +32,12 @@ class INSDCStatus(Enum):
     ANN_SUBMITTED = 'Annotations Created'
 
 class Roles(Enum):
-    SAMPLE_COLLECTOR = 'SampleCollector' #can only submit samples
-    SAMPLE_MANAGER = 'SampleManager' # submit and validate samples
-    DATA_ADMIN = 'Admin' # all actions less users CRUD
+    DATA_MANAGER = 'DataManager' # create/edit data
+    DATA_ADMIN = 'Admin' # all actions
+
+class CronJobStatus(Enum):
+    PENDING = 'PENDING'
+    DONE = 'DONE'
 
 class TaxonNode(db.Document):
     children = db.ListField(db.StringField()) #stores taxids
@@ -224,6 +223,7 @@ class Organism(db.Document):
     assemblies = db.ListField(db.StringField())
     experiments = db.ListField(db.StringField())
     publications = db.ListField(db.EmbeddedDocumentField(Publication))
+    metadata = db.DictField()
     tolid_prefix = db.StringField()
     links = db.ListField(db.URLField())
     common_names= db.ListField(db.EmbeddedDocumentField(CommonName))
@@ -245,14 +245,15 @@ class Organism(db.Document):
         'indexes': [
             'scientific_name',
             'insdc_common_name',
+            'tolid_prefix',
             'taxid'
         ]
     }
+
+class CronJob(db.Document):
+    status = db.EnumField(CronJobStatus, required=True)
 
 class BioGenomeUser(db.Document):
     name=db.StringField(unique=True,required=True)
     password=db.StringField(required=True)
     role=db.EnumField(Roles, required=True)
-
-class CronJob(db.Document):
-    status=db.EnumField(CronJobStatus, required=True)

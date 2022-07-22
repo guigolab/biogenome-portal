@@ -3,8 +3,12 @@ from flask_cors import CORS
 from config import BaseConfig
 from db import initialize_db
 from rest import initialize_api
-from cronjobs.import_records import handle_tasks
 from flask_jwt_extended import JWTManager
+from db.models import BioGenomeUser,Roles
+from services import bioproject
+from tendo.singleton import SingleInstance
+
+import os
 
 
 app = Flask(__name__)
@@ -22,10 +26,19 @@ initialize_api(app)
 
 jwt = JWTManager(app)
 
-## ADD JOB TO GET BIOSAMPLE ACCESSION BY LOCAL_ID (TUBE_OR_WELL_ID) FROM COPO
-##TODO: VERY IMPORTANT!! FIX EXECUTION OF JOB BY EACH WORKER
-# handle_tasks()
-
+username = os.getenv('DB_USER')
+password = os.getenv('DB_PASS')
+bioproject_accession = os.getenv('PROJECT_ACCESSION')
+##create root user if does not exist
+try:
+    FIRST_START = SingleInstance()
+    user = BioGenomeUser.objects(name = username).first()
+    if not user:
+        BioGenomeUser(name = username, password = password, role= Roles.DATA_ADMIN).save()
+    if bioproject_accession:
+        bioproject.create_bioproject_from_ENA(bioproject_accession)
+except:
+    pass
 
 # # if __name__ == '__main__':
 #     app.run(debug=True,host='0.0.0.0')

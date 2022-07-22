@@ -4,7 +4,7 @@ from flask_jwt_extended import create_access_token, jwt_required, set_access_coo
 from datetime import timedelta
 import os
 import json
-from db.models import Chromosome, GeoCoordinates,Annotation, TaxonNode, BioSample,LocalSample, Organism, Assembly, Experiment,BioProject,BioGenomeUser
+from db.models import Chromosome, CronJob,GeoCoordinates,Annotation, TaxonNode, BioSample,LocalSample, Organism, Assembly, Experiment,BioProject,BioGenomeUser
 from flask import current_app as app
 
 class Login(Resource):
@@ -17,25 +17,22 @@ class Login(Resource):
             password = request.form["password"]
         user_obj = BioGenomeUser.objects(name=name).first()
         if user_obj and user_obj.password == password:
-            role = user_obj.role
+            role = user_obj.role.value
             name = user_obj.name
-        elif name == os.getenv('DB_USER') and password == os.getenv('DB_PASS'):
-            role = 'SuperAdmin' #The dev
-            name = 'The Best'
         else:
             role = None
         if role:
-            access_token = create_access_token(identity=name,expires_delta=timedelta(minutes=30))
-            response = Response(json.dumps(dict(msg=f"welcome {name}",role=role)), mimetype="application/json", status=201)
+            access_token = create_access_token(identity=name,expires_delta=timedelta(minutes=2))
+            response = Response(json.dumps(dict(msg=f"welcome {name}",role=role)), mimetype="application/json", status=200)
             set_access_cookies(response,access_token)
             return response
         return Response(json.dumps({"msg":"Bad User or Password"}), mimetype="application/json", status=401)
     
-    @jwt_required()
-    def get(self):
-        app.logger.info('HELLOO')
+    # @jwt_required()
+    # def get(self):
+    #     app.logger.info('HELLOO')
 
-  
+    @jwt_required()
     def delete(self):
         Annotation.drop_collection()
         TaxonNode.drop_collection()
@@ -48,6 +45,7 @@ class Login(Resource):
         Assembly.drop_collection()
         Chromosome.drop_collection()
         Experiment.drop_collection()
+        CronJob.drop_collection()
         return 200
 
 class Logout(Resource):

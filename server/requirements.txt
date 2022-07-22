@@ -16,6 +16,7 @@ flask-mongoengine==1.0.0
 flask-restful==0.3.8
 flask==1.1.2
 lxml==4.8.0
+tendo==0.2.15
 mongoengine==0.24.0; python_version >= '3.6'
 openpyxl==3.0.9
 pyjwt==2.3.0; python_version >= '3.6'
