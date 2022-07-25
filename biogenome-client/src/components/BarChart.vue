@@ -1,5 +1,4 @@
 <template>
-{{orgStore.stats}}
     <va-card class="custom-card">
         <va-card-title>
             stats

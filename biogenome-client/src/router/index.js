@@ -15,7 +15,7 @@ const samples = () => import('../components/admin/LocalSamples.vue')
 const assembliesForm = () => import('../components/admin/form/AssemblyForm.vue')
 const annotationForm = () => import('../components/admin/form/AnnotationForm.vue')
 //form pages/components
-
+const sunburst = () => import('../components/SunBurst.vue')
 const excel = () => import('../components/admin/form/ExcelForm.vue')
 
 // const jBrowseComponent = () => import('../views/JBrowse.vue')
@@ -30,6 +30,11 @@ const routes = [
     path: "/",
     name: "home",
     component: Home,
+  },
+  {
+    path: "/sunburst",
+    name: "sunburst",
+    component: sunburst,
   },
   {
     path: "/admin",

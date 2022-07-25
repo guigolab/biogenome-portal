@@ -1,7 +1,8 @@
 <template>
 <div class="row">
     <div class="flex lg4 md4 sm12 xs12">
-        <TreeSideBar/>
+        <SunBurst/>
+        <!-- <TreeSideBar/> -->
     </div>
     <div class="flex lg8 md8 sm12 xs12">
         <va-card class="custom-card">
@@ -98,6 +99,7 @@ import {organisms} from '../stores/organisms'
 import {taxons} from '../stores/taxons'
 import {onMounted,watch,ref, nextTick, reactive} from 'vue'
 import DataPortalService from '../services/DataPortalService'
+import SunBurst from '../components/SunBurst.vue'
 
 const orgStore = organisms()
 const taxStore = taxons()
