@@ -28,12 +28,14 @@ import TreeBrowser from './TreeBrowser.vue'
 import BioProjectsTree from '../components/BioProjectsTree.vue'
 import DataPortalService from '../services/DataPortalService'
 import {taxons} from '../stores/taxons'
-import {ROOTNODE,PROJECT_ACCESSION} from '../../config'
 import {bioprojects} from '../stores/bioprojects'
 import {organisms} from '../stores/organisms'
+
 const taxStore = taxons()
 const bioprjStore = bioprojects()
 const orgStore = organisms()
+const ROOTNODE = import.meta.env.VITE_ROOT_NODE
+const PROJECT_ACCESSION = import.meta.env.VITE_PROJECT_ACCESSION
 onMounted(()=>{
     DataPortalService.getTaxonChildren(ROOTNODE)
     .then(resp => {

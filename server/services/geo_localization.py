@@ -35,35 +35,59 @@ def geo_localization_object(coordinates):
 
 def create_coordinates(sample,organism):
     ##parse coordinates
-    if 'lat_lon' in sample.metadata.keys():
-        values = sample.metadata['lat_lon'].split(' ')
+    coords = coordinate_parser(sample.metadata)
+
+    if not coords:
+        return
+    sample.latitude = coords[0]
+    sample.longitude = coords[1]
+    sample.save()
+    geo_loc = sample.latitude+':'+sample.longitude
+    geo_obj = GeoCoordinates.objects(geo_location=geo_loc).first()
+    if not geo_obj:
+        geo_obj = GeoCoordinates(geo_location=geo_loc).save()
+    geo_obj.modify(add_to_set__organisms=organism.taxid)
+    organism.modify(add_to_set__coordinates=geo_obj.geo_location)
+    sample_dict = json.loads(sample.to_json())
+    if 'bioprojects' in sample_dict.keys():
+        for project in sample.bioprojects:
+            geo_obj.modify(add_to_set__bioprojects=project)
+    if not geo_obj.geometry:
+        geometry = Geometry(coordinates=[sample.longitude,sample.latitude])
+        geo_obj.geometry = geometry
+    geo_obj.save()
+
+def coordinate_parser(sample_metadata):
+    lowered_keys_dict = dict()
+    for key in sample_metadata.keys():
+        low_key = key.lower()
+        lowered_keys_dict[low_key] = sample_metadata[key]
+
+    if 'lat_lon' in sample_metadata.keys():
+        values = sample_metadata['lat_lon'].split(' ')
         if len(values) == 4:
             lat,lat_value,long,long_value = values
-            sample.latitude = '-'+lat if lat_value == 'S' else lat
-            sample.longitude = '-'+long if long_value == 'W' else long 
-    elif 'geographic location (latitude)' in sample.metadata.keys() and 'geographic location (longitude)' in sample.metadata.keys():
-        sample.latitude = str(sample.metadata['geographic location (latitude)'])
-        sample.longitude = str(sample.metadata['geographic location (longitude)'])
+            latitude = '-'+lat if lat_value == 'S' else lat
+            longitude = '-'+long if long_value == 'W' else long
+        else:
+            return
+    elif 'lat lon' in sample_metadata.keys():
+        values = sample_metadata['lat lon'].split(' ')
+        if len(values) == 4:
+            lat,lat_value,long,long_value = values
+            latitude = '-'+lat if lat_value == 'S' else lat
+            longitude = '-'+long if long_value == 'W' else long
+        else:
+            return
+    elif 'geographic location (latitude)' in sample_metadata.keys() and 'geographic location (longitude)' in sample_metadata.keys():
+        latitude = str(sample_metadata['geographic location (latitude)'])
+        longitude = str(sample_metadata['geographic location (longitude)'])
+    elif 'latitude' in lowered_keys_dict and 'longitude' in lowered_keys_dict:
+        latitude = str(lowered_keys_dict['latitude'])
+        longitude  = str(lowered_keys_dict['longitude'])
     else:
-        for key in sample.metadata.keys():
-            if 'latitude' in key.lower():
-                sample.latitude = str(sample.metadata[key])
-            elif 'longitude' in key.lower():
-                sample.longitude  = str(sample.metadata[key])
-    sample.save()
-    if not sample.latitude or not sample.longitude:
         return
-    if any(c.isdigit() for c in str(sample.latitude)) and any(c.isdigit() for c in str(sample.longitude)):
-        geo_loc = sample.latitude+':'+sample.longitude
-        geo_obj = GeoCoordinates.objects(geo_location=geo_loc).first()
-        if not geo_obj:
-            geo_obj = GeoCoordinates(geo_location=geo_loc).save()
-        geo_obj.modify(add_to_set__organisms=organism.taxid)
-        organism.modify(add_to_set__coordinates=geo_obj.geo_location)
-        if 'bioprojects' in sample._fields.keys():
-            for project in sample.bioprojects:
-                geo_obj.modify(add_to_set__bioprojects=project)
-        if not geo_obj.geometry:
-            geometry = Geometry(coordinates=[sample.longitude,sample.latitude])
-            geo_obj.geometry = geometry
-        geo_obj.save()
+    if any(c.isdigit() for c in str(latitude)) and any(c.isdigit() for c in str(longitude)):
+        return [latitude,longitude]
+    else:
+        return

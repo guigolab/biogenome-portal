@@ -20,7 +20,6 @@ def create_annotation(data):
     annotation_obj.taxid = assembly_obj.taxid
     annotation_obj.save()
     data_helper.create_data_from_annotation(annotation_obj)
-    ##create data here
     return annotation_obj
 
 def update_annotation(name,data):

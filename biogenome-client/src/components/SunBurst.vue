@@ -1,7 +1,12 @@
 <template>
     <va-inner-loading :loading="isLoading">
-        <svg ref="sunburst">
-        </svg>
+    <div style="height:100vh" class="row justify--center">
+        <div class="flex lg6 md6 sm12 xs12">
+            <svg ref="sunburst">
+            </svg>
+        </div>
+    </div>
+
     </va-inner-loading>
 </template>
 <script setup>
@@ -46,7 +51,7 @@ function createSunBurst(data){
     root.each(d=>d.current = d)
     const svg = d3.select(sunburst.value)
       .attr("viewBox", [0, 0, width, width])
-      .style("font", "10px sans-serif");
+      .style("font", "7px sans-serif");
 
     const g = svg.append("g")
       .attr("transform", `translate(${width / 2},${width / 2})`);

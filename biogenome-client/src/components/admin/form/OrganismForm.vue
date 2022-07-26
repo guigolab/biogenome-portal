@@ -126,11 +126,12 @@
 import {nextTick, onMounted, reactive,ref} from 'vue'
 import EnaService from '../../../services/clients/ENAClientService'
 import SubmissionService from '../../../services/SubmissionService'
-import {PROJECT_ACCESSION,GoaTStatus,TargetListStatus,PublicationSource} from '../../../../config'
+import {GoaTStatus,TargetListStatus,PublicationSource} from '../../../../config'
 import ListInputComponent from './ListInputComponent.vue'
 import FormComponent from './FormComponent.vue'
 import DataPortalService from '../../../services/DataPortalService'
 
+const PROJECT_ACCESSION = import.meta.env.VITE_PROJECT_ACCESSION
 const props = defineProps({
     taxid:String
 })

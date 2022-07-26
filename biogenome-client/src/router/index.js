@@ -1,7 +1,8 @@
 import { createWebHistory, createRouter } from 'vue-router';
 import Home from '../views/Home.vue';
-import {ROOTNODE,PROJECT_ACCESSION} from '../../config'
 
+const ROOTNODE = import.meta.env.VITE_ROOT_NODE
+const PROJECT_ACCESSION = import.meta.env.VITE_PROJECT_ACCESSION
 const treeOfLife = () => import('../views/TreeOfLife.vue')
 const map = () => import('../views/MapPage.vue')
 const organism = () => import('../views/Organism.vue')

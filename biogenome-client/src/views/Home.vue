@@ -1,8 +1,8 @@
 <template>
 <div class="row">
     <div class="flex lg4 md4 sm12 xs12">
-        <SunBurst/>
-        <!-- <TreeSideBar/> -->
+        <!-- <SunBurst/> -->
+        <TreeSideBar/>
     </div>
     <div class="flex lg8 md8 sm12 xs12">
         <va-card class="custom-card">
