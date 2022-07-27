@@ -202,10 +202,10 @@ def update_modified_organism(sender, document):
         document.goat_status=GoaTStatus.IN_ASSEMBLY
     elif document.biosamples:
         document.insdc_status=INSDCStatus.SAMPLE
-        document.goat_status = GoaTStatus.SAMPLE_COLLECTED
+        document.goat_status = GoaTStatus.SAMPLE_ACQUIRED
     elif document.local_samples:
         document.insdc_status=INSDCStatus.LOCAL_SAMPLE
-        document.goat_status = GoaTStatus.SAMPLE_ACQUIRED
+        document.goat_status = GoaTStatus.SAMPLE_COLLECTED
     if document.publications:
         document.goat_status = GoaTStatus.PUBLICATION_AVAILABLE
 

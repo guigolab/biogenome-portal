@@ -1,5 +1,5 @@
 <template>
-    <div class="layout">
+    <div style="height:100vh" class="layout">
         <div class="row">
             <va-alert :color="alert.color" v-model="showAlert" closeable>
                 {{alert.message}}
@@ -82,16 +82,36 @@
                 </template>
                 </va-data-table>
                 <va-modal v-model="showItemDetails">
-                <va-divider>Attributes</va-divider>
+                    <va-divider>Attributes</va-divider>
                     <ul>
                         <li style="padding:10px" v-for="obj in objectToShow.fields" :key="obj.key">
-                            <strong>{{obj.key+ ': '}}</strong>{{obj.value}}
+                            <div v-if="Array.isArray(obj.value)">
+                                <strong>{{obj.key+ ': '}}</strong>
+                                <ul >
+                                    <li v-for="(el,index) in obj.value" :key="index">
+                                        {{el}}
+                                    </li>
+                                </ul>
+                            </div>
+                            <div v-else>
+                                <strong>{{obj.key+ ': '}}</strong>{{obj.value}}
+                            </div>
                         </li>
                     </ul>
-                <va-divider v-if="objectToShow.metadata && objectToShow.metadata.length">Metadata</va-divider>
+                    <va-divider v-if="objectToShow.metadata && objectToShow.metadata.length">Metadata</va-divider>
                     <ul v-if="objectToShow.metadata && objectToShow.metadata.length">
                         <li style="padding:10px" v-for="obj in objectToShow.metadata" :key="obj.key">
-                            <strong>{{obj.key+ ': '}}</strong>{{obj.value}}
+                            <div v-if="Array.isArray(obj.value)">
+                                <strong>{{obj.key+ ': '}}</strong>
+                                <ul>
+                                    <li v-for="(el,index) in obj.value" :key="index">
+                                        {{el}}
+                                    </li>
+                                </ul>
+                            </div>
+                            <div v-else>
+                                <strong>{{obj.key+ ': '}}</strong>{{obj.value}}
+                            </div>
                         </li>
                     </ul>
                 </va-modal>

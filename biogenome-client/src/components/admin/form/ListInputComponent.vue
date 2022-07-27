@@ -61,7 +61,6 @@ function saveObject(){
     props.modelList.push({...reactiveObj})
     Object.assign(reactiveObj,props.listObject)
 }
-
 function editObject(index){
     Object.assign(reactiveObj, props.modelList[index])
     props.modelList.splice(index,1)

@@ -59,10 +59,10 @@ def create_data_from_biosample(biosample_obj):
         organism_obj.modify(add_to_set__biosamples=biosample_obj.accession)
         children_samples = biosample.get_biosamples_derived_from(biosample_obj.accession)
         if children_samples:
+            for sample in children_samples:
+                biosample_obj.modify(add_to_set__sub_samples=sample.accession)
             biosamples_to_update.extend(children_samples)
         response = ena_client.parse_assemblies(biosample_obj.accession)
-        app.logger.info('ASSEMBLY IS')
-        app.logger.info(response)
         if response:
             for ass in response:
                 assembly_accession = ass['accession']+'.'+ass['version']

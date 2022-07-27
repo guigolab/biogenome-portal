@@ -1,126 +1,122 @@
 <template>
-    <va-card>
-        <va-card-title>
-            Organism Form
-        </va-card-title>
-        <va-divider/>
-        <va-card-content>
-            <div class="row justify-space-between">
-                <div v-if="!organismToUpdate" class="flex">
-                    <va-card class="custom-card">
-                        <va-card-title>
-                            TAXONOMIC IDENTIFIER
-                        </va-card-title>
-                        <va-card-content>
-                            <va-inner-loading :loading="taxidLoading">
-                                <div class="row justify--space-between">
-                                    <div class="flex ">
-                                        <va-input label="NCBI taxonomic identifier (*mandatory)" v-model="organismFormData.taxid" :disabled="organismFormData.scientific_name">
-                                            <template #prepend>
-                                                <va-chip v-if="organismLoaded" disabled flat>
-                                                    {{organismFormData.scientific_name}}
-                                                </va-chip>
-                                            </template>
-                                        </va-input>
-                                    </div>
-                                    <div class="flex">
-                                        <va-chip @click="getTaxon()" outline>
-                                            Validate Taxon Id
-                                        </va-chip>
-                                        <va-chip @click="resetTaxon()" outline>
-                                            Reset taxid
-                                        </va-chip>
-                                    </div>
-                                </div>
-                            </va-inner-loading>
-                        </va-card-content>
-                    </va-card>
+<div class="layout">
+    <div class="row">
+        <div class="flex">
+            <h1 class="display-3">Organism Form</h1>
+        </div>
+    </div>
+    <va-divider/>
+    <div class="row">
+        <div class="flex lg12 md12 sm12 xs12">
+            <va-alert class="custom-card" closeable v-model="showAlert" :title="alert.title" border="left" :border-color="alert.color">
+                {{alert.message}}
+            </va-alert>
+        </div>
+    </div>
+    <div class="row">
+        <div class="flex lg12 md12 sm12 xs12">
+            <va-card v-if="!organismToUpdate" class="custom-card">
+                <va-card-title>
+                    NCBI TAXONOMIC IDENTIFIER (*mandatory)
+                </va-card-title>
+                <va-card-content>
+                    <va-inner-loading :loading="taxidLoading">
+                        <div class="row justify--space-between">
+                            <div class="flex ">
+                                <va-input label="NCBI Taxid" v-model="organismFormData.taxid" :disabled="organismFormData.scientific_name"/>
+                            </div>
+                            <div class="flex">
+                                <va-chip :disabled="validTaxid" @click="getTaxon()" outline>
+                                    Validate Taxon Id
+                                </va-chip>
+                                <va-chip color="danger" @click="resetTaxon()" outline>
+                                    Reset taxid
+                                </va-chip>
+                            </div>
+                        </div>
+                    </va-inner-loading>
+                </va-card-content>
+            </va-card>
+            <div v-if="validTaxid">
+                <div class="row">
+                    <div class="flex">
+                        <h1 class="display-3">{{organismFormData.scientific_name}}</h1>
+                    </div>
                 </div>
-                <div class="flex lg6 md6 sm12 xs12">
-                    <FormComponent
-                        :title="'Taxonomic informations'"
-                        :listObject="organismFormData"
-                        :formOptions="taxonomicInformations"
-                    />
-                </div>
-                <div class="flex">
-                    <va-card class="custom-card">
-                        <va-card-title>
-                            Avatar image
-                        </va-card-title>
-                        <va-card-content>
-                            <va-input label="Avatar" v-model="organismFormData.image">
-                                <template #append>
-                                    <va-chip @click="previewAvatar=true">Preview</va-chip>
-                                    <va-chip @click="organismFormData.image=null">Clear</va-chip>
-                                </template>
-                            </va-input>
-                            <va-avatar size="large" v-show="previewAvatar" :src="organismFormData.image">
-                            </va-avatar>
-                        </va-card-content>
-                    </va-card>
-                </div>
-                <div class="flex lg6 md6 sm12 xs12">
-                    <va-card class="custom-card">
-                        <va-card-title>
-                            gallery images
-                        </va-card-title>
-                        <va-card-content>
-                            <va-input
-                                v-for="(opt,index) in galleryImagesOptions"
-                                :key="index"
-                                :label="opt.label+' ('+index+')' "
-                                v-model="opt.value"
-                            >
-                                <template #append>
-                                    <va-chip outline @click="organismFormData.image_urls.push(opt.value)">Confirm</va-chip>
-                                    <va-chip outline @click="removeImage(index)">Remove</va-chip>
-                                </template>
-                            </va-input>
-                        <va-button @click="galleryImagesOptions.push({label:'Image url', value:''})">Add new image</va-button>   
-                        </va-card-content>
-                        <va-divider/>
-                        <va-card-title>
-                            Gallery Preview
-                        </va-card-title>
-                        <va-card-content>
-                            <va-carousel :items="organismFormData.image_urls" v-model="imageIndex"/>
-                        </va-card-content>
-                    </va-card>
-                </div>
-                <div class="flex lg6 md6 sm12 xs12">
-                    <ListInputComponent 
-                        :title="'Vernacular Names'"
-                        :keyLabel="'value'"
-                        :listObject="initVernacularName"
-                        :modelList="organismFormData.common_names"
-                        :formOptions="vernacularNameFormOptions"
-                    />
-                </div>
-                <div class="flex lg6 md6 sm12 xs12">
-                    <FormComponent
-                        v-if="PROJECT_ACCESSION"
-                        :title="'goat status'"
-                        :listObject="organismFormData"
-                        :formOptions="goatInformations"
-                    />
-                </div>
+                <va-divider/>
+                <va-card class="custom-card">
+                    <va-card-title>
+                        Avatar image
+                    </va-card-title>
+                    <va-card-content>
+                        <va-input label="Avatar" v-model="organismFormData.image">
+                            <template #append>
+                                <va-chip @click="previewAvatar=true">Preview</va-chip>
+                                <va-chip @click="organismFormData.image=null">Clear</va-chip>
+                            </template>
+                        </va-input>
+                        <va-avatar size="large" v-show="previewAvatar" :src="organismFormData.image">
+                        </va-avatar>
+                    </va-card-content>
+                </va-card>
+                <va-card class="custom-card">
+                    <va-card-title>
+                        gallery images
+                    </va-card-title>
+                    <va-card-content>
+                        <va-input
+                            v-for="(opt,index) in galleryImagesOptions"
+                            :key="index"
+                            :label="opt.label+' ('+index+')' "
+                            v-model="opt.value"
+                        >
+                            <template #append>
+                                <va-chip outline @click="organismFormData.image_urls.push(opt.value)">Confirm</va-chip>
+                                <va-chip outline @click="removeImage(index)">Remove</va-chip>
+                            </template>
+                        </va-input>
+                    <va-button @click="galleryImagesOptions.push({label:'Image url', value:''})">Add new image</va-button>   
+                    </va-card-content>
+                    <va-divider/>
+                    <va-card-title>
+                        Gallery Preview
+                    </va-card-title>
+                    <va-card-content>
+                        <va-carousel :items="organismFormData.image_urls" v-model="imageIndex"/>
+                    </va-card-content>
+                </va-card>
+                <MetadataForm :metadata="organismFormData.metadata"/>
+                <ListInputComponent 
+                    :title="'Vernacular Names'"
+                    :keyLabel="'value'"
+                    :listObject="initVernacularName"
+                    :modelList="organismFormData.common_names"
+                    :formOptions="vernacularNameFormOptions"
+                />
+                <FormComponent
+                    v-if="PROJECT_ACCESSION"
+                    :title="'goat status'"
+                    :listObject="organismFormData"
+                    :formOptions="goatInformations"
+                />
+                <ListInputComponent
+                    :title="'Related Publications'"
+                    :keyLabel="'id'"
+                    :listObject="initPublication"
+                    :modelList="organismFormData.publications"
+                    :formOptions="pubIdFormOptions"
+                />
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="flex">
+            <va-button :disabled="!validTaxid" @click="organismToUpdate ? updateOrganism() : createOrganism()">Submit</va-button>
+        </div>
+    </div>
+</div>
+     
 
-                <div class="flex lg6 md6 sm12 xs12">
-                    <ListInputComponent
-                        :title="'Related Publications'"
-                        :keyLabel="'id'"
-                        :listObject="initPublication"
-                        :modelList="organismFormData.publications"
-                        :formOptions="pubIdFormOptions"
-                    />
-                </div>
-            </div>        
-        </va-card-content>
-        <va-card-actions>
-            <va-button @click="organismToUpdate?updateOrganism():createOrganism()">Submit</va-button>
-        </va-card-actions>
-    </va-card>
 </template>
 <script setup>
 import {nextTick, onMounted, reactive,ref} from 'vue'
@@ -130,6 +126,7 @@ import {GoaTStatus,TargetListStatus,PublicationSource} from '../../../../config'
 import ListInputComponent from './ListInputComponent.vue'
 import FormComponent from './FormComponent.vue'
 import DataPortalService from '../../../services/DataPortalService'
+import MetadataForm from './MetadataForm.vue'
 
 const PROJECT_ACCESSION = import.meta.env.VITE_PROJECT_ACCESSION
 const props = defineProps({
@@ -137,16 +134,16 @@ const props = defineProps({
 })
 const organismToUpdate = ref(false)
 
+const validTaxid = ref(false)
+const showAlert = ref(false)
+
 const initOrganism = {
     scientific_name:null,
     taxid:null,
     common_names:[],
     image:null,
     image_urls:[],
-    description:null,
-    interest:null,
-    distribution:null,
-    funding:null,
+    metadata:{},
     links:[],
     publications:[],
     goat_status:null,
@@ -181,12 +178,6 @@ const initAlert = {
 
 const alert = reactive({...initAlert})
 
-const taxonomicInformations = [
-    {type:'textarea',label:'Description', key:'description'},
-    {type:'textarea',label:'Interest', key:'interest'},
-    {type:'textarea',label:'Funding', key:'funding'},
-    {type:'textarea',label:'Distribution', key:'distribution'},
-]
 const goatInformations = [
     {type:'select',label:'GoaT status', key:'goat_status', options:GoaTStatus.map(s => s.label)},
     {type:'select',label:'Long List status', key:'target_list_status',options:TargetListStatus.map(s => s.label)},
@@ -231,6 +222,7 @@ const organismFormData = reactive({...initOrganism})
 
 onMounted(()=>{
     if(props.taxid){
+        validTaxid.value=true
         DataPortalService.getOrganism(props.taxid)
         .then(resp => {
             const obj = {}
@@ -248,7 +240,6 @@ onMounted(()=>{
             nextTick(()=>{
                 Object.assign(organismFormData,obj)
                 organismToUpdate.value = true
-
             })
         })
     }
@@ -256,27 +247,47 @@ onMounted(()=>{
 
 function getTaxon(){
     taxidLoading.value = true
-    EnaService.getTaxon(organismFormData.taxid)
+    //first check if taxon is not already present
+    DataPortalService.getOrganism(organismFormData.taxid)
     .then(resp => {
-        nextTick(()=>{
-            if (resp.data && resp.data.length){
-                organismFormData.taxid = resp.data[0].tax_id
-                organismFormData.scientific_name = resp.data[0].description
-                organismLoaded.value = true
-                taxidLoading.value = false
-                return
-            }
-            taxidLoading.value = false
-            return
-        })
-
+        if(resp && resp.data){
+            alert.title="Error"
+            alert.message=`The organism with taxid: ${organismFormData.taxid} (${resp.data.scientific_name}) is already present`
+            alert.color="danger"
+            showAlert.value=true
+            taxidLoading.value=false
+        }
     })
     .catch(e => {
-        console.log(e)
+        if(e && e.response && e.response.status && e.response.status === 404){
+            return EnaService.getTaxon(organismFormData.taxid)
+        }
+        return null
+    })
+    .then(resp => {
+        if(resp){
+            nextTick(()=>{
+                if (resp.data && resp.data.length){
+                    organismFormData.taxid = resp.data[0].tax_id
+                    organismFormData.scientific_name = resp.data[0].description
+                    organismLoaded.value = true
+                    taxidLoading.value = false
+                    validTaxid.value = true
+                    return
+                }
+                taxidLoading.value = false
+                return
+            })
+        }
+    })
+    .catch(e => {
+        alert.title="Error"
+        alert.message=`The organism with taxid: ${organismFormData.taxid} does not exists in INSDC (ENA)`
+        alert.color="danger"
+        showAlert.value=true
         taxidLoading.value = false
     })
 }
-
 
 function removeImage(index){
     if(index>0){
@@ -291,20 +302,39 @@ function removeImage(index){
 function createOrganism(){
     SubmissionService.createOrganism(organismFormData)
     .then(resp => {
-        console.log(resp)
+        alert.title="Success"
+        alert.message=`The organism with taxid: ${organismFormData.taxid} has been correctly saved`
+        alert.color="success"
+        showAlert.value=true
+    })
+    .catch(e => {
+        alert.title="Error"
+        alert.message="Something happened"
+        alert.color="danger"
+        showAlert.value=true
     })
 }
 
 function updateOrganism(){
     SubmissionService.updateOrganism(props.taxid,organismFormData)
     .then(resp => {
-        console.log(resp)
+        alert.title="Success"
+        alert.message=`The organism with taxid: ${organismFormData.taxid} has been correctly updated`
+        alert.color="success"
+        showAlert.value=true
+    })
+    .catch(e => {
+        alert.title="Error"
+        alert.message="Something happened"
+        alert.color="danger"
+        showAlert.value=true
     })
 }
 
 function resetTaxon(){
     organismFormData.taxid=null
     organismFormData.scientific_name = null
-    organismLoaded = false
+    organismLoaded.value = false
+    validTaxid.value=false
 }
 </script>

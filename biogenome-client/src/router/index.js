@@ -54,28 +54,6 @@ const routes = [
     ],
     component: admin,
   },
-  // {
-  //   path: "/excel",
-  //   name: "excel",
-  //   component: excel
-  // },
-  // {
-  //   path: "/organism-form/:taxid?",
-  //   props: true,
-  //   name: "organism-form",
-  //   component: organismForm
-  // },
-  // {
-  //   path: "/assemblies",
-  //   props: true,
-  //   name: "assemblies",
-  //   component: assembliesForm
-  // },
-  // {
-  //   path: "/organisms",
-  //   name: "organisms",
-  //   component: Home,
-  // },
   {
     path: '/tree-of-life',
     redirect: {name: 'tree-of-life', params: {node: ROOTNODE}}
@@ -107,38 +85,7 @@ const routes = [
         path:'taxid'
       }
     ]
-  },
-  // {
-  //   path: "/human",
-  //   name: "human",
-  //   component: humanPage,
-  // },
-  // {
-  //   path: "/human-new",
-  //   name: "human-new",
-  //   component: humanNew,
-  // },
-  // {
-  //   path: "/fly-new",
-  //   name: "fly-new",
-  //   component: flyNew,
-  // },
-  // {
-  //   path: "/fly",
-  //   name: "fly",
-  //   component: flyPage,
-  // },
-  // {
-  //   path: "/experiments/:id",
-  //   name: "experiments",
-  //   component: expDetails,
-  //   props:true
-  // },
-  // {
-  //   path: "/jbrowse2",
-  //   name: "jbrowse2",
-  //   component: jBrowseComponent,
-  // },
+  }
 ];
 
 const router = createRouter({

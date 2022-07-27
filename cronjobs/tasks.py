@@ -1,4 +1,3 @@
-from urllib import response
 import requests
 import os
 from datetime import datetime, timedelta
@@ -52,6 +51,7 @@ def import_records():
     if ACCESSION:
         import_from_NCBI(ACCESSION,cookies)
     if PROJECTS:
+
         import_from_EBI_biosamples(PROJECTS,cookies)
     ##check new reads
     update_biosamples(cookies)
@@ -60,25 +60,28 @@ def import_records():
     ##TODO convert local samples to biosample via copo api
 
 def import_from_NCBI(project_accession,cookies):
-
+    try:
     #get existing assemblies
-    assemblies = requests.get(f"{API_URL}/bulk/assembly")
-    if assemblies.status_code != 200:
-        print('API ERROR, UNABLE TO RETRIEVE ASSEMBLIES')
-        return
-    if not assemblies.json():
-        print('NO ASSEMBLY PRESENT IN DB')
-        existing_assemblies = list()
-    else:
-        existing_assemblies = [assembly['accession'] for assembly in assemblies.json()]
-    assemblies = get_assemblies(project_accession)
-    for assembly in assemblies:
-        accession = assembly['assembly_accession']
-        if accession in existing_assemblies:
-            continue
-        create_data(f"{API_URL}/assemblies/{accession}",cookies)
-    print(len(assemblies))
-    print('ASSEMBLIES FROM NCBI IMPORTED')
+        assemblies = requests.get(f"{API_URL}/bulk/assembly")
+        if assemblies.status_code != 200:
+            print('API ERROR, UNABLE TO RETRIEVE ASSEMBLIES')
+            return
+        if not assemblies.json():
+            print('NO ASSEMBLY PRESENT IN DB')
+            existing_assemblies = list()
+        else:
+            existing_assemblies = [assembly['accession'] for assembly in assemblies.json()]
+        assemblies = get_assemblies(project_accession)
+        for assembly in assemblies:
+            accession = assembly['assembly_accession']
+            if accession in existing_assemblies:
+                continue
+            create_data(f"{API_URL}/assemblies/{accession}",cookies)
+        print(len(assemblies))
+        print('ASSEMBLIES FROM NCBI IMPORTED')
+    except:
+        print("ERROR IN ASSEMBLIES IMPORT")
+        create_data(f"{API_URL}/cronjob",cookies, is_delete=True)
 
 
 ##retrieve assemblies by bioproject in NCBI
@@ -101,27 +104,31 @@ def get_assemblies(project_accession):
     return assemblies
 
 def import_from_EBI_biosamples(PROJECTS,cookies):
-    print('STARTING IMPORT BIOSAMPLES JOB')
-    project_mapper = {p.split('_')[0]:p.split('_')[1] for p in PROJECTS}
-    sample_dict = collect_samples(project_mapper.keys()) ##return dict with project names as keys
-    ##get biosamples
-    # sub_samples = list()
-    biosamples = requests.get(f"{API_URL}/bulk/biosample")
-    if biosamples.status_code != 200:
-        print('API ERROR, UNABLE TO RETRIEVE BIOSAMPLES')
-        return
-    if not biosamples.json():
-        print('NO BIOSAMPLES PRESENT IN DB')
-        existing_biosamples = list()
-    else:
-        existing_biosamples = [sample['accession'] for sample in existing_biosamples.json()]
-    for project in sample_dict.keys():
-        for sample in sample_dict[project]:
-            accession = sample['accession']
-            if accession in existing_biosamples:
-                continue
-            create_data(f"{API_URL}/biosamples/{accession}",cookies)
-    print('DATA FROM ENA/BIOSAMPLES IMPORTED')
+    try:
+        print('STARTING IMPORT BIOSAMPLES JOB')
+        project_mapper = {p.split('_')[0]:p.split('_')[1] for p in PROJECTS}
+        sample_dict = collect_samples(project_mapper.keys()) ##return dict with project names as keys
+        ##get biosamples
+        # sub_samples = list()
+        biosamples = requests.get(f"{API_URL}/bulk/biosample")
+        if biosamples.status_code != 200:
+            print('API ERROR, UNABLE TO RETRIEVE BIOSAMPLES')
+            return
+        if not biosamples.json():
+            print('NO BIOSAMPLES PRESENT IN DB')
+            existing_biosamples = list()
+        else:
+            existing_biosamples = [sample['accession'] for sample in biosamples.json()]
+        for project in sample_dict.keys():
+            for sample in sample_dict[project]:
+                accession = sample['accession']
+                if accession in existing_biosamples:
+                    continue
+                create_data(f"{API_URL}/biosamples/{accession}",cookies)
+        print('DATA FROM ENA/BIOSAMPLES IMPORTED')
+    except:
+        print("ERROR IN BIOSAMPLES IMPORT")
+        create_data(f"{API_URL}/cronjob",cookies, is_delete=True)
 
 def collect_samples(PROJECTS):
     samples = dict()

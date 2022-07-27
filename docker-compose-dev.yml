@@ -35,6 +35,7 @@ services:
       args:
         - ROOT_NODE=$ROOT_NODE
         - PROJECT_ACCESSION=$PROJECT_ACCESSION
+        - CESIUM_TOKEN=$CESIUM_TOKEN
     container_name: "biogenome_nginx"
     restart: always
     volumes:

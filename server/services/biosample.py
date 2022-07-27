@@ -34,8 +34,8 @@ def create_biosample_from_accession_input(accession):
         resp_obj['message'] = f"{accession} not found in ENA"
         return resp_obj
     biosample_obj = create_biosample_from_ebi_data(biosample_response[0])
-    data_helper.create_data_from_biosample(biosample_obj)
     if biosample_obj:
+        data_helper.create_data_from_biosample(biosample_obj)
         resp_obj['success'] = True
         resp_obj['message'] = biosample_obj.accession
         return resp_obj

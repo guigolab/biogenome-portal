@@ -28,12 +28,6 @@ def get_organisms(offset=0, limit=20,
     if bioproject and bioproject != PROJECT_ACCESSION:
         query['bioprojects'] = bioproject
     organisms = Organism.objects(filter_query, **query).exclude('id') if filter_query else Organism.objects.filter(**query).exclude('id')
-    taxids_queried = [org.taxid for org in organisms]
-    all_taxids = [org.taxid for org in Organism.objects()]
-    for taxid in all_taxids:
-        if taxid not in taxids_queried:
-            app.logger.info(taxid)
-
     if sort_column:
         sort = '-'+sort_column if sort_order == 'true' else sort_column
         organisms = organisms.order_by(sort)
