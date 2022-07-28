@@ -5,7 +5,7 @@ from db import initialize_db
 from rest import initialize_api
 from flask_jwt_extended import JWTManager
 from db.models import BioGenomeUser,Roles
-from services import bioproject
+from services import bioproject_service
 from tendo.singleton import SingleInstance
 
 import os
@@ -36,7 +36,7 @@ try:
     if not user:
         BioGenomeUser(name = username, password = password, role= Roles.DATA_ADMIN).save()
     if bioproject_accession:
-        bioproject.create_bioproject_from_ENA(bioproject_accession)
+        bioproject_service.create_bioproject_from_ENA(bioproject_accession)
 except:
     pass
 

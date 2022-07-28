@@ -45,12 +45,11 @@ class DataPortalService {
     getTaxonChildren(name) {
         return base.get(`/taxons/${name}`)
     }
-    // getData(model,ids){
-    //     return base.post(`/data/${model}`, ids)
-    // }
-    
     getAssemblies(params){
         return base.get('/assemblies', {params:params})
+    }
+    getAssembly(accession){
+        return base.get(`/assemblies/${accession}`)
     }
     getAnnotations(params){
         return base.get('/annotations', {params:params})
@@ -58,13 +57,18 @@ class DataPortalService {
     getBioSamples(params){
         return base.get('/biosamples', {params:params})
     }
+    getBioSample(accession){
+        return base.get(`/biosamples/${accession}`)
+    }
     getLocalSamples(params){
         return base.get('/local_samples', {params:params})
     }
     getReads(params){
         return base.get('/reads', {params:params})
     }
-
+    getRead(accession){
+        return base.get(`/reads/${accession}`)
+    }
     getData(model,taxid){
         return base.get(`/data/${model}`, {params:{taxid:taxid}})
     }

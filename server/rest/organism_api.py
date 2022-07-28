@@ -1,4 +1,4 @@
-import services.organism as organism_service
+import services.organism_service as organism_service
 from flask import Response, request
 from db.models import  Organism,TaxonNode
 from flask_restful import Resource

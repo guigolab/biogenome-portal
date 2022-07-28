@@ -1,118 +1,122 @@
 <template>
-<va-card>
-    <va-card-title>
-        Create Annotation
-    </va-card-title>
-    <va-card-content>
-        <ClientInput 
-            :label="'Search Assembly accession'"
-            :placeholder="'ex: GCA_905340225.1'"
-            :request="NCBIClientService.getAssembly"
-            @on-response="parseResponse"
-        />
-    </va-card-content>
-    <va-divider/>
-    <va-card-content>
+<va-inner-loading :loading="isLoading">
+    <div class="layout">
+        <div class="row">
+            <div class="flex">
+                <h1 class="display-3">Annotation Form</h1>
+            </div>
+        </div>
+        <va-divider/>
+        <div class="row">
+            <div class="flex lg12 md12 sm12 xs12">
+                <va-alert class="custom-card" closeable v-model="showAlert" :title="alert.title" border="left" :border-color="alert.color">
+                    {{alert.message}}
+                </va-alert>
+            </div>
+        </div>
         <FormComponent
-            :title="'annotation form'"
+            :title="'annotation name'"
             :listObject="annotation"
             :formOptions="annotationOptions"
         />
-    </va-card-content>
-    <va-card-actions>
-        <va-button>Reset Annotation</va-button>
-        <va-button>Submit Annotation</va-button>
-    </va-card-actions>
-</va-card>
+        <MetadataForm :metadata="annotation.metadata"/>
+        <va-card class="custom-card">
+            <va-card-title>
+                External links
+            </va-card-title>
+            <va-card-content>
+                <va-input
+                    v-for="(opt,index) in linkOptions"
+                    :key="index"
+                    :label="opt.label+' ('+index+')' "
+                    v-model="opt.value"
+                >
+                    <template #append>
+                        <va-chip outline @click="annotation.links.push(opt.value)">Confirm</va-chip>
+                        <va-chip outline @click="removeLink(index)">Remove</va-chip>
+                    </template>
+                </va-input>
+            <va-button @click="linkOptions.push({label:'External link', value:''})">Add new link</va-button>   
+            </va-card-content>
+            <va-divider/>
+        </va-card>
+        <div class="row justify--space-between">
+            <div class="flex">
+                <va-button @click="reset()" color="danger">
+                    Reset Annotation
+                </va-button>
+            </div>
+            <div class="flex">
+                <va-button @click="submitAnnotation()" :disabled="!annotation.name && Object.keys(annotation.metadata).length < 1" >
+                    Submit Annotation
+                </va-button>            
+            </div>
+        </div>
+    </div>
+</va-inner-loading>
 </template>
 <script setup>
 import { reactive,ref } from "vue"
 import FormComponent from './FormComponent.vue'
-import NCBIClientService from "../../../services/clients/NCBIClientService"
+import MetadataForm from "./MetadataForm.vue";
+import AnnotationService from "../../../services/AnnotationService";
 
-const isValidAssembly = ref(false)
+const props = defineProps({
+    assemblyAccession:String
+})
 
 const isLoading = ref(false)
 
+const initLink={
+    label:'external link',value:''
+}
+const linkOptions = reactive([
+    {...initLink},
+])
 const initAnnotation = {
     name:'',
-    assembly_accession:'',
-    gff_gz_location:'',
-    tab_index_location:'',
+    assembly_accession:props.assembly_accession,
+    metadata:{},
+    links:[]
 }
 
 const annotation = reactive({...initAnnotation})
 
-const initResponse = {
-    organism_name:'',
-    display_name:'',
-    assembly_level:'',
-}
-
-const response = reactive({...initResponse})
-
 const annotationOptions = [
     {type:'input',label:'Name', key:'name', mandatory:true},
-    {type:'input',label:'GFF3 GZIP', key:'gff_gz_location', mandatory:true},
-    {type:'input',label:'GFF3 TABIX GZIP', key:'tab_index_location', mandatory:true},
+]
+const linksFormOptions = [
+    {type:'input',label:'link', key:'id', messages: ['DOI: enter the complete string, e.g., 10.1093/nar/gks1195',
+    'PubMed ID (PMID): use simple numbers, e.g., 23193287',
+    'PubMed CentralID (PMCID): include the PMC prefix, e.g., PMC3531190'],
+    mandatory:true},
+    {type:'select',label:'source', key:'source', options:PublicationSource.map(s => s.label)},
 ]
 
-function getAssemblyFromNCBI(){
-    isLoading.value=true
-    //wait 1 second after each request to avoid being blocked
-    if(requestCounter.value > 0){
-        setTimeout(()=>1.0*1000)
-        requestCounter.value = 0
+function removeLink(index){
+    if(index>0){
+        linkOptions.splice(index,1)
+        annotation.links.splice(index,1)
+    }else{
+        annotation.links = []
+        linkOptions[0].value=''
     }
-    NCBIClientService.getAssembly(annotation.assembly_accession)
+}
+
+function submitAnnotation(){
+    isLoading.value=true
+    AnnotationService.createAnnotation(annotation)
     .then(resp => {
-        requestCounter.value++
-        if(resp.data && resp.data.total_count && resp.data.total_count >= 1){
-            const assembly = resp.data.assemblies[0].assembly
-            response.organism_name = assembly.org.sci_name
-            response.display_name = assembly.display_name
-            response.assembly_level = assembly.assembly_level
-            isLoading.value=false
-            isValidAssembly.value = true
-        }else{
-            isLoading.value=false
-            isValidAssembly.value = false
-            assemblyLoaded.value=false
-        }
+        console.log(resp)
+        isLoading.value=false
     })
     .catch(e => {
-        requestCounter.value++
         console.log(e)
         isLoading.value=false
-        isValidAssembly.value = false
-        assemblyLoaded.value=false
     })
 }
-function parseResponse(value){
-    if(value.isError){
-        alert.message = `${value.id} not found`
-        alert.color = 'danger'
-        showAlert.value = true
-        return
-    }
-    //get element in array
-    if(value.response.data && value.response.data.assemblies.length){
-        const assemblyToParse = value.response.data.assemblies[0].assembly
-        const parsedAssembly = {}
-        Object.keys(assemblyToParse)
-        .forEach(k => {
-            if(k === 'org'){
-                parsedAssembly['taxid'] = assemblyToParse[k].tax_id
-                parsedAssembly['scientific_name'] = assemblyToParse[k].sci_name
-            }else{
-                if(typeof assemblyToParse[k] === 'string'){
-                    parsedAssembly[k] = assemblyToParse[k]
-                }
-            }
-        })
-        response.value = parsedAssembly
-        assemblyToSubmit.accession = value.id
-        isValidAssembly.value = true
-    }
+
+function reset(){
+    Object.assign(annotation, initAnnotation)
 }
 </script>

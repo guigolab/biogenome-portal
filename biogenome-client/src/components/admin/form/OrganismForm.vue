@@ -20,21 +20,15 @@
                     NCBI TAXONOMIC IDENTIFIER (*mandatory)
                 </va-card-title>
                 <va-card-content>
-                    <va-inner-loading :loading="taxidLoading">
-                        <div class="row justify--space-between">
-                            <div class="flex ">
-                                <va-input label="NCBI Taxid" v-model="organismFormData.taxid" :disabled="organismFormData.scientific_name"/>
-                            </div>
-                            <div class="flex">
-                                <va-chip :disabled="validTaxid" @click="getTaxon()" outline>
-                                    Validate Taxon Id
-                                </va-chip>
-                                <va-chip color="danger" @click="resetTaxon()" outline>
-                                    Reset taxid
-                                </va-chip>
-                            </div>
-                        </div>
-                    </va-inner-loading>
+                    <ClientInput 
+                        :label="'NCBI Taxid'"
+                        :placeholder="'ex: 9606'"
+                        :insdc-request="EnaService.getTaxon"
+                        :portal-request="DataPortalService.getOrganism"
+                        :valid-data="validTaxid"
+                        @on-response="getTaxon"
+                        @on-reset="resetTaxon"
+                    />
                 </va-card-content>
             </va-card>
             <div v-if="validTaxid">
@@ -127,6 +121,7 @@ import ListInputComponent from './ListInputComponent.vue'
 import FormComponent from './FormComponent.vue'
 import DataPortalService from '../../../services/DataPortalService'
 import MetadataForm from './MetadataForm.vue'
+import ClientInput from '../../ClientInput.vue'
 
 const PROJECT_ACCESSION = import.meta.env.VITE_PROJECT_ACCESSION
 const props = defineProps({
@@ -144,7 +139,6 @@ const initOrganism = {
     image:null,
     image_urls:[],
     metadata:{},
-    links:[],
     publications:[],
     goat_status:null,
     target_list_status:null,
@@ -245,50 +239,23 @@ onMounted(()=>{
     }
 })
 
-function getTaxon(){
-    taxidLoading.value = true
-    //first check if taxon is not already present
-    DataPortalService.getOrganism(organismFormData.taxid)
-    .then(resp => {
-        if(resp && resp.data){
-            alert.title="Error"
-            alert.message=`The organism with taxid: ${organismFormData.taxid} (${resp.data.scientific_name}) is already present`
-            alert.color="danger"
-            showAlert.value=true
-            taxidLoading.value=false
-        }
-    })
-    .catch(e => {
-        if(e && e.response && e.response.status && e.response.status === 404){
-            return EnaService.getTaxon(organismFormData.taxid)
-        }
-        return null
-    })
-    .then(resp => {
-        if(resp){
-            nextTick(()=>{
-                if (resp.data && resp.data.length){
-                    organismFormData.taxid = resp.data[0].tax_id
-                    organismFormData.scientific_name = resp.data[0].description
-                    organismLoaded.value = true
-                    taxidLoading.value = false
-                    validTaxid.value = true
-                    return
-                }
-                taxidLoading.value = false
-                return
-            })
-        }
-    })
-    .catch(e => {
-        alert.title="Error"
-        alert.message=`The organism with taxid: ${organismFormData.taxid} does not exists in INSDC (ENA)`
-        alert.color="danger"
+function getTaxon(value){
+    console.log(value)
+    if(value.isError){
+        Object.assign(alert,value.alert)
         showAlert.value=true
-        taxidLoading.value = false
-    })
+        validTaxid.value=false
+    }else{
+        organismFormData.taxid = value.data[0].tax_id
+        organismFormData.scientific_name = value.data[0].description
+        validTaxid.value = true
+    }
 }
-
+function resetTaxon(){
+    organismFormData.taxid=null
+    organismFormData.scientific_name = null
+    validTaxid.value=false
+}
 function removeImage(index){
     if(index>0){
         galleryImagesOptions.splice(index,1)
@@ -331,10 +298,5 @@ function updateOrganism(){
     })
 }
 
-function resetTaxon(){
-    organismFormData.taxid=null
-    organismFormData.scientific_name = null
-    organismLoaded.value = false
-    validTaxid.value=false
-}
+
 </script>

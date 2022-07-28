@@ -12,24 +12,6 @@
         :model-list="annotations"
         :form-options="annotationOptions"
     />
-    <!-- <Transition>
-        <va-card v-if="validData" class="custom-card">
-            <va-card-actions > 
-                <div class="row justify--space-between">
-                    <div class="flex">
-                        <va-button @click="resetTracks()" color="danger">
-                            Cancel
-                        </va-button>
-                    </div>
-                    <div class="flex">
-                        <va-button @click="submitTracks()">
-                            Submit Tracks
-                        </va-button>            
-                    </div>
-                </div>
-            </va-card-actions>
-        </va-card>
-    </Transition> -->
 </va-inner-loading>
 </template>
 <script setup>
@@ -37,7 +19,6 @@
 import { computed, reactive,ref } from "vue"
 import FormComponent from './FormComponent.vue'
 import AssemblyService from "../../../services/AssemblyService"
-import AnnotationService from "../../../services/AnnotationService"
 import ListInputComponent from "./ListInputComponent.vue"
 
 const isLoading = ref(false)
@@ -68,7 +49,6 @@ const initAnnotation = {
 const validData = computed(()=>{
     initJbrowseData.annotations.length && initJbrowseData.fasta_location && initJbrowseData.fai_location && initJbrowseData.gzi_location
 })
-
 const annotationOptions = [
     {type:'input',label:'Name', key:'name', mandatory:true},
     {type:'input',label:'GFF3 GZIP', key:'gff_gz_location', mandatory:true},
@@ -88,14 +68,11 @@ function submitTracks(){
         console.log(resp)
         return resp
     })
-    //first update assembly
-
-    // then post assembly via loop
 }
 
 function resetTracks(){
     Object.assign(assemblyTrack,initAssemblyTrack)
-    Object.assign(annotationsToSubmit,initAnnotations)
+    Object.assign(annotationsToSubmit,initAnnotation)
 
 }
 

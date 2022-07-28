@@ -1,7 +1,8 @@
 from __future__ import annotations
+from services import annotation_service
 from utils.common_functions import query_search
 from mongoengine.queryset.visitor import Q
-from services import assembly,annotation
+from services import assembly_service
 from db.models import Annotation,Organism
 import json
 from utils import data_helper
@@ -9,13 +10,13 @@ from utils import data_helper
 ANNOTATION_TRACK_FIELDS = ['name','gff_gz_location','tab_index_location']
 
 def create_jbrowse_tracks(assembly_accession,data):
-    ass_obj = assembly.create_assembly_from_accession(assembly_accession)
-    assembly_track = assembly.create_assembly_track(data)
+    ass_obj = assembly_service.create_assembly_from_accession(assembly_accession)
+    assembly_track = assembly_service.create_assembly_track(data)
     if assembly_track:
         ass_obj.track = assembly_track
     if 'annotations' in data.keys():
         for ann in data['annotations']:
-            annotation.create_annotation(**ann)
+            annotation_service.create_annotation(**ann)
 
 
 

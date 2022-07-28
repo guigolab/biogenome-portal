@@ -64,11 +64,6 @@ class Experiment(db.Document):
         'indexes': ['experiment_accession']
     }
 
-class AssemblyTrack(db.EmbeddedDocument):
-    fasta_location = db.URLField()
-    fai_location = db.URLField()
-    gzi_location = db.URLField() 
-    chrom_alias = db.StringField()
 
 #TODO ADD last published assembly banner
 class Assembly(db.Document):
@@ -80,7 +75,6 @@ class Assembly(db.Document):
     created = db.DateTimeField(default=datetime.datetime.utcnow)
     metadata=db.DictField()
     chromosomes=db.ListField(db.StringField())
-    track = db.EmbeddedDocumentField(AssemblyTrack)
     meta = {
         'indexes': ['accession']
     }
@@ -165,13 +159,37 @@ class GeoCoordinates(db.Document):
         ]
     }
 
+class AssemblyTrack(db.EmbeddedDocument):
+    assembly_name=db.StringField()
+    fasta_location = db.URLField()
+    fai_location = db.URLField()
+    gzi_location = db.URLField() 
+    chrom_alias = db.StringField()
+
+class AnnotationTrack(db.EmbeddedDocument):
+    name = db.StringField()
+    gff_gz_location = db.URLField()
+    tab_index_location = db.URLField()
+
+#model to store assembly and annotation tracks
+class GenomeBrowserData(db.Document):
+    assembly_accession = db.StringField(required=True,unique=True)
+    taxid = db.StringField(required=True)
+    assembly_track=db.EmbeddedDocumentField(AssemblyTrack)
+    annotation_tracks = db.ListField(db.EmbeddedDocumentField(AnnotationTrack))
+    meta = {
+        'indexes': [
+            'assembly_accession'
+        ]
+    }
+
+##external annotations
 class Annotation(db.Document):
     name = db.StringField(required=True,unique=True)
     taxid=db.StringField()
-    gff_gz_location = db.URLField()
-    tab_index_location = db.URLField()
     assembly_accession = db.StringField(required=True) ##assembly accession
     metadata=db.DictField()
+    links = db.ListField(db.URLField())
     created = db.DateTimeField(default=datetime.datetime.utcnow)
     meta = {
         'indexes': [

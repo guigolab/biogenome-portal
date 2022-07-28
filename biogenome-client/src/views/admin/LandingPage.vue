@@ -47,6 +47,21 @@
                         <div v-if="selectedModelObject && selectedModelObject.editable" class="flex">
                             <va-button @click="editItem(rowData)" icon="edit"/>
                         </div>
+                        <div v-if="dataValue === 'assemblies'">
+                            <va-button-dropdown
+                                icon="more_vert"
+                                flat
+                            >
+                            <ul>
+                                <li>
+                                    <va-button flat icon="query_stats" :to="{name:'annotation-form',params:{assemblyAccession:rowData.accession}}">Add Annotation</va-button>
+                                </li>
+                                <li>
+                                    <va-button flat icon="query_stats" :to="{name:'genome-browser-form',params:{assemblyAccession:rowData.accession}}">Add Genome Browser Data</va-button>
+                                </li>
+                            </ul>
+                            </va-button-dropdown>
+                        </div>
                         <div class="flex">
                             <va-button color="danger" @click="confirmDeleteItem(rowData)" icon="delete"/>
                         </div>

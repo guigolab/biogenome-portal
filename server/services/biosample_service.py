@@ -1,9 +1,8 @@
 from db.models import BioSample, Organism
+from errors import NotFound
 from utils import data_helper
-from utils import ena_client,utils,common_functions
-from mongoengine.queryset.visitor import Q
-from .organism import get_or_create_organism
-import json
+from utils import ena_client,utils
+from .organism_service import get_or_create_organism
 from flask import current_app as app
 
 
@@ -25,22 +24,22 @@ def create_biosample_from_accession_input(accession):
     resp_obj = dict()
     biosample_obj = BioSample.objects(accession=accession).first()
     if biosample_obj:
-        resp_obj['success'] = False
         resp_obj['message'] = f"{accession} already exists"
+        resp_obj['status'] = 400
         return resp_obj
     biosample_response = ena_client.get_sample_from_biosamples(accession)
     if not biosample_response:
-        resp_obj['success'] = False
-        resp_obj['message'] = f"{accession} not found in ENA"
+        resp_obj['message'] = f"{accession} not found in INSDC"
+        resp_obj['status'] = 400
         return resp_obj
     biosample_obj = create_biosample_from_ebi_data(biosample_response[0])
     if biosample_obj:
         data_helper.create_data_from_biosample(biosample_obj)
-        resp_obj['success'] = True
-        resp_obj['message'] = biosample_obj.accession
+        resp_obj['message'] = f'{biosample_obj.accession} correctly saved'
+        resp_obj['status'] = 201
         return resp_obj
-    resp_obj['success'] = False
     resp_obj['message'] = 'Unhandled error'
+    resp_obj['status'] = 500
     return resp_obj
     
 def get_biosamples_derived_from(accession):
@@ -88,14 +87,11 @@ def create_biosample_from_ebi_data(sample):
 def delete_biosample(accession):
     biosample_to_delete = BioSample.objects(accession=accession).first()
     if not biosample_to_delete:
-        return
+        raise NotFound
     samples_to_update = BioSample.objects(sub_samples=accession).update(pull__sub_samples=accession)
-
     organism_to_update = Organism.objects(taxid=biosample_to_delete.taxid).first()
     if organism_to_update:
         organism_to_update.modify(pull__biosamples=accession)
         organism_to_update.save()
-
     biosample_to_delete.delete()
-
     return accession
