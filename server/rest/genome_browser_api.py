@@ -3,6 +3,7 @@ from flask import Response, request
 from db.models import GenomeBrowserData
 from services import genome_browser_service
 from utils import common_functions
+from errors import NotFound
 import json
 
 FIELDS_TO_EXCLUDE = ['id']
@@ -10,7 +11,12 @@ FIELDS_TO_EXCLUDE = ['id']
 
 class GenomeBrowserApi(Resource):
 
-    def get(self):
+    def get(self,accession=None):
+        if accession:
+            genome_br_obj = GenomeBrowserData.objects(assembly_accession=accession).first()
+            if not genome_br_obj:
+                raise NotFound
+            return Response(genome_br_obj.to_json(),mimetype="application/json", status=200)
         return Response(common_functions.query_search(GenomeBrowserData, FIELDS_TO_EXCLUDE, **request.args), mimetype="application/json", status=200)
 
     def post(self):

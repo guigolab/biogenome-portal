@@ -3,7 +3,7 @@
     <div class="layout">
         <div class="row">
             <div class="flex">
-                <h1 class="display-3">Annotation Form of {{accession}}</h1>
+                <h1 class="display-3">{{name? name: "Annotation Form of"+ accession}}</h1>
             </div>
         </div>
         <va-divider/>
@@ -15,6 +15,7 @@
             </div>
         </div>
         <FormComponent
+            v-if="!props.name"
             :title="'annotation name'"
             :listObject="annotation"
             :formOptions="annotationOptions"
@@ -47,7 +48,7 @@
                 </va-button>
             </div>
             <div class="flex">
-                <va-button @click="submitAnnotation()" :disabled="!annotation.name && Object.keys(annotation.metadata).length < 1" >
+                <va-button @click="toUpdate? updateAnnotation() : submitAnnotation()" :disabled="!annotation.name && Object.keys(annotation.metadata).length < 1" >
                     Submit Annotation
                 </va-button>            
             </div>
@@ -56,7 +57,7 @@
 </va-inner-loading>
 </template>
 <script setup>
-import { reactive,ref } from "vue"
+import { onMounted, reactive,ref } from "vue"
 import FormComponent from './FormComponent.vue'
 import MetadataForm from "./MetadataForm.vue";
 import AnnotationService from "../../../services/AnnotationService";
@@ -64,7 +65,9 @@ import {useRouter} from "vue-router"
 const router = useRouter()
 
 const props = defineProps({
-    accession:String
+    accession:String,
+    toUpdate:Boolean,
+    name:String
 })
 const showAlert = ref(false)
 const alert = reactive({
@@ -95,6 +98,17 @@ const annotationOptions = [
     {type:'input',label:'Name', key:'name', mandatory:true},
 ]
 
+onMounted(()=>{
+    if(props.name){
+        AnnotationService.getAnnotation(props.name)
+        .then(resp => {
+            Object.assign(annotation,resp.data)
+        })
+        .catch(e => {
+            console.log(e)
+        })
+    }
+})
 
 function removeLink(index){
     if(index>0){
@@ -125,6 +139,27 @@ function submitAnnotation(){
         isLoading.value=false
     })
 }
+
+function updateAnnotation(){
+    isLoading.value=true
+    AnnotationService.updateAnnotation(props.name, annotation)
+    .then(resp => {
+        alert.title="Success"
+        alert.message=`${resp.data}`
+        alert.color="success"
+        showAlert.value=true
+        isLoading.value=false
+
+    })
+    .catch(e => {
+        alert.title="Error"
+        alert.message=`${e.response && e.response.data? e.response.data:e}`
+        alert.color="danger"
+        showAlert.value=true
+        isLoading.value=false
+    })
+}
+
 
 function reset(){
     router.go()

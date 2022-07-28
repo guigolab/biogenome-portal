@@ -10,6 +10,10 @@ class GenomeBrowserService {
         return base.get('/genome_browser', {params:params})
     }
 
+    getGenomeBrowserDatum(accession){
+        return base.get(`/genome_browser/${accession}`)
+    }
+
     createGenomeBrowserData(formData){
         return submission.post('/genome_browser',formData)
     }
@@ -21,7 +25,6 @@ class GenomeBrowserService {
     deleteGenomeBrowserData(accession){
         return submission.delete(`/genome_browser/${accession}`)
     }
-
 }
 
 export default new GenomeBrowserService();

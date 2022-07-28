@@ -3,6 +3,7 @@ from flask import Response, request
 from db.models import Annotation
 from services import annotation_service
 from utils import common_functions
+from errors import NotFound
 import json
 
 FIELDS_TO_EXCLUDE = ['id','created']
@@ -10,7 +11,12 @@ FIELDS_TO_EXCLUDE = ['id','created']
 
 class AnnotationApi(Resource):
 
-    def get(self):
+    def get(self,name=None):
+        if name:
+            ann_obj = Annotation.objects(name=name).first()
+            if not ann_obj:
+                raise NotFound
+            return Response(ann_obj.to_json(),mimetype="application/json", status=200)
         return Response(common_functions.query_search(Annotation, FIELDS_TO_EXCLUDE, **request.args), mimetype="application/json", status=200)
 
     def post(self):

@@ -44,10 +44,10 @@ const routes = [
     children:[
       {path:'', component:adminHP, name:"admin-hp"},
       {path:'excel-form', component:excel, name:"excel"},
-      {path: "organism-form/:taxid?",component:organismForm, name:"organism-form", props:true, },
+      {path: "organism-form/:taxid?",component:organismForm, name:"organism-form", props:true},
       {path: "assembly-form",component:assembliesForm, name:"assembly-form"},
-      {path: "annotation-form/:accession",component:annotationForm, name:"annotation-form",props:true},
-      {path: "genome-browser-form/:accession",component:genomeBrowserForm, name:"genome-browser-form",props:true},
+      {path: "annotation-form",component:annotationForm, name:"annotation-form",props:true},
+      {path: "genome-browser-form",component:genomeBrowserForm, name:"genome-browser-form",props:true},
 
       {path: "biosample-form",component:biosampleForm, name:"biosample-form"},
       {path: "read-form",component:readForm, name:"read-form"}

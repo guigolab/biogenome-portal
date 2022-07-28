@@ -37,7 +37,7 @@
                 </va-button>
             </div>
             <div class="flex">
-                <va-button @click="submitGenomeBrowserData()" :disabled="!validAnnotation" >
+                <va-button @click="toUpdate? updateGenomeBrowserData() : submitGenomeBrowserData()" :disabled="!validAnnotation" >
                     Submit Data
                 </va-button>            
             </div>
@@ -47,7 +47,7 @@
 </template>
 <script setup>
 
-import { reactive,ref,computed } from "vue"
+import { reactive,ref,computed, onMounted } from "vue"
 import FormComponent from './FormComponent.vue'
 import ListInputComponent from "./ListInputComponent.vue"
 import GenomeBrowserService from "../../../services/GenomeBrowserService";
@@ -58,6 +58,7 @@ const isLoading = ref(false)
 
 const props = defineProps({
     accession:String,
+    toUpdate:Boolean
 })
 const showAlert = ref(false)
 
@@ -110,6 +111,18 @@ const assemblyTrackOptions = [
     {type:'input',label:'chromosome aliases file url', key:'chrom_alias',mandatory:false},
 ]
 
+onMounted(()=>{
+    if(props.toUpdate){
+    GenomeBrowserService.getGenomeBrowserDatum(props.accession)
+    .then(resp => {
+        Object.assign(jbrowseData,resp.data)
+    })
+    .catch(e => {
+        console.log(e)
+    })
+    }
+})
+
 function submitGenomeBrowserData(){
     isLoading.value=true
     GenomeBrowserService.createGenomeBrowserData(jbrowseData)
@@ -127,6 +140,24 @@ function submitGenomeBrowserData(){
         alert.color="danger"
         showAlert.value=true
         isLoading.value = false
+    })
+}
+
+function updateGenomeBrowserData(){
+    GenomeBrowserService.updateGenomeBrowserData(props.accession,jbrowseData)
+    .then(resp => {
+        alert.title="Success"
+        alert.message=`${resp.data}`
+        alert.color="success"
+        showAlert.value=true
+        isLoading.value=false
+    })
+    .catch(e => {
+        alert.title="Error"
+        alert.message=`${e.response && e.response.data? e.response.data:e}`
+        alert.color="danger"
+        showAlert.value=true
+        isLoading.value=false
     })
 }
 

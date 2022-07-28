@@ -54,10 +54,10 @@
                             >
                             <ul>
                                 <li>
-                                    <va-button flat icon="query_stats" :to="{name:'annotation-form',params:{accession:rowData.accession}}">Add Annotation</va-button>
+                                    <va-button flat icon="query_stats" :to="{name:'annotation-form', params:{accession:rowData.accession,toUpdate:false}}">Add Annotation</va-button>
                                 </li>
                                 <li>
-                                    <va-button flat icon="view_timeline" :to="{name:'genome-browser-form', params:{accession:rowData.accession}}">Add Genome Browser Data</va-button>
+                                    <va-button flat icon="view_timeline" :to="{name:'genome-browser-form', params:{accession:rowData.accession,toUpdate:false}}">Add Genome Browser Data</va-button>
                                 </li>
                             </ul>
                             </va-button-dropdown>
@@ -385,19 +385,33 @@ function getData(){
 
 //edit assembly track or annotation track
 function editItem(item){
-    if(dataValue.value === 'annotations'){
-        objectToEdit.title = item.name
-        objectToEdit.listObject = item
-        objectToEdit.formOptions = annotationOptions
-        showEditModal.value = true
-    }else if(dataValue.value === 'organisms'){
-        router.push({name: 'organism-form', params:{taxid: item.taxid}})
-    }else if(dataValue.value === 'users'){
-        objectToEdit.title = item.name
-        objectToEdit.listObject = item
-        objectToEdit.formOptions = userOptions
-        showEditModal.value = true
+    switch(dataValue.value){
+        case 'annotations':
+            router.push({name:'annotation-form', params:{accession:item.assembly_accession,toUpdate:true,name:item.name}})
+            break
+        case 'jbrowse':
+            router.push({name:'genome-browser-form', params:{accession:item.accession,toUpdate:true}}) //genome browser data share the same assembly accession
+            break
+        case 'organisms':
+            router.push({name: 'organism-form', params:{taxid: item.taxid}})
+            break
+        case 'users':
+            objectToEdit.title = item.name
+            objectToEdit.listObject = item
+            objectToEdit.formOptions = userOptions
+            showEditModal.value = true
+            break
     }
+    // if(dataValue.value === 'annotations'){
+    //     router.push({name:'annotation-form', params:{accession:rowData.accession,toUpdate:true,name:item.name}})
+    // }else if(dataValue.value === 'organisms'){
+    //     router.push({name: 'organism-form', params:{taxid: item.taxid}})
+    // }else if(dataValue.value === 'users'){
+    //     objectToEdit.title = item.name
+    //     objectToEdit.listObject = item
+    //     objectToEdit.formOptions = userOptions
+    //     showEditModal.value = true
+    // }
 }
 
 function resetEditAction(){
