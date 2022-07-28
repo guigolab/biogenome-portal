@@ -30,7 +30,7 @@ def create_annotation(data):
     annotation_obj.taxid = assembly_obj.taxid
     annotation_obj.save()
     data_helper.create_data_from_annotation(annotation_obj)
-    resp_obj['message'] = annotation_obj.name
+    resp_obj['message'] = f'{annotation_obj.name} correctly saved'
     resp_obj['status'] = 201
     return resp_obj
 
@@ -44,6 +44,6 @@ def delete_annotation(name):
     annotation_obj.delete()
     organism_to_update = Organism.objects(annotations=name).first()
     if organism_to_update:
-        organism_to_update.modify(pull_annotations=name)
+        organism_to_update.modify(pull__annotations=name)
         organism_to_update.save()
     return name

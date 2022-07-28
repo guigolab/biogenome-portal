@@ -26,7 +26,7 @@
                 <va-data-table
                     sticky-header
                     :style="{
-                        '--va-data-table-scroll-table-height': '300px',
+                        '--va-data-table-scroll-table-height': '66vh',
                         '--va-data-table-scroll-table-color': '#2c82e0',
                     }"
                     :items="loadedItems.data"
@@ -54,10 +54,10 @@
                             >
                             <ul>
                                 <li>
-                                    <va-button flat icon="query_stats" :to="{name:'annotation-form',params:{assemblyAccession:rowData.accession}}">Add Annotation</va-button>
+                                    <va-button flat icon="query_stats" :to="{name:'annotation-form',params:{accession:rowData.accession}}">Add Annotation</va-button>
                                 </li>
                                 <li>
-                                    <va-button flat icon="query_stats" :to="{name:'genome-browser-form',params:{assemblyAccession:rowData.accession}}">Add Genome Browser Data</va-button>
+                                    <va-button flat icon="view_timeline" :to="{name:'genome-browser-form', params:{accession:rowData.accession}}">Add Genome Browser Data</va-button>
                                 </li>
                             </ul>
                             </va-button-dropdown>
@@ -103,7 +103,7 @@
                             <div v-if="Array.isArray(obj.value)">
                                 <strong>{{obj.key+ ': '}}</strong>
                                 <ul >
-                                    <li v-for="(el,index) in obj.value" :key="index">
+                                    <li class="data-attribute" v-for="(el,index) in obj.value" :key="index">
                                         {{el}}
                                     </li>
                                 </ul>
@@ -119,7 +119,7 @@
                             <div v-if="Array.isArray(obj.value)">
                                 <strong>{{obj.key+ ': '}}</strong>
                                 <ul>
-                                    <li v-for="(el,index) in obj.value" :key="index">
+                                    <li class="data-attribute" v-for="(el,index) in obj.value" :key="index">
                                         {{el}}
                                     </li>
                                 </ul>
@@ -201,6 +201,7 @@ import LocalSampleService from '../../services/LocalSampleService'
 import ReadService from '../../services/ReadService'
 import OrganismService from '../../services/OrganismService'
 import UserService from '../../services/UserService'
+import GenomeBrowserService from '../../services/GenomeBrowserService'
 import Pagination from '../../components/Pagination.vue'
 import FormComponent from '../../components/admin/form/FormComponent.vue'
 import {computed, nextTick, onMounted, reactive, ref, watch} from 'vue'
@@ -308,20 +309,15 @@ const dataModels = [
     {label:'Reads',value:'reads', itemProvider: ReadService.getReads,
     columns:['experiment_accession','instrument_platform','taxid','actions'],deleteAction: ReadService.deleteReads,editable:false},
     {label:'Assemblies',value:'assemblies', itemProvider: AssemblyService.getAssemblies,
-    columns:['accession','assembly_name','taxid','actions'],deleteAction: AssemblyService.deleteAssembly,editable:true},
+    columns:['accession','assembly_name','taxid','actions'],deleteAction: AssemblyService.deleteAssembly,editable:false},
     {label:'Annotations',value:'annotations', itemProvider: AnnotationService.getAnnotations,
     columns:['name','assembly_accession','actions'],deleteAction: AnnotationService.deleteAnnotation,editable:true},
     {label:'Local samples',value:'local_samples', itemProvider: LocalSampleService.getLocalSamples,
     columns:['local_id','taxid','broker','actions'], deleteAction: LocalSampleService.deleteLocalSample,editable:false},
+    {label:'Genome Browser Data',value:'jbrowse', itemProvider: GenomeBrowserService.getGenomeBrowserData ,deleteAction: GenomeBrowserService.deleteGenomeBrowserData, columns:['assembly_accession','taxid','actions'], editable:true},
     {label:'Portal Users',value:'users', itemProvider: UserService.getUsers,deleteAction: UserService.deleteUser,columns:['name','role','actions'],editable:true}
 ]
 
-const initAssemblyTrack = {
-    fasta_location : null,
-    fai_location: null,
-    gzi_location: null,
-    chrom_alias: null
-}
 
 function showDetails(item){
     objectToShow.fields = Object.keys(item)
@@ -348,7 +344,6 @@ function openUserForm(){
 function submitUser(){
     UserService.createUser(user)
     .then(resp => {
-        console.log(resp)
         resetUser()
         getData()
     })
@@ -369,7 +364,6 @@ function getData(){
         if(m.value === dataValue.value){
             m.itemProvider(params)
             .then(resp => {
-                console.log(resp)
                 nextTick(()=>{
                     loadedItems.data = resp.data.data
                     loadedItems.total = resp.data.total
@@ -386,12 +380,7 @@ function getData(){
 
 //edit assembly track or annotation track
 function editItem(item){
-    if(dataValue.value === 'assemblies'){
-        objectToEdit.title = item.accession
-        objectToEdit.listObject = item.track || initAssemblyTrack
-        objectToEdit.formOptions = assemblyTrackOptions
-        showEditModal.value = true
-    }else if(dataValue.value === 'annotations'){
+    if(dataValue.value === 'annotations'){
         objectToEdit.title = item.name
         objectToEdit.listObject = item
         objectToEdit.formOptions = annotationOptions
@@ -432,7 +421,7 @@ function submitEditedItem(){
 }
 
 function confirmDeleteItem(item){
-    idToDelete.value = item.accession || item.name || item.local_id || item.experiment_accession || item.taxid
+    idToDelete.value = item.accession || item.name || item.local_id || item.experiment_accession || item.assembly_accession || item.taxid
     showDeleteModal.value = true
 }
 
@@ -462,3 +451,8 @@ function deleteItem(){
     })
 }
 </script>
+<style scoped>
+li.data-attribute{
+    list-style: circle;
+}
+</style>

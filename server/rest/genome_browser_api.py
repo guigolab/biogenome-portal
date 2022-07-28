@@ -1,7 +1,7 @@
 from flask_restful import Resource
 from flask import Response, request
 from db.models import GenomeBrowserData
-from services import annotation_service
+from services import genome_browser_service
 from utils import common_functions
 import json
 
@@ -13,20 +13,19 @@ class GenomeBrowserApi(Resource):
     def get(self):
         return Response(common_functions.query_search(GenomeBrowserData, FIELDS_TO_EXCLUDE, **request.args), mimetype="application/json", status=200)
 
-    def post(self,accession):
+    def post(self):
         data = request.json if request.is_json else request.form
         ##expects a list of annotation objects
-        new_annotation = annotation_service.create_annotation(data)
-        if new_annotation:
-            return Response(new_annotation.to_json(), mimetype="application/json", status=201)
+        resp = genome_browser_service.create_genome_browser_data(data)
+        return Response(json.dumps(resp['message']), mimetype="application/json", status=resp['status'])
 
-    def delete(self,name):
-        deleted_name = annotation_service.delete_annotation(name)
-        return Response(json.dumps(deleted_name), mimetype="application/json", status=201)
+    def delete(self,accession):
+        deleted_accession = genome_browser_service.delete_genome_browser_data(accession)
+        return Response(json.dumps(deleted_accession), mimetype="application/json", status=201)
 
-    def put(self,name):
+    def put(self,accession):
         data = request.json if request.is_json else request.form
-        updated_annotation = annotation_service.update_annotation(name,data)
-        return Response(json.dumps(updated_annotation), mimetype="application/json", status=201)
+        update_accession = genome_browser_service.update_genome_browser_data(accession,data)
+        return Response(json.dumps(update_accession), mimetype="application/json", status=201)
     # ##get last created model object
 

@@ -16,7 +16,7 @@ const samples = () => import('../components/admin/LocalSamples.vue')
 const assembliesForm = () => import('../components/admin/form/AssemblyForm.vue')
 const annotationForm = () => import('../components/admin/form/AnnotationForm.vue')
 //form pages/components
-const genomeBrowserForm = () => import('../components/admin/form/GenomeBrowserFrom.vue')
+const genomeBrowserForm = () => import('../components/admin/form/GenomeBrowserForm.vue')
 const sunburst = () => import('../components/SunBurst.vue')
 const excel = () => import('../components/admin/form/ExcelForm.vue')
 
@@ -46,8 +46,8 @@ const routes = [
       {path:'excel-form', component:excel, name:"excel"},
       {path: "organism-form/:taxid?",component:organismForm, name:"organism-form", props:true, },
       {path: "assembly-form",component:assembliesForm, name:"assembly-form"},
-      {path: "annotation-form/assemblyAccession",component:annotationForm, name:"annotation-form",props:true},
-      {path: "genome-browser-form/assemblyAccession",component:genomeBrowserForm, name:"genome-browser-form",props:true},
+      {path: "annotation-form/:accession",component:annotationForm, name:"annotation-form",props:true},
+      {path: "genome-browser-form/:accession",component:genomeBrowserForm, name:"genome-browser-form",props:true},
 
       {path: "biosample-form",component:biosampleForm, name:"biosample-form"},
       {path: "read-form",component:readForm, name:"read-form"}

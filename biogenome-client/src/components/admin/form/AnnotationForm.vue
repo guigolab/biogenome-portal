@@ -3,7 +3,7 @@
     <div class="layout">
         <div class="row">
             <div class="flex">
-                <h1 class="display-3">Annotation Form</h1>
+                <h1 class="display-3">Annotation Form of {{accession}}</h1>
             </div>
         </div>
         <va-divider/>
@@ -62,8 +62,16 @@ import MetadataForm from "./MetadataForm.vue";
 import AnnotationService from "../../../services/AnnotationService";
 
 const props = defineProps({
-    assemblyAccession:String
+    accession:String
 })
+const showAlert = ref(false)
+
+const alert = reactive({
+    title:'',
+    color:'',
+    message:''
+})
+
 
 const isLoading = ref(false)
 
@@ -75,7 +83,7 @@ const linkOptions = reactive([
 ])
 const initAnnotation = {
     name:'',
-    assembly_accession:props.assembly_accession,
+    assembly_accession:props.accession,
     metadata:{},
     links:[]
 }
@@ -85,13 +93,7 @@ const annotation = reactive({...initAnnotation})
 const annotationOptions = [
     {type:'input',label:'Name', key:'name', mandatory:true},
 ]
-const linksFormOptions = [
-    {type:'input',label:'link', key:'id', messages: ['DOI: enter the complete string, e.g., 10.1093/nar/gks1195',
-    'PubMed ID (PMID): use simple numbers, e.g., 23193287',
-    'PubMed CentralID (PMCID): include the PMC prefix, e.g., PMC3531190'],
-    mandatory:true},
-    {type:'select',label:'source', key:'source', options:PublicationSource.map(s => s.label)},
-]
+
 
 function removeLink(index){
     if(index>0){
@@ -107,11 +109,19 @@ function submitAnnotation(){
     isLoading.value=true
     AnnotationService.createAnnotation(annotation)
     .then(resp => {
-        console.log(resp)
+        alert.title="Success"
+        alert.message=`${resp.data}`
+        alert.color="success"
+        showAlert.value=true
         isLoading.value=false
+        reset()
     })
     .catch(e => {
         console.log(e)
+        alert.title="Error"
+        alert.message=`${e.response && e.response.data? e.response.data:e}`
+        alert.color="danger"
+        showAlert.value=true
         isLoading.value=false
     })
 }

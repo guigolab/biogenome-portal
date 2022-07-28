@@ -11,7 +11,7 @@ FIELDS_TO_EXCLUDE = ['id','created']
 ##post request to handle large list of assemblies/experiments/local_samples/biosamples/annotations ids
 class ExperimentApi(Resource):
 
-    def get(self,accession):
+    def get(self,accession=None):
         if accession:
             experiment_obj = Experiment.objects(experiment_accession=accession).first()
             if not experiment_obj:

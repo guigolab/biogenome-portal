@@ -3,7 +3,7 @@
         <va-card-title>
             {{title}}
         </va-card-title>
-        <va-card-content>
+        <va-card-content style="text-align:start">
             <va-button-dropdown outline :color="color" v-for="(model,index) in modelList" :key="index" :label="model[keyLabel]">
                 <ul>
                     <li>

@@ -1,54 +1,91 @@
 <template>
 <va-inner-loading :loading="isLoading">
-    <FormComponent
-        :title="accession+' Track'"
-        :list-object="assemblyTrack"
-        :form-options="assemblyTrackOptions"
-    />
-    <ListInputComponent 
-        :title="'Annotation tracks'"
-        :key-label="'name'"
-        :list-object="initAnnotation"
-        :model-list="annotations"
-        :form-options="annotationOptions"
-    />
+    <div class="layout">
+        <div class="row">
+            <div class="flex">
+                <h1 class="display-3">Genome Browser Form of {{accession}}</h1>
+            </div>
+        </div>
+        <va-divider/>
+        <div class="row">
+            <div class="flex lg12 md12 sm12 xs12">
+                <va-alert class="custom-card" closeable v-model="showAlert" :title="alert.title" border="left" :border-color="alert.color">
+                    {{alert.message}}
+                </va-alert>
+            </div>
+        </div>
+        <div class="row">
+            <div class="flex lg12 md12 sm12 xs12">
+                <FormComponent
+                    :title="accession+' Track'"
+                    :list-object="jbrowseData.assembly_track"
+                    :form-options="assemblyTrackOptions"
+                />
+                <ListInputComponent 
+                    :title="'Annotation tracks'"
+                    :key-label="'name'"
+                    :list-object="initAnnotation"
+                    :model-list="jbrowseData.annotation_tracks"
+                    :form-options="annotationOptions"
+                />
+            </div>
+        </div>
+        <div class="row justify--space-between">
+            <div class="flex">
+                <va-button @click="reset()" color="danger">
+                    Reset
+                </va-button>
+            </div>
+            <div class="flex">
+                <va-button @click="submitGenomeBrowserData()" :disabled="!validAnnotation" >
+                    Submit Data
+                </va-button>            
+            </div>
+        </div>
+    </div>
 </va-inner-loading>
 </template>
 <script setup>
 
-import { computed, reactive,ref } from "vue"
+import { reactive,ref,computed } from "vue"
 import FormComponent from './FormComponent.vue'
-import AssemblyService from "../../../services/AssemblyService"
 import ListInputComponent from "./ListInputComponent.vue"
+import GenomeBrowserService from "../../../services/GenomeBrowserService";
 
 const isLoading = ref(false)
 
 const props = defineProps({
     accession:String,
-    annotations: Array,
-    assemblyTrack:Object,
+})
+const showAlert = ref(false)
+
+const validAnnotation = computed(()=>{
+    return jbrowseData.assembly_track.fasta_location && 
+    jbrowseData.assembly_track.fai_location && 
+    jbrowseData.assembly_track.gzi_location && 
+    jbrowseData.annotation_tracks.length
 })
 
+const alert = reactive({
+    title:'',
+    color:'',
+    message:''
+})
 const initJbrowseData = {
-    fasta_location : null,
-    fai_location: null,
-    gzi_location: null,
-    chrom_alias: null,
-    annotations: []
+    assembly_accession: props.accession,
+    assembly_track: {},
+    annotation_tracks : []
 }
-
-const jbrowseData = reactive({...initJbrowseData})
 
 const initAnnotation = {
     name:'',
-    assembly_accession:props.accession,
     gff_gz_location:'',
     tab_index_location:'',
 }
 
-const validData = computed(()=>{
-    initJbrowseData.annotations.length && initJbrowseData.fasta_location && initJbrowseData.fai_location && initJbrowseData.gzi_location
-})
+
+const jbrowseData = reactive({...initJbrowseData})
+
 const annotationOptions = [
     {type:'input',label:'Name', key:'name', mandatory:true},
     {type:'input',label:'GFF3 GZIP', key:'gff_gz_location', mandatory:true},
@@ -58,22 +95,32 @@ const assemblyTrackOptions = [
     {type:'input',label:'Fasta location', key:'fasta_location', mandatory:true},
     {type:'input',label:'fai location', key:'fai_location', mandatory:true},
     {type:'input',label:'gzi Location', key:'gzi_location', mandatory:true},
-    {type:'input',label:'chromosome aliases file url', key:'chrom_alias'},
+    {type:'input',label:'chromosome aliases file url', key:'chrom_alias',mandatory:false},
 ]
 
-function submitTracks(){
+function submitGenomeBrowserData(){
     isLoading.value=true
-    AssemblyService.updateAssembly(props.accession, assemblyTrack)
+    GenomeBrowserService.createGenomeBrowserData(jbrowseData)
     .then(resp => {
-        console.log(resp)
-        return resp
+        alert.title="Success"
+        alert.message=`${resp.data}`
+        alert.color="success"
+        showAlert.value=true
+        isLoading.value=false
+        reset()
+    })
+    .catch(e => {
+        console.log(e)
+        alert.title="Error"
+        alert.message=`${e.response && e.response.data? e.response.data:e}`
+        alert.color="danger"
+        showAlert.value=true
+        isLoading.value = false
     })
 }
 
-function resetTracks(){
-    Object.assign(assemblyTrack,initAssemblyTrack)
-    Object.assign(annotationsToSubmit,initAnnotation)
-
+function reset(){
+    Object.assign(jbrowseData,initJbrowseData)
 }
 
 

@@ -1,6 +1,6 @@
 *.db
 .DS_Store
 venv
-env
+.env
 __pycache__
 blog_old.md
