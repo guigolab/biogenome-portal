@@ -78,7 +78,6 @@
 import { watch,nextTick,ref, reactive } from 'vue'
 import {dataIcons} from '../../config'
 import portalService from '../services/DataPortalService'
-import OrganismForm from '../components/OrganismForm.vue'
 import DataTable from '../components/data/DataTable.vue'
 
 const isLoading = ref(false)

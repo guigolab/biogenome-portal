@@ -1,9 +1,3 @@
-<script setup>
-import OrganismForm from './components/OrganismForm.vue'
-import TreeSideBar from './components/TreeSideBar.vue'
-import NavBar from './components/NavBar.vue'
-</script>
-
 <template>
 <NavBar/>
     <router-view/>

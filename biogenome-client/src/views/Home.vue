@@ -35,56 +35,16 @@
             </va-card-content>
             <va-divider/>
             <va-card-content>
-            <div class="row">
-                <div class="flex lg12 md12">
-                    <OrganismForm/>
-                </div>
-            </div>
+
             <div class="row">
                 <div class="flex lg12 md12">
                     <OrganismList @data-selected="getData" @organism-selected="getOrganism" :total="orgStore.total" :organisms="orgStore.organisms" :query="orgStore.query"/>
                 </div>
-                <!-- <div class="flex">
-                    <OrganismForm/>
-                </div> -->
             </div>
             </va-card-content>
         </va-card>
     </div>
 </div>
-<!-- <div class="row">
-    <div class="flex">
-        <DataCards/>
-    </div>
-    <div class="flex">
-        <OrganismForm/>
-    </div>
-</div> -->
-<!-- <div class="row">
-    <div class="flex">
-    </div>
-    <div class="flex">
-        <OrganismList @data-selected="getData" @organism-selected="getOrganism" :total="orgStore.total" :organisms="orgStore.organisms" :query="orgStore.query"/>
-    </div>
-    <div class="flex lg6 md6">
-        <div class="row">
-            <div class="flex lg12">
-                <OrganismDetails v-if="organismLoaded" :organism="organism"/>
-            </div>
-            <div v-if="dataLoaded" class="flex lg12">
-                <va-card class="custom-card">
-                    <va-card-title>
-                        {{data.model+' of '+data.organismName}}
-                    </va-card-title>
-                    <va-card-content>
-                        <va-data-table :items="data.values"/>
-                    </va-card-content>
-                </va-card>
-            </div>
-        </div>
-    </div>
-</div> -->
-
 </template>
 <script setup>
 import BarChart from '../components/BarChart.vue'
@@ -94,7 +54,6 @@ import OrganismList from '../components/OrganismList.vue'
 import OrganismTable from '../components/OrganismTable.vue'
 import TreeSideBar from '../components/TreeSideBar.vue'
 import DataCards from '../components/DataCards.vue'
-import OrganismForm from '../components/OrganismForm.vue'
 import {organisms} from '../stores/organisms'
 import {taxons} from '../stores/taxons'
 import {onMounted,watch,ref, nextTick, reactive} from 'vue'

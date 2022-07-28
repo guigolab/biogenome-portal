@@ -40,7 +40,6 @@
 import { reactive } from "vue"
 
 const props = defineProps({
-    color:String,
     title:String,
     listObject:Object,
     formOptions:Array

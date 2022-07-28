@@ -7,7 +7,7 @@
             </va-button-dropdown>
         </div>
         <div class="flex">
-            <va-button color="gray" v-if="query.offset-limit > 0" @click="query.offset=query.offset-limit" flat icon="chevron_left"/>
+            <va-button color="gray" v-if="query.offset-limit >= 0" @click="query.offset=query.offset-limit" flat icon="chevron_left"/>
             <va-button color="gray" v-if="query.offset+limit < total" @click="query.offset=query.offset+limit" flat icon="chevron_right"/>
         </div> 
     </div>

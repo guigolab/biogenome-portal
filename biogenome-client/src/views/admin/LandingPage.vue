@@ -82,12 +82,12 @@
                 </template>
                 <template #headerAppend>
                     <tr style="background-color:white">
-                        <th colspan="1">
-                            <va-button v-if="dataValue === 'users'" @click="openUserForm()">
-                                Create user
+                        <th v-if="dataValue === 'users'" colspan="1">
+                            <va-button @click="openUserForm()">
+                                Create new user
                             </va-button>
                         </th>
-                        <th :colspan="loadedItems.columns.length - 1">
+                        <th colspan="1">
                             <Pagination
                                 :total="loadedItems.total"
                                 :query="params"
@@ -169,6 +169,12 @@
                     </template>
                 </va-modal>
                 <va-modal v-model="showEditModal" hide-default-actions>
+                <div v-if="dataValue==='annotations'">
+
+                </div>
+                <div v-else-if="dataValue==='jbrowse'">
+
+                </div>
                         <FormComponent 
                             :title="objectToEdit.title"
                             :form-options="objectToEdit.formOptions"
@@ -206,6 +212,9 @@ import Pagination from '../../components/Pagination.vue'
 import FormComponent from '../../components/admin/form/FormComponent.vue'
 import {computed, nextTick, onMounted, reactive, ref, watch} from 'vue'
 import {useRouter} from 'vue-router'
+
+
+//should split code page
 
 const router = useRouter()
 
@@ -267,12 +276,8 @@ const annotationOptions = [
     {type:'input',label:'GFF3 GZIP', key:'gff_gz_location', mandatory:true},
     {type:'input',label:'GFF3 TABIX GZIP', key:'tab_index_location', mandatory:true},
 ]
-const assemblyTrackOptions = [
-    {type:'input',label:'Fasta location', key:'fasta_location', mandatory:true},
-    {type:'input',label:'fai location', key:'fai_location', mandatory:true},
-    {type:'input',label:'gzi Location', key:'gzi_location', mandatory:true},
-    {type:'input',label:'chromosome aliases file url', key:'chrom_alias'},
-]
+
+
 
 const selectedModelObject = computed(()=>{
     return dataModels.find(model => model.value === dataValue.value)
@@ -402,17 +407,16 @@ function resetEditAction(){
 }
 
 function submitEditedItem(){
-    if(dataValue.value === 'assemblies'){
-        AssemblyService.updateAssembly(objectToEdit.title, objectToEdit.listObject)
-        .then(resp => {
-            console.log(resp)
-        })
-    }else if(dataValue.value === 'annotations'){
+    if(dataValue.value === 'annotations'){
         AnnotationService.updateAnnotation(objectToEdit.title, objectToEdit.listObject)
         .then(resp => {
             console.log(resp)
         })
-    }else if(dataValue.value === 'users'){
+    
+    }else if(dataValue.value === 'jbrowse'){
+
+    }
+    else if(dataValue.value === 'users'){
         UserService.updateUser(objectToEdit.title, objectToEdit.listObject)
         .then(resp => {
             console.log(resp)

@@ -1,8 +1,9 @@
 <template>
+<va-inner-loading :loading="isLoading">
 <div class="layout">
     <div class="row">
         <div class="flex">
-            <h1 class="display-3">Organism Form</h1>
+            <h1 class="display-3">{{validTaxid?organismFormData.scientific_name:'Organism Form'}}</h1>
         </div>
     </div>
     <va-divider/>
@@ -32,12 +33,6 @@
                 </va-card-content>
             </va-card>
             <div v-if="validTaxid">
-                <div class="row">
-                    <div class="flex">
-                        <h1 class="display-3">{{organismFormData.scientific_name}}</h1>
-                    </div>
-                </div>
-                <va-divider/>
                 <va-card class="custom-card">
                     <va-card-title>
                         Avatar image
@@ -103,17 +98,20 @@
             </div>
         </div>
     </div>
-    <div class="row">
+    <div class="row justify--space-between">
+        <div class="flex">
+            <va-button color="danger" @click="reset()">Reset</va-button>
+        </div>
         <div class="flex">
             <va-button :disabled="!validTaxid" @click="organismToUpdate ? updateOrganism() : createOrganism()">Submit</va-button>
         </div>
     </div>
 </div>
      
-
+</va-inner-loading>
 </template>
 <script setup>
-import {nextTick, onMounted, reactive,ref} from 'vue'
+import {computed, nextTick, onMounted, reactive,ref} from 'vue'
 import EnaService from '../../../services/clients/ENAClientService'
 import SubmissionService from '../../../services/SubmissionService'
 import {GoaTStatus,TargetListStatus,PublicationSource} from '../../../../config'
@@ -122,16 +120,16 @@ import FormComponent from './FormComponent.vue'
 import DataPortalService from '../../../services/DataPortalService'
 import MetadataForm from './MetadataForm.vue'
 import ClientInput from '../../ClientInput.vue'
-
+import {useRouter} from "vue-router"
 const PROJECT_ACCESSION = import.meta.env.VITE_PROJECT_ACCESSION
 const props = defineProps({
     taxid:String
 })
 const organismToUpdate = ref(false)
-
 const validTaxid = ref(false)
 const showAlert = ref(false)
-
+const router = useRouter()
+const isLoading=ref(false)
 const initOrganism = {
     scientific_name:null,
     taxid:null,
@@ -172,8 +170,26 @@ const initAlert = {
 
 const alert = reactive({...initAlert})
 
+const goatOptions = computed(()=>{
+    if(organismToUpdate.value){
+        switch(organismFormData.goat_status){
+            case 'Sample Collected':
+                return ['Sample Collected','Sample Acquired','Data Generation','In Assembly'];
+            case 'Sample Acquired':
+                return ['Sample Acquired','Data Generation','In Assembly']
+            case 'Data Generation':
+                return ['Data Generation','In Assembly']
+            default:
+                return [organismFormData.goat_status]
+        }
+    }
+    return ['Sample Collected','Sample Acquired','Data Generation','In Assembly']
+
+    
+})
+
 const goatInformations = [
-    {type:'select',label:'GoaT status', key:'goat_status', options:GoaTStatus.map(s => s.label)},
+    {type:'select',label:'GoaT status', key:'goat_status', options:goatOptions.value},
     {type:'select',label:'Long List status', key:'target_list_status',options:TargetListStatus.map(s => s.label)},
 ]
 const initGalleryImageOption={
@@ -267,36 +283,45 @@ function removeImage(index){
 }
 
 function createOrganism(){
+    isLoading.value=true
     SubmissionService.createOrganism(organismFormData)
     .then(resp => {
         alert.title="Success"
         alert.message=`The organism with taxid: ${organismFormData.taxid} has been correctly saved`
         alert.color="success"
         showAlert.value=true
+        isLoading.value=false
     })
     .catch(e => {
         alert.title="Error"
         alert.message="Something happened"
         alert.color="danger"
         showAlert.value=true
+        isLoading.value=false
     })
 }
 
 function updateOrganism(){
+    isLoading.value=true
     SubmissionService.updateOrganism(props.taxid,organismFormData)
     .then(resp => {
         alert.title="Success"
         alert.message=`The organism with taxid: ${organismFormData.taxid} has been correctly updated`
         alert.color="success"
         showAlert.value=true
+        isLoading.value=false
     })
     .catch(e => {
         alert.title="Error"
         alert.message="Something happened"
         alert.color="danger"
         showAlert.value=true
+        isLoading.value=false
     })
 }
 
+function reset(){
+    router.go()
+}
 
 </script>

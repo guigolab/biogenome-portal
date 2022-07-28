@@ -54,17 +54,16 @@ function getData(){
         }
     })
     .catch(e => {
-        isLoading.value=false
         if(e && e.response && e.response.status && e.response.status === 404){
             return props.insdcRequest(id.value)
         }
         return null
     })
     .then(resp => {
-        isLoading.value=false
         if(resp && resp.data){
             emit('onResponse', {data:resp.data, isError:false,alert:alert, id:id.value})
         }
+        isLoading.value=false
     })
     .catch(e => {
         alert.title="Error"

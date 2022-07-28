@@ -24,7 +24,7 @@
                 <ListInputComponent 
                     :title="'Annotation tracks'"
                     :key-label="'name'"
-                    :list-object="initAnnotation"
+                    :list-object="annotation"
                     :model-list="jbrowseData.annotation_tracks"
                     :form-options="annotationOptions"
                 />
@@ -51,6 +51,8 @@ import { reactive,ref,computed } from "vue"
 import FormComponent from './FormComponent.vue'
 import ListInputComponent from "./ListInputComponent.vue"
 import GenomeBrowserService from "../../../services/GenomeBrowserService";
+import {useRouter} from "vue-router"
+const router = useRouter()
 
 const isLoading = ref(false)
 
@@ -77,12 +79,22 @@ const initJbrowseData = {
     annotation_tracks : []
 }
 
+const initAssemblyObj = {
+    fasta_location:'',
+    fai_location:'',
+    gzi_location:'',
+    chrom_alias:''
+}
+
+const assemblyObj = reactive({...initAssemblyObj})
+
 const initAnnotation = {
     name:'',
     gff_gz_location:'',
     tab_index_location:'',
 }
 
+const annotation = reactive({...initAnnotation})
 
 const jbrowseData = reactive({...initJbrowseData})
 
@@ -107,7 +119,6 @@ function submitGenomeBrowserData(){
         alert.color="success"
         showAlert.value=true
         isLoading.value=false
-        reset()
     })
     .catch(e => {
         console.log(e)
@@ -120,7 +131,7 @@ function submitGenomeBrowserData(){
 }
 
 function reset(){
-    Object.assign(jbrowseData,initJbrowseData)
+    router.go()
 }
 
 

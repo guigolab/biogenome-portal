@@ -43,7 +43,7 @@
 import {ref} from "vue"
 
 const props = defineProps({
-    metadata:Object
+    metadata:Object,
 })
 
 const metadataKey = ref("")

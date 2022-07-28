@@ -60,12 +60,13 @@ import { reactive,ref } from "vue"
 import FormComponent from './FormComponent.vue'
 import MetadataForm from "./MetadataForm.vue";
 import AnnotationService from "../../../services/AnnotationService";
+import {useRouter} from "vue-router"
+const router = useRouter()
 
 const props = defineProps({
     accession:String
 })
 const showAlert = ref(false)
-
 const alert = reactive({
     title:'',
     color:'',
@@ -114,7 +115,6 @@ function submitAnnotation(){
         alert.color="success"
         showAlert.value=true
         isLoading.value=false
-        reset()
     })
     .catch(e => {
         console.log(e)
@@ -127,6 +127,6 @@ function submitAnnotation(){
 }
 
 function reset(){
-    Object.assign(annotation, initAnnotation)
+    router.go()
 }
 </script>
