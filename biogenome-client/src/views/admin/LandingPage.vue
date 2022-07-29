@@ -10,7 +10,7 @@
                 <va-tabs v-model="dataValue" >
                     <template #tabs>
                         <va-tab
-                            v-for="model in dataModels"
+                            v-for="model in filteredDataModels"
                             :name="model.value"
                             :key="model.value"
                         >
@@ -62,7 +62,7 @@
                             </ul>
                             </va-button-dropdown>
                         </div>
-                        <div v-if="isAdmin" class="flex">
+                        <div v-if="userRole !== 'SampleManager'" class="flex">
                             <va-button :disabled="loggedUser && loggedUser === rowData.name"  color="danger" @click="confirmDeleteItem(rowData)" icon="delete"/>
                         </div>
                     </div>
@@ -260,7 +260,7 @@ const initLoadedItems = {
 const initUser = {
     name:'',
     password:'',
-    role:'SampleCollector'
+    role:''
 }
 
 
@@ -304,9 +304,8 @@ watch(dataValue, ()=>{
     getData()
 })
 
-const isAdmin = computed(()=>{
-    const role = localStorage.getItem('userRole')
-    return role === 'Admin'
+const userRole = computed(()=>{
+    return localStorage.getItem('userRole')
 })
 
 const loggedUser = computed(()=>{

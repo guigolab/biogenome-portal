@@ -9,7 +9,7 @@ export const auth = defineStore('auth', {
             password:'',
             role: localStorage.getItem('userRole') || "",
         },
-        isAuthenticated: localStorage.getItem('isAuthenticated') || false,
+        isAuthenticated: localStorage.getItem('isAuthenticated') || "",
         message: {
             color:'secondary',
             text:'Here you will see the last notification'
@@ -19,7 +19,7 @@ export const auth = defineStore('auth', {
         removeUser(){
           this.user.name = ""
           this.user.role = ""
-          this.isAuthenticated = false
+          this.isAuthenticated = ""
           this.setLocalStorage()
 
         },
@@ -46,7 +46,7 @@ export const auth = defineStore('auth', {
                 this.user.name = ''
                 this.user.password = ''
                 this.user.role = ''
-                this.isAuthenticated = false
+                this.isAuthenticated = ''
                 this.setLocalStorage()
                 this.message.text = response.data.msg
                 this.message.color = 'success'

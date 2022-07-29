@@ -4,14 +4,14 @@
             <div class="flex">
                 <va-button-dropdown label="Import data from INSDC">
                     <ul>
-                        <li v-for="(action,index) in importActions" :key="index">
+                        <li v-for="(action,index) in filteredActions.importActions" :key="index">
                             <va-chip style="width: fit-content;" :to="action.path" square flat>{{action.label}}</va-chip>
                         </li>
                     </ul>
                 </va-button-dropdown>
                 <va-button-dropdown label="Create data locally">
                     <ul>
-                        <li v-for="(action,index) in creationActions" :key="index">
+                        <li v-for="(action,index) in filteredActions.creationActions" :key="index">
                             <va-chip style="width: fit-content;" :to="action.path" square flat>{{action.label}}</va-chip>
                         </li>
                     </ul>
@@ -34,6 +34,7 @@ const filteredActions = computed(()=>{
         case 'SampleManager':
             obj.importActions = importActions.filter(act => act.path === '/admin/biosample-form')
             obj.creationActions = creationActions.filter(act => act.path !== '/admin/organism-form')
+            return obj
         default:
             obj.importActions = [...importActions]
             obj.creationActions = [...creationActions]

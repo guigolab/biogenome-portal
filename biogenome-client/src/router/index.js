@@ -99,8 +99,6 @@ const router = createRouter({
 router.beforeEach(async (to,from)=>{
   const authStore = auth()
   if(to.matched.some((record)=>record.meta.requiresAuth)){
-    console.log(!authStore.isAuthenticated)
-    console.log(authStore.isAuthenticated)
     if(!authStore.isAuthenticated && to.name !== 'login'){
       alert('Authentication required')
       return {name: 'login'}
