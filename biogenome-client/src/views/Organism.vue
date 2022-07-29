@@ -1,6 +1,5 @@
 <template>
 <div v-if="organismLoaded" class="row">
-{{jbrowseSession}}
     <div class="flex lg12 md12 sm12 xs12">
         <div class="row justify--start align--center">
             <div style="padding:15px" class="flex">

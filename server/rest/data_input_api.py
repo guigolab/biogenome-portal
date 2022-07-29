@@ -22,16 +22,12 @@ class Login(Resource):
         else:
             role = None
         if role:
-            access_token = create_access_token(identity=name,expires_delta=timedelta(minutes=2))
+            access_token = create_access_token(identity=name,expires_delta=timedelta(minutes=1))
             response = Response(json.dumps(dict(msg=f"welcome {name}",role=role)), mimetype="application/json", status=200)
             set_access_cookies(response,access_token)
             return response
         return Response(json.dumps({"msg":"Bad User or Password"}), mimetype="application/json", status=401)
     
-    # @jwt_required()
-    # def get(self):
-    #     app.logger.info('HELLOO')
-
     @jwt_required()
     def delete(self):
         Annotation.drop_collection()
@@ -54,41 +50,3 @@ class Logout(Resource):
         response = Response(json.dumps({"msg":"Logout succesfull"}), mimetype="application/json", status=201)
         unset_jwt_cookies(response)
         return response
-
-class Users(Resource):
-    @jwt_required()
-    def get(self):
-        response = Response(BioGenomeUser.objects().to_json(), mimetype="application/json", status=200)
-        return response
-
-    #create user
-    @jwt_required()
-    def post(self):
-        user_data = request.json  if request.is_json else request.form
-        app.logger.info(user_data)
-        user = BioGenomeUser.objects(name=user_data['name']).first()
-        if user:
-            return Response(json.dumps({"msg":f'User {user.name} already exists!'}), mimetype="application/json", status=400)
-        new_user = BioGenomeUser(**user_data).save()
-        return Response(json.dumps({"msg":f'User {user.name} saved!'}), mimetype="application/json", status=400)
-
-    #update user
-    @jwt_required()
-    def put(self, name):
-        if not name:
-            return Response(json.dumps({"msg":'user name is mandatory!'}), mimetype="application/json", status=400)
-        user = BioGenomeUser.objects(name=name).first()
-        if request.is_json:
-            user_data = request.json()
-        else:
-            user_data = request.form
-        user.update(**user_data)
-        return Response(json.dumps({"msg":f'User {user.name} updated!'}), mimetype="application/json", status=400)
-
-    @jwt_required()
-    def delete(self, name):
-        if not name:
-            return Response(json.dumps({"msg":'user name is mandatory!'}), mimetype="application/json", status=400)
-        user = BioGenomeUser.objects(name=name).first()
-        user.delete()
-        return Response(json.dumps({"msg":f'User {user.name} deleted!'}), mimetype="application/json", status=400)

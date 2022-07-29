@@ -1,7 +1,7 @@
 from flask_restful import Resource
 from flask import Response, request
 from db.models import CronJob,CronJobStatus
-from flask_jwt_extended import jwt_required, set_access_cookies, unset_jwt_cookies
+from flask_jwt_extended import jwt_required
 
 
 ## persist cronjob status

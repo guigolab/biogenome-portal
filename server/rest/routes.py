@@ -3,7 +3,7 @@ from .local_sample_api import LocalSampleApi
 from .organism_api import OrganismsApi, OrganismApi
 from .parser_api import ExcelParser
 from .taxonomy_api import TreeApi,TaxNodesApi
-from .data_input_api import Login,Logout,Users
+from .data_input_api import Login,Logout
 from .bioproject_api import BioProjectApi
 from .assembly_api import AssemblyApi
 from .geo_localization_api import GeoLocApi

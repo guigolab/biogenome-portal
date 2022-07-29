@@ -1,6 +1,6 @@
 import { createWebHistory, createRouter } from 'vue-router';
-import Home from '../views/Home.vue';
-
+import Home from '../views/Home.vue'
+import {auth} from '../stores/auth'
 const ROOTNODE = import.meta.env.VITE_ROOT_NODE
 const PROJECT_ACCESSION = import.meta.env.VITE_PROJECT_ACCESSION
 const treeOfLife = () => import('../views/TreeOfLife.vue')
@@ -10,15 +10,13 @@ const admin = () => import('../views/AdminArea.vue')
 const adminHP = () => import('../views/admin/LandingPage.vue')
 const biosampleForm = () => import('../components/admin/form/BioSampleForm.vue')
 const readForm = () => import('../components/admin/form/ReadForm.vue')
-const users = () => import('../components/admin/Users.vue')
 const organismForm = () => import('../components/admin/form/OrganismForm.vue')
-const samples = () => import('../components/admin/LocalSamples.vue')
 const assembliesForm = () => import('../components/admin/form/AssemblyForm.vue')
 const annotationForm = () => import('../components/admin/form/AnnotationForm.vue')
-//form pages/components
 const genomeBrowserForm = () => import('../components/admin/form/GenomeBrowserForm.vue')
 const sunburst = () => import('../components/SunBurst.vue')
 const excel = () => import('../components/admin/form/ExcelForm.vue')
+const login = () => import('../components/admin/form/Login.vue')
 
 // const jBrowseComponent = () => import('../views/JBrowse.vue')
 // const humanPage = () => import('../views/Human.vue')
@@ -48,14 +46,11 @@ const routes = [
       {path: "assembly-form",component:assembliesForm, name:"assembly-form"},
       {path: "annotation-form",component:annotationForm, name:"annotation-form",props:true},
       {path: "genome-browser-form",component:genomeBrowserForm, name:"genome-browser-form",props:true},
-
       {path: "biosample-form",component:biosampleForm, name:"biosample-form"},
       {path: "read-form",component:readForm, name:"read-form"}
-
-
-      // {path:'/users', component:users, name:"users"}
     ],
     component: admin,
+    meta: { requiresAuth: true }
   },
   {
     path: '/tree-of-life',
@@ -88,6 +83,11 @@ const routes = [
         path:'taxid'
       }
     ]
+  },
+  {
+    path: "/login",
+    name:'login',
+    component: login
   }
 ];
 
@@ -96,4 +96,15 @@ const router = createRouter({
   routes,
 });
 
+router.beforeEach(async (to,from)=>{
+  const authStore = auth()
+  if(to.matched.some((record)=>record.meta.requiresAuth)){
+    console.log(!authStore.isAuthenticated)
+    console.log(authStore.isAuthenticated)
+    if(!authStore.isAuthenticated && to.name !== 'login'){
+      alert('Authentication required')
+      return {name: 'login'}
+    }
+  }
+})
 export default router;

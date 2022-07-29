@@ -1,21 +1,28 @@
 import {defineStore} from 'pinia'
 import {reactive, ref} from 'vue'
 import SubmissionService from '../services/SubmissionService'
-
+import router from '../router'
 export const auth = defineStore('auth', {
     state: () => ({
         user: {
-            name: localStorage.getItem('userName'),
+            name: localStorage.getItem('userName') || "",
             password:'',
-            role: localStorage.getItem('userRole'),
+            role: localStorage.getItem('userRole') || "",
         },
-        isAuthenticated: !!localStorage.getItem('isAuthenticated'),
+        isAuthenticated: localStorage.getItem('isAuthenticated') || false,
         message: {
             color:'secondary',
             text:'Here you will see the last notification'
         }
     }),
     actions: {
+        removeUser(){
+          this.user.name = ""
+          this.user.role = ""
+          this.isAuthenticated = false
+          this.setLocalStorage()
+
+        },
         async login(){
             try {
                 const response = await SubmissionService.login(this.user)
@@ -23,9 +30,8 @@ export const auth = defineStore('auth', {
                 this.user.role = response.data.role
                 this.message.color = 'success'
                 this.isAuthenticated = true
-                localStorage.setItem('userName', this.user.name)
-                localStorage.setItem('userRole', this.user.role)
-                localStorage.setItem('isAuthenticated', this.isAuthenticated)
+                this.setLocalStorage()
+                router.go(-1)
               } catch (error) {
                 this.message.text = error.response.data.message
                 this.message.color = 'danger'
@@ -41,6 +47,7 @@ export const auth = defineStore('auth', {
                 this.user.password = ''
                 this.user.role = ''
                 this.isAuthenticated = false
+                this.setLocalStorage()
                 this.message.text = response.data.msg
                 this.message.color = 'success'
               } catch (error) {
@@ -50,6 +57,11 @@ export const auth = defineStore('auth', {
                 return error
               }
         },
+        setLocalStorage(){
+          localStorage.setItem('userName', this.user.name)
+          localStorage.setItem('userRole', this.user.role)
+          localStorage.setItem('isAuthenticated', this.isAuthenticated)
+        }
 
     }
   })

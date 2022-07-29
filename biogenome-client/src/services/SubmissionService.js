@@ -1,47 +1,15 @@
 import http from "../http-axios"
-// import store from "../store"
-
+import router from "../router";
+import {auth} from "../stores/auth"
 const base = http.base
 const submission = http.submission
-// const download = http.download
 
-// download.interceptors.response.use(undefined, (error) => {
-//   if (error) {
-//     // const originalRequest = error.config;
-//     if (error.response.status === 401) {
-//         store.dispatch('submission/showLoginModal')
-//     }
-//     return Promise.reject(error)
-//   }
-// })
-// download.interceptors.request.use(
-//   (config) => {
-//   const token = localStorage.getItem('token') || null
-//   config.headers = {
-//     'Authorization': `Bearer ${token}`,
-//     'Content-Type': 'application/json'
-//   }
-//   return config
-//   },
-//   (error) => {
-//     return Promise.reject(error)
-//   }
-// )
-
-// submission.interceptors.response.use(undefined, (error) => {
-//   if (error) {
-//     // const originalRequest = error.config;
-//     if (error.response.status === 401) {
-//         store.dispatch('submission/showLoginModal')
-//     }
-//     return Promise.reject(error)
-//   }
-// })
 function getCookie(name) {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
     if (parts.length === 2) return parts.pop().split(';').shift();
   }
+
 submission.interceptors.request.use(
   (config) => {
   config.headers = {
@@ -54,6 +22,20 @@ submission.interceptors.request.use(
     return Promise.reject(error)
   }
 )
+
+submission.interceptors.response.use(function (response) {
+  return response;
+}, function (error) {
+  if (401 === error.response.status) {
+    const authStore = auth()
+    authStore.removeUser()
+    alert('Session expired!')
+    return router.push({name:'login'})
+  } else {
+      return Promise.reject(error);
+  }
+});
+
 class SubmissionService {
   generateXML(form) {
       return base.post("/xml", form)
@@ -93,16 +75,6 @@ class SubmissionService {
     return submission.delete(`/users/${name}`)
   }
 
-  
-  //local sample CRUD
-  getSamples(params){} // get samples, validated and not
-  importSamples(formData){} // import samples from spreadsheet
-  createSample(formData){}
-  updateSample(id){}
-  deleteSample(id){}
-
-
-
   deleteAll(){
     return submission.delete('/login')
   }
@@ -139,17 +111,6 @@ class SubmissionService {
   deleteAnnotation(name){
     return submission.delete(`/annotations/${name}`)
   }
-
-  /*
-    submit samples
-    CRUD local sample
-    import biosample/delete biosample
-    CRUD organism
-    import assembly/delete assembly/create assembly track
-    import experiments/delete experiments
-    CRUD annotation
-    
-  */
 
 }
 

@@ -15,6 +15,7 @@ class OrganismsApi(Resource):
 		return Response(organism_service.get_organisms(**request.args),mimetype="application/json", status=200)
 
 	#create organism
+	@jwt_required()
 	def post(self):
 		data = request.json if request.is_json else request.form
 		new_organism = organism_service.create_organism_from_data(data)
@@ -37,11 +38,13 @@ class OrganismApi(Resource):
 		return Response(json.dumps(json_resp, default=str),mimetype="application/json", status=200)
 
 	##update organism
+	@jwt_required()
 	def put(self,taxid):
 		data = request.json if request.is_json else request.form
 		updated_organism = organism_service.update_organism_from_data(data,taxid)
 		return Response(updated_organism.to_json(),mimetype="application/json", status=201)
 	
+	@jwt_required()
 	def delete(self,taxid):
 		message = organism_service.delete_organism(taxid)
 		return Response(json.dumps(message),mimetype="application/json", status=200)

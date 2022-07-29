@@ -6,6 +6,7 @@ from db.models import Assembly
 from services import assembly_service
 from utils import common_functions
 from errors import NotFound
+from flask_jwt_extended import jwt_required
 
 FIELDS_TO_EXCLUDE = ['id','created']
 
@@ -19,11 +20,13 @@ class AssemblyApi(Resource):
                 raise NotFound
             return Response(assembly_obj.to_json(), mimetype="application/json", status=200)
         return Response(common_functions.query_search(Assembly,FIELDS_TO_EXCLUDE,**request.args), mimetype="application/json", status=200)
-
+    
+    @jwt_required()
     def post(self,accession):
         response = assembly_service.create_assembly_from_accession(accession)
         return Response(json.dumps(response['message']), mimetype="application/json", status=response['status'])
 
+    @jwt_required()
     def delete(self,accession):
         deleted_accession = assembly_service.delete_assembly(accession)
         if deleted_accession:

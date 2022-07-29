@@ -5,6 +5,7 @@ from db.models import BioSample
 from services import biosample_service
 from utils import common_functions
 from errors import NotFound
+from flask_jwt_extended import jwt_required
 
 FIELDS_TO_EXCLUDE = ['id','created','last_check']
 
@@ -19,10 +20,12 @@ class BioSampleApi(Resource):
             return Response(biosample_obj.to_json(),mimetype="application/json", status=200)
         return Response(common_functions.query_search(BioSample,FIELDS_TO_EXCLUDE,**request.args), mimetype="application/json", status=200)
 
+    @jwt_required()
     def post(self,accession):
         response = biosample_service.create_biosample_from_accession_input(accession)
         return Response(json.dumps(response['message']), mimetype="application/json", status=response['status'])
 
+    @jwt_required()
     def delete(self,accession):
         deleted_accession = biosample_service.delete_biosample(accession)
         if deleted_accession:

@@ -62,8 +62,8 @@
                             </ul>
                             </va-button-dropdown>
                         </div>
-                        <div class="flex">
-                            <va-button color="danger" @click="confirmDeleteItem(rowData)" icon="delete"/>
+                        <div v-if="isAdmin" class="flex">
+                            <va-button :disabled="loggedUser && loggedUser === rowData.name"  color="danger" @click="confirmDeleteItem(rowData)" icon="delete"/>
                         </div>
                     </div>
                 </template>
@@ -263,6 +263,8 @@ const initUser = {
     role:'SampleCollector'
 }
 
+
+
 const user = reactive({...initUser})
 
 const userOptions = [
@@ -300,6 +302,15 @@ watch(dataValue, ()=>{
     showTable.value=false
     Object.assign(params,initParams)
     getData()
+})
+
+const isAdmin = computed(()=>{
+    const role = localStorage.getItem('userRole')
+    return role === 'Admin'
+})
+
+const loggedUser = computed(()=>{
+    return localStorage.getItem('userName')
 })
 
 onMounted(()=>{
@@ -398,20 +409,10 @@ function editItem(item){
         case 'users':
             objectToEdit.title = item.name
             objectToEdit.listObject = item
-            objectToEdit.formOptions = userOptions
+            objectToEdit.formOptions = userOptions.filter(opt => opt.key !== 'name') // can't edit the name
             showEditModal.value = true
             break
     }
-    // if(dataValue.value === 'annotations'){
-    //     router.push({name:'annotation-form', params:{accession:rowData.accession,toUpdate:true,name:item.name}})
-    // }else if(dataValue.value === 'organisms'){
-    //     router.push({name: 'organism-form', params:{taxid: item.taxid}})
-    // }else if(dataValue.value === 'users'){
-    //     objectToEdit.title = item.name
-    //     objectToEdit.listObject = item
-    //     objectToEdit.formOptions = userOptions
-    //     showEditModal.value = true
-    // }
 }
 
 function resetEditAction(){
@@ -421,22 +422,13 @@ function resetEditAction(){
 }
 
 function submitEditedItem(){
-    if(dataValue.value === 'annotations'){
-        AnnotationService.updateAnnotation(objectToEdit.title, objectToEdit.listObject)
-        .then(resp => {
-            console.log(resp)
-        })
-    
-    }else if(dataValue.value === 'jbrowse'){
-
+    if(dataValue.value === 'users'){
+            UserService.updateUser(objectToEdit.title, objectToEdit.listObject)
+            .then(resp => {
+                console.log(resp)
+            })
+        }
     }
-    else if(dataValue.value === 'users'){
-        UserService.updateUser(objectToEdit.title, objectToEdit.listObject)
-        .then(resp => {
-            console.log(resp)
-        })
-    }
-}
 
 function confirmDeleteItem(item){
     idToDelete.value = item.accession || item.name || item.local_id || item.experiment_accession || item.assembly_accession || item.taxid

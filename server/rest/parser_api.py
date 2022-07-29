@@ -52,6 +52,7 @@ from flask_jwt_extended import jwt_required
 
 class ExcelParser(Resource):
 ## should save excel file to track history
+    @jwt_required()
     def post(self):
         excel = request.files.get('excel')
         form_data = dict(**request.files,**request.json) if request.is_json else dict(**request.form)

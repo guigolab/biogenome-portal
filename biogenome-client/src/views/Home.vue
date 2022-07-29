@@ -35,7 +35,11 @@
             </va-card-content>
             <va-divider/>
             <va-card-content>
-
+            <div class="row">
+                <div class="flex lg12 md12">
+                   <OrganismFilter/>
+                </div>
+            </div>
             <div class="row">
                 <div class="flex lg12 md12">
                     <OrganismList @data-selected="getData" @organism-selected="getOrganism" :total="orgStore.total" :organisms="orgStore.organisms" :query="orgStore.query"/>
@@ -59,6 +63,7 @@ import {taxons} from '../stores/taxons'
 import {onMounted,watch,ref, nextTick, reactive} from 'vue'
 import DataPortalService from '../services/DataPortalService'
 import SunBurst from '../components/SunBurst.vue'
+import OrganismFilter from '../components/OrganismFilter.vue'
 
 const orgStore = organisms()
 const taxStore = taxons()
