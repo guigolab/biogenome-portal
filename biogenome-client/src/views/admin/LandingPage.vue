@@ -270,7 +270,7 @@ const user = reactive({...initUser})
 const userOptions = [
     {type:'input',label:'Name', key:'name', mandatory:true},
     {type:'input',label:'Password', key:'password', mandatory:true},
-    {type:'select',label:'Role',options:['SampleCollector','SampleManager','Admin'], key:'role', mandatory:true},
+    {type:'select',label:'Role',options:['SampleManager','DataManager','Admin'], key:'role', mandatory:true},
 ]
 
 const annotationOptions = [
@@ -334,6 +334,17 @@ const dataModels = [
     {label:'Portal Users',value:'users', itemProvider: UserService.getUsers,deleteAction: UserService.deleteUser,columns:['name','role','actions'],editable:true}
 ]
 
+const filteredDataModels = computed(()=>{
+    const role = localStorage.getItem('userRole')
+    switch(role){
+        case 'Admin':
+            return dataModels
+        case 'SampleManager':
+            return dataModels.filter(dt => dt.value === 'local_samples' || dt.value === 'biosamples')
+        case 'DataManager':
+            return dataModels.filter(dt => dt.value !== 'users')
+    }
+})
 
 function showDetails(item){
     objectToShow.fields = Object.keys(item)

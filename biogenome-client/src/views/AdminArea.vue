@@ -22,6 +22,24 @@
     </div>
 </template>
 <script setup>
+import { computed } from "vue"
+
+const filteredActions = computed(()=>{
+    const obj = {
+        importActions:[],
+        creationActions:[]
+    }
+    const role = localStorage.getItem('userRole')
+    switch(role){
+        case 'SampleManager':
+            obj.importActions = importActions.filter(act => act.path === '/admin/biosample-form')
+            obj.creationActions = creationActions.filter(act => act.path !== '/admin/organism-form')
+        default:
+            obj.importActions = [...importActions]
+            obj.creationActions = [...creationActions]
+            return obj
+    }
+})
 
 const importActions = [
     {label:'Biosample from EBI',path:'/admin/biosample-form'},

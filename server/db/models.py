@@ -32,7 +32,8 @@ class INSDCStatus(Enum):
     ANN_SUBMITTED = 'Annotations Created'
 
 class Roles(Enum):
-    DATA_MANAGER = 'DataManager' # create/edit data
+    SAMPLE_MANAGER = 'SampleManager' # samples local (through excel) and public (biosamples)
+    DATA_MANAGER = 'DataManager' # crud data
     DATA_ADMIN = 'Admin' # all actions
 
 class CronJobStatus(Enum):
