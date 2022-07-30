@@ -5,26 +5,22 @@
         <TreeSideBar/>
     </div>
     <div class="flex lg8 md8 sm12 xs12">
-        <va-card class="custom-card">
-            <va-card-title>
-                <div class="row justify--space-between">
-                    <div class="flex">
-                        <h1 class="display-5">
-                            {{orgStore.selectedNode.name}}
-                        </h1>
-                    </div>
-                    <div class="flex">
-                        <va-popover :message="orgStore.selectedNode.metadata.rank?'Tree of Life UI':'3D World Map'">
-                            <router-link :to="{name:'map',params:{accession:orgStore.selectedNode.metadata.accession}}"><va-icon size="large" :name="orgStore.selectedNode.metadata.rank?'call_split':'travel_explore'"/></router-link>
-                        </va-popover>
-                    </div>
+        <va-inner-loading :loading="isLoading">
+            <div class="row justify--space-between custom-card">
+                <div class="flex">
+                    <h1 class="display-3">
+                        {{orgStore.selectedNode.name}}
+                    </h1>
                 </div>
-
-            </va-card-title>
-            <va-card-content>
-            <div class="row">
+                <div class="flex">
+                    <va-popover :message="orgStore.selectedNode.metadata.rank?'Tree of Life UI':'3D World Map'">
+                        <router-link :to="{name:'map',params:{accession:orgStore.selectedNode.metadata.accession}}"><va-icon size="large" :name="orgStore.selectedNode.metadata.rank?'call_split':'travel_explore'"/></router-link>
+                    </va-popover>
+                </div>
+            </div>
+            <div class="row custom-card">
                 <div style="text-align:start" class="flex lg12 md12">
-                    <va-chip outline v-for="key in Object.keys(orgStore.selectedNode.metadata)" :key="key" size="small">{{key +': '+orgStore.selectedNode.metadata[key]}}</va-chip>
+                    <va-chip style="padding:5px" outline v-for="key in Object.keys(orgStore.selectedNode.metadata)" :key="key" size="small">{{key +': '+orgStore.selectedNode.metadata[key]}}</va-chip>
                 </div>
             </div>
             <div class="row justify--center">
@@ -32,21 +28,13 @@
                     <DataCards/>
                 </div>
             </div>
-            </va-card-content>
             <va-divider/>
-            <va-card-content>
             <div class="row">
                 <div class="flex lg12 md12">
-                   <OrganismFilter/>
+                    <OrganismList @data-selected="getData" @organism-selected="getOrganism" :total="orgStore.total" :organisms="orgStore.organisms" :query="orgStore.query" :is-loading="orgStore.isLoading"/>
                 </div>
             </div>
-            <div class="row">
-                <div class="flex lg12 md12">
-                    <OrganismList @data-selected="getData" @organism-selected="getOrganism" :total="orgStore.total" :organisms="orgStore.organisms" :query="orgStore.query"/>
-                </div>
-            </div>
-            </va-card-content>
-        </va-card>
+        </va-inner-loading>
     </div>
 </div>
 </template>
@@ -63,7 +51,6 @@ import {taxons} from '../stores/taxons'
 import {onMounted,watch,ref, nextTick, reactive} from 'vue'
 import DataPortalService from '../services/DataPortalService'
 import SunBurst from '../components/SunBurst.vue'
-import OrganismFilter from '../components/OrganismFilter.vue'
 
 const orgStore = organisms()
 const taxStore = taxons()

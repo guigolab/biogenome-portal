@@ -2,7 +2,7 @@ from .bulk_load_api import BulkLoadApi
 from .local_sample_api import LocalSampleApi
 from .organism_api import OrganismsApi, OrganismApi
 from .parser_api import ExcelParser
-from .taxonomy_api import TreeApi,TaxNodesApi
+from .taxonomy_api import TaxonomyApi, TreeApi,TaxNodesApi
 from .data_input_api import Login,Logout
 from .bioproject_api import BioProjectApi
 from .assembly_api import AssemblyApi
@@ -46,6 +46,8 @@ def initialize_routes(api):
 	api.add_resource(BioProjectApi, '/api/bioprojects', '/api/bioprojects/<accession>')
 	
 	api.add_resource(TaxNodesApi, '/api/taxons/<taxid>')
+
+	api.add_resource(TaxonomyApi, '/api/taxonomy')
 	
 	api.add_resource(TreeApi, '/api/tree/<taxid>') 
 	

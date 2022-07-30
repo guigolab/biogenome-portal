@@ -45,6 +45,9 @@ class DataPortalService {
     getTaxonChildren(name) {
         return base.get(`/taxons/${name}`)
     }
+    searchTaxons(params){
+        return base.get('/taxonomy',{params:params})
+    }
     getAssemblies(params){
         return base.get('/assemblies', {params:params})
     }

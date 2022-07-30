@@ -11,7 +11,23 @@
             </va-card-content>
         </Transition>
         <va-card-title>
-            taxons
+          <div class="row justify--space-between">
+            <div class="flex">
+                taxons
+            </div>
+            <div class="flex">
+              <va-input
+                v-model="taxonName"
+                placeholder="search taxon"
+              >
+                <template #appendInner>
+                    <va-icon
+                        name="search"
+                    />
+                </template>
+              </va-input>
+            </div>
+          </div>
         </va-card-title>
         <Transition duration="550" name="nested">
             <va-card-content>
@@ -23,7 +39,7 @@
     </va-card>
 </template>
 <script setup>
-import { onMounted,ref } from 'vue'
+import { onMounted,ref, watch } from 'vue'
 import TreeBrowser from './TreeBrowser.vue'
 import BioProjectsTree from '../components/BioProjectsTree.vue'
 import DataPortalService from '../services/DataPortalService'
@@ -31,6 +47,7 @@ import {taxons} from '../stores/taxons'
 import {bioprojects} from '../stores/bioprojects'
 import {organisms} from '../stores/organisms'
 
+const taxonName = ref("")
 const taxStore = taxons()
 const bioprjStore = bioprojects()
 const orgStore = organisms()
@@ -54,6 +71,13 @@ onMounted(()=>{
     })
 })
 
+watch(taxonName,()=>{
+  DataPortalService.searchTaxons({name:taxonName.value})
+  .then(resp => {
+    console.log(resp)
+    taxStore.tree = resp.data
+  })
+})
 </script>
 <style>
 .nested-enter-active, .nested-leave-active {

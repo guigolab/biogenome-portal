@@ -1,6 +1,7 @@
 from db.models import Organism, TaxonNode
 from flask import current_app as app
 from utils.pipelines import TaxonPipeline
+from mongoengine.queryset.visitor import Q
 
 #expects lazy references
 def delete_taxons(taxid_list):
@@ -85,3 +86,8 @@ def get_children(taxid):
     for node in tax_node['children']:
         node['isOpen'] = False
     return tax_node          
+
+def search_taxons(name):
+    query = (Q(name__iexact=name) | Q(name__icontains=name))
+    taxons = TaxonNode.objects(query).aggregate(*TaxonPipeline)
+    return list(taxons)

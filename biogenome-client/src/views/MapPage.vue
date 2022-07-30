@@ -41,11 +41,11 @@
     <va-divider/>
     <div class="row">
         <Transition>
-            <div class="flex lg3 md3 sm12 xs12">
+            <div class="flex lg4 md4 sm12 xs12">
                 <OrganismList :organisms="organisms" :total="total" @on-update-query="updateQuery" :query="query"/>
             </div>
         </Transition>
-        <div class="flex lg9 sm12 xs12">
+        <div class="flex lg8 md8 sm12 xs12">
             <va-card class="custom-card">
                 <va-card-title>World map</va-card-title>
                 <va-card-content class="map-container">

@@ -78,11 +78,6 @@ const routes = [
     name: "organism-details",
     props: true,
     component: organism,
-    children: [
-      {
-        path:'taxid'
-      }
-    ]
   },
   {
     path: "/login",

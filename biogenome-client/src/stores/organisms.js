@@ -8,6 +8,7 @@ export const organisms = defineStore('organisms', {
             name:'',
             metadata:{}
         }),
+        isLoading:false,
         stats:reactive({
             biosamples:0,
             local_samples:0,
@@ -36,13 +37,19 @@ export const organisms = defineStore('organisms', {
     }),
     actions:{
         loadOrganisms(){
+            this.isLoading=true
             DataPortalService.getOrganisms(this.query)
             .then(response => {
                 this.organisms = [...response.data.data]
                 this.stats = {...response.data.stats}
-                this.total = response.data.total
+                if(response.data.total !== this.total){
+                    this.query.offset = 0
+                    this.total = response.data.total
+                }
+                this.isLoading = false
+            }).catch(e => {
+                this.isLoading = false
             })
-
         },
         resetQuery(){
             this.query = reactive({
