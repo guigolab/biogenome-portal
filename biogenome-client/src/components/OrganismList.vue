@@ -19,7 +19,7 @@
                 <va-card 
                     v-for="(item, index) in props.organisms"
                     :key="index"
-                    class="organism-item"
+                    class="organism-item box"
                     @click="$router.push({name:'organism-details',params:{taxid:item.taxid}})"
                 >
                     <va-card-content>
@@ -116,11 +116,7 @@ function mapData(item){
 
 .organism-item{
     margin: 10px;
-    transition: box-shadow .5s;
-    border: 1px solid #eff3f8;
+
 }
-.organism-item:hover{
-    box-shadow: 0 0 15px rgba(33,33,33,.2);
-    border: 1px solid rgba(33,33,33,.2);
-}
+
 </style>

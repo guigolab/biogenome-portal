@@ -1,7 +1,7 @@
 import {defineStore} from 'pinia'
 import {reactive, ref} from 'vue'
 
-export const taxons = defineStore('taxons', {
+export const tree = defineStore('tree', {
     state: () => ({
         tree:reactive([]),
     }),

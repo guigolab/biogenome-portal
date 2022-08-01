@@ -1,5 +1,7 @@
 from db.models import BioProject
 from utils import ena_client
+from mongoengine.queryset.visitor import Q
+
 import json
 
 
@@ -7,6 +9,7 @@ def get_bioproject(accession):
     biop = BioProject.objects(accession=accession).first()
     if biop:
         response = json.loads(biop.to_json())
+        response['isOpen'] = True
         response['parents'] = json.loads(BioProject.objects(accession__in=biop.parents).to_json())
         response['children'] = json.loads(BioProject.objects(parents=biop.accession).to_json())
         for child in response['children']:
@@ -28,7 +31,7 @@ def create_bioprojects_from_NCBI(bioprojects,organism,sample=None):
         organism.modify(add_to_set__bioprojects=bioproject.accession)
         if sample:
             sample.modify(add_to_set__bioprojects=bioproject.accession)
-        
+
 def create_bioproject_from_ENA(project_accession):
     if BioProject.objects(accession=project_accession).first():
         return
@@ -36,3 +39,8 @@ def create_bioproject_from_ENA(project_accession):
     for r in resp:
         if 'study_accession' in r.keys() and r['study_accession'] == project_accession:
             return BioProject(accession=project_accession, title=r['description']).save()
+
+def search_bioproject(name):
+    query = (Q(title__iexact=name) | Q(title__icontains=name))
+    bioprojects = BioProject.objects(query).exclude('id')
+    return bioprojects

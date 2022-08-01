@@ -1,7 +1,7 @@
 <template>
     <div class="row">
         <div v-for="dt in stats" :key="dt" class="flex">
-            <va-card class="custom-card" :stripe="orgStore.query[dt]" :stripe-color="dataIcons[dt].color" @click="dataSelected(dt, orgStore.stats[dt])">
+            <va-card class="custom-card box" :stripe="orgStore.query[dt]" :stripe-color="dataIcons[dt].color" @click="dataSelected(dt, orgStore.stats[dt])">
                 <va-card-title>
                     <div class="row justify--space-between align--center">
                         <div class="flex">

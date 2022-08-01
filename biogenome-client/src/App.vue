@@ -1,6 +1,8 @@
 <template>
 <NavBar/>
+<div id="app">
     <router-view/>
+</div>
 </template>
 <script setup>
 import NavBar from './components/NavBar.vue';
@@ -17,5 +19,15 @@ import NavBar from './components/NavBar.vue';
 }
 .custom-card{
   margin:15px;
+}
+
+.box{
+    transition: box-shadow .5s;
+    border: 1px solid #eff3f8;
+}
+
+.box:hover{
+    box-shadow: 0 0 15px rgba(33,33,33,.2);
+    border: 1px solid rgba(33,33,33,.2);
 }
 </style>

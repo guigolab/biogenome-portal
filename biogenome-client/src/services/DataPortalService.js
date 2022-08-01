@@ -23,6 +23,9 @@ class DataPortalService {
     getBioProjectChildren(accession){
         return base.get(`/bioprojects/${accession}`)
     }
+    searchBioprojects(params){
+        return base.get('/bioprojects',{params:params})
+    }
     getCoordinatesBySampleIds(ids,){
         return base.post('/coordinates',ids)
     }
@@ -46,7 +49,7 @@ class DataPortalService {
         return base.get(`/taxons/${name}`)
     }
     searchTaxons(params){
-        return base.get('/taxonomy',{params:params})
+        return base.get('/taxons',{params:params})
     }
     getAssemblies(params){
         return base.get('/assemblies', {params:params})
