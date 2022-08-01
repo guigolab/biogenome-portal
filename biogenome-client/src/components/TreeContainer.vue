@@ -1,42 +1,47 @@
 <template>
 <div class="custom-card">
-    <div class="row justify--center align--center custom-card">
+    <div class="row align--center custom-card">
         <div class="flex">
-            <va-button-toggle
-                outline
-                v-model="model"
-                :options="filteredModelOptions"
-                color="secondary"
-            />
+            <va-button-dropdown :close-on-content-click="false" flat icon="more_vert">
+                <div class="row custom-card">
+                    <div class="flex">
+                        <va-radio 
+                            v-for="(opt,index) in ['taxons','bioprojects']" 
+                            :key="index"
+                            v-model="model"
+                            :option="opt"    
+                        />
+                    </div>
+                </div>
+                <div class="row align--center custom-card">
+                    <div class="flex">
+                        <va-input
+                            v-model="name"
+                            :placeholder="'search '+ model"
+                        />
+                    </div>
+                    <div class="flex">
+                        <va-button :disabled="name.length <= 1" outline  icon="search" @click="search()">
+                            submit
+                        </va-button>
+                    </div>
+                </div>
+            </va-button-dropdown>
+        </div>
+        <div class="flex">
+            <h6 class="display-6">{{selectedModelObj.label}}</h6>
         </div>
     </div>
-    <div class="row justify--center custom-card">
-        <div class="flex">
-            <va-input
-            v-model="name"
-            :placeholder="'search '+ model"
-            >
-            <template #appendInner>
-                <va-icon
-                    name="search"
-                />
-            </template>
-            </va-input>
-        </div>
-    </div>
-    <va-divider>{{selectedModelObj.label}}</va-divider>
-        <!-- <Transition duration="550" name="nested">
-            <va-card-content> -->
+    <va-divider/>
     <div style="max-height:66vh;overflow:scroll">
         <va-inner-loading :loading="isLoading">
-            <div v-for="(node,index) in treeStore.tree" :key="index">
-                <NodeIterator :node="node" :model="selectedModelObj"/>
-            </div>
+            <TransitionGroup duration="550">
+                <div v-for="(node,index) in treeStore.tree" :key="index">
+                    <NodeIterator :node="node" :model="selectedModelObj"/>
+                </div>
+            </TransitionGroup>
         </va-inner-loading>
     </div>
-            <!-- </va-card-content>
-        </Transition> -->
-    <!-- </va-card> -->
 </div>
 </template>
 <script setup>
@@ -102,12 +107,49 @@ onMounted(()=>{
 })
 
 watch(model,()=>{
-    getData()
+    if(selectedModelObj.value.id === 'taxid'){
+        orgStore.query.parent_taxid = node.taxid
+        orgStore.query.bioproject = null
+    }else{
+        orgStore.query.parent_taxid = null
+        orgStore.query.bioproject = node.accession
+    }
+    getRoot()
 })
 
-watch(name,()=>{
-    getData()
-})
+function search(){
+    isLoading.value=true
+    selectedModelObj.value.searchQuery({name:name.value})
+    .then(resp => {
+        treeStore.tree = resp.data
+        isLoading.value=false
+    })
+    .catch(e => {
+        console.log(e)
+        isLoading.value=false
+    })
+}
+
+function getRoot(){
+    isLoading.value=true
+    selectedModelObj.value.defaultQuery(selectedModelObj.value.root)
+    .then(resp => {
+        treeStore.tree = [resp.data]
+        orgStore.selectedNode.name = resp.data[selectedModelObj.value.respLabel]
+        const metadata = {}
+        selectedModelObj.value.metadataFields.forEach(f => {
+            metadata[f] = resp.data[f]
+        })
+        orgStore.selectedNode.metadata = metadata
+        orgStore.query[selectedModelObj.value.organismQuery] = resp.data[selectedModelObj.value.id]
+        console.log(orgStore.query)
+        isLoading.value=false
+    })
+    .catch(e => {
+        console.log(e)
+        isLoading.value = false
+    })
+}
 
 function getData(){
     isLoading.value=true
@@ -132,6 +174,7 @@ function getData(){
             })
             orgStore.selectedNode.metadata = metadata
             orgStore.query[selectedModelObj.value.organismQuery] = resp.data[selectedModelObj.value.id]
+            console.log(orgStore.query)
             isLoading.value=false
         })
         .catch(e => {

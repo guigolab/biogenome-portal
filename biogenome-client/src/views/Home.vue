@@ -13,8 +13,10 @@
                         {{orgStore.selectedNode.name}}
                     </h1>
                 </div>
+            </div>
+            <div class="row custom-card">
                 <div class="flex">
-                    <va-chip size="small" style="margin:5px" outline v-for="key in Object.keys(orgStore.selectedNode.metadata)" :key="key">{{key +': '+orgStore.selectedNode.metadata[key]}}</va-chip>
+                    <va-chip size="small" style="padding:5px" outline v-for="key in Object.keys(orgStore.selectedNode.metadata)" :key="key">{{key +': '+orgStore.selectedNode.metadata[key]}}</va-chip>
                 </div>
                 <!-- <div class="flex">
                     <va-popover :message="orgStore.selectedNode.metadata.rank?'Tree of Life UI':'3D World Map'">

@@ -8,7 +8,7 @@
                             <va-icon @click.stop.prevent="updateOrganisms(node)" :name="orgStore.selectedNode.name === node[model.respLabel]?'radio_button_checked':'radio_button_unchecked'"/>
                         </div>
                         <div class="flex lg8 md8 sm8 xs8">
-                            <p>{{node.rank ? node.name+' ('+node.rank+')': node.title + ' ('+node.accession+')'}}</p>
+                            <p style="padding-left:5px">{{node.rank ? node.name+' ('+node.rank+')': node.title + ' ('+node.accession+')'}}</p>
                         </div>
                     </div>
                 </div>
