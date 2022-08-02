@@ -1,14 +1,20 @@
 <template>
     <li :class="orgStore.selectedNode.name === node[model.respLabel]?'tree-container selected-node':'tree-container'" :id="node[model.respLabel]">
-        <va-card class="node-card child-container box">
+        <va-card style="margin:10px" class="child-container box">
             <div @click="toggle(node)" class="row justify--space-between align--center">
                 <div class="flex lg8 md8 sm8 xs8">
                     <div class="row align--center justify--start">
                         <div class="flex">
                             <va-icon @click.stop.prevent="updateOrganisms(node)" :name="orgStore.selectedNode.name === node[model.respLabel]?'radio_button_checked':'radio_button_unchecked'"/>
                         </div>
-                        <div class="flex lg8 md8 sm8 xs8">
-                            <p style="padding-left:5px">{{node.rank ? node.name+' ('+node.rank+')': node.title + ' ('+node.accession+')'}}</p>
+                        <div class="flex lg8 md8 sm8 xs8" style="text-align:start;padding-left: 5px;">
+                            <h5 class="display-6" style="text-align:start">{{node.name || node.title}}</h5>
+                            <div class="row align--center justify-content--space-between">
+                                <div class="flex text--secondary" style="font-size: 16px;">
+                                    <p style="text-align:start" v-if="node.rank">{{node.rank}}</p>
+                                    <p style="text-align:start" v-else>{{node.accession}}</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -31,14 +37,11 @@
     </li>
 </template>
 <script setup>
-import TreeBrowser from './TreeBrowser.vue';
 import NodeIterator from './NodeIterator.vue'
-import { computed, onMounted, ref, nextTick } from 'vue';
+import { nextTick } from 'vue'
 import DataPortalService from '../services/DataPortalService'
 import {organisms} from '../stores/organisms'
-import {taxons} from '../stores/taxons'
 
-const taxStore = taxons()
 const orgStore = organisms()
 
 const props = defineProps({

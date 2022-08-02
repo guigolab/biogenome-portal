@@ -1,61 +1,55 @@
 <template>
 <div class="row">
-    <div class="flex lg4 md4 sm12 xs12">
-        <!-- <SunBurst/> -->
-        <!-- <TreeSideBar/> -->
-        <TreeContainer/>
-    </div>
-    <div class="flex lg8 md8 sm12 xs12">
-        <va-inner-loading :loading="isLoading">
-            <div class="row custom-card align--center">
-                <div class="flex">
-                    <h1 class="display-3">
-                        {{orgStore.selectedNode.name}}
-                    </h1>
-                </div>
-            </div>
+    <div class="flex lg12 md12 sm12 xs12">
+        <!-- <va-inner-loading :loading="orgStore.isLoading"> -->
             <div class="row custom-card">
-                <div class="flex">
-                    <va-chip size="small" style="padding:5px" outline v-for="key in Object.keys(orgStore.selectedNode.metadata)" :key="key">{{key +': '+orgStore.selectedNode.metadata[key]}}</va-chip>
+                <div class="flex lg4 md4 sm12 xs12">
+                    <div class="row align--center">
+                        <div class="flex">
+                            <h1 style="text-align:start" class="display-3">
+                                {{orgStore.selectedNode.name}}
+                            </h1>
+                        </div>
+                    </div>
+                    <div class="row align--center">
+                        <div class="flex">
+                            <va-chip size="small" style="padding:5px" outline v-for="key in Object.keys(orgStore.selectedNode.metadata)" :key="key">{{key +': '+orgStore.selectedNode.metadata[key]}}</va-chip>
+                        </div>
+                        <div v-if="hasCoordinates" class="flex">
+                            <va-popover :message="'3D World Map'">
+                                <router-link :to="{name:'map',params:{accession:orgStore.selectedNode.metadata.accession}}"><va-icon size="large" name="travel_explore"/></router-link>
+                            </va-popover>
+                        </div>
+                    </div>
                 </div>
-                <!-- <div class="flex">
-                    <va-popover :message="orgStore.selectedNode.metadata.rank?'Tree of Life UI':'3D World Map'">
-                        <router-link :to="{name:'map',params:{accession:orgStore.selectedNode.metadata.accession}}"><va-icon size="large" :name="orgStore.selectedNode.metadata.rank?'call_split':'travel_explore'"/></router-link>
-                    </va-popover>
-                </div> -->
-            </div>
-            <div class="row justify--center">
-                <div class="flex lg12 md12">
+                <div class="flex lg8 md8 sm12 xs12">
+                    <!-- <NewDataCards/> -->
                     <DataCards/>
                 </div>
             </div>
             <va-divider/>
             <div class="row">
-                <div class="flex lg12 md12">
+                <div class="flex lg4 md4 sm12 xs12">
+                    <!-- <SunBurst/> -->
+                    <TreeContainer/>
+                </div>
+                <div class="flex lg8 md8">
                     <OrganismList @data-selected="getData" @organism-selected="getOrganism" :total="orgStore.total" :organisms="orgStore.organisms" :query="orgStore.query" :is-loading="orgStore.isLoading"/>
                 </div>
             </div>
-        </va-inner-loading>
+        <!-- </va-inner-loading> -->
     </div>
 </div>
 </template>
 <script setup>
-import BarChart from '../components/BarChart.vue'
-import OrganismDetails from '../components/OrganismDetails.vue'
-import TaxonBreadCrumbs from '../components/TaxonBreadCrumbs.vue'
 import OrganismList from '../components/OrganismList.vue'
-import OrganismTable from '../components/OrganismTable.vue'
-import TreeSideBar from '../components/TreeSideBar.vue'
 import DataCards from '../components/DataCards.vue'
 import {organisms} from '../stores/organisms'
-import {taxons} from '../stores/taxons'
-import {onMounted,watch,ref, nextTick, reactive} from 'vue'
+import {onMounted,computed,watch,ref, nextTick, reactive} from 'vue'
 import DataPortalService from '../services/DataPortalService'
-import SunBurst from '../components/SunBurst.vue'
 import TreeContainer from '../components/TreeContainer.vue'
 
 const orgStore = organisms()
-const taxStore = taxons()
 const toggle = ref(true)
 const organismLoaded = ref(false)
 const dataLoaded = ref(false)
@@ -67,14 +61,10 @@ var data = reactive({
     model: String
 })
 
-function toggleNode(value){
-    toggle.value = value
-}
-function toggleCrumb(value){
-    taxStore.taxonNav = [...value.taxonNav]
-    taxStore.tree = {...value.tree}
-    orgStore.query.parent_taxid = value.taxid
-}
+const hasCoordinates = computed(()=>{
+    return orgStore.selectedNode.metadata.accession && orgStore.organisms.some(org => org.coordinates.length)
+})
+
 
 function getData(value){
     dataLoaded.value = false

@@ -17,14 +17,6 @@ const genomeBrowserForm = () => import('../components/admin/form/GenomeBrowserFo
 const sunburst = () => import('../components/SunBurst.vue')
 const excel = () => import('../components/admin/form/ExcelForm.vue')
 const login = () => import('../components/admin/form/Login.vue')
-
-// const jBrowseComponent = () => import('../views/JBrowse.vue')
-// const humanPage = () => import('../views/Human.vue')
-// const humanNew = () => import('../views/HumanNew.vue')
-// const flyNew = () => import('../views/FlyNew.vue')
-
-// const flyPage = () => import('../views/Fly.vue')
-// const expDetails = () => import('../views/ExperimentDetails.vue')
 const routes = [
   {
     path: "/",

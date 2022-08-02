@@ -27,7 +27,7 @@ import NavBar from './components/NavBar.vue';
 }
 
 .box:hover{
-    box-shadow: 0 0 15px rgba(33,33,33,.2);
+    box-shadow: 0 0 15px rgba(19, 18, 18, 0.2);
     border: 1px solid rgba(33,33,33,.2);
 }
 </style>
