@@ -1,35 +1,37 @@
 <template>
     <div class="row">
-        <div v-for="dt in stats" :key="dt" class="flex">
-            <va-card class="custom-card box" :stripe="orgStore.query[dt]" :stripe-color="dataIcons[dt].color" @click="dataSelected(dt, orgStore.stats[dt])">
-                <va-card-title>
-                    <div class="row justify--space-between align--center">
-                        <div class="flex">
-                            <p>{{dt}}</p>
+        <TransitionGroup>
+            <div v-for="dt in stats" :key="dt" class="flex">
+                <va-card class="custom-card box" :stripe="orgStore.query[dt]" :stripe-color="dataIcons[dt].color" @click="dataSelected(dt, orgStore.stats[dt])">
+                    <va-card-title>
+                        <div class="row justify--space-between align--center">
+                            <div class="flex">
+                                <p>{{dt}}</p>
+                            </div>
+                            <div class="flex">
+                                <va-icon 
+                                    :name="dataIcons[dt].icon"
+                                    :color="dataIcons[dt].color"
+                                >
+                                </va-icon>
+                            </div>
                         </div>
-                        <div class="flex">
-                            <va-icon 
-                                :name="dataIcons[dt].icon"
-                                :color="dataIcons[dt].color"
-                            >
-                            </va-icon>
+                    </va-card-title>
+                    <va-card-content>
+                        <div class="row justify--space-between">
+                            <div class="flex">
+                                <va-progress-circle size="large" :thickness="0.15" :color="dataIcons[dt].color" class="mb-2" :modelValue="((orgStore.stats[dt]/orgStore.total)*100).toFixed(2)">
+                                    {{ ((orgStore.stats[dt]/orgStore.total)*100).toFixed(2) + '%' }}
+                                </va-progress-circle>
+                            </div>
+                            <div class="flex">
+                                <p><strong>{{orgStore.stats[dt]}}</strong></p><va-divider/><p class="text--secondary">{{orgStore.total}}</p>
+                            </div>
                         </div>
-                    </div>
-                </va-card-title>
-                <va-card-content>
-                    <div class="row justify--space-between">
-                        <div class="flex">
-                            <va-progress-circle size="large" :thickness="0.15" :color="dataIcons[dt].color" class="mb-2" :modelValue="((orgStore.stats[dt]/orgStore.total)*100).toFixed(2)">
-                                {{ ((orgStore.stats[dt]/orgStore.total)*100).toFixed(2) + '%' }}
-                            </va-progress-circle>
-                        </div>
-                        <div class="flex">
-                            <p><strong>{{orgStore.stats[dt]}}</strong></p><va-divider/><p class="text--secondary">{{orgStore.total}}</p>
-                        </div>
-                    </div>
-                </va-card-content>
-            </va-card> 
-        </div>
+                    </va-card-content>
+                </va-card> 
+            </div>
+        </TransitionGroup>
     </div>
 </template>
 

@@ -1,8 +1,10 @@
-import { createWebHistory, createRouter } from 'vue-router';
+import {createWebHistory, createRouter} from 'vue-router'
 import Home from '../views/Home.vue'
 import {auth} from '../stores/auth'
+
 const ROOTNODE = import.meta.env.VITE_ROOT_NODE
 const PROJECT_ACCESSION = import.meta.env.VITE_PROJECT_ACCESSION
+
 const treeOfLife = () => import('../views/TreeOfLife.vue')
 const map = () => import('../views/MapPage.vue')
 const organism = () => import('../views/Organism.vue')
@@ -17,6 +19,7 @@ const genomeBrowserForm = () => import('../components/admin/form/GenomeBrowserFo
 const sunburst = () => import('../components/SunBurst.vue')
 const excel = () => import('../components/admin/form/ExcelForm.vue')
 const login = () => import('../components/admin/form/Login.vue')
+
 const routes = [
   {
     path: "/",
@@ -37,7 +40,7 @@ const routes = [
       {path: "organism-form/:taxid?",component:organismForm, name:"organism-form", props:true},
       {path: "assembly-form",component:assembliesForm, name:"assembly-form"},
       {path: "annotation-form",component:annotationForm, name:"annotation-form",props:true},
-      {path: "genome-browser-form",component:genomeBrowserForm, name:"genome-browser-form",props:true},
+      {path: "genome-browser-form/:accession",component:genomeBrowserForm, name:"genome-browser-form",props:true},
       {path: "biosample-form",component:biosampleForm, name:"biosample-form"},
       {path: "read-form",component:readForm, name:"read-form"}
     ],
@@ -70,25 +73,21 @@ const routes = [
     name: "organism-details",
     props: true,
     component: organism,
-  },
-  {
-    path: "/login",
-    name:'login',
-    component: login
   }
-];
+]
 
 const router = createRouter({
   history: createWebHistory(),
-  routes,
+  routes
 });
 
 router.beforeEach(async (to,from)=>{
   const authStore = auth()
   if(to.matched.some((record)=>record.meta.requiresAuth)){
-    if(!authStore.isAuthenticated && to.name !== 'login'){
+    if(!authStore.isAuthenticated){
       alert('Authentication required')
-      return {name: 'login'}
+      authStore.showModal = true
+      return 
     }
   }
 })

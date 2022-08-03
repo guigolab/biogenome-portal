@@ -30,7 +30,8 @@ submission.interceptors.response.use(function (response) {
     const authStore = auth()
     authStore.removeUser()
     alert('Session expired!')
-    return router.push({name:'login'})
+    authStore.showModal = true
+    return
   } else {
       return Promise.reject(error);
   }

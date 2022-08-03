@@ -106,42 +106,19 @@ def get_or_create_organism(taxid):
         taxonomy_service.leaves_counter(taxon_lineage)
     return organism
 
-def create_organism_from_data(data):
-    if not 'scientific_name' in data.keys() or not 'taxid' in data.keys():
-        return 
-    if Organism.objects(taxid=data['taxid']).first():
-        return
-    string_attrs = dict()
-    for key in data.keys():
-        if isinstance(data[key],str):
-            string_attrs[key] = data[key]
-    organism = get_or_create_organism(data['taxid'])
-    for key in string_attrs.keys():
-        organism[key] = string_attrs[key]
-    if 'common_names' in data.keys():
-        c_name_list=list()
-        for c_name in data['common_names']:
-            if 'value' in c_name.keys():
-                c_name_list.append(CommonName(**c_name))
-        if c_name_list:
-            organism.common_names = c_name_list
-    if 'image_urls' in data.keys():
-        organism.image_urls = data['image_urls']
-    if 'publications' in data.keys():
-        pub_list = list()
-        for pub in data['publications']:
-            if 'id' in pub.keys():
-                pub_list.append(Publication(**pub))
-        if pub_list:
-            organism.publications.append(Publication(**pub))
-    organism.save()
-    return organism
 
-def update_organism_from_data(data,taxid):
-    if not 'scientific_name' in data.keys() or not 'taxid' in data.keys():
-        return 
-    if not Organism.objects(taxid=data['taxid']).first():
-        return
+def parse_organism_data(data,taxid=None):
+    #organism creation
+    if not taxid:
+        if not 'scientific_name' in data.keys() or not 'taxid' in data.keys():
+            return
+        if Organism.objects(taxid=data['taxid']).first():
+            return
+        taxid = data['taxid']
+    else:
+        #organism update
+        if not Organism.objects(taxid=taxid).first():
+            return
     organism = get_or_create_organism(taxid)
     string_attrs = dict()
     for key in data.keys():
@@ -149,6 +126,8 @@ def update_organism_from_data(data,taxid):
             string_attrs[key] = data[key]
     for key in string_attrs.keys():
         organism[key] = string_attrs[key]
+    if 'metadata' in data.keys():
+        organism.metadata = data['metadata']
     if 'common_names' in data.keys():
         c_name_list=list()
         for c_name in data['common_names']:
@@ -165,7 +144,6 @@ def update_organism_from_data(data,taxid):
         organism.publications=pub_list
     organism.save()
     return organism
-# def update_organism_names(names):
 
 def delete_organism(taxid):
     ## delete everything related to the organism

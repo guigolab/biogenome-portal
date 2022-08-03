@@ -11,9 +11,12 @@ export const auth = defineStore('auth', {
         },
         isAuthenticated: localStorage.getItem('isAuthenticated') || "",
         message: {
-            color:'secondary',
-            text:'Here you will see the last notification'
-        }
+            color:'',
+            text:'',
+            title:''
+        },
+        isLoading:false,
+        showModal:false
     }),
     actions: {
         removeUser(){
@@ -24,38 +27,42 @@ export const auth = defineStore('auth', {
 
         },
         async login(){
-            try {
-                const response = await SubmissionService.login(this.user)
-                this.message.text = response.data.msg
-                this.user.role = response.data.role
-                this.message.color = 'success'
-                this.isAuthenticated = true
-                this.setLocalStorage()
-                router.go(-1)
-              } catch (error) {
-                this.message.text = error.response.data.message
-                this.message.color = 'danger'
-                // let the form component display the error
-                return error
-              }
+          try {
+              this.isLoading = true
+              const response = await SubmissionService.login(this.user)
+              this.message.text = response.data.msg
+              this.user.role = response.data.role
+              this.message.color = 'success'
+              this.message.title = `Welcome ${this.user.name}`
+              this.isAuthenticated = true
+              this.setLocalStorage()
+              this.isLoading=false
+              // router.go(-1)
+          } 
+          catch (error) {
+            console.log(error.response.data.msg)
+              this.message.text = error.response.data.msg
+              this.message.color = 'danger'
+              this.message.title = 'Error'
+              this.isLoading = false
+          }
         },
         async logout(){
-            try {
-                const response = await SubmissionService.logout()
-                localStorage.clear()
-                this.user.name = ''
-                this.user.password = ''
-                this.user.role = ''
-                this.isAuthenticated = ''
-                this.setLocalStorage()
-                this.message.text = response.data.msg
-                this.message.color = 'success'
-              } catch (error) {
-                this.message.text = error.response.data.message
-                this.message.color = 'danger'
-                // let the form component display the error
-                return error
-              }
+          try {
+              const response = await SubmissionService.logout()
+              localStorage.clear()
+              this.user.name = ''
+              this.user.password = ''
+              this.user.role = ''
+              this.isAuthenticated = ''
+              this.setLocalStorage()
+              this.message.text = response.data.msg
+              this.message.color = 'success'
+          } 
+          catch (error) {
+              this.message.text = error.response.data.message
+              this.message.color = 'danger'
+          }
         },
         setLocalStorage(){
           localStorage.setItem('userName', this.user.name)

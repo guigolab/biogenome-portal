@@ -15,7 +15,7 @@ class GenomeBrowserApi(Resource):
 
     def get(self,accession=None):
         if accession:
-            genome_br_obj = GenomeBrowserData.objects(assembly_accession=accession).first()
+            genome_br_obj = GenomeBrowserData.objects(assembly_accession=accession).exclude('id').first()
             if not genome_br_obj:
                 raise NotFound
             return Response(genome_br_obj.to_json(),mimetype="application/json", status=200)

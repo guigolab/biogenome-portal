@@ -2,7 +2,7 @@
 <div class="row">
     <div class="flex lg12 md12 sm12 xs12">
         <!-- <va-inner-loading :loading="orgStore.isLoading"> -->
-            <div class="row custom-card">
+            <div class="row custom-card align--center">
                 <div class="flex lg4 md4 sm12 xs12">
                     <div class="row align--center">
                         <div class="flex">

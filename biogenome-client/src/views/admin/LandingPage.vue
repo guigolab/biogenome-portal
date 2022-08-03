@@ -175,25 +175,25 @@
                 <div v-else-if="dataValue==='jbrowse'">
 
                 </div>
-                        <FormComponent 
-                            :title="objectToEdit.title"
-                            :form-options="objectToEdit.formOptions"
-                            :list-object="objectToEdit.listObject"
-                        />
-                        <template #footer>
-                            <div class="row justify--space-between">
-                                <div class="flex">
-                                    <va-button @click="resetEditAction()"  color="info">
-                                        Cancel Action
-                                    </va-button>
-                                </div>
-                                <div class="flex">
-                                    <va-button @click="submitEditedItem()" color="danger">
-                                        update
-                                    </va-button>
-                                </div>
-                            </div>                            
-                        </template>
+                    <FormComponent 
+                        :title="objectToEdit.title"
+                        :form-options="objectToEdit.formOptions"
+                        :list-object="objectToEdit.listObject"
+                    />
+                    <template #footer>
+                        <div class="row justify--space-between">
+                            <div class="flex">
+                                <va-button @click="resetEditAction()"  color="info">
+                                    Cancel Action
+                                </va-button>
+                            </div>
+                            <div class="flex">
+                                <va-button @click="submitEditedItem()" color="danger">
+                                    Update
+                                </va-button>
+                            </div>
+                        </div>                            
+                    </template>
                 </va-modal>
             </div>
         </div>
@@ -228,6 +228,7 @@ const initAlert = {
     color:'',
     message:''
 }
+
 const alert = reactive({...initAlert})
 
 const initObjectToEdit = {
@@ -263,8 +264,6 @@ const initUser = {
     role:''
 }
 
-
-
 const user = reactive({...initUser})
 
 const userOptions = [
@@ -278,8 +277,6 @@ const annotationOptions = [
     {type:'input',label:'GFF3 GZIP', key:'gff_gz_location', mandatory:true},
     {type:'input',label:'GFF3 TABIX GZIP', key:'tab_index_location', mandatory:true},
 ]
-
-
 
 const selectedModelObject = computed(()=>{
     return dataModels.find(model => model.value === dataValue.value)
@@ -411,7 +408,7 @@ function editItem(item){
             router.push({name:'annotation-form', params:{accession:item.assembly_accession,toUpdate:true,name:item.name}})
             break
         case 'jbrowse':
-            router.push({name:'genome-browser-form', params:{accession:item.accession,toUpdate:true}}) //genome browser data share the same assembly accession
+            router.push({name:'genome-browser-form', params:{accession:item.assembly_accession,toUpdate:true}}) //genome browser data share the same assembly accession
             break
         case 'organisms':
             router.push({name: 'organism-form', params:{taxid: item.taxid}})

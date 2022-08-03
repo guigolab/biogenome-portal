@@ -22,7 +22,7 @@ class Login(Resource):
         else:
             role = None
         if role:
-            access_token = create_access_token(identity=name,expires_delta=timedelta(minutes=1))
+            access_token = create_access_token(identity=name,expires_delta=timedelta(minutes=30))
             response = Response(json.dumps(dict(msg=f"welcome {name}",role=role)), mimetype="application/json", status=200)
             set_access_cookies(response,access_token)
             return response

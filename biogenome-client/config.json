@@ -113,10 +113,11 @@
     "PROJECT_ACCESSION": "PRJNA545868",
 
     "NavBar":{
-        "logoPath":"",
+        "logoPath":"./assets/logo.png",
         "bgColor":"",
         "navItems":[
-            
+            {"icon": "home", "pathName":"home"},
+            {"icon": "travel_explore", "pathName":"static-map"}
         ]
     },
     "ROLES":[

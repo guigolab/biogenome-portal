@@ -179,6 +179,8 @@ const goatOptions = computed(()=>{
                 return ['Sample Acquired','Data Generation','In Assembly']
             case 'Data Generation':
                 return ['Data Generation','In Assembly']
+            case 'INSDC Submitted':
+                return ['INSDC Submitted']
             default:
                 return [organismFormData.goat_status]
         }
@@ -256,7 +258,6 @@ onMounted(()=>{
 })
 
 function getTaxon(value){
-    console.log(value)
     if(value.isError){
         Object.assign(alert,value.alert)
         showAlert.value=true

@@ -18,7 +18,7 @@ class OrganismsApi(Resource):
 	@jwt_required()
 	def post(self):
 		data = request.json if request.is_json else request.form
-		new_organism = organism_service.create_organism_from_data(data)
+		new_organism = organism_service.parse_organism_data(data)
 		return Response(new_organism.to_json(),mimetype="application/json", status=201)
 
 class OrganismApi(Resource):
@@ -41,7 +41,8 @@ class OrganismApi(Resource):
 	@jwt_required()
 	def put(self,taxid):
 		data = request.json if request.is_json else request.form
-		updated_organism = organism_service.update_organism_from_data(data,taxid)
+		app.logger.info(data)
+		updated_organism = organism_service.parse_organism_data(data,taxid)
 		return Response(updated_organism.to_json(),mimetype="application/json", status=201)
 	
 	@jwt_required()

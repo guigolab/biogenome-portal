@@ -36,30 +36,30 @@
             </div>
             <div class="flex lg8 md8 sm12 xs12">
                 <Transition name="slide-up">
-                <va-card class="custom-card" :key="selectedModel" v-if="selectedModel === 'overview'">
-                    <va-card-title>
-                        {{selectedModel}}
-                    </va-card-title>
-                    <va-card-content>
-                        <OrganismOverview :organism="organism"/>
-                    </va-card-content>
-                </va-card>
-                <va-card class="custom-card" :key="selectedModel" v-if="Object.keys(dataIcons).includes(selectedModel)">
-                    <va-card-title>
-                        {{selectedModel}}
-                    </va-card-title>
-                    <va-card-content>
-                        <DataTable :items="organism[selectedModel]" :columns="dataIcons[selectedModel].fields" :color="dataIcons[selectedModel].color"/>
-                    </va-card-content>
-                </va-card>
-                <va-card class="custom-card" :key="selectedModel" v-if="selectedModel === 'coordinates'">
-                </va-card>
-                <va-card class="custom-card" :key="selectedModel" v-if="selectedModel === 'jbrowse'">
-                    <Jbrowse2 
-                        :assembly="jbrowseSession.assemblyTrack"
-                        :tracks="jbrowseSession.annotationTracks"
-                    />
-                </va-card>
+                    <va-card class="custom-card" :key="selectedModel" v-if="selectedModel === 'overview'">
+                        <va-card-title>
+                            {{selectedModel}}
+                        </va-card-title>
+                        <va-card-content>
+                            <OrganismOverview :organism="organism"/>
+                        </va-card-content>
+                    </va-card>
+                    <va-card class="custom-card" :key="selectedModel" v-if="Object.keys(dataIcons).includes(selectedModel)">
+                        <va-card-title>
+                            {{selectedModel}}
+                        </va-card-title>
+                        <va-card-content>
+                            <DataTable :items="organism[selectedModel]" :columns="dataIcons[selectedModel].fields" :color="dataIcons[selectedModel].color"/>
+                        </va-card-content>
+                    </va-card>
+                    <va-card class="custom-card" :key="selectedModel" v-if="selectedModel === 'coordinates'">
+                    </va-card>
+                    <va-card class="custom-card" :key="selectedModel" v-if="selectedModel === 'jbrowse'">
+                        <Jbrowse2 
+                            :assembly="jbrowseSession.assemblyTrack"
+                            :tracks="jbrowseSession.annotationTracks"
+                        />
+                    </va-card>
                 </Transition>
             </div>
         </div>
@@ -127,7 +127,6 @@
         </va-card> -->
     </div>
 </div>
-
     <!-- <div>
         Organism details:
         photo??
@@ -154,8 +153,6 @@
         assemblies
         experiments
         annotations
-        
-        
          -->
 </template>
 <script setup>

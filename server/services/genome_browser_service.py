@@ -73,7 +73,7 @@ def validate_data(data):
     return 
 
 def update_genome_browser_data(accession,data):
-    genome_browser_data_obj = GenomeBrowserData(assembly_accession=accession).first()
+    genome_browser_data_obj = GenomeBrowserData.objects(assembly_accession=accession).first()
     if not genome_browser_data_obj:
         raise NotFound
     ##does this work in any case?

@@ -1,9 +1,4 @@
 import axios from 'axios'
-// function getCookie(name) {
-//   const value = `; ${document.cookie}`;
-//   const parts = value.split(`; ${name}=`);
-//   if (parts.length === 2) return parts.pop().split(';').shift();
-// }
 
 const baseURL = "/api"
 const base = axios.create({
@@ -15,33 +10,6 @@ const base = axios.create({
 const submitInstance = axios.create({
   baseURL:baseURL,
 })
-
-// submitInstance.interceptors.request.use(
-//   (config) => {
-//   config.headers = {
-//     'X-CSRF-TOKEN': getCookie('csrf_access_token'),
-//     'Content-Type': 'application/json'
-//   }
-//   return config
-//   },
-//   (error) => {
-//     return Promise.reject(error)
-//   }
-// )
-
-// submitInstance.interceptors.response.use(function (response) {
-//   return response;
-// }, function (error) {
-//   if (401 === error.response.status) {
-//     const authStore = auth()
-//     console.log(router)
-//     authStore.removeUser()
-//     alert('Session expired!')
-//     return router.push({name:'login'})
-//   } else {
-//       return Promise.reject(error);
-//   }
-// });
 
 const download =  axios.create({
   baseURL: process.env.BASE_URL + "api",

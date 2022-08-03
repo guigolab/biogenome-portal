@@ -1,11 +1,15 @@
 <template>
-<NavBar/>
-<div id="app">
-    <router-view/>
-</div>
+  <div>
+    <NavBar/>
+    <div id="app">
+        <router-view/>
+    </div>
+    <Login/>
+  </div>
 </template>
 <script setup>
-import NavBar from './components/NavBar.vue';
+import NavBar from './components/NavBar.vue'
+import Login from './components/admin/form/Login.vue'
 </script>
 
 <style>

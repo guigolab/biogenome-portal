@@ -36,7 +36,6 @@ def initialize_routes(api):
 	
 	api.add_resource(GenomeBrowserApi, '/api/genome_browser', '/api/genome_browser/<accession>') ##assembly accession
 	
-	
 	api.add_resource(OrganismsApi, '/api/organisms')
 	
 	api.add_resource(OrganismApi, '/api/organisms/<taxid>') 
