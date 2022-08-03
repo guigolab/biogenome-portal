@@ -10,7 +10,7 @@ import pin_drop from '../assets/pin.svg'
 const accessToken = import.meta.env.VITE_CESIUM_TOKEN
 
 const props = defineProps({
-    geojson:ref(Object)
+    geojson:Object
 })
 const cesium = ref(null)
 

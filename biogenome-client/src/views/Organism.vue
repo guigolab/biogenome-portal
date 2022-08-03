@@ -14,19 +14,21 @@
                 </div>
             </div>
             <div style="padding:15px" class="flex">
-                <va-button @click="selectedModel='overview'" :outline="selectedModel!=='overview'">Overview</va-button>
-                <va-button v-for="key in organismData.dataKeys" :key="key" @click="selectedModel=key" :color="dataIcons[key].color" :outline="selectedModel!==key" :icon="dataIcons[key].icon">{{key}}</va-button>
-                <va-button @click="selectedModel='coordinates'" v-if="organism.coordinates.length" icon="travel_explore" :outline="selectedModel!=='coordinates'">Map</va-button>
-                <va-button-dropdown outline color="#752061">
-                    <template #label>
-                      <va-icon name="view_timeline"/> Genome Browser 
-                    </template>
-                    <ul>
-                        <li v-for="(ass,index) in assembliesWithTrack" :key="index">
-                            <va-button @click="toJBrowse(ass)" flat squared>{{ass.assembly_name}}</va-button>
-                        </li>
-                    </ul>
-                </va-button-dropdown>
+                <div style="max-width:300px;overflow: scroll;" >
+                    <va-button @click="selectedModel='overview'" :outline="selectedModel!=='overview'">Overview</va-button>
+                    <va-button v-for="key in organismData.dataKeys" :key="key" @click="selectedModel=key" :color="dataIcons[key].color" :outline="selectedModel!==key" :icon="dataIcons[key].icon">{{key}}</va-button>
+                    <va-button @click="selectedModel='coordinates'" v-if="organism.coordinates.length" icon="travel_explore" :outline="selectedModel!=='coordinates'">Map</va-button>
+                    <va-button-dropdown outline color="#752061">
+                        <template #label>
+                        <va-icon name="view_timeline"/> Genome Browser 
+                        </template>
+                        <ul>
+                            <li v-for="(ass,index) in assembliesWithTrack" :key="index">
+                                <va-button @click="toJBrowse(ass)" flat squared>{{ass.assembly_name}}</va-button>
+                            </li>
+                        </ul>
+                    </va-button-dropdown>
+                </div>
             </div>
         </div>
         <va-divider/>
@@ -53,6 +55,7 @@
                         </va-card-content>
                     </va-card>
                     <va-card class="custom-card" :key="selectedModel" v-if="selectedModel === 'coordinates'">
+                        <CesiumComponent v-if="showMap" :geojson="geoJson"/>
                     </va-card>
                     <va-card class="custom-card" :key="selectedModel" v-if="selectedModel === 'jbrowse'">
                         <Jbrowse2 
@@ -157,17 +160,20 @@
 </template>
 <script setup>
 import OrganismDetails from '../components/OrganismDetails.vue'
-import { computed, nextTick, onMounted, reactive, ref } from '@vue/runtime-core'
+import { computed, nextTick, onMounted, reactive, ref, watch } from '@vue/runtime-core'
 import {dataIcons,GoaTStatus,INSDCStatus,jbrowse2} from '../../config'
 import DataPortalService from '../services/DataPortalService'
 import DataTable from '../components/data/DataTable.vue'
 import OrganismOverview from '../components/OrganismOverview.vue'
 import OrganismSideBar from '../components/OrganismSideBar.vue'
 import Jbrowse2 from '../components/Jbrowse2.vue'
+import CesiumComponent from '../components/CesiumComponent.vue'
+
 // import MapComponent from '../components/MapComponent.vue'
 
-const selectedModel = ref('overview')
 
+const selectedModel = ref('overview')
+const showMap = ref(false)
 const assembliesWithTrack = ref([])
 
 const props = defineProps({
@@ -185,6 +191,21 @@ const organismData = reactive({
     loadedItems:[]
 })
 
+watch(selectedModel,()=>{
+    if(selectedModel.value === 'coordinates'){
+        console.log('HERE')
+        DataPortalService.getCoordinates(organism.coordinates)
+        .then(resp => {
+            console.log(resp)
+            nextTick(()=>{
+                geoJson = resp.data
+                showMap.value = true
+            })
+        }).catch(e => {console.log(e)})
+    }else{
+        showMap.value = false
+    }
+})
 
 const jbrowseSession = reactive({
     assemblyTrack: null,

@@ -58,7 +58,6 @@
 </template>
 <script setup>
 import { onMounted, reactive, nextTick,ref, watch } from 'vue'
-import MapComponent from '../components/MapComponent.vue'
 import CesiumComponent from '../components/CesiumComponent.vue'
 import OrganismList from '../components/OrganismList.vue'
 import DataPortalService from '../services/DataPortalService'

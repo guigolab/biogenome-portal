@@ -11,7 +11,7 @@ FEATURE_COLLECTION_OBJECT={
     'features' : []
 }   
 
-def geo_localization_coordinates(bioproject=None, taxid=None):
+def geo_localization_coordinates(bioproject=None, taxid=None, coordinates=None):
     coordinates = list()
     if bioproject and bioproject != os.getenv('PROJECT_ACCESSION'):
         coord_model = json.loads(GeoCoordinates.objects(bioprojects = bioproject).to_json())
@@ -25,6 +25,12 @@ def geo_localization_coordinates(bioproject=None, taxid=None):
         coordinates.append(coord)
     FEATURE_COLLECTION_OBJECT['features'] = coordinates
     return FEATURE_COLLECTION_OBJECT
+
+def get_coordinates(data):
+    if data:
+        coordinates = json.loads(GeoCoordinates.objects(geo_location__in=data).to_json())
+        FEATURE_COLLECTION_OBJECT['features'] = coordinates
+        return FEATURE_COLLECTION_OBJECT
 
 def geo_localization_object(coordinates):
     ##expects lat:long format

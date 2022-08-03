@@ -30,7 +30,7 @@ class DataPortalService {
         return base.post('/coordinates',ids)
     }
     getCoordinates(coordinates) {
-        return base.get(`/coordinates/${coordinates}`)
+        return base.post('coordinates', coordinates)
     }
     getAllCoordinates(params) {
         if(params){
