@@ -38,7 +38,7 @@ class OrganismApi(Resource):
 		##get genome browser tracks
 		if json_resp['assemblies']:
 			assembly_accessions = [ass['accession'] for ass in json_resp['assemblies']]
-			genome_browser_data = GenomeBrowserData.objects(assembly_accession__in=assembly_accessions).exclude('id').to_json()
+			genome_browser_data = GenomeBrowserData.objects(assembly_accession__in=assembly_accessions).to_json()
 			json_resp['genome_browser_data'] = json.loads(genome_browser_data)
 		return Response(json.dumps(json_resp, default=str),mimetype="application/json", status=200)
 

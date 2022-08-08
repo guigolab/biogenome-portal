@@ -1,5 +1,6 @@
 <template>
 <va-inner-loading :loading="isLoading">
+{{toUpdate}}
     <div class="layout">
         <div class="row">
             <div class="flex">
@@ -37,7 +38,7 @@
                 </va-button>
             </div>
             <div class="flex">
-                <va-button @click="toUpdate? updateGenomeBrowserData() : submitGenomeBrowserData()" :disabled="!validAnnotation" >
+                <va-button @click="toUpdate === true ? updateGenomeBrowserData() : submitGenomeBrowserData()" :disabled="!validAnnotation" >
                     Submit Data
                 </va-button>            
             </div>

@@ -169,12 +169,6 @@
                     </template>
                 </va-modal>
                 <va-modal v-model="showEditModal" hide-default-actions>
-                <div v-if="dataValue==='annotations'">
-
-                </div>
-                <div v-else-if="dataValue==='jbrowse'">
-
-                </div>
                     <FormComponent 
                         :title="objectToEdit.title"
                         :form-options="objectToEdit.formOptions"
