@@ -7,7 +7,7 @@ const PROJECT_ACCESSION = import.meta.env.VITE_PROJECT_ACCESSION
 
 const treeOfLife = () => import('../views/TreeOfLife.vue')
 const map = () => import('../views/MapPage.vue')
-const organism = () => import('../views/Organism.vue')
+const organism = () => import('../views/OrganismPage.vue')
 const admin = () => import('../views/AdminArea.vue')
 const adminHP = () => import('../views/admin/LandingPage.vue')
 const biosampleForm = () => import('../components/admin/form/BioSampleForm.vue')

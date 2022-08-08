@@ -114,7 +114,7 @@ OrganismPipeline = [
 			"created":0
 		},
 		"assemblies":{
-			"id":0,
+			"_id":0,
 			"created":0
 		},
 		"experiments":{
@@ -123,7 +123,6 @@ OrganismPipeline = [
 		},
 		"bioprojects":{
 			"_id":0,
-			"parents":0
 		},
 		}
 	}

@@ -1,6 +1,6 @@
 import services.organism_service as organism_service
 from flask import Response, request
-from db.models import  Organism,TaxonNode
+from db.models import  GenomeBrowserData, Organism,TaxonNode
 from flask_restful import Resource
 from errors import NotFound, SchemaValidationError
 import json
@@ -35,6 +35,11 @@ class OrganismApi(Resource):
 		for taxid in ordered_taxid_lineage:
 			parsed_lineage.append(next(f for f in lineage_from_model if f['taxid'] == taxid ))
 		json_resp['taxon_lineage'] = list(reversed(parsed_lineage))
+		##get genome browser tracks
+		if json_resp['assemblies']:
+			assembly_accessions = [ass['accession'] for ass in json_resp['assemblies']]
+			genome_browser_data = GenomeBrowserData.objects(assembly_accession__in=assembly_accessions).exclude('id').to_json()
+			json_resp['genome_browser_data'] = json.loads(genome_browser_data)
 		return Response(json.dumps(json_resp, default=str),mimetype="application/json", status=200)
 
 	##update organism
