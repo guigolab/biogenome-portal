@@ -1,199 +1,69 @@
 <template>
 <div v-if="organismLoaded" class="row">
     <div class="flex lg12 md12 sm12 xs12">
-        <div v-if="organism.image_urls" class="row justify--center align--center">
+        <div v-if="organism.image_urls && organism.image_urls.length" class="row justify--center align--center">
             <va-carousel style="height:75vh" :items="organism.image_urls" :indicators="false" stateful autoscroll infinite :autoscrollInterval="5000" effect="fade"/>
         </div>
         <div class="row custom-card align--center">
-            <div class="flex">
+            <div class="flex lg4 md4 sm12 xs12">
                 <div class="row align--center">
                     <div v-if="organism.image" class="flex">
-                        <va-avatar :src="organism.image" size="large"/>
+                        <va-avatar :src="organism.image" size="5rem"/>
                     </div>
                     <div class="flex">
-                        <div class="row">
-                            <h1 style="text-align:start" class="display-3">
-                                {{organism.scientific_name}}
-                            </h1>
-                        </div>
-                        <div class="row align--center justify--start">
-                            <div class="flex">
-                                <va-chip v-if="organism.insdc_common_name" size="small" style="padding:5px" outline>common name: {{organism.insdc_common_name}}</va-chip>
-                                <va-chip v-if="organism.tolid_prefix" size="small" style="padding:5px" outline>tolid: {{organism.tolid_prefix}}</va-chip>
-                                <va-chip size="small" style="padding:5px" outline>taxid: {{organism.taxid}}</va-chip>
-                                <va-chip v-if="organism.target_list_status" size="small" outline>target_list_status: {{organism.target_list_status}}</va-chip>
-                                <va-button-dropdown outline size="small" label="INSDC Status">
-                                    <div style="font-size:.8rem">
-                                        <div style="padding:10px" v-for="(status,index) in INSDCStatus" :key="index">
-                                            <va-badge dot overlap :color="INSDCStatus.findIndex(stat => stat.label === organism.insdc_status) >= index ? 'success':'warning'">
-                                                <va-icon :name="status.icon"/>
-                                            </va-badge>
-                                            <p style="font-size:.8rem">{{status.label}}</p>
-                                        </div>
-                                    </div>
-                                </va-button-dropdown>
-                                <va-button-dropdown outline size="small" label="GoaT status">
-                                    <div style="font-size:.8rem">
-                                        <div style="padding:10px" v-for="(status,index) in GoaTStatus" :key="index">
-                                            <va-badge dot overlap :color="GoaTStatus.findIndex(stat => stat.label === organism.goat_status) >= index ? 'success':'warning'">
-                                                <va-icon :name="status.icon"/>
-                                            </va-badge>
-                                            <p style="font-size:.8rem">{{status.label}}</p>
-                                        </div>
-                                    </div>
-                                </va-button-dropdown>
+                        <h1 style="text-align:start" class="display-3">
+                            {{organism.scientific_name}}
+                        </h1>
+                    </div>
+                </div>
+                <div class="row align--center">
+                    <div class="flex">
+                        <va-chip v-if="organism.insdc_common_name" size="small" style="padding:5px" outline>common name: {{organism.insdc_common_name}}</va-chip>
+                        <va-chip v-if="organism.tolid_prefix" size="small" style="padding:5px" outline>tolid: {{organism.tolid_prefix}}</va-chip>
+                        <va-chip size="small" style="padding:5px" outline>taxid: {{organism.taxid}}</va-chip>
+                        <va-chip v-if="organism.target_list_status" size="small" outline>target_list_status: {{organism.target_list_status}}</va-chip>
+                        <va-button-dropdown outline size="small" label="INSDC Status">
+                            <div style="font-size:.8rem">
+                                <div style="padding:10px" v-for="(status,index) in INSDCStatus" :key="index">
+                                    <va-badge dot overlap :color="INSDCStatus.findIndex(stat => stat.label === organism.insdc_status) >= index ? 'success':'warning'">
+                                        <va-icon :name="status.icon"/>
+                                    </va-badge>
+                                    <p style="font-size:.8rem">{{status.label}}</p>
+                                </div>
                             </div>
-                        </div>
+                        </va-button-dropdown>
+                        <va-button-dropdown outline size="small" label="GoaT status">
+                            <div style="font-size:.8rem">
+                                <div style="padding:10px" v-for="(status,index) in GoaTStatus" :key="index">
+                                    <va-badge dot overlap :color="GoaTStatus.findIndex(stat => stat.label === organism.goat_status) >= index ? 'success':'warning'">
+                                        <va-icon :name="status.icon"/>
+                                    </va-badge>
+                                    <p style="font-size:.8rem">{{status.label}}</p>
+                                </div>
+                            </div>
+                        </va-button-dropdown>
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="row align--center custom-card">
-            <div class="flex lg12 md12 sm12 xs12">
-                <div class="row custom-card align--center scroller">
-                    <div v-for="key in organismData.dataKeys" :key="key" class="flex menu-item">
-                        <va-card :stripe="selectedModel===key" @click="selectedModel === key?selectedModel='overview':selectedModel=key"  :stripe-color="dataIcons[key].color" class="custom-card box">
-                            <va-card-title>
-                                <div class="row justify--space-between align--center">
-                                    <div class="flex">
-                                        <p>{{key}}</p>
-                                    </div>
-                                    <div class="flex">
-                                        <va-icon 
-                                            :name="dataIcons[key].icon"
-                                            :color="dataIcons[key].color"
-                                        >
-                                        </va-icon>
-                                    </div>
-                                </div>
-                            </va-card-title>
-                            <va-card-content>
-                                <div class="row justify--space-between">
-                                    <div class="flex">
-                                        <p><strong>{{organism[key].length}}</strong></p>
-                                    </div>
-                                </div>
-                            </va-card-content>
-                        </va-card>
-                    </div>
-                    <div class="flex menu-item">
-                        <va-card :stripe="selectedModel === 'coordinates'"      
-                        @click="selectedModel==='coordinates'?selectedModel='overview':selectedModel='coordinates'" class="custom-card box">
-                            <va-card-title>
-                                <div class="row justify--space-between align--center">
-                                    <div class="flex">
-                                        <p>Map</p>
-                                    </div>
-                                    <div class="flex">
-                                        <va-icon 
-                                            name="travel_explore"
-                                        >
-                                        </va-icon>
-                                    </div>
-                                </div>
-                            </va-card-title>
-                            <va-card-content>
-                                <div class="row justify--space-between">
-                                    <div class="flex">
-                                        <p><strong>{{organism.coordinates.length}}</strong></p>
-                                    </div>
-                                </div>
-                            </va-card-content>
-                        </va-card> 
-                    </div>
-                    <div class="flex menu-item">
-                        <va-card :stripe="selectedModel==='jbrowse'" stripe-color="#752061" @click="selectedModel==='jbrowse'?selectedModel='overview':selectedModel='jbrowse'" class="custom-card box">
-                            <va-card-title>
-                                <div class="row justify--space-between align--center">
-                                    <div class="flex">
-                                        <p>Genome Browser</p>
-                                    </div>
-                                    <div class="flex">
-                                        <va-icon 
-                                            name="view_timeline"
-                                            color="#752061"
-                                        >
-                                        </va-icon>
-                                    </div>
-                                </div>
-                            </va-card-title>
-                            <va-card-content>
-                                <div class="row justify--space-between">
-                                    <div class="flex">
-                                        <p><strong>{{organism.genome_browser_data.length}}</strong></p>
-                                    </div>
-                                </div>
-                            </va-card-content>
-                        </va-card> 
-                    </div>
-                </div> 
+            <div class="flex lg8 md8 sm12 xs12">
+                <OrganismNavCards @on-selected="handleSelected" :organism="organism"/>
             </div>
         </div>
-        <Transition name="slide-up">
-            <div v-if="selectedModel === 'overview'" :key="selectedModel" class="row custom-card">
+        <va-divider/>
+        <div class="row">
+            <div class="flex lg4 md4 sm12 xs12">
                 <OrganismOverview :organism="organism"/>
             </div>
-        </Transition>
-    </div>
-</div>
-<!-- 
-                <div v-if="selectedModel === 'biosamples'" class="row">
-                    <div class="flex lg12 md12 sm12 xs12">
-                        <div class="row custom-card">
-                            <div class="flex">
-                                <h6 class="display-6">BioSamples</h6>
-                            </div>
-                        </div>
-                        <va-card v-for="(biosample,index) in organism.biosamples" :key="index" class="custom-card">
-                            <va-card-title>
-                                <div class="row align--center">
-                                    <div class="flex">
-                                        <p>{{biosample.accession}}</p>
-                                    </div>
-                                    <div v-if="biosample.longitude" class="flex">
-                                        <p class="text--secondary">{{biosample.latitude}},{{biosample.longitude}}</p><va-icon name="location_on"/>
-                                    </div>
-                                </div>
-                            </va-card-title>
-                            <va-card-content>
-                                <div class="row">
-                                    <div class="flex">
-
-                                    </div>
-                                    <div class="flex">
-                                    </div>
-                                </div>
-                            </va-card-content>
-                        </va-card>
-                    </div>
-                </div>
-            </Transition>
-        <div class="row">
-            <div class="flex lg12 md12 sm12 xs12">
+            <div class="flex lg8 md8 sm12 xs12">
                 <Transition name="slide-up">
-                    <va-card class="custom-card" :key="selectedModel" v-if="Object.keys(dataIcons).includes(selectedModel)">
-                        <va-card-title>
-                            {{selectedModel}}
 
-                        </va-card-title>
-                        <va-card-content>
-                            <DataTable :items="organism[selectedModel]" :columns="dataIcons[selectedModel].fields" :color="dataIcons[selectedModel].color"/>
-                        </va-card-content>
-                    </va-card> 
-                    <va-card class="custom-card" :key="selectedModel" v-if="selectedModel === 'coordinates'">
-                        <CesiumComponent v-if="showMap" :geojson="geoJson"/>
-                    </va-card>
-                    <va-card class="custom-card" :key="selectedModel" v-if="selectedModel === 'jbrowse'">
-                        <Jbrowse2 
-                            :assembly="jbrowseSession.assemblyTrack"
-                            :tracks="jbrowseSession.annotationTracks"
-                        />
-                    </va-card>
                 </Transition>
             </div>
         </div>
+
     </div>
-</div> -->
+</div>
+
     <!-- <div>
         Organism details:
         photo??
@@ -232,7 +102,7 @@ import OrganismOverview from '../components/OrganismOverview.vue'
 import OrganismSideBar from '../components/OrganismSideBar.vue'
 import Jbrowse2 from '../components/Jbrowse2.vue'
 import CesiumComponent from '../components/CesiumComponent.vue'
-
+import OrganismNavCards from '../components/OrganismNavCards.vue'
 // import MapComponent from '../components/MapComponent.vue'
 
 const showLineage = ref(false)
@@ -271,6 +141,10 @@ watch(selectedModel,()=>{
         showMap.value = false
     }
 })
+
+function handleSelected(payload){
+    console.log(payload)
+}
 
 const jbrowseSession = reactive({
     assemblyTrack: null,
@@ -356,5 +230,17 @@ function toJBrowse(assembly){
 .status-icon-wrapper::after{
     top:15px;
     width: 10px;
+}
+
+.scroller {
+  overflow: auto;
+  white-space: nowrap;
+  display: block;
+}
+
+.menu-item {
+  display: inline-block;
+  text-align: center;
+  text-decoration: none;
 }
 </style>
