@@ -3,7 +3,7 @@
         <div v-if="organism.metadata && Object.keys(organism.metadata).length" class="custom-card">
             <div class="row">
                 <div class="flex">
-                    <h3 style="text-align:start" class="display-3">
+                    <h3 style="text-align:start" class="display-6">
                         Metadata
                     </h3>
                 </div>
@@ -28,7 +28,7 @@
         <div v-if="organism.common_names && organism.common_names.length" class="custom-card">
             <div class="row">
                 <div class="flex">
-                    <h3 style="text-align:start" class="display-3">
+                    <h3 style="text-align:start" class="display-6">
                         Names
                     </h3>
                 </div>
@@ -64,7 +64,7 @@
         <div v-if="organism.publications && organism.publications.length" class="custom-card">
             <div class="row">
                 <div class="flex">
-                    <h3 style="text-align:start" class="display-3">
+                    <h3 style="text-align:start" class="display-6">
                         Publications
                     </h3>
                 </div>
@@ -89,7 +89,7 @@
         <div v-if="organism.bioprojects && organism.bioprojects.length" class="custom-card">
             <div class="row">
                 <div class="flex">
-                    <h3 style="text-align:start" class="display-3">
+                    <h3 style="text-align:start" class="display-6">
                         BioProjects
                     </h3>
                 </div>
@@ -111,10 +111,10 @@
                 </div>
             </div>
         </div>
-        <div class="custom-card">
+        <!-- <div class="custom-card">
             <div class="row">
                 <div class="flex">
-                    <h3 style="text-align:start" class="display-3">
+                    <h3 style="text-align:start" class="display-6">
                         Lineage
                     </h3>
                 </div>
@@ -135,7 +135,7 @@
                     </va-card>
                 </div>
             </div>
-        </div>
+        </div> -->
     </div>
 </template>
 <script setup>

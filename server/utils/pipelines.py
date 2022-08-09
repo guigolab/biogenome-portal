@@ -84,13 +84,13 @@ OrganismPipeline = [
 		}
 	},
 	## to mantain lineage order we query it after
-	{"$lookup":
-		{"from": "taxon_node",
-		"localField": "taxon_lineage",
-		"foreignField": "taxid",
-		"as": "taxon_lineage",
-		}
-	},
+	# {"$lookup":
+	# 	{"from": "taxon_node",
+	# 	"localField": "taxon_lineage",
+	# 	"foreignField": "taxid",
+	# 	"as": "taxon_lineage",
+	# 	}
+	# },
 	{"$lookup":
 		{"from": "bio_project",
 		"localField": "bioprojects",

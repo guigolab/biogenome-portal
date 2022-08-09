@@ -56,41 +56,39 @@
             </div>
             <div class="flex lg8 md8 sm12 xs12">
                 <Transition name="slide-up">
+                    <va-card v-if="selectedModel === 'biosamples'">
+                        {{selectedModel}}
+                    </va-card>
+                    <va-card v-else-if="selectedModel === 'local_samples'">
+                        {{selectedModel}}
 
+                    </va-card>
+                    <va-card v-else-if="selectedModel === 'assemblies'">
+                        {{selectedModel}}
+
+                    </va-card>
+                    <va-card v-else-if="selectedModel === 'experiments'">
+                        {{selectedModel}}
+
+                    </va-card>
+                    <va-card v-else-if="selectedModel === 'annotations'">
+                        {{selectedModel}}
+
+                    </va-card>
+                    <va-card v-else-if="selectedModel === 'jbrowse'">
+                        {{selectedModel}}
+
+                    </va-card>
+                    <va-card v-else-if="selectedModel === 'coordinates'">
+                        {{selectedModel}}
+
+                    </va-card>
                 </Transition>
             </div>
         </div>
 
     </div>
 </div>
-
-    <!-- <div>
-        Organism details:
-        photo??
-        <va-avatar>
-        </va-avatar>
-        <va-card>
-            <va-card-title>
-            </va-card-title>
-        </va-card>
-        <va-card>
-            <va-card-title>
-            </va-card-title>
-        </va-card>
-        lineage
-        map
-        bioproject
-        taxid,tolid
-        goat status
-        insdc status
-
-        Organism data:
-        biosamples
-        local_samples
-        assemblies
-        experiments
-        annotations
-         -->
 </template>
 <script setup>
 import OrganismDetails from '../components/OrganismDetails.vue'
@@ -105,18 +103,14 @@ import CesiumComponent from '../components/CesiumComponent.vue'
 import OrganismNavCards from '../components/OrganismNavCards.vue'
 // import MapComponent from '../components/MapComponent.vue'
 
-const showLineage = ref(false)
-const showProjects = ref(false)
-const selectedModel = ref('overview')
+const selectedModel = ref('')
 const showMap = ref(false)
 const assembliesWithTrack = ref([])
-
 const props = defineProps({
     taxid:String
 })
 const showTable = ref(false)
 const organismLoaded = ref(false)
-const hasCoordinates = ref(false)
 //static object
 var organism = null
 var geoJson = null
@@ -143,7 +137,7 @@ watch(selectedModel,()=>{
 })
 
 function handleSelected(payload){
-    console.log(payload)
+    selectedModel.value = payload
 }
 
 const jbrowseSession = reactive({

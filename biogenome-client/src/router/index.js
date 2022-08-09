@@ -1,7 +1,7 @@
 import {createWebHistory, createRouter} from 'vue-router'
 import Home from '../views/Home.vue'
 import {auth} from '../stores/auth'
-
+import {organisms} from '../stores/organisms'
 const ROOTNODE = import.meta.env.VITE_ROOT_NODE
 const PROJECT_ACCESSION = import.meta.env.VITE_PROJECT_ACCESSION
 
@@ -83,12 +83,16 @@ const router = createRouter({
 
 router.beforeEach(async (to,from)=>{
   const authStore = auth()
+  const organismStore = organisms()
   if(to.matched.some((record)=>record.meta.requiresAuth)){
     if(!authStore.isAuthenticated){
       alert('Authentication required')
       authStore.showModal = true
       return 
     }
+  }
+  if(to.name === 'home' && from.name !== 'home'){
+    organismStore.resetQuery()
   }
 })
 export default router;

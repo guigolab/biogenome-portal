@@ -28,13 +28,13 @@ class OrganismApi(Resource):
 			raise NotFound
 		json_resp = next(organism_obj.aggregate(*OrganismPipeline))
 		##parse bioprojects and lineage
-		ordered_taxid_lineage = organism_obj.first().taxon_lineage
-		lineage_from_model = json.loads(TaxonNode.objects(taxid__in=ordered_taxid_lineage).exclude('children').to_json())
+		# ordered_taxid_lineage = organism_obj.first().taxon_lineage
+		# lineage_from_model = json.loads(TaxonNode.objects(taxid__in=ordered_taxid_lineage).exclude('children').to_json())
 		#order lineage TODO FIX THIS
-		parsed_lineage = list()
-		for taxid in ordered_taxid_lineage:
-			parsed_lineage.append(next(f for f in lineage_from_model if f['taxid'] == taxid ))
-		json_resp['taxon_lineage'] = list(reversed(parsed_lineage))
+		# parsed_lineage = list()
+		# for taxid in ordered_taxid_lineage:
+		# 	parsed_lineage.append(next(f for f in lineage_from_model if f['taxid'] == taxid ))
+		# json_resp['taxon_lineage'] = list(reversed(parsed_lineage))
 		##get genome browser tracks
 		if json_resp['assemblies']:
 			assembly_accessions = [ass['accession'] for ass in json_resp['assemblies']]
