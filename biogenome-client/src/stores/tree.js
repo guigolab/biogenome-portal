@@ -3,7 +3,8 @@ import {reactive, ref} from 'vue'
 
 export const tree = defineStore('tree', {
     state: () => ({
-        tree:reactive([]),
+        taxonomyTree:reactive([]),
+        bioprojectsTree:reactive([])
     }),
     actions: {
     }

@@ -14,7 +14,7 @@
         </div>
     </div>
     <div class="row">
-        <div class="flex lg12 md12 sm12 xs12" style="height:50vh;overflow:scroll" v-if="props.organisms.length">
+        <div class="flex lg12 md12 sm12 xs12" style="height:80vh;overflow:scroll" v-if="props.organisms.length">
             <va-inner-loading :loading="isLoading">
                 <va-card 
                     v-for="(item, index) in props.organisms"

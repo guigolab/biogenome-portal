@@ -16,8 +16,8 @@ createApp(App)
 .use(createVuestic({
     config:{
         colors:{
-            primary: '#1e1d1f',
-            secondary: '#7ab615',
+            primary: '#2B303A',
+            secondary: '#0C7C59',
         }
     }
 }))

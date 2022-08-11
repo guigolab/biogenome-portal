@@ -37,6 +37,7 @@ export const auth = defineStore('auth', {
               this.isAuthenticated = true
               this.setLocalStorage()
               this.isLoading=false
+              this.showModal=false
               // router.go(-1)
           } 
           catch (error) {

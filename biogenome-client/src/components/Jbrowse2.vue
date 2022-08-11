@@ -1,5 +1,5 @@
 <template>
-<va-card>
+<va-card class="custom-card">
   <va-card-title>
     Genome Browser
   </va-card-title>

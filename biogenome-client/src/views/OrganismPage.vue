@@ -5,7 +5,7 @@
             <va-carousel style="height:75vh" :items="organism.image_urls" :indicators="false" stateful autoscroll infinite :autoscrollInterval="5000" effect="fade"/>
         </div>
         <div class="row custom-card align--center">
-            <div class="flex lg4 md4 sm12 xs12">
+            <div class="flex lg6 md6 sm12 xs12">
                 <div class="row align--center">
                     <div v-if="organism.image" class="flex">
                         <va-avatar :src="organism.image" size="5rem"/>
@@ -45,69 +45,373 @@
                     </div>
                 </div>
             </div>
-            <div class="flex lg8 md8 sm12 xs12">
+            <div class="flex lg6 md6 sm12 xs12">
                 <OrganismNavCards @on-selected="handleSelected" :organism="organism"/>
             </div>
         </div>
         <va-divider/>
         <div class="row">
-            <div class="flex lg4 md4 sm12 xs12">
-                <OrganismOverview :organism="organism"/>
+            <div class="flex lg4 md12 sm12 xs12">
+                <va-card v-if="organism.metadata && Object.keys(organism.metadata).length" class="custom-card">
+                    <va-card-title>
+                        <div class="row justify--space-between align--center">
+                            <div class="flex">
+                                Metadata
+                            </div>
+                            <div class="flex">
+                                <va-icon 
+                                    name="info"
+                                >
+                                </va-icon>
+                            </div>
+                        </div>
+                    </va-card-title>
+                    <va-card-content>
+                        <div v-for="(key,index) in Object.keys(organism.metadata)" :key="index" class="row justify--space-between align--center" style="padding:5px">
+                            <div class="flex">
+                                <p style="text-align:start">{{key}}</p>
+                            </div>
+                            <div class="flex">
+                                <p style="text-align:start">{{organism.metadata[key]}}</p>
+                            </div>
+                        </div>
+                    </va-card-content>
+                </va-card>
+                <va-card v-if="organism.common_names && organism.common_names.length" class="custom-card">
+                    <va-card-title>
+                        <div class="row justify--space-between align--center">
+                            <div class="flex">
+                                Names
+                            </div>
+                        </div>
+                    </va-card-title>
+                    <va-card-content>
+                        <div v-for="(name,index) in organism.common_names" :key="index" class="row justify--space-between align--center" style="padding:5px">
+                            <div class="flex lg4 md4 sm4 xs4">
+                                <p style="text-align:start">{{name.value}}</p>
+                            </div>
+                            <div class="flex lg4 md4 sm4 xs4">
+                                <span style="text-align:start">{{name.lang}}</span>
+                                <va-icon style="margin-left:5px" name="language"/>
+                            </div>
+                            <div v-if="name.locality" class="flex lg4 md4 sm4 xs4">
+                                <span style="text-align:start">{{name.locality}}</span>
+                                <va-icon style="margin-left:5px" name="location_on"/>
+                            </div>
+                        </div>
+                    </va-card-content>
+                </va-card>
+                <va-card v-if="organism.publications && organism.publications.length" class="custom-card">
+                    <va-card-title>
+                        <div class="row justify--space-between align--center">
+                            <div class="flex">
+                                Publications
+                            </div>
+                        </div>
+                    </va-card-title>
+                    <va-card-content>
+                        <div v-for="(pub,index) in organism.publications" :key="index" class="row justify--space-between align--center" style="padding:5px">
+                            <div class="flex lg4 md4 sm4 xs4">
+                                <p style="text-align:start">{{pub.id}}</p>
+                            </div>
+                            <div class="flex lg4 md4 sm4 xs4">
+                                <p style="text-align:start">{{pub.source}}</p>
+                            </div>
+                        </div>
+                    </va-card-content>
+                </va-card>
+                <va-card v-if="organism.bioprojects && organism.bioprojects.length" class="custom-card">
+                    <va-card-title>
+                        <div class="row justify--space-between align--center">
+                            <div class="flex">
+                                bioprojects
+                            </div>
+                            <div class="flex">
+                                <va-icon 
+                                    name="science"
+                                    color="success"
+                                >
+                                </va-icon>
+                            </div>
+                        </div>
+                    </va-card-title>
+                    <va-card-content>
+                        <div v-for="(pr,index) in organism.bioprojects" :key="index" class="row justify--space-between align--center" style="padding:5px">
+                            <div class="flex lg8 md8 sm8 xs8">
+                                <p style="text-align:start">{{pr.title}}</p>
+                            </div>
+                            <div class="flex lg4 md4 sm4 xs4">
+                                <a :href="`https://www.ebi.ac.uk/ena/browser/view/${pr.accession}`" class="link">{{pr.accession}}</a>
+                            </div>
+                        </div>
+                    </va-card-content>
+                </va-card>
+                <va-card class="custom-card">
+                    <va-card-title>
+                        <div class="row justify--space-between align--center">
+                            <div class="flex">
+                                Lineage
+                            </div>
+                            <div class="flex">
+                                <va-icon 
+                                    name="pets"
+                                >
+                                </va-icon>
+                            </div>
+                        </div>
+                    </va-card-title>
+                    <va-card-content>
+                        <div v-for="(node,index) in organism.taxon_lineage" :key="index" class="row justify--space-between align--center" style="padding:5px">
+                            <div class="flex lg8 md8 sm8 xs8">
+                                <p style="text-align:start">{{node.name}}</p>
+                            </div>
+                            <div class="flex lg4 md4 sm4 xs4">
+                                <p style="text-align:start">{{node.rank}}</p>
+                            </div>
+                        </div>
+                    </va-card-content>
+                </va-card>
             </div>
-            <div class="flex lg8 md8 sm12 xs12">
-                <Transition name="slide-up">
-                    <va-card v-if="selectedModel === 'biosamples'">
-                        {{selectedModel}}
-                    </va-card>
-                    <va-card v-else-if="selectedModel === 'local_samples'">
-                        {{selectedModel}}
-
-                    </va-card>
-                    <va-card v-else-if="selectedModel === 'assemblies'">
-                        {{selectedModel}}
-
-                    </va-card>
-                    <va-card v-else-if="selectedModel === 'experiments'">
-                        {{selectedModel}}
-
-                    </va-card>
-                    <va-card v-else-if="selectedModel === 'annotations'">
-                        {{selectedModel}}
-
-                    </va-card>
-                    <va-card v-else-if="selectedModel === 'jbrowse'">
-                        {{selectedModel}}
-
-                    </va-card>
-                    <va-card v-else-if="selectedModel === 'coordinates'">
-                        {{selectedModel}}
-
-                    </va-card>
-                </Transition>
+            <div class="flex lg8 md12 sm12 xs12">
+                <va-card stripe :stripe-color="dataIcons.biosamples.color" v-if="organism.biosamples && organism.biosamples.length" class="custom-card">
+                    <va-card-title>
+                        <div class="row justify--space-between align--center">
+                            <div class="flex">
+                                biosamples
+                            </div>
+                            <div class="flex">
+                                <va-icon 
+                                    :name="dataIcons.biosamples.icon"
+                                    :color="dataIcons.biosamples.color"
+                                >
+                                </va-icon>
+                            </div>
+                        </div>
+                    </va-card-title>
+                    <va-card-content style="overflow:scroll">
+                        <va-data-table
+                            :items="organism.biosamples"
+                            :columns="['accession', 'organism_part','related_samples','metadata']"
+                        >
+                        <template #cell(accession)="{ rowData }">
+                            <a target="_blank" :href="`https://www.ebi.ac.uk/ena/browser/view/${rowData.accession}`" class="link">{{rowData.accession}}</a>
+                        </template>
+                        <template #cell(organism_part)="{ rowData }">
+                            <p>{{rowData.metadata.tissue || rowData.metadata.organism_part}}</p>
+                        </template>
+                        <template #cell(related_samples)="{ rowData }">
+                            <va-button-dropdown flat size="small" v-if="rowData.sub_samples && rowData.sub_samples.length">
+                                <ul style="max-height:300px;overflow:scroll">
+                                    <li v-for="(relatedSample,index) in rowData.sub_samples" :key="index">
+                                        <va-button flat @click="getRelatedSample(relatedSample)">{{relatedSample}}</va-button>
+                                    </li>
+                                </ul>
+                            </va-button-dropdown>
+                        </template>
+                        <template #cell(metadata)="{ rowData }"><va-icon name="search" :color="color" @click="toggleMetadata(rowData)"/></template>
+                        </va-data-table>
+                    </va-card-content>
+                </va-card>
+                <va-card stripe :stripe-color="dataIcons.local_samples.color" v-if="organism.local_samples && organism.local_samples.length" class="custom-card">
+                    <va-card-title>
+                        <div class="row justify--space-between align--center">
+                            <div class="flex">
+                                local samples
+                            </div>
+                            <div class="flex">
+                                <va-icon 
+                                    :name="dataIcons.local_samples.icon"
+                                    :color="dataIcons.local_samples.color"
+                                >
+                                </va-icon>
+                            </div>
+                        </div>
+                    </va-card-title>
+                    <va-card-content style="overflow:scroll">
+                        <va-data-table
+                            :items="organism.local_samples"
+                            :columns="['local_id', 'organism_part','metadata']"
+                        >
+                        <template #cell(accession)="{ rowData }">
+                            <a target="_blank" :href="`https://www.ebi.ac.uk/ena/browser/view/${rowData.accession}`" class="link">{{rowData.accession}}</a>
+                        </template>
+                        <template #cell(organism_part)="{ rowData }">
+                            <p>{{rowData.metadata.tissue || rowData.metadata.ORGANISM_PART}}</p>
+                        </template>
+                        <template #cell(metadata)="{ rowData }"><va-icon name="search" :color="color" @click="toggleMetadata(rowData)"/></template>
+                        </va-data-table>
+                    </va-card-content>
+                </va-card>
+                <va-card stripe :stripe-color="dataIcons.assemblies.color" v-if="organism.assemblies && organism.assemblies.length" class="custom-card">
+                    <va-card-title>
+                        <div class="row justify--space-between align--center">
+                            <div class="flex">
+                                assemblies
+                            </div>
+                            <div class="flex">
+                                <va-icon 
+                                    :name="dataIcons.assemblies.icon"
+                                    :color="dataIcons.assemblies.color"
+                                >
+                                </va-icon>
+                            </div>
+                        </div>
+                    </va-card-title>
+                    <va-card-content style="overflow:scroll">
+                        <va-data-table
+                            :items="organism.assemblies"
+                            :columns="['accession', 'assembly_name','metadata']"
+                        >
+                        <template #cell(accession)="{ rowData }">
+                            <a target="_blank" :href="`https://www.ebi.ac.uk/ena/browser/view/${rowData.accession}`" class="link">{{rowData.accession}}</a>
+                        </template>
+                        <template #cell(metadata)="{ rowData }"><va-icon name="search" :color="color" @click="toggleMetadata(rowData)"/></template>
+                        </va-data-table>
+                    </va-card-content>
+                </va-card>
+                <va-card stripe :stripe-color="dataIcons.experiments.color" v-if="organism.experiments && organism.experiments.length" class="custom-card">
+                    <va-card-title>
+                        <div class="row justify--space-between align--center">
+                            <div class="flex">
+                                experiments
+                            </div>
+                            <div class="flex">
+                                <va-icon 
+                                    :name="dataIcons.experiments.icon"
+                                    :color="dataIcons.experiments.color"
+                                >
+                                </va-icon>
+                            </div>
+                        </div>
+                    </va-card-title>
+                    <va-card-content style="overflow:scroll">
+                        <va-data-table
+                            :items="organism.experiments"
+                            :columns="['experiment_accession', 'instrument_platform','metadata']"
+                        >
+                        <template #cell(experiment_accession)="{ rowData }">
+                            <a target="_blank" :href="`https://www.ebi.ac.uk/ena/browser/view/${rowData.experiment_accession}`" class="link">{{rowData.experiment_accession}}</a>
+                        </template>
+                        <template #cell(metadata)="{ rowData }"><va-icon name="search" :color="color" @click="toggleMetadata(rowData)"/></template>
+                        </va-data-table>
+                    </va-card-content>
+                </va-card>
+                <va-card stripe :stripe-color="dataIcons.annotations.color" v-if="organism.annotations && organism.annotations.length" class="custom-card">
+                    <va-card-title>
+                        <div class="row justify--space-between align--center">
+                            <div class="flex">
+                                annotations
+                            </div>
+                            <div class="flex">
+                                <va-icon 
+                                    :name="dataIcons.annotations.icon"
+                                    :color="dataIcons.annotations.color"
+                                >
+                                </va-icon>
+                            </div>
+                        </div>
+                    </va-card-title>
+                    <va-card-content style="overflow:scroll">
+                        <va-data-table
+                            :items="organism.annotations"
+                            :columns="['name', 'assembly_accession','metadata']"
+                        >
+                        <template #cell(metadata)="{ rowData }"><va-icon name="search" :color="color" @click="toggleMetadata(rowData)"/></template>
+                        </va-data-table>
+                    </va-card-content>
+                </va-card>
+                <va-card stripe stripe-color="#752061" v-if="organism.genome_browser_data && organism.genome_browser_data.length" class="custom-card">
+                    <va-card-title>
+                        <div class="row justify--space-between align--center">
+                            <div class="flex">
+                                genome browser data
+                            </div>
+                            <div class="flex">
+                                <va-icon 
+                                    name="view_timeline"
+                                    color="#752061"
+                                >
+                                </va-icon>
+                            </div>
+                        </div>
+                    </va-card-title>
+                    <va-card-content style="overflow:scroll">
+                        <va-data-table
+                            :items="organism.genome_browser_data"
+                            :columns="['assembly_accession','metadata','actions']"
+                        >
+                        <template #cell(metadata)="{ rowData }"><va-icon name="search" :color="color" @click="toggleMetadata(rowData)"/></template>
+                        <template #cell(actions)="{ rowData }"><va-chip outline color="#752061" @click="loadTrack(rowData)">See in JBrowse2</va-chip></template>
+                        </va-data-table>
+                    </va-card-content>
+                </va-card>
+                <Jbrowse2 v-if="showJBrowse" :assembly="jbrowseSession.assemblyTrack" :tracks="jbrowseSession.annotationTracks"/>
+                <va-card  v-if="showMap" class="custom-card">
+                    <va-card-title>
+                        <div class="row justify--space-between align--center">
+                            <div class="flex">
+                                <p>Map</p>
+                            </div>
+                            <div class="flex">
+                                <va-icon 
+                                    name="travel_explore"
+                                >
+                                </va-icon>
+                            </div>
+                        </div>
+                    </va-card-title>
+                    <va-card-content>
+                        <CesiumComponent :geojson="geoJson"/>
+                    </va-card-content>
+                </va-card>
             </div>
         </div>
-
     </div>
+    <va-modal v-model="showMetadata" :title="toggledMetadata.name">
+        <ul>
+            <li style="padding:10px" v-for="key in Object.keys(toggledMetadata.metadata)" :key="key">
+                <!-- <div v-if="Object.keys(toggledMetadata.metadata[key]).length">
+                    <ul>
+                        <li v-for="(metadataKey,index) in toggledMetadata.metadata[key]" :key="index">
+                            <div v-if="toggledMetadata.metadata[key][metadataKey].length">
+                                <ul>
+                                    <li v-for="(value,index) in toggledMetadata.metadata[key][metadataKey]" :key="index">
+                                        <strong>{{value+ ': '}}</strong>{{toggledMetadata.metadata[key][metadataKey]}}
+                                    </li>
+                                </ul>
+                            </div>
+                            <strong>{{key+ ': '}}</strong>{{toggledMetadata.metadata[key][metadataKey]}}
+                        </li>
+                    </ul>
+                </div> -->
+                <strong>{{key+ ': '}}</strong>{{toggledMetadata.metadata[key]}}
+                <va-divider/>
+            </li>
+        </ul>
+    </va-modal>
 </div>
 </template>
 <script setup>
-import OrganismDetails from '../components/OrganismDetails.vue'
 import { computed, nextTick, onMounted, reactive, ref, watch } from '@vue/runtime-core'
 import {dataIcons,GoaTStatus,INSDCStatus,jbrowse2} from '../../config'
 import DataPortalService from '../services/DataPortalService'
-import DataTable from '../components/data/DataTable.vue'
-import OrganismOverview from '../components/OrganismOverview.vue'
-import OrganismSideBar from '../components/OrganismSideBar.vue'
 import Jbrowse2 from '../components/Jbrowse2.vue'
 import CesiumComponent from '../components/CesiumComponent.vue'
 import OrganismNavCards from '../components/OrganismNavCards.vue'
 // import MapComponent from '../components/MapComponent.vue'
 
+const showJBrowse = ref(false)
 const selectedModel = ref('')
 const showMap = ref(false)
 const assembliesWithTrack = ref([])
 const props = defineProps({
     taxid:String
+})
+const showMetadata = ref(false)
+
+const toggledMetadata = reactive({
+    name:'',
+    metadata:{}
 })
 const showTable = ref(false)
 const organismLoaded = ref(false)
@@ -139,15 +443,29 @@ watch(selectedModel,()=>{
 function handleSelected(payload){
     selectedModel.value = payload
 }
+function toggleMetadata(rowData){
+    toggledMetadata.name = rowData.accession || rowData.experiment_accession || rowData.local_id || rowData.name
+    toggledMetadata.metadata = {...rowData.metadata}
+    showMetadata.value = true    
+}
+
+function getRelatedSample(sampleAccession){
+    DataPortalService.getBioSample(sampleAccession)
+    .then(resp => {
+        toggledMetadata.name = sampleAccession
+        toggledMetadata.metadata = {...resp.data.metadata}
+        nextTick(()=>{
+            showMetadata.value = true
+        })
+    })
+}
+
 
 const jbrowseSession = reactive({
     assemblyTrack: null,
     annotationTracks:[]
 })
 
-function toggledMetadata(value){
-    console.log(value)
-}
 function toggleTable(key){
     showTable.value = false
     organismData.loadedItems = organism[key]
@@ -158,6 +476,7 @@ onMounted(()=>{
     .then(response => {
         organismLoaded.value = false
         organism = response.data
+        console.dir(organism)
         organismData.dataKeys = Object.keys(dataIcons).filter(d => organism[d].length)
         organismData.loadedItems = organism[organismData.dataKeys[0]]
         organismLoaded.value = true
@@ -167,35 +486,37 @@ onMounted(()=>{
         // if (organism.coordinates.length){
         //     return DataPortalService.getCoordinates(organism.coordinates)
         // }
-    })
+        return  DataPortalService.getCoordinates(organism.coordinates)
+    }).then(resp => {
+        if(resp.data){
+            geoJson = resp.data
+            showMap.value=true
+        }
+    } )
 })
 
-function toJBrowse(assembly){
-    const assToLoad = {...jbrowse2.assemblyObject}
-    console.log(assToLoad)
-    assToLoad.name = assembly.assembly_name
-    assToLoad.sequence.trackId = assembly.accession
-    assToLoad.sequence.adapter.fastaLocation.uri = assembly.track.fasta_location
-    assToLoad.sequence.adapter.faiLocation.uri = assembly.track.fai_location
-    assToLoad.sequence.adapter.gziLocation.uri = assembly.track.gzi_location
-    jbrowseSession.assemblyTrack = {...assToLoad}
-    organism.annotations.filter(ann => ann.assembly_accession === assembly.accession)
-    .forEach(ann => {
+function loadTrack(rowData){
+    showJBrowse.value=false
+    const assTrack = {...jbrowse2.assemblyObject}
+    assTrack.name = rowData.assembly_accession
+    assTrack.sequence.trackId = rowData.assembly_accession
+    assTrack.sequence.adapter.fastaLocation.uri = rowData.assembly_track.fasta_location
+    assTrack.sequence.adapter.faiLocation.uri = rowData.assembly_track.fai_location
+    assTrack.sequence.adapter.gziLocation.uri = rowData.assembly_track.gzi_location
+    jbrowseSession.assemblyTrack = {...assTrack}
+    rowData.annotation_tracks.forEach(ann => {
         const annToLoad = {...jbrowse2.annotationTrackObject}
         annToLoad.name = ann.name
         annToLoad.trackId = ann.name
-        annToLoad.assemblyNames = [assembly.assembly_name]
+        annToLoad.assemblyNames = [rowData.assembly_accession]
         annToLoad.adapter.gffGzLocation.uri = ann.gff_gz_location
         annToLoad.adapter.index.location.uri = ann.tab_index_location
-        const existingAnnotation = jbrowseSession.annotationTracks.filter(annotation => ann.name === annotation.name)
-        if(!existingAnnotation.length){
-            jbrowseSession.annotationTracks.push(annToLoad)
-        }
+        jbrowseSession.annotationTracks.push(annToLoad)
     })
-    selectedModel.value = 'jbrowse'
-
-    
+    showJBrowse.value = true
 }
+
+
 
 
 </script>

@@ -28,7 +28,7 @@
             </va-input>
         </div>
     </div>
-    <div style="max-height:50vh;overflow:scroll">
+    <div style="max-height:100vh;overflow:scroll">
         <va-inner-loading :loading="isLoading">
             <TransitionGroup duration="550">
                 <div v-for="(node,index) in treeStore.tree" :key="index">
