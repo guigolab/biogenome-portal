@@ -1,8 +1,10 @@
 <template>
-  <div style="height:100vh">
+  <div id="app" >
     <NavBar/>
-    <div id="app">
+    <div>
+      <div style="min-height:100vh;background-color: #eff3f8">
         <router-view/>
+      </div>
     </div>
     <Login/>
   </div>

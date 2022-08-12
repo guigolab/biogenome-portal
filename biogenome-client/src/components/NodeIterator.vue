@@ -1,14 +1,14 @@
 <template>
     <li :class="orgStore.selectedNode.name === node[model.respLabel]?'tree-container selected-node':'tree-container'" :id="node[model.respLabel]">
-        <va-card style="margin:10px" class="child-container box">
+        <div style="margin:10px;padding: 10px;">
             <div @click="toggle(node)" class="row justify--space-between align--center">
                 <div class="flex lg8 md8 sm8 xs8">
                     <div class="row align--center justify--start">
                         <div class="flex">
                             <va-icon @click.stop.prevent="updateOrganisms(node)" :name="orgStore.selectedNode.name === node[model.respLabel]?'radio_button_checked':'radio_button_unchecked'"/>
                         </div>
-                        <div class="flex lg8 md8 sm8 xs8" style="text-align:start;padding-left: 5px;">
-                            <h5 class="display-6" style="text-align:start">{{node.name || node.title}}</h5>
+                        <div class="flex lg10 md10 sm10 xs10" style="text-align:start;padding-left: 5px;">
+                            <p style="text-align:start">{{node.name || node.title}}</p>
                             <div class="row align--center justify-content--space-between">
                                 <div class="flex text--secondary" style="font-size: 16px;">
                                     <p style="text-align:start" v-if="node.rank">{{node.rank}}</p>
@@ -22,7 +22,7 @@
                     <va-icon :name="node.isOpen? 'expand_less':'expand_more'"/>
                 </div>
             </div>
-        </va-card>
+        </div>
         <Transition name="slide-fade">
             <ul v-if="node.children && node.children.length && node.isOpen">
                 <NodeIterator

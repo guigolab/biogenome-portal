@@ -32,7 +32,7 @@
                                         </va-avatar>
                                     </div>
                                     <div class="flex" style="text-align:start;padding-left: 5px;">
-                                        <h5 class="display-6" style="text-align:start">{{item.scientific_name}}</h5>
+                                        <p style="text-align:start"><strong>{{item.scientific_name}}</strong></p>
                                         <div class="row align--center justify-content--space-between">
                                             <div class="flex text--secondary" style="padding:0 0 0 15px">
                                                 <p style="text-align:start" v-if="item.insdc_common_name">{{item.insdc_common_name}}</p>

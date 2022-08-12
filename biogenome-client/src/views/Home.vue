@@ -1,150 +1,19 @@
 <template>
 <div class="row">
-    {{screenWidth}}
-    {{isMobile}}
-    <div class="flex lg12 md12 sm12 xs12">
+    <div class="flex lg3 md3 sm2 xs2">
+        <div v-if ="isMobile">
+            <va-button>toggle</va-button>
+        </div>
+        <div v-else>
+            <TreeContainer/>
+        </div>
+    </div>
+    <div class="flex lg9 md9 sm10 xs10">
         <!-- <va-inner-loading :loading="orgStore.isLoading"> -->
             <div class="row custom-card justify--start">
-                <div class="flex lg3 md3 sm12 xs12">
-                    <!-- <FilterSideBar></FilterSideBar> -->
-                    <!-- <va-card class="custom-card">
-                        <va-collapse
-                            class="box"
-                            header="Scientific Name"
-                            v-model="showScientificName"
-                            solid
-                        >
-                            <div class="row justify--center collapse-row">
-                                <div class="flex lg12 md12 sm12 xs12">
-                                    <va-input outline class="side-input" label="Scientific Name">
-                                        <template #append>
-                                            <va-button :rounded="false" outline icon="search"/>
-                                        </template>
-                                    </va-input>
-                                </div>
-                            </div>
-                        </va-collapse>
-                        <va-collapse
-                            class="box"
-                            :color-all="true"
-                            header="INSDC Common Name"
-                            v-model="showCommonName"
-                            color="white"
-                            solid
-                        >
-                            <div class="row justify--center collapse-row">
-                                <div class="flex lg12 md12 sm12 xs12">
-                                    <va-input outline class="side-input" label="Common Name">
-                                        <template #append>
-                                            <va-button :rounded="false" outline icon="search"/>
-                                        </template>
-                                    </va-input>
-                                </div>
-                            </div>
-                        </va-collapse>
-                        <va-collapse
-                            class="box"
-                            :color-all="true"
-                            v-model="showTolid"
-                            header="ToLID"
-                            color="white"
-                            solid
-                        >
-                            <div class="row justify--center collapse-row">
-                                <div class="flex lg12 md12 sm12 xs12">
-                                    <va-input outline class="side-input" label="ToLID">
-                                        <template #append>
-                                            <va-button :rounded="false" outline icon="search"/>
-                                        </template>
-                                    </va-input>
-                                </div>
-                            </div>
-                        </va-collapse>
-                        <va-collapse
-                            class="box"
-                            :color-all="true"
-                            header="Tax ID"
-                            v-model="showTaxid"
-                            color="white"
-                            solid
-                        >
-                            <div class="row justify--center collapse-row">
-                                <div class="flex lg12 md12 sm12 xs12">
-                                    <va-input outline class="side-input" label="Tax ID">
-                                        <template #append>
-                                            <va-button :rounded="false" outline icon="search"/>
-                                        </template>
-                                    </va-input>
-                                </div>
-                            </div>
-                        </va-collapse>
-                        <va-collapse
-                            class="box"
-                            :color-all="true"
-                            header="Taxonomy"
-                            v-model="showTaxonomy"
-                            color="white"
-                            solid
-                        >
-                            <div>
-                                <div class="row justify--center collapse-row">
-                                    <div class="flex lg12 md12 sm12 xs12">
-                                        <va-input outline class="side-input" label="Taxonomy">
-                                            <template #append>
-                                                <va-button :rounded="false" outline icon="search"/>
-                                            </template>
-                                        </va-input>
-                                    </div>
-                                </div>
-                                <va-divider/>
-                                <div class="row justify--center collapse-row">
-                                    <div style="background-color:#eff3f8 ;" class="flex lg10 md10 sm12 xs12">
-                                        <div style="width:100%;height:400px;overflow: scroll;">
-                                            <va-inner-loading :loading="isTaxonTreeLoading">
-                                                <div v-for="(node,index) in [treeStore.taxonomyTree]" :key="index">
-                                                    <NodeIterator :node="node" :model="taxonModel"/>
-                                                </div>
-                                            </va-inner-loading>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </va-collapse>
-                        <va-collapse
-                            class="box"
-                            :color-all="true"
-                            header="BioProjects"
-                            v-model="showBioprojects"
-                            color="white"
-                            solid
-                        >
-                            <div>
-                                <div class="row justify--center collapse-row">
-                                    <div class="flex lg12 md12 sm12 xs12">
-                                        <va-input outline class="side-input" label="BioProjects">
-                                            <template #append>
-                                                <va-button :rounded="false" outline icon="search"/>
-                                            </template>
-                                        </va-input>
-                                    </div>
-                                </div>
-                                <va-divider/>
-                                <div class="row justify--center collapse-row">
-                                    <div style="background-color:#eff3f8 ;" class="flex lg10 md10 sm12 xs12">
-                                        <div style="width:100%;height:400px;overflow: scroll;background-color:#eff3f8 ;">
-                                            <va-inner-loading :loading="isBioprojectTreeLoading">
-                                                <div v-for="(node,index) in [treeStore.bioprojectsTree]" :key="index">
-                                                    <NodeIterator :node="node" :model="bioprojectModel"/>
-                                                </div>
-                                            </va-inner-loading>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </va-collapse>
-                    </va-card> -->
+                <!-- <div class="flex lg3 md3 sm12 xs12">
                     <TreeContainer/>
-                </div>
+                </div> -->
                 <div class="flex lg9 md9 sm12 xs12">
                     <div class="row align--center custom-card">
                         <div class="flex lg6 md6 sm12 xs12">
@@ -161,7 +30,7 @@
                                 </div>
                                 <div v-if="hasCoordinates" class="flex">
                                     <va-popover :message="'3D World Map'">
-                                        <router-link :to="{name:'map',params:{accession:orgStore.selectedNode.metadata.accession}}"><va-icon size="large" name="travel_explore"/></router-link>
+                                        <router-link :to="{name:'map',params:{accession:orgStore.selectedNode.metadata.accession}}"><va-icon style="padding:5px" size="large" name="travel_explore"/></router-link>
                                     </va-popover>
                                 </div>
                             </div>
@@ -172,20 +41,9 @@
                             <DataCards/>
                         </div>
                     </div>
-                    <OrganismList @data-selected="getData" @organism-selected="getOrganism" :total="orgStore.total" :organisms="orgStore.organisms" :query="orgStore.query" :is-loading="orgStore.isLoading"/>
-                    <!-- <NewDataCards/> -->
+                    <OrganismList :total="orgStore.total" :organisms="orgStore.organisms" :query="orgStore.query" :is-loading="orgStore.isLoading"/>
                 </div>
             </div>
-            <!-- <div class="row">
-                <div class="flex lg4 md4 sm12 xs12">
-
-                    <TreeContainer/>
-                </div>
-                <div class="flex lg8 md8">
-                    <OrganismList @data-selected="getData" @organism-selected="getOrganism" :total="orgStore.total" :organisms="orgStore.organisms" :query="orgStore.query" :is-loading="orgStore.isLoading"/>
-                </div>
-            </div> 
-          -->
     </div>
 </div>
 </template>
@@ -334,5 +192,9 @@ function updateQuery(dataKey){
 }
 .collapse-row{
     background-color: white;
+}
+
+.sidebar{
+    background-color: #0c7c59;
 }
 </style>

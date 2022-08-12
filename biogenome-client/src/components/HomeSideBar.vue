@@ -1,47 +1,14 @@
 <template>
-<va-card class="custom-card">
-    <va-card-title>
-        <div class="row align--center justify--space-between">
-            <div class="flex">
-                {{selectedModelObj.text}}
-            </div>
-            <div class="flex">
-                 <va-button-toggle
-                    size="small"
-                    outline
-                    v-model="model"
-                    :options="modelOptions"
-                />
-            </div>
-        </div>
-    </va-card-title>
-    <va-card-content>
-        <va-input
-            label="filter"
-            v-model="name"
-            :placeholder="'search '+ model"
-            style="padding:10px"
-        >
-            <template #append>
-                <va-button :rounded="false" :disabled="name.length <= 1" outline  icon="search" @click="search()">
-                    search
-                </va-button>
-            </template>
-        </va-input>
-    </va-card-content>
-    <va-divider/>
-    <va-card-content>
-        <div style="max-height:100vh;overflow:scroll">
-            <va-inner-loading :loading="isLoading">
-                <TransitionGroup duration="550">
-                    <div v-for="(node,index) in treeStore.tree" :key="index">
-                        <NodeIterator :node="node" :model="selectedModelObj"/>
-                    </div>
-                </TransitionGroup>
-            </va-inner-loading>
-        </div>
-    </va-card-content>
-</va-card>
+     <va-card>
+        <!-- <va-accordion v-model="value">
+            <va-collapse header="Taxonomy" icon="pets" color="white">
+                <NodeIterator :node="" :model=""/>
+            </va-collapse>
+            <va-collapse header="BioProjects" icon="science" color="white">
+                <NodeIterator :node="" :model=""/>
+            </va-collapse>
+        </va-accordion> -->
+    </va-card> 
 </template>
 <script setup>
 import { computed, onMounted,ref, watch } from 'vue'
@@ -58,9 +25,10 @@ const treeStore = tree()
 const ROOTNODE = import.meta.env.VITE_ROOT_NODE
 const PROJECT_ACCESSION = import.meta.env.VITE_PROJECT_ACCESSION
 
+const value = [true,false]
 const modelOptions = [
     {
-        text: 'Taxonomy',
+        label: 'Taxonomy',
         value: 'taxons', 
         searchQuery:DataPortalService.searchTaxons,
         defaultQuery:DataPortalService.getTaxonChildren,
@@ -68,11 +36,10 @@ const modelOptions = [
         organismQuery: 'parent_taxid',
         respLabel: 'name',
         metadataFields: ['taxid','leaves','rank'],
-        id: 'taxid',
-        icon: 'pets'
+        id: 'taxid'
     },
     {
-        text: 'BioProjects',
+        label: 'BioProjects',
         value: 'bioprojects', 
         searchQuery:DataPortalService.searchBioprojects,
         defaultQuery:DataPortalService.getBioProjectChildren,
@@ -80,8 +47,7 @@ const modelOptions = [
         organismQuery: 'bioproject',
         respLabel: 'title',
         metadataFields: ['accession'],
-        id: 'accession',
-        icon: 'science'
+        id: 'accession'
     }
 ]
 
