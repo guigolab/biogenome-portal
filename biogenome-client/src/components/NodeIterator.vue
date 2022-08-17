@@ -21,7 +21,7 @@
                     </div>
                 </div>
                 <div class="flex">
-                    <va-button outline :to="{name:model.value,params:{id:node[model.id]}}" icon="visibility"/>
+                    <va-button outline @click="toPage(node)" icon="visibility"/>
                 </div>
             </div>
         </div>
@@ -41,8 +41,9 @@
 <script setup>
 import NodeIterator from './NodeIterator.vue'
 import {organisms} from '../stores/organisms'
-
+import { useRouter } from 'vue-router';
 const orgStore = organisms()
+const router = useRouter()
 
 const props = defineProps({
     node:Object,
@@ -60,7 +61,9 @@ function toggle(node){
         }
     }
     node.isOpen = !node.isOpen
-    
+}
+function toPage(node){
+    router.push({name:props.model.value,params:{id:node[props.model.id]}})
 }
 
 

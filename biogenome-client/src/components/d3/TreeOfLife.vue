@@ -1,7 +1,7 @@
 <template>
 <div class="row">
     <div class="flex lg12 md12 sm12 xs12">
-        <va-card>
+        <va-card class="custom-card">
             <va-card-title>Tree of Life</va-card-title>
             <va-card-content>
                 <div ref="tooltip" class="tooltip"></div>
@@ -19,7 +19,9 @@
 import {reactive, onMounted, watch, ref, nextTick, computed} from "vue";
 import * as d3 from "d3";
 import DataPortalService from "../../services/DataPortalService";
+import { useRouter } from "vue-router";
 
+const router = useRouter()
 var level = ref(0)
 var linkExtension = null
 var link = null
@@ -126,10 +128,11 @@ function createD3Tree(data){
     .attr("d", linkConstant)
     .attr("stroke", d => d.target.color)
     .on("mouseover", function(event, d){
+        console.log(d)
         div.transition()		
         .duration(200)		
         .style("opacity", .9);		
-        div.html(`${d.ancestors().map(d => `${d.data.name} (${d.data.rank})`).reverse().join("/")}\n${d.data.leaves}`)	
+        div.html( `${d.data.name} (${d.data.rank})`)	
         .style("left", (event.layerX) + "px")		
         .style("top", (event.layerY-15) + "px");	
     })
@@ -138,8 +141,9 @@ function createD3Tree(data){
             .duration(500)		
             .style("opacity", 0);	
     })
-    .on("click", info(this));
-
+    .on("click", function(event,d){
+        getData(d.data)
+    });
     g.append("g")
     .selectAll("text")
     .data(root.leaves())
@@ -148,35 +152,30 @@ function createD3Tree(data){
     .attr("transform", d => `rotate(${d.x - 90}) translate(${innerRadius.value + 4},0)${d.x < 180 ? "" : " rotate(180)"}`)
     .attr("text-anchor", d => d.x < 180 ? "start" : "end")
     .attr("class","leaves-class")
-    .text(d => d.data.name.replace(/_/g, " ")).on("click", info(this))
+    .text(d => d.data.name.replace(/_/g, " "))
+    .on("click",test(this))
     .on("mouseover", mouseovered(true))
     .on("mouseout", mouseovered(false));
 }
-function info(component) {
-    return function(_, d){
-    if(d.target && d.target.data){
-        component.getData(d.target.data)
-    }
-    else if(d.data){
-    component.getData(d.data)
-    }
-    else {
-        component.getData(d)
-    }
-    }
+function test(test){
+    console.log(test)
 }
-function getData(taxon){
-    const name = taxon.name || taxon
-    if(taxon.rank === 'species' || taxon.rank === 'subspecies'){
-    // this.$router.push({name:'organism-details', params: {name: name}})
-    }
-    else {
-        // if(props.node == name){
-        //     return
-        // }
-    // this.$router.push({name:'tree-of-life', params: {node: name}})
-    }
+
+const getData = taxon => {
+    console.log(router)
+    router.push({name:'taxons',params:{taxid:taxon.taxid}})
 }
+
+// function getData(taxon){
+//     console.log(taxon)
+//     const name = taxon.name || taxon
+//     if(taxon.rank === 'species' || taxon.rank === 'subspecies'){
+//         router.push({name:'organisms',params:{taxid:taxon.taxid}})
+//     }
+//     else {
+//         router.push({name:'taxons',params:{taxid:taxon.taxid}})
+//     }
+// }
 function getDomains(node,domains) {
     if(node.children){
     node.children.forEach(n => {
@@ -280,7 +279,9 @@ function legend(svg){
     .attr("dy", "0.35em")
     .attr("class","legend-text")
     .text(d =>d +' ('+ legendDomains.find(value => value.name === d).rank +')')
-    .on("click", info(this))
+    .on("click", function(event,d){
+        getData(d.data)
+    })
     .on("mouseover", mouseovered(true))
     .on("mouseout", mouseovered(false))
 }
