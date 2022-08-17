@@ -1,12 +1,15 @@
 import {defineStore} from 'pinia'
 import {reactive,ref} from 'vue'
 import DataPortalService from '../services/DataPortalService'
+const ROOTNODE = import.meta.env.VITE_ROOT_NODE
+const PROJECT_ACCESSION = import.meta.env.VITE_PROJECT_ACCESSION
 export const organisms = defineStore('organisms', {
     state: () => ({
         organisms:reactive([]),
         selectedNode:reactive({
             name:'',
-            metadata:{}
+            metadata:{},
+            children:[]
         }),
         isLoading:false,
         stats:reactive({
@@ -49,6 +52,24 @@ export const organisms = defineStore('organisms', {
                 this.isLoading = false
             }).catch(e => {
                 this.isLoading = false
+            })
+        },
+        getTaxonNode(){
+            DataPortalService.getTaxonChildren(this.query.parent_taxid)
+            .then(resp => {
+                this.selectedNode.name = resp.data.name
+                this.selectedNode.metadata = {taxid:resp.data.taxid, rank: resp.data.rank}
+                this.selectedNode.children = resp.data.children
+            })
+        },
+        getProjectNode(){
+            const accession = this.query.bioproject? this.query.bioproject : PROJECT_ACCESSION
+            DataPortalService.getBioProjectChildren(accession)
+            .then(resp => {
+                this.selectedNode.name = resp.data.title
+                this.selectedNode.metadata = {accession:resp.data.accession}
+                this.selectedNode.children = resp.data.children
+
             })
         },
         resetQuery(){

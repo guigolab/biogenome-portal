@@ -2,17 +2,18 @@ from .bulk_load_api import BulkLoadApi
 from .local_sample_api import LocalSampleApi
 from .organism_api import OrganismsApi, OrganismApi
 from .parser_api import ExcelParser
-from .taxonomy_api import TreeApi,TaxNodesApi
+from .taxonomy_api import TreeApi,TaxNodesApi,TaxonomyTreeApi
 from .data_input_api import Login,Logout
 from .bioproject_api import BioProjectApi
 from .assembly_api import AssemblyApi
-from .geo_localization_api import GeoLocApi
+from .geo_localization_api import GeoLocApi,TaxonCoordinatesApi,ProjectCoordinatesApi,OrganismCoordinatesApi
 from .annotation_api import AnnotationApi
 from .biosample_api import BioSampleApi
 from .read_api import ExperimentApi
 from .user_api import UserApi
 from .cronjob_api import CronJobApi
 from .genome_browser_api import GenomeBrowserApi
+from .statistics_api import StatsApi
 
 def initialize_routes(api):
 
@@ -47,9 +48,19 @@ def initialize_routes(api):
 	api.add_resource(TaxNodesApi, '/api/taxons','/api/taxons/<taxid>')
 	
 	api.add_resource(TreeApi, '/api/tree/<taxid>') 
+
+	api.add_resource(TaxonomyTreeApi, '/api/taxonomy_tree/<taxid>') 
 	
+	api.add_resource(StatsApi, '/api/stats')
+
 	api.add_resource(GeoLocApi, '/api/coordinates', '/api/coordinates/<coordinates>') ##expects lat:long dd format
 	##parser endpoint
+	api.add_resource(TaxonCoordinatesApi, '/api/coordinates/taxons/<taxid>')
+
+	api.add_resource(ProjectCoordinatesApi, '/api/coordinates/bioprojects/<accession>')
+
+	api.add_resource(OrganismCoordinatesApi, '/api/coordinates/organisms/<taxid>')
+
 	api.add_resource(ExcelParser, '/api/excel')
 
 

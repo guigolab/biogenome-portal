@@ -9,8 +9,8 @@ from flask import current_app as app
 
 
 class TreeApi(Resource):
-    def get(self, node):
-        tree = service.create_tree(node, **request.args)
+    def get(self, taxid):
+        tree = service.create_tree(taxid, **request.args)
         return Response(json.dumps(tree), mimetype="application/json", status=200)
         
 

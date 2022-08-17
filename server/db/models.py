@@ -96,7 +96,7 @@ class Geometry(db.EmbeddedDocument):
 class BioProject(db.Document):
     accession = db.StringField(required=True, unique=True)
     title = db.StringField()
-    parents = db.ListField(db.StringField())
+    children = db.ListField(db.StringField())
     meta = {
         'indexes': ['accession']
     }

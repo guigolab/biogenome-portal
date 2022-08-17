@@ -23,10 +23,11 @@ onMounted(()=>{
     Cesium.Ion.defaultAccessToken = accessToken
     viewer = new Cesium.Viewer(cesium.value, {timeline:false,animation:false,infoBox:false});
     viewer.selectedEntityChanged.addEventListener(function(selectedEntity) {
-        if(Cesium.defined(selectedEntity) && Cesium.defined(selectedEntity.name)) {
-            emit('onEntitySelection', {label:'geo_location', value:selectedEntity.name})
+        if(Cesium.defined(selectedEntity)) {
+            console.log(selectedEntity.name)
+            emit('onEntitySelection', selectedEntity.name)
         }else {
-            emit('onEntitySelection', {label:'geo_location', value:null})
+            emit('onEntitySelection', null)
         }
     })
     updateSource(props.geojson)

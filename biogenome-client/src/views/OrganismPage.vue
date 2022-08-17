@@ -345,7 +345,7 @@
                         </va-data-table>
                     </va-card-content>
                 </va-card>
-                <Jbrowse2 v-if="showJBrowse" :assembly="jbrowseSession.assemblyTrack" :tracks="jbrowseSession.annotationTracks"/>
+                <!-- <Jbrowse2 v-if="showJBrowse" :assembly="jbrowseSession.assemblyTrack" :tracks="jbrowseSession.annotationTracks"/> -->
                 <va-card  v-if="showMap" class="custom-card">
                     <va-card-title>
                         <div class="row justify--space-between align--center">
@@ -395,7 +395,7 @@
 import { computed, nextTick, onMounted, reactive, ref, watch } from '@vue/runtime-core'
 import {dataIcons,GoaTStatus,INSDCStatus,jbrowse2} from '../../config'
 import DataPortalService from '../services/DataPortalService'
-import Jbrowse2 from '../components/Jbrowse2.vue'
+// import Jbrowse2 from '../components/Jbrowse2.vue'
 import CesiumComponent from '../components/CesiumComponent.vue'
 import OrganismNavCards from '../components/OrganismNavCards.vue'
 // import MapComponent from '../components/MapComponent.vue'
@@ -477,7 +477,7 @@ onMounted(()=>{
         organismLoaded.value = false
         organism = response.data
         console.dir(organism)
-        organismData.dataKeys = Object.keys(dataIcons).filter(d => organism[d].length)
+        organismData.dataKeys = Object.keys(dataIcons).filter(d => organism[d] && organism[d].length)
         organismData.loadedItems = organism[organismData.dataKeys[0]]
         organismLoaded.value = true
         showTable.value = true

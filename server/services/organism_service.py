@@ -16,13 +16,17 @@ def get_organisms(offset=0, limit=20,
                 coordinates=None,geo_location=None,
                 biosamples=None,local_samples=None,
                 assemblies=None,experiments=None,
-                annotations=None):
-    query=dict()
+                annotations=None, image=None,last_created=None):
     json_resp=dict()
+    if last_created:
+        organisms = Organism.objects.order_by('-id')[1:20].as_pymongo()
+        json_resp['data'] = organisms
+        return json.dumps(json_resp)
+    query=dict()
     stats=dict()    
     filter_query = get_query_filter(filter, filter_option) if filter else None
     get_coordinates_filter(query,coordinates,geo_location)
-    get_data_query(query, biosamples, local_samples, assemblies, annotations, experiments)
+    get_data_query(query, biosamples, local_samples, assemblies, annotations, experiments,image)
     taxa = TaxonNode.objects(taxid=parent_taxid).first()
     query['taxon_lineage'] = taxa.taxid
     if bioproject and bioproject != PROJECT_ACCESSION:
@@ -66,7 +70,7 @@ def get_query_filter(filter,option):
     else:
         return (Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter))
 
-def get_data_query(query, biosamples, localSamples, assemblies, annotations, experiments):
+def get_data_query(query, biosamples, localSamples, assemblies, annotations, experiments, image):
     if biosamples:
         query['biosamples__not__size'] = 0
     if localSamples:
@@ -77,6 +81,9 @@ def get_data_query(query, biosamples, localSamples, assemblies, annotations, exp
         query['annotations__not__size'] = 0
     if experiments:
         query['experiments__not__size'] = 0
+    if image:
+        query['image__ne'] = None
+
 
 
 

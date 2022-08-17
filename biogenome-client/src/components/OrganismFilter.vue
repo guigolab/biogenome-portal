@@ -2,7 +2,7 @@
     <div class="row">
         <div class="flex lg6">
             <va-select
-                label="search field"
+                label="search by"
                 v-model="orgStore.query.filter_option"
                 :options="['tolid','taxid','common_name']"
                 style="padding:10px"

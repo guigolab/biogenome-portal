@@ -1,38 +1,6 @@
 <template>
 <div class="row">
-    <div class="flex">
-        <va-card>
-            <va-card-title>Layout</va-card-title>
-            <va-card-content>
-                <va-counter class="mx-4 my-2"
-                    v-model="width"
-                    :min="350" :max="3500" :step="50"
-                    :messages="'current width: '+width"
-                />
-            </va-card-content>
-        </va-card>
-        <button @click="zoomIn()">Zoom in</button>
-        <button @click="zoomOut()">Zoom out</button>
-        <button @click="resetZoom()">Reset zoom</button>
-        <button @click="panLeft()">Pan left</button>
-        <button @click="panRight()">Pan right</button>
-        <button @click="center()">Center</button>
-    </div>
-    <div class="flex">
-        <va-card>
-            <va-card-title>Layout</va-card-title>
-            <va-card-content>
-                <va-counter class="mx-4 my-2"
-                    v-model="width"
-                    :min="350" :max="3500" :step="50"
-                    :messages="'current width: '+width"
-                />
-            </va-card-content>
-        </va-card>
-    </div>
-</div>
-<div class="row">
-    <div class="flex">
+    <div class="flex lg12 md12 sm12 xs12">
         <va-card>
             <va-card-title>Tree of Life</va-card-title>
             <va-card-content>
@@ -50,16 +18,16 @@
 <script setup>
 import {reactive, onMounted, watch, ref, nextTick, computed} from "vue";
 import * as d3 from "d3";
-import DataPortalService from '../services/DataPortalService'
+import DataPortalService from "../../services/DataPortalService";
 
 var level = ref(0)
 var linkExtension = null
 var link = null
 var legendDomains = reactive([])
-// const props = defineProps({
-//     node:String
-// })
-const width = ref(3000)
+const props = defineProps({
+    node:String
+})
+const width = ref(1000)
 const outerRadius = computed(()=>width.value/2)
 const innerRadius = computed(()=> outerRadius.value - 170)
 const legendPosition =  computed(()=> -outerRadius.value)
@@ -71,9 +39,7 @@ const tree=ref(null)
 const tooltip=ref(null)
 const treegroup = ref(null)
 const domainleg = ref(null)
-const zoom = d3.zoom()
-    .scaleExtent([0.25,10])
-    .on('zoom', handleZoom)
+
 
 watch(width, ()=>{
     createD3Tree(data)
@@ -104,50 +70,7 @@ function getTree(node){
     })
 }
 
-function initZoom() {
-	d3.select(tree.value)
-		.call(zoom);
-}
-function handleZoom(e){
-    d3.select(treegroup.value)
-    .attr('transform', e.transform);
-}
 
-function zoomIn() {
-	d3.select(tree.value)
-		.transition()
-		.call(zoom.scaleBy, 2);
-}
-
-function zoomOut() {
-	d3.select(tree.value)
-		.transition()
-		.call(zoom.scaleBy, 0.5);
-}
-
-function resetZoom() {
-	d3.select(tree.value)
-		.transition()
-		.call(zoom.scaleTo, 1);
-}
-
-function center() {
-	d3.select(tree.value)
-    .transition()
-    .call(zoom.translateTo, 0.5 * width.value, 0.5 * width.value);
-}
-
-function panLeft() {
-	d3.select(tree.value)
-		.transition()
-		.call(zoom.translateBy, -50, 0);
-}
-
-function panRight() {
-	d3.select(tree.value)
-		.transition()
-		.call(zoom.translateBy, 50, 0);
-}
 function createD3Tree(data){
     const root = d3.hierarchy(data , d => d.children)
       .sum(d => d.children ? 0 : 1)
@@ -206,7 +129,7 @@ function createD3Tree(data){
         div.transition()		
         .duration(200)		
         .style("opacity", .9);		
-        div.html(d.target.data.name+' :'+d.target.data.leaves)	
+        div.html(`${d.ancestors().map(d => `${d.data.name} (${d.data.rank})`).reverse().join("/")}\n${d.data.leaves}`)	
         .style("left", (event.layerX) + "px")		
         .style("top", (event.layerY-15) + "px");	
     })
@@ -228,8 +151,6 @@ function createD3Tree(data){
     .text(d => d.data.name.replace(/_/g, " ")).on("click", info(this))
     .on("mouseover", mouseovered(true))
     .on("mouseout", mouseovered(false));
-
-    initZoom()
 }
 function info(component) {
     return function(_, d){
@@ -271,7 +192,7 @@ function maxLength(d) {
     return d.data.length + (d.children ? d3.max(d.children, maxLength) : 0);
 }
 
-function  mouseovered(active) {
+function mouseovered(active) {
     return function(event, d) {
     d3.select(this).classed("label--active", active);
     d3.select(d.linkExtensionNode).classed("link-extension--active", active).raise();

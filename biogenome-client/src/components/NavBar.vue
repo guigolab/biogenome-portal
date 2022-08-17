@@ -8,6 +8,9 @@
         <va-navbar-item v-for="(item,index) in navItems" :key="index">
           <va-icon :name="item.icon" @click="$router.push({name:item.pathName})"/>
         </va-navbar-item>
+        <va-navbar-item>
+          <va-badge :text="treeStore.loadedSpecies.length"><va-icon name="insights" @click="$router.push({name:'tree-of-life'})"></va-icon></va-badge>
+        </va-navbar-item>
         <!-- <va-navbar-item><va-icon name="call_split"></va-icon></va-navbar-item> -->
         <va-navbar-item v-if="authStore.isAuthenticated"><va-icon name="settings" @click="$router.push({name:'admin-hp'})"></va-icon></va-navbar-item>
         <va-navbar-item v-if="!authStore.isAuthenticated"><va-icon name="person" @click="authStore.showModal=true"/></va-navbar-item>
@@ -22,11 +25,11 @@ import Login from './admin/form/Login.vue'
 import {ref} from 'vue'
 import {auth} from '../stores/auth'
 import {NavBar} from '../../config'
-
+import {tree} from '../stores/tree'
 const imagePath = NavBar.logoPath
 const navItems = NavBar.navItems
 const authStore = auth()
+const treeStore = tree()
 const showModal = ref(false)
-
 
 </script>

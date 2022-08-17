@@ -13,6 +13,12 @@ class TreeApi(Resource):
         tree = taxonomy_service.create_tree(taxid)
         return Response(json.dumps(tree), mimetype="application/json", status=200)
 
+class TaxonomyTreeApi(Resource):
+    def get(self,taxid):
+        tree = taxonomy_service.create_tree(taxid)
+        return Response(json.dumps(tree), mimetype="application/json", status=200)
+
+
 class TaxNodesApi(Resource):
     def get(self,taxid=None):
         if taxid:

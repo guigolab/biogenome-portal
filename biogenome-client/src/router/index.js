@@ -1,5 +1,5 @@
 import {createWebHistory, createRouter} from 'vue-router'
-import Home from '../views/Home.vue'
+import Home from '../views/NewHome.vue'
 import {auth} from '../stores/auth'
 import {organisms} from '../stores/organisms'
 const ROOTNODE = import.meta.env.VITE_ROOT_NODE
@@ -19,6 +19,8 @@ const genomeBrowserForm = () => import('../components/admin/form/GenomeBrowserFo
 const sunburst = () => import('../components/SunBurst.vue')
 const excel = () => import('../components/admin/form/ExcelForm.vue')
 const login = () => import('../components/admin/form/Login.vue')
+const bioprojects = () => import('../views/ProjectNodePage.vue')
+const taxons = () => import('../views/TaxonNodePage.vue')
 
 const routes = [
   {
@@ -27,9 +29,16 @@ const routes = [
     component: Home,
   },
   {
-    path: "/sunburst",
-    name: "sunburst",
-    component: sunburst,
+    path: "/taxons/:id",
+    name: "taxons",
+    component: taxons,
+    props:true
+  },
+  {
+    path: "/bioprojects/:id",
+    name: "bioprojects",
+    component: bioprojects,
+    props:true
   },
   {
     path: "/admin",
@@ -49,14 +58,14 @@ const routes = [
   },
   {
     path: '/tree-of-life',
-    redirect: {name: 'tree-of-life', params: {node: ROOTNODE}}
-  },
-  {
-    path: "/tree-of-life/:node",
-    name: "tree-of-life",
-    props: true,
     component: treeOfLife
   },
+  // {
+  //   path: "/tree-of-life/:node",
+  //   name: "tree-of-life",
+  //   props: true,
+  //   component: treeOfLife
+  // },
   {
     path: '/map',
     name: 'static-map',

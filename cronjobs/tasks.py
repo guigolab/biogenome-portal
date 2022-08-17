@@ -51,7 +51,6 @@ def import_records():
     if ACCESSION:
         import_from_NCBI(ACCESSION,cookies)
     if PROJECTS:
-
         import_from_EBI_biosamples(PROJECTS,cookies)
     ##check new reads
     update_biosamples(cookies)

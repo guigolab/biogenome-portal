@@ -1,34 +1,35 @@
 <template>
     <div class="row">
-        <div v-for="dt in stats" :key="dt" class="flex">
-            <va-card class="custom-card box" :stripe="orgStore.query[dt]" :stripe-color="dataIcons[dt].color" @click="dataSelected(dt, orgStore.stats[dt])">
-                <va-card-content>
+        <div class="flex lg12 md12 sm12 xs12">
+            <va-card class="custom-card">
+                <va-card-title>
+                    Related data
+                </va-card-title>
+                <va-card-content v-for="dt in stats" :key="dt">
                     <div class="row align--center justify--space-between">
-                        <div class="flex lg6 md6 sm6 xs6">
+                        <div class="flex lg5 md6 sm6 xs6">
                             <div class="row align--center">
                                 <div class="flex">
-                                    <va-icon 
-                                        :name="dataIcons[dt].icon"
+                                    <va-chip @click="dataSelected(dt, orgStore.stats[dt])" :outline="!orgStore.query[dt]" :color="dataIcons[dt].color" :icon="dataIcons[dt].icon">{{dt}}</va-chip>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex lg5 md6 sm6 xs6">
+                            <div class="row justify--space-between">
+                                <div class="flex lg8 md8 sm8 xs8">
+                                    <va-progress-bar
+                                        :model-value="((orgStore.stats[dt]/orgStore.total)*100).toFixed(0)"
                                         :color="dataIcons[dt].color"
                                     />
                                 </div>
                                 <div class="flex">
-                                    <p>{{dt}}</p>
+                                    <span class="left-space" :style="{color:dataIcons[dt].color}">{{((orgStore.stats[dt]/orgStore.total)*100).toFixed(2)}}%</span>
                                 </div>
                             </div>
                         </div>
-                        <div class="flex lg4 md4 sm4 xs4">
-                            <va-progress-bar
-                                :model-value="((orgStore.stats[dt]/orgStore.total)*100).toFixed(2)"
-                                :color="dataIcons[dt].color"
-                            />
-                        </div>
-                        <div class="flex lg2 md2 sm2 xs2">
-                            <p :style="{color:dataIcons[dt].color}">{{((orgStore.stats[dt]/orgStore.total)*100).toFixed(2)}}%</p>
-                        </div>
                     </div>
                 </va-card-content>
-            </va-card> 
+            </va-card>
         </div>
     </div>
 </template>
@@ -50,3 +51,8 @@ function dataSelected(dataKey, count){
 }
 
 </script>
+<style scoped>
+.left-space{
+    padding-left:5px;
+}
+</style>

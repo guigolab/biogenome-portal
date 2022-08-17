@@ -68,6 +68,15 @@
             "fields":["name","assembly_accession","metadata"],
             "icon":"query_stats",
             "color":"#babfc2"
+        },
+        "organisms":{
+            "icon":"pets"
+        },
+        "coordinates":{
+            "icon":"travel_explore"
+        },
+        "users":{
+            "icon":"group"
         }
     },
     "GoaTStatus":
@@ -124,5 +133,8 @@
         {"value":"SampleCollector","text":"Sample Collector", "description":"Submit sample metadata"},
         {"value":"SampleManager", "text":"Sample Manager","description":"Validate sample metadata"},
         {"value":"Admin", "text":"Data Admin","description":"All powers"}
-    ]
+    ],
+    "HomePage":{
+        "title":"BioGenome Portal Community Edition"
+    }
 }

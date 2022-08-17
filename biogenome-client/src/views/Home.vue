@@ -1,55 +1,85 @@
 <template>
-<div class="row">
-    <div class="flex lg3 md3 sm2 xs2">
-        <div v-if ="isMobile">
-            <va-button>toggle</va-button>
-        </div>
-        <div v-else>
-            <TreeContainer/>
-        </div>
-    </div>
-    <div class="flex lg9 md9 sm10 xs10">
-        <!-- <va-inner-loading :loading="orgStore.isLoading"> -->
-            <div class="row custom-card justify--start">
-                <!-- <div class="flex lg3 md3 sm12 xs12">
-                    <TreeContainer/>
-                </div> -->
-                <div class="flex lg9 md9 sm12 xs12">
-                    <div class="row align--center custom-card">
-                        <div class="flex lg6 md6 sm12 xs12">
-                            <div class="row">
-                                <div class="flex">
-                                    <h1 style="text-align:start" class="display-3">
-                                        {{orgStore.selectedNode.name}}
-                                    </h1>
-                                </div>
-                            </div>
-                            <div class="row align--center">
-                                <div class="flex">
-                                    <va-chip size="small" style="padding:5px" outline v-for="key in Object.keys(orgStore.selectedNode.metadata)" :key="key">{{key +': '+orgStore.selectedNode.metadata[key]}}</va-chip>
-                                </div>
-                                <div v-if="hasCoordinates" class="flex">
-                                    <va-popover :message="'3D World Map'">
-                                        <router-link :to="{name:'map',params:{accession:orgStore.selectedNode.metadata.accession}}"><va-icon style="padding:5px" size="large" name="travel_explore"/></router-link>
-                                    </va-popover>
-                                </div>
-                            </div>
+<div>
+    <div class="row custom-card align--center justify--space-between">
+        <div class="flex">
+            <div class="row align--center justify--space-between">
+                <div class="flex">
+                    <h1 style="text-align:start" class="display-3">
+                        {{orgStore.selectedNode.name}}
+                    </h1>
+                    <div class="row">
+                        <div class="flex">
+                            <va-chip size="small" style="padding:5px" outline v-for="key in Object.keys(orgStore.selectedNode.metadata)" :key="key">{{key +': '+orgStore.selectedNode.metadata[key]}}</va-chip>
                         </div>
                     </div>
-                    <div class="row align--center">
-                        <div class="flex lg12 md12 sm12 xs12">
-                            <DataCards/>
-                        </div>
-                    </div>
-                    <OrganismList :total="orgStore.total" :organisms="orgStore.organisms" :query="orgStore.query" :is-loading="orgStore.isLoading"/>
+                </div>
+                <div class="flex">
+                    <DataCards/>
                 </div>
             </div>
+        </div>
+        <div class="flex">
+            <va-button-toggle
+                size="small"
+                outline
+                v-model="currentModel"
+                :options="filteredModelOptions"
+            />
+        </div>
+    </div>
+    <va-divider/>
+    <div class="row custom-card justify--space-between">
+        <div class="flex lg6 md6 sm12 xs12">
+            <va-card class="custom-card">
+                <va-card-title>
+                    <div class="row justify--space-between align--center">
+                        <div class="flex">
+                            <p>{{orgStore.selectedNode.name+ "'s children"}}</p>
+                        </div>
+                        <div class="flex">
+                            <va-icon 
+                                :name="currentModel === 'taxons'? 'pets':'science'"
+                            >
+                            </va-icon>
+                        </div>
+                    </div>
+                </va-card-title>
+                <va-card-content style="max-height:50vh;overflow:scroll">
+                    <va-list>
+                        <va-list-item
+                            v-for="(node, index) in orgStore.selectedNode.children"
+                            :key="index"
+                            @click="getNode(node)"
+                        >
+                        <va-list-item-section style="text-align:start">
+                            <va-list-item-label>
+                            {{ node.title || node.name}}
+                            </va-list-item-label>
+                            <va-list-item-label caption>
+                                {{ node.rank || node.accession}}
+                            </va-list-item-label>
+                        </va-list-item-section>
+
+                        <va-list-item-section icon>
+                            <va-icon
+                                name="visibility"
+                            />
+                        </va-list-item-section>
+                        </va-list-item>
+                    </va-list>
+                </va-card-content>
+            </va-card>
+        </div>
+        <div class="flex lg6 md6 sm12 xs12">
+            <OrganismList :total="orgStore.total" :organisms="orgStore.organisms" :query="orgStore.query" :is-loading="orgStore.isLoading"/>
+        </div>
     </div>
 </div>
 </template>
 <script setup>
 import OrganismList from '../components/OrganismList.vue'
 import NodeIterator from '../components/NodeIterator.vue'
+import NewDataCards from '../components/NewDataCards.vue'
 import DataCards from '../components/DataCards.vue'
 import {organisms} from '../stores/organisms'
 import { tree } from '../stores/tree'
@@ -58,37 +88,28 @@ import DataPortalService from '../services/DataPortalService'
 import TreeContainer from '../components/TreeContainer.vue'
 import FilterSideBar from '../components/FilterSideBar.vue'
 
+
+
+/*
+home page containing search filter button toggle for taxon or project
+and scrollable horizontal tree cluster
+*/
 const ROOTNODE = import.meta.env.VITE_ROOT_NODE
 const PROJECT_ACCESSION = import.meta.env.VITE_PROJECT_ACCESSION
 
-const taxonModel = {
-    label: 'Taxonomy',
-    value: 'taxons', 
-    searchQuery:DataPortalService.searchTaxons,
-    defaultQuery:DataPortalService.getTaxonChildren,
-    root:ROOTNODE,
-    organismQuery: 'parent_taxid',
-    respLabel: 'name',
-    metadataFields: ['taxid','leaves','rank'],
-    id: 'taxid'
-}
-const bioprojectModel = {
-    label: 'BioProjects',
-    value: 'bioprojects', 
-    searchQuery:DataPortalService.searchBioprojects,
-    defaultQuery:DataPortalService.getBioProjectChildren,
-    root:PROJECT_ACCESSION,
-    organismQuery: 'bioproject',
-    respLabel: 'title',
-    metadataFields: ['accession'],
-    id: 'accession'
-}
-const showBioprojects = ref(false)
-const showTaxonomy = ref(false)
-const showScientificName = ref(false)
-const showCommonName = ref(false)
-const showTaxid = ref(false)
-const showTolid = ref(false)
+const modelOptions = [
+    {
+        text: 'Taxonomy',
+        value: 'taxons', 
+        icon: 'pets'
+    },
+    {
+        text: 'BioProjects',
+        value: 'bioprojects',
+        icon: 'science'
+    }
+]
+const currentModel = ref('taxons')
 const isTaxonTreeLoading = ref(false)
 const isBioprojectTreeLoading = ref(false)
 const orgStore = organisms()
@@ -106,6 +127,25 @@ var data = reactive({
     model: String
 })
 
+const filteredModelOptions = computed(()=>{
+    if(PROJECT_ACCESSION){
+        return modelOptions
+    }
+    return modelOptions.filter(opt => opt.value !== 'bioprojects')
+})
+
+function getNode(node){
+    if(node.accession){
+        orgStore.query.bioproject = node.accession
+        orgStore.query.parent_taxid = ROOTNODE
+        orgStore.getProjectRootNode()
+    }else{
+        orgStore.query.bioproject = null
+        orgStore.query.parent_taxid = node.taxid
+        orgStore.getTaxonRootNode()
+    }
+    orgStore.loadOrganisms()
+}
 
 const hasCoordinates = computed(()=>{
     return orgStore.selectedNode.metadata.accession && orgStore.organisms.some(org => org.coordinates.length)
@@ -127,16 +167,18 @@ function getData(value){
 
 onMounted(()=>{
     orgStore.loadOrganisms()
+    orgStore.getTaxonRootNode()
+
 })
 
-watch(showTaxonomy,()=>{
-    if(showTaxonomy.value){
-        getTaxons()
-    }
-})
-watch(showBioprojects,()=>{
-    if(showBioprojects.value){
-        getBioprojects()
+watch(currentModel, ()=>{
+    switch (currentModel.value){
+        case 'taxons':
+            orgStore.getTaxonRootNode()
+            break;
+        case 'bioprojects':
+            orgStore.getProjectRootNode()
+            break;
     }
 })
 

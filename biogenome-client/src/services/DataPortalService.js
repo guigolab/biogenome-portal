@@ -40,10 +40,8 @@ class DataPortalService {
         }
         return base.get('/coordinates')
     }
-    getTree(node, maxLeaves){
-        return base.get(`/tree/${node}`,{
-            params: {maxLeaves:maxLeaves}
-        });    
+    getTree(node){
+        return base.get(`/tree/${node}`);    
     }
     getTaxonChildren(name) {
         return base.get(`/taxons/${name}`)
@@ -81,6 +79,22 @@ class DataPortalService {
     getLastCreated(model){
         return base.get(`/data/${model}`)
     }
+    getTaxonomyTree(taxid){
+        return base.get(`/taxonomy_tree/${taxid}`)
+    }
+    getStats(){
+        return base.get('/stats')
+    }
+    getTaxonCoordinates(taxid){
+        return base.get(`/coordinates/taxons/${taxid}`)
+    }
+    getOrganismCoordinates(taxid){
+        return base.get(`/coordinates/organisms/${taxid}`)
+    }
+    getProjectCoordinates(accession){
+        return base.get(`/coordinates/bioprojects/${accession}`)
+    }
+
 }
 
 export default new DataPortalService();
