@@ -1,107 +1,94 @@
 <template>
-    <div>
-        <div class="row justify--center">
-            <div v-for="(key,index) in Object.keys(stats.data)" :key="index" class="flex lg2 md2 sm4 xs4">
-                <va-card class="custom-card box">
-                    <va-card-title>
-                        <div class="row justify--space-between align--center">
-                            <div class="flex">
-                                {{key}}
-                            </div>
-                            <div class="flex">
-                                <va-icon 
-                                    :name="dataIcons[key].icon"
-                                    :color="dataIcons[key].color"
-                                >
-                                </va-icon>
-                            </div>
-                        </div>
-                    </va-card-title>
-                    <va-card-content>
-                        <strong>{{stats.data[key]}}</strong>
-                    </va-card-content>
-                </va-card>
+<div>
+    <div class="row justify-space--between align--center">
+        <div class="flex lg6 md6 sm12 xs12">
+            <div class="row custom-card">
+                <div class="flex">
+                    <h1 class="display-3">{{HomePage.title}}</h1>
+                </div>
+            </div>
+            <div class="row custom-card">
+                <div class="flex">
+                    <p style="text-align:start">{{HomePage.description}}</p>
+                </div>
             </div>
         </div>
-        <div v-if="stats.organismsWithImages.length" class="row">
-            <div v-for="(org,index) in stats.organismsWithImages" size="large" :key="index" class="flex">
-                <va-card class="custom-card">
-                    <va-image :src="org.image"></va-image>
-                    <va-card-content>
-                        <va-chip size="small" outline>{{org.scientific_name}}</va-chip>
-                    </va-card-content>
-                </va-card>
-            </div>
-        </div>
-        <div class="row">
-            <div class="flex lg6 md6 sm12 xs12">
-                <va-inner-loading :loading="isLoading">
-                    <va-card class="custom-card">
-                        <va-card-title>
-                            <div class="row justify--space-between align--center">
-                                <div class="flex">
-                                <va-input
-                                    :label="currentModel"
-                                    placeholder="Search"
-                                    v-model="inputValue"
-                                />
+        <div class="flex lg6 md6 sm12 xs12">
+            <div class="row align--center justify--end">
+                <div class="scroller">
+                    <div v-for="(key,index) in Object.keys(stats.data)" :key="index" class="flex menu-item">
+                        <va-card  class="custom-card box">
+                            <va-card-title>
+                                <div class="row justify--space-between align--center">
+                                    <div class="flex">
+                                        {{key}}
+                                    </div>
+                                    <div class="flex">
+                                        <va-icon 
+                                            :name="dataIcons[key].icon"
+                                            :color="dataIcons[key].color"
+                                        >
+                                        </va-icon>
+                                    </div>
                                 </div>
-                                <div class="flex">
-                                    <va-button-toggle
-                                        size="small"
-                                        outline
-                                        v-model="currentModel"
-                                        :options="filteredModelOptions"
-                                    />
-                                </div>
-                            </div>
-                        </va-card-title>
-                        <va-card-content style="max-height:50vh;overflow:scroll" v-if="showTree">
-                            <NodeIterator v-for="(node, index) in treeStore.tree" :key="index" :node="node" :model="selectedModelObj"/>
-                        </va-card-content>
-                    </va-card>
-                </va-inner-loading>
-            </div>
-            <div v-if="showOrganisms" class="flex lg6 md6 sm12 xs12">
-                <va-card class="custom-card">
-                    <va-card-title>
-                        recent organisms
-                    </va-card-title>
-                    <va-card-content style="max-height:50vh;overflow:scroll">
-                        <va-list style="padding-top:0!important">
-                            <va-list-item
-                                v-for="(organism, index) in stats.lastCreated"
-                                :key="index"
-                            >
-                            <va-list-item-section avatar>
-                                <va-avatar size="large">
-                                    <img :src="organism.image">
-                                </va-avatar>
-                            </va-list-item-section>
-
-                            <va-list-item-section style="text-align:start">
-                                <va-list-item-label>
-                                {{ organism.scientific_name}}
-                                </va-list-item-label>
-
-                                <va-list-item-label caption>
-                                {{ organism.insdc_common_name? organism.insdc_common_name+', '+organism.tolid_prefix:organism.tolid_prefix }}
-                                </va-list-item-label>
-                            </va-list-item-section>
-
-                            <va-list-item-section icon>
-                                <va-icon style="padding:5px" v-for="dt in mapData(organism)" :key="dt"
-                                    :name="dataIcons[dt].icon"
-                                    :color="dataIcons[dt].color"
-                                />
-                            </va-list-item-section>
-                            </va-list-item>
-                        </va-list>
-                    </va-card-content>
-                </va-card>
+                            </va-card-title>
+                            <va-card-content>
+                                <strong>{{stats.data[key]}}</strong>
+                            </va-card-content>
+                        </va-card>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
+    <va-divider/>
+    <div class="row justify--space--between">
+        <div class="flex lg6 md6 sm12 xs12">
+            <div class="row justify--space-between custom-card align--center">
+                <div class="flex lg8 md8 sm12 xs12">
+                    <va-input
+                        :label="currentModel"
+                        placeholder="Search"
+                        v-model="inputValue"
+                        outline
+                    />
+                </div>
+                <div class="flex">
+                    <va-button-toggle
+                        size="small"
+                        outline
+                        v-model="currentModel"
+                        :options="filteredModelOptions"
+                    />
+                </div>
+            </div>
+            <div class="row">
+                <div style="max-height:50vh;overflow:scroll" class="flex lg12 md12 sm12 xs12">
+                    <NodeIterator v-for="(node, index) in treeStore.tree" :key="index" :node="node" :model="selectedModelObj"/>
+                </div>
+            </div>
+        </div>
+        <div class="flex lg6 md6 sm12 xs12">
+            <div class="row justify--space-between custom-card align--center">
+                <div class="flex lg12 md12 sm12 xs12">
+                    <va-select
+                        label="taxonomic ranks"
+                        v-model="rank"
+                        :options="options"
+                    >
+                    </va-select>
+                </div>
+            </div>
+            <div class="row">
+                <div v-if="showRanks" style="max-height:50vh;overflow:scroll" class="flex lg12 md12 sm12 xs12">
+                    <BarChart :data="stats.ranks"/>
+                    <PieChart :data="stats.ranks"/>
+                    <!-- <NodeIterator v-for="(node, index) in stats.ranks" :key="index" :node="node" :model="modelOptions[0]"/> -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 </template>
 <script setup>
 
@@ -110,15 +97,23 @@ import { organisms } from '../stores/organisms';
 import DataPortalService from '../services/DataPortalService';
 import NodeIterator from '../components/NodeIterator.vue';
 import { tree } from '../stores/tree';
-import {dataIcons} from '../../config.json'
+import {dataIcons,TwitterURL,HomePage} from '../../config.json'
+import TwitterWidget from '../components/TwitterWidget.vue';
+import ICicle from '../components/d3/ICicle.vue';
+import PieChart from '../components/d3/PieChart.vue';
+import BarChart from '../components/d3/BarChart.vue';
+
 
 const ROOTNODE = import.meta.env.VITE_ROOT_NODE
 const PROJECT_ACCESSION = import.meta.env.VITE_PROJECT_ACCESSION
 const stats = reactive({
     data:Object,
     organismsWithImages:Array,
-    lastCreated:Array
+    ranks:Array,
+    icicle:Object
 })
+const rank = ref('class')
+const options = ['kingdom','phylum','class','order','family']
 const treeStore = tree()
 const modelOptions = [
     {
@@ -144,6 +139,7 @@ const isLoading = ref(false)
 const orgStore = organisms()
 const currentModel = ref('taxons')
 const showTree = ref(false)
+const showRanks = ref(false)
 const showOrganisms = ref(false)
 const inputValue = ref('')
 
@@ -168,21 +164,25 @@ onMounted(()=>{
     })
     .then(resp => {
         stats.data = {...resp.data}
-        return DataPortalService.getOrganisms({image:true})
+        return DataPortalService.searchTaxons({rank:rank.value})
     })
     .then(resp => {
-        stats.organismsWithImages = [...resp.data.data]
-        return DataPortalService.getOrganisms({last_created:true})
-    })
-    .then(resp => {
-        stats.lastCreated = resp.data.data
+        stats.ranks = resp.data
+        showRanks.value = true
         showOrganisms.value = true
     })
     .catch(e => {
         console.log(e)
     })
+})
 
-
+watch(rank,()=>{
+    showRanks.value=false
+    DataPortalService.searchTaxons({rank:rank.value})
+    .then(resp => {
+        stats.ranks = resp.data
+        showRanks.value = true
+    })
 })
 
 watch(inputValue, ()=>{
@@ -216,8 +216,17 @@ watch(currentModel, ()=>{
     })
 })
 
-function mapData(item){
-    return Object.keys(item).filter(k => ['local_samples','biosamples','assemblies','experiments','annotations'].includes(k))
-    .filter(key => item[key].length)
-}
 </script>
+<style scoped>
+.scroller {
+  overflow: auto;
+  white-space: nowrap;
+  display: block;
+}
+
+.menu-item {
+  display: inline-block;
+  text-align: center;
+  text-decoration: none;
+}
+</style>

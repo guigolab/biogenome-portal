@@ -4,7 +4,7 @@ import {reactive, ref} from 'vue'
 export const tree = defineStore('tree', {
     state: () => ({
         tree:reactive([]),
-        loadedSpecies: reactive(localStorage.getItem('loadedSpecies')) || reactive([]),
+        loadedSpecies: reactive([]),
         limit: 150
     }),
     actions:{

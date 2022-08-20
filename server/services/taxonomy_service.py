@@ -72,6 +72,23 @@ def dfs(stack, tree, max_level):
             tree["children"].append(child_dict)
     return tree
 
+def dfs_generator(stack,tree,taxids):
+    node, level = stack.pop(0)
+    tree["name"] = node.name
+    tree["taxid"] = node.taxid
+    tree["children"] = []
+    tree['rank'] = node.rank
+    tree['leaves'] = node.leaves
+    if node.children:
+        children = TaxonNode.objects(taxid__in=node.children)
+        for child in children:
+            if not child.taxid in taxids:
+                continue
+            child_dict = {}
+            dfs_generator([(child, level+1)], child_dict, taxids)
+            tree["children"].append(child_dict)
+    return tree
+
 def get_max_level(counts, limit):
     for level, nodes in counts.items():
         if nodes > limit:
@@ -103,9 +120,24 @@ def get_children(taxid):
     node['children'] = json.loads(children.to_json())
     return node
 
-def search_taxons(name):
-    query = (Q(name__iexact=name) | Q(name__icontains=name))
-    taxons = TaxonNode.objects(query).aggregate(*TaxonPipeline)
-    return list(taxons)
+def search_taxons(name=None,rank=None):
+    if name:
+        query = (Q(name__iexact=name) | Q(name__icontains=name))
+        taxons = TaxonNode.objects(query).aggregate(*TaxonPipeline)
+        taxons = TaxonNode.objects(query)
+    if rank:
+        taxons = TaxonNode.objects(rank=rank)
+    return taxons.to_json()
+
+def generate_tree(data):
+    taxids = data['taxids']
+    organisms = Organism.objects(taxid__in=taxids)
+    root = TaxonNode.objects(taxid= data['root']).first()
+    #get root node
+    lineages = [org.taxon_lineage for org in organisms]
+    result = set().union(*lineages)
+    tree = {}
+    dfs_generator([(root,0)],tree,list(result))
+    return tree
 
 

@@ -1,5 +1,5 @@
 <template>
-    <div class="row custom-card align--center">
+    <div class="row custom-card align--center justify--end">
         <div class="scroller">
             <div v-if="organism.biosamples && organism.biosamples.length" class="flex menu-item">
                 <va-card @click="$emit('onSelected','biosamples')" class="custom-card box" :stripe="selectedModel === 'biosamples'" :stripe-color="dataIcons.biosamples.color">

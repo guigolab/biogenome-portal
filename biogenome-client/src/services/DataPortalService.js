@@ -94,6 +94,9 @@ class DataPortalService {
     getProjectCoordinates(accession){
         return base.get(`/coordinates/bioprojects/${accession}`)
     }
+    generateTree(taxids){
+        return base.post('/tree', taxids)
+    }
 
 }
 

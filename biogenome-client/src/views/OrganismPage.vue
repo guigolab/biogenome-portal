@@ -370,20 +370,6 @@
     <va-modal v-model="showMetadata" :title="toggledMetadata.name">
         <ul>
             <li style="padding:10px" v-for="key in Object.keys(toggledMetadata.metadata)" :key="key">
-                <!-- <div v-if="Object.keys(toggledMetadata.metadata[key]).length">
-                    <ul>
-                        <li v-for="(metadataKey,index) in toggledMetadata.metadata[key]" :key="index">
-                            <div v-if="toggledMetadata.metadata[key][metadataKey].length">
-                                <ul>
-                                    <li v-for="(value,index) in toggledMetadata.metadata[key][metadataKey]" :key="index">
-                                        <strong>{{value+ ': '}}</strong>{{toggledMetadata.metadata[key][metadataKey]}}
-                                    </li>
-                                </ul>
-                            </div>
-                            <strong>{{key+ ': '}}</strong>{{toggledMetadata.metadata[key][metadataKey]}}
-                        </li>
-                    </ul>
-                </div> -->
                 <strong>{{key+ ': '}}</strong>{{toggledMetadata.metadata[key]}}
                 <va-divider/>
             </li>
@@ -460,6 +446,9 @@ function getRelatedSample(sampleAccession){
     })
 }
 
+function parseData(data){
+    
+}
 
 const jbrowseSession = reactive({
     assemblyTrack: null,

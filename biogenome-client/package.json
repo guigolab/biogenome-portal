@@ -19,9 +19,11 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "stream-browserify": "^3.0.0",
+    "twitter-widgets": "^2.0.0",
     "vite-plugin-rewrite-all": "^0.1.2",
     "vue": "^3.2.25",
     "vue-router": "^4.0.15",
+    "vue-tweet": "^2.0.2",
     "vuestic-ui": "^1.4.1"
   },
   "devDependencies": {

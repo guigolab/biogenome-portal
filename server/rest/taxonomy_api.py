@@ -13,6 +13,13 @@ class TreeApi(Resource):
         tree = taxonomy_service.create_tree(taxid)
         return Response(json.dumps(tree), mimetype="application/json", status=200)
 
+    def post(self):
+        data = request.json if request.is_json else request.form
+        tree = taxonomy_service.generate_tree(data)
+        return Response(json.dumps(tree), mimetype="application/json", status=200)
+
+
+
 class TaxonomyTreeApi(Resource):
     def get(self,taxid):
         tree = taxonomy_service.create_tree(taxid)
@@ -24,5 +31,5 @@ class TaxNodesApi(Resource):
         if taxid:
             return Response(json.dumps(taxonomy_service.get_children(taxid, **request.args)), mimetype="application/json", status=200)
         result = taxonomy_service.search_taxons(**request.args)
-        return Response(json.dumps(result),mimetype="application/json", status=200)
+        return Response(result,mimetype="application/json", status=200)
  

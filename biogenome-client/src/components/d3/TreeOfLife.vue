@@ -2,7 +2,16 @@
 <div class="row">
     <div class="flex lg12 md12 sm12 xs12">
         <va-card class="custom-card">
-            <va-card-title>Tree of Life</va-card-title>
+            <va-card-title>
+                <div class="row justify--space-between align--center">
+                    <div class="flex">
+                        Tree of Life
+                    </div>
+                    <div class="flex">
+                        <va-chip @click="downloadImage()">download image</va-chip>
+                    </div>
+                </div>
+            </va-card-title>
             <va-card-content>
                 <div ref="tooltip" class="tooltip"></div>
                 <svg ref="tree">
@@ -27,15 +36,16 @@ var linkExtension = null
 var link = null
 var legendDomains = reactive([])
 const props = defineProps({
-    node:String
+    // node:String,
+    data:Object
 })
-const width = ref(1000)
+const width = ref(650)
 const outerRadius = computed(()=>width.value/2)
 const innerRadius = computed(()=> outerRadius.value - 170)
 const legendPosition =  computed(()=> -outerRadius.value)
 
 const stack = reactive([])
-var data = null
+// var data = null
 var domains = reactive([])
 const tree=ref(null)
 const tooltip=ref(null)
@@ -52,24 +62,27 @@ onMounted(()=>{
     tooltip.value.focus()
     treegroup.value.focus()
     domainleg.value.focus()
-    getTree(props.node)
+    // getTree(props.node)
+    const doms = getDomains(props.data,[])
+    legendDomains = doms.slice(0,9)
+    domains = legendDomains.map(v => v.name)
+    createD3Tree(props.data)
 })
 
-watch(props.node,(value)=>{
-    getTree(value)
-})
-
-function getTree(node){
-    DataPortalService.getTree(node)
-    .then(response => {
-        data = response.data
-        nextTick(()=>{
-          const doms = getDomains(data,[])
-          legendDomains = doms.slice(0,9)
-          domains = legendDomains.map(v => v.name)
-          createD3Tree(data)
-        })
-    })
+function downloadImage(){
+    const svg = tree.value.cloneNode(true); // clone your original svg
+    // document.body.appendChild(svg); // append element to document
+    const g = svg.querySelector('g') // select the parent g
+    g.setAttribute('transform', '') // clean transform
+    // svg.setAttribute('display', 'none') // set svg to be the g dimensions
+    // svg.setAttribute('height', g.getBBox().height)
+    const svgAsXML = (new XMLSerializer).serializeToString(svg);
+    const svgData = `data:image/svg+xml,${encodeURIComponent(svgAsXML)}`
+    const link = document.createElement("a");
+    // document.body.appendChild(link); 
+    link.setAttribute("href", svgData);
+    link.setAttribute("download", "image.svg");
+    link.click();
 }
 
 
@@ -153,7 +166,9 @@ function createD3Tree(data){
     .attr("text-anchor", d => d.x < 180 ? "start" : "end")
     .attr("class","leaves-class")
     .text(d => d.data.name.replace(/_/g, " "))
-    .on("click",test(this))
+    .on("click",(d)=>{
+        router.push({name:'taxons',params:{taxid:d.data.taxid}})
+    })
     .on("mouseover", mouseovered(true))
     .on("mouseout", mouseovered(false));
 }

@@ -47,7 +47,7 @@ def initialize_routes(api):
 	
 	api.add_resource(TaxNodesApi, '/api/taxons','/api/taxons/<taxid>')
 	
-	api.add_resource(TreeApi, '/api/tree/<taxid>') 
+	api.add_resource(TreeApi,'/api/tree', '/api/tree/<taxid>') 
 
 	api.add_resource(TaxonomyTreeApi, '/api/taxonomy_tree/<taxid>') 
 	

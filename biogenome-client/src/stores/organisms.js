@@ -58,7 +58,7 @@ export const organisms = defineStore('organisms', {
             DataPortalService.getTaxonChildren(this.query.parent_taxid)
             .then(resp => {
                 this.selectedNode.name = resp.data.name
-                this.selectedNode.metadata = {taxid:resp.data.taxid, rank: resp.data.rank}
+                this.selectedNode.metadata = {taxid:resp.data.taxid, rank: resp.data.rank, leaves: resp.data.leaves}
                 this.selectedNode.children = resp.data.children
             })
         },

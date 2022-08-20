@@ -135,6 +135,8 @@
         {"value":"Admin", "text":"Data Admin","description":"All powers"}
     ],
     "HomePage":{
-        "title":"BioGenome Portal Community Edition"
-    }
+        "title":"BioGenome Portal Community Edition",
+        "description":"This portal tracks the progress of the Earth Biogenome Project, offering the biodiversity community the opportunity to share photos of collected organisms, vernacular names and links to annotations of their genomes"
+    },
+    "TwitterURL":"https://twitter.com/CatBiogenoma?ref_src=twsrc%5Etfw"
 }

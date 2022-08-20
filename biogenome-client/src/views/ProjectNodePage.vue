@@ -20,7 +20,22 @@
         </div>
     </div>
     <va-divider/>
-    <div class="row custom-card justify--space-between">
+    <div class="row" v-if="showMap">
+        <div class="flex lg4 md4 sm12 xs12">
+            <OrganismFilter/>
+            <OrganismList :total="orgStore.total" :organisms="orgStore.organisms" :query="orgStore.query" :is-loading="orgStore.isLoading"/>
+        </div>
+        <div class="flex lg8 md8 sm12 xs12">
+            <CesiumComponent @on-entity-selection="updateQuery" class="custom-card" :geojson = "geojson"/>
+        </div>
+    </div>
+    <div v-else class="row">
+        <div class="flex lg12 md12 sm12 xs12">
+            <OrganismFilter/>
+            <OrganismList :total="orgStore.total" :organisms="orgStore.organisms" :query="orgStore.query" :is-loading="orgStore.isLoading"/>
+        </div>
+    </div>
+    <!-- <div class="row custom-card justify--space-between">
         <div class="flex lg4 md4 sm12 xs12">
             <div class="row">
                 <div class="flex">
@@ -36,7 +51,7 @@
         <div v-if="showMap" class="flex lg8 md8 sm12 xs12">
             <CesiumComponent @on-entity-selection="updateQuery" class="custom-card" :geojson = "geojson"/>
         </div>
-    </div>
+    </div> -->
 </div>
 </template>
 <script setup>
@@ -83,14 +98,5 @@ function updateQuery(value){
 }
 </script>
 <style scoped>
-.side-input{
-    padding: 15px;
-}
-.collapse-row{
-    background-color: white;
-}
 
-.sidebar{
-    background-color: #0c7c59;
-}
 </style>

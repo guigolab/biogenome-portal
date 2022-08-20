@@ -5,9 +5,6 @@
             <div class="flex">
                 organisms
             </div>
-            <div class="flex">
-                <va-chip outline :disabled="treeStore.loadedSpecies.length + total > treeStore.limit" size="small" icon="insights" @click="addOrganisms()"/>
-            </div>
         </div>
     </va-card-title>
     <va-card-content>

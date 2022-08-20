@@ -1,6 +1,6 @@
 import services.organism_service as organism_service
 from flask import Response, request
-from db.models import  GenomeBrowserData, Organism,TaxonNode
+from db.models import  Chromosome, GenomeBrowserData, Organism,TaxonNode
 from flask_restful import Resource
 from errors import NotFound, SchemaValidationError
 import json
@@ -36,6 +36,9 @@ class OrganismApi(Resource):
 		json_resp['taxon_lineage'] = list(reversed(parsed_lineage))
 		#get genome browser tracks
 		if json_resp['assemblies']:
+			for ass in json_resp['assemblies']:
+				if ass['chromosomes']:
+					json_resp['chromosomes'] = json.loads(Chromosome.objects(accession_version__in=ass['chromosomes']).to_json())
 			assembly_accessions = [ass['accession'] for ass in json_resp['assemblies']]
 			genome_browser_data = GenomeBrowserData.objects(assembly_accession__in=assembly_accessions).to_json()
 			json_resp['genome_browser_data'] = json.loads(genome_browser_data)

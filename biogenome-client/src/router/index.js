@@ -3,6 +3,8 @@ import Home from '../views/NewHome.vue'
 import {auth} from '../stores/auth'
 import {organisms} from '../stores/organisms'
 
+const ROOTNODE = import.meta.env.VITE_ROOT_NODE
+
 const treeOfLife = () => import('../views/TreeOfLife.vue')
 const map = () => import('../views/MapPage.vue')
 const organism = () => import('../views/OrganismPage.vue')
@@ -19,6 +21,7 @@ const excel = () => import('../components/admin/form/ExcelForm.vue')
 const login = () => import('../components/admin/form/Login.vue')
 const bioprojects = () => import('../views/ProjectNodePage.vue')
 const taxons = () => import('../views/TaxonNodePage.vue')
+const treeGenerator = () => import('../views/TreeGeneratorPage.vue')
 
 const routes = [
   {
@@ -37,6 +40,11 @@ const routes = [
     name: "bioprojects",
     component: bioprojects,
     props:true
+  },
+  {
+    path: "/tree",
+    name: "tree",
+    component: treeGenerator,
   },
   {
     path: "/admin",
