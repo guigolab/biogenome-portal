@@ -117,7 +117,7 @@ function createD3Tree(data){
 
     const gLegend = d3.select(domainleg.value)
     .attr("font-family", "sans-serif")
-    .attr("font-size", 10);
+    .attr("font-size", 8);
 
     legend(gLegend)
 
@@ -289,7 +289,7 @@ function legend(svg){
     .attr("height", 15)
     .attr("fill", color());
     g.append("text")
-    .attr("x", 24)
+    .attr("x", 20)
     .attr("y", 9)
     .attr("dy", "0.35em")
     .attr("class","legend-text")

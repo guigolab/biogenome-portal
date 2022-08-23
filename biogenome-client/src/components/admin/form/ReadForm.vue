@@ -126,6 +126,7 @@ function submit(){
             alert.message=response.message+' correctly inserted'
             reset()
             showAlert.value=true
+            window.scrollTo({ top: 0, behavior: 'smooth' });
             return
         }
         alert.title='Error'
@@ -133,6 +134,7 @@ function submit(){
         alert.message=response.message
         showAlert.value=true
         isLoading.value = false
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }).catch(e => {
         console.log(e)
         alert.title='Error'
@@ -140,6 +142,7 @@ function submit(){
         alert.message=e
         showAlert.value=true
         isLoading.value = false
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     })
 }
 </script>

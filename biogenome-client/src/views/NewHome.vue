@@ -1,10 +1,10 @@
 <template>
 <div>
-    <div class="row justify-space--between align--center">
+    <div class="row justify-space--between align--center custom-card">
         <div class="flex lg6 md6 sm12 xs12">
             <div class="row custom-card">
                 <div class="flex">
-                    <h1 class="display-3">{{HomePage.title}}</h1>
+                    <h1 style="text-align:start" class="display-1">{{HomePage.title}}</h1>
                 </div>
             </div>
             <div class="row custom-card">
@@ -13,64 +13,73 @@
                 </div>
             </div>
         </div>
-        <div class="flex lg6 md6 sm12 xs12">
-            <div class="row align--center justify--end">
-                <div class="scroller">
-                    <div v-for="(key,index) in Object.keys(stats.data)" :key="index" class="flex menu-item">
-                        <va-card  class="custom-card box">
-                            <va-card-title>
-                                <div class="row justify--space-between align--center">
-                                    <div class="flex">
-                                        {{key}}
-                                    </div>
-                                    <div class="flex">
-                                        <va-icon 
-                                            :name="dataIcons[key].icon"
-                                            :color="dataIcons[key].color"
-                                        >
-                                        </va-icon>
-                                    </div>
-                                </div>
-                            </va-card-title>
-                            <va-card-content>
-                                <strong>{{stats.data[key]}}</strong>
-                            </va-card-content>
-                        </va-card>
-                    </div>
-                </div>
+    </div>
+    <va-divider/>
+    <div class="row align--center custom-card">
+        <div class="scroller">
+            <div v-for="(key,index) in Object.keys(stats.data)" :key="index" class="flex menu-item">
+                <va-card class="custom-card box">
+                    <va-card-title>
+                        <div class="row justify--space-between align--center">
+                            <div class="flex">
+                                {{key}}
+                            </div>
+                            <div class="flex">
+                                <va-icon 
+                                    :name="dataIcons[key].icon"
+                                    :color="dataIcons[key].color"
+                                >
+                                </va-icon>
+                            </div>
+                        </div>
+                    </va-card-title>
+                    <va-card-content>
+                        <strong>{{stats.data[key]}}</strong>
+                    </va-card-content>
+                </va-card>
             </div>
         </div>
     </div>
-    <va-divider/>
-    <div class="row justify--space--between">
+    <div class="row justify--space-between custom-card">
         <div class="flex lg6 md6 sm12 xs12">
-            <div class="row justify--space-between custom-card align--center">
-                <div class="flex lg8 md8 sm12 xs12">
+            <div class="row align--center justify--space-between custom-card">
+                <div class="flex">
+                    <h1 style="text-align:start" class="display-3">
+                        {{`${selectedModelObj.text} Browser`}}
+                    </h1>
+                </div>
+                <div class="flex">
                     <va-input
-                        :label="currentModel"
-                        placeholder="Search"
+                        :placeholder="`Search in ${currentModel}`"
                         v-model="inputValue"
-                        outline
-                    />
+                    >
+                        <template #appendInner>
+                            <va-icon
+                            name="search"
+                            />
+                        </template>
+                    </va-input>
                 </div>
                 <div class="flex">
                     <va-button-toggle
                         size="small"
                         outline
+                        :rounded="false"
                         v-model="currentModel"
                         :options="filteredModelOptions"
                     />
                 </div>
             </div>
-            <div class="row">
-                <div style="max-height:50vh;overflow:scroll" class="flex lg12 md12 sm12 xs12">
+            <va-divider/>
+            <div class="row custom-card">
+                <div class="flex lg12 md12 sm12 xs12">
                     <NodeIterator v-for="(node, index) in treeStore.tree" :key="index" :node="node" :model="selectedModelObj"/>
                 </div>
             </div>
         </div>
         <div class="flex lg6 md6 sm12 xs12">
-            <div class="row justify--space-between custom-card align--center">
-                <div class="flex lg12 md12 sm12 xs12">
+            <div class="row justify--space-between custom-card align--center custom-card">
+                <div class="flex">
                     <va-select
                         label="taxonomic ranks"
                         v-model="rank"
@@ -78,12 +87,22 @@
                     >
                     </va-select>
                 </div>
+                <div class="flex">
+                    <va-button-toggle
+                        size="small"
+                        outline
+                        :rounded="false"
+                        v-model="chart"
+                        :options="chartOptions"
+                    />
+                </div>
             </div>
-            <div class="row">
-                <div v-if="showRanks" style="max-height:50vh;overflow:scroll" class="flex lg12 md12 sm12 xs12">
+            <div v-if="showRanks" class="row custom-card">
+                <div v-if="chart == 'chart'" class="flex lg12 md12 sm12 xs12">
                     <BarChart :data="stats.ranks"/>
+                </div>
+                <div v-else class="flex lg12 md12 sm12 xs12">
                     <PieChart :data="stats.ranks"/>
-                    <!-- <NodeIterator v-for="(node, index) in stats.ranks" :key="index" :node="node" :model="modelOptions[0]"/> -->
                 </div>
             </div>
         </div>
@@ -99,19 +118,22 @@ import NodeIterator from '../components/NodeIterator.vue';
 import { tree } from '../stores/tree';
 import {dataIcons,TwitterURL,HomePage} from '../../config.json'
 import TwitterWidget from '../components/TwitterWidget.vue';
-import ICicle from '../components/d3/ICicle.vue';
 import PieChart from '../components/d3/PieChart.vue';
 import BarChart from '../components/d3/BarChart.vue';
+import { useRouter } from 'vue-router';
 
-
+const router = useRouter()
 const ROOTNODE = import.meta.env.VITE_ROOT_NODE
 const PROJECT_ACCESSION = import.meta.env.VITE_PROJECT_ACCESSION
 const stats = reactive({
     data:Object,
     organismsWithImages:Array,
     ranks:Array,
-    icicle:Object
 })
+const chartOptions = [
+    {value:'pie',icon:'pie_chart'},
+    {value:'chart',icon:'bar_chart'},
+]
 const rank = ref('class')
 const options = ['kingdom','phylum','class','order','family']
 const treeStore = tree()
@@ -137,9 +159,11 @@ const modelOptions = [
 ]
 const isLoading = ref(false)
 const orgStore = organisms()
+const chart = ref('pie')
 const currentModel = ref('taxons')
 const showTree = ref(false)
 const showRanks = ref(false)
+const showResult = ref(false)
 const showOrganisms = ref(false)
 const inputValue = ref('')
 
@@ -153,12 +177,12 @@ const selectedModelObj = computed(()=>{
     return modelOptions.filter(opt => opt.value === currentModel.value)[0]
 })
 
-
-
 onMounted(()=>{
     DataPortalService.getTaxonChildren(ROOTNODE)
     .then(resp => {
-        treeStore.tree = [resp.data]
+        const treeToLoad = resp.data
+        treeToLoad.isOpen=true 
+        treeStore.tree = [treeToLoad]
         showTree.value = true
         return DataPortalService.getStats()
     })
@@ -191,10 +215,17 @@ watch(inputValue, ()=>{
         selectedModelObj.value.searchQuery({name: inputValue.value})
         .then(resp => {
             treeStore.tree = resp.data
-            isLoading.value=false
         })
         .catch(e => {
-            isLoading.value=false
+            console.log(e)
+        })
+    }else{
+        selectedModelObj.value.defaultQuery(selectedModelObj.value.root)
+        .then(resp => {
+            const treeToLoad = resp.data
+            treeToLoad.isOpen = true
+            treeStore.tree = [treeToLoad]
+            showTree.value = true
         })
     }
 })
@@ -206,7 +237,9 @@ watch(currentModel, ()=>{
     const root = selectedModelObj.value.root
     selectedModelObj.value.defaultQuery(root).
     then(resp => {
-        treeStore.tree = [resp.data]
+        const treeToLoad = resp.data
+        treeToLoad.isOpen = true
+        treeStore.tree = [treeToLoad]
         showTree.value = true
         isLoading.value=false
     })
@@ -216,6 +249,10 @@ watch(currentModel, ()=>{
     })
 })
 
+function toRoute(node){
+    router.push({name:selectedModelObj.value.value, params:{id:node[selectedModelObj.value.id]}})
+}
+
 </script>
 <style scoped>
 .scroller {
@@ -223,7 +260,18 @@ watch(currentModel, ()=>{
   white-space: nowrap;
   display: block;
 }
-
+.result-list{
+    position: absolute;
+    background-color: white;
+    z-index: 100;
+    width: 100%;
+}
+.result-list{
+    cursor: pointer;
+}
+.result-item:hover{
+    background-color: #eff3f8;
+}
 .menu-item {
   display: inline-block;
   text-align: center;

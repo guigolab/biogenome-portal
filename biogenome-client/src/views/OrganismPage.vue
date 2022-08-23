@@ -141,7 +141,7 @@
                                 <p style="text-align:start">{{pr.title}}</p>
                             </div>
                             <div class="flex lg4 md4 sm4 xs4">
-                                <a :href="`https://www.ebi.ac.uk/ena/browser/view/${pr.accession}`" class="link">{{pr.accession}}</a>
+                                <p><router-link :to="{name:'bioprojects',params:{id:pr.accession}}">{{pr.accession}}</router-link></p>
                             </div>
                         </div>
                     </va-card-content>
@@ -163,7 +163,7 @@
                     <va-card-content>
                         <div v-for="(node,index) in organism.taxon_lineage" :key="index" class="row justify--space-between align--center" style="padding:5px">
                             <div class="flex lg8 md8 sm8 xs8">
-                                <p style="text-align:start">{{node.name}}</p>
+                                <p style="text-align:start"><router-link :to="{name:'taxons',params:{id:node.taxid}}">{{node.name}}</router-link></p>
                             </div>
                             <div class="flex lg4 md4 sm4 xs4">
                                 <p style="text-align:start">{{node.rank}}</p>
@@ -345,7 +345,7 @@
                         </va-data-table>
                     </va-card-content>
                 </va-card>
-                <!-- <Jbrowse2 v-if="showJBrowse" :assembly="jbrowseSession.assemblyTrack" :tracks="jbrowseSession.annotationTracks"/> -->
+                <Jbrowse2 v-if="showJBrowse" :assembly="jbrowseSession.assemblyTrack" :tracks="jbrowseSession.annotationTracks"/>
                 <va-card  v-if="showMap" class="custom-card">
                     <va-card-title>
                         <div class="row justify--space-between align--center">
@@ -381,10 +381,9 @@
 import { computed, nextTick, onMounted, reactive, ref, watch } from '@vue/runtime-core'
 import {dataIcons,GoaTStatus,INSDCStatus,jbrowse2} from '../../config'
 import DataPortalService from '../services/DataPortalService'
-// import Jbrowse2 from '../components/Jbrowse2.vue'
+import Jbrowse2 from '../components/Jbrowse2.vue'
 import CesiumComponent from '../components/CesiumComponent.vue'
 import OrganismNavCards from '../components/OrganismNavCards.vue'
-// import MapComponent from '../components/MapComponent.vue'
 
 const showJBrowse = ref(false)
 const selectedModel = ref('')
@@ -447,7 +446,7 @@ function getRelatedSample(sampleAccession){
 }
 
 function parseData(data){
-    
+
 }
 
 const jbrowseSession = reactive({

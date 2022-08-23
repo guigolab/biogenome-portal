@@ -5,7 +5,6 @@ import {organisms} from '../stores/organisms'
 
 const ROOTNODE = import.meta.env.VITE_ROOT_NODE
 
-const treeOfLife = () => import('../views/TreeOfLife.vue')
 const map = () => import('../views/MapPage.vue')
 const organism = () => import('../views/OrganismPage.vue')
 const admin = () => import('../views/AdminArea.vue')
@@ -16,9 +15,7 @@ const organismForm = () => import('../components/admin/form/OrganismForm.vue')
 const assembliesForm = () => import('../components/admin/form/AssemblyForm.vue')
 const annotationForm = () => import('../components/admin/form/AnnotationForm.vue')
 const genomeBrowserForm = () => import('../components/admin/form/GenomeBrowserForm.vue')
-const sunburst = () => import('../components/SunBurst.vue')
 const excel = () => import('../components/admin/form/ExcelForm.vue')
-const login = () => import('../components/admin/form/Login.vue')
 const bioprojects = () => import('../views/ProjectNodePage.vue')
 const taxons = () => import('../views/TaxonNodePage.vue')
 const treeGenerator = () => import('../views/TreeGeneratorPage.vue')
@@ -62,16 +59,6 @@ const routes = [
     component: admin,
     meta: { requiresAuth: true }
   },
-  {
-    path: '/tree-of-life',
-    component: treeOfLife
-  },
-  // {
-  //   path: "/tree-of-life/:node",
-  //   name: "tree-of-life",
-  //   props: true,
-  //   component: treeOfLife
-  // },
   {
     path: '/map',
     name: 'static-map',

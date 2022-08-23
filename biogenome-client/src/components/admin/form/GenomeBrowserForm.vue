@@ -1,6 +1,5 @@
 <template>
 <va-inner-loading :loading="isLoading">
-{{toUpdate}}
     <div class="layout">
         <div class="row">
             <div class="flex">
@@ -133,6 +132,7 @@ function submitGenomeBrowserData(){
         alert.color="success"
         showAlert.value=true
         isLoading.value=false
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     })
     .catch(e => {
         console.log(e)
@@ -141,6 +141,7 @@ function submitGenomeBrowserData(){
         alert.color="danger"
         showAlert.value=true
         isLoading.value = false
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     })
 }
 

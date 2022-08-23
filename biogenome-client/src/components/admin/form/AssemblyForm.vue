@@ -132,12 +132,21 @@ function submitAssembly(){
     AssemblyService.importAssembly(assemblyToSubmit.accession)
     .then(resp => {
         console.log(resp)
+        alert.title = "Success"
+        alert.message = resp.data
+        alert.color = "success"
         isLoading.value=false
+        showAlert.value=true
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     })
     .catch(errors => {
         console.log(errors)
+        alert.title = "Error"
+        alert.message = errors.response.data
+        alert.color = "danger"
         isLoading.value=false
-
+        showAlert.value=true
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     })
 }
 

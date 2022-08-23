@@ -21,12 +21,12 @@
     </div>
     <va-divider/>
     <div class="row" v-if="showMap">
+        <div class="flex lg8 md8 sm12 xs12">
+            <CesiumComponent @on-entity-selection="updateQuery" class="custom-card" :geojson = "geojson"/>
+        </div>
         <div class="flex lg4 md4 sm12 xs12">
             <OrganismFilter/>
             <OrganismList :total="orgStore.total" :organisms="orgStore.organisms" :query="orgStore.query" :is-loading="orgStore.isLoading"/>
-        </div>
-        <div class="flex lg8 md8 sm12 xs12">
-            <CesiumComponent @on-entity-selection="updateQuery" class="custom-card" :geojson = "geojson"/>
         </div>
     </div>
     <div v-else class="row">
@@ -35,23 +35,6 @@
             <OrganismList :total="orgStore.total" :organisms="orgStore.organisms" :query="orgStore.query" :is-loading="orgStore.isLoading"/>
         </div>
     </div>
-    <!-- <div class="row custom-card justify--space-between">
-        <div class="flex lg4 md4 sm12 xs12">
-            <div class="row">
-                <div class="flex">
-                    <OrganismFilter/>
-                </div>
-            </div>
-            <div class="row">
-                <div class="flex lg12 md12 sm12 xs12">
-                    <OrganismList :total="orgStore.total" :organisms="orgStore.organisms" :query="orgStore.query" :is-loading="orgStore.isLoading"/>
-                </div>
-            </div>
-        </div>
-        <div v-if="showMap" class="flex lg8 md8 sm12 xs12">
-            <CesiumComponent @on-entity-selection="updateQuery" class="custom-card" :geojson = "geojson"/>
-        </div>
-    </div> -->
 </div>
 </template>
 <script setup>

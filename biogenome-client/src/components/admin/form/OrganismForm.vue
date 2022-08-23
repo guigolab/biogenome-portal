@@ -292,6 +292,7 @@ function createOrganism(){
         alert.color="success"
         showAlert.value=true
         isLoading.value=false
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     })
     .catch(e => {
         alert.title="Error"
@@ -299,6 +300,7 @@ function createOrganism(){
         alert.color="danger"
         showAlert.value=true
         isLoading.value=false
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     })
 }
 
@@ -311,6 +313,7 @@ function updateOrganism(){
         alert.color="success"
         showAlert.value=true
         isLoading.value=false
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     })
     .catch(e => {
         alert.title="Error"
@@ -318,6 +321,7 @@ function updateOrganism(){
         alert.color="danger"
         showAlert.value=true
         isLoading.value=false
+        window.scrollTo({ top: 0, behavior: 'smooth' });   
     })
 }
 

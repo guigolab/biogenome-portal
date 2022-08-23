@@ -26,41 +26,39 @@
                 :key="index"
                 :to="{name:'organism-details',params:{taxid:organism.taxid}}"
             >
-            <va-list-item-section avatar>
-                <va-avatar size="large">
-                    <img :src="organism.image">
-                </va-avatar>
-            </va-list-item-section>
-
-            <va-list-item-section style="text-align:start">
-                <va-list-item-label>
-                {{ organism.scientific_name}}
-                </va-list-item-label>
-
-                <va-list-item-label caption>
-                {{ organism.insdc_common_name? organism.insdc_common_name+', '+organism.tolid_prefix:organism.tolid_prefix }}
-                </va-list-item-label>
-            </va-list-item-section>
-
-            <va-list-item-section icon>
-                <va-icon style="padding:5px" v-for="dt in mapData(organism)" :key="dt"
-                    :name="dataIcons[dt].icon"
-                    :color="dataIcons[dt].color"
-                />
-            </va-list-item-section>
+                <va-list-item-section avatar>
+                    <va-avatar size="large">
+                        <img :src="organism.image">
+                    </va-avatar>
+                </va-list-item-section>
+                <va-list-item-section style="text-align:start">
+                    <va-list-item-label>
+                    {{ organism.scientific_name}}
+                    </va-list-item-label>
+                    <va-list-item-label caption>
+                    {{ organism.insdc_common_name ? organism.insdc_common_name+', '+organism.tolid_prefix:organism.tolid_prefix }}
+                    </va-list-item-label>
+                </va-list-item-section>
+                <va-list-item-section icon>
+                    <va-icon style="padding:5px" v-for="dt in mapData(organism)" :key="dt"
+                        :name="dataIcons[dt].icon"
+                        :color="dataIcons[dt].color"
+                    />
+                </va-list-item-section>
             </va-list-item>
         </va-list>
     </va-card-content>
 </va-card>
 </template>
 <script setup>
-import { watch,nextTick,ref, reactive, computed } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import {dataIcons} from '../../config'
 import portalService from '../services/DataPortalService'
 import DataTable from '../components/data/DataTable.vue'
 import OrganismFilter from './OrganismFilter.vue'
 import {useRouter} from 'vue-router'
 import { tree } from '../stores/tree'
+
 const props = defineProps({
     organisms: Array,
     query: Object,

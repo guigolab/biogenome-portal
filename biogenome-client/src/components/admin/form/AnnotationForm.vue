@@ -129,6 +129,7 @@ function submitAnnotation(){
         alert.color="success"
         showAlert.value=true
         isLoading.value=false
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     })
     .catch(e => {
         console.log(e)
@@ -137,6 +138,8 @@ function submitAnnotation(){
         alert.color="danger"
         showAlert.value=true
         isLoading.value=false
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
     })
 }
 

@@ -18,7 +18,7 @@ onMounted(()=>{
     DonutChart(props.data,{
         name: d => d.name,
         value: d => d.leaves,
-        height: 1000
+        height: 750
     })
 
 })
@@ -98,7 +98,8 @@ function DonutChart(data, {
     .selectAll("text")
     .data(arcs)
     .join("text")
-      .attr("transform", d => `translate(${arcLabel.centroid(d)})`)
+    .attr("transform", d => `translate(${arcLabel.centroid(d)})`)
+    .attr("opacity", d => d.endAngle - d.startAngle > 0.1 ? 1 : 0)
     .selectAll("tspan")
     .data(d => {
       const lines = `${title(d.data)}`.split(/\n/);
