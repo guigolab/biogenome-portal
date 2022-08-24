@@ -8,12 +8,30 @@
                         Tree of Life
                     </div>
                     <div class="flex">
-                        <va-chip @click="downloadImage()">download image</va-chip>
+                        <va-button-dropdown
+                            size="small"
+                            split
+                            outline
+                            :label="`download ${downloadType}`"
+                            @main-button-click="downloadType === 'svg' ? downloadSVGImage():downloadPGNImage()"
+                        >
+                        <ul>
+                            <li>
+                                <va-button @click="downloadType='svg'" flat>
+                                    SVG
+                                </va-button>
+                            </li>
+                            <li>
+                                <va-button @click="downloadType='png'" flat>
+                                    PNG
+                                </va-button>
+                            </li>
+                        </ul>
+                        </va-button-dropdown>
                     </div>
                 </div>
             </va-card-title>
             <va-card-content>
-                <div ref="tooltip" class="tooltip"></div>
                 <svg ref="tree">
                     <g ref="domainleg"/>
                     <g ref="treegroup"/>
@@ -27,8 +45,8 @@
 <script setup>
 import {reactive, onMounted, watch, ref, nextTick, computed} from "vue";
 import * as d3 from "d3";
-import DataPortalService from "../../services/DataPortalService";
 import { useRouter } from "vue-router";
+import { Canvg } from 'canvg';
 
 const router = useRouter()
 var level = ref(0)
@@ -43,25 +61,24 @@ const width = ref(650)
 const outerRadius = computed(()=>width.value/2)
 const innerRadius = computed(()=> outerRadius.value - 170)
 const legendPosition =  computed(()=> -outerRadius.value)
-
+const downloadType = ref('svg')
 const stack = reactive([])
 // var data = null
 var domains = reactive([])
 const tree=ref(null)
-const tooltip=ref(null)
 const treegroup = ref(null)
 const domainleg = ref(null)
-
+// const canvas = ref(null)
 
 watch(width, ()=>{
     createD3Tree(data)
 })
 
 onMounted(()=>{
-    tree.value.focus()
-    tooltip.value.focus()
+    tree.value.focus()         
     treegroup.value.focus()
     domainleg.value.focus()
+    // canvas.value.focus()
     // getTree(props.node)
     const doms = getDomains(props.data,[])
     legendDomains = doms.slice(0,9)
@@ -69,7 +86,7 @@ onMounted(()=>{
     createD3Tree(props.data)
 })
 
-function downloadImage(){
+function downloadSVGImage(){
     const svg = tree.value.cloneNode(true); // clone your original svg
     // document.body.appendChild(svg); // append element to document
     const g = svg.querySelector('g') // select the parent g
@@ -85,6 +102,26 @@ function downloadImage(){
     link.click();
 }
 
+function downloadPGNImage() {
+    const canvas = document.createElement("canvas")
+    const ctx = canvas.getContext("2d")
+    const svgAsXML = new XMLSerializer().serializeToString(tree.value);
+    ctx.canvas.width = 2000
+    ctx.canvas.height = 2000
+    const v = Canvg.fromString(ctx,svgAsXML)
+    v.start()
+    ctx.globalCompositeOperation = 'destination-over'
+    ctx.fillStyle = "white"
+    ctx.fillRect(0, 0, ctx.canvas.width,ctx.canvas.height)
+    // const image = new Image()
+    // image.src = canvas.value.toDataURL("image/png")
+    const link = document.createElement("a")
+    // document.body.appendChild(link); 
+    link.setAttribute("href", canvas.toDataURL("image/png"))
+    link.setAttribute("download", "image.png")
+    link.click();
+}
+
 
 function createD3Tree(data){
     const root = d3.hierarchy(data , d => d.children)
@@ -96,9 +133,11 @@ function createD3Tree(data){
     setColor(root)
     const svg = d3.select(tree.value)
     .attr("viewBox", [-outerRadius.value, -outerRadius.value, width.value, width.value])
+    
     const g = d3.select(treegroup.value)
     .attr("font-family", "sans-serif")
-    .attr("font-size", 7);
+    .attr("font-size", 8)
+    .attr("backgorun-color","white");
 
     g.append("style").text(`
     .link--active {
@@ -112,12 +151,12 @@ function createD3Tree(data){
         font-weight: bold;
     }
     `);
-    var div = d3.select(tooltip.value)
-    .style("opacity", 0)
 
     const gLegend = d3.select(domainleg.value)
     .attr("font-family", "sans-serif")
-    .attr("font-size", 8);
+    .attr("font-size", 6)
+    .attr("backgorun-color","white");
+
 
     legend(gLegend)
 
@@ -139,24 +178,9 @@ function createD3Tree(data){
     .join("path")
     .each(function(d) { d.target.linkNode = this; })
     .attr("d", linkConstant)
-    .attr("stroke", d => d.target.color)
-    .on("mouseover", function(event, d){
-        console.log(d)
-        div.transition()		
-        .duration(200)		
-        .style("opacity", .9);		
-        div.html( `${d.data.name} (${d.data.rank})`)	
-        .style("left", (event.layerX) + "px")		
-        .style("top", (event.layerY-15) + "px");	
-    })
-    .on("mouseout", function() {
-        div.transition()		
-            .duration(500)		
-            .style("opacity", 0);	
-    })
-    .on("click", function(event,d){
-        getData(d.data)
-    });
+    .attr("stroke", d => d.target.color);
+
+
     g.append("g")
     .selectAll("text")
     .data(root.leaves())
@@ -166,31 +190,10 @@ function createD3Tree(data){
     .attr("text-anchor", d => d.x < 180 ? "start" : "end")
     .attr("class","leaves-class")
     .text(d => d.data.name.replace(/_/g, " "))
-    .on("click",(d)=>{
-        router.push({name:'taxons',params:{taxid:d.data.taxid}})
-    })
     .on("mouseover", mouseovered(true))
     .on("mouseout", mouseovered(false));
 }
-function test(test){
-    console.log(test)
-}
 
-const getData = taxon => {
-    console.log(router)
-    router.push({name:'taxons',params:{taxid:taxon.taxid}})
-}
-
-// function getData(taxon){
-//     console.log(taxon)
-//     const name = taxon.name || taxon
-//     if(taxon.rank === 'species' || taxon.rank === 'subspecies'){
-//         router.push({name:'organisms',params:{taxid:taxon.taxid}})
-//     }
-//     else {
-//         router.push({name:'taxons',params:{taxid:taxon.taxid}})
-//     }
-// }
 function getDomains(node,domains) {
     if(node.children){
     node.children.forEach(n => {
@@ -315,14 +318,5 @@ function legend(svg){
     /* max-width: 100%; */
     overflow: visible;
 }
-.tooltip {	
-  position: absolute;			
-  text-align: center;			
-  width: min-content;					
-  background: black;	
-  border: 0px;		
-  color: white;
-  border-radius: 8px;			
-  pointer-events: none;			
-}
+
 </style>

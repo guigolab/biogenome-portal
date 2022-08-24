@@ -1,6 +1,6 @@
 <template>
 <div>
-    <div class="row justify-space--between align--center">
+    <div class="row justify--space-between align--center">
         <div class="flex lg6 md6 sm12 xs12">
             <div class="row custom-card">
                 <div class="flex">
@@ -13,6 +13,9 @@
                 </div>
             </div>
         </div>
+        <div class="flex">
+            <va-button size="large" icon="insights" outline color="secondary" @click="getTree()" :disabled="!isTreeValid">Create Tree</va-button>
+        </div>
     </div>
     <va-divider/>
     <div class="row justify--space-between">
@@ -22,12 +25,19 @@
                     <h1 style="text-align:start" class="display-5">1. Select a root node</h1>
                 </div>
                 <div v-if="Object.keys(selectedRoot).length" class="flex">
-                    <va-chip outline icon="close" @click="selectedRoot={}">{{selectedRoot.name}}</va-chip>
+                    <div class="row align--center">
+                        <div class="flex">
+                            <va-icon name="trending_flat"/>
+                        </div>
+                        <div class="flex">
+                            <va-chip color="secondary" outline icon="close" @click="selectedRoot={};showTree=false">{{selectedRoot.name}}</va-chip>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div v-if="!Object.keys(selectedRoot).length" class="row">
                 <div class="flex">
-                    <va-card class="custom-card">
+                    <va-card @mouseenter="showTaxonResult=true" @mouseleave="showTaxonResult=false" class="custom-card">
                         <va-card-title>
                             <va-input 
                                 label="search taxon"
@@ -35,10 +45,10 @@
                                 v-model="taxonInput"
                             />
                         </va-card-title>
-                        <va-card-content style="max-height:30vh;overflow: scroll;">
+                        <va-card-content v-if="showTaxonResult && taxonResult.length" class="result-content">
                             <ul>
                                 <li @click="selectedRoot=taxon" v-for="(taxon,index) in taxonResult" :key="index">
-                                    <div style="padding:15px" class="row justify--space-between">
+                                    <div style="padding:15px" class="row justify--space-between result-element">
                                         <div class="flex">
                                             <strong>{{taxon.name}}</strong>
                                         </div>
@@ -59,22 +69,29 @@
                     <h1 style="text-align:start" class="display-5">1.1 Select a BioProject (Optional)</h1>
                 </div>
                 <div v-if="Object.keys(selectedBioProject).length" class="flex">
-                    <va-chip outline icon="close" @click="selectedBioProject={}">{{selectedBioProject.title}}</va-chip>
+                <div class="row align--center">
+                    <div class="flex">
+                        <va-icon name="trending_flat"/>
+                    </div>
+                    <div class="flex">
+                        <va-chip color="secondary" outline icon="close" @click="selectedBioProject={}">{{selectedBioProject.title}}</va-chip>
+                    </div>
+                </div>
                 </div>
             </div>
             <div v-if="!Object.keys(selectedBioProject).length" class="row">
-                <div class="flex">
-                    <va-card class="custom-card">
+                <div class="flex lg12 md12 sm12 xs12">
+                    <va-card @mouseenter="showBioProjectResult=true" @mouseleave="showBioProjectResult=false" class="custom-card">
                         <va-card-title>
                             <va-input label="search bioproject"
                                 placeholder="ex. Earth BioGenome Project (EBP)"
                                 v-model="bioProjectInput"
                             />
                         </va-card-title>
-                        <va-card-content style="max-height:30vh;overflow: scroll;">
+                        <va-card-content v-if="showBioProjectResult && bioprojectResult.length" class="result-content">
                             <ul>
                                 <li @click="selectedBioProject=project" v-for="(project,index) in bioprojectResult" :key="index">
-                                    <div style="padding:15px" class="row justify--space-between">
+                                    <div style="padding:15px" class="row justify--space-between result-element">
                                         <div class="flex">
                                             <strong>{{project.title}}</strong>
                                         </div>
@@ -90,7 +107,7 @@
             </div>       
         </div>
     </div>
-    <div class="row justify--space-between align--center custom-card">
+    <div v-if="Object.keys(selectedRoot).length" class="row justify--space-between align--center custom-card">
         <div class="flex">
             <h1 style="text-align:start" class="display-5">2. Add up to 150 organisms</h1>
         </div>
@@ -117,7 +134,7 @@
                 <va-card-content style="max-height:30vh;overflow:scroll">
                     <ul>
                         <li @click="addOrganism(org)" v-for="(org,index) in filteredOrganisms()" :key="index">
-                            <div style="padding:15px" class="row justify--space-between">
+                            <div style="padding:15px" class="row justify--space-between result-element">
                                 <div class="flex">
                                     <strong>{{org.scientific_name}}</strong>
                                 </div>
@@ -152,7 +169,7 @@
                 <va-card-content style="max-height:30vh;overflow:scroll;">
                     <ul>
                         <li @click="removeOrganism(org)" v-for="(org,index) in treeStore.loadedSpecies" :key="index">
-                            <div style="padding:15px" class="row justify--space-between">
+                            <div style="padding:15px" class="row justify--space-between result-element">
                                 <div class="flex">
                                     <strong>{{org.scientific_name}}</strong>
                                 </div>
@@ -164,11 +181,6 @@
                     </ul>
                 </va-card-content>
             </va-card>
-        </div>
-    </div>
-    <div class="row justify--center">
-        <div class="flex">
-            <va-button size="large" outline @click="getTree()" :disabled="!isTreeValid">generate tree</va-button>
         </div>
     </div>
     <div v-if="showTree" class="row">
@@ -193,7 +205,8 @@ const taxonInput = ref('')
 const bioProjectInput = ref('')
 const taxonResult = ref([])
 const bioprojectResult = ref([])
-
+const showTaxonResult = ref(false)
+const showBioProjectResult = ref(false)
 const selectedRoot = ref({})
 const selectedBioProject = ref({})
 const selectAll = ref(false)
@@ -202,9 +215,13 @@ const treeStore = tree()
 const showTree=ref(false)
 let treeData = null
 
-// onMounted(()=>{
-//     orgStore.loadOrganisms()
-// })
+onMounted(()=>{
+    Object.keys(orgStore.query).forEach(key => {
+        if(key !== 'limit' || key !== 'offset'){
+            orgStore.query[key] = null
+        }
+    })
+})
 
 watch(taxonInput, ()=>{
     if(taxonInput.value.length>1){
@@ -249,19 +266,18 @@ const isTreeValid = computed(()=>{
 function filteredOrganisms(){
     return orgStore.organisms.filter(org => !treeStore.loadedSpecies.some(el => el.taxid === org.taxid))
 }
-// const filteredOrganisms = computed(()=>{
-//     return orgStore.organisms.filter(org => !treeStore.loadedSpecies.some(el => el.taxid === org.taxid))
-// })
 
 function loadAll(){
-    const total = orgStore.total
-    orgStore.query.limit = total
-    DataPortalService.getOrganisms(orgStore.query)
-    .then(resp => {
-        orgStore.organisms = [...resp.data.data]
-        const totalSpecies = treeStore.loadedSpecies.concat(filteredOrganisms())
-        treeStore.loadedSpecies = [...totalSpecies]
-    })
+    if(orgStore.total > 0){
+        const total = orgStore.total
+        orgStore.query.limit = total
+        DataPortalService.getOrganisms(orgStore.query)
+        .then(resp => {
+            orgStore.organisms = [...resp.data.data]
+            const totalSpecies = treeStore.loadedSpecies.concat(filteredOrganisms())
+            treeStore.loadedSpecies = [...totalSpecies]
+        })
+    }
 }
 
 function addOrganism(organism){
@@ -270,12 +286,10 @@ function addOrganism(organism){
         orgStore.query.offset = orgStore.query.offset + orgStore.query.limit
         orgStore.loadOrganisms()
     }
-    // localStorage.setItem('loadedSpecies',treeStore.loadedSpecies)
 }
 function removeOrganism(organism){
     const index = treeStore.loadedSpecies.findIndex(spec => spec.taxid === organism.taxid)
     treeStore.loadedSpecies.splice(index,1)
-    // localStorage.setItem('loadedSpecies',treeStore.loadedSpecies)
 }
 
 function getTree(){
@@ -292,3 +306,15 @@ function getTree(){
 
 
 </script>
+<style scoped>
+.result-content{
+    max-height: 35vh;
+    overflow: scroll;
+    position: absolute;
+    z-index: 1000;
+    background-color: white;
+}
+.result-element:hover{
+    background-color: #eff3f8;
+}
+</style>

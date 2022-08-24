@@ -21,12 +21,12 @@
     </div>
     <va-divider/>
     <div class="row" v-if="showMap">
-        <div class="flex lg8 md8 sm12 xs12">
-            <CesiumComponent @on-entity-selection="updateQuery" class="custom-card" :geojson = "geojson"/>
-        </div>
         <div class="flex lg4 md4 sm12 xs12">
             <OrganismFilter/>
             <OrganismList :total="orgStore.total" :organisms="orgStore.organisms" :query="orgStore.query" :is-loading="orgStore.isLoading"/>
+        </div>
+        <div class="flex lg8 md8 sm12 xs12">
+            <CesiumComponent @on-entity-selection="updateQuery" class="custom-card" :geojson = "geojson"/>
         </div>
     </div>
     <div v-else class="row">
@@ -39,15 +39,11 @@
 </template>
 <script setup>
 import OrganismList from '../components/OrganismList.vue'
-import NodeIterator from '../components/NodeIterator.vue'
-import NewDataCards from '../components/NewDataCards.vue'
 import DataCards from '../components/DataCards.vue'
 import {organisms} from '../stores/organisms'
 import { tree } from '../stores/tree'
 import {onMounted,computed,watch,ref, nextTick, reactive} from 'vue'
 import DataPortalService from '../services/DataPortalService'
-import TreeContainer from '../components/TreeContainer.vue'
-import FilterSideBar from '../components/FilterSideBar.vue'
 import CesiumComponent from '../components/CesiumComponent.vue'
 import OrganismFilter from '../components/OrganismFilter.vue'
 
