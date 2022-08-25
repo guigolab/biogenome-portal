@@ -23,9 +23,17 @@
                 }
             }
         },
+        "refNameAliases": {
+            "adapter": {
+                "type": "RefNameAliasAdapter",
+                "location": {
+                    "uri": ""
+                }
+            }
+        },
         "annotationTrackObject":    
         {
-            "type": "BasicTrack",
+            "type": "FeatureTrack",
             "trackId":"",
             "name": "",
             "assemblyNames": [],
@@ -33,11 +41,13 @@
             "adapter": {
                 "type": "Gff3TabixAdapter",
                 "gffGzLocation": {
-                    "uri": ""
+                    "uri": "",
+                    "locationType": "UriLocation"
                 },
                 "index": {
                     "location": {
-                        "uri": ""
+                        "uri": "",
+                        "locationType": "UriLocation"
                     }
                 }
             }
@@ -125,8 +135,7 @@
         "logoPath":"./assets/logo.png",
         "bgColor":"",
         "navItems":[
-            {"icon": "home", "pathName":"home"},
-            {"icon": "travel_explore", "pathName":"static-map"}
+            {"icon": "home", "pathName":"home"}
         ]
     },
     "ROLES":[

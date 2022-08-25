@@ -411,10 +411,8 @@ const organismData = reactive({
 
 watch(selectedModel,()=>{
     if(selectedModel.value === 'coordinates'){
-        console.log('HERE')
         DataPortalService.getCoordinates(organism.coordinates)
         .then(resp => {
-            console.log(resp)
             nextTick(()=>{
                 geoJson = resp.data
                 showMap.value = true
@@ -445,10 +443,6 @@ function getRelatedSample(sampleAccession){
     })
 }
 
-function parseData(data){
-
-}
-
 const jbrowseSession = reactive({
     assemblyTrack: null,
     annotationTracks:[]
@@ -464,17 +458,13 @@ onMounted(()=>{
     .then(response => {
         organismLoaded.value = false
         organism = response.data
-        console.dir(organism)
         organismData.dataKeys = Object.keys(dataIcons).filter(d => organism[d] && organism[d].length)
         organismData.loadedItems = organism[organismData.dataKeys[0]]
         organismLoaded.value = true
         showTable.value = true
         organism.assemblies.filter(ass => ass.track)
         .forEach(ass => assembliesWithTrack.value.push(ass))
-        // if (organism.coordinates.length){
-        //     return DataPortalService.getCoordinates(organism.coordinates)
-        // }
-        return  DataPortalService.getCoordinates(organism.coordinates)
+        return DataPortalService.getCoordinates(organism.coordinates)
     }).then(resp => {
         if(resp.data){
             geoJson = resp.data
@@ -486,21 +476,28 @@ onMounted(()=>{
 function loadTrack(rowData){
     showJBrowse.value=false
     const assTrack = {...jbrowse2.assemblyObject}
-    assTrack.name = rowData.assembly_accession
+    assTrack.name = rowData.assembly_name || rowData.assembly_accession
     assTrack.sequence.trackId = rowData.assembly_accession
     assTrack.sequence.adapter.fastaLocation.uri = rowData.assembly_track.fasta_location
     assTrack.sequence.adapter.faiLocation.uri = rowData.assembly_track.fai_location
     assTrack.sequence.adapter.gziLocation.uri = rowData.assembly_track.gzi_location
+    if(rowData.assembly_track.chrom_alias){
+        const refNameAliases = {...jbrowse2.refNameAliases}
+        refNameAliases.adapter.location.uri= rowData.assembly_track.chrom_alias
+        assTrack.refNameAliases = {...refNameAliases}
+    }
     jbrowseSession.assemblyTrack = {...assTrack}
     rowData.annotation_tracks.forEach(ann => {
         const annToLoad = {...jbrowse2.annotationTrackObject}
         annToLoad.name = ann.name
-        annToLoad.trackId = ann.name
-        annToLoad.assemblyNames = [rowData.assembly_accession]
+        annToLoad.trackId = ann.name+' '+rowData.assembly_accession
+        annToLoad.assemblyNames = [rowData.assembly_name || rowData.assembly_accession]
         annToLoad.adapter.gffGzLocation.uri = ann.gff_gz_location
         annToLoad.adapter.index.location.uri = ann.tab_index_location
         jbrowseSession.annotationTracks.push(annToLoad)
     })
+    console.log(jbrowseSession.assemblyTrack)
+    console.log(jbrowseSession.annotationTracks)
     showJBrowse.value = true
 }
 

@@ -4,8 +4,6 @@ import {auth} from '../stores/auth'
 import {organisms} from '../stores/organisms'
 
 const ROOTNODE = import.meta.env.VITE_ROOT_NODE
-
-const map = () => import('../views/MapPage.vue')
 const organism = () => import('../views/OrganismPage.vue')
 const admin = () => import('../views/AdminArea.vue')
 const adminHP = () => import('../views/admin/LandingPage.vue')
@@ -58,17 +56,6 @@ const routes = [
     ],
     component: admin,
     meta: { requiresAuth: true }
-  },
-  {
-    path: '/map',
-    name: 'static-map',
-    component: map
-  },
-  {
-    path: "/map/:accession",
-    name: "map",
-    props:true,
-    component: map
   },
   {
     path: "/organisms/:taxid",

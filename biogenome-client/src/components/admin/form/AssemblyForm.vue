@@ -72,7 +72,7 @@
 import { reactive, ref } from "vue";
 import DataPortalService from "../../../services/DataPortalService";
 import NCBIClientService from '../../../services/clients/NCBIClientService'
-import ClientInput from '../../ClientInput.vue'
+import ClientInput from './ClientInput.vue'
 import AssemblyService from "../../../services/AssemblyService";
 
 const response = ref(null)

@@ -165,7 +165,8 @@ class AssemblyTrack(db.EmbeddedDocument):
     fasta_location = db.URLField()
     fai_location = db.URLField()
     gzi_location = db.URLField() 
-    chrom_alias = db.StringField()
+    chrom_alias = db.URLField()
+    
 
 class AnnotationTrack(db.EmbeddedDocument):
     name = db.StringField()

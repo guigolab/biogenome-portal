@@ -69,7 +69,7 @@
 </va-inner-loading>
 </template>
 <script setup>
-import ClientInput from '../../ClientInput.vue'
+import ClientInput from './ClientInput.vue'
 import { reactive, ref } from "vue"
 import ENAClientService from "../../../services/clients/ENAClientService"
 import ReadService from '../../../services/ReadService'

@@ -54,7 +54,6 @@
 import { ref, reactive, computed } from 'vue'
 import {dataIcons} from '../../config'
 import portalService from '../services/DataPortalService'
-import DataTable from '../components/data/DataTable.vue'
 import OrganismFilter from './OrganismFilter.vue'
 import {useRouter} from 'vue-router'
 import { tree } from '../stores/tree'

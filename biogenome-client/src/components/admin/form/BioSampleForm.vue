@@ -66,7 +66,7 @@
 </template>
 <script setup>
 import { reactive, ref } from "vue"
-import ClientInput from '../../ClientInput.vue'
+import ClientInput from './ClientInput.vue'
 import ENAClientService from "../../../services/clients/ENAClientService"
 import BioSampleService from "../../../services/BioSampleService"
 import DataPortalService from "../../../services/DataPortalService"

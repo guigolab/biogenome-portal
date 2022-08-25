@@ -119,7 +119,7 @@ import ListInputComponent from './ListInputComponent.vue'
 import FormComponent from './FormComponent.vue'
 import DataPortalService from '../../../services/DataPortalService'
 import MetadataForm from './MetadataForm.vue'
-import ClientInput from '../../ClientInput.vue'
+import ClientInput from './ClientInput.vue'
 import {useRouter} from "vue-router"
 const PROJECT_ACCESSION = import.meta.env.VITE_PROJECT_ACCESSION
 const props = defineProps({

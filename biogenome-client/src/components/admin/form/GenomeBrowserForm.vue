@@ -1,5 +1,6 @@
 <template>
 <va-inner-loading :loading="isLoading">
+{{toUpdate}}
     <div class="layout">
         <div class="row">
             <div class="flex">
@@ -37,7 +38,7 @@
                 </va-button>
             </div>
             <div class="flex">
-                <va-button @click="toUpdate === true ? updateGenomeBrowserData() : submitGenomeBrowserData()" :disabled="!validAnnotation" >
+                <va-button @click="handleSubmit()" :disabled="!validAnnotation" >
                     Submit Data
                 </va-button>            
             </div>
@@ -123,6 +124,15 @@ onMounted(()=>{
     }
 })
 
+function handleSubmit(){
+    console.log(props.toUpdate)
+    if(props.toUpdate){
+        updateGenomeBrowserData()
+        return
+    }
+    submitGenomeBrowserData()
+}
+
 function submitGenomeBrowserData(){
     isLoading.value=true
     GenomeBrowserService.createGenomeBrowserData(jbrowseData)
@@ -153,6 +163,8 @@ function updateGenomeBrowserData(){
         alert.color="success"
         showAlert.value=true
         isLoading.value=false
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
     })
     .catch(e => {
         alert.title="Error"
@@ -160,6 +172,8 @@ function updateGenomeBrowserData(){
         alert.color="danger"
         showAlert.value=true
         isLoading.value=false
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
     })
 }
 
