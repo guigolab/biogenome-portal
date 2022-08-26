@@ -209,10 +209,9 @@ const showTree=ref(false)
 let treeData = null
 
 onMounted(()=>{
-    Object.keys(orgStore.query).forEach(key => {
-        if(key !== 'limit' || key !== 'offset'){
-            orgStore.query[key] = null
-        }
+    const params = ['limit','offset']
+    Object.keys(orgStore.query).filter(key => !params.includes(key)).forEach(key => {
+        orgStore.query[key] = null
     })
 })
 
@@ -248,7 +247,6 @@ watch(selectedRoot, ()=>{
 watch(selectedBioProject, ()=>{
     orgStore.query.bioproject=selectedBioProject.value.accession
 })
-
 watch(orgStore.query, ()=>{
     orgStore.loadOrganisms()
 },{deep:true})
@@ -275,7 +273,7 @@ function loadAll(){
 
 function addOrganism(organism){
     treeStore.loadedSpecies.push(organism)
-    if(orgStore.query.offset + orgStore.query.limit <= orgStore.total && filteredOrganisms().length === 0){
+    if((orgStore.query.offset + orgStore.query.limit <= orgStore.total) && filteredOrganisms().length === 0){
         orgStore.query.offset = orgStore.query.offset + orgStore.query.limit
         orgStore.loadOrganisms()
     }
@@ -295,8 +293,6 @@ function getTree(){
         showTree.value=true
     })
 }
-
-
 </script>
 <style scoped>
 .result-content{
@@ -312,11 +308,9 @@ function getTree(){
 .slide-fade-enter-active {
   transition: all 0.2s ease-out;
 }
-
 .slide-fade-leave-active {
   transition: all 0.2s cubic-bezier(1, 0.5, 0.8, 1);
 }
-
 .slide-fade-enter-from,
 .slide-fade-leave-to {
   transform: translateX(20px);

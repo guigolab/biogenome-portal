@@ -7,7 +7,7 @@
           </div>
       </div>
       <va-divider/>
-      <div class="row">
+      <div v-if="showNotifications" class="row">
         <div class="flex">
           <va-card class="custom-card">
             <va-card-title>
@@ -24,7 +24,9 @@
             </va-card-content>
           </va-card>
         </div>
-        <div class="flex lg8 md8 sm12 xs12">
+      </div>
+      <div class="row">
+        <div class="flex lg12 md12 sm12 xs12">
           <va-card class="custom-card">
             <va-card-title>
               Import options
@@ -113,7 +115,7 @@ const response = reactive({
   color: ''
 })
 
-const isError = ref(false)
+const showNotifications = ref(false)
 
 const validForm = ref(null)
 
@@ -147,12 +149,14 @@ function submitExcel(){
   .then(resp => {
     response.messages = [...resp.data]
     response.color = 'success'
-    console.log(resp)
+    showNotifications.value = true
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   })
   .catch(e => {
     response.messages = [...e.response.data]
     response.color = 'danger'
-    console.log(e)
+    showNotifications.value = true
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   })
 }
 
