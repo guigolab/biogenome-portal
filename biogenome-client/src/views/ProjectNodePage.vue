@@ -62,8 +62,10 @@ onMounted(()=>{
     DataPortalService.getProjectCoordinates(props.id)
     .then(resp => {
         if(resp.data.features && resp.data.features.length){
-            geojson = resp.data
-            showMap.value = true
+            nextTick(()=>{
+                geojson = resp.data
+                showMap.value = true
+            })
         }
     })
 })

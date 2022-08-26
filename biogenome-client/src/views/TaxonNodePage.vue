@@ -42,7 +42,7 @@
 import OrganismList from '../components/OrganismList.vue'
 import DataCards from '../components/DataCards.vue'
 import {organisms} from '../stores/organisms'
-import {onMounted,watch,ref,computed} from 'vue'
+import {onMounted,watch,ref,computed, nextTick} from 'vue'
 import DataPortalService from '../services/DataPortalService'
 import CesiumComponent from '../components/CesiumComponent.vue'
 import OrganismFilter from '../components/OrganismFilter.vue'
@@ -57,17 +57,18 @@ let geojson = {}
 const orgStore = organisms()
 
 onMounted(()=>{
-    DataPortalService.getTaxonCoordinates(props.id)
-    .then(resp => {
-        if(resp.data.features && resp.data.features.length){
-            geojson = resp.data
-            showMap.value = true
-        }
-    })
     orgStore.query.parent_taxid = props.id
     orgStore.loadOrganisms()
     orgStore.getTaxonNode()
-
+    DataPortalService.getTaxonCoordinates(props.id)
+    .then(resp => {
+        if(resp.data.features && resp.data.features.length){
+            nextTick(()=>{
+                geojson = resp.data
+                showMap.value = true
+            })
+        }
+    })
 })
 
 watch(orgStore.query, ()=>{

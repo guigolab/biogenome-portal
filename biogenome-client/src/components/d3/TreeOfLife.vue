@@ -91,6 +91,11 @@ function downloadSVGImage(){
     // document.body.appendChild(svg); // append element to document
     const g = svg.querySelector('g') // select the parent g
     g.setAttribute('transform', '') // clean transform
+    svg.setAttribute("background-color","white")
+    g.setAttribute("background-color","white")
+    console.log(svg)
+    console.log(g)
+    
     // svg.setAttribute('display', 'none') // set svg to be the g dimensions
     // svg.setAttribute('height', g.getBBox().height)
     const svgAsXML = (new XMLSerializer).serializeToString(svg);
@@ -133,11 +138,11 @@ function createD3Tree(data){
     setColor(root)
     const svg = d3.select(tree.value)
     .attr("viewBox", [-outerRadius.value, -outerRadius.value, width.value, width.value])
-    
+
     const g = d3.select(treegroup.value)
     .attr("font-family", "sans-serif")
     .attr("font-size", 8)
-    .attr("backgorun-color","white");
+    .attr("background-color","white");
 
     g.append("style").text(`
     .link--active {
@@ -155,7 +160,7 @@ function createD3Tree(data){
     const gLegend = d3.select(domainleg.value)
     .attr("font-family", "sans-serif")
     .attr("font-size", 6)
-    .attr("backgorun-color","white");
+    .attr("background-color","white");
 
 
     legend(gLegend)
