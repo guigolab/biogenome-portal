@@ -11,11 +11,11 @@
         <div class="row justify--end align--center">
             <div class="flex">
                 <va-button-dropdown color="primary" leftIcon flat outline :label="(query.offset+1)+'-'+(limit+query.offset>total?total:limit+query.offset)+' of '+total">
-                    <va-button :disabled="query.offset === 0" @click="query.offset=0" flat color="primary">Start</va-button>
-                    <va-button :disabled="query.offset+limit >= total" @click="query.offset=total-limit" flat color="primary">End</va-button>
+                    <va-button :disabled="query.offset === 0" @click="$emit('update',0)" flat color="primary">Start</va-button>
+                    <va-button :disabled="query.offset+limit >= total" @click="$emit('update',total-limit)" flat color="primary">End</va-button>
                 </va-button-dropdown>
-                <va-button color="primary" :disabled="query.offset-limit < 0" @click="query.offset=query.offset-limit" flat icon="chevron_left"/>
-                <va-button color="primary" :disabled="query.offset+limit >= total" @click="query.offset=query.offset+limit" flat icon="chevron_right"/>
+                <va-button color="primary" :disabled="query.offset-limit < 0" @click="$emit('update',query.offset-limit)" flat icon="chevron_left"/>
+                <va-button color="primary" :disabled="query.offset+limit >= total" @click="$emit('update',query.offset+limit)" flat icon="chevron_right"/>
             </div>
         </div>
     </va-card-content>
@@ -51,12 +51,12 @@
 </va-card>
 </template>
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed,defineEmits } from 'vue'
 import {dataIcons} from '../../config'
 import portalService from '../services/DataPortalService'
-import OrganismFilter from './OrganismFilter.vue'
 import {useRouter} from 'vue-router'
-import { tree } from '../stores/tree'
+
+const emits = defineEmits(['update'])
 
 const props = defineProps({
     organisms: Array,
@@ -66,18 +66,8 @@ const props = defineProps({
 })
 
 const router = useRouter()
-const treeStore = tree()
 
 const limit = ref(props.query.limit)
-
-function addOrganisms(){
-    const orgsToAdd = props.organisms.filter(org => {
-        if(!treeStore.loadedSpecies.includes(sp => sp.taxid === org.taxid)){
-            return org
-        }
-    })
-    treeStore.loadedSpecies.concat(orgsToAdd)
-}
 
 function mapData(item){
     return Object.keys(item).filter(k => ['local_samples','biosamples','assemblies','experiments','annotations'].includes(k))

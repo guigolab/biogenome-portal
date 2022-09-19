@@ -1,5 +1,5 @@
 <template>
-<va-inner-loading :loading="isLoading">
+<va-inner-loading :loading="authStore.isLoading">
     <div class="layout">
         <div class="row">
             <div class="flex">
@@ -74,9 +74,9 @@ import { reactive, ref } from "vue"
 import ENAClientService from "../../../services/clients/ENAClientService"
 import ReadService from '../../../services/ReadService'
 import DataPortalService from '../../../services/DataPortalService'
+import { auth } from '../../../stores/auth'
 
-const isLoading = ref(false)
-
+const authStore = auth()
 const accession = ref('')
 const showAlert = ref(false)
 
@@ -115,7 +115,7 @@ function reset(){
 }
 
 function submit(){
-    isLoading.value=true
+    authStore.isLoading=true
     ReadService.importReads(accession.value)
     .then(resp => {
         console.log(resp)
@@ -133,7 +133,7 @@ function submit(){
         alert.color='danger'
         alert.message=response.message
         showAlert.value=true
-        isLoading.value = false
+        authStore.isLoading = false
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }).catch(e => {
         console.log(e)
@@ -141,7 +141,7 @@ function submit(){
         alert.color='danger'
         alert.message=e
         showAlert.value=true
-        isLoading.value = false
+        authStore.isLoading = false
         window.scrollTo({ top: 0, behavior: 'smooth' });
     })
 }

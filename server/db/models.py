@@ -97,6 +97,7 @@ class BioProject(db.Document):
     accession = db.StringField(required=True, unique=True)
     title = db.StringField()
     children = db.ListField(db.StringField())
+    leaves = db.IntField()
     meta = {
         'indexes': ['accession']
     }
@@ -272,6 +273,7 @@ class Organism(db.Document):
 
 class CronJob(db.Document):
     status = db.EnumField(CronJobStatus, required=True)
+
 
 class BioGenomeUser(db.Document):
     name=db.StringField(unique=True,required=True)

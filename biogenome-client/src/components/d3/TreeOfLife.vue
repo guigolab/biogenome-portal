@@ -32,9 +32,39 @@
                 </div>
             </va-card-title>
             <va-card-content>
-                <svg ref="tree">
-                    <g ref="domainleg"/>
-                    <g ref="treegroup"/>
+                <div ref="tooltip" class="tooltip">
+                    <va-card stripe :stripe-color="selectedNode.color" v-if="showDetails" class="box" style="padding:10px">
+                        <div class="row align--center justify--space-between">
+                            <div class="flex">
+                                <p style="text-align:start;font-size: 16px;">{{`${selectedNode.name} (${selectedNode.rank})`}}</p>
+                            </div>
+                            <div class="flex">
+                                <va-icon @click="showDetails=false" name="close"/>
+                            </div>
+                        </div>
+                        <va-divider/>
+                        <div class="row">
+                            <div class="flex text--secondary" style="font-size: 16px;">
+                                <p style="text-align:start">{{`taxid: ${selectedNode.taxid}`}}</p>
+                            </div>
+                        </div>
+                        <div v-if="selectedNode.leaves" class="row">
+                            <div class="flex text--secondary" style="font-size: 16px;">
+                                <p style="text-align:start">{{`organisms: ${selectedNode.leaves}`}}</p>
+                            </div>
+                        </div>
+                        <va-divider/>
+                        <div class="row align--center justify-content--space-between">
+                            <div class="flex">
+                                <va-button size="small" outline @click="toPageDetails({name:'taxons', params:{id:selectedNode.taxid}})">Details</va-button>
+                            </div>
+                            <div v-if="selectedNode.leaves" class="flex">
+                                <va-button size="small" outline :to="{name:'tree', params: {taxid: selectedNode.taxid}}">Tree</va-button>
+                            </div>
+                        </div>                                            
+                    </va-card>
+                </div>
+                <svg class="tree-svg" ref="tree">
                 </svg>
             </va-card-content>
         </va-card>
@@ -43,11 +73,13 @@
 
 </template>
 <script setup>
-import {reactive, onMounted, watch, ref, nextTick, computed} from "vue";
+import {reactive, onMounted, ref, computed} from "vue";
 import * as d3 from "d3";
 import { useRouter } from "vue-router";
 import { Canvg } from 'canvg';
+import { organisms } from "../../stores/organisms";
 
+const orgStore = organisms()
 const router = useRouter()
 var level = ref(0)
 var linkExtension = null
@@ -57,51 +89,32 @@ const props = defineProps({
     // node:String,
     data:Object
 })
-const width = ref(650)
+const width = ref(954)
+const tooltip = ref(null)
+const showDetails = ref(false)
 const outerRadius = computed(()=>width.value/2)
 const innerRadius = computed(()=> outerRadius.value - 170)
 const legendPosition =  computed(()=> -outerRadius.value)
 const downloadType = ref('svg')
 const stack = reactive([])
-// var data = null
 var domains = reactive([])
 const tree=ref(null)
-const treegroup = ref(null)
-const domainleg = ref(null)
-// const canvas = ref(null)
-
-watch(width, ()=>{
-    createD3Tree(data)
-})
-
+const selectedNode = ref({})
 onMounted(()=>{
     tree.value.focus()         
-    treegroup.value.focus()
-    domainleg.value.focus()
-    // canvas.value.focus()
-    // getTree(props.node)
-    const doms = getDomains(props.data,[])
-    legendDomains = doms.slice(0,9)
-    domains = legendDomains.map(v => v.name)
+    tooltip.value.focus()
     createD3Tree(props.data)
 })
 
 function downloadSVGImage(){
     const svg = tree.value.cloneNode(true); // clone your original svg
-    // document.body.appendChild(svg); // append element to document
     const g = svg.querySelector('g') // select the parent g
     g.setAttribute('transform', '') // clean transform
     svg.setAttribute("background-color","white")
     g.setAttribute("background-color","white")
-    console.log(svg)
-    console.log(g)
-    
-    // svg.setAttribute('display', 'none') // set svg to be the g dimensions
-    // svg.setAttribute('height', g.getBBox().height)
     const svgAsXML = (new XMLSerializer).serializeToString(svg);
     const svgData = `data:image/svg+xml,${encodeURIComponent(svgAsXML)}`
     const link = document.createElement("a");
-    // document.body.appendChild(link); 
     link.setAttribute("href", svgData);
     link.setAttribute("download", "image.svg");
     link.click();
@@ -118,10 +131,7 @@ function downloadPGNImage() {
     ctx.globalCompositeOperation = 'destination-over'
     ctx.fillStyle = "white"
     ctx.fillRect(0, 0, ctx.canvas.width,ctx.canvas.height)
-    // const image = new Image()
-    // image.src = canvas.value.toDataURL("image/png")
     const link = document.createElement("a")
-    // document.body.appendChild(link); 
     link.setAttribute("href", canvas.toDataURL("image/png"))
     link.setAttribute("download", "image.png")
     link.click();
@@ -132,19 +142,26 @@ function createD3Tree(data){
     const root = d3.hierarchy(data , d => d.children)
       .sum(d => d.children ? 0 : 1)
       .sort((a, b) => (a.value - b.value) || d3.ascending(a.data.length, b.data.length));
+      const doms = root.descendants().sort((a,b) =>  b.height - a.height)
+      var countList = doms.reduce(function(p, c){
+        p[c.height] = (p[c.height] || 0) + 1;
+        return p;
+        }, {});
+        var result = doms.filter(function(obj){
+            return countList[obj.height] > 1;
+            });
+      legendDomains = [doms[0]].concat(result.slice(0,4)).map(d => d.data)
+      domains = legendDomains.map(d => d.name)
     var cluster = radialCluster();
     cluster(root);
     setRadius(root, root.data.length = 0, innerRadius.value / maxLength(root));
     setColor(root)
     const svg = d3.select(tree.value)
     .attr("viewBox", [-outerRadius.value, -outerRadius.value, width.value, width.value])
-
-    const g = d3.select(treegroup.value)
     .attr("font-family", "sans-serif")
-    .attr("font-size", 8)
-    .attr("background-color","white");
+    .attr("font-size", 10);  
 
-    g.append("style").text(`
+    svg.append("style").text(`
     .link--active {
         stroke: #000 !important;
         stroke-width: 1.5px;
@@ -157,15 +174,12 @@ function createD3Tree(data){
     }
     `);
 
-    const gLegend = d3.select(domainleg.value)
-    .attr("font-family", "sans-serif")
-    .attr("font-size", 6)
-    .attr("background-color","white");
+    const div = d3.select(tooltip.value)
+    // .style("opacity", 0)
 
+    svg.append("g").call(legend)
 
-    legend(gLegend)
-
-    linkExtension = g.append("g")
+    linkExtension = svg.append("g")
     .attr("fill", "none")
     .attr("stroke", "#000")
     .attr("stroke-opacity", 0.25)
@@ -175,7 +189,7 @@ function createD3Tree(data){
     .each(function(d) { d.target.linkExtensionNode = this; })
     .attr("d", linkExtensionConstant);
 
-    link = g.append("g")
+    link = svg.append("g")
     .attr("fill", "none")
     .attr("stroke", "#000")
     .selectAll("path")
@@ -183,10 +197,16 @@ function createD3Tree(data){
     .join("path")
     .each(function(d) { d.target.linkNode = this; })
     .attr("d", linkConstant)
-    .attr("stroke", d => d.target.color);
+    .attr("stroke", d => d.target.color)
+    .on("click", function(event,d){
+        selectedNode.value = d.target.data
+        selectedNode.value.color = d.target.color
+        div.style("left", (event.layerX) + "px")		
+        .style("top", (event.layerY-15) + "px")
+        showDetails.value=true
+    });
 
-
-    g.append("g")
+    svg.append("g")
     .selectAll("text")
     .data(root.leaves())
     .join("text")
@@ -196,18 +216,14 @@ function createD3Tree(data){
     .attr("class","leaves-class")
     .text(d => d.data.name.replace(/_/g, " "))
     .on("mouseover", mouseovered(true))
-    .on("mouseout", mouseovered(false));
-}
-
-function getDomains(node,domains) {
-    if(node.children){
-    node.children.forEach(n => {
-        domains = getDomains(n,domains)
-        })
-    if (node.children.length > 1)
-        domains.push(node)
-    }
-    return domains.sort((a,b) => b.leaves-a.leaves)
+    .on("mouseout", mouseovered(false))
+    .on("click", function(event,d){
+        selectedNode.value = d.data
+        selectedNode.value.color = d.color
+        div.style("left", (event.layerX) + "px")		
+        .style("top", (event.layerY-15) + "px")
+        showDetails.value=true
+    })
 }
 
 function maxLength(d) {
@@ -239,15 +255,10 @@ function setColor(d) {
         }
 }
 
-function linkVariable(d) {
-      return linkStep(d.source.x, d.source.radius, d.target.x, d.target.radius);
-    }
 function linkConstant(d) {
       return linkStep(d.source.x, d.source.y, d.target.x, d.target.y);
     }
-function linkExtensionVariable(d) {
-      return linkStep(d.target.x, d.target.radius, d.target.x, innerRadius.value);
-    }
+
 function linkExtensionConstant(d) {
       return linkStep(d.target.x, d.target.y, d.target.x, innerRadius.value);
     }
@@ -262,17 +273,6 @@ function linkStep(startAngle, startRadius, endAngle, endRadius) {
           + "L" + endRadius * c1 + "," + endRadius * s1;
     }
 
-function getFirstFork(node) {
-    if(node.children.length > 1){
-        return node
-    }else if(node.children){
-        var childNode = null
-        node.children.forEach(n => {
-            childNode = getFirstFork(n)
-            })
-        return childNode
-    }
-}
 function color() {
     const color = d3.scaleOrdinal()
     .domain(domains)
@@ -291,28 +291,34 @@ function legend(svg){
     .selectAll("g").text('').attr('fill',null).attr('stroke',null)
     .data(color().domain())
     .join("g")
-    .attr("transform", (d, i) => `translate(${-outerRadius.value},${legendPosition.value + i * 20})`);
+    .attr("transform", (d, i) => `translate(${-outerRadius.value},${-outerRadius.value + i * 20})`);
     g.append("rect")
     .attr("width", 15)
     .attr("height", 15)
     .attr("fill", color());
     g.append("text")
-    .attr("x", 20)
+    .attr("x", 24)
     .attr("y", 9)
     .attr("dy", "0.35em")
     .attr("class","legend-text")
     .text(d =>d +' ('+ legendDomains.find(value => value.name === d).rank +')')
     .on("click", function(event,d){
-        getData(d.data)
+        router.push({name:'taxons',params:{id: d.data.taxid}});
     })
     .on("mouseover", mouseovered(true))
     .on("mouseout", mouseovered(false))
 }
 
+function toPageDetails(route){
+    orgStore.query.parent_taxid=null
+    orgStore.query.bioproject=null
+    orgStore.query.geo_location=null
+    router.push(route)
+}
 </script>
 
 <style scoped>
-.leaves-class {
+.leaves-class, .legend-text {
   cursor: pointer;
   font-size: 0.8rem;
   /* font-size: inherit; */
@@ -323,5 +329,14 @@ function legend(svg){
     /* max-width: 100%; */
     overflow: visible;
 }
-
+.tooltip {	
+  position: absolute;			
+  text-align: center;			
+  width: min-content;					
+  background: black;	
+  border: 0px;		
+  color: white;
+  border-radius: 8px;		
+  min-width: 300px;	
+}
 </style>

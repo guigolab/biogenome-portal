@@ -4,7 +4,9 @@
 <script setup>
 import { onMounted,ref } from "vue";
 import * as d3 from "d3";
+import { useRouter } from "vue-router";
 
+const router = useRouter()
 const bar = ref(null)
 const props = defineProps({
     data:Array
@@ -95,7 +97,7 @@ function BarChart(data, {
           .attr("y", -22)
           .attr("fill", "currentColor")
           .attr("text-anchor", "end")
-          .text(xLabel));
+          .text(xLabel))
 
   svg.append("g")
     .attr("fill", color)

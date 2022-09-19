@@ -5,6 +5,7 @@ from mongoengine.queryset.visitor import Q
 import json
 from flask import current_app as app
 from errors import NotFound
+from treelib import Node, Tree
 
 #expects lazy references
 def delete_taxons(taxid_list):
@@ -41,7 +42,7 @@ def leaves_counter(lineage_list):
         node.leaves=Organism.objects(taxon_lineage=node.taxid, taxid__ne=node.taxid).count()
         node.save()
 
-def bfs(root,nodes, max_leaves):
+def bfs(root, nodes, max_leaves):
     queue = [(root,0)]
     while queue:
         node, level = queue.pop(0)
@@ -72,6 +73,7 @@ def dfs(stack, tree, max_level):
             tree["children"].append(child_dict)
     return tree
 
+
 def dfs_generator(stack,tree,taxids):
     node, level = stack.pop(0)
     tree["name"] = node.name
@@ -89,25 +91,47 @@ def dfs_generator(stack,tree,taxids):
             tree["children"].append(child_dict)
     return tree
 
-def get_max_level(counts, limit):
-    for level, nodes in counts.items():
-        if nodes > limit:
-            return level-1
-
-def create_tree(taxid,max_leaves=250):
-    node = TaxonNode.objects(taxid=taxid).first()
-    node_counts={}
-    max_level = bfs(node,node_counts,max_leaves)
-    tree={}
-    dfs([(node,0)],tree,max_level)
+def dfs_all(stack,tree):
+    node = stack.pop(0)
+    tree["name"] = node.name
+    tree["taxid"] = node.taxid
+    tree["children"] = []
+    tree['rank'] = node.rank
+    tree['leaves'] = node.leaves
+    if node.children:
+        children = TaxonNode.objects(taxid__in=node.children)
+        for child in children:
+            child_dict = {}
+            dfs_all([child], child_dict)
+            tree["children"].append(child_dict)
     return tree
 
-# def get_children(taxid):
-#     tax_node = TaxonNode.objects(taxid=taxid).aggregate(*TaxonPipeline).next()
-#     tax_node['isOpen'] = True
-#     for node in tax_node['children']:
-#         node['isOpen'] = False
-#     return tax_node          
+def create_tree(taxid,max_leaves=150):
+    node = TaxonNode.objects(taxid=taxid).first()
+    tree = Tree()
+    # tree_iterator(node,tree)
+    # node_counts={}
+    # max_level = bfs(node,node_counts,max_leaves)
+    # app.logger.info(max_level)
+    tree={}
+    dfs_all([node],tree)
+    # dfs([(node,1)],tree,max_level)
+    # app.logger.info(len(tree.leaves()))
+    # app.logger.info(tree.expand_tree(filter=lambda x: x.depth <= 2))
+    # app.logger.info(tree.depth())
+    return tree
+    # return tree, node_counts
+
+def tree_iterator(node, tree, parent=None):
+    if parent:  
+        tree.create_node(node.name, node.taxid, data=dict(rank=node.rank,leaves=node.leaves),parent=parent.taxid)
+    else:
+        tree.create_node(node.name, node.taxid, data=dict(rank=node.rank,leaves=node.leaves))
+    if node.children:
+        children = TaxonNode.objects(taxid__in=node.children)
+        for child in children:
+            tree_iterator(child,tree,node)
+    return tree
 
 def get_children(taxid):
     taxon = TaxonNode.objects(taxid=taxid).exclude('id').first()
@@ -123,7 +147,6 @@ def get_children(taxid):
 def search_taxons(name=None,rank=None):
     if name:
         query = (Q(name__iexact=name) | Q(name__icontains=name))
-        taxons = TaxonNode.objects(query).aggregate(*TaxonPipeline)
         taxons = TaxonNode.objects(query)
     if rank:
         taxons = TaxonNode.objects(rank=rank)
@@ -139,5 +162,3 @@ def generate_tree(data):
     tree = {}
     dfs_generator([(root,0)],tree,list(result))
     return tree
-
-

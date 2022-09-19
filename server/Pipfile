@@ -18,6 +18,7 @@ flask-httpauth = "*"
 flask-jwt-extended = "*"
 blinker = "*"
 tzlocal = "<3.0"
+treelib = "*"
 
 [dev-packages]
 

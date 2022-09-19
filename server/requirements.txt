@@ -22,6 +22,7 @@ openpyxl==3.0.9
 pyjwt==2.3.0; python_version >= '3.6'
 pymongo==4.0; python_version >= '3.6'
 requests==2.27.1
+treelib==1.6.1
 tzlocal==2.1
 uwsgi==2.0.20
 werkzeug==2.0.3; python_version >= '3.6'

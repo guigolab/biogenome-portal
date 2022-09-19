@@ -141,7 +141,7 @@
                                 <p style="text-align:start">{{pr.title}}</p>
                             </div>
                             <div class="flex lg4 md4 sm4 xs4">
-                                <p><router-link :to="{name:'bioprojects',params:{id:pr.accession}}">{{pr.accession}}</router-link></p>
+                                <va-chip @click="toPage({name:'bioprojects',params:{id:pr.accession}})" size="small" outline>{{pr.accession}}</va-chip>
                             </div>
                         </div>
                     </va-card-content>
@@ -162,8 +162,8 @@
                     </va-card-title>
                     <va-card-content>
                         <div v-for="(node,index) in organism.taxon_lineage" :key="index" class="row justify--space-between align--center" style="padding:5px">
-                            <div class="flex lg8 md8 sm8 xs8">
-                                <p style="text-align:start"><router-link :to="{name:'taxons',params:{id:node.taxid}}">{{node.name}}</router-link></p>
+                            <div style="text-align:start" class="flex lg8 md8 sm8 xs8">
+                                <va-chip @click="toPage({name:'taxons',params:{id:node.taxid}})" size="small" outline>{{node.name}}</va-chip>
                             </div>
                             <div class="flex lg4 md4 sm4 xs4">
                                 <p style="text-align:start">{{node.rank}}</p>
@@ -197,11 +197,12 @@
                             <a target="_blank" :href="`https://www.ebi.ac.uk/ena/browser/view/${rowData.accession}`" class="link">{{rowData.accession}}</a>
                         </template>
                         <template #cell(organism_part)="{ rowData }">
-                            <p>{{rowData.metadata.tissue || rowData.metadata.organism_part}}</p>
+                            <p>{{rowData.metadata.tissue || rowData.metadata.organism_part || rowData.metadata["organism part"]}}</p>
                         </template>
                         <template #cell(related_samples)="{ rowData }">
                             <va-button-dropdown flat size="small" v-if="rowData.sub_samples && rowData.sub_samples.length">
                                 <ul style="max-height:300px;overflow:scroll">
+                                    <!-- add async info on hover?? -->
                                     <li v-for="(relatedSample,index) in rowData.sub_samples" :key="index">
                                         <va-button flat @click="getRelatedSample(relatedSample)">{{relatedSample}}</va-button>
                                     </li>
@@ -314,9 +315,18 @@
                     <va-card-content style="overflow:scroll">
                         <va-data-table
                             :items="organism.annotations"
-                            :columns="['name', 'assembly_accession','metadata']"
+                            :columns="['name', 'assembly_accession','metadata','links']"
                         >
                         <template #cell(metadata)="{ rowData }"><va-icon name="search" :color="color" @click="toggleMetadata(rowData)"/></template>
+                        <template #cell(links)="{ rowData }">
+                            <va-button-dropdown flat size="small" v-if="rowData.links && rowData.links.length">
+                                <ul style="max-height:300px;overflow:scroll">
+                                    <li v-for="(link,index) in rowData.links" :key="index">
+                                        <a target="_blank" :href="link">{{link}}</a>
+                                    </li>
+                                </ul>
+                            </va-button-dropdown>
+                        </template>
                         </va-data-table>
                     </va-card-content>
                 </va-card>
@@ -384,7 +394,11 @@ import DataPortalService from '../services/DataPortalService'
 import Jbrowse2 from '../components/Jbrowse2.vue'
 import CesiumComponent from '../components/CesiumComponent.vue'
 import OrganismNavCards from '../components/OrganismNavCards.vue'
+import { useRouter } from 'vue-router'
+import { organisms } from '../stores/organisms'
 
+const orgStore = organisms()
+const router = useRouter()
 const showJBrowse = ref(false)
 const selectedModel = ref('')
 const showMap = ref(false)
@@ -502,7 +516,12 @@ function loadTrack(rowData){
 }
 
 
-
+function toPage(route){
+    orgStore.query.parent_taxid=null
+    orgStore.query.bioproject=null
+    orgStore.query.geo_location=null
+    router.push(route)
+}
 
 </script>
 <style scoped>

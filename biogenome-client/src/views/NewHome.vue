@@ -54,9 +54,12 @@
                         v-model="inputValue"
                     >
                         <template #appendInner>
-                            <va-icon
-                            name="search"
-                            />
+                            <va-chip outline
+                            :rounded="false"
+                            :disabled="inputValue.length <= 1"
+                            @click="search()"
+                            icon="search"
+                            >search</va-chip>
                         </template>
                     </va-input>
                 </div>
@@ -72,7 +75,7 @@
             </div>
             <va-divider/>
             <div class="row custom-card">
-                <div class="flex lg12 md12 sm12 xs12">
+                <div class="flex lg12 md12 sm12 xs12" style="max-height:50vh;overflow:scroll">
                     <NodeIterator v-for="(node, index) in treeStore.tree" :key="index" :node="node" :model="selectedModelObj"/>
                 </div>
             </div>
@@ -98,7 +101,7 @@
                 </div>
             </div>
             <div v-if="showRanks" class="row custom-card">
-                <div v-if="chart == 'chart'" class="flex lg12 md12 sm12 xs12">
+                <div v-if="chart == 'chart'" class="flex lg12 md12 sm12 xs12" style="max-height:50vh;overflow:scroll">
                     <BarChart :data="stats.ranks"/>
                 </div>
                 <div v-else class="flex lg12 md12 sm12 xs12">
@@ -210,16 +213,7 @@ watch(rank,()=>{
 })
 
 watch(inputValue, ()=>{
-    if(inputValue.value.length>1){
-        isLoading.value = true
-        selectedModelObj.value.searchQuery({name: inputValue.value})
-        .then(resp => {
-            treeStore.tree = resp.data
-        })
-        .catch(e => {
-            console.log(e)
-        })
-    }else{
+    if(inputValue.value.length<=1){
         selectedModelObj.value.defaultQuery(selectedModelObj.value.root)
         .then(resp => {
             const treeToLoad = resp.data
@@ -248,6 +242,16 @@ watch(currentModel, ()=>{
         isLoading.value=false
     })
 })
+
+function search(){
+    selectedModelObj.value.searchQuery({name: inputValue.value})
+    .then(resp => {
+        treeStore.tree = resp.data
+    })
+    .catch(e => {
+        console.log(e)
+    })
+}
 
 function toRoute(node){
     router.push({name:selectedModelObj.value.value, params:{id:node[selectedModelObj.value.id]}})

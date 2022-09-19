@@ -4,7 +4,7 @@ from flask_jwt_extended import create_access_token, jwt_required, set_access_coo
 from datetime import timedelta
 import os
 import json
-from db.models import Chromosome, CronJob,GeoCoordinates,Annotation, TaxonNode, BioSample,LocalSample, Organism, Assembly, Experiment,BioProject,BioGenomeUser
+from db.models import Chromosome, CronJob, GenomeBrowserData,GeoCoordinates,Annotation, TaxonNode, BioSample,LocalSample, Organism, Assembly, Experiment,BioProject,BioGenomeUser
 from flask import current_app as app
 
 class Login(Resource):
@@ -31,6 +31,7 @@ class Login(Resource):
     @jwt_required()
     def delete(self):
         Annotation.drop_collection()
+        GenomeBrowserData.drop_collection()
         TaxonNode.drop_collection()
         GeoCoordinates.drop_collection()
         BioGenomeUser.drop_collection()

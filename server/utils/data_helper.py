@@ -3,6 +3,9 @@ from services import assembly_service, bioproject_service, biosample_service, ge
 from . import ena_client
 from services import read_service
 from flask import current_app as app
+import os 
+
+PROJECTS = [p.strip() for p in os.getenv('PROJECTS').split(',') if p] if os.getenv('PROJECTS') else None
 
 
 def create_data_from_assembly(assembly_obj, ncbi_response):
@@ -50,7 +53,6 @@ def create_data_from_assembly(assembly_obj, ncbi_response):
 def create_data_from_biosample(biosample_obj):
     biosamples_to_update=[biosample_obj]
     organism_obj = organism_service.get_or_create_organism(biosample_obj.taxid)
-
     if 'sample derived from' in biosample_obj.metadata.keys():
         biosample_container = biosample_service.create_biosample_from_accession(biosample_obj.metadata['sample derived from'])
         biosample_container.modify(add_to_set__sub_samples=biosample_obj.accession)
@@ -70,12 +72,21 @@ def create_data_from_biosample(biosample_obj):
                 assembly_service.create_assembly_from_accession(assembly_accession)
         ##check for assembly
     for saved_biosample in biosamples_to_update:
+        ##create bioproject if present
+        if 'project name' in saved_biosample.metadata.keys() and PROJECTS:
+            project_mapper = {p.split('_')[0]:p.split('_')[1] for p in PROJECTS}
+            if saved_biosample.metadata['project name'] in project_mapper.keys():
+                bioproject = bioproject_service.create_bioproject_from_ENA(project_mapper[saved_biosample.metadata['project name']])
+                if bioproject:
+                    organism_obj.modify(add_to_set__bioprojects=bioproject.accession)
+                    saved_biosample.modify(add_to_set__bioprojects=bioproject.accession)
+                    bioproject_service.leaves_counter([bioproject])
         geo_localization_service.create_coordinates(saved_biosample, organism_obj)
         saved_reads = read_service.create_reads_from_biosample_accession(saved_biosample.accession)
         for read in saved_reads:
             organism_obj.modify(add_to_set__experiments=read)
             saved_biosample.modify(add_to_set__experiments=read)
-        
+    
     organism_obj.save()
     return organism_obj
 

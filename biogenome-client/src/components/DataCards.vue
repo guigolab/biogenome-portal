@@ -1,8 +1,8 @@
 <template>
     <div class="row">
-        <TransitionGroup>
-            <div v-for="dt in stats" :key="dt" class="flex">
-                <va-card class="custom-card box" :stripe="orgStore.query[dt]" :stripe-color="dataIcons[dt].color" @click="dataSelected(dt, orgStore.stats[dt])">
+        <div class="flex">
+            <TransitionGroup name="list" tag="div" style="display:flex">
+                <va-card v-for="dt in stats" :key="dt" class="custom-card box" :stripe="query[dt]" :stripe-color="dataIcons[dt].color" @click="$emit('onDataSelection',dt)">
                     <va-card-title>
                         <div class="row justify--space-between align--center">
                             <div class="flex">
@@ -20,35 +20,51 @@
                     <va-card-content>
                         <div class="row justify--space-between">
                             <div class="flex">
-                                <va-progress-circle size="large" :thickness="0.15" :color="dataIcons[dt].color" class="mb-2" :modelValue="((orgStore.stats[dt]/orgStore.total)*100).toFixed(2)">
-                                    {{ ((orgStore.stats[dt]/orgStore.total)*100).toFixed(2) + '%' }}
+                                <va-progress-circle size="large" :thickness="0.15" :color="dataIcons[dt].color" class="mb-2" :modelValue="((statistics[dt]/total)*100).toFixed(2)">
+                                    {{ ((statistics[dt]/total)*100).toFixed(2) + '%' }}
                                 </va-progress-circle>
                             </div>
                             <div class="flex">
-                                <p><strong>{{orgStore.stats[dt]}}</strong></p><va-divider/><p class="text--secondary">{{orgStore.total}}</p>
+                                <p><strong>{{statistics[dt]}}</strong></p><va-divider/><p class="text--secondary">{{total}}</p>
                             </div>
                         </div>
                     </va-card-content>
                 </va-card> 
-            </div>
-        </TransitionGroup>
+            </TransitionGroup>
+        </div>
     </div>
 </template>
 
 <script setup>
-import { computed} from '@vue/runtime-core'
+import { computed, defineEmits, defineProps} from 'vue'
 import {dataIcons} from '../../config'
-import {organisms} from '../stores/organisms'
+// import {organisms} from '../stores/organisms'
 
-const orgStore = organisms()
+const emits = defineEmits(['onDataSelection'])
+// const orgStore = organisms()
+const props = defineProps({
+    statistics : Object,
+    total:Number,
+    query: Object
+})
+const stats = computed(()=> Object.keys(props.statistics))
 
-const stats = computed(()=> Object.keys(orgStore.stats))
-
-function dataSelected(dataKey, count){
-    if(orgStore.query.offset >= count){
-        orgStore.query.offset = 0
-    }
-    orgStore.query[dataKey] = orgStore.query[dataKey] ? null : true
-}
+// function dataSelected(dataKey, count){
+//     if(orgStore.query.offset >= count){
+//         orgStore.query.offset = 0
+//     }
+//     orgStore.query[dataKey] = orgStore.query[dataKey] ? null : true
+// }
 
 </script>
+<style scoped>
+.list-enter-active,
+.list-leave-active {
+  transition: all 0.5s ease;
+}
+.list-enter-from,
+.list-leave-to {
+  opacity: 0;
+  transform: translateY(30px);
+}
+</style>

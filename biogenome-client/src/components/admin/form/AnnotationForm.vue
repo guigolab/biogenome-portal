@@ -1,5 +1,5 @@
 <template>
-<va-inner-loading :loading="isLoading">
+<va-inner-loading :loading="authStore.isLoading">
     <div class="layout">
         <div class="row">
             <div class="flex">
@@ -62,7 +62,10 @@ import FormComponent from './FormComponent.vue'
 import MetadataForm from "./MetadataForm.vue";
 import AnnotationService from "../../../services/AnnotationService";
 import {useRouter} from "vue-router"
+import { auth } from "../../../stores/auth";
 const router = useRouter()
+
+const authStore = auth()
 
 const props = defineProps({
     accession:String,
@@ -77,7 +80,6 @@ const alert = reactive({
 })
 
 
-const isLoading = ref(false)
 
 const initLink={
     label:'external link',value:''
@@ -121,14 +123,14 @@ function removeLink(index){
 }
 
 function submitAnnotation(){
-    isLoading.value=true
+    authStore.isLoading.value=true
     AnnotationService.createAnnotation(annotation)
     .then(resp => {
         alert.title="Success"
         alert.message=`${resp.data}`
         alert.color="success"
         showAlert.value=true
-        isLoading.value=false
+        authStore.isLoading=false
         window.scrollTo({ top: 0, behavior: 'smooth' });
     })
     .catch(e => {
@@ -137,21 +139,20 @@ function submitAnnotation(){
         alert.message=`${e.response && e.response.data? e.response.data:e}`
         alert.color="danger"
         showAlert.value=true
-        isLoading.value=false
+        authStore.isLoading=false
         window.scrollTo({ top: 0, behavior: 'smooth' });
-
     })
 }
 
 function updateAnnotation(){
-    isLoading.value=true
+    auth.isLoading=true
     AnnotationService.updateAnnotation(props.name, annotation)
     .then(resp => {
         alert.title="Success"
         alert.message=`${resp.data}`
         alert.color="success"
         showAlert.value=true
-        isLoading.value=false
+        authStore.isLoading=false
 
     })
     .catch(e => {
@@ -159,7 +160,7 @@ function updateAnnotation(){
         alert.message=`${e.response && e.response.data? e.response.data:e}`
         alert.color="danger"
         showAlert.value=true
-        isLoading.value=false
+        authStore.isLoading=false
     })
 }
 

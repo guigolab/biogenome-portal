@@ -1,3 +1,4 @@
+from services import geo_localization_service
 from utils import ena_client,utils
 from services import taxonomy_service
 from flask import current_app as app
@@ -11,25 +12,22 @@ PROJECT_ACCESSION=os.getenv('PROJECT_ACCESSION')
 
 def get_organisms(offset=0, limit=20, 
                 sort_order=None, sort_column=None,
-                parent_taxid=ROOT_NODE, filter=None, 
+                parent_taxid=None, filter=None, 
                 filter_option=None, bioproject=None,
                 coordinates=None,geo_location=None,
                 biosamples=None,local_samples=None,
                 assemblies=None,experiments=None,
-                annotations=None, image=None,last_created=None):
+                annotations=None):
     json_resp=dict()
-    if last_created:
-        organisms = Organism.objects.order_by('-id')[1:20].as_pymongo()
-        json_resp['data'] = organisms
-        return json.dumps(json_resp)
     query=dict()
     stats=dict()    
     filter_query = get_query_filter(filter, filter_option) if filter else None
     get_coordinates_filter(query,coordinates,geo_location)
-    get_data_query(query, biosamples, local_samples, assemblies, annotations, experiments,image)
+    get_data_query(query, biosamples, local_samples, assemblies, annotations, experiments)
     taxa = TaxonNode.objects(taxid=parent_taxid).first()
-    query['taxon_lineage'] = taxa.taxid
-    if bioproject and bioproject != PROJECT_ACCESSION:
+    if taxa:
+        query['taxon_lineage'] = taxa.taxid
+    if bioproject:
         query['bioprojects'] = bioproject
     organisms = Organism.objects(filter_query, **query).exclude('id') if filter_query else Organism.objects.filter(**query).exclude('id')
     if sort_column:
@@ -70,10 +68,10 @@ def get_query_filter(filter,option):
     else:
         return (Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter))
 
-def get_data_query(query, biosamples, localSamples, assemblies, annotations, experiments, image):
+def get_data_query(query, biosamples, local_samples, assemblies, annotations, experiments):
     if biosamples:
         query['biosamples__not__size'] = 0
-    if localSamples:
+    if local_samples:
         query['local_samples__not__size'] = 0
     if assemblies:
         query['assemblies__not__size'] = 0
@@ -81,8 +79,6 @@ def get_data_query(query, biosamples, localSamples, assemblies, annotations, exp
         query['annotations__not__size'] = 0
     if experiments:
         query['experiments__not__size'] = 0
-    if image:
-        query['image__ne'] = None
 
 
 

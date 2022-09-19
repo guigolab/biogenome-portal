@@ -6,11 +6,13 @@ const PROJECT_ACCESSION = import.meta.env.VITE_PROJECT_ACCESSION
 export const organisms = defineStore('organisms', {
     state: () => ({
         organisms:reactive([]),
+        geojson:{},
         selectedNode:reactive({
             name:'',
             metadata:{},
             children:[]
         }),
+        showMap:false,
         isLoading:false,
         stats:reactive({
             biosamples:0,
@@ -41,9 +43,12 @@ export const organisms = defineStore('organisms', {
     actions:{
         loadOrganisms(){
             this.isLoading=true
+            this.showMap=false
             DataPortalService.getOrganisms(this.query)
             .then(response => {
                 this.organisms = [...response.data.data]
+                this.geojson = {...response.data.geojson}
+                if(this.geojson.features && this.geojson.features.length) this.showMap=true
                 this.stats = {...response.data.stats}
                 if(response.data.total !== this.total){
                     this.query.offset = 0
@@ -71,6 +76,9 @@ export const organisms = defineStore('organisms', {
             .then(resp => {
                 this.selectedNode.name = resp.data.title
                 this.selectedNode.metadata = {accession:resp.data.accession}
+                if(resp.data.leaves){
+                    this.selectedNode.metadata.leaves = resp.data.leaves
+                }
                 this.selectedNode.children = resp.data.children
 
             })

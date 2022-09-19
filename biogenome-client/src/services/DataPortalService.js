@@ -17,8 +17,11 @@ class DataPortalService {
             return base.get(`/organisms/${accession}`)
         }
     }
-    getStats(){
-        return base.get('/statistics')
+    getOrganismStats(params){
+        return base.get('/organisms/statistics',{params:params})
+    }
+    getNodeCoordinates(params){
+        return base.get('/coordinates/node',{params:params}) 
     }
     getBioProjectChildren(accession){
         return base.get(`/bioprojects/${accession}`)
@@ -96,6 +99,13 @@ class DataPortalService {
     }
     generateTree(taxids){
         return base.post('/tree', taxids)
+    }
+    getLevels(taxid){
+        if(taxid){
+            return base.get(`/tree_levels/${taxid}`)
+        }else{
+            return base.get('/tree_levels')
+        }
     }
 
 }

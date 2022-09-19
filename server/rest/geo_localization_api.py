@@ -1,6 +1,6 @@
 from flask import Response,request
 from flask_restful import Resource
-from services.geo_localization_service import geo_localization_coordinates, geo_localization_object, get_coordinates,get_coordinates_by_taxon,get_coordinates_by_organism,get_coordinates_by_project
+from services.geo_localization_service import geo_localization_coordinates, geo_localization_object, get_coordinates,get_coordinates_by_taxon,get_coordinates_by_organism,get_coordinates_by_project,get_coordinates_query
 import json
 from flask import current_app as app
 
@@ -17,6 +17,11 @@ class GeoLocApi(Resource):
         app.logger.info(data)
         result = get_coordinates(data)
         return Response(json.dumps(result), mimetype="application/json", status=200)
+
+class NodeCoordinatesApi(Resource):
+    def get(self):
+        resp = get_coordinates_query(**request.args)
+        return Response(json.dumps(resp), mimetype="application/json", status=200)
 
 
 class TaxonCoordinatesApi(Resource):

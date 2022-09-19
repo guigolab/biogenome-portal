@@ -1,16 +1,37 @@
 
-from db.models import GeoCoordinates,Geometry,Organism
+from db.models import BioProject, GeoCoordinates,Geometry,Organism, TaxonNode
 from flask import current_app as app
 from mongoengine.queryset.visitor import Q
-
 import json
 import os
+from services import organism_service
 # PROJECT_ACCESSION=os.getenv('PROJECT_ACCESSION')
 FEATURE_COLLECTION_OBJECT={
     'type': 'FeatureCollection',
     'crs': { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
     'features' : []
 }   
+
+
+def get_coordinates_query(parent_taxid=None, bioproject=None,
+                        biosamples=None,local_samples=None,
+                        assemblies=None,experiments=None,
+                        annotations=None):
+    query=dict()
+    query['coordinates__not__size'] = 0
+    if parent_taxid:
+        query['taxon_lineage'] = parent_taxid
+    if bioproject:
+        query['bioprojects'] = bioproject
+    organism_service.get_data_query(query, biosamples, local_samples, assemblies, annotations, experiments)
+    organisms = Organism.objects.filter(**query).exclude('id').scalar('coordinates')
+    app.logger.info(organisms)
+    coord_query = [coord for sublist in organisms for coord in sublist]
+    coordinates = json.loads(GeoCoordinates.objects(geo_location__in=coord_query).exclude('id').to_json())
+    for coord in coordinates:
+        coord['properties'] = dict(name=coord['geo_location'])
+    FEATURE_COLLECTION_OBJECT['features'] = coordinates
+    return FEATURE_COLLECTION_OBJECT
 
 def get_coordinates_by_taxon(taxid):
     organism_coordinates = Organism.objects(Q(taxon_lineage=taxid) & Q(coordinates__not__size=0)).scalar('coordinates')

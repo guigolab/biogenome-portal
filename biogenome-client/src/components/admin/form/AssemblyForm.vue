@@ -1,5 +1,5 @@
 <template>
-<va-inner-loading :loading="isLoading">
+<va-inner-loading :loading="authStore.isLoading">
     <div class="layout">
         <div class="row">
             <div class="flex">
@@ -74,12 +74,10 @@ import DataPortalService from "../../../services/DataPortalService";
 import NCBIClientService from '../../../services/clients/NCBIClientService'
 import ClientInput from './ClientInput.vue'
 import AssemblyService from "../../../services/AssemblyService";
-
+import { auth } from "../../../stores/auth";
 const response = ref(null)
-
+const authStore = auth()
 const showAlert = ref(false)
-
-const isLoading = ref(false)
 
 const isValidAssembly = ref(false)
 
@@ -128,7 +126,7 @@ function parseResponse(value){
 }
 
 function submitAssembly(){
-    isLoading.value=true
+    authStore.isLoading=true
     AssemblyService.importAssembly(assemblyToSubmit.accession)
     .then(resp => {
         console.log(resp)
@@ -144,7 +142,7 @@ function submitAssembly(){
         alert.title = "Error"
         alert.message = errors.response.data
         alert.color = "danger"
-        isLoading.value=false
+        authStore.isLoading=false
         showAlert.value=true
         window.scrollTo({ top: 0, behavior: 'smooth' });
     })

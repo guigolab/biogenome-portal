@@ -3,55 +3,51 @@
 </template>
 
 <script setup>
-import { nextTick, onMounted,ref,watch} from 'vue';
+import { onMounted,ref,watch} from 'vue';
 import * as Cesium from 'cesium';
 import pin_drop from '../assets/pin.svg'
-
+import countries from '../assets/countries.json'
 const accessToken = import.meta.env.VITE_CESIUM_TOKEN
-const props = defineProps({
-    geojson:Object,
-    counter:Number
-})
+
+// const props = defineProps({
+//     geojson:Object
+// })
 const cesium = ref(null)
 
 const emit = defineEmits(['onEntitySelection'])
 
 var viewer = null
-var source = new Cesium.GeoJsonDataSource()
 
 onMounted(()=>{
     cesium.value.focus()
     Cesium.Ion.defaultAccessToken = accessToken
-    viewer = new Cesium.Viewer(cesium.value, {timeline:false,animation:false,infoBox:false});
+    viewer = new Cesium.Viewer(cesium.value, {timeline:false,animation:false});
     viewer.selectedEntityChanged.addEventListener(function(selectedEntity) {
         if(Cesium.defined(selectedEntity)) {
+            console.log(selectedEntity.name)
             emit('onEntitySelection', selectedEntity.name)
         }else {
             emit('onEntitySelection', null)
         }
     })
-    viewer.dataSources.add(source)
-    updateSource(props.geojson)
+    console.log("inside mounted")
+    updateSource(countries)
 })
 
-watch(()=>props.counter,
-    (value)=>{
-    updateSource(props.geojson)
-})
+// watch(props.geojson,(newValue, oldValue)=>{
+//     console.log("inside watch")
+//     updateSource(oldValue)
+// })
 
 function updateSource(geojson){
-    source.entities.removeAll()
+    console.log("inside method")
     const pinBuilder = new Cesium.PinBuilder()
-    source.load(geojson)
+    Cesium.GeoJsonDataSource.load(geojson)
     .then(dataSource => {
-        nextTick(()=>{
-            const entities = dataSource.entities.values
-            entities.forEach(entity => {
-                entity.billboard.image = pin_drop
-            })
-            viewer.zoomTo(viewer.entities)
-        })
-
+        const entities = dataSource.entities.values
+        console.log(entities)
+        viewer.dataSources.add(dataSource)
+        // viewer.zoomTo(viewer.entities)
     })
 }
 

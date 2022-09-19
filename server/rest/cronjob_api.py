@@ -14,7 +14,6 @@ class CronJobApi(Resource):
     #create cronjob
     @jwt_required()
     def post(self):
-        print('HERE')
         cronjob = CronJob(status=CronJobStatus.PENDING).save()
         return Response(cronjob.to_json(), mimetype="application/json", status=201)
 

@@ -40,9 +40,6 @@
                 </div>
             </div>
         </div>
-                        <!-- <va-button @click="logout()">
-                            Logout
-                        </va-button> -->
     </va-inner-loading>
     <template #footer>
         <div class="row justify--space-between">

@@ -20,21 +20,23 @@
         </div>
     </div>
     <va-divider/>
-    <div class="row" v-if="showMap">
-        <div class="flex lg4 md4 sm12 xs12">
-            <OrganismFilter/>
-            <OrganismList :total="orgStore.total" :organisms="orgStore.organisms" :query="orgStore.query" :is-loading="orgStore.isLoading"/>
+    <Transition name="slide-fade">
+        <div key="1" class="row" v-if="orgStore.showMap">
+            <div class="flex lg4 md4 sm12 xs12">
+                <OrganismFilter @on-search="filterOrganisms"/>
+                <OrganismList :total="orgStore.total" :organisms="orgStore.organisms" :query="orgStore.query" :is-loading="orgStore.isLoading"/>
+            </div>
+            <div class="flex lg8 md8 sm12 xs12">
+                <CesiumComponent @on-entity-selection="updateQuery" class="custom-card" :geojson = "orgStore.geojson"/>
+            </div>
         </div>
-        <div class="flex lg8 md8 sm12 xs12">
-            <CesiumComponent @on-entity-selection="updateQuery" class="custom-card" :geojson = "geojson"/>
+        <div key="2" v-else class="row">
+            <div class="flex lg12 md12 sm12 xs12">
+                <OrganismFilter @on-search="filterOrganisms"/>
+                <OrganismList :total="orgStore.total" :organisms="orgStore.organisms" :query="orgStore.query" :is-loading="orgStore.isLoading"/>
+            </div>
         </div>
-    </div>
-    <div v-else class="row">
-        <div class="flex lg12 md12 sm12 xs12">
-            <OrganismFilter/>
-            <OrganismList :total="orgStore.total" :organisms="orgStore.organisms" :query="orgStore.query" :is-loading="orgStore.isLoading"/>
-        </div>
-    </div>
+    </Transition>
 </div>
 </template>
 
@@ -53,22 +55,12 @@ const props = defineProps({
 })
 const showMap = ref(false)
 const showTree = ref(true)
-let geojson = {}
 const orgStore = organisms()
 
 onMounted(()=>{
     orgStore.query.parent_taxid = props.id
     orgStore.loadOrganisms()
     orgStore.getTaxonNode()
-    DataPortalService.getTaxonCoordinates(props.id)
-    .then(resp => {
-        if(resp.data.features && resp.data.features.length){
-            nextTick(()=>{
-                geojson = resp.data
-                showMap.value = true
-            })
-        }
-    })
 })
 
 watch(orgStore.query, ()=>{
@@ -81,5 +73,15 @@ function updateQuery(value){
 
 </script>
 <style scoped>
-
+.slide-fade-enter-active {
+  transition: all 0.2s ease-out;
+}
+.slide-fade-leave-active {
+  transition: all 0.2s cubic-bezier(1, 0.5, 0.8, 1);
+}
+.slide-fade-enter-from,
+.slide-fade-leave-to {
+  transform: translateX(20px);
+  opacity: 0;
+}
 </style>

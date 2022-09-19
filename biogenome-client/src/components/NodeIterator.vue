@@ -9,12 +9,14 @@
                                 <va-icon :name="node.isOpen? 'expand_less':'expand_more'"/>
                             </div>
                             <div class="flex lg10 md10 sm10 xs10" style="text-align:start;padding-left: 5px;">
-                                <p style="text-align:start;font-size: 16px;">{{node.name || node.title}}</p>
-                                <div class="row align--center justify-content--space-between">
-                                    <div class="flex text--secondary" style="font-size: 16px;">
-                                        <p style="text-align:start">{{node.rank || node.accession}}</p>
+                                <va-popover :message="`organisms: ${node.leaves}`">
+                                    <p style="text-align:start;font-size: 16px;">{{node.name || node.title}}</p>
+                                    <div class="row align--center justify-content--space-between">
+                                        <div class="flex text--secondary" style="font-size: 16px;">
+                                            <p style="text-align:start">{{node.rank || node.accession}}</p>
+                                        </div>
                                     </div>
-                                </div>
+                                </va-popover>
                             </div>
                         </div>
                     </div>
@@ -40,15 +42,14 @@
 <script setup>
 import NodeIterator from './NodeIterator.vue'
 import {organisms} from '../stores/organisms'
-import { useRouter } from 'vue-router';
+import { useRouter } from 'vue-router'
+
 const orgStore = organisms()
 const router = useRouter()
-
 const props = defineProps({
     node:Object,
     model:Object
 })
-
 function toggle(node){
     if(!node.isOpen){
         if(node.children.length){
@@ -64,6 +65,4 @@ function toggle(node){
 function toPage(node){
     router.push({name:props.model.value,params:{id:node[props.model.id]}})
 }
-
-
 </script>

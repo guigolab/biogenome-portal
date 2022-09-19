@@ -1,6 +1,5 @@
 from flask_restful import Resource
 from flask import Response, request
-from db.models import BioProject
 from services import bioproject_service 
 from flask import current_app as app
 import os

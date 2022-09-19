@@ -13,168 +13,33 @@
                 </div>
             </div>
         </div>
-        <div class="flex">
-            <va-chip v-if="selectedRoot.taxid" color="secondary" outline icon="close" @click="selectedRoot={};showTree=false">{{selectedRoot.name}}</va-chip>
-            <va-chip v-if="selectedBioProject.title" color="secondary" outline icon="close" @click="selectedBioProject={};bioprojectSkipped=false">{{selectedBioProject.title || 'None'}}</va-chip>
-        </div>
+        <!-- <div class="flex">
+            <va-button-toggle
+                size="small"
+                outline
+                :rounded="false"
+                v-model="currentModel"
+                :options="modelOptions"
+            />
+        </div> -->
     </div>
     <va-divider/>
-    <Transition name="slide-fade">
-        <div v-if="!selectedRoot.taxid">
-            <div class="row align--center justify--space-between">
-                <div class="flex lg6 md6 sm12 xs12">
-                    <div class="row align--center justify--center custom-card">
-                        <div class="flex">
-                            <h1 style="text-align:start" class="display-5">1. Select a BioProject (Optional)</h1>
-                        </div>
-                    </div>
-                    <div class="row justify--center custom-card">
-                        <div class="flex">
-                            <va-card @mouseenter="showBioProjectResult=true" @mouseleave="showBioProjectResult=false" class="custom-card">
-                                <va-card-title>
-                                    <va-input label="search bioproject"
-                                        placeholder="ex. Earth BioGenome Project (EBP)"
-                                        v-model="bioProjectInput"
-                                    />
-                                </va-card-title>
-                                <va-card-content v-if="showBioProjectResult && bioprojectResult.length" class="result-content">
-                                    <ul>
-                                        <li @click="selectedBioProject=project" v-for="(project,index) in bioprojectResult" :key="index">
-                                            <div style="padding:15px" class="row justify--space-between result-element">
-                                                <div class="flex">
-                                                    <strong>{{project.title}}</strong>
-                                                </div>
-                                                <div class="flex">
-                                                    <p class="text--secondary">{{project.accession}}</p>
-                                                </div>
-                                            </div>
-                                        </li>
-                                    </ul>
-                                </va-card-content>
-                            </va-card>
-                        </div>
-                    </div> 
-                </div>
-                <div class="flex lg6 md6 sm12 xs12">
-                    <div class="row align--center justify--center custom-card">
-                        <div class="flex">
-                            <h1 style="text-align:start" class="display-5">2. Select a root node (Mandatory)</h1>
-                        </div>
-                    </div>
-                    <div class="row justify--center custom-card">
-                        <div class="flex">
-                            <va-card @mouseenter="showTaxonResult=true" @mouseleave="showTaxonResult=false" class="custom-card">
-                                <va-card-title>
-                                    <va-input 
-                                        label="search taxon"
-                                        placeholder="ex. Aves"
-                                        v-model="taxonInput"
-                                    />
-                                </va-card-title>
-                                <va-card-content v-if="showTaxonResult && taxonResult.length" class="result-content">
-                                    <ul>
-                                        <li @click="selectedRoot=taxon" v-for="(taxon,index) in taxonResult" :key="index">
-                                            <div style="padding:15px" class="row justify--space-between result-element">
-                                                <div class="flex">
-                                                    <strong>{{taxon.name}}</strong>
-                                                </div>
-                                                <div class="flex">
-                                                    <p class="text--secondary">{{taxon.taxid}}</p>
-                                                </div>
-                                            </div>
-                                        </li>
-                                    </ul>
-                                </va-card-content>
-                            </va-card>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <div v-if="showSlider" class="row justify--center">
+        <div class="flex lg8 md10 sm12 xs12">
+            <va-slider
+                v-model="treeSize"
+                track-label-visible
+                :max="maxLevel"
+            >
+                <template #trackLabel="{ value }">
+                    <va-chip outline color="secondary" size="small">{{ levels[value] }}</va-chip>
+                </template>
+            </va-slider>
         </div>
-    </Transition>
+    </div>
     <Transition name="slide-fade">
-        <div v-if="selectedRoot.taxid && !showTree">
-            <div class="row justify--center align--center custom-card">
-                <div class="flex">
-                    <h1 style="text-align:start" class="display-5">3. Add up to 150 organisms</h1>
-                </div>
-            </div>
-            <div class="row justify--space-between">
-                <div class="flex lg5 md5 sm12 xs12">
-                    <va-card class="custom-card">
-                        <va-card-title>
-                            <div class="row justify--space-between align--center">
-                                <div class="flex">
-                                    organisms
-                                </div>
-                                <div style="padding:5px" class="flex">
-                                    {{orgStore.total}}
-                                </div>
-                                <div class="flex">
-                                    <va-button :disabled="orgStore.total+treeStore.loadedSpecies.length >= treeStore.limit" @click="loadAll()" size="small" outline>select all</va-button>
-                                </div>
-                            </div>
-                        </va-card-title>
-                        <va-card-content>
-                            <OrganismFilter/>
-                        </va-card-content>
-                        <va-card-content style="max-height:30vh;overflow:scroll">
-                            <ul>
-                                <li @click="addOrganism(org)" v-for="(org,index) in filteredOrganisms()" :key="index">
-                                    <div style="padding:15px" class="row justify--space-between result-element">
-                                        <div class="flex">
-                                            <strong>{{org.scientific_name}}</strong>
-                                        </div>
-                                        <div class="flex">
-                                            <p class="text--secondary">{{org.taxid}}</p>
-                                        </div>
-                                    </div>
-                                </li>
-                            </ul>
-                        </va-card-content>
-                    </va-card>
-                </div>
-                <div class="flex lg5 md5 sm12 xs12">
-                    <va-card class="custom-card">
-                        <va-card-title>
-                            <div class="row justify--space-between align--center">
-                                <div class="flex">
-                                    <div class="row justify--space-between align--center">
-                                        <div class="flex">
-                                            selected organisms
-                                        </div>
-                                        <div style="padding:5px" class="flex">
-                                            {{`${treeStore.loadedSpecies.length}/${treeStore.limit}`}}
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="flex">
-                                    <va-button :disabled="treeStore.loadedSpecies.length === 0" @click="treeStore.loadedSpecies = []" size="small" outline>remove all</va-button>
-                                </div>
-                            </div>
-                        </va-card-title>
-                        <va-card-content style="max-height:30vh;overflow:scroll;">
-                            <ul>
-                                <li @click="removeOrganism(org)" v-for="(org,index) in treeStore.loadedSpecies" :key="index">
-                                    <div style="padding:15px" class="row justify--space-between result-element">
-                                        <div class="flex">
-                                            <strong>{{org.scientific_name}}</strong>
-                                        </div>
-                                        <div class="flex">
-                                            <p class="text--secondary">{{org.taxid}}</p>
-                                        </div>
-                                    </div>
-                                </li>
-                            </ul>
-                        </va-card-content>
-                    </va-card>
-                </div>
-            </div>
-            <div class="row justify--center">
-                <div class="flex">
-                    <va-button icon="insights" color="secondary" @click="getTree()" :disabled="!isTreeValid">Create Tree</va-button>
-                </div>
-            </div>
+        <div v-if="showForm">
+            <TreeFilter @generate-tree="getTree"/>
         </div>
     </Transition>
     <Transition name="slide-fade">
@@ -189,107 +54,59 @@
 import { computed, onMounted, watch, ref, reactive } from '@vue/runtime-core'
 import {organisms} from '../stores/organisms'
 import { tree } from '../stores/tree'
-import OrganismFilter from '../components/OrganismFilter.vue';
 import DataPortalService from '../services/DataPortalService';
 import TreeOfLife from '../components/d3/TreeOfLife.vue';
+import TreeFilter from '../components/TreeFilter.vue';
+import * as d3 from "d3";
 
-const bioprojectSkipped = ref(false)
-const taxonInput = ref('')
-const bioProjectInput = ref('')
-const taxonResult = ref([])
-const bioprojectResult = ref([])
-const showTaxonResult = ref(false)
-const showBioProjectResult = ref(false)
-const selectedRoot = ref({})
-const selectedBioProject = ref({})
-const selectAll = ref(false)
-const orgStore = organisms()
-const treeStore = tree()
+const props = defineProps({
+    taxid:String
+})
+
+const ROOTNODE = import.meta.env.VITE_ROOT_NODE
+
+const currentModel = ref('default')
+const isLoading = ref(false)
 const showTree=ref(false)
+const showForm=ref(true)
+const showSlider = ref(false)
+const treeSize = ref(0)
+const maxLevel = ref(0)
 let treeData = null
+const modelOptions = [
+    {value:'default', icon:'insights'},
+    {value:'custom', icon:'inbox_customize'}
+]
+const levels = ref({})
 
 onMounted(()=>{
-    const params = ['limit','offset']
-    Object.keys(orgStore.query).filter(key => !params.includes(key)).forEach(key => {
-        orgStore.query[key] = null
-    })
+    getTreeAndLevels(props.taxid)
 })
 
-watch(taxonInput, ()=>{
-    if(taxonInput.value.length>1){
-        DataPortalService.searchTaxons({name: taxonInput.value})
-        .then(resp => {
-            taxonResult.value = resp.data
-        })
-        .catch(e => {
-            console.log(e)
-        })
-    }else{
-        taxonResult.value=[]
-    }
+watch(props.taxid,()=>{
+    // getTreeAndLevels(props.taxid)
 })
-watch(bioProjectInput, ()=>{
-    if(bioProjectInput.value.length>1){
-        DataPortalService.searchBioprojects({name: bioProjectInput.value})
-        .then(resp => {
-            bioprojectResult.value = resp.data
-        })
-        .catch(e => {
-            console.log(e)
-        })
-    }else{
-        bioprojectResult.value=[]
-    }
-})
-watch(selectedRoot, ()=>{
-    orgStore.query.parent_taxid=selectedRoot.value.taxid
-})
-watch(selectedBioProject, ()=>{
-    orgStore.query.bioproject=selectedBioProject.value.accession
-})
-watch(orgStore.query, ()=>{
-    orgStore.loadOrganisms()
-},{deep:true})
+ 
+function getTreeAndLevels(taxid){
+     DataPortalService.getTree(taxid)
+     .then(resp => {
+         const root = d3.hierarchy(resp.data , d => d.children)
+        .sum(d => d.children ? 0 : 1)
+        .sort((a, b) => (a.value - b.value) || d3.ascending(a.data.length, b.data.length));
+        console.log(root)
+        if(root.leaves() > 250){
 
-const isTreeValid = computed(()=>{
-    return treeStore.loadedSpecies.length > 0 && treeStore.loadedSpecies.length <= 150 && selectedRoot.value.taxid
-})
-function filteredOrganisms(){
-    return orgStore.organisms.filter(org => !treeStore.loadedSpecies.some(el => el.taxid === org.taxid))
+        }
+     })
 }
 
-function loadAll(){
-    if(orgStore.total > 0){
-        const total = orgStore.total
-        orgStore.query.limit = total
-        DataPortalService.getOrganisms(orgStore.query)
-        .then(resp => {
-            orgStore.organisms = [...resp.data.data]
-            const totalSpecies = treeStore.loadedSpecies.concat(filteredOrganisms())
-            treeStore.loadedSpecies = [...totalSpecies]
-        })
-    }
-}
-
-function addOrganism(organism){
-    treeStore.loadedSpecies.push(organism)
-    if((orgStore.query.offset + orgStore.query.limit <= orgStore.total) && filteredOrganisms().length === 0){
-        orgStore.query.offset = orgStore.query.offset + orgStore.query.limit
-        orgStore.loadOrganisms()
-    }
-}
-function removeOrganism(organism){
-    const index = treeStore.loadedSpecies.findIndex(spec => spec.taxid === organism.taxid)
-    treeStore.loadedSpecies.splice(index,1)
-}
-
-function getTree(){
+function getTree(payload){
     showTree.value = false
-    const taxids = treeStore.loadedSpecies.map(org => org.taxid)
-    const root = selectedRoot.value.taxid
-    DataPortalService.generateTree({taxids:taxids,root:root})
+    const taxids = payload.data.map(org => org.taxid)
+    DataPortalService.generateTree({taxids:taxids,root:payload.root.taxid})
     .then(resp => {
         treeData = resp.data
+        showForm.value=false
         showTree.value=true
     })
 }

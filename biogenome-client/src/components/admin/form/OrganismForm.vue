@@ -1,5 +1,5 @@
 <template>
-<va-inner-loading :loading="isLoading">
+<va-inner-loading :loading="authStore.isLoading">
 <div class="layout">
     <div class="row">
         <div class="flex">
@@ -121,15 +121,16 @@ import DataPortalService from '../../../services/DataPortalService'
 import MetadataForm from './MetadataForm.vue'
 import ClientInput from './ClientInput.vue'
 import {useRouter} from "vue-router"
+import { auth } from '../../../stores/auth'
 const PROJECT_ACCESSION = import.meta.env.VITE_PROJECT_ACCESSION
 const props = defineProps({
     taxid:String
 })
+const authStore = auth()
 const organismToUpdate = ref(false)
 const validTaxid = ref(false)
 const showAlert = ref(false)
 const router = useRouter()
-const isLoading=ref(false)
 const initOrganism = {
     scientific_name:null,
     taxid:null,
@@ -284,14 +285,14 @@ function removeImage(index){
 }
 
 function createOrganism(){
-    isLoading.value=true
+    authStore.isLoading=true
     SubmissionService.createOrganism(organismFormData)
     .then(resp => {
         alert.title="Success"
         alert.message=`The organism with taxid: ${organismFormData.taxid} has been correctly saved`
         alert.color="success"
         showAlert.value=true
-        isLoading.value=false
+        authStore.isLoading=false
         window.scrollTo({ top: 0, behavior: 'smooth' });
     })
     .catch(e => {
@@ -299,20 +300,20 @@ function createOrganism(){
         alert.message="Something happened"
         alert.color="danger"
         showAlert.value=true
-        isLoading.value=false
+        authStore.isLoading=false
         window.scrollTo({ top: 0, behavior: 'smooth' });
     })
 }
 
 function updateOrganism(){
-    isLoading.value=true
+    authStore.isLoading=true
     SubmissionService.updateOrganism(props.taxid,organismFormData)
     .then(resp => {
         alert.title="Success"
         alert.message=`The organism with taxid: ${organismFormData.taxid} has been correctly updated`
         alert.color="success"
         showAlert.value=true
-        isLoading.value=false
+        authStore.isLoading=false
         window.scrollTo({ top: 0, behavior: 'smooth' });
     })
     .catch(e => {
@@ -320,7 +321,7 @@ function updateOrganism(){
         alert.message="Something happened"
         alert.color="danger"
         showAlert.value=true
-        isLoading.value=false
+        authStore.isLoading=false
         window.scrollTo({ top: 0, behavior: 'smooth' });   
     })
 }

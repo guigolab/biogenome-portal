@@ -1,6 +1,5 @@
 <template>
-<va-inner-loading :loading="isLoading">
-{{toUpdate}}
+<va-inner-loading :loading="authStore.isLoading">
     <div class="layout">
         <div class="row">
             <div class="flex">
@@ -53,9 +52,9 @@ import FormComponent from './FormComponent.vue'
 import ListInputComponent from "./ListInputComponent.vue"
 import GenomeBrowserService from "../../../services/GenomeBrowserService";
 import {useRouter} from "vue-router"
+import { auth } from "../../../stores/auth";
 const router = useRouter()
-
-const isLoading = ref(false)
+const authStore = auth()
 
 const props = defineProps({
     accession:String,
@@ -125,8 +124,8 @@ onMounted(()=>{
 })
 
 function handleSubmit(){
-    console.log(props.toUpdate)
-    if(props.toUpdate){
+    console.log()
+    if(props.toUpdate || props.toUpdate !== 'false'){
         updateGenomeBrowserData()
         return
     }
@@ -134,14 +133,14 @@ function handleSubmit(){
 }
 
 function submitGenomeBrowserData(){
-    isLoading.value=true
+    authStore.isLoading=true
     GenomeBrowserService.createGenomeBrowserData(jbrowseData)
     .then(resp => {
         alert.title="Success"
         alert.message=`${resp.data}`
         alert.color="success"
         showAlert.value=true
-        isLoading.value=false
+        authStore.isLoading=false
         window.scrollTo({ top: 0, behavior: 'smooth' });
     })
     .catch(e => {
@@ -150,7 +149,7 @@ function submitGenomeBrowserData(){
         alert.message=`${e.response && e.response.data? e.response.data:e}`
         alert.color="danger"
         showAlert.value=true
-        isLoading.value = false
+        authStore.isLoading = false
         window.scrollTo({ top: 0, behavior: 'smooth' });
     })
 }
@@ -162,7 +161,7 @@ function updateGenomeBrowserData(){
         alert.message=`${resp.data}`
         alert.color="success"
         showAlert.value=true
-        isLoading.value=false
+        authStore.isLoading=false
         window.scrollTo({ top: 0, behavior: 'smooth' });
 
     })
@@ -171,7 +170,7 @@ function updateGenomeBrowserData(){
         alert.message=`${e.response && e.response.data? e.response.data:e}`
         alert.color="danger"
         showAlert.value=true
-        isLoading.value=false
+        authStore.isLoading=false
         window.scrollTo({ top: 0, behavior: 'smooth' });
 
     })

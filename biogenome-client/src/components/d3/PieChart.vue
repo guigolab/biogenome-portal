@@ -4,7 +4,9 @@
 <script setup>
 import { onMounted, ref } from "vue";
 import * as d3 from "d3";
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
 
 const pie = ref(null)
 const props = defineProps({
@@ -41,7 +43,6 @@ function DonutChart(data, {
   padAngle = stroke === "none" ? 1 / outerRadius : 0, // angular separation between wedges
 } = {}) {
   // Compute values.
-  console.log(data)
   const N = d3.map(data, name);
   const V = d3.map(data, value);
   const I = d3.range(N.length).filter(i => !isNaN(V[i]));
@@ -89,7 +90,8 @@ function DonutChart(data, {
       .attr("fill", d => color(N[d.data]))
       .attr("d", arc)
     .append("title")
-      .text(d => title(d.data));
+      .text(d => title(d.data))
+
 
   svg.append("g")
       .attr("font-family", "sans-serif")

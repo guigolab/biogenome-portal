@@ -1,4 +1,4 @@
-from db.models import BioProject
+from db.models import BioProject,Organism
 from utils import ena_client
 from mongoengine.queryset.visitor import Q
 
@@ -30,10 +30,13 @@ def create_bioprojects_from_NCBI(bioprojects,organism,sample=None):
         organism.modify(add_to_set__bioprojects=bioproject.accession)
         if sample:
             sample.modify(add_to_set__bioprojects=bioproject.accession)
+    leaves_counter(saved_bioprojects)
+
 
 def create_bioproject_from_ENA(project_accession):
-    if BioProject.objects(accession=project_accession).first():
-        return
+    bioproject =  BioProject.objects(accession=project_accession).first()
+    if bioproject:
+        return bioproject
     resp = ena_client.get_bioproject(project_accession)
     for r in resp:
         if 'study_accession' in r.keys() and r['study_accession'] == project_accession:
@@ -43,3 +46,9 @@ def search_bioproject(name):
     query = (Q(title__iexact=name) | Q(title__icontains=name))
     bioprojects = BioProject.objects(query).exclude('id')
     return bioprojects
+
+def leaves_counter(bioproject_list):
+    for node in bioproject_list:
+        # node.leaves=count_species(node)
+        node.leaves=Organism.objects(bioprojects=node.accession).count()
+        node.save()

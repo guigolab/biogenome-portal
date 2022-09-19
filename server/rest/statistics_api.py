@@ -1,6 +1,7 @@
-from flask import Response
+from flask import Response,request
 from db.models import Assembly,Annotation, BioGenomeUser,BioSample, GeoCoordinates,LocalSample,Experiment,Organism
 from flask_restful import Resource
+from services import statistics_service
 import json
 
 MODEL_LIST = {
@@ -21,4 +22,8 @@ class StatsApi(Resource):
             if MODEL_LIST[key].objects.count() > 0:
                 resp[key] = MODEL_LIST[key].objects.count()
         return Response(json.dumps(resp, default=str),mimetype="application/json", status=200)
-        
+
+class OrganismStatsApi(Resource):
+    def get(self):
+        stats = statistics_service.get_statistics(**request.args)
+        return Response(json.dumps(stats, default=str),mimetype="application/json", status=200)

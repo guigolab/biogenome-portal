@@ -17,7 +17,8 @@ const excel = () => import('../components/admin/form/ExcelForm.vue')
 const bioprojects = () => import('../views/ProjectNodePage.vue')
 const taxons = () => import('../views/TaxonNodePage.vue')
 const treeGenerator = () => import('../views/TreeGeneratorPage.vue')
-
+const newMap = () => import('../components/NewCesiumComponent.vue')
+const nodePage = () => import('../views/NodePage.vue')
 const routes = [
   {
     path: "/",
@@ -27,26 +28,37 @@ const routes = [
   {
     path: "/taxons/:id",
     name: "taxons",
-    component: taxons,
+    component: nodePage,
     props:true
+  },
+  {
+    path: "/map",
+    name: "new-map",
+    component: newMap,
   },
   {
     path: "/bioprojects/:id",
     name: "bioprojects",
-    component: bioprojects,
+    component: nodePage,
     props:true
   },
   {
-    path: "/tree",
+    path: '/tree',
+    name: 'tree-of-life',
+    redirect: {name: 'tree', params: {taxid: ROOTNODE}}
+  },
+  {
+    path: "/tree/:taxid",
     name: "tree",
     component: treeGenerator,
+    props:true
   },
   {
     path: "/admin",
     name: "admin",
     children:[
       {path:'', component:adminHP, name:"admin-hp"},
-      {path:'excel-form', component:excel, name:"excel"},
+      {path: "excel-form", component:excel, name:"excel"},
       {path: "organism-form/:taxid?",component:organismForm, name:"organism-form", props:true},
       {path: "assembly-form",component:assembliesForm, name:"assembly-form"},
       {path: "annotation-form",component:annotationForm, name:"annotation-form",props:true},

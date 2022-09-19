@@ -20,17 +20,17 @@ def login():
         return
     return session.cookies.get_dict()
 
-def create_data(url,cookies,is_delete=False):
+def create_data(url,cookies,to_delete=False):
     crsf = cookies['csrf_access_token']
     headers = {"X-CSRF-TOKEN":crsf}
-    if is_delete:
+    if to_delete:
         resp = requests.delete(url,headers=headers,cookies=cookies)
     else:
         resp = requests.post(url,headers=headers,cookies=cookies)
     if resp.status_code == 401:
         cookies = login()
         create_data(url, cookies)
-    print("RESPONSE IS:", resp.status_code)
+    print("RESPONSE IS:", resp.json())
     return
 
 def import_records():
@@ -46,7 +46,7 @@ def import_records():
         return
     ##create cronjob object
     create_data(f"{API_URL}/cronjob",cookies)
-    PROJECTS = [p.strip() for p in os.getenv('PROJECTS').split(',') if p]
+    PROJECTS = [p.strip() for p in os.getenv('PROJECTS').split(',') if p] if os.getenv('PROJECTS') else None
     ACCESSION = os.getenv('PROJECT_ACCESSION')
     if ACCESSION:
         import_from_NCBI(ACCESSION,cookies)
@@ -54,7 +54,7 @@ def import_records():
         import_from_EBI_biosamples(PROJECTS,cookies)
     ##check new reads
     update_biosamples(cookies)
-    create_data(f"{API_URL}/cronjob",cookies, is_delete=True)
+    create_data(f"{API_URL}/cronjob",cookies, to_delete=True)
 
     ##TODO convert local samples to biosample via copo api
 
@@ -76,11 +76,10 @@ def import_from_NCBI(project_accession,cookies):
             if accession in existing_assemblies:
                 continue
             create_data(f"{API_URL}/assemblies/{accession}",cookies)
-        print(len(assemblies))
-        print('ASSEMBLIES FROM NCBI IMPORTED')
+        print("assemblies length",len(assemblies))
     except:
         print("ERROR IN ASSEMBLIES IMPORT")
-        create_data(f"{API_URL}/cronjob",cookies, is_delete=True)
+        create_data(f"{API_URL}/cronjob",cookies, to_delete=True)
 
 
 ##retrieve assemblies by bioproject in NCBI
@@ -127,7 +126,7 @@ def import_from_EBI_biosamples(PROJECTS,cookies):
         print('DATA FROM ENA/BIOSAMPLES IMPORTED')
     except:
         print("ERROR IN BIOSAMPLES IMPORT")
-        create_data(f"{API_URL}/cronjob",cookies, is_delete=True)
+        create_data(f"{API_URL}/cronjob",cookies, to_delete=True)
 
 def collect_samples(PROJECTS):
     samples = dict()
@@ -154,7 +153,7 @@ def update_biosamples(cookies):
     biosamples = requests.get(f"{API_URL}/bulk/biosample")
     for biosample in biosamples.json():
         experiments = get_reads(biosample['accession'])
-        print(len(experiments))
+        print(f"experiments for {biosample['accession']}",len(experiments))
         for experiment in experiments:
             accession = experiment['experiment_accession']
             if accession not in biosample['experiments']:
