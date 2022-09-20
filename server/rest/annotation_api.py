@@ -9,7 +9,6 @@ from flask_jwt_extended import jwt_required
 
 FIELDS_TO_EXCLUDE = ['id','created']
 
-
 class AnnotationApi(Resource):
 
     def get(self,name=None):

@@ -4,7 +4,7 @@ from config import BaseConfig
 from db import initialize_db
 from rest import initialize_api
 from flask_jwt_extended import JWTManager
-from db.models import BioGenomeUser,Roles
+from db.models import BioGenomeUser, CronJob,Roles
 from services import bioproject_service
 from tendo.singleton import SingleInstance
 
@@ -37,6 +37,8 @@ try:
         BioGenomeUser(name = username, password = password, role= Roles.DATA_ADMIN).save()
     if bioproject_accession:
         bioproject_service.create_bioproject_from_ENA(bioproject_accession)
+    cronjob = CronJob.drop_collection() ##remove all cronjobs at each start
+
 except:
     pass
 

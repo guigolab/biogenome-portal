@@ -25,7 +25,7 @@
                             :label="'Assembly accession'"
                             :placeholder="'ex: GCA_905340225.1'"
                             :insdc-request="NCBIClientService.getAssembly"
-                            :portal-request="DataPortalService.getAssembly"
+                            :portal-request="AssemblyService.getAssembly"
                             :valid-data="isValidAssembly"
                             @on-response="parseResponse"
                             @on-reset="reset"
@@ -70,7 +70,6 @@
 <script setup>
 
 import { reactive, ref } from "vue";
-import DataPortalService from "../../../services/DataPortalService";
 import NCBIClientService from '../../../services/clients/NCBIClientService'
 import ClientInput from './ClientInput.vue'
 import AssemblyService from "../../../services/AssemblyService";

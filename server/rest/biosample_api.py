@@ -14,7 +14,7 @@ class BioSampleApi(Resource):
 
     def get(self,accession=None):
         if accession:
-            biosample_obj=BioSample.objects(accession=accession).first()
+            biosample_obj=BioSample.objects(accession=accession).exclude('id').first()
             if not biosample_obj:
                 raise NotFound
             return Response(biosample_obj.to_json(),mimetype="application/json", status=200)

@@ -77,9 +77,7 @@ import {reactive, onMounted, ref, computed} from "vue";
 import * as d3 from "d3";
 import { useRouter } from "vue-router";
 import { Canvg } from 'canvg';
-import { organisms } from "../../stores/organisms";
 
-const orgStore = organisms()
 const router = useRouter()
 var level = ref(0)
 var linkExtension = null
@@ -310,9 +308,6 @@ function legend(svg){
 }
 
 function toPageDetails(route){
-    orgStore.query.parent_taxid=null
-    orgStore.query.bioproject=null
-    orgStore.query.geo_location=null
     router.push(route)
 }
 </script>

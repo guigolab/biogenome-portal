@@ -17,5 +17,6 @@ def update_user(name,data):
 
 def delete_user(name):
     ex_user = BioGenomeUser.objects(name=name).first()
+    deleted_user = ex_user.to_json()
     ex_user.delete()
-    return name
+    return delete_user

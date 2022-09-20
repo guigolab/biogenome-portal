@@ -52,7 +52,6 @@
 </template>
 <script setup>
 import { computed, onMounted, watch, ref, reactive } from '@vue/runtime-core'
-import {organisms} from '../stores/organisms'
 import { tree } from '../stores/tree'
 import DataPortalService from '../services/DataPortalService';
 import TreeOfLife from '../components/d3/TreeOfLife.vue';

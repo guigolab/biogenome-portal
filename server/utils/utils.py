@@ -35,8 +35,4 @@ def parse_sample_metadata(metadata):
         sample_metadata[k] = metadata[k][0]['text']
     return sample_metadata
 
-def custom_response(message,code):
-    response = make_response(jsonify(message=message), code)
-    return response
-
 

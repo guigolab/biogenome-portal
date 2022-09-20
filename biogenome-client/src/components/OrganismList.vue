@@ -8,7 +8,8 @@
         </div>
     </va-card-title>
     <va-card-content>
-        <div class="row justify--end align--center">
+        <Pagination :query="query" :total="total" @update="bubbleUp"/>
+        <!-- <div class="row justify--end align--center">
             <div class="flex">
                 <va-button-dropdown color="primary" leftIcon flat outline :label="(query.offset+1)+'-'+(limit+query.offset>total?total:limit+query.offset)+' of '+total">
                     <va-button :disabled="query.offset === 0" @click="$emit('update',0)" flat color="primary">Start</va-button>
@@ -17,7 +18,7 @@
                 <va-button color="primary" :disabled="query.offset-limit < 0" @click="$emit('update',query.offset-limit)" flat icon="chevron_left"/>
                 <va-button color="primary" :disabled="query.offset+limit >= total" @click="$emit('update',query.offset+limit)" flat icon="chevron_right"/>
             </div>
-        </div>
+        </div> -->
     </va-card-content>
     <va-card-content style="max-height:50vh;overflow:scroll">
         <va-list style="padding-top:0!important">
@@ -51,10 +52,12 @@
 </va-card>
 </template>
 <script setup>
-import { ref, reactive, computed,defineEmits } from 'vue'
+import { ref, defineEmits } from 'vue'
 import {dataIcons} from '../../config'
 import portalService from '../services/DataPortalService'
 import {useRouter} from 'vue-router'
+import Pagination from './Pagination.vue';
+import { emit } from 'process';
 
 const emits = defineEmits(['update'])
 
@@ -74,6 +77,9 @@ function mapData(item){
     .filter(key => item[key].length)
 }
 
+function bubbleUp(value){
+    emits("update",value)
+}
 
 </script>
 <style scoped>

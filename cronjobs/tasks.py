@@ -1,6 +1,6 @@
 import requests
 import os
-from datetime import datetime, timedelta
+from datetime import datetime
 import time
 
 API_URL = "http://biogenome_nginx/api"
@@ -30,7 +30,7 @@ def create_data(url,cookies,to_delete=False):
     if resp.status_code == 401:
         cookies = login()
         create_data(url, cookies)
-    print("RESPONSE IS:", resp.json())
+    print("RESPONSE IS:", resp.text)
     return
 
 def import_records():

@@ -9,7 +9,6 @@ from flask_jwt_extended import jwt_required
 
 FIELDS_TO_EXCLUDE = ['id','password']
 
-##post request to handle large list of assemblies/experiments/local_samples/biosamples/annotations ids
 class UserApi(Resource):
 
     @jwt_required()
@@ -27,10 +26,10 @@ class UserApi(Resource):
     def put(self,name):
         data = request.json if request.is_json else request.form
         response = user_service.update_user(name,data)
+        return Response(response, mimetype="application/json", status=200)
+
 
     @jwt_required()
     def delete(self,name):
         response = user_service.delete_user(name)
-        # deleted_accession = reads.delete_experiment(accession)
-        # if deleted_accession:
-        #     return Response(json.dumps(deleted_accession), mimetype="application/json", status=201)
+        return Response(response, mimetype="application/json", status=200)

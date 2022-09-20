@@ -115,12 +115,10 @@
 <script setup>
 
 import {computed,onMounted,reactive,ref, watch} from 'vue'
-import { organisms } from '../stores/organisms';
 import DataPortalService from '../services/DataPortalService';
 import NodeIterator from '../components/NodeIterator.vue';
 import { tree } from '../stores/tree';
-import {dataIcons,TwitterURL,HomePage} from '../../config.json'
-import TwitterWidget from '../components/TwitterWidget.vue';
+import {dataIcons,HomePage} from '../../config.json'
 import PieChart from '../components/d3/PieChart.vue';
 import BarChart from '../components/d3/BarChart.vue';
 import { useRouter } from 'vue-router';
@@ -161,7 +159,6 @@ const modelOptions = [
     }
 ]
 const isLoading = ref(false)
-const orgStore = organisms()
 const chart = ref('pie')
 const currentModel = ref('taxons')
 const showTree = ref(false)

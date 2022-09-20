@@ -23,7 +23,7 @@
                     :label="'INSDC BioSample accession'"
                     :placeholder="'ex: SAMEA14448454'"
                     :insdc-request="ENAClientService.getBioSample"
-                    :portal-request="DataPortalService.getBioSample"
+                    :portal-request="BioSampleService.getBioSample"
                     :valid-data="validBiosample"
                     @on-response="parseResponse"
                     @on-reset="reset"

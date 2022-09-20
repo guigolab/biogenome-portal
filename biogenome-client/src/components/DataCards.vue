@@ -38,10 +38,8 @@
 <script setup>
 import { computed, defineEmits, defineProps} from 'vue'
 import {dataIcons} from '../../config'
-// import {organisms} from '../stores/organisms'
 
 const emits = defineEmits(['onDataSelection'])
-// const orgStore = organisms()
 const props = defineProps({
     statistics : Object,
     total:Number,
@@ -49,12 +47,6 @@ const props = defineProps({
 })
 const stats = computed(()=> Object.keys(props.statistics))
 
-// function dataSelected(dataKey, count){
-//     if(orgStore.query.offset >= count){
-//         orgStore.query.offset = 0
-//     }
-//     orgStore.query[dataKey] = orgStore.query[dataKey] ? null : true
-// }
 
 </script>
 <style scoped>

@@ -1,12 +1,9 @@
-from db.models import Assembly
 from services import assembly_service, bioproject_service, biosample_service, geo_localization_service, organism_service
 from . import ena_client
 from services import read_service
-from flask import current_app as app
 import os 
 
 PROJECTS = [p.strip() for p in os.getenv('PROJECTS').split(',') if p] if os.getenv('PROJECTS') else None
-
 
 def create_data_from_assembly(assembly_obj, ncbi_response):
     organism_obj = organism_service.get_or_create_organism(assembly_obj.taxid)
@@ -37,18 +34,6 @@ def create_data_from_assembly(assembly_obj, ncbi_response):
     organism_obj.modify(add_to_set__assemblies=assembly_obj.accession)
     organism_obj.save()
     return organism_obj
-
-    ##ass
-
-# get assembly
-#  get organism and biosample
-#   
-#   get reads
-##
-##
-##
-##
-# assemblies are not managed here
 
 def create_data_from_biosample(biosample_obj):
     biosamples_to_update=[biosample_obj]

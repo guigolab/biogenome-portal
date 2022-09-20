@@ -395,9 +395,8 @@ import Jbrowse2 from '../components/Jbrowse2.vue'
 import CesiumComponent from '../components/CesiumComponent.vue'
 import OrganismNavCards from '../components/OrganismNavCards.vue'
 import { useRouter } from 'vue-router'
-import { organisms } from '../stores/organisms'
+import BioSampleService from '../services/BioSampleService'
 
-const orgStore = organisms()
 const router = useRouter()
 const showJBrowse = ref(false)
 const selectedModel = ref('')
@@ -423,19 +422,19 @@ const organismData = reactive({
     loadedItems:[]
 })
 
-watch(selectedModel,()=>{
-    if(selectedModel.value === 'coordinates'){
-        DataPortalService.getCoordinates(organism.coordinates)
-        .then(resp => {
-            nextTick(()=>{
-                geoJson = resp.data
-                showMap.value = true
-            })
-        }).catch(e => {console.log(e)})
-    }else{
-        showMap.value = false
-    }
-})
+// watch(selectedModel,()=>{
+//     if(selectedModel.value === 'coordinates'){
+//         DataPortalService.getCoordinates(organism.coordinates)
+//         .then(resp => {
+//             nextTick(()=>{
+//                 geoJson = resp.data
+//                 showMap.value = true
+//             })
+//         }).catch(e => {console.log(e)})
+//     }else{
+//         showMap.value = false
+//     }
+// })
 
 function handleSelected(payload){
     selectedModel.value = payload
@@ -447,7 +446,7 @@ function toggleMetadata(rowData){
 }
 
 function getRelatedSample(sampleAccession){
-    DataPortalService.getBioSample(sampleAccession)
+    BioSampleService.getBioSample(sampleAccession)
     .then(resp => {
         toggledMetadata.name = sampleAccession
         toggledMetadata.metadata = {...resp.data.metadata}
@@ -517,9 +516,6 @@ function loadTrack(rowData){
 
 
 function toPage(route){
-    orgStore.query.parent_taxid=null
-    orgStore.query.bioproject=null
-    orgStore.query.geo_location=null
     router.push(route)
 }
 

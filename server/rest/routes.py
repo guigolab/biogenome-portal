@@ -6,7 +6,7 @@ from .taxonomy_api import TreeApi,TaxNodesApi,TaxonomyTreeApi,TreeLevelsApi
 from .data_input_api import Login,Logout
 from .bioproject_api import BioProjectApi
 from .assembly_api import AssemblyApi
-from .geo_localization_api import GeoLocApi,NodeCoordinatesApi,ProjectCoordinatesApi,OrganismCoordinatesApi
+from .geo_localization_api import GeoLocApi,NodeCoordinatesApi,OrganismCoordinatesApi
 from .annotation_api import AnnotationApi
 from .biosample_api import BioSampleApi
 from .read_api import ExperimentApi
@@ -61,9 +61,6 @@ def initialize_routes(api):
 
 	api.add_resource(GeoLocApi, '/api/coordinates', '/api/coordinates/<coordinates>') ##expects lat:long dd format
 	##parser endpoint
-
-	api.add_resource(ProjectCoordinatesApi, '/api/coordinates/bioprojects/<accession>')
-
 	api.add_resource(OrganismCoordinatesApi, '/api/coordinates/organisms/<taxid>')
 
 	api.add_resource(ExcelParser, '/api/excel')

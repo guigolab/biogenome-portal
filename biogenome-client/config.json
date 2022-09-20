@@ -132,7 +132,7 @@
     "PROJECT_ACCESSION": "PRJNA545868",
 
     "NavBar":{
-        "logoPath":"./assets/logo.png",
+        "logoName":"EBG-Logo.png",
         "bgColor":"",
         "navItems":[
             {"icon": "home", "pathName":"home"}
@@ -145,7 +145,13 @@
     ],
     "HomePage":{
         "title":"BioGenome Portal Community Edition",
-        "description":"This portal tracks the progress of the Earth Biogenome Project, offering the biodiversity community the opportunity to share photos of collected organisms, vernacular names and links to annotations of their genomes"
+        "description":"This portal tracks the progress of the Earth Biogenome Project, offering to the biodiversity community the opportunity to share photos of collected organisms, vernacular names and links to the gene annotations of the generated assemblies"
     },
-    "TwitterURL":"https://twitter.com/CatBiogenoma?ref_src=twsrc%5Etfw"
+    "TwitterURLS":{
+       "PRJEB49670":"https://twitter.com/CatBiogenoma?ref_src=twsrc%5Etfw"
+    },
+    "Layout":{
+        "primary":"#2B303A",
+        "secondary":"#0C7C59"
+    }
 }

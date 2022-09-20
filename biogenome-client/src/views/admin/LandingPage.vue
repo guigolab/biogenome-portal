@@ -73,7 +73,7 @@
                             <va-button-dropdown v-if="rowData.sub_samples && rowData.sub_samples.length" size="small" flat>
                                 <ul>
                                     <li v-for="acc in rowData.sub_samples" :key="acc">
-                                        <a class="link">{{acc}}</a>
+                                        <a class="link" @click="showSubSample(acc)">{{acc}}</a>
                                     </li>
                                 </ul>
                             </va-button-dropdown>
@@ -91,6 +91,7 @@
                             <Pagination
                                 :total="loadedItems.total"
                                 :query="params"
+                                @update="(value) => params.offset = value"
                             />
                         </th>
                     </tr>
@@ -414,6 +415,14 @@ function editItem(item){
             showEditModal.value = true
             break
     }
+}
+
+function showSubSample(accession){
+    BioSampleService.getBioSample(accession)
+    .then(resp => {
+        const subSampleObj = resp.data
+        showDetails(subSampleObj)
+    })
 }
 
 function resetEditAction(){

@@ -9,6 +9,9 @@ class BioSampleService {
     getBioSamples(params){
         return base.get('/biosamples', {params:params})
     }
+    getBioSample(accession){
+        return base.get(`/biosamples/${accession}`)
+    }
     //create biosample by INSDC accession, creation is managed back end.. no edit options
     importBioSample(accession){
         return submission.post(`/biosamples/${accession}`)

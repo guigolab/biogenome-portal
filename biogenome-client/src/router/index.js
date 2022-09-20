@@ -1,7 +1,6 @@
 import {createWebHistory, createRouter} from 'vue-router'
 import Home from '../views/NewHome.vue'
 import {auth} from '../stores/auth'
-import {organisms} from '../stores/organisms'
 
 const ROOTNODE = import.meta.env.VITE_ROOT_NODE
 const organism = () => import('../views/OrganismPage.vue')
@@ -14,10 +13,7 @@ const assembliesForm = () => import('../components/admin/form/AssemblyForm.vue')
 const annotationForm = () => import('../components/admin/form/AnnotationForm.vue')
 const genomeBrowserForm = () => import('../components/admin/form/GenomeBrowserForm.vue')
 const excel = () => import('../components/admin/form/ExcelForm.vue')
-const bioprojects = () => import('../views/ProjectNodePage.vue')
-const taxons = () => import('../views/TaxonNodePage.vue')
 const treeGenerator = () => import('../views/TreeGeneratorPage.vue')
-const newMap = () => import('../components/NewCesiumComponent.vue')
 const nodePage = () => import('../views/NodePage.vue')
 const routes = [
   {
@@ -30,11 +26,6 @@ const routes = [
     name: "taxons",
     component: nodePage,
     props:true
-  },
-  {
-    path: "/map",
-    name: "new-map",
-    component: newMap,
   },
   {
     path: "/bioprojects/:id",
@@ -84,16 +75,12 @@ const router = createRouter({
 
 router.beforeEach(async (to,from)=>{
   const authStore = auth()
-  const organismStore = organisms()
   if(to.matched.some((record)=>record.meta.requiresAuth)){
     if(!authStore.isAuthenticated){
       alert('Authentication required')
       authStore.showModal = true
       return 
     }
-  }
-  if(to.name === 'home' && from.name !== 'home'){
-    organismStore.resetQuery()
   }
 })
 export default router;

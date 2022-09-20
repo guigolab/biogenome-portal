@@ -1,52 +1,3 @@
-
-TaxonPipeline = [
-	{"$lookup":
-		{"from": "taxon_node",
-		"localField": "children",
-		"foreignField": "taxid",
-		"as": "children",
-		}
-	},
-	{"$project": 
-		{"_id":0,
-		"children":{
-			"_id":0
-		}}
-	}
-]
-
-GeoCoordinatesPipeline= [
-	{"$lookup":
-		{"from": "secondary_organism",
-		"localField": "biosamples",
-		"foreignField": "_id",
-		"as": "biosamples",
-		}
-	},
-	# {'$unwind': '$biosamples'}, 
-    # {'$sort': {'biosamples.scientific_name': 1}},
-	{"$project": 
-		{"_id":0,
-		"properties": { 
-			"biosamples" : {
-				'$map': { 
-					'input': '$biosamples', 
-					'as': 'biosample', 
-					'in': { 
-						'accession': '$$biosample.accession',
-						'tube_or_well_id': '$$biosample.tube_or_well_id',
-						'scientific_name': '$$biosample.scientific_name',
-					}
-				},
-			}
-		},
-		"geo_loc":1,
-		"type":1,
-		"geometry":1,
-		}
-	}
-]
-
 OrganismPipeline = [
 	{"$lookup":
 		{"from": "bio_sample",
@@ -83,14 +34,6 @@ OrganismPipeline = [
 		"as": "annotations",
 		}
 	},
-	## to mantain lineage order we query it after
-	# {"$lookup":
-	# 	{"from": "taxon_node",
-	# 	"localField": "taxon_lineage",
-	# 	"foreignField": "taxid",
-	# 	"as": "taxon_lineage",
-	# 	}
-	# },
 	{"$lookup":
 		{"from": "bio_project",
 		"localField": "bioprojects",

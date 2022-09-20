@@ -5,7 +5,6 @@ from datetime import timedelta
 import os
 import json
 from db.models import Chromosome, CronJob, GenomeBrowserData,GeoCoordinates,Annotation, TaxonNode, BioSample,LocalSample, Organism, Assembly, Experiment,BioProject,BioGenomeUser
-from flask import current_app as app
 
 class Login(Resource):
     def post(self):
@@ -28,22 +27,22 @@ class Login(Resource):
             return response
         return Response(json.dumps({"msg":"Bad User or Password"}), mimetype="application/json", status=401)
     
-    @jwt_required()
-    def delete(self):
-        Annotation.drop_collection()
-        GenomeBrowserData.drop_collection()
-        TaxonNode.drop_collection()
-        GeoCoordinates.drop_collection()
-        BioGenomeUser.drop_collection()
-        BioProject.drop_collection()
-        BioSample.drop_collection()
-        LocalSample.drop_collection()
-        Organism.drop_collection()
-        Assembly.drop_collection()
-        Chromosome.drop_collection()
-        Experiment.drop_collection()
-        CronJob.drop_collection()
-        return 200
+    # @jwt_required()
+    # def delete(self):
+    #     Annotation.drop_collection()
+    #     GenomeBrowserData.drop_collection()
+    #     TaxonNode.drop_collection()
+    #     GeoCoordinates.drop_collection()
+    #     BioGenomeUser.drop_collection()
+    #     BioProject.drop_collection()
+    #     BioSample.drop_collection()
+    #     LocalSample.drop_collection()
+    #     Organism.drop_collection()
+    #     Assembly.drop_collection()
+    #     Chromosome.drop_collection()
+    #     Experiment.drop_collection()
+    #     CronJob.drop_collection()
+    #     return 200
 
 class Logout(Resource):
     @jwt_required()

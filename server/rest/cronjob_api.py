@@ -1,8 +1,8 @@
 from flask_restful import Resource
-from flask import Response, request
+from flask import Response
 from db.models import CronJob,CronJobStatus
 from flask_jwt_extended import jwt_required
-
+import json
 
 ## persist cronjob status
 class CronJobApi(Resource):
@@ -21,3 +21,5 @@ class CronJobApi(Resource):
     def delete(self):
         cronjob = CronJob.objects().first()
         cronjob.delete()
+        resp = dict(message="cronjob deleter")
+        return Response(json.loads(resp), mimetype="application/json", status=200)

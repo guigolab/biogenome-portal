@@ -25,7 +25,6 @@ def get_coordinates_query(parent_taxid=None, bioproject=None,
         query['bioprojects'] = bioproject
     organism_service.get_data_query(query, biosamples, local_samples, assemblies, annotations, experiments)
     organisms = Organism.objects.filter(**query).exclude('id').scalar('coordinates')
-    app.logger.info(organisms)
     coord_query = [coord for sublist in organisms for coord in sublist]
     coordinates = json.loads(GeoCoordinates.objects(geo_location__in=coord_query).exclude('id').to_json())
     for coord in coordinates:

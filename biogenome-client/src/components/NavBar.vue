@@ -2,7 +2,7 @@
 <div>
   <va-navbar>
       <template #left>
-        <va-navbar-item><va-image :src="imagePath" /></va-navbar-item>
+        <va-navbar-item><va-image style="height:55px;width:100%" :src="imgUrl" /></va-navbar-item>
       </template>
       <template #right>
         <va-navbar-item v-for="(item,index) in navItems" :key="index">
@@ -25,11 +25,10 @@ import Login from './admin/form/Login.vue'
 import {ref} from 'vue'
 import {auth} from '../stores/auth'
 import {NavBar} from '../../config'
-import {tree} from '../stores/tree'
-const imagePath = NavBar.logoPath
+
+const imgUrl = new URL(`/src/assets/${NavBar.logoName}`, import.meta.url).href
 const navItems = NavBar.navItems
 const authStore = auth()
-const treeStore = tree()
 const showModal = ref(false)
 
 </script>

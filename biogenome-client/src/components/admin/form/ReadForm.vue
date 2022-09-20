@@ -25,7 +25,7 @@
                             :label="'Experiment accession'"
                             :placeholder="'ex: ERX6313174'"
                             :insdc-request="ENAClientService.getRead"
-                            :portal-request="DataPortalService.getRead"
+                            :portal-request="ReadService.getRead"
                             :valid-data="validRead"
                             @on-response="parseResponse"
                             @on-reset="reset"
@@ -73,7 +73,6 @@ import ClientInput from './ClientInput.vue'
 import { reactive, ref } from "vue"
 import ENAClientService from "../../../services/clients/ENAClientService"
 import ReadService from '../../../services/ReadService'
-import DataPortalService from '../../../services/DataPortalService'
 import { auth } from '../../../stores/auth'
 
 const authStore = auth()

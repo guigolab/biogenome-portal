@@ -41,10 +41,8 @@
 </template>
 <script setup>
 import NodeIterator from './NodeIterator.vue'
-import {organisms} from '../stores/organisms'
 import { useRouter } from 'vue-router'
 
-const orgStore = organisms()
 const router = useRouter()
 const props = defineProps({
     node:Object,

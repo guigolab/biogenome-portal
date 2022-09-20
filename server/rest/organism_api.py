@@ -2,7 +2,7 @@ import services.organism_service as organism_service
 from flask import Response, request
 from db.models import  Chromosome, GenomeBrowserData, Organism,TaxonNode
 from flask_restful import Resource
-from errors import NotFound, SchemaValidationError
+from errors import NotFound
 import json
 from flask_jwt_extended import jwt_required
 from utils.pipelines import OrganismPipeline
@@ -48,7 +48,6 @@ class OrganismApi(Resource):
 	@jwt_required()
 	def put(self,taxid):
 		data = request.json if request.is_json else request.form
-		app.logger.info(data)
 		updated_organism = organism_service.parse_organism_data(data,taxid)
 		return Response(updated_organism.to_json(),mimetype="application/json", status=201)
 	
@@ -56,28 +55,5 @@ class OrganismApi(Resource):
 	def delete(self,taxid):
 		message = organism_service.delete_organism(taxid)
 		return Response(json.dumps(message),mimetype="application/json", status=200)
-
-
-	# @jwt_required()
-	# def post(self,name):
-	# 	organism = Organism.objects(organism=name).first()
-	# 	if not organism:
-	# 		raise NotFound
-	# 	if request.form:
-	# 		if 'delete_image' in request.form.keys():
-	# 			organism.image.delete()
-	# 		if 'image' in request.files.keys():
-	# 			if organism.image:
-	# 				organism.image.replace(request.files['image'], content_type = 'image/jpeg')
-	# 			else:
-	# 				organism.image.put(request.files['image'], content_type = 'image/jpeg')
-	# 		if 'image_url' in request.form.keys():
-	# 			organism.image_url = request.form['image_url']
-	# 		if 'common_name' in request.form.keys():
-	# 			common_names = request.form['common_name'].split(',')
-	# 			organism.common_name = (common_names)
-	# 		organism.save()
-	# 	else:
-	# 		raise SchemaValidationError	# organism.common_name.extend
 
 

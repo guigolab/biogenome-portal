@@ -90,7 +90,6 @@ const showData = reactive({
 const organisms = ref([])
 let geojson = {}
 const stats = ref({})
-// const orgStore = organisms()
 const total = ref(0)
 
 onMounted(()=>{
@@ -125,7 +124,6 @@ onMounted(()=>{
     })
     .then(resp => {
         geojson = resp.data
-        console.log(geojson)
         if(geojson.features && geojson.features.length){
             showData.map=true
         }
@@ -181,9 +179,7 @@ function getOrganismsAtCoordinates(value){
 }
 
 function filterOrganisms(payload){
-    console.log(payload)
     const setter = payload.value ? false : true
-    console.log(setter)
     showData.stats = setter
     showData.map = setter
     organismQuery.filter=payload.value

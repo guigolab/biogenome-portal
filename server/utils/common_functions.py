@@ -1,7 +1,6 @@
 from db.models import Assembly,Annotation,Experiment,BioSample,LocalSample
 from mongoengine.queryset.visitor import Q
 import json
-from flask import current_app as app
 
 
 def get_query_set(model,filter):
