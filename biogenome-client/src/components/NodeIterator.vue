@@ -21,7 +21,8 @@
                         </div>
                     </div>
                     <div class="flex">
-                        <va-button outline @click.stop.prevent="toPage(node)" icon="visibility"/>
+                        <va-button v-if="node.rank" icon="insights" flat @click="toTreeOfLife(node)"/>
+                        <va-button flat @click.stop.prevent="toPage(node)" icon="visibility"/>
                     </div>
                 </div>
             </va-card>
@@ -62,5 +63,8 @@ function toggle(node){
 }
 function toPage(node){
     router.push({name:props.model.value,params:{id:node[props.model.id]}})
+}
+function toTreeOfLife(node){
+    router.push({name:"tree",params:{taxid:node.taxid}})
 }
 </script>
