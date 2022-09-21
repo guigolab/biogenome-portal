@@ -16,7 +16,6 @@ const props = defineProps({
 
 onMounted(()=>{
     pie.value.focus()
-    console.log(props.data)
     DonutChart(props.data,{
         name: d => d.name,
         value: d => d.leaves,

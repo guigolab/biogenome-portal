@@ -52,6 +52,7 @@
         <va-divider/>
         <div class="row">
             <div class="flex lg4 md12 sm12 xs12">
+                <Transition name="slide-fade">
                 <va-card v-if="organism.metadata && Object.keys(organism.metadata).length" class="custom-card">
                     <va-card-title>
                         <div class="row justify--space-between align--center">
@@ -77,6 +78,8 @@
                         </div>
                     </va-card-content>
                 </va-card>
+                </Transition>
+                <Transition name="slide-fade">
                 <va-card v-if="organism.common_names && organism.common_names.length" class="custom-card">
                     <va-card-title>
                         <div class="row justify--space-between align--center">
@@ -101,6 +104,8 @@
                         </div>
                     </va-card-content>
                 </va-card>
+                </Transition>
+                <Transition name="slide-fade">
                 <va-card v-if="organism.publications && organism.publications.length" class="custom-card">
                     <va-card-title>
                         <div class="row justify--space-between align--center">
@@ -120,6 +125,8 @@
                         </div>
                     </va-card-content>
                 </va-card>
+                </Transition>
+                <Transition name="slide-fade">
                 <va-card v-if="organism.bioprojects && organism.bioprojects.length" class="custom-card">
                     <va-card-title>
                         <div class="row justify--space-between align--center">
@@ -146,6 +153,7 @@
                         </div>
                     </va-card-content>
                 </va-card>
+                </Transition>
                 <va-card class="custom-card">
                     <va-card-title>
                         <div class="row justify--space-between align--center">
@@ -173,6 +181,7 @@
                 </va-card>
             </div>
             <div class="flex lg8 md12 sm12 xs12">
+                <Transition name="slide-fade">
                 <va-card stripe :stripe-color="dataIcons.biosamples.color" v-if="organism.biosamples && organism.biosamples.length" class="custom-card">
                     <va-card-title>
                         <div class="row justify--space-between align--center">
@@ -213,6 +222,8 @@
                         </va-data-table>
                     </va-card-content>
                 </va-card>
+                </Transition>
+                <Transition name="slide-fade">
                 <va-card stripe :stripe-color="dataIcons.local_samples.color" v-if="organism.local_samples && organism.local_samples.length" class="custom-card">
                     <va-card-title>
                         <div class="row justify--space-between align--center">
@@ -243,6 +254,8 @@
                         </va-data-table>
                     </va-card-content>
                 </va-card>
+                </Transition>
+                <Transition name="slide-fade">
                 <va-card stripe :stripe-color="dataIcons.assemblies.color" v-if="organism.assemblies && organism.assemblies.length" class="custom-card">
                     <va-card-title>
                         <div class="row justify--space-between align--center">
@@ -270,6 +283,8 @@
                         </va-data-table>
                     </va-card-content>
                 </va-card>
+                </Transition>
+                <Transition name="slide-fade">
                 <va-card stripe :stripe-color="dataIcons.experiments.color" v-if="organism.experiments && organism.experiments.length" class="custom-card">
                     <va-card-title>
                         <div class="row justify--space-between align--center">
@@ -297,6 +312,8 @@
                         </va-data-table>
                     </va-card-content>
                 </va-card>
+                </Transition>
+                <Transition name="slide-fade">
                 <va-card stripe :stripe-color="dataIcons.annotations.color" v-if="organism.annotations && organism.annotations.length" class="custom-card">
                     <va-card-title>
                         <div class="row justify--space-between align--center">
@@ -330,6 +347,8 @@
                         </va-data-table>
                     </va-card-content>
                 </va-card>
+                </Transition>
+                <Transition name="slide-fade">
                 <va-card stripe stripe-color="#752061" v-if="organism.genome_browser_data && organism.genome_browser_data.length" class="custom-card">
                     <va-card-title>
                         <div class="row justify--space-between align--center">
@@ -355,7 +374,11 @@
                         </va-data-table>
                     </va-card-content>
                 </va-card>
+                </Transition>
+                <Transition name="slide-fade">
                 <Jbrowse2 v-if="showJBrowse" :assembly="jbrowseSession.assemblyTrack" :tracks="jbrowseSession.annotationTracks"/>
+                </Transition>
+                <Transition name="slide-fade">
                 <va-card  v-if="showMap" class="custom-card">
                     <va-card-title>
                         <div class="row justify--space-between align--center">
@@ -374,6 +397,7 @@
                         <CesiumComponent :geojson="geoJson"/>
                     </va-card-content>
                 </va-card>
+                </Transition>
             </div>
         </div>
     </div>
@@ -521,19 +545,16 @@ function toPage(route){
 
 </script>
 <style scoped>
-.slide-up-enter-active,
-.slide-up-leave-active {
-  transition: all 0.25s ease-out;
+.slide-fade-enter-active {
+  transition: all 0.2s ease-out;
 }
-
-.slide-up-enter-from {
-  opacity: 0;
-  transform: translateY(30px);
+.slide-fade-leave-active {
+  transition: all 0.2s cubic-bezier(1, 0.5, 0.8, 1);
 }
-
-.slide-up-leave-to {
+.slide-fade-enter-from,
+.slide-fade-leave-to {
+  transform: translateX(20px);
   opacity: 0;
-  transform: translateY(-30px);
 }
 .status-icon-wrapper{
     padding:15px;

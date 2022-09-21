@@ -4,39 +4,20 @@
         <div class="flex lg6 md6 sm12 xs12">
             <div class="row custom-card">
                 <div class="flex">
-                    <h1 style="text-align:start" class="display-3">Tree of Life Generator</h1>
+                    <h1 style="text-align:start" class="display-3">Tree of Life</h1>
                 </div>
             </div>
             <div class="row custom-card">
                 <div class="flex">
-                    <p style="text-align:start">Generate a Tree of Life image and download it</p>
+                    <va-chip @click="showForm=true;showTree=false" outline>Generate Tree</va-chip>
+                </div>
+                <div class="flex">
+                    <va-chip @click="showForm=false;showTree=true" outline>Browse Tree</va-chip>
                 </div>
             </div>
         </div>
-        <!-- <div class="flex">
-            <va-button-toggle
-                size="small"
-                outline
-                :rounded="false"
-                v-model="currentModel"
-                :options="modelOptions"
-            />
-        </div> -->
     </div>
     <va-divider/>
-    <div v-if="showSlider" class="row justify--center">
-        <div class="flex lg8 md10 sm12 xs12">
-            <va-slider
-                v-model="treeSize"
-                track-label-visible
-                :max="maxLevel"
-            >
-                <template #trackLabel="{ value }">
-                    <va-chip outline color="secondary" size="small">{{ levels[value] }}</va-chip>
-                </template>
-            </va-slider>
-        </div>
-    </div>
     <Transition name="slide-fade">
         <div v-if="showForm">
             <TreeFilter @generate-tree="getTree"/>
@@ -51,52 +32,37 @@
 
 </template>
 <script setup>
-import { computed, onMounted, watch, ref, reactive } from '@vue/runtime-core'
-import { tree } from '../stores/tree'
+import { onMounted, watch, ref } from '@vue/runtime-core'
 import DataPortalService from '../services/DataPortalService';
 import TreeOfLife from '../components/d3/TreeOfLife.vue';
 import TreeFilter from '../components/TreeFilter.vue';
-import * as d3 from "d3";
 
 const props = defineProps({
     taxid:String
 })
 
-const ROOTNODE = import.meta.env.VITE_ROOT_NODE
-
-const currentModel = ref('default')
-const isLoading = ref(false)
 const showTree=ref(false)
-const showForm=ref(true)
-const showSlider = ref(false)
-const treeSize = ref(0)
-const maxLevel = ref(0)
+const showForm=ref(false)
 let treeData = null
-const modelOptions = [
-    {value:'default', icon:'insights'},
-    {value:'custom', icon:'inbox_customize'}
-]
-const levels = ref({})
+
 
 onMounted(()=>{
-    getTreeAndLevels(props.taxid)
+    browseTree(props.taxid)
 })
 
-watch(props.taxid,()=>{
-    // getTreeAndLevels(props.taxid)
+watch(()=>props.taxid,()=>{
+    console.log("hello")
+    browseTree(props.taxid)
 })
  
-function getTreeAndLevels(taxid){
-     DataPortalService.getTree(taxid)
-     .then(resp => {
-         const root = d3.hierarchy(resp.data , d => d.children)
-        .sum(d => d.children ? 0 : 1)
-        .sort((a, b) => (a.value - b.value) || d3.ascending(a.data.length, b.data.length));
-        console.log(root)
-        if(root.leaves() > 250){
 
-        }
-     })
+function browseTree(taxid){
+    showTree.value=false
+    DataPortalService.getTree(taxid)
+    .then(resp => {
+        treeData = resp.data
+        showTree.value = true
+    })
 }
 
 function getTree(payload){

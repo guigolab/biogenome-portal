@@ -38,7 +38,6 @@ def import_records():
     if cronjob_exists:
         print('A CRONJOB IS RUNNING ALREADY')
         return
-
     ##login to create token
     cookies = login()
     if not cookies:
@@ -151,15 +150,20 @@ def get_biosamples_page(url, samples):
 
 def update_biosamples(cookies):
     biosamples = requests.get(f"{API_URL}/bulk/biosample")
+    existing_experiments = requests.get(f"{API_URL}/bulk/experiment").json()
+    existing_accessions = [exp['experiment_accession'] for exp in existing_experiments] if len(existing_experiments) else []
     for biosample in biosamples.json():
+        if biosample["experiments"]:
+            continue
         experiments = get_reads(biosample['accession'])
         print(f"experiments for {biosample['accession']}",len(experiments))
         for experiment in experiments:
             accession = experiment['experiment_accession']
-            if accession not in biosample['experiments']:
-                create_data(f"{API_URL}/experiments/{accession}",cookies)
+            if accession not in biosample['experiments'] and accession not in existing_accessions:
+                create_data(f"{API_URL}/reads/{accession}",cookies)
 
 def get_reads(accession):
+    time.sleep(1)
     experiments_data = requests.get(f'https://www.ebi.ac.uk/ena/portal/'
                                         f'api/filereport?result=read_run'
                                         f'&accession={accession}'

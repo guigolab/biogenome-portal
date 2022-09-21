@@ -54,7 +54,7 @@
                             </div>
                         </div>
                         <va-divider/>
-                        <div class="row align--center justify-content--space-between">
+                        <div class="row align--center justify--space-between">
                             <div class="flex">
                                 <va-button size="small" outline @click="toPageDetails({name:'taxons', params:{id:selectedNode.taxid}})">Details</va-button>
                             </div>
@@ -138,6 +138,8 @@ function downloadPGNImage() {
 
 function createD3Tree(data){
     const root = d3.hierarchy(data , d => d.children)
+    console.log(root)
+    root
       .sum(d => d.children ? 0 : 1)
       .sort((a, b) => (a.value - b.value) || d3.ascending(a.data.length, b.data.length));
       const doms = root.descendants().sort((a,b) =>  b.height - a.height)
@@ -285,6 +287,7 @@ function radialCluster(){
     }
 
 function legend(svg){
+    const div = d3.select(tooltip.value)
     const g = svg
     .selectAll("g").text('').attr('fill',null).attr('stroke',null)
     .data(color().domain())
@@ -301,10 +304,28 @@ function legend(svg){
     .attr("class","legend-text")
     .text(d =>d +' ('+ legendDomains.find(value => value.name === d).rank +')')
     .on("click", function(event,d){
-        router.push({name:'taxons',params:{id: d.data.taxid}});
+        const selectedDomain = legendDomains.find(value => value.name === d)
+        selectedNode.value = {...selectedDomain}
+        selectedNode.value.color = color()(d)
+        div.style("left", (event.layerX) + "px")		
+        .style("top", (event.layerY-15) + "px")
+        showDetails.value=true
     })
     .on("mouseover", mouseovered(true))
     .on("mouseout", mouseovered(false))
+}
+
+//return object with level and number of nodes at each level
+function leveledTree(node, leveledTreeObj) {
+  if(leveledTreeObj[node.height]) {
+    leveledTreeObj[node.height]++
+  } else {
+    leveledTreeObj[node.height] = 1
+  }
+  if(node.children) {
+    node.children.forEach(n => leveledTree(n, leveledTreeObj))
+  }
+  return leveledTreeObj
 }
 
 function toPageDetails(route){

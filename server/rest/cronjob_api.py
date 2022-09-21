@@ -20,6 +20,7 @@ class CronJobApi(Resource):
     @jwt_required()
     def delete(self):
         cronjob = CronJob.objects().first()
-        cronjob.delete()
-        resp = dict(message="cronjob deleter")
-        return Response(json.loads(resp), mimetype="application/json", status=200)
+        if cronjob:
+            cronjob.delete()
+            resp = dict(message="cronjob deleted")
+            return Response(json.dumps(resp), mimetype="application/json", status=200)

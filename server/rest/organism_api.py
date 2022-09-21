@@ -1,6 +1,6 @@
 import services.organism_service as organism_service
 from flask import Response, request
-from db.models import  Chromosome, GenomeBrowserData, Organism,TaxonNode
+from db.models import  BioSample, Chromosome, GenomeBrowserData, Organism,TaxonNode
 from flask_restful import Resource
 from errors import NotFound
 import json
@@ -31,8 +31,8 @@ class OrganismApi(Resource):
 		ordered_taxid_lineage = organism_obj.first().taxon_lineage
 		lineage_from_model = json.loads(TaxonNode.objects(taxid__in=ordered_taxid_lineage).exclude('children').to_json())
 		parsed_lineage = list()
-		for taxid in ordered_taxid_lineage:
-			parsed_lineage.append(next(f for f in lineage_from_model if f['taxid'] == taxid ))
+		for l_taxid in ordered_taxid_lineage:
+			parsed_lineage.append(next(f for f in lineage_from_model if f['taxid'] == l_taxid ))
 		json_resp['taxon_lineage'] = list(reversed(parsed_lineage))
 		#get genome browser tracks
 		if json_resp['assemblies']:
