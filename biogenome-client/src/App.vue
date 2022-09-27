@@ -12,6 +12,13 @@
 <script setup>
 import NavBar from './components/NavBar.vue'
 import Login from './components/admin/form/Login.vue'
+import {Application} from '../config.json'
+import { onMounted } from '@vue/runtime-core'
+
+onMounted(()=>{
+  document.title = Application.title
+})
+
 </script>
 
 <style>

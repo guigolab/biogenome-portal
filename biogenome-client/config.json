@@ -145,7 +145,7 @@
     ],
     "HomePage":{
         "title":"BioGenome Portal Community Edition",
-        "description":"This portal tracks the progress of the Earth Biogenome Project, offering to the biodiversity community the opportunity to share photos of collected organisms, vernacular names and links to the gene annotations of the generated assemblies"
+        "description":"this portal tracks the progress of the earth biogenome project and its affiliated projects, giving the biodiversity community the opportunity to share photos, vernacular names, and gene annotations of sequenced species"
     },
     "TwitterURLS":{
        "PRJEB49670":"https://twitter.com/CatBiogenoma?ref_src=twsrc%5Etfw"
@@ -153,5 +153,8 @@
     "Layout":{
         "primary":"#2B303A",
         "secondary":"#0C7C59"
+    },
+    "Application":{
+        "title":"BioGenome Portal Community Edition"
     }
 }
