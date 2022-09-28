@@ -9,7 +9,10 @@ variables:
 stages:          # List of stages for jobs, and their order of execution
   - build
 
-build-front:       
+build-front:
+  tags:
+  - docker
+  - monstre       
   stage: build
   image: docker:latest
   services:
