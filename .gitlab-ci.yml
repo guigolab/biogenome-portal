@@ -1,0 +1,45 @@
+variables:
+    APP_NAME_FRONT: biogenome_front
+    APP_NAME_CRON: biogenome_cronjob
+    APP_NAME_BACK: biogenome_back
+    CESIUM_TOKEN : $CESIUM_TOKEN
+    ROOT_NODE: 2759
+    PROJECT_ACCESSION: PRJNA533106
+
+stages:          # List of stages for jobs, and their order of execution
+  - build
+
+build-front:       
+  stage: build
+  image: docker:latest
+  services:
+    - docker:dind
+  only:
+    - main
+  script:
+    - docker login gitlab.linux.crg.es:5005
+    - docker build --file=biogenome-client/Dockerfile --build-arg CESIUM_TOKEN="$CESIUM_TOKEN" --build-arg ROOT_NODE="$ROOT_NODE" --build-arg PROJECT_ACCESION="$PROJECT_ACCESSION" -t gitlab.linux.crg.es:5005/erighi/biogenome-portal/$APP_NAME_FRONT .
+    - docker push gitlab.linux.crg.es:5005/erighi/biogenome-portal/$APP_NAME_FRONT
+
+# build-back:       
+#   stage: build
+#   image: docker:latest
+#   services:
+#     - docker:dind
+#   only:
+#     - main
+#   script:
+#     - echo "Compiling the code..."
+#     - echo "Compile complete."
+
+# build-cron:       
+#   stage: build
+#   image: docker:latest
+#   services:
+#     - docker:dind
+#   only:
+#     - master
+#   script:
+#     - echo "Compiling the code..."
+#     - echo "Compile complete."
+
