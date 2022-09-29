@@ -19,10 +19,13 @@ build-front:
     - docker:dind
   only:
     - main
-  before_script:
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  # before_script:
+
+    # - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
 
   script:
+    - docker info
+    # - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - docker build --file=biogenome-client/Dockerfile --build-arg CESIUM_TOKEN="$CESIUM_TOKEN" --build-arg ROOT_NODE="$ROOT_NODE" --build-arg PROJECT_ACCESION="$PROJECT_ACCESSION" -t gitlab.linux.crg.es:5005/erighi/biogenome-portal/$APP_NAME_FRONT .
     - docker push gitlab.linux.crg.es:5005/erighi/biogenome-portal/$APP_NAME_FRONT
 
