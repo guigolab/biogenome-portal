@@ -23,7 +23,6 @@ build-front:
     - main
   before_script:
     - echo $CI_REGISTRY_PASSWORD | docker login $CI_REGISTRY -u $CI_REGISTRY_USER --password-stdin
-    - $BASE_PATH
 
   script:
     - docker info
