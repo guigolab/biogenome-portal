@@ -12,7 +12,22 @@ services:
      - mongodb-data:${MONGODB_DATA_DIR}
     ports:
       - "27015:${DB_PORT}"
-  
+
+  # mongo-backup:
+  #   image: tarator/mongodump:5.0
+  #   restart: always
+  #   links:
+  #     - biogenome_mongo
+  #   depends_on:
+  #     - biogenome_mongo ## link to mongo service name
+  #   volumes:
+  #     - ./mongo_backup:/backup:rw
+  #   environment:
+  #     - MONGO_HOST=biogenome_mongo
+  #     - MONGO_PORT=27017
+  #     - BACKUP_CRON_TIME=* * * * *
+  #     - KEEP_DAYS=14
+
   biogenome_server:
     build: ./server
     container_name: "biogenome_server"

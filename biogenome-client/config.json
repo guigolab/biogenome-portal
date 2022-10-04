@@ -127,10 +127,6 @@
         {"label":"Annotations Created",
         "icon":"query_stats"}
     ],
-    "ROOTNODE": "2759",
-
-    "PROJECT_ACCESSION": "PRJNA545868",
-
     "NavBar":{
         "logoName":"EBG-Logo.png",
         "bgColor":"",

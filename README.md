@@ -30,8 +30,9 @@
     <li>
       <a href="#getting-started">Getting Started</a>
       <ul>
-        <li><a href="#prerequisites">Prerequisites</a></li>
-        <li><a href="#installation">Installation</a></li>
+        <li><a href="#configurations">Configurations</a></li>
+        <li><a href="#run-locally">Run locally</a></li>
+        <li><a href="#deploy">Deploy</a></li>
       </ul>
     </li>
     <li><a href="#usage">Usage</a></li>
@@ -50,21 +51,9 @@ HERE is the live demo: https://genome.crg.cat/portal-dev/#/
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-This project aims to provide an easy way to show biodiversity within a geographical context (country, region, botanical garden, zoo, sequencing projects).
+This project aims to provide a user-friendly interface to show and manage biodiversity metadata.
 
-Species are created from samples representing the physical or genetic entity of the species.
-
-The samples can be inserted locally via excel (following the format of the ERGA manifest) or via form.
-
-This project offers additional services for sequencing projects (under the Earth Biogenome scope):
-
-* cronjob to collect INSDC data related to the project (genomic data): assemblies, reads, samples metadata and taxonomy.
-* export of an excel file containing locally inserted samples to submit to COPO(https://copo-project.org/)
-
-
-IMPORTANT:
-This project uses the metadata of the ERGA manifest (https://github.com/ERGA-consortium/COPO-manifest) and is mainly intended to retrieve data from BioSamples(https://www.ebi.ac.uk/biosamples) for samples metadata and ENA (https://www.ebi.ac.uk/ena/browser/home) for reads and assemblies. For specific project needs you can open an issue.
-
+Metadata can be imported locally (samples) from a spreadsheet file and/or from the INSDC APIs (biosamples, reads, assemblies).
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
@@ -78,13 +67,16 @@ This project is built with the following stack:
 * [FlaskRESTful](https://flask-restful.readthedocs.io/en/latest/)
 * [MongoDB](https://www.mongodb.com/) 
 
+
+
 <p align="right">(<a href="#top">back to top</a>)</p>
 
 
 
 <!-- GETTING STARTED -->
-## Getting Started
+### Getting Started
 
+This project is composed by 4 docker containers that can be easily 
 By default the portal is configured to retrieve public data under the EBP umbrella (https://www.earthbiogenome.org/) it will load (at building stage) and seed the database with the last dump (/dump-db directory)
 
 If you want to customize the portal follow the steps below:

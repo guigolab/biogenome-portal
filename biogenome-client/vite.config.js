@@ -6,8 +6,10 @@ import { NodeModulesPolyfillPlugin } from '@esbuild-plugins/node-modules-polyfil
 import rollupNodePolyFill from 'rollup-plugin-node-polyfills'
 import pluginRewriteAll from 'vite-plugin-rewrite-all';
 
+const basePath = import.meta.env.VITE_BASE_PATH
 // https://vitejs.dev/config/
 export default defineConfig({
+  base: basePath,
   resolve: {
     alias: {
       stream: 'stream-browserify',
