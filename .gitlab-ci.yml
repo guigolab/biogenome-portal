@@ -25,7 +25,7 @@ build-front:
 
   script:
     - docker info
-    - docker build --build-arg CESIUM_TOKEN="$CESIUM_TOKEN" --build-arg BASE_PATH="$BASE_PATH" --build-arg ROOT_NODE="$ROOT_NODE" --build-arg PROJECT_ACCESION="$PROJECT_ACCESSION" -t gitlab.linux.crg.es:5005/monstre/biogenome-portal/$APP_NAME_FRONT ./biogenome-client
+    - docker build --build-arg CESIUM_TOKEN="$CESIUM_TOKEN" --build-arg BASE_PATH="$BASE_PATH" --build-arg ROOT_NODE="$ROOT_NODE" --build-arg PROJECT_ACCESSION="$PROJECT_ACCESSION" -t gitlab.linux.crg.es:5005/monstre/biogenome-portal/$APP_NAME_FRONT ./biogenome-client
     - docker push gitlab.linux.crg.es:5005/monstre/biogenome-portal/$APP_NAME_FRONT
 
 build-back:
