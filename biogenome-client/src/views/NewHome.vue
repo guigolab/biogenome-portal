@@ -126,6 +126,7 @@ import { useRouter } from 'vue-router';
 const router = useRouter()
 const ROOTNODE = import.meta.env.VITE_ROOT_NODE
 const PROJECT_ACCESSION = import.meta.env.VITE_PROJECT_ACCESSION
+console.log(PROJECT_ACCESSION)
 const stats = reactive({
     data:Object,
     organismsWithImages:Array,
