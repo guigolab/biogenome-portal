@@ -3,6 +3,7 @@ import Home from '../views/NewHome.vue'
 import {auth} from '../stores/auth'
 
 const ROOTNODE = import.meta.env.VITE_ROOT_NODE
+const BASE_PATH = import.meta.env.VITE_BASE_PATH
 const organism = () => import('../views/OrganismPage.vue')
 const admin = () => import('../views/AdminArea.vue')
 const adminHP = () => import('../views/admin/LandingPage.vue')
@@ -69,7 +70,7 @@ const routes = [
 ]
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHistory(BASE_PATH),
   routes
 });
 

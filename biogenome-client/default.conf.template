@@ -1,6 +1,5 @@
 
 server {
-    include /etc/nginx/mime.types;
     
     listen ${API_PORT};
 
