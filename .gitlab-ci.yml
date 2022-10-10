@@ -22,7 +22,7 @@ build-front:
     - main
   before_script:
     - echo $CI_REGISTRY_PASSWORD | docker login $CI_REGISTRY -u $CI_REGISTRY_USER --password-stdin
-    - echo "$FRONT_CONFIGS"
+    - cat $FRONT_CONFIGS
 
 
   script:
