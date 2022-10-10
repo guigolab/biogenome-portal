@@ -13,12 +13,15 @@
                 </div>
             </div>
         </div>
+        <div v-if="TwitterURL" class="flex lg6 md6 sm12 xs12">
+            <TwitterWidget :twitter="TwitterURL"/>
+        </div>
     </div>
     <va-divider/>
     <div class="row align--center custom-card">
         <div class="scroller">
             <div v-for="(key,index) in Object.keys(stats.data)" :key="index" class="flex menu-item">
-                <va-card class="custom-card box">
+                <va-card class="custom-card">
                     <va-card-title>
                         <div class="row justify--space-between align--center">
                             <div class="flex">
@@ -52,6 +55,7 @@
                     <va-input
                         :placeholder="`Search in ${currentModel}`"
                         v-model="inputValue"
+                        @keyup.enter="search()"
                     >
                         <template #appendInner>
                             <va-chip outline
@@ -118,10 +122,11 @@ import {computed,onMounted,reactive,ref, watch} from 'vue'
 import DataPortalService from '../services/DataPortalService';
 import NodeIterator from '../components/NodeIterator.vue';
 import { tree } from '../stores/tree';
-import {dataIcons,HomePage} from '../../config.json'
+import {dataIcons,HomePage,TwitterURL} from '../../config.json'
 import PieChart from '../components/d3/PieChart.vue';
 import BarChart from '../components/d3/BarChart.vue';
 import { useRouter } from 'vue-router';
+import TwitterWidget from '../components/TwitterWidget.vue';
 
 const router = useRouter()
 const ROOTNODE = import.meta.env.VITE_ROOT_NODE
@@ -242,6 +247,10 @@ watch(currentModel, ()=>{
 })
 
 function search(){
+    if(inputValue.value.length <= 1){
+        return
+    }
+    console.log('Hello')
     selectedModelObj.value.searchQuery({name: inputValue.value})
     .then(resp => {
         treeStore.tree = resp.data

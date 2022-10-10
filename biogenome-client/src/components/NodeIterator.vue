@@ -9,7 +9,7 @@
                                 <va-icon :name="node.isOpen? 'expand_less':'expand_more'"/>
                             </div>
                             <div class="flex lg10 md10 sm10 xs10" style="text-align:start;padding-left: 5px;">
-                                <va-popover :message="`organisms: ${node.leaves}`">
+                                <va-popover v-if="node.leaves" :message="`organisms: ${node.leaves}`">
                                     <p style="text-align:start;font-size: 16px;">{{node.name || node.title}}</p>
                                     <div class="row align--center justify-content--space-between">
                                         <div class="flex text--secondary" style="font-size: 16px;">

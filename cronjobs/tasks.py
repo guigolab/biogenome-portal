@@ -29,7 +29,7 @@ def create_data(url,cookies,to_delete=False):
         resp = requests.post(url,headers=headers,cookies=cookies)
     if resp.status_code == 401:
         cookies = login()
-        create_data(url, cookies)
+        create_data(url, cookies, to_delete)
     print("RESPONSE IS:", resp.text)
     return
 
