@@ -2,7 +2,7 @@
 <div>
   <va-navbar>
       <template #left>
-        <va-navbar-item><va-image style="height:55px;width:100px" :src="imgUrl" /></va-navbar-item>
+        <va-navbar-item><img style="width:100px" :src="imgUrl" /></va-navbar-item>
       </template>
       <template #right>
         <va-navbar-item v-for="(item,index) in navItems" :key="index">
