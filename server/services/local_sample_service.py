@@ -1,9 +1,11 @@
 from db.models import LocalSample
 from errors import NotFound
 from services import organism_service
+from flask import current_app as app
 
 
 def delete_local_sample(id):
+    app.logger.info(LocalSample.objects().to_json())
     sample_to_delete = LocalSample.objects(local_id=id).first()
     if not sample_to_delete:
         raise NotFound

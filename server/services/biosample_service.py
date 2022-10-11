@@ -3,7 +3,6 @@ from errors import NotFound
 from utils import data_helper
 from utils import ena_client,utils
 from .organism_service import get_or_create_organism
-from flask import current_app as app
 
 
 

@@ -8,7 +8,7 @@
       </div>
       <va-divider/>
       <div v-if="showNotifications" class="row">
-        <div class="flex">
+        <div class="flex lg12 md12 sm12 xs12">
           <va-card class="custom-card">
             <va-card-title>
                 Notifications

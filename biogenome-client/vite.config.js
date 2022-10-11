@@ -11,7 +11,7 @@ export default defineConfig(({ command, mode }) => {
 
   const env = loadEnv(mode, process.cwd(), '')
   return {
-  base: env.VITE_BASE_PATH,
+  base: env.VITE_BASE_PATH ? env.VITE_BASE_PATH:'/',
   resolve: {
     alias: {
       stream: 'stream-browserify',

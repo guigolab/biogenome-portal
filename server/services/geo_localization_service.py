@@ -135,6 +135,9 @@ def coordinate_parser(sample_metadata):
     elif 'latitude' in lowered_keys_dict and 'longitude' in lowered_keys_dict:
         latitude = str(lowered_keys_dict['latitude'])
         longitude  = str(lowered_keys_dict['longitude'])
+    elif 'decimal_latitude' in lowered_keys_dict and 'decimal_longitude' in lowered_keys_dict:
+        latitude = str(lowered_keys_dict['decimal_latitude'])
+        longitude  = str(lowered_keys_dict['decimal_longitude'])
     else:
         return
     if any(c.isdigit() for c in str(latitude)) and any(c.isdigit() for c in str(longitude)):
