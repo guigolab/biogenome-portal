@@ -9,13 +9,12 @@ stages:          # List of stages for jobs, and their order of execution
   - build
   - deploy
 
-build-front:
+build-containers:
   tags:
   - docker
   - monstre       
   stage: build
   image: docker:latest
-
   only:
     - main
   before_script:
@@ -24,34 +23,14 @@ build-front:
   script:
     - docker build --build-arg CESIUM_TOKEN="$CESIUM_TOKEN" --build-arg BASE_PATH="$BASE_PATH" --build-arg ROOT_NODE="$ROOT_NODE" --build-arg PROJECT_ACCESSION="$PROJECT_ACCESSION" -t gitlab.linux.crg.es:5005/monstre/biogenome-portal/$APP_NAME_FRONT ./biogenome-client
     - docker push gitlab.linux.crg.es:5005/monstre/biogenome-portal/$APP_NAME_FRONT
-
-build-back:
-  tags:
-  - docker
-  - monstre       
-  stage: build
-  image: docker:latest
-  only:
-    - main
-  before_script:
-    - echo $CI_REGISTRY_PASSWORD | docker login $CI_REGISTRY -u $CI_REGISTRY_USER --password-stdin
-  script:
     - docker build -t gitlab.linux.crg.es:5005/monstre/biogenome-portal/$APP_NAME_BACK ./server
     - docker push gitlab.linux.crg.es:5005/monstre/biogenome-portal/$APP_NAME_BACK
-
-build-cron:
-  tags:
-  - docker
-  - monstre       
-  stage: build
-  image: docker:latest
-  only:
-    - main
-  before_script:
-    - echo $CI_REGISTRY_PASSWORD | docker login $CI_REGISTRY -u $CI_REGISTRY_USER --password-stdin
-  script:
     - docker build -t gitlab.linux.crg.es:5005/monstre/biogenome-portal/$APP_NAME_CRON ./cronjobs
     - docker push gitlab.linux.crg.es:5005/monstre/biogenome-portal/$APP_NAME_CRON
+    - echo "${APP_TO_DEPLOY}" >> deploy.env
+  artifacts:
+    reports:
+      dotenv: deploy.env
 
 deploy-app:
   stage: deploy
