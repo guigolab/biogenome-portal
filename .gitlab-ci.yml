@@ -2,7 +2,7 @@ variables:
     APP_NAME_FRONT: biogenome_front
     APP_NAME_CRON: biogenome_cronjob
     APP_NAME_BACK: biogenome_back
-
+    APP_TO_DEPLOY: $APP_TO_DEPLOY
 
 
 stages:          # List of stages for jobs, and their order of execution
@@ -27,10 +27,6 @@ build-containers:
     - docker push gitlab.linux.crg.es:5005/monstre/biogenome-portal/$APP_NAME_BACK
     - docker build -t gitlab.linux.crg.es:5005/monstre/biogenome-portal/$APP_NAME_CRON ./cronjobs
     - docker push gitlab.linux.crg.es:5005/monstre/biogenome-portal/$APP_NAME_CRON
-    - echo "${APP_TO_DEPLOY}" >> deploy.env
-  artifacts:
-    reports:
-      dotenv: deploy.env
 
 deploy-app:
   stage: deploy
