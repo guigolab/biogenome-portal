@@ -114,7 +114,8 @@ def parse_excel(excel=None, id=None, taxid=None, scientific_name=None, header=1,
         else:
             organism = get_or_create_organism(new_sample[taxid])
             if not organism:
-                sample_error_obj[index+header+1] = 'TAXID not found in NCBI'
+                msg = 'TAXID not found in NCBI'
+                sample_error_obj[index+header+1].append(msg)
                 all_errors.append(sample_error_obj)
                 continue
             sample_obj = LocalSample(taxid=new_sample[taxid],local_id=new_sample[id],broker=source,metadata=new_sample['metadata'],scientific_name=new_sample[scientific_name]).save()                

@@ -110,6 +110,7 @@ const importOptions = [
   {value:'SKIP',text:'SKIP existing records'},
 ]
 
+const isLoading = ref(false)
 const response = reactive({
   messages:[],
   color: ''
@@ -138,6 +139,7 @@ const excelForm = {
 const excelData = reactive({...excelForm})
 
 function submitExcel(){
+  isLoading.value=true
   const formData = new FormData()
   formData.append('excel', excel.file[0])
   Object.keys(excelData).forEach(key => {
@@ -150,12 +152,15 @@ function submitExcel(){
     response.messages = [...resp.data]
     response.color = 'success'
     showNotifications.value = true
+    isLoading.value=false
     window.scrollTo({ top: 0, behavior: 'smooth' });
+
   })
   .catch(e => {
     response.messages = [...e.response.data]
     response.color = 'danger'
     showNotifications.value = true
+    isLoading.value=false
     window.scrollTo({ top: 0, behavior: 'smooth' });
   })
 }
