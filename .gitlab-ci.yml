@@ -1,5 +1,5 @@
 variables:
-    APP_NAME_FRONT: biogenome_front
+    APP_NAME_FRONT: $APP_NAME_FRONT
     APP_NAME_CRON: biogenome_cronjob
     APP_NAME_BACK: biogenome_back
     APP_TO_DEPLOY: $APP_TO_DEPLOY
