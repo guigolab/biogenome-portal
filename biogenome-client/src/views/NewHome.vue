@@ -131,7 +131,6 @@ import TwitterWidget from '../components/TwitterWidget.vue';
 const router = useRouter()
 const ROOTNODE = import.meta.env.VITE_ROOT_NODE
 const PROJECT_ACCESSION = import.meta.env.VITE_PROJECT_ACCESSION
-console.log(PROJECT_ACCESSION)
 const stats = reactive({
     data:Object,
     organismsWithImages:Array,
@@ -250,7 +249,6 @@ function search(){
     if(inputValue.value.length <= 1){
         return
     }
-    console.log('Hello')
     selectedModelObj.value.searchQuery({name: inputValue.value})
     .then(resp => {
         treeStore.tree = resp.data

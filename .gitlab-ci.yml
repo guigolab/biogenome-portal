@@ -2,10 +2,8 @@ variables:
     APP_NAME_FRONT: biogenome_front
     APP_NAME_CRON: biogenome_cronjob
     APP_NAME_BACK: biogenome_back
-    CESIUM_TOKEN : $CESIUM_TOKEN
-    BASE_PATH: $BASE_PATH
-    ROOT_NODE: 2759
-    PROJECT_ACCESSION: PRJNA533106
+
+
 
 stages:          # List of stages for jobs, and their order of execution
   - build
@@ -23,8 +21,6 @@ build-front:
   before_script:
     - echo $CI_REGISTRY_PASSWORD | docker login $CI_REGISTRY -u $CI_REGISTRY_USER --password-stdin
     - cat $FRONT_CONFIGS > ./biogenome-client/config.json
-
-
   script:
     - docker build --build-arg CESIUM_TOKEN="$CESIUM_TOKEN" --build-arg BASE_PATH="$BASE_PATH" --build-arg ROOT_NODE="$ROOT_NODE" --build-arg PROJECT_ACCESSION="$PROJECT_ACCESSION" -t gitlab.linux.crg.es:5005/monstre/biogenome-portal/$APP_NAME_FRONT ./biogenome-client
     - docker push gitlab.linux.crg.es:5005/monstre/biogenome-portal/$APP_NAME_FRONT
@@ -39,7 +35,6 @@ build-back:
     - main
   before_script:
     - echo $CI_REGISTRY_PASSWORD | docker login $CI_REGISTRY -u $CI_REGISTRY_USER --password-stdin
-
   script:
     - docker build -t gitlab.linux.crg.es:5005/monstre/biogenome-portal/$APP_NAME_BACK ./server
     - docker push gitlab.linux.crg.es:5005/monstre/biogenome-portal/$APP_NAME_BACK
@@ -54,7 +49,6 @@ build-cron:
     - main
   before_script:
     - echo $CI_REGISTRY_PASSWORD | docker login $CI_REGISTRY -u $CI_REGISTRY_USER --password-stdin
-
   script:
     - docker build -t gitlab.linux.crg.es:5005/monstre/biogenome-portal/$APP_NAME_CRON ./cronjobs
     - docker push gitlab.linux.crg.es:5005/monstre/biogenome-portal/$APP_NAME_CRON
