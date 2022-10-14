@@ -3,7 +3,9 @@ import os
 from datetime import datetime
 import time
 
-API_URL = "http://biogenome_nginx/api"
+PROXY_HOST=os.getenv('PROXY_HOST')
+
+API_URL = f"http://{PROXY_HOST}/api"
 
 username = os.getenv('DB_USER')
 password = os.getenv('DB_PASS')
@@ -130,23 +132,21 @@ def import_from_EBI_biosamples(PROJECTS,cookies):
 def collect_samples(PROJECTS):
     samples = dict()
     for project in PROJECTS:
-        biosamples = get_biosamples_page(f"https://www.ebi.ac.uk/biosamples/samples?size=10000&filter=attr%3Aproject%20name%3A{project}", [])
+        biosamples = get_biosamples_from_biosamples_ebi(project)
         print('lenght ebi biosamples of ',project, len(biosamples))
         if biosamples:
             samples[project] = biosamples
     return samples
 
-def get_biosamples_page(url, samples):
-    response = requests.get(url)
-    if response.status_code !=  200:
-        print('ERROR CALLING BIOSAMPLES API',response.content)
-        return samples
-    data = response.json()
-    if '_embedded' in data.keys() and 'samples' in data['_embedded'].keys():
-        samples.extend(data['_embedded']['samples'])
-    if 'next' in data['_links'].keys():
-        get_biosamples_page(data['_links']['next']['href'],samples)
-    return samples
+def get_biosamples_from_biosamples_ebi(project_name):
+    biosamples = []
+    href = f"https://www.ebi.ac.uk/biosamples/samples?size=200&filter=attr%3Aproject%20name%3A{project_name}"
+    resp = requests.get(href).json()
+    while 'next' in resp['_links'].keys():
+        href=resp['_links']['next']['href']
+        biosamples.extend(resp['_embedded']['samples'])
+        resp = requests.get(href).json()
+    return biosamples
 
 def update_biosamples(cookies):
     biosamples = requests.get(f"{API_URL}/bulk/biosample")
@@ -155,8 +155,11 @@ def update_biosamples(cookies):
     for biosample in biosamples.json():
         if biosample["experiments"]:
             continue
-        experiments = get_reads(biosample['accession'])
-        print(f"experiments for {biosample['accession']}",len(experiments))
+        try:
+            experiments = get_reads(biosample['accession'])
+        except:
+            print("ERROR IN EXPERIMENTS IMPORT")
+            create_data(f"{API_URL}/cronjob",cookies, to_delete=True)
         for experiment in experiments:
             accession = experiment['experiment_accession']
             if accession not in biosample['experiments'] and accession not in existing_accessions:

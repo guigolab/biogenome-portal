@@ -132,14 +132,15 @@ function submitAssembly(){
         alert.title = "Success"
         alert.message = resp.data
         alert.color = "success"
-        isLoading.value=false
+        authStore.isLoading=false
         showAlert.value=true
+        reset()
         window.scrollTo({ top: 0, behavior: 'smooth' });
     })
     .catch(errors => {
         console.log(errors)
         alert.title = "Error"
-        alert.message = errors.response.data
+        alert.message = errors.response ? errors.response.data:errors
         alert.color = "danger"
         authStore.isLoading=false
         showAlert.value=true

@@ -35,7 +35,7 @@
                 <div v-if="validRead">
                     <div class="row">
                         <div class="flex">
-                            <h1 class="display-3">{{organismFormData.scientific_name}}</h1>
+                            <h1 class="display-3">{{readToSubmit.scientific_name}}</h1>
                         </div>
                     </div>
                     <va-divider/>
@@ -96,9 +96,10 @@ function parseResponse(value){
     console.log(value)
     if(value.isError){
         Object.assign(alert,value.alert)
+        showAlert.value=true
     }else{
-        if(value.response.data.length){
-            readToSubmit.value = value.response.data[0]
+        if(value.data.length){
+            readToSubmit.value = value.data[0]
             accession.value = value.id
             validRead.value = true
         }
@@ -117,20 +118,19 @@ function submit(){
     authStore.isLoading=true
     ReadService.importReads(accession.value)
     .then(resp => {
-        console.log(resp)
-        const response = resp.data
-        if(response.success){
+        if(resp.status === 201){
             alert.title='Success'
             alert.color='success'
-            alert.message=response.message+' correctly inserted'
+            alert.message=resp.data+' correctly inserted'
             reset()
             showAlert.value=true
+            authStore.isLoading=false
             window.scrollTo({ top: 0, behavior: 'smooth' });
             return
         }
         alert.title='Error'
         alert.color='danger'
-        alert.message=response.message
+        alert.message=resp.data
         showAlert.value=true
         authStore.isLoading = false
         window.scrollTo({ top: 0, behavior: 'smooth' });

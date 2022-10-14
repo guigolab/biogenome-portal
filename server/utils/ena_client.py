@@ -20,15 +20,20 @@ def check_taxons_from_NCBI(taxids):
 
 def get_sample_from_biosamples(accession):
     time.sleep(1)
-    response = requests.get(f"https://www.ebi.ac.uk/biosamples/samples?size=1000&filter=acc:{accession}").json()
-    samples = biosamples_response_parser(response)
-    return samples
+    response = requests.get(f"https://www.ebi.ac.uk/biosamples/samples?size=10&filter=acc:{accession}").json()
+    app.logger.info(response)
+    sample = response['_embedded']['samples'][0]
+    return sample
 
 def get_samples_derived_from(accession):
-    time.sleep(1)
-    response = requests.get(f"https://www.ebi.ac.uk/biosamples/samples?size=1000&filter=attr%3Asample%20derived%20from%3A{accession}").json()
-    samples = biosamples_response_parser(response)
-    return samples
+    biosamples=[]
+    href=f"https://www.ebi.ac.uk/biosamples/samples?size=200&filter=attr%3Asample%20derived%20from%3A{accession}"
+    resp = requests.get(href).json()
+    while 'next' in resp['_links'].keys():
+        href=resp['_links']['next']['href']
+        biosamples.extend(resp['_embedded']['samples'])
+        resp = requests.get(href).json()
+    return biosamples
     
 def get_tolid(taxid):
     time.sleep(1)
@@ -45,21 +50,6 @@ def get_bioproject(project_accession):
         return list()
     return resp.json()
 
-def get_biosamples_page(url , samples):
-    time.sleep(1)
-    response = requests.get(url)
-    if response.status_code !=  200:
-        print('ERROR CALLING BIOSAMPLES API',response.content)
-        return samples
-    data = response.json()
-    if '_embedded' in data.keys() and 'samples' in data['_embedded'].keys():
-        samples.extend(data['_embedded']['samples'])
-    if 'next' in data['_links'].keys():
-        get_biosamples_page(data['_links']['next']['href'],samples)
-    return samples
-
-def get_biosamples(project):
-    return get_biosamples_page(f"https://www.ebi.ac.uk/biosamples/samples?size=10000&filter=attr%3Aproject%20name%3A{project}", [])
 
 
 def parse_assemblies(accession):

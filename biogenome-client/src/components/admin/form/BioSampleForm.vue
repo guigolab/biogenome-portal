@@ -96,8 +96,13 @@ function parseResponse(value){
         showAlert.value = true
         return
     }else{
-        if(value.response.data._embedded){
-            biosampleToSubmit.value = value.response.data._embedded.samples[0]
+        if(value.data && value.data._embedded){
+            var metadata = {}
+            const characteristics = value.data._embedded.samples[0].characteristics
+            Object.keys(characteristics).forEach(k => {
+                metadata[k] = characteristics[k][0].text
+            })
+            biosampleToSubmit.value = {...metadata}
             accession.value = value.id
             validBiosample.value = true
             return
@@ -119,12 +124,11 @@ function submit(){
     authStore.isLoading=true
     BioSampleService.importBioSample(accession.value)
     .then(resp => {
-        console.log(resp)
         const response = resp.data
-        if(response.success){
+        if(resp.status === 201){
             alert.title='Success'
             alert.color='success'
-            alert.message=response.message+' correctly inserted'
+            alert.message=resp.data
             reset()
             showAlert.value=true
             authStore.isLoading = false
@@ -133,7 +137,7 @@ function submit(){
         }
         alert.title='Error'
         alert.color='danger'
-        alert.message=response.message
+        alert.message=response.data
         showAlert.value=true
         authStore.isLoading = false
         window.scrollTo({ top: 0, behavior: 'smooth' });
