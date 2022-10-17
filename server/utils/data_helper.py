@@ -38,11 +38,15 @@ def create_data_from_assembly(assembly_obj, ncbi_response):
 def create_data_from_biosample(biosample_obj):
     biosamples_to_update=[biosample_obj]
     organism_obj = organism_service.get_or_create_organism(biosample_obj.taxid)
+    if not organism_obj:
+        return
+    organism_obj.modify(add_to_set__biosamples=biosample_obj.accession)
     if 'sample derived from' in biosample_obj.metadata.keys():
         biosample_container = biosample_service.create_biosample_from_accession(biosample_obj.metadata['sample derived from'])
-        biosample_container.modify(add_to_set__sub_samples=biosample_obj.accession)
-        organism_obj.modify(add_to_set__biosamples=biosample_container.accession)
-        biosamples_to_update.append(biosample_container)
+        if biosample_container:
+            biosample_container.modify(add_to_set__sub_samples=biosample_obj.accession)
+            organism_obj.modify(add_to_set__biosamples=biosample_container.accession)
+            biosamples_to_update.append(biosample_container)
     else:
         organism_obj.modify(add_to_set__biosamples=biosample_obj.accession)
         children_samples = biosample_service.get_biosamples_derived_from(biosample_obj.accession)

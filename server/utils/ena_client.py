@@ -1,6 +1,4 @@
 import requests
-from flask import current_app as app, request
-from .common_functions import biosamples_response_parser
 import time
 
 def get_taxon_from_ena(taxon_id):
@@ -21,9 +19,8 @@ def check_taxons_from_NCBI(taxids):
 def get_sample_from_biosamples(accession):
     time.sleep(1)
     response = requests.get(f"https://www.ebi.ac.uk/biosamples/samples?size=10&filter=acc:{accession}").json()
-    app.logger.info(response)
-    sample = response['_embedded']['samples'][0]
-    return sample
+    if '_embedded' in response.keys() and 'samples' in response['_embedded'] and response['_embedded']['samples']:
+        return response['_embedded']['samples'][0]
 
 def get_samples_derived_from(accession):
     biosamples=[]
