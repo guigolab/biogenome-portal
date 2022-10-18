@@ -70,7 +70,7 @@
                     <va-card-content>
                         <div v-for="(key,index) in Object.keys(organism.metadata)" :key="index" class="row justify--space-between align--center" style="padding:5px">
                             <div class="flex">
-                                <p style="text-align:start">{{key}}</p>
+                                <p style="text-align:start"><strong>{{key}}:</strong></p>
                             </div>
                             <div class="flex">
                                 <p style="text-align:start">{{organism.metadata[key]}}</p>
