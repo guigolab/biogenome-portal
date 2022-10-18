@@ -83,7 +83,7 @@
                     :formOptions="vernacularNameFormOptions"
                 />
                 <FormComponent
-                    v-if="PROJECT_ACCESSION"
+                    v-if="PROJECT_ACCESSION && showGoaTStatus"
                     :title="'goat status'"
                     :listObject="organismFormData"
                     :formOptions="goatInformations"
@@ -111,7 +111,7 @@
 </va-inner-loading>
 </template>
 <script setup>
-import {computed, nextTick, onMounted, reactive,ref} from 'vue'
+import {computed, nextTick, onMounted, reactive,ref, watch} from 'vue'
 import EnaService from '../../../services/clients/ENAClientService'
 import SubmissionService from '../../../services/SubmissionService'
 import {GoaTStatus,TargetListStatus,PublicationSource} from '../../../../config'
@@ -131,6 +131,7 @@ const organismToUpdate = ref(false)
 const validTaxid = ref(false)
 const showAlert = ref(false)
 const router = useRouter()
+const showGoaTStatus = ref(false)
 const initOrganism = {
     scientific_name:null,
     taxid:null,
@@ -171,28 +172,11 @@ const initAlert = {
 
 const alert = reactive({...initAlert})
 
-const goatOptions = computed(()=>{
-    if(organismToUpdate.value){
-        switch(organismFormData.goat_status){
-            case 'Sample Collected':
-                return ['Sample Collected','Sample Acquired','Data Generation','In Assembly'];
-            case 'Sample Acquired':
-                return ['Sample Acquired','Data Generation','In Assembly']
-            case 'Data Generation':
-                return ['Data Generation','In Assembly']
-            case 'INSDC Submitted':
-                return ['INSDC Submitted']
-            default:
-                return [organismFormData.goat_status]
-        }
-    }
-    return ['Sample Collected','Sample Acquired','Data Generation','In Assembly']
+const goatOptions = ref([]) 
 
-    
-})
 
 const goatInformations = [
-    {type:'select',label:'GoaT status', key:'goat_status', options:goatOptions.value},
+    {type:'select',label:'GoaT status', key:'goat_status', options:[]},
     {type:'select',label:'Long List status', key:'target_list_status',options:TargetListStatus.map(s => s.label)},
 ]
 const initGalleryImageOption={
@@ -250,13 +234,39 @@ onMounted(()=>{
                 })
                 Object.assign(galleryImagesOptions, galleryOptions)
             }
-            nextTick(()=>{
                 Object.assign(organismFormData,obj)
                 organismToUpdate.value = true
-            })
+                setGoaTOption()
         })
+    }else{
+        setGoaTOption()
     }
 })
+
+function setGoaTOption(){
+    if(organismToUpdate.value){
+        switch(organismFormData.goat_status){
+            case 'Sample Collected':
+                goatOptions.value = ['Sample Collected','Sample Acquired','Data Generation','In Assembly']
+                break
+            case 'Sample Acquired':
+                goatOptions.value = ['Sample Acquired','Data Generation','In Assembly']
+                break
+            case 'Data Generation':
+                goatOptions.value = ['Data Generation','In Assembly']
+                break
+            case 'INSDC Submitted':
+                goatOptions.value = ['INSDC Submitted']
+                break
+            default:
+                goatOptions.value = [organismFormData.goat_status]
+        }
+    }else{
+        goatOptions.value = ['Sample Collected','Sample Acquired','Data Generation','In Assembly']
+    }
+    showGoaTStatus.value=true
+    goatInformations[0].options = [...goatOptions.value]
+}
 
 function getTaxon(value){
     if(value.isError){

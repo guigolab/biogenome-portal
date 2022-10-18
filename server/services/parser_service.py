@@ -1,6 +1,5 @@
 # from tempfile import NamedTemporaryFile
 import openpyxl
-from flask import current_app as app
 from db.models import BrokerSource, LocalSample
 from services import geo_localization_service
 from .organism_service import get_or_create_organism
@@ -86,6 +85,8 @@ def parse_excel(excel=None, id=None, taxid=None, scientific_name=None, header=1,
         sample_error_obj[index+header+1] = []
         new_sample = dict(metadata=dict())
         for key, cell in zip(header_row,row):
+            if 'orcid' in key.lower():
+                continue ## skip orcid related fields maybe private
             if key in [f['value'] for f in mandatory_fields]:
                 if not cell.value:
                     msg = f"{key} field is mandatory"
