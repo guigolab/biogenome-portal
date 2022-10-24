@@ -9,6 +9,10 @@ server {
         client_max_body_size 1000M;
     }
 
+    location /files/ {
+        alias /var/www/statics/;
+    }
+
     location /api {
         include uwsgi_params;
         uwsgi_pass ${API_HOST}:${API_PORT};

@@ -525,7 +525,7 @@ function loadTrack(rowData){
     }
     jbrowseSession.assemblyTrack = {...assTrack}
     rowData.annotation_tracks.forEach(ann => {
-        const annToLoad = {...jbrowse2.annotationTrackObject}
+        const annToLoad = JSON.parse(JSON.stringify(jbrowse2.annotationTrackObject));
         annToLoad.name = ann.name
         annToLoad.trackId = ann.name+' '+rowData.assembly_accession
         annToLoad.assemblyNames = [rowData.assembly_name || rowData.assembly_accession]

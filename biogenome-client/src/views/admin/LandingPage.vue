@@ -54,10 +54,10 @@
                             >
                             <ul>
                                 <li>
-                                    <va-button flat icon="query_stats" :to="{name:'annotation-form', params:{accession:rowData.accession,toUpdate:false}}">Add Annotation</va-button>
+                                    <va-button flat icon="query_stats" :to="{name:'annotation-form', params:{accession:rowData.accession}}">Add Annotation</va-button>
                                 </li>
                                 <li>
-                                    <va-button flat icon="view_timeline" :to="{name:'genome-browser-form', params:{accession:rowData.accession,toUpdate:false}}">Add Genome Browser Data</va-button>
+                                    <va-button flat icon="view_timeline" :to="{name:'genome-browser-form', params:{accession:rowData.accession}}">Add Genome Browser Data</va-button>
                                 </li>
                             </ul>
                             </va-button-dropdown>
@@ -400,7 +400,7 @@ function getData(){
 function editItem(item){
     switch(dataValue.value){
         case 'annotations':
-            router.push({name:'annotation-form', params:{accession:item.assembly_accession,toUpdate:true,name:item.name}})
+            router.push({name:'annotation-form', params:{accession:item.assembly_accession,name:item.name}})
             break
         case 'jbrowse':
             router.push({name:'genome-browser-form', params:{accession:item.assembly_accession,toUpdate:true}}) //genome browser data share the same assembly accession

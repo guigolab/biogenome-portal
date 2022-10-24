@@ -21,7 +21,11 @@ var source = new Cesium.GeoJsonDataSource()
 
 onMounted(()=>{
     cesium.value.focus()
-    Cesium.Ion.defaultAccessToken = accessToken
+    console.log(accessToken?'true':'false')
+    if(accessToken){
+        console.log('hello')
+        Cesium.Ion.defaultAccessToken = accessToken
+    }
     viewer = new Cesium.Viewer(cesium.value, {timeline:false,animation:false,infoBox:false});
     viewer.selectedEntityChanged.addEventListener(function(selectedEntity) {
         if(Cesium.defined(selectedEntity)) {

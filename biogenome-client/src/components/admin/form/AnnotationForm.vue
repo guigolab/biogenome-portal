@@ -3,7 +3,7 @@
     <div class="layout">
         <div class="row">
             <div class="flex">
-                <h1 class="display-3">{{name? name: "Annotation Form of"+ accession}}</h1>
+                <h1 class="display-3">{{name? name: "Annotation Form of "+ accession}}</h1>
             </div>
         </div>
         <va-divider/>
@@ -27,17 +27,16 @@
             </va-card-title>
             <va-card-content>
                 <va-input
-                    v-for="(opt,index) in linkOptions"
+                    v-for="(link,index) in annotation.links"
                     :key="index"
-                    :label="opt.label+' ('+index+')' "
-                    v-model="opt.value"
+                    :label="`link ${index}`"
+                    v-model="annotation.links[index]"
                 >
                     <template #append>
-                        <va-chip outline @click="annotation.links.push(opt.value)">Confirm</va-chip>
                         <va-chip outline @click="removeLink(index)">Remove</va-chip>
                     </template>
                 </va-input>
-            <va-button @click="linkOptions.push({label:'External link', value:''})">Add new link</va-button>   
+            <va-button @click="annotation.links.push('')">Add New Link Field</va-button>   
             </va-card-content>
             <va-divider/>
         </va-card>
@@ -48,7 +47,7 @@
                 </va-button>
             </div>
             <div class="flex">
-                <va-button @click="toUpdate? updateAnnotation() : submitAnnotation()" :disabled="!annotation.name && Object.keys(annotation.metadata).length < 1" >
+                <va-button @click="name? updateAnnotation() : submitAnnotation()" :disabled="(!annotation.name) && (Object.keys(annotation.metadata).length < 1)" >
                     Submit Annotation
                 </va-button>            
             </div>
@@ -69,7 +68,6 @@ const authStore = auth()
 
 const props = defineProps({
     accession:String,
-    toUpdate:Boolean,
     name:String
 })
 const showAlert = ref(false)
@@ -82,7 +80,7 @@ const alert = reactive({
 
 
 const initLink={
-    label:'external link',value:''
+    label:'external link',value:'', saved:false,
 }
 const linkOptions = reactive([
     {...initLink},
@@ -101,10 +99,22 @@ const annotationOptions = [
 ]
 
 onMounted(()=>{
+    console.log(props.name)
     if(props.name){
         AnnotationService.getAnnotation(props.name)
         .then(resp => {
-            Object.assign(annotation,resp.data)
+            Object.keys(resp.data).forEach(k => {
+                if(annotation[k]){
+                    annotation[k] = resp.data[k]
+                }
+            })
+            if(annotation.links.length){
+                linkOptions.pop()
+            }
+            annotation.links.forEach(link => {
+                linkOptions.push({label:'External link', value:link,saved:true})
+            })
+            // Object.assign(annotation,resp.data)
         })
         .catch(e => {
             console.log(e)
@@ -113,21 +123,17 @@ onMounted(()=>{
 })
 
 function removeLink(index){
-    if(index>0){
-        linkOptions.splice(index,1)
-        annotation.links.splice(index,1)
-    }else{
-        annotation.links = []
-        linkOptions[0].value=''
-    }
+    linkOptions.splice(index,1)
+    annotation.links.splice(index,1)
 }
 
 function submitAnnotation(){
-    authStore.isLoading.value=true
+    authStore.isLoading=true
+    annotation.links = annotation.links.filter(l => l)
     AnnotationService.createAnnotation(annotation)
     .then(resp => {
         alert.title="Success"
-        alert.message=`${resp.data}`
+        alert.message=`${resp.data.name} correctly saved`
         alert.color="success"
         showAlert.value=true
         authStore.isLoading=false
@@ -145,11 +151,17 @@ function submitAnnotation(){
 }
 
 function updateAnnotation(){
-    auth.isLoading=true
-    AnnotationService.updateAnnotation(props.name, annotation)
+    authStore.isLoading=true
+    //remove name from annotation object
+    annotation.links = annotation.links.filter(l => l)
+    const annotationToUpdate = {}
+    Object.keys(annotation).filter(k => k !== 'name').forEach(k => {
+        annotationToUpdate[k] = annotation[k]
+    })
+    AnnotationService.updateAnnotation(props.name, annotationToUpdate)
     .then(resp => {
         alert.title="Success"
-        alert.message=`${resp.data}`
+        alert.message=`${resp.data.name} correctly updated`
         alert.color="success"
         showAlert.value=true
         authStore.isLoading=false

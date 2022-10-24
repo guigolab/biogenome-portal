@@ -6,6 +6,7 @@ from utils import common_functions
 from errors import NotFound
 import json
 from flask_jwt_extended import jwt_required
+from flask import current_app as app
 
 FIELDS_TO_EXCLUDE = ['id','created']
 
@@ -13,7 +14,7 @@ class AnnotationApi(Resource):
 
     def get(self,name=None):
         if name:
-            ann_obj = Annotation.objects(name=name).first()
+            ann_obj = Annotation.objects(name=name).exclude(*FIELDS_TO_EXCLUDE).first()
             if not ann_obj:
                 raise NotFound
             return Response(ann_obj.to_json(),mimetype="application/json", status=200)
@@ -25,6 +26,7 @@ class AnnotationApi(Resource):
         ##expects a list of annotation objects
         response = annotation_service.create_annotation(data)
         return Response(json.dumps(response['message']), mimetype="application/json", status=response['status'])
+    
     @jwt_required()
     def delete(self,name):
         deleted_name = annotation_service.delete_annotation(name)
@@ -34,6 +36,6 @@ class AnnotationApi(Resource):
     def put(self,name):
         data = request.json if request.is_json else request.form
         updated_annotation = annotation_service.update_annotation(name,data)
-        return Response(json.dumps(updated_annotation), mimetype="application/json", status=201)
+        return Response(updated_annotation.to_json(), mimetype="application/json", status=201)
     # ##get last created model object
 
