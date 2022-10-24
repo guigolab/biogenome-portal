@@ -23,17 +23,28 @@
   <ol>
     <li>
       <a href="#about-the-project">About The Project</a>
-      <ul>
-        <li><a href="#built-with">Built With</a></li>
-      </ul>
     </li>
+    <li><a href="#built-with">Built With</a></li>
     <li>
       <a href="#getting-started">Getting Started</a>
-      <ul>
-        <li><a href="#configurations">Configurations</a></li>
+      <ol>
+        <li><a href="#containers">Containers</a>
+          <ol>
+            <li><a href="#front-end">Front end</a></li>
+            <li><a href="#back-end">Back end</a></li>
+            <li><a href="#database">Database</a></li>
+            <li><a href="#cronjob">cronjob</a></li>
+          </ol>
+        </li>
+        <li><a href="#configurations">Configurations</a>
+          <ol>
+            <li><a href="#config-json">Front end configuration</a></li>
+            <li><a href="#env-file">Env variables configuration</a></li>
+          </ol>
+        </li>
         <li><a href="#run-locally">Run locally</a></li>
         <li><a href="#deploy">Deploy</a></li>
-      </ul>
+      </ol>
     </li>
     <li><a href="#usage">Usage</a></li>
     <li><a href="#External APIs">External APIs</a></li>
@@ -46,18 +57,10 @@
   </ol>
 </details>
 
-HERE is the live demo: https://genome.crg.cat/portal-dev/#/
-
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
 This project aims to provide a user-friendly interface to show and manage biodiversity metadata.
-
-Metadata can be imported locally (samples) from a spreadsheet file and/or from the INSDC APIs (biosamples, reads, assemblies).
-
-<p align="right">(<a href="#top">back to top</a>)</p>
-
-
 
 ### Built With
 
@@ -68,106 +71,162 @@ This project is built with the following stack:
 * [MongoDB](https://www.mongodb.com/) 
 
 
-
-<p align="right">(<a href="#top">back to top</a>)</p>
-
-
-
-<!-- GETTING STARTED -->
 ### Getting Started
 
-This project is composed by 4 docker containers that can be easily 
+To launch this application locally you must have docker-compose installed!
+
+Follow this instructions to install it: <a href="https://docs.docker.com/compose/install/">install docker-compose</a>
+
+### Containers
+
+This app is composed by 4 docker containers that are built and launched via a docker-compose file.
+
+### Front End
+
+The Front-end container compile the Vue3 app with Vite and serve it via NGINX
+
+### Back end
+
+The Back-end container consists in a API, implemented in flaskRESTful, and exposed via uWSGI web server that communicates with the NGINX proxy present in the front-end container. This container is the one that manages the client requests from the front-end container, query the database and return the JSON response to the front-end container
+
+### Database
+
+The database container is a MongoDB image
+
+### Cronjob
+
+The cronjob container is optional as it is necessary only to run scheduled jobs that downloads metadata already published in INSDC.
+
+It downloads assemblies and related metadata generated under a bioproject accession at the following endpoint: https://api.ncbi.nlm.nih.gov/datasets/v1/genome/bioproject/{project_accession}
+
+It downloads biosamples via the project name attribute at the following endpoint: https://www.ebi.ac.uk/biosamples/samples?size=200&filter=attr%3Aproject%20name%3A{project_name}
+
+It checks for new reads for each biosample already saved in the database at the following endpoint: https://www.ebi.ac.uk/ena/portal/api/filereport?result=read_run&accession={accession}
+
+
+### Configurations
+
+Before running the project it is necessary to configure an environment file to place in the root of the project, this will be used by all the containers, and a config.json file that will be used by the front-end container.
+
 By default the portal is configured to retrieve public data under the EBP umbrella (https://www.earthbiogenome.org/) it will load (at building stage) and seed the database with the last dump (/dump-db directory)
 
-If you want to customize the portal follow the steps below:
+### Front end configuration
 
-  General configurations:
-  - Set the ROOT_NODE env variable with the Taxon name you want to use as a root (default: Eukaryota)
-  
-  Public data management:
-  - in the .env file insert the PROJECT_ACCESSION (The INSDC BioProject accession) of the project you want to use as a root:
-      if the bioproject you want to use as a root is not under the EBP umbrella, you have to comment the volumes of the biogenome_mongo service in the docker-compose-dev file:
-                  - ./mongo-init.sh:/docker-entrypoint-initdb.d/mongo-init.sh
-                  - ./mongo-restore.sh:/docker-entrypoint-initdb.d/mongo-restore.sh
-                  - ./db-dump:/db-dump
-  - if the same project or sub projects are defined as attributes of the sample metadata (ex: project name: 'YOUR_PROJECT_NAME') submitted in INSDC, set the list of comma separated project names in the PROJECTS env variable (default values: VGP(https://vertebrategenomesproject.org/), DTOL(https://www.darwintreeoflife.org/)) 
+The config.json file is used to customize the user interface, such as the layout, icons, logos, app title and description.
 
-  -EXEC_TIME: how often, in seconds, the job should be performed it does nothing if PROJECTS OR PROJECT_ACCESSION are empty
+### Env variables configuration
 
-  NOTE: if you are just interested in local data management remove the default values of PROJECTS and PROJECT_ACCESSION
+The env file is necessary to run the app. Below a list of all the environment variables needed to run the app:
 
-  Local data management:
+- DB_NAME=db  --> this is the name of the database
+- DB_USER=user --> this is the name of the database admin user*
+- DB_PASS=password --> this is the password of the database admin user*
 
-  Configure this part if you want to enter samples locally
-	USR=admin --> Define the user name that will be inserted to access the admin area
-	JWT_SECRET_KEY=secret_restKey #change this in production!! --> key to encrypt the RESTKEY (below)
-	RESTKEY=secretPassword #change this in production!! --> password that will be inserted to access the admin area
+*When first launched the app will create a User with the same credentials as the admin user of the database, this user will be able to log in into the admin UI and to manage all the data as creating/deleting/updating users, organisms etc.
+
+- DB_DEV_HOST=biogenome-devdb --> this is the name of the database container (host) # default dev db host
 
 
-To add a custom logo and an icon follow this steps:
-- save the icon in client/public directory
-- save the logo in client/public/static/img directory
-- go to client/public/index.html and change line 7 with the full name of your icon (<%= BASE_URL %>ICON_NAME.ico>
-- go to client/src/components/base/NavBarComponent.vue and change line 4 with the full name of your image (:src="'./static/img/LOGO_IMAGE.png'" id="logo-image" alt="EBP logo")
+- DB_PORT=27017
+- DB_DUMP=last_mongo_dump.gz --> this is the database dump containing all the data of the database, we will keep it updated*
 
-To modify themes and layout read carefully https://bootstrap-vue.org/
+*IMPORTANT: the dump contains all the data submitted to INSDC under the Earth BioGenome Project umbrella
 
-To add a custom links to the navigation menu follow this steps:
--go to client/src/components/base/NavBarComponent.vue
--add the code snippet below after line 17   
-        <b-nav-item  active-class="active" class="nav-link" href="PUT YOUR LINK HERE">
-            PUT THE NAME YOU WANT HERE 
-        </b-nav-item>
-You can add as many navigation items as you need
+- MONGO_INITDB_ROOT_USERNAME=root
+- MONGO_INITDB_ROOT_PASSWORD=root
+- MONGO_INITDB_DATABASE=admin
+- MONGODB_DATA_DIR=/var/lib/mongodb-data
+- MONDODB_LOG_DIR=/dev/null
 
+- FLASK_ENV=development --> should be null in production
+- APP_NAME=BioGenomePortal
+- API_PORT=80
+- API_HOST=biogenome_server
+- PROXY_HOST=biogenome_nginx
+- PROCESSES=4
+- THREADS=2
+- JWT_SECRET_KEY=secret_restKey --> key used to encrypt the JWT token of the admin area
 
-To get a local copy up and running follow these simple example steps.
+- PROJECT_ACCESSION=PRJNA533106 --> the INSDC bioproject accession of the root bioproject
+- PROJECTS= --> the list of project which name is present in the project name field of the published biosample metadata, it must be composed by {PROJECT_NAME}_{BIOPROJECT_ACCESSION}: ex: ERGA_PRJEB43510
+
+- ROOT_NODE=2759 --> the NCBI taxonomic identifier of the root node
+
+- CESIUM_TOKEN=***** --> the token needed to use the Cesium 3D world map, to generate a token go to: https://cesium.com/ion/tokens
+
 
 ### Installation
 
-You need to have docker compose installed (https://docs.docker.com/compose/). 
+Once configured the .env file run this command in the root directory:
+	
+  sudo docker-compose -f docker-compose.dev.yml up --build
 
-1. Run this command in the root directory:
-	sudo docker-compose -f docker-compose.dev.yml up --build
-
-  This will load the last generated db dump containing all the public data under the EBP scope (https://www.earthbiogenome.org/)
-
-2. To start creating data go to: /admin from the home page and login
+This will load the last generated db dump containing all the public data under the EBP scope (https://www.earthbiogenome.org/)
 
 
-<p align="right">(<a href="#top">back to top</a>)</p>
-
-
-## External APIs
+### External APIs
 This project consumes different externals APIs to retrieve taxonomic and genomic informations about species, therefore changes in these APIs might break the species creation. Please open an issue if this is the case.
 
 Here is a list of the APIs consumed:
 
 [ENA Portal API](https://www.ebi.ac.uk/ena/portal/api/)
 [NCBI Taxonomy API](https://api.ncbi.nlm.nih.gov/datasets/docs/v1/reference-docs/rest-api/)
-[ENA BioSamples API](https://www.ebi.ac.uk/biosamples/docs/references/api)
+[EBI BioSamples API](https://www.ebi.ac.uk/biosamples/docs/references/api)
+
+### Admin area
+
+The admin area allows to manage all the data present in the database.
+
+Reads, Biosamples and Assemblies published in INSDC can be manually imported via form by their respective accession number. These data cannot be further modified but can be deleted.
+
+Organisms(taxons) can be imported by their NCBI taxonomic identifier, or will be automatically imported when other related metadata (Samples, reads or assemblies) are created. Data such as urls of images, vernacular names, key-value metadata and related publications can be added via form.
+
+Samples metadata can be imported locally via a spreadsheet file (.xlsx), through a form it will be necessary to declare the column names for the taxon identifier, the scientific name and the unique identifier of the sample. This feature can be useful to manage sample metadata before submission to INSDC. Column names containing "ORCID" will not be imported
+
+Annotations can be added from an imported assembly (link to download the annotation + metadata)
+
+### Genome Browser
+
+The app provides a genome browser (JBrowse2: https://jbrowse.org/jb2/ ) to visualize genomic annotations related to an imported assembly.
+
+The genome browser data requires the links to the following files:
+
+  Genome:
+    genome.fa.gz
+    genome.fa.gz.fai
+    genome.fa.gz.gzi
+    chromosome_aliases.txt -_> this field is mandatory if the gff file uses a different chromosome nomenclature
 
 
-## Sequencing Project
-For sequencing projects, it is strongly recommended to submit public samples to the ENA via the [COPO web service](https://copo-project.org/), this service ensure that all the submitted samples share the same format before submission to ENA(INSDC). It will, then, be responsibility of the single project to upload assemblies and reads to ENA/NCBI and associate them with the sample accession submitted through COPO. 
-To facilitate the sample submission to COPO this project provides the possibility to download the samples inserted locally in an excel compliant with the [ERGA submission manifest](https://github.com/ERGA-consortium/COPO-manifest). The generated excel will be then submitted to COPO. Once the samples will be pubblicly available in BioSamples the data portal will link the accession to the sample unique name and will start checking for new assemlies and/or reads every time the cronjob will be executed (the EXEC_TIME env variable).
-IMPORTANT: the ERGA manifest will change during time, this portal will try to keep it up to date.
+To generate the files above follow this steps:
 
-The importance of the TUBE_OR_WELL_ID field:
-This field is used to uniquely identify the sample entity, within this scope a sample can be a whole organism or part of it, imagine a sample as the set of metadata (from the sample collection event, the sample preservation and the sample charateristics) related to an assembly or an experiment. It will be used to retrieve the sample accession from the COPO's API (feature not implemented yet: waiting for COPO to implement the API for ERGA).
+    bgzip -i genome.fa
+
+    samtools faidx genome.fa.gz
+
+  Annotation (the gff must be sorted):
+    genes.gff.gz
+    genes.gff.gz.tbi
+
+To generate the files above follow this steps:
+
+    gt gff3 -sortlines -tidy -retainids genes.gff3 > genes.sorted.gff3
+
+    bgzip genes.gff
+
+    tabix genes.gff.gz
+
+Example of 
+
+For more informations visit: https://jbrowse.org/jb2/docs/
+
 
 
 IMPORTANT:
-If for any reason you have to manage sample submission on your own, you could still use this data portal as a backup/status tracking service if you are compliant with this [ENA-checklist](https://www.ebi.ac.uk/ena/browser/view/ERC000053) (remember that the samples need to be public in order to be displayed in the data portal, it is recommended to submit the samples first in BioSamples and then link the genomic data to their respective accession.
+ It is possible to add just one fasta per assembly, while it is possible to add as many gene annotations as desired.
 
-## The import of samples from BioSamples
-The cronjob function allows to download all the samples (with this metadata checklist) related to one or more projects. By declaring the various project names it is possible to import samples at every layer of a biogenome project/effort.
+ The app does not provide a way to directly store the file, but files can be stored in any cloud provider (which supports range requests and return the correct http code (206)) or can be served by the front-end container (NGINX) see example in the code in the /genome-browser-data path.
 
-## The import of BioProject data from NCBI
-The cronjob function allows to download all the data published under a bioproject, it will automatically create the sample's metadata from NCBI or from EBI/BioSamples, then the cronjob will retrieve public reads linked to the sample accession in ENA.
-
-Note: 
-The import function uses the BioSamples API to retrieve samples metadata via the project_name attribute. If your project have already submitted the samples and linked some genomic data to this samples it is still possible to insert this sample in the data portal via excel or form, by adding the correct accession field, the program will then seek for all the genomic data related to this sample
 
 <!-- ROADMAP -->
 ## Roadmap
@@ -175,15 +234,6 @@ The import function uses the BioSamples API to retrieve samples metadata via the
 - [ ] Add Changelog
 - [ ] Add API Documentation
 - [ ] Add tests (I know..)
-
-
-
-
-
-See the [open issues](https://github.com/othneildrew/Best-README-Template/issues) for a full list of proposed features (and known issues).
-
-<p align="right">(<a href="#top">back to top</a>)</p>
-
 
 
 <!-- CONTRIBUTING -->
@@ -200,18 +250,12 @@ Don't forget to give the project a star! Thanks again!
 4. Push to the Branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-<p align="right">(<a href="#top">back to top</a>)</p>
-
-
-
 <!-- LICENSE -->
 ## License
 
 Distributed under the MIT License. See `LICENSE.txt` for more information.
 
 <p align="right">(<a href="#top">back to top</a>)</p>
-
-
 
 <!-- CONTACT -->
 ## Contact
@@ -220,21 +264,3 @@ Emilio Righi - emilio.righi@crg.eu
 
 Project Link: https://github.com/guigolab/biogenome-portal
 
-<p align="right">(<a href="#top">back to top</a>)</p>
-
-
-
-<!-- ACKNOWLEDGMENTS -->
-## Acknowledgments
-
-List of projects and code snippets that inspired the creation of this project:
-
-* [Tree of life d3js](https://observablehq.com/@d3/tree-of-life)
-* [Darwin Tree of Life](https://github.com/TreeOfLifeDCC)
-* [OpenLayers](https://openlayers.org/)
-* [COPO](https://github.com/collaborative-open-plant-omics)
-* [GOAT](https://github.com/genomehubs)
-
-
-
-<p align="right">(<a href="#top">back to top</a>)</p>
