@@ -13,7 +13,7 @@ from .read_api import ExperimentApi
 from .user_api import UserApi
 from .cronjob_api import CronJobApi
 from .genome_browser_api import GenomeBrowserApi
-from .statistics_api import StatsApi,OrganismStatsApi
+from .statistics_api import StatsApi,OrganismStatsApi,FieldStatsApi
 
 def initialize_routes(api):
 
@@ -55,7 +55,9 @@ def initialize_routes(api):
 
 	api.add_resource(TaxonomyTreeApi, '/api/taxonomy_tree/<taxid>') 
 	
-	api.add_resource(StatsApi, '/api/stats')
+	api.add_resource(StatsApi,'/api/stats')
+
+	api.add_resource(FieldStatsApi, '/api/stats/<model>')
 
 	api.add_resource(NodeCoordinatesApi, '/api/coordinates/node')
 

@@ -34,6 +34,12 @@ def create_chromosomes(assembly,chromosomes):
             chr_obj = Chromosome(accession_version=chr['accession_version'], metadata=metadata).save()
         assembly.modify(add_to_set__chromosomes=chr_obj.accession_version)
 
+def get_chromosomes(accession):
+    assembly = Assembly.objects(accession=accession).first()
+    if not assembly or not assembly.chromosomes:
+        return
+    return Chromosome.objects(accession_version__in=assembly.chromosomes).as_pymongo()
+
 ##return response obj
 def create_assembly_from_accession_input(accession):
     resp_obj=dict()

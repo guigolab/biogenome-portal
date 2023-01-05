@@ -6,7 +6,6 @@ from utils import common_functions
 from errors import NotFound
 import json
 from flask_jwt_extended import jwt_required
-from flask import current_app as app
 
 FIELDS_TO_EXCLUDE = ['id','created']
 

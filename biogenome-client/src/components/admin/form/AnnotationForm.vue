@@ -99,7 +99,6 @@ const annotationOptions = [
 ]
 
 onMounted(()=>{
-    console.log(props.name)
     if(props.name){
         AnnotationService.getAnnotation(props.name)
         .then(resp => {

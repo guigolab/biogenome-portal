@@ -51,7 +51,6 @@ onMounted(()=>{
 })
 
 watch(()=>props.taxid,()=>{
-    console.log("hello")
     browseTree(props.taxid)
 })
  

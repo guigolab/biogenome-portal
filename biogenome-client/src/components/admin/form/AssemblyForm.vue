@@ -128,7 +128,6 @@ function submitAssembly(){
     authStore.isLoading=true
     AssemblyService.importAssembly(assemblyToSubmit.accession)
     .then(resp => {
-        console.log(resp)
         alert.title = "Success"
         alert.message = resp.data
         alert.color = "success"

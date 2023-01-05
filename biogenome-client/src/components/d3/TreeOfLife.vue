@@ -138,7 +138,6 @@ function downloadPGNImage() {
 
 function createD3Tree(data){
     const root = d3.hierarchy(data , d => d.children)
-    console.log(root)
     root
       .sum(d => d.children ? 0 : 1)
       .sort((a, b) => (a.value - b.value) || d3.ascending(a.data.length, b.data.length));

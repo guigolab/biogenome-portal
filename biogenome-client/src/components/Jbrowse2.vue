@@ -37,7 +37,6 @@ onMounted(()=>{
 function renderBrowser(){
     const assembly = props.assembly
     const tracks = Object.assign([],props.tracks)
-    console.log(tracks)
   createRoot(wrapper.value)
     .render(
       React.createElement(JBrowseLinearGenomeView, {viewState: new createViewState({assembly:assembly,tracks:tracks})})

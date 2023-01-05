@@ -17,6 +17,8 @@ class AssemblyApi(Resource):
             assembly_obj = Assembly.objects(accession=accession).first()
             if not assembly_obj:
                 raise NotFound
+            if assembly_obj.chromosomes:
+                assembly_obj.chromosomes = assembly_service.get_chromosomes(accession)
             return Response(assembly_obj.to_json(), mimetype="application/json", status=200)
         return Response(common_functions.query_search(Assembly,FIELDS_TO_EXCLUDE,**request.args), mimetype="application/json", status=200)
     

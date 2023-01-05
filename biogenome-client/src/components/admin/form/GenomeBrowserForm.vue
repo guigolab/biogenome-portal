@@ -112,7 +112,6 @@ const assemblyTrackOptions = [
 ]
 
 onMounted(()=>{
-    console.log(props.toUpdate)
     if(props.toUpdate){
     GenomeBrowserService.getGenomeBrowserDatum(props.accession)
     .then(resp => {
@@ -125,7 +124,6 @@ onMounted(()=>{
 })
 
 function handleSubmit(){
-    console.log(props.toUpdate)
     if(props.toUpdate){
         updateGenomeBrowserData()
         return

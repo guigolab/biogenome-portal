@@ -43,4 +43,5 @@ export default defineConfig(({ command, mode }) => {
     },
   },
   plugins: [vue(),cesium(),pluginRewriteAll()]
-}})
+}
+})

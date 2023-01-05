@@ -86,7 +86,7 @@ def import_from_NCBI(project_accession,cookies):
 ##retrieve assemblies by bioproject in NCBI
 def get_assemblies(project_accession):
     assemblies=list()
-    result = requests.get(f"https://api.ncbi.nlm.nih.gov/datasets/v1/genome/bioproject/{project_accession}?filters.reference_only=false&filters.assembly_source=all&&&page_size=100").json()
+    result = requests.get(f"https://api.ncbi.nlm.nih.gov/datasets/v1/genome/bioproject/{project_accession}?filters.reference_only=false&filters.assembly_source=all&page_size=100").json()
     counter = 1
     if 'assemblies' in result.keys():
         while 'next_page_token' in result.keys():
@@ -96,7 +96,7 @@ def get_assemblies(project_accession):
             if counter >= 3:
                 time.sleep(1)
                 counter = 0
-            result = requests.get(f"https://api.ncbi.nlm.nih.gov/datasets/v1/genome/bioproject/{project_accession}?filters.reference_only=false&filters.assembly_source=all&filters.has_annotation=false&&page_size=1000&page_token={next_page_token}").json()
+            result = requests.get(f"https://api.ncbi.nlm.nih.gov/datasets/v1/genome/bioproject/{project_accession}?filters.reference_only=false&filters.assembly_source=all&filters.has_annotation=false&page_size=100&page_token={next_page_token}").json()
             counter+=1
         if 'assemblies' in result.keys():
             assemblies.extend([ass['assembly'] for ass in result['assemblies']])
@@ -143,6 +143,7 @@ def get_biosamples_from_biosamples_ebi(project_name):
     href = f"https://www.ebi.ac.uk/biosamples/samples?size=200&filter=attr%3Aproject%20name%3A{project_name}"
     resp = requests.get(href).json()
     while 'next' in resp['_links'].keys():
+        time.sleep(1)
         href=resp['_links']['next']['href']
         biosamples.extend(resp['_embedded']['samples'])
         resp = requests.get(href).json()

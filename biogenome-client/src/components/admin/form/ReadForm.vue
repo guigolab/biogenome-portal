@@ -93,7 +93,6 @@ const alert = reactive({...initAlert})
 
 
 function parseResponse(value){
-    console.log(value)
     if(value.isError){
         Object.assign(alert,value.alert)
         showAlert.value=true
@@ -104,8 +103,6 @@ function parseResponse(value){
             validRead.value = true
         }
     }
-    //get element in array
-
 }
 
 function reset(){
