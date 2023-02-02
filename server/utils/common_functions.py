@@ -2,6 +2,11 @@ from db.models import Assembly,Annotation,Experiment,BioSample,LocalSample
 from mongoengine.queryset.visitor import Q
 import json
 
+def return_response(offset, limit, items):
+  json_resp = dict()
+  json_resp['total'] = items.count()
+  json_resp['data'] = list(items[int(offset):int(offset)+int(limit)].as_pymongo())
+  return json.dumps(json_resp, default=str)  
 
 def get_query_set(model,filter):
   if model == Assembly:

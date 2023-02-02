@@ -168,7 +168,6 @@ class AssemblyTrack(db.EmbeddedDocument):
     gzi_location = db.URLField() 
     chrom_alias = db.URLField()
     
-
 class AnnotationTrack(db.EmbeddedDocument):
     name = db.StringField()
     gff_gz_location = db.URLField()

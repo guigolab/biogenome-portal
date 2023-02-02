@@ -14,7 +14,7 @@ def get_organisms(offset=0, limit=20,
                 sort_order=None, sort_column=None,
                 parent_taxid=None, filter=None, 
                 filter_option=None, bioproject=None,
-                coordinates=None,geo_location=None,
+                geo_location=None,
                 biosamples=None,local_samples=None,
                 assemblies=None,experiments=None,
                 annotations=None):
@@ -22,7 +22,8 @@ def get_organisms(offset=0, limit=20,
     query=dict()
     stats=dict()    
     filter_query = get_query_filter(filter, filter_option) if filter else None
-    get_coordinates_filter(query,coordinates,geo_location)
+    if geo_location:
+        query['coordinates'] = geo_location
     get_data_query(query, biosamples, local_samples, assemblies, annotations, experiments)
     taxa = TaxonNode.objects(taxid=parent_taxid).first()
     if taxa:
@@ -31,7 +32,7 @@ def get_organisms(offset=0, limit=20,
         query['bioprojects'] = bioproject
     organisms = Organism.objects(filter_query, **query).exclude('id') if filter_query else Organism.objects.filter(**query).exclude('id')
     if sort_column:
-        sort = '-'+sort_column if sort_order == 'true' else sort_column
+        sort = '-'+sort_column if sort_order == 'desc' else sort_column
         organisms = organisms.order_by(sort)
     stats = get_stats(organisms)
     json_resp['total'] = organisms.count()
@@ -80,14 +81,6 @@ def get_data_query(query, biosamples, local_samples, assemblies, annotations, ex
     if experiments:
         query['experiments__not__size'] = 0
 
-
-
-
-def get_coordinates_filter(query, only_coordinates, geo_location):
-    if geo_location:
-        query['coordinates'] = geo_location
-    elif only_coordinates == 'true':
-        query['coordinates__not__size'] = 0
 
 def get_or_create_organism(taxid):
     organism = Organism.objects(taxid=taxid).first()

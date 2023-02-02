@@ -29,6 +29,7 @@ jwt = JWTManager(app)
 username = os.getenv('DB_USER')
 password = os.getenv('DB_PASS')
 bioproject_accession = os.getenv('PROJECT_ACCESSION')
+
 ##create root user if does not exist
 try:
     FIRST_START = SingleInstance()

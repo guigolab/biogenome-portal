@@ -446,19 +446,6 @@ const organismData = reactive({
     loadedItems:[]
 })
 
-// watch(selectedModel,()=>{
-//     if(selectedModel.value === 'coordinates'){
-//         DataPortalService.getCoordinates(organism.coordinates)
-//         .then(resp => {
-//             nextTick(()=>{
-//                 geoJson = resp.data
-//                 showMap.value = true
-//             })
-//         }).catch(e => {console.log(e)})
-//     }else{
-//         showMap.value = false
-//     }
-// })
 
 function handleSelected(payload){
     selectedModel.value = payload

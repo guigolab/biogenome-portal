@@ -182,6 +182,7 @@ const selectedModelObj = computed(()=>{
     return modelOptions.filter(opt => opt.value === currentModel.value)[0]
 })
 
+
 onMounted(()=>{
     DataPortalService.getTaxonChildren(ROOTNODE)
     .then(resp => {
