@@ -1,70 +1,65 @@
-from .bulk_load_api import BulkLoadApi
-from .local_sample_api import LocalSampleApi
-from .organism_api import OrganismsApi, OrganismApi
-from .parser_api import ExcelParser
-from .taxonomy_api import TreeApi,TaxNodesApi,TaxonomyTreeApi,TreeLevelsApi
-from .data_input_api import Login,Logout
-from .bioproject_api import BioProjectApi
-from .assembly_api import AssemblyApi
-from .geo_localization_api import GeoLocApi,NodeCoordinatesApi,OrganismCoordinatesApi
-from .annotation_api import AnnotationApi
-from .biosample_api import BioSampleApi
-from .read_api import ExperimentApi
-from .user_api import UserApi
-from .cronjob_api import CronJobApi
-from .genome_browser_api import GenomeBrowserApi
-from .statistics_api import StatsApi,OrganismStatsApi,FieldStatsApi
+from user import users_controller
+from local_sample import local_samples_controller 
+from bioproject import bioprojects_controller
+from biosample import biosamples_controller
+from assembly import assemblies_controller
+from read import reads_controller
+from organism import organisms_controller
+from taxon import taxons_controller
+from annotation import annotations_controller
+from dump import dumps_controller
+from cronjob import cronjobs_controller
+from stats import stats_controller
+from upload import uploads_controller
+from genome_browser import genome_browser_controller
+from taxonomy import taxonomy_controller
 
 def initialize_routes(api):
 
-	api.add_resource(Login, '/api/login')
+	api.add_resource(users_controller.LoginApi, '/api/login')
+	api.add_resource(users_controller.LogoutApi, '/api/logout')
+	api.add_resource(cronjobs_controller.CronJobApi, '/api/cronjob')
+	api.add_resource(dumps_controller.DumpApi, '/api/dumps/<model>')
+	api.add_resource(uploads_controller.ExcelParserApi, '/api/spreadsheet_upload')
 
-	api.add_resource(Logout, '/api/logout')
 
-	api.add_resource(CronJobApi, '/api/cronjob')
-
-	api.add_resource(BulkLoadApi, '/api/bulk/<model>')
-
-	api.add_resource(AnnotationApi, '/api/annotations', '/api/annotations/<name>')
+	api.add_resource(taxonomy_controller.TreeApi,'/api/tree', '/api/tree/<taxid>')
+	api.add_resource(taxonomy_controller.TreeLevelsApi, '/api/tree_levels', '/api/tree_levels/<taxid>')
+	api.add_resource(taxonomy_controller.TaxonomyTreeApi, '/api/taxonomy_tree/<taxid>') 
 	
-	api.add_resource(AssemblyApi, '/api/assemblies', '/api/assemblies/<accession>')
-	
-	api.add_resource(BioSampleApi, '/api/biosamples', '/api/biosamples/<accession>')
-	
-	api.add_resource(LocalSampleApi, '/api/local_samples', '/api/local_samples/<local_id>')
-	
-	api.add_resource(ExperimentApi, '/api/reads', '/api/reads/<accession>')
-	
-	api.add_resource(GenomeBrowserApi, '/api/genome_browser', '/api/genome_browser/<accession>') ##assembly accession
-	
-	api.add_resource(OrganismsApi, '/api/organisms')
-	
-	api.add_resource(OrganismStatsApi, '/api/organisms/statistics')
+	api.add_resource(annotations_controller.AnnotationsApi, '/api/annotations')
+	api.add_resource(annotations_controller.AnnotationApi,  '/api/annotations/<name>')
 
-	api.add_resource(OrganismApi, '/api/organisms/<taxid>') 
+	api.add_resource(assemblies_controller.AssembliesApi, '/api/assemblies')
+	api.add_resource(assemblies_controller.AssemblyApi,  '/api/assemblies/<accession>')
 
-	api.add_resource(UserApi, '/api/users','/api/users/<name>')
+	api.add_resource(biosamples_controller.BioSamplesApi, '/api/biosamples')
+	api.add_resource(biosamples_controller.BioSampleApi, '/api/biosamples/<accession>')
+
+	api.add_resource(local_samples_controller.LocalSamplesApi, '/api/local_samples')
+	api.add_resource(local_samples_controller.LocalSampleApi, '/api/local_samples/<local_id>')
 	
-	api.add_resource(BioProjectApi, '/api/bioprojects', '/api/bioprojects/<accession>')
+	api.add_resource(reads_controller.ExperimentApi, '/api/reads/<accession>')
+	api.add_resource(reads_controller.ExperimentsApi, '/api/reads')
 	
-	api.add_resource(TaxNodesApi, '/api/taxons','/api/taxons/<taxid>')
-	
-	api.add_resource(TreeApi,'/api/tree', '/api/tree/<taxid>')
+	api.add_resource(organisms_controller.OrganismsApi, '/api/organisms')
+	api.add_resource(organisms_controller.OrganismApi, '/api/organisms/<taxid>')
 
-	api.add_resource(TreeLevelsApi, '/api/tree_levels', '/api/tree_levels/<taxid>')
+	api.add_resource(bioprojects_controller.BioProjectsApi, '/api/bioprojects')
+	api.add_resource(bioprojects_controller.BioProjectApi, '/api/bioprojects/<accession>')
 
-	api.add_resource(TaxonomyTreeApi, '/api/taxonomy_tree/<taxid>') 
-	
-	api.add_resource(StatsApi,'/api/stats')
+	api.add_resource(taxons_controller.TaxonsApi, '/api/taxons')
+	api.add_resource(taxons_controller.TaxonApi, '/api/taxons/<taxid>')
 
-	api.add_resource(FieldStatsApi, '/api/stats/<model>')
+	api.add_resource(users_controller.UsersApi, '/api/users')
+	api.add_resource(users_controller.UserApi,'/api/users/<name>')
 
-	api.add_resource(NodeCoordinatesApi, '/api/coordinates/node')
+	api.add_resource(stats_controller.StatsApi,'/api/stats')
+	api.add_resource(stats_controller.FieldStatsApi, '/api/stats/<model>')
 
-	api.add_resource(GeoLocApi, '/api/coordinates', '/api/coordinates/<coordinates>') ##expects lat:long dd format
-	##parser endpoint
-	api.add_resource(OrganismCoordinatesApi, '/api/coordinates/organisms/<taxid>')
+	api.add_resource(genome_browser_controller.GenomeBrowserTracksApi, '/api/genome_browser') ##assembly accession
+	api.add_resource(genome_browser_controller.GenomeBrowserTrackApi, '/api/genome_browser/<accession>') ##assembly accession
 
-	api.add_resource(ExcelParser, '/api/excel')
+
 
 
