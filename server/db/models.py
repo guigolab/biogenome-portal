@@ -150,6 +150,7 @@ class Geometry(db.EmbeddedDocument):
 #TODO fix many to many relationship with species and bioprojects
 class GeoCoordinates(db.Document):
     geo_location=db.StringField(required=True,unique=True)
+    country=db.StringField()
     type=db.StringField(default='Feature')
     properties = db.DictField() ##duplicate field 
     organisms=db.ListField(db.StringField()) ##list of taxids
@@ -184,6 +185,12 @@ class GenomeBrowserData(db.Document):
             'assembly_accession'
         ]
     }
+
+class Country(db.Document):
+    name = db.StringField(required=True,unique=True)
+    id = db.StringField(required=True,unique=True)
+    organism_count = db.IntField()
+
 
 ##external annotations
 class Annotation(db.Document):
@@ -250,6 +257,7 @@ class Organism(db.Document):
     bioprojects = db.ListField(db.StringField())
     annotations = db.ListField(db.StringField())
     coordinates =db.ListField(db.StringField())
+    countries = db.Listfield(db.StringField())
     insdc_common_name = db.StringField()
     local_samples = db.ListField(db.StringField())
     biosamples = db.ListField(db.StringField())

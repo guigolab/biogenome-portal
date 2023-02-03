@@ -5,7 +5,7 @@ from .parser_api import ExcelParser
 from .taxonomy_api import TreeApi,TaxNodesApi,TaxonomyTreeApi,TreeLevelsApi
 from .data_input_api import Login,Logout
 from .bioproject_api import BioProjectApi
-from .assembly.assembly_api import AssemblyApi
+from .assembly.assemblies_controller import AssemblyApi
 from .geo_localization_api import GeoLocApi,NodeCoordinatesApi,OrganismCoordinatesApi
 from .annotation_api import AnnotationApi
 from .biosample_api import BioSampleApi

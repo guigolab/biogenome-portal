@@ -9,7 +9,7 @@ info:
 servers:
   - url: https://ebp.biogenoma.cat/api
     description: server containing all the data submitted to INSDC under the EBP umbrella
-  - url: http://cbp.biogenoma.cat/api
+  - url: https://data.biogenoma.cat/api
     description: server containing all the data generated under the CBP umbrella 
 
 tags:
@@ -22,6 +22,7 @@ tags:
 - name: "annotations"
 - name: "bioprojects"
 - name: "goat_report"
+- name: "countries"
 
 paths:
   
@@ -69,14 +70,26 @@ paths:
                   type: "string"
                   format: "binary"
                   nullable: true
+                id:
+                  type: "string"
+                  description: "Unique identifier of the local sample"
+                taxid:
+                  type: "string"
+                option:
+                  type: "string"
+                  enum:
+                    - "SKIP"
+                    - "UPDATE"
+                  description: "Skip or update existing sample"
+                header:
+                  type: "number"
+                  description: "row number 1-based of the header"
       responses:
         "200":
           description: "samples correctly uploaded"
         "400":
           description: "Invalid fields"
           
-  
-
   /organisms:
     get:
       tags:
@@ -99,6 +112,12 @@ paths:
             - "taxid"
             - "common_name"
             - "tolid"
+            - "scientific_name"
+        - in: "query"
+          name: "country"
+          schema:
+            type: "string"
+          description: "country code"
         - in: 'query'
           name: 'sort_order'
           schema:
@@ -127,11 +146,6 @@ paths:
           schema:
             $ref: '#/components/schemas/TargetListStatus'
         - in: 'query'
-          name: 'geo_location'
-          schema:
-            type: 'string'
-            description: '45518745.0:13567936.0'
-        - in: 'query'
           name: 'offset'
           schema:
             type: 'number'
@@ -155,10 +169,48 @@ paths:
                       $ref: "#/components/schemas/Organism"
                   total:
                     type: "number"
-                  
-        "405":
-          description: "Invalid input"
-          
+
+  /organisms/{taxid}:
+    get:
+      tags:
+        - "organisms"
+      parameters:
+        - in: 'path'
+          name: 'taxid'
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "successful operation"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Organism"
+        "404":
+          description: "Organism not found"
+  
+  /countries:
+    get:
+      tags:
+        - "countries"
+      responses:
+        "200":
+          description: "successful operation"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  type: "object"
+                  properties:
+                    name:
+                      type: "string"
+                    id:
+                      type: "string"
+                    organism_count:
+                      type: "number"
+                    
   /assemblies:
     get:
       tags:
@@ -201,6 +253,14 @@ paths:
             enum:
             - "asc"
             - "desc"
+        - in: "query"
+          name: "bioproject"
+          schema:
+            type: "string"
+        - in: "query"
+          name: "parent_taxid"
+          schema:
+            type: "string"
         - in: 'query'
           name: 'sort_column'
           schema:
@@ -208,8 +268,7 @@ paths:
             enum:
             - "contig_n50"
             - "size"
-            - "chromosomes"
-            - "date"
+            - "submission_date"
         - in: 'query'
           name: 'offset'
           schema:
@@ -234,9 +293,26 @@ paths:
                       $ref: "#/components/schemas/Assembly"
                   total:
                     type: "number"
-                  
-        "405":
-          description: "Invalid input"
+
+  /assemblies/{accession}:
+    get:
+      tags:
+        - "assemblies"
+      parameters:
+        - in: 'path'
+          name: 'accession'
+          required: true
+          schema:
+            type: 'string'
+      responses:
+        "200":
+          description: "successful operation"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Assembly"
+        "404":
+          description: "Assembly not found"
 
   /reads:
     get:
@@ -298,7 +374,28 @@ paths:
                     type: "number"
         "405":
           description: "Invalid input"
+
+  /reads/{accession}:
+    get:
+      tags:
+        - "reads"
+      parameters:
+        - in: 'path'
+          name: 'accession'
+          schema:
+            type: 'string'
+          required: true
           
+      responses:
+        "200":
+          description: "successful operation"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Experiment"
+        "404":
+          description: "Read not found"
+                
   /biosamples:
     get:
       tags:
@@ -326,23 +423,19 @@ paths:
           name: 'end_date'
           schema:  
             type: "string"
-        - in: 'query'
-          name: 'habitat'
-          schema:  
-            type: "string"
-        - in: 'query'
-          name: 'gal'
-          schema:  
-            type: "string"
-        - in: 'query'
-          name: 'instrument_platform'
+        - in: "query"
+          name: "sort_column"
           schema:
             type: "string"
             enum:
-            - "ILLUMINA"
-            - "PACBIO_SMRT"
-            - "OXFORD_NANOPORE"
-            - "OTHER"
+              - "collection_date"
+        - in: 'query'
+          name: 'sort_order'
+          schema:  
+            type: "string"
+            enum:
+            - "asc"
+            - "desc"
         - in: 'query'
           name: 'offset'
           schema:
@@ -370,6 +463,27 @@ paths:
         "405":
           description: "Invalid input"
           
+  /biosamples/{accession}:
+    get:
+      tags:
+        - "biosamples"
+      parameters:
+        - in: 'path'
+          name: 'accession'
+          schema:
+            type: 'string'
+          required: true
+      responses:
+        "200":
+          description: "successful operation"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BioSample"
+        "404":
+          description: "Read not found"
+          
+
   /local_samples:
     get:
       tags:
@@ -421,7 +535,28 @@ paths:
                     type: "number"
         "405":
           description: "Invalid input"
+
+  /local_samples/{id}:
+    get:
+      tags:
+        - "local_samples"
+      parameters:
+        - in: 'path'
+          name: 'id'
+          required: true
+          schema:
+            type: 'string'
+      responses:
+        "200":
+          description: "successful operation"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LocalSample"
+        "404":
+          description: "local sample not found"
           
+        
   /annotations:
     get:
       tags:
@@ -432,22 +567,6 @@ paths:
           name: 'filter'
           schema:
             type: 'string'
-        - in: 'query'
-          name: 'filter_option'
-          schema:
-            type: "string"
-            enum:
-            - "taxid"
-            - "scientific_name"
-            - "assembly_name"
-        - in: 'query'
-          name: 'start_date'
-          schema:  
-            type: "string"
-        - in: 'query'
-          name: 'end_date'
-          schema:  
-            type: "string"
         - in: 'query'
           name: 'offset'
           schema:
@@ -473,7 +592,28 @@ paths:
                   total:
                     type: "number"
         "405":
-          description: "Invalid input"       
+          description: "Invalid input"
+
+  /annotations/{id}:
+    get:
+      tags:
+        - "annotations"
+      parameters:
+        - in: 'path'
+          name: 'id'
+          required: true
+          schema:
+            type: 'string'
+      responses:
+        "200":
+          description: "successful operation"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Annotation"
+        "404":
+          description: "annotation not found"
+          
   /bioprojects:
     get:
       tags:
@@ -509,7 +649,28 @@ paths:
                   total:
                     type: "number"
         "405":
-          description: "Invalid input"       
+          description: "Invalid input"
+
+  /bioprojects/{accession}:
+    get:
+      tags:
+        - "bioprojects"
+      parameters:
+        - in: 'path'
+          name: 'accession'
+          required: true
+          schema:  
+            type: 'string'
+      responses:
+        "200":
+          description: "successful operation"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BioProject"
+        "404":
+          description: "BioProject not found"
+      
   /taxons:
     get:
       tags:
@@ -556,7 +717,28 @@ paths:
                     type: "number"
         "405":
           description: "Invalid input"
-          
+
+  /taxons/{taxid}:
+    get:
+      tags:
+        - "taxons"
+      parameters:
+        - in: 'path'
+          name: 'taxid'
+          required: true
+          schema:  
+            type: 'string'
+
+      responses:
+        "200":
+          description: "successful operation"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaxonNode"
+        "404":
+          description: "Taxon not found"
+       
 components:
   schemas:
     Assembly:
@@ -603,7 +785,42 @@ components:
         metadata:
           type: "object"
           description: "user defined metadata object schema"
-
+    
+    Geometry:
+      type: "object"
+      properties:
+        type:
+          type: "string"
+          default: "Point"
+        coordinates:
+          type: "array"
+          items:
+            type: "string"
+    
+    GeoLocation:
+      type: "object"
+      description: "geolocation object"
+      properties:
+        geo_location:
+          type: "string"
+          description: "lat:lon formatted string"
+        type:
+          type: "string"
+          default: "Feature"
+        organisms:
+          type: "array"
+          items:
+            type: "string"
+          description: "array of taxids"
+        bioprojects:
+          type: "array"
+          items:
+            type: "string"
+          description: "list of bioproject's accessions"
+        geometry:
+          $ref: "#/components/schemas/Geometry"
+          
+    
     Experiment:
       type: "object"
       description: "Raw or Mapped Reads"

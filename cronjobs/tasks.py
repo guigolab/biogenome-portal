@@ -202,6 +202,8 @@ def get_reads(accession):
         return list()
     return experiments_data.json()
 
+def 
+
 if __name__ == "__main__":
     print(f"Running script at {datetime.now()}")
     import_records()

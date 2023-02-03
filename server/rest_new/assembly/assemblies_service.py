@@ -1,7 +1,7 @@
-from db.models import Assembly, BioSample,Chromosome,AssemblyTrack, Organism
+from db.models import Assembly, BioSample, Chromosome,AssemblyTrack, Organism
 from flask import current_app as app
 from errors import NotFound
-from utils import ncbi_client,data_helper,common_functions
+from utils import ncbi_client,data_helper
 from mongoengine.queryset.visitor import Q
 from datetime import datetime
 
@@ -12,30 +12,59 @@ TRACK_FIELDS = ['fasta_location','fai_location','gzi_location']
 ASSEMBLY_LEVELS = ['Chromosome', 'Scaffold', 'Complete Genome', 'Contig']
 
 
-def get_assemblies(filter=None, offset=0, 
-                    limit=20, date_start=None, 
-                    date_end=None, assembly_level=None, 
-                    bioproject=None, size=None, contig_n50=None):
-                    
+def get_assemblies(filter=None, filter_option='assembly_name', offset=0, 
+                    limit=20, start_date=None, 
+                    end_date=datetime.utcnow, assembly_level=None,
+                    sort_order=None, sort_column=None,
+                    bioproject=None, parent_taxid=None):  
     query=dict()
     ## filter match for accession, assembly name or species name
     if filter:
-        filter_query = (Q(accession__iexact=filter) | Q(accession__icontains=filter) | Q(assembly_name__icontains=filter) | Q(assembly_name__iexact=filter) | Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter))
-    if assembly_level and assembly_level in ASSEMBLY_LEVELS:
-        raise  
-    if bioproject:
-        organisms = Organism.objects(bioprojects = bioproject).scalar('taxid')
-        if not organisms:
-            return
+        filter_query = get_filter(filter, filter_option)
+    else:
+        filter_query = None
+    if assembly_level:
+        query['metadata__assembly_level'] = assembly_level
+    organism_query = None
+    if bioproject and parent_taxid:
+        organism_query = dict(bioprojects=bioproject, taxon_lineage=parent_taxid)
+    elif bioproject:
+        organism_query = dict(bioprojects=bioproject)
+    elif parent_taxid:
+        organism_query = dict(bioprojects=bioproject)
+    if organism_query:
+        organisms = Organism.objects(organism_query).scalar('taxid')
         query['taxid__in'] = organisms
-    if size:
-        
-    if contig_n50:
+    if start_date:
+        date_query = (Q(metadata__submission_date__gte=start_date) & Q(metadata__submission_date__lte=end_date))
+    else:
+        date_query = None
+    if filter_query and date_query:
+        assemblies = Assembly.objects(filter_query, date_query, **query)
+    elif filter_query:
+        assemblies = Assembly.objects(filter_query, **query)
+    elif date_query:
+        assemblies = Assembly.objects(date_query, **query)
+    else:
+        assemblies = Assembly.objects(**query)
+    if sort_column:
+        if sort_column == 'submission_date':
+            sort_column = 'metadata.submission_date'
+        sort = '-'+sort_column if sort_order == 'desc' else sort_column
+        assemblies = assemblies.order_by(sort)
+    return assemblies.count(), assemblies[int(offset):int(offset)+int(limit)]
 
-    return common_functions.return_response(offset,limit,assemblies)
+def get_filter(filter, option):
+    if option == 'taxid':
+        return (Q(taxid__iexact=filter) | Q(taxid__icontains=filter))
+    elif option == 'scientific_name':
+        return (Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter))
+    else:
+        return (Q(assembly_name__iexact=filter) | Q(assembly_name__icontains=filter))
+
 
 def create_assembly_from_ncbi_data(assembly,sample_accession=None):
-    print('CREATEING ASSEMBLY FROM NCBI DATA')
+    print('CREATING ASSEMBLY FROM NCBI DATA')
     ass_data = dict(accession = assembly['assembly_accession'],assembly_name= assembly['display_name'],scientific_name=assembly['org']['sci_name'],taxid=assembly['org']['tax_id'])
     ass_metadata=dict()
     for key in assembly.keys():
