@@ -1,18 +1,18 @@
-from user import users_controller
-from local_sample import local_samples_controller 
-from bioproject import bioprojects_controller
-from biosample import biosamples_controller
-from assembly import assemblies_controller
-from read import reads_controller
-from organism import organisms_controller
-from taxon import taxons_controller
-from annotation import annotations_controller
-from dump import dumps_controller
-from cronjob import cronjobs_controller
-from stats import stats_controller
-from upload import uploads_controller
-from genome_browser import genome_browser_controller
-from taxonomy import taxonomy_controller
+from .user import users_controller
+from .local_sample import local_samples_controller 
+from .bioproject import bioprojects_controller
+from .biosample import biosamples_controller
+from .assembly import assemblies_controller
+from .read import reads_controller
+from .organism import organisms_controller
+from .taxon import taxons_controller
+from .annotation import annotations_controller
+from .dump import dumps_controller
+from .cronjob import cronjobs_controller
+from .stats import stats_controller
+from .upload import uploads_controller
+from .genome_browser import genome_browser_controller
+from .taxonomy import taxonomy_controller
 
 def initialize_routes(api):
 

@@ -1,8 +1,8 @@
 from db.models import BioSample, Experiment, Organism
 from errors import NotFound
-from biosample.biosamples_service import create_biosample_from_accession
-from organism.organisms_service import get_or_create_organism
-from utils import ena_client
+from ..biosample import biosamples_service
+from ..organism import organisms_service
+from ..utils import ena_client
 from mongoengine.queryset.visitor import Q
 from datetime import datetime
 
@@ -87,7 +87,7 @@ def create_read_from_experiment_accession(accession):
                 other_attributes[k] = exp[k]
             else:
                 exp_metadata[k] = exp[k]
-        organism_obj = get_or_create_organism(other_attributes['taxid'])
+        organism_obj = organisms_service.get_or_create_organism(other_attributes['taxid'])
         if not organism_obj:
             resp_obj['message'] = f"organism with taxid: {other_attributes['taxid']} not found"
             resp_obj['status'] = 400
@@ -96,7 +96,7 @@ def create_read_from_experiment_accession(accession):
         organism_obj.modify(add_to_set__experiments=exp_obj.experiment_accession)
         organism_obj.save()
         if 'sample_accession' in exp_metadata.keys():
-            biosample_obj = create_biosample_from_accession(exp_metadata['sample_accession'])
+            biosample_obj = biosamples_service.create_biosample_from_accession(exp_metadata['sample_accession'])
             biosample_obj.modify(add_to_set__experiments=exp_obj.experiment_accession)   
         ##create data here
         saved_accessions.append(exp_obj.experiment_accession)

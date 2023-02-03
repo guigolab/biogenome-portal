@@ -2,7 +2,6 @@ from flask_restful import Resource
 from flask import Response, request
 from db.models import GenomeBrowserData
 from . import genome_browser_service
-from utils import common_functions
 from errors import NotFound
 import json
 from flask_jwt_extended import jwt_required

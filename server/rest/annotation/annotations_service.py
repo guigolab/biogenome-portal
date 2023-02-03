@@ -1,8 +1,8 @@
-from assembly import assemblies_service
+from ..assembly import assemblies_service
 from mongoengine.queryset.visitor import Q
 from db.models import Annotation,Organism
-from utils import data_helper
-from organism import organisms_service
+from ..utils import data_helper
+from ..organism import organisms_service
 
 ANNOTATION_FIELDS = ['name','taxid','assembly_accession']
 

@@ -1,5 +1,5 @@
-from utils import ena_client,data_helper
-from services import taxonomy_service
+from ..utils import ena_client,data_helper
+from ..taxon import taxons_service
 from flask import current_app as app
 from mongoengine.queryset.visitor import Q
 from db.models import Annotation, Assembly, BioProject, BioSample, CommonName, Experiment, GeoCoordinates, LocalSample, Organism, Publication,TaxonNode
@@ -78,11 +78,11 @@ def get_or_create_organism(taxid):
         lineage = data_helper.parse_taxon_from_ena(taxon_xml)
         tax_organism = lineage[0]
         tolid = ena_client.get_tolid(taxid)
-        taxon_lineage = taxonomy_service.create_taxons_from_lineage(lineage)
+        taxon_lineage = taxons_service.create_taxons_from_lineage(lineage)
         taxon_list = [tax.taxid for tax in taxon_lineage]
         insdc_common_name = tax_organism['commonName'] if 'commonName' in tax_organism.keys() else ''
         organism = Organism(taxid = taxid, insdc_common_name=insdc_common_name, scientific_name= tax_organism['scientificName'], taxon_lineage = taxon_list, tolid_prefix=tolid).save()
-        taxonomy_service.leaves_counter(taxon_lineage)
+        taxons_service.leaves_counter(taxon_lineage)
     return organism
 
 def parse_organism_data(data,taxid=None):
@@ -141,5 +141,5 @@ def delete_organism(taxid):
             if organisms_in_bioprojects.count() == 1 and organisms_in_bioprojects.first().taxid == taxid:
                 bioproject_to_delete = BioProject.objects(accession=bioproject).delete()
     organism_to_delete.delete()
-    taxonomy_service.delete_taxons(lineage)
+    taxons_service.delete_taxons(lineage)
     return taxid

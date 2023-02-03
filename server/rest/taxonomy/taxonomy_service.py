@@ -1,8 +1,5 @@
 from db.models import Organism, TaxonNode
-from mongoengine.queryset.visitor import Q
-import json
 from flask import current_app as app
-from errors import NotFound
 
 def bfs(root, nodes, max_leaves):
     queue = [(root,0)]

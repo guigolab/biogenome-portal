@@ -1,10 +1,10 @@
 from db.models import BioSample, Organism
 from errors import NotFound
-from utils import ena_client,utils,data_helper
-from organism import organisms_service
-from assembly import assemblies_service
-from bioproject import bioprojects_service
-from read import reads_service
+from ..utils import ena_client,data_helper
+from ..organism import organisms_service
+from ..assembly import assemblies_service
+from ..bioproject import bioprojects_service
+from ..read import reads_service
 from datetime import datetime
 from mongoengine.queryset.visitor import Q
 import os

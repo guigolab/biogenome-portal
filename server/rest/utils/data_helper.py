@@ -1,6 +1,5 @@
 from lxml import etree
 import requests
-import json
 
 def get_annotations(org_name):
     response = requests.get(f'https://genome.crg.cat/geneid-predictions/api/organisms/{org_name}')

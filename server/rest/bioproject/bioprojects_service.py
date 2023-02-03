@@ -1,5 +1,5 @@
 from db.models import BioProject,Organism
-from utils import ena_client
+from ..utils import ena_client
 from mongoengine.queryset.visitor import Q
 import json
 

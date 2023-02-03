@@ -331,6 +331,8 @@ paths:
             enum:
             - "taxid"
             - "scientific_name"
+            - "instrument_platform"
+            - "experiment_title"
         - in: 'query'
           name: 'start_date'
           schema:
@@ -340,14 +342,18 @@ paths:
           schema:
             type: "string"
         - in: 'query'
-          name: 'instrument_platform'
+          name: 'sort_order'
+          schema:  
+            type: "string"
+            enum:
+            - "asc"
+            - "desc"
+        - in: 'query'
+          name: 'sort_column'
           schema:
             type: "string"
             enum:
-            - "ILLUMINA"
-            - "PACBIO_SMRT"
-            - "OXFORD_NANOPORE"
-            - "OTHER"
+            - "first_created"
         - in: 'query'
           name: 'offset'
           schema:
@@ -501,6 +507,19 @@ paths:
             enum:
             - "taxid"
             - "scientific_name"
+        - in: "query"
+          name: "sort_column"
+          schema:
+            type: "string"
+            enum:
+              - "created"
+        - in: 'query'
+          name: 'sort_order'
+          schema:  
+            type: "string"
+            enum:
+            - "asc"
+            - "desc"
         - in: 'query'
           name: 'start_date'
           schema:  

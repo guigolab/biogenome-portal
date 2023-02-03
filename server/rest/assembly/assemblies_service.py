@@ -1,11 +1,11 @@
 from db.models import Assembly, BioSample, Chromosome, AssemblyTrack, Organism
 from flask import current_app as app
 from errors import NotFound
-from utils import ncbi_client,data_helper
-from organism import organisms_service
-from bioproject import bioprojects_service
-from biosample import biosamples_service
-from read import reads_service
+from ..utils import ncbi_client,data_helper
+from ..organism import organisms_service
+from ..bioproject import bioprojects_service
+from ..biosample import biosamples_service
+from ..read import reads_service
 from mongoengine.queryset.visitor import Q
 from datetime import datetime
 

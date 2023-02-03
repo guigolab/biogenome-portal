@@ -1,0 +1,1 @@
+docker exec biogenome-devdb sh -c 'exec mongodump --db biogenome-db --authenticationDatabase admin --username biogenome-user --password biogenome-password --gzip --archive' > dump_`date "+%Y-%m-%d"`.gz

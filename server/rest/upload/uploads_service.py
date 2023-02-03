@@ -1,8 +1,7 @@
-# from tempfile import NamedTemporaryFile
 import openpyxl
 from db.models import BrokerSource, LocalSample
-from organism.organisms_service import get_or_create_organism
-from utils import data_helper
+from ..organism import organisms_service
+from ..utils import data_helper
 
 OPTIONS = ['SKIP','UPDATE']
 
@@ -114,7 +113,7 @@ def parse_excel(excel=None, id=None, taxid=None, scientific_name=None, header=1,
                 sample_obj.update(taxid=new_sample[taxid],local_id=new_sample[id],broker=source,metadata=new_sample['metadata'],scientific_name=new_sample[scientific_name])
                 saved_sample[index+1+header] = [f"{sample_obj.local_id} correctly updated"]
         else:
-            organism = get_or_create_organism(new_sample[taxid])
+            organism = organisms_service.get_or_create_organism(new_sample[taxid])
             if not organism:
                 msg = 'TAXID not found in NCBI'
                 sample_error_obj[index+header+1].append(msg)

@@ -1,7 +1,7 @@
 from db.models import AssemblyTrack,AnnotationTrack,Annotation,GenomeBrowserData
 from errors import NotFound
-from organism.organisms_service import get_or_create_organism
-from assembly.assemblies_service import create_assembly_from_accession
+from ..organism import organisms_service
+from ..assembly import assemblies_service
 
 ASSEMBLY_TRACK_FIELDS=['fasta_location','fai_location','gzi_location']
 ANNOTATION_TRACK_FIELDS=['name','gff_gz_location','tab_index_location']
@@ -22,7 +22,7 @@ def create_genome_browser_data(data):
         resp['message'] = f"{accession} already exists"
         resp['status'] = 400
         return resp
-    assembly_obj=create_assembly_from_accession(accession)
+    assembly_obj=assemblies_service.create_assembly_from_accession(accession)
     if not assembly_obj:
         resp['message'] = f'assembly with {accession} not found in INSDC'
         resp['status'] = 400
@@ -43,7 +43,7 @@ def create_genome_browser_data(data):
         links=[ann_track['gff_gz_location'],ann_track['tab_index_location']]
         metadata={'source':'local'}
         ann_obj = Annotation(name=annotation_name,taxid=assembly_obj.taxid,assembly_accession=accession,links=links,metadata=metadata).save()
-        organism_obj = get_or_create_organism(assembly_obj.taxid)
+        organism_obj = organisms_service.get_or_create_organism(assembly_obj.taxid)
         organism_obj.modify(add_to_set__annotations=ann_obj.name)
     genome_browser_data_obj = GenomeBrowserData(assembly_accession=accession,assembly_track=assembly_track,annotation_tracks=annotation_tracks,taxid=assembly_obj.taxid).save()
     if not genome_browser_data_obj:

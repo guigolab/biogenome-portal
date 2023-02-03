@@ -257,7 +257,7 @@ class Organism(db.Document):
     bioprojects = db.ListField(db.StringField())
     annotations = db.ListField(db.StringField())
     coordinates =db.ListField(db.StringField())
-    countries = db.Listfield(db.StringField())
+    countries = db.ListField(db.StringField())
     insdc_common_name = db.StringField()
     local_samples = db.ListField(db.StringField())
     biosamples = db.ListField(db.StringField())
