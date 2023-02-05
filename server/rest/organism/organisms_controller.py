@@ -22,7 +22,7 @@ class OrganismsApi(Resource):
 class OrganismApi(Resource):
 	def get(self, taxid):
 		organism_obj = Organism.objects(taxid=taxid).first()
-		if not organism_obj.first():
+		if not organism_obj:
 			raise NotFound
 		return Response(organism_obj.to_json(),mimetype="application/json", status=200)
 

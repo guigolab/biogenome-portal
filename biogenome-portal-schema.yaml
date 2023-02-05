@@ -247,20 +247,16 @@ paths:
           schema:  
             type: "string"
         - in: 'query'
+          name: 'submitter'
+          schema:  
+            type: "string"
+        - in: 'query'
           name: 'sort_order'
           schema:  
             type: "string"
             enum:
             - "asc"
             - "desc"
-        - in: "query"
-          name: "bioproject"
-          schema:
-            type: "string"
-        - in: "query"
-          name: "parent_taxid"
-          schema:
-            type: "string"
         - in: 'query'
           name: 'sort_column'
           schema:
@@ -354,6 +350,10 @@ paths:
             type: "string"
             enum:
             - "first_created"
+        - in: 'query'
+          name: 'center'
+          schema:
+            type: 'string'
         - in: 'query'
           name: 'offset'
           schema:

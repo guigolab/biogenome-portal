@@ -11,7 +11,7 @@ MODEL_LIST = {
     'annotations':Annotation,
     'biosamples':BioSample,
     'local_samples':LocalSample,
-    'experiments':Experiment,
+    'reads':Experiment,
     'organisms':Organism,
     }
 
@@ -22,8 +22,7 @@ class FieldStatsApi(Resource):
         db_model = MODEL_LIST[model]
         field = request.args['field']
         try:
-            app.logger.info(field)
-            resp = db_model.objects.item_frequencies('accession')
+            resp = db_model.objects.item_frequencies(field)
             status = 200
         except:
             resp = {'message': 'field not found'}

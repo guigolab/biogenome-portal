@@ -9,7 +9,10 @@ from datetime import datetime
 def get_reads(offset=0,limit=20,
                 filter=None, filter_option="scientific_name",
                 start_date=None, end_date=datetime.utcnow,
-                sort_column=None,sort_order=None):
+                sort_column=None,sort_order=None, center=None):
+    query = dict()
+    if center:
+        query['metadata__center_name'] = center
     if filter:
         filter_query = get_filter(filter,filter_option)
     else:
@@ -19,13 +22,13 @@ def get_reads(offset=0,limit=20,
     else:
         date_query = None
     if filter_query and date_query:
-        reads = Experiment.objects(filter_query, date_query)
+        reads = Experiment.objects(filter_query & date_query, **query).exclude('id','created')
     elif filter_query:
-        reads = Experiment.objects(filter_query)
+        reads = Experiment.objects(filter_query,**query).exclude('id','created')
     elif date_query:
-        reads = Experiment.objects(date_query)
+        reads = Experiment.objects(date_query,**query).exclude('id','created')
     else:
-        reads = Experiment.objects()
+        reads = Experiment.objects(**query).exclude('id','created')
     if sort_column and sort_column == "first_created":
         sort_column = 'metadata.first_created'
         sort = '-'+sort_column if sort_order == 'desc' else sort_column

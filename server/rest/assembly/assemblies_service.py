@@ -16,44 +16,41 @@ TRACK_FIELDS = ['fasta_location','fai_location','gzi_location']
 ASSEMBLY_LEVELS = ['Chromosome', 'Scaffold', 'Complete Genome', 'Contig']
 
 
-def get_assemblies(filter=None, filter_option='assembly_name', offset=0, 
+def get_assemblies(filter=None, filter_option='assembly_name', 
+                    offset=0, submitter=None,
                     limit=20, start_date=None, 
-                    end_date=datetime.utcnow, assembly_level=None,
-                    sort_order=None, sort_column=None,
-                    bioproject=None, parent_taxid=None):  
+                    end_date=datetime.today().strftime('%Y-%m-%d'), assembly_level=None,
+                    sort_order=None, sort_column=None):  
     query=dict()
     ## filter match for accession, assembly name or species name
     if filter:
         filter_query = get_filter(filter, filter_option)
     else:
         filter_query = None
-    if assembly_level:
+    if assembly_level and assembly_level in ASSEMBLY_LEVELS:
         query['metadata__assembly_level'] = assembly_level
-    organism_query = None
-    if bioproject and parent_taxid:
-        organism_query = dict(bioprojects=bioproject, taxon_lineage=parent_taxid)
-    elif bioproject:
-        organism_query = dict(bioprojects=bioproject)
-    elif parent_taxid:
-        organism_query = dict(bioprojects=bioproject)
-    if organism_query:
-        organisms = Organism.objects(organism_query).scalar('taxid')
-        query['taxid__in'] = organisms
+    if submitter:
+        query['metadata__submitter'] = submitter
     if start_date:
         date_query = (Q(metadata__submission_date__gte=start_date) & Q(metadata__submission_date__lte=end_date))
     else:
         date_query = None
     if filter_query and date_query:
-        assemblies = Assembly.objects(filter_query, date_query, **query)
+        visitor_query = filter_query & date_query
+        assemblies = Assembly.objects(visitor_query, **query).exclude('id','created')
     elif filter_query:
-        assemblies = Assembly.objects(filter_query, **query)
+        assemblies = Assembly.objects(filter_query, **query).exclude('id','created')
     elif date_query:
-        assemblies = Assembly.objects(date_query, **query)
+        assemblies = Assembly.objects(date_query, **query).exclude('id','created')
     else:
-        assemblies = Assembly.objects(**query)
+        assemblies = Assembly.objects(**query).exclude('id','created')
     if sort_column:
         if sort_column == 'submission_date':
             sort_column = 'metadata.submission_date'
+        elif sort_column == 'size':
+            sort_column = 'metadata.estimated_size'
+        elif sort_column == 'contig_n50':
+            sort_column = 'metadata.contig_n50'
         sort = '-'+sort_column if sort_order == 'desc' else sort_column
         assemblies = assemblies.order_by(sort)
     return assemblies.count(), assemblies[int(offset):int(offset)+int(limit)]

@@ -25,13 +25,13 @@ def get_biosamples(offset=0,limit=20,
     else:
         date_query = None
     if filter_query and date_query:
-        biosamples = BioSample.objects(filter_query, date_query)
+        biosamples = BioSample.objects(filter_query & date_query).exclude('id','created')
     elif filter_query:
-        biosamples = BioSample.objects(filter_query)
+        biosamples = BioSample.objects(filter_query).exclude('id','created')
     elif date_query:
-        biosamples = BioSample.objects(date_query)
+        biosamples = BioSample.objects(date_query).exclude('id','created')
     else:
-        biosamples = BioSample.objects()
+        biosamples = BioSample.objects().exclude('id','created')
     if sort_column:
         if sort_column == 'collection_date':
             sort_column = 'metadata.collection_date'
@@ -43,9 +43,9 @@ def get_filter(filter, option):
     if option == 'taxid':
         return (Q(taxid__iexact=filter) | Q(taxid__icontains=filter))
     elif option == 'habitat':
-        return (Q(metadata_habitat__iexact=filter) | Q(metadata__habitat__icontains=filter))
+        return (Q(metadata__habitat__iexact=filter) | Q(metadata__habitat__icontains=filter))
     elif option == 'gal':
-        return (Q(metadata_GAL__iexact=filter) | Q(metadata__GAL__icontains=filter)) 
+        return (Q(metadata__GAL__iexact=filter) | Q(metadata__GAL__icontains=filter)) 
     else:
         return (Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter))
 
