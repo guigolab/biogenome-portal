@@ -5,9 +5,9 @@ import json
 
 def get_bioprojects(filter=None, offset=0, limit=20):
     if filter:
-        bioprojects = BioProject.objects(Q(title__iexact=filter) | Q(title__icontains=filter))
+        bioprojects = BioProject.objects( Q(title__iexact=filter) | Q(title__icontains=filter) | Q(accession__iexact=filter) | Q(accession__icontains=filter)).exclude('id')
     else:
-        bioprojects = BioProject.object()
+        bioprojects = BioProject.object().exclude('id')
     return bioprojects.count(), bioprojects[int(offset):int(offset)+int(limit)]
 
 def get_bioproject(accession):

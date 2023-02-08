@@ -20,7 +20,7 @@ def create_annotation(data):
         resp_obj['status'] = 400
         return resp_obj
     assembly_accession = data['assembly_accession']
-    assembly_obj = assemblies_service.create_assembly_from_accession(data['assembly_accession'])
+    assembly_obj = assemblies_service.created_related_assembly(data['assembly_accession'])
     if not assembly_obj:
         resp_obj['message'] = f'{assembly_accession} not found in INSDC'
         resp_obj['status'] = 400

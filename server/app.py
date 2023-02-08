@@ -7,7 +7,7 @@ from flask_jwt_extended import JWTManager
 from db.models import BioGenomeUser, CronJob,Roles
 from rest.bioproject import bioprojects_service
 from tendo.singleton import SingleInstance
-
+import json
 import os
 
 

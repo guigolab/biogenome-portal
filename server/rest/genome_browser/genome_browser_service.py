@@ -22,7 +22,7 @@ def create_genome_browser_data(data):
         resp['message'] = f"{accession} already exists"
         resp['status'] = 400
         return resp
-    assembly_obj=assemblies_service.create_assembly_from_accession(accession)
+    assembly_obj=assemblies_service.created_related_assembly(accession)
     if not assembly_obj:
         resp['message'] = f'assembly with {accession} not found in INSDC'
         resp['status'] = 400

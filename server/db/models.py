@@ -125,8 +125,10 @@ class BioSample(db.Document):
     experiments = db.ListField(db.StringField())
     accession = db.StringField(required=True,unique=True)
     country=db.StringField()
+    collection_date=db.StringField() #TODO: add job to parse collection date form metadata 
     latitude=db.StringField()
     longitude=db.StringField()
+    coordinates = db.PointField()
     bioprojects = db.ListField(db.StringField())
     sub_samples = db.ListField(db.StringField())
     created = db.DateTimeField(default=datetime.datetime.utcnow)
@@ -191,7 +193,6 @@ class GenomeBrowserData(db.Document):
 class Country(db.Document):
     name = db.StringField(required=True,unique=True)
     id = db.StringField(required=True,unique=True)
-    organism_count = db.IntField()
 
 
 ##external annotations
@@ -258,6 +259,7 @@ class Organism(db.Document):
     common_names= db.ListField(db.EmbeddedDocumentField(CommonName))
     bioprojects = db.ListField(db.StringField())
     annotations = db.ListField(db.StringField())
+    coords = db.ListField(db.PointField())
     coordinates =db.ListField(db.StringField())
     countries = db.ListField(db.StringField())
     insdc_common_name = db.StringField()

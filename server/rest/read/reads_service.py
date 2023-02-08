@@ -99,7 +99,7 @@ def create_read_from_experiment_accession(accession):
         organism_obj.modify(add_to_set__experiments=exp_obj.experiment_accession)
         organism_obj.save()
         if 'sample_accession' in exp_metadata.keys():
-            biosample_obj = biosamples_service.create_biosample_from_accession(exp_metadata['sample_accession'])
+            biosample_obj = biosamples_service.create_related_biosample(exp_metadata['sample_accession'])
             biosample_obj.modify(add_to_set__experiments=exp_obj.experiment_accession)   
         ##create data here
         saved_accessions.append(exp_obj.experiment_accession)

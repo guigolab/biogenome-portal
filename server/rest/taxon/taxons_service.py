@@ -9,15 +9,15 @@ def get_taxons(offset=0, limit=20,
                 filter=None, rank=None):
     query=dict()
     if filter:
-        filter_query = (Q(name__iexact=filter) | Q(name__icontains=filter))
+        filter_query = (Q(name__iexact=filter) | Q(name__icontains=filter) | Q(taxid__iexact=filter) | Q(taxid__icontains=filter))
     else:
         filter_query = None
     if rank:
         query['rank'] = rank
     if filter_query:
-        taxons = TaxonNode.objects(filter_query, **query)
+        taxons = TaxonNode.objects(filter_query, **query).exclude('id')
     else:
-        taxons = TaxonNode.objects(**query)
+        taxons = TaxonNode.objects(**query).exclude('id')
     return taxons.count(), taxons[int(offset):int(offset)+int(limit)]
 
 def delete_taxons(taxid_list):

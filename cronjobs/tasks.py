@@ -38,7 +38,7 @@ def create_data(url,cookies,to_delete=False):
 def import_records():
     cronjob_exists = requests.get(f"{API_URL}/cronjob").json()
     if cronjob_exists:
-        print('A CRONJOB IS RUNNING ALREADY')
+        print('A CRONJOB IS ALREADY RUNNING')
         return
     ##login to create token
     cookies = login()
@@ -55,7 +55,7 @@ def import_records():
         import_from_EBI_biosamples(PROJECTS,cookies)
     ##check new reads
     update_biosamples(cookies)
-    create_data(f"{API_URL}/cronjob",cookies, to_delete=True)
+    create_data(f"{API_URL}/cronjob", cookies, to_delete=True)
 
     ##TODO convert local samples to biosample via copo api
 
@@ -201,8 +201,6 @@ def get_reads(accession):
     if experiments_data.status_code != 200:
         return list()
     return experiments_data.json()
-
-def 
 
 if __name__ == "__main__":
     print(f"Running script at {datetime.now()}")

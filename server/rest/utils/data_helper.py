@@ -1,5 +1,8 @@
 from lxml import etree
 import requests
+import json
+from shapely.geometry import Point
+from shapely.geometry import shape
 
 def get_annotations(org_name):
     response = requests.get(f'https://genome.crg.cat/geneid-predictions/api/organisms/{org_name}')
@@ -25,18 +28,40 @@ def parse_sample_metadata(metadata):
         sample_metadata[k] = metadata[k][0]['text']
     return sample_metadata
 
+#open countries geojson
+def get_countries_json():
+    with open('./countries.json') as f:
+        data = json.load(f)
+    f.close()
+    return data
 
-def create_coordinates(sample,organism):
+def coordinates_in_country(coordinates):
+    countries = get_countries_json()['features']
+    point = Point(*coordinates)
+    for country in countries:
+        geometry = country['geometry']
+        polygon = shape(geometry)
+        if geometry['type'] == 'MultiPolygon':
+            print(polygon)
+        # print(point.within(polygon))
+        # if polygon.contains(point):
+        #     print('YES')
+        #     print(country)
+
+
+
+def create_coordinates(sample, organism):
     ##parse coordinates
     coords = coordinate_parser(sample.metadata)
 
     if not coords:
         return
-    sample.latitude = coords[0]
-    sample.longitude = coords[1]
-    sample.save()
-    geo_loc = sample.latitude+':'+sample.longitude
-    organism.modify(add_to_set__coordinates=geo_loc)
+    point = coords
+    sample.update(coordinates=point)
+    # sample.latitude = coords[0]
+    # sample.longitude = coords[1]
+    # sample.save()
+    organism.modify(add_to_set__coords=point)
 
 
 def coordinate_parser(sample_metadata):

@@ -28,7 +28,7 @@ class AssemblyApi(Resource):
     
     @jwt_required()
     def post(self,accession):
-        response = assemblies_service.create_assembly_from_accession_input(accession)
+        response = assemblies_service.create_assembly_from_accession(accession)
         return Response(response['message'], mimetype="application/json", status=response['status'])
 
     @jwt_required()

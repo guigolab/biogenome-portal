@@ -1,5 +1,4 @@
 from db.models import Assembly, BioSample, Chromosome, AssemblyTrack, Organism
-from flask import current_app as app
 from errors import NotFound
 from ..utils import ncbi_client,data_helper
 from ..organism import organisms_service
@@ -98,7 +97,7 @@ def get_chromosomes(accession):
     return Chromosome.objects(accession_version__in=assembly.chromosomes).as_pymongo()
 
 ##return response obj
-def create_assembly_from_accession_input(accession):
+def create_assembly_from_accession(accession):
     resp_obj=dict()
     assembly_obj = Assembly.objects(accession=accession).first()
     if assembly_obj:
@@ -122,7 +121,7 @@ def create_assembly_from_accession_input(accession):
     return resp_obj
 
 
-def create_assembly_from_accession(accession):
+def created_related_assembly(accession):
     assembly_obj = Assembly.objects(accession=accession).first()
     if assembly_obj:
         return assembly_obj
@@ -159,7 +158,7 @@ def create_data_from_assembly(assembly_obj, ncbi_response):
     else:
         print('CREATING BIOSAMPLE FROM ACCESSION')
         print(assembly_obj.to_json())
-        biosample_obj = biosamples_service.create_biosample_from_accession(assembly_obj.sample_accession)
+        biosample_obj = biosamples_service.create_related_biosample(assembly_obj.sample_accession)
     if assembly_obj.sample_accession and biosample_obj:
         organism_obj.modify(add_to_set__biosamples=biosample_obj.accession)
         biosamples_to_update = [biosample_obj]

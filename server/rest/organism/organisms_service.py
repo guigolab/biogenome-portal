@@ -34,7 +34,9 @@ def get_organisms(offset=0, limit=20,
         organisms = organisms.order_by(sort)
     
     return organisms.count(), organisms[int(offset):int(offset)+int(limit)]
-    
+
+def get_organism_related_data(taxid, model):
+    return model.objects(taxid=taxid)
 
 def get_stats(organisms):
     stats = dict()

@@ -49,7 +49,7 @@ def get_filter(filter, option):
     else:
         return (Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter))
 
-def create_biosample_from_accession(accession):
+def create_related_biosample(accession):
 
     biosample_obj = BioSample.objects(accession=accession).first()
     if biosample_obj:
@@ -62,7 +62,7 @@ def create_biosample_from_accession(accession):
     ##create data here
     return biosample_obj
 
-def create_biosample_from_accession_input(accession):
+def create_biosample_from_accession(accession):
     resp_obj = dict()
     biosample_obj = BioSample.objects(accession=accession).first()
     if biosample_obj:
@@ -145,7 +145,7 @@ def create_data_from_biosample(biosample_obj):
         return
     organism_obj.modify(add_to_set__biosamples=biosample_obj.accession)
     if 'sample derived from' in biosample_obj.metadata.keys():
-        biosample_container = create_biosample_from_accession(biosample_obj.metadata['sample derived from'])
+        biosample_container = create_related_biosample(biosample_obj.metadata['sample derived from'])
         if biosample_container:
             biosample_container.modify(add_to_set__sub_samples=biosample_obj.accession)
             organism_obj.modify(add_to_set__biosamples=biosample_container.accession)
@@ -161,7 +161,7 @@ def create_data_from_biosample(biosample_obj):
         if response:
             for ass in response:
                 assembly_accession = ass['accession']+'.'+ass['version']
-                assemblies_service.create_assembly_from_accession(assembly_accession)
+                assemblies_service.created_related_assembly(assembly_accession)
         ##check for assembly
     for saved_biosample in biosamples_to_update:
         ##create bioproject if present

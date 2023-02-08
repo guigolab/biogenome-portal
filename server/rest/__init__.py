@@ -1,6 +1,5 @@
 from flask_restful import Api
 from .routes import initialize_routes
-
 from errors import errors
 
 api = None

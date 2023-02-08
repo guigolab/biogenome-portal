@@ -101,6 +101,10 @@ paths:
           schema:
             type: 'string'
         - in: 'query'
+          name: 'bioproject'
+          schema:
+            type: 'string'
+        - in: 'query'
           name: 'filter'
           schema:
             type: 'string'
@@ -180,6 +184,39 @@ paths:
           required: true
           schema:
             type: "string"
+      responses:
+        "200":
+          description: "successful operation"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Organism"
+        "404":
+          description: "Organism not found"
+
+    /organisms/{taxid}/{model}:
+    get:
+      tags:
+        - "organisms"
+      parameters:
+        - in: 'path'
+          name: 'taxid'
+          required: true
+          schema:
+            type: "string"
+        - in: 'path'
+          name: 'model'
+          required: true
+          schema:
+            type: 'string'
+            enum:
+              - 'bioprojects'
+              - 'taxons'
+              - 'biosamples'
+              - 'local_samples'
+              - 'assemblies'
+              - 'reads'
+              - 'annotations'
       responses:
         "200":
           description: "successful operation"
