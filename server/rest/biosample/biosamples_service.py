@@ -178,6 +178,6 @@ def create_data_from_biosample(biosample_obj):
         for read in saved_reads:
             organism_obj.modify(add_to_set__experiments=read)
             saved_biosample.modify(add_to_set__experiments=read)
-    
+    print(organism_obj.to_json())
     organism_obj.save()
     return organism_obj

@@ -13,17 +13,9 @@ class AssemblyService {
         return base.get(`/assemblies/${accession}`)
     }
     //create assembly by INSDC accession
-    importAssembly(accession, formData){
-        if(formData){
-            return submission.post(`/assemblies/${accession}`, formData)
-        }
+    importAssembly(accession){
         return submission.post(`/assemblies/${accession}`)
     }
-
-    updateAssembly(accession, formData){
-        return submission.put(`/assemblies/${accession}`, formData)
-    }
-    
     deleteAssembly(accession){
         return submission.delete(`/assemblies/${accession}`)
     }

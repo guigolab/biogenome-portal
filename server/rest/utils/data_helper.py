@@ -1,8 +1,7 @@
 from lxml import etree
 import requests
 import json
-from shapely.geometry import Point
-from shapely.geometry import shape
+from db.models import Organism
 
 def get_annotations(org_name):
     response = requests.get(f'https://genome.crg.cat/geneid-predictions/api/organisms/{org_name}')
@@ -35,20 +34,39 @@ def get_countries_json():
     f.close()
     return data
 
-def coordinates_in_country(coordinates):
+def coordinates_in_country(model):
     countries = get_countries_json()['features']
-    point = Point(*coordinates)
     for country in countries:
         geometry = country['geometry']
-        polygon = shape(geometry)
-        if geometry['type'] == 'MultiPolygon':
-            print(polygon)
-        # print(point.within(polygon))
-        # if polygon.contains(point):
-        #     print('YES')
-        #     print(country)
+        biosamples = model.objects(coordinates__geo_within=geometry).scalar('taxid')
+        if biosamples:
+            Organism.objects(taxid__in=biosamples).update(add_to_set__countries=country['id'])
 
+def update_organism_coordinates(organisms):
+    for organism in organisms:
+        organism.coords=list()
+        organism.countries=list()
+        coords = []
+        for coordinate in organism.coordinates:
+            lat,lng = [float(coord.replace(',','.')) for coord in coordinate.split(':')]
+            if coordinates_in_range(lat,lng):
+                coords.append([lng,lat])
+        if coords:
+            organism.locations = coords
+        organism.save()
 
+def coordinates_in_range(lat,lng):
+    return lat > -90.0 and lat < 90.0 and lng > -180.0 and lng < 180.0
+
+def update_samples_coordinates(samples):
+    for sample in samples:
+        # if sample.location:
+        #     continue
+        if sample.longitude and sample.latitude:
+            lng,lat = [float(sample.longitude.replace(',','.')), float(sample.latitude.replace(',','.'))]
+            if coordinates_in_range(lat,lng):
+                sample.location=[lng,lat]
+                sample.save()
 
 def create_coordinates(sample, organism):
     ##parse coordinates
@@ -57,11 +75,14 @@ def create_coordinates(sample, organism):
     if not coords:
         return
     point = coords
-    sample.update(coordinates=point)
-    # sample.latitude = coords[0]
-    # sample.longitude = coords[1]
-    # sample.save()
-    organism.modify(add_to_set__coords=point)
+    sample.coordinates=point
+    sample.save()
+    sample_lng, sample_lat = coords
+    for loc in organism.locations:
+        lng,lat = loc
+        if not lng == sample_lng and not lat == sample_lat:
+            organism.locations.append([sample_lng,sample_lat])
+    organism.save()
 
 
 def coordinate_parser(sample_metadata):
@@ -98,6 +119,8 @@ def coordinate_parser(sample_metadata):
     else:
         return
     if any(c.isdigit() for c in str(latitude)) and any(c.isdigit() for c in str(longitude)):
-        return [latitude,longitude]
-    else:
-        return    
+        lng = float(longitude)
+        lat = float(latitude)
+        if coordinates_in_range(lat,lng):
+            return [lng,lat]
+    return    

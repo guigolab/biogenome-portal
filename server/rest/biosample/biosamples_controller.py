@@ -5,6 +5,8 @@ from db.models import BioSample
 from . import biosamples_service
 from errors import NotFound
 from flask_jwt_extended import jwt_required
+from ..utils import data_helper
+
 
 FIELDS_TO_EXCLUDE = ['id','created','last_check']
 
@@ -31,6 +33,8 @@ class BioSampleApi(Resource):
 class BioSamplesApi(Resource):
 
     def get(self):
+        # data_helper.update_samples_coordinates(BioSample.objects())
+        # data_helper.coordinates_in_country(BioSample)
         total, data = biosamples_service.get_biosamples(**request.args)
         json_resp = dict(total=total,data=list(data.as_pymongo()))
         return Response(json.dumps(json_resp), mimetype="application/json", status=200)

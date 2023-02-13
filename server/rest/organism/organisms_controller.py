@@ -11,7 +11,8 @@ from flask import current_app as app
 class OrganismsApi(Resource):
 
 	def get(self):
-		data_helper.coordinates_in_country([ 51.769, -1.339 ])
+		# data_helper.update_organism_coordinates(Organism.objects())
+		# data_helper.coordinates_in_country(Organism.objects())
 		total, data = organisms_service.get_organisms(**request.args)
 		json_resp = dict(total=total,data=list(data.as_pymongo()))
 		return Response(json.dumps(json_resp), mimetype="application/json", status=200)

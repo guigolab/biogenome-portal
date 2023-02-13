@@ -3,7 +3,7 @@ version: '3'
 services:
 
   biogenome_mongo:
-    image: mongo:latest
+    image: mongo:5.0.10
     container_name: "${DB_DEV_HOST}"
     env_file:
       - .env

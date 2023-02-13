@@ -108,6 +108,8 @@ class LocalSample(db.Document):
     last_check = db.DateTimeField()
     latitude=db.StringField()
     longitude=db.StringField()
+    location = db.PointField() ##list of longitude, latitude tuples: as it can contain one or more tuples it is not a valid geojson 
+    coordinates = db.PointField()
     country=db.StringField()
     taxid = db.StringField(required=True)
     scientific_name = db.StringField(required=True)
@@ -128,6 +130,7 @@ class BioSample(db.Document):
     collection_date=db.StringField() #TODO: add job to parse collection date form metadata 
     latitude=db.StringField()
     longitude=db.StringField()
+    location = db.PointField()
     coordinates = db.PointField()
     bioprojects = db.ListField(db.StringField())
     sub_samples = db.ListField(db.StringField())
@@ -260,6 +263,7 @@ class Organism(db.Document):
     bioprojects = db.ListField(db.StringField())
     annotations = db.ListField(db.StringField())
     coords = db.ListField(db.PointField())
+    locations = db.ListField(db.ListField(db.FloatField()))
     coordinates =db.ListField(db.StringField())
     countries = db.ListField(db.StringField())
     insdc_common_name = db.StringField()

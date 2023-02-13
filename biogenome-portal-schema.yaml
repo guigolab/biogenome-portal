@@ -101,6 +101,10 @@ paths:
           schema:
             type: 'string'
         - in: 'query'
+          name: 'country'
+          schema:
+            type: 'string'
+        - in: 'query'
           name: 'bioproject'
           schema:
             type: 'string'
@@ -505,7 +509,7 @@ paths:
                     type: "number"
         "405":
           description: "Invalid input"
-          
+          /cesium/
   /biosamples/{accession}:
     get:
       tags:
@@ -726,6 +730,26 @@ paths:
                 $ref: "#/components/schemas/BioProject"
         "404":
           description: "BioProject not found"
+
+  /bioprojects/{accession}/coordinates:
+    get:
+      tags:
+        - "bioprojects"
+      parameters:
+        - in: 'path'
+          name: 'accession'
+          required: true
+          schema:  
+            type: 'string'
+      responses:
+        "200":
+          description: "successful operation"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BioProject"
+        "404":
+          description: "BioProject not found"
       
   /taxons:
     get:
@@ -794,7 +818,28 @@ paths:
                 $ref: "#/components/schemas/TaxonNode"
         "404":
           description: "Taxon not found"
-       
+          
+  /taxons/{taxid}/coordinates:
+    get:
+      tags:
+        - "taxons"
+      parameters:
+        - in: 'path'
+          name: 'taxid'
+          required: true
+          schema:  
+            type: 'string'
+
+      responses:
+        "200":
+          description: "successful operation"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaxonNode"
+        "404":
+          description: "Taxon not found"
+        
 components:
   schemas:
     Assembly:

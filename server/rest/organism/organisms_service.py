@@ -23,7 +23,7 @@ def get_organisms(offset=0, limit=20,
     if goat_status:
         query['goat_status'] = goat_status
     if country:
-        query['country'] = country
+        query['countries'] = country
     if insdc_status:
         query['insdc_status'] = insdc_status
     if target_list_status:
