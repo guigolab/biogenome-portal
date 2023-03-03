@@ -92,7 +92,7 @@ def parse_excel(excel=None, id=None, taxid=None, scientific_name=None, latitude=
                 else:
                     new_sample[key] = str(cell.value).strip()
             if cell.value:
-                new_sample['metadata'][key] = cell.value
+                new_sample['metadata'][key] = str(cell.value)
 
         if sample_error_obj[index+header+1]:
             if not all_errors:
@@ -116,6 +116,8 @@ def parse_excel(excel=None, id=None, taxid=None, scientific_name=None, latitude=
             if not organism:
                 msg = 'TAXID not found in NCBI'
                 sample_error_obj[index+header+1].append(msg)
+                if not all_errors:
+                    all_errors = list()
                 all_errors.append(sample_error_obj)
                 continue
             sample_obj = LocalSample(taxid=new_sample[taxid],local_id=new_sample[id],broker=source,metadata=new_sample['metadata'],scientific_name=new_sample[scientific_name]).save()                

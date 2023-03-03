@@ -33,14 +33,6 @@ class OrganismsApi(Resource):
 
 class OrganismApi(Resource):
 	def get(self, taxid):
-		BioSample.objects(unset__latitude=True)
-		BioSample.objects(unset__longitude=True)
-		for biosample in BioSample.objects():
-			biosample.save()
-		LocalSample.objects(unset__latitude=True)
-		LocalSample.objects(unset__longitude=True)	
-		for local_sample in LocalSample.objects():
-			local_sample.save()
 		organism_obj = Organism.objects(taxid=taxid).first()
 		if not organism_obj:
 			raise NotFound
@@ -130,3 +122,8 @@ class OrganismSankeyDataApi(Resource):
 			read_children['value'] = len(read_children['children'])
 			tree['children'].append(read_children)
 		return Response(json.dumps(tree),mimetype="application/json", status=200)
+
+class OrganismsCoordinatesApi(Resource):
+	def get(self):
+		organisms = organisms_service.get_organisms_locations(**request.args)
+		return Response(organisms.to_json(),mimetype="application/json", status=200)

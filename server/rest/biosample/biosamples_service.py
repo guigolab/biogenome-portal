@@ -55,7 +55,7 @@ def create_related_biosample(accession):
     biosample_response = ena_client.get_sample_from_biosamples(accession)
     if not biosample_response:
         return
-    biosample_obj = create_biosample_from_ebi_data(biosample_response[0])
+    biosample_obj = create_biosample_from_ebi_data(biosample_response)
     return biosample_obj
 
 def create_biosample_from_accession(accession):

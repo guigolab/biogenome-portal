@@ -1,19 +1,19 @@
 from db.models import Organism, Assembly, BioSample, BioProject, LocalSample
-from db.enums import CronJobStatus
 from ..utils import ena_client
 from ..biosample import biosamples_service
 from ..organism import organisms_service
 from ..read import reads_service
 from ..assembly import assemblies_service
 from ..bioproject import bioprojects_service
-from mongoengine.queryset.visitor import Q
+from shapely.geometry import shape, Point
+from decimal import Decimal
 import time
 import os
 import requests
 import json
 
 ## get samples derived from or samples container
-def update_samples(cronjob):
+def update_samples():
     biosamples = BioSample.objects()
     counter=0
     for biosample in biosamples:
@@ -36,9 +36,8 @@ def update_samples(cronjob):
                 continue
             for sample_to_save in ebi_biosample_response:
                 biosamples_service.create_biosample_from_ebi_data(sample_to_save)
-    cronjob.delete()
 
-def import_assemblies(cronjob):
+def import_assemblies():
     project_accession = os.getenv('PROJECT_ACCESSION')
     if not project_accession:
         return
@@ -69,21 +68,15 @@ def import_assemblies(cronjob):
             organism = organisms_service.get_or_create_organism(saved_assembly.taxid)
             sample = BioSample.objects(accession=saved_assembly.sample_accession).first()
             bioprojects_service.create_bioprojects_from_NCBI(assembly_to_save['bioproject_lineages'],organism,sample)
-    cronjob.delete()
 
-
-
-def update_reads(cronjob):
+def update_reads():
     biosamples = BioSample.objects()
     for biosample in biosamples:
         reads_service.create_reads_from_biosample_accession(biosample.accession)
-    cronjob.delete()
 
-
-def import_biosamples(cronjob):
+def import_biosamples():
     project_list = [p.strip() for p in os.getenv('PROJECTS').split(',') if p] if os.getenv('PROJECTS') else None
     project_mapper = {p.split('_')[0]:p.split('_')[1] for p in project_list}
-
     for project_accession in project_mapper.keys():
         biosamples = []
         href = f"https://www.ebi.ac.uk/biosamples/samples?size=200&filter=attr%3Aproject%20name%3A{project_accession}"
@@ -112,22 +105,38 @@ def import_biosamples(cronjob):
                     organism = organisms_service.get_or_create_organism(saved_sample.taxid)
                     organism.modify(add_to_set__bioprojects=parent_project.accession)
                 bioprojects_service.leaves_counter(parent_bioprojects)
-    cronjob.delete()
 
-
-def update_countries(cronjob):
+def update_countries():
     with open('./countries.json') as f:
         countries = json.load(f)['features']
-        organisms = Organism.objects()
-        countries_to_save=list()
-        for organism in organisms:
-            for country in countries:
-                geometry = country['geometry']
-                query = (Q(taxid__in=organism.taxid) & Q(location__geo_within=geometry))
-                for model in [BioSample,LocalSample]:
-                    samples = model.objects(query)
-                    if samples:
-                        countries_to_save.append(country['id'])
-            if countries_to_save:
-                organism.update(countries=countries_to_save)
-    cronjob.delete()
+        for model in [BioSample, LocalSample]:
+            samples = model.objects(location__ne=None)
+            for sample in samples:
+                lng,lat = sample.location['coordinates']
+                point = Point(lng, lat)
+                for country in countries:
+                    geometry=country['geometry']
+                    polygon = shape(geometry)
+                    if polygon.contains(point):
+                        Organism.objects(taxid=sample.taxid).update(add_to_set__countries=country['id'])
+
+
+def update_organism_locations():
+    for organism in Organism.objects():
+        for model in [BioSample, LocalSample]:
+            samples = model.objects(taxid=organism.taxid,location__ne=None)
+            locations = list()
+            for sample in samples:
+                lng,lat = sample.location['coordinates']
+                decimal_lng = Decimal(str(lng))
+                decimal_lat = Decimal(str(lat))
+                location_exists=False
+                for location in locations:
+                    existing_lng, existing_lat = location
+                    if existing_lat.compare(decimal_lat) == 0 and existing_lng.compare(decimal_lng) == 0:
+                        location_exists=True
+                if not location_exists:
+                    locations.append([decimal_lng, decimal_lat])
+            if locations:
+                organism.locations=[[float(loc[0]), float(loc[1])] for loc in locations]
+                organism.save()

@@ -36,6 +36,27 @@ def get_organisms(offset=0, limit=20,
     
     return organisms.count(), organisms[int(offset):int(offset)+int(limit)]
 
+
+def get_organisms_locations(filter=None, filter_option='scientfic_name', parent_taxid=None, country=None, bioproject=None,
+                goat_status=None, insdc_status=None, target_list_status=None):
+    query=dict(locations__0__ne=None)
+    filter_query = get_filter(filter, filter_option) if filter else None
+    if parent_taxid:
+        query['taxon_lineage'] = parent_taxid
+    if bioproject:
+        query['bioprojects'] = bioproject
+    if goat_status:
+        query['goat_status'] = goat_status
+    if country:
+        query['countries'] = country
+    if insdc_status:
+        query['insdc_status'] = insdc_status
+    if target_list_status:
+        query['target_list_status'] = target_list_status
+    organisms = Organism.objects(filter_query, **query).exclude('id') if filter_query else Organism.objects.filter(**query).exclude('id')
+    return organisms
+
+
 def get_organism_related_data(taxid, model):
     return model.objects(taxid=taxid)
 

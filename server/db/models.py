@@ -101,7 +101,6 @@ def update_organism_status(sender, document, **kwargs):
             document.goat_status = GoaTStatus.PUBLICATION_AVAILABLE
 
 
-
 @add_to_related_data.apply
 @remove_from_related_data.apply
 class Experiment(db.Document):
@@ -116,7 +115,6 @@ class Experiment(db.Document):
     meta = {
         'indexes': ['experiment_accession']
     }
-
 
 @add_to_related_data.apply
 @remove_from_related_data.apply
@@ -146,7 +144,7 @@ class BioProject(db.Document):
         'indexes': ['accession']
     }
 
-@handler(db.post_save)
+@handler(db.pre_save)
 def set_location(sender, document, **kwargs):
     if document.location:
         return
@@ -179,26 +177,22 @@ def set_location(sender, document, **kwargs):
         latitude = str(lowered_keys_dict['decimal_latitude'])
         longitude  = str(lowered_keys_dict['decimal_longitude'])
     if latitude and longitude:
-        if any(c.isdigit() for c in str(latitude)) and any(c.isdigit() for c in str(longitude)):
-            ##replace , with .
-            latitude = latitude.replace(',', '.')
-            longitude = longitude.replace(',', '.')
-            if float(latitude) > -90.0 and float(latitude) < 90.0 and float(longitude) > -180.0 and float(longitude) < 180.0:
-                lng = float(longitude)
-                lat = float(latitude)
-                document.location = [lng, lat]
-                organism = Organism.objects(taxid=document.taxid).first()
-                if not organism:
-                    return
-                if not organism.locations:
-                    organism.locations.append([lng, lat])
-                else:
-                    for loc in organism.locations:
-                        existing_lng, existing_lat = loc
-                        if not existing_lng == lng and not existing_lat == lat:
-                            organism.locations.append([lng, lat])
-                            # update_countries(sender,organism)
-                organism.save()
+        try:
+            if any(c.isdigit() for c in str(latitude)) and any(c.isdigit() for c in str(longitude)):
+                ##replace , with .
+                if ',' in latitude and ',' in longitude:
+                    latitude = latitude.replace(',', '.')
+                    longitude = longitude.replace(',', '.')
+                elif "'" in latitude and "'" in longitude:
+                    latitude = latitude.replace("'", ".")
+                    longitude = longitude.replace("'", ".")
+                    if float(latitude) >= -90.0 and float(latitude) <= 90.0 and float(longitude) >= -180.0 and float(longitude) <= 180.0:
+                        lng = float(longitude)
+                        lat = float(latitude)
+                        document.location = [lng, lat]
+        except:
+            id = document.accession if document.accession else document.local_id
+            print(f'Invalid latitude:{latitude} or longitude: {longitude} for sample:{id}')
 
 
 @add_to_related_data.apply
@@ -295,7 +289,6 @@ class Publication(db.EmbeddedDocument):
     source = db.EnumField(PublicationSource)
     id = db.StringField()
 
-
 @add_to_related_data.apply
 @remove_from_related_data.apply
 class OrganismPublication(db.Document):
@@ -305,7 +298,6 @@ class OrganismPublication(db.Document):
     title = db.StringField()
     description = db.StringField()
     metadata = db.DictField()
-
 
 @delete_related_data.apply
 @update_organism_status.apply
