@@ -4,9 +4,9 @@ from mongoengine.queryset.visitor import Q
 def get_users(offset=0,limit=20,
                 filter=None):
     if filter:
-        users = BioGenomeUser.objects(Q(name__iexact=filter) | Q(name__icontains=filter)).exclude('password')
+        users = BioGenomeUser.objects(Q(name__iexact=filter) | Q(name__icontains=filter)).exclude('password','id')
     else:
-        users = BioGenomeUser.objects().exclude('password')
+        users = BioGenomeUser.objects().exclude('password','id')
     return users.count(), users[int(offset):int(offset)+int(limit)]
 
 def create_user(data):

@@ -1,5 +1,5 @@
 from flask import Response,request
-from db.models import Assembly,Annotation,BioSample,LocalSample,Experiment,Organism, TaxonNode
+from db.models import Assembly,GenomeAnnotation,BioSample,LocalSample,Experiment,Organism, TaxonNode
 from flask_restful import Resource
 import json
 from flask import current_app as app
@@ -8,7 +8,7 @@ from flask import current_app as app
 MODEL_LIST = {
     'assemblies':Assembly,
     'taxons': TaxonNode,
-    'annotations':Annotation,
+    'annotations':GenomeAnnotation,
     'biosamples':BioSample,
     'local_samples':LocalSample,
     'reads':Experiment,
@@ -21,8 +21,13 @@ class FieldStatsApi(Resource):
             return 404
         db_model = MODEL_LIST[model]
         field = request.args['field']
+        query = request.args['query'] if 'query' in request.args.keys() else None
         try:
-            resp = db_model.objects.item_frequencies(field)
+            query_obj = json.loads(query) if query else None
+            if query_obj and query_obj.keys():
+                resp = db_model.objects(**query_obj).item_frequencies(field)
+            else:
+                resp = db_model.objects.item_frequencies(field)
             status = 200
         except:
             resp = {'message': 'field not found'}

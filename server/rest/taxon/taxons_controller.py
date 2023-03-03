@@ -17,3 +17,19 @@ class TaxonApi(Resource):
         if not taxon:
             raise NotFound
         return Response(taxon.to_json(), mimetype="application/json", status=200)
+
+class TaxonCoordinatesApi(Resource):
+    def get(self, taxid):
+        taxon = TaxonNode.objects(taxid=taxid).first()
+        if not taxon:
+            raise NotFound
+        items = taxons_service.get_taxon_coordinates(taxon)
+        return Response(items.to_json(), mimetype="application/json", status=200)
+
+class TaxonChildrenApi(Resource):
+    def get(self, taxid):
+        taxon = TaxonNode.objects(taxid=taxid).first()
+        if not taxon:
+            raise NotFound
+        items = TaxonNode.objects(taxid__in=taxon.children)
+        return Response(items.to_json(), mimetype="application/json", status=200)

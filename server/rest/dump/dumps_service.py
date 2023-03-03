@@ -1,11 +1,11 @@
-from db.models import Annotation, Assembly, BioProject, BioSample, Experiment, LocalSample, Organism, TaxonNode
+from db.models import GenomeAnnotation, Assembly, BioProject, BioSample, Experiment, LocalSample, Organism, TaxonNode
 import json
 
 MODEL = {
     'organism': Organism,
     'biosample': BioSample,
     'assembly': Assembly,
-    'annotation': Annotation,
+    'annotation': GenomeAnnotation,
     'experiment': Experiment,
     'local_sample': LocalSample,
     'bioproject': BioProject,

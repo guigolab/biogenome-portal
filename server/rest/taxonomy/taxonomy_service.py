@@ -50,12 +50,14 @@ def dfs_generator(stack,tree,taxids):
             tree["children"].append(child_dict)
     return tree
 
-def create_tree(taxid):
+def create_tree(taxid, limit=None):
     node = TaxonNode.objects(taxid=taxid).exclude('id').first()
     # tree_iterator(node,tree)
     node_counts={}
-    max_level = bfs(node,node_counts,150)
-    app.logger.info(max_level)
+    if limit:
+        max_level = bfs(node,node_counts,int(limit))
+    else:
+        max_level = None
     tree={}
     dfs([(node,1)],tree,max_level)
     return tree
@@ -72,6 +74,13 @@ def get_leaves_per_level(node, levels_obj):
             get_leaves_per_level(child, levels_obj)
     return levels_obj
 
+#params we expect
+#   
+#   list of taxids
+#   root taxid
+#   insdc status
+#   goat status
+#
 def generate_tree(data):
     taxids = data['taxids']
     organisms = Organism.objects(taxid__in=taxids)
@@ -81,4 +90,31 @@ def generate_tree(data):
     result = set().union(*lineages)
     tree = {}
     dfs_generator([(root,0)],tree,list(result))
+    return tree
+
+def generate_status_tree(taxid, status_type='insdc_status', status=None):
+    root = TaxonNode.objects(taxid=taxid).first()
+    result=list()
+    # if status:
+    #     query=dict(taxon_lineage=taxid)
+    #     query[status_type]=status
+    #     lineages = Organism.objects(**query).scalar('taxon_lineage')
+    #     result = list(set().union(*lineages))
+    tree = {}
+    dfs_status_tree([(root,0)], tree)
+    return tree
+
+def dfs_status_tree(stack, tree):
+    node, level = stack.pop(0)
+    tree["name"] = node.name
+    tree["taxid"] = node.taxid
+    tree["children"] = []
+    tree['rank'] = node.rank
+    tree['leaves'] = node.leaves
+    if node.children:
+        children = TaxonNode.objects(taxid__in=node.children)
+        for child in children:
+            child_dict = {}
+            dfs_status_tree([(child, level+1)], child_dict,valid_lineages_taxid)
+            tree["children"].append(child_dict)
     return tree

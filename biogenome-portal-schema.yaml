@@ -462,6 +462,7 @@ paths:
             - "scientific_name"
             - "gal"
             - "habitat"
+            - "accession"
         - in: 'query'
           name: 'start_date'
           schema:  

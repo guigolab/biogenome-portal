@@ -39,19 +39,6 @@ def get_bioproject(project_accession):
         return list()
     return resp.json()
 
-
-
-def parse_assemblies(accession):
-    time.sleep(1)
-    assemblies_data = requests.get(f"https://www.ebi.ac.uk/ena/portal/api/"
-                                   f"links/sample?format=json"
-                                   f"&accession={accession}&result=assembly"
-                                   f"&offset=0&limit=1000")
-    if assemblies_data.status_code != 200:
-        return list()
-    return assemblies_data.json()
-
-
 def get_reads(accession):
     time.sleep(1)
     experiments_data = requests.get(f'https://www.ebi.ac.uk/ena/portal/'

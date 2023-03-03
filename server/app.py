@@ -4,7 +4,7 @@ from config import BaseConfig
 from db import initialize_db
 from rest import initialize_api
 from flask_jwt_extended import JWTManager
-from db.models import BioGenomeUser, CronJob,Roles
+from db.models import BioGenomeUser, CronJob,Roles,BioSample,LocalSample
 from rest.bioproject import bioprojects_service
 from tendo.singleton import SingleInstance
 import json
@@ -13,16 +13,21 @@ import os
 
 app = Flask(__name__)
 
-CORS(app)
 app.config.from_object(BaseConfig)
 app.config["JWT_TOKEN_LOCATION"] = ["cookies"]
 
 # If true this will only allow the cookies that contain your JWTs to be sent
 # over https. In production, this should always be set to True
-app.config["JWT_COOKIE_SECURE"] = True
+app.config["JWT_COOKIE_SAMESITE"] = "None"
+# app.config["JWT_COOKIE_SECURE"] = True
+app.config['CORS_SUPPORTS_CREDENTIALS'] = True
+app.config['CORS_ORIGINS'] = ['http://localhost:3000']
+
 initialize_db(app)
 
 initialize_api(app)
+
+CORS(app)
 
 jwt = JWTManager(app)
 

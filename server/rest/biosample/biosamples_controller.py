@@ -1,11 +1,10 @@
 from flask_restful import Resource
 from flask import Response, request
 import json
-from db.models import BioSample
+from db.models import BioSample,Experiment,Assembly,BioProject
 from . import biosamples_service
 from errors import NotFound
 from flask_jwt_extended import jwt_required
-from ..utils import data_helper
 
 
 FIELDS_TO_EXCLUDE = ['id','created','last_check']
@@ -29,12 +28,33 @@ class BioSampleApi(Resource):
         if deleted_accession:
             return Response(json.dumps(deleted_accession), mimetype="application/json", status=201)
 
-##post request to handle large list of assemblies/experiments/local_samples/biosamples/annotations ids
 class BioSamplesApi(Resource):
 
     def get(self):
-        # data_helper.update_samples_coordinates(BioSample.objects())
-        # data_helper.coordinates_in_country(BioSample)
         total, data = biosamples_service.get_biosamples(**request.args)
         json_resp = dict(total=total,data=list(data.as_pymongo()))
         return Response(json.dumps(json_resp), mimetype="application/json", status=200)
+
+class BioSampleRelatedDataApi(Resource):
+
+    def get(self, accession, model):
+        biosample_obj=BioSample.objects(accession=accession).exclude('id').first()
+        if not biosample_obj or not model in ['sub_samples','experiments','assemblies']:
+            raise NotFound
+        if model == 'sub_samples':
+            items = BioSample.objects(accession__in=biosample_obj.sub_samples)
+        elif model == 'experiments':
+            items = Experiment.objects(metadata__sample_accession=biosample_obj.accession)
+        else:
+            items = Assembly.objects(sample_accession=biosample_obj.accession)
+        return Response(items.to_json(),mimetype="application/json", status=200)
+
+class BioSampleBioProjectsApi(Resource):
+    def get(self, accession):
+        biosample_obj=BioSample.objects(accession=accession).exclude('id').first()
+        if not biosample_obj:
+            raise NotFound
+        bioprojects = BioProject.objects(accession__in=biosample_obj.bioprojects)
+        return Response(bioprojects.to_json(),mimetype="application/json", status=200)
+
+        

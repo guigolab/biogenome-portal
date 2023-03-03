@@ -95,12 +95,9 @@ def create_read_from_experiment_accession(accession):
             resp_obj['message'] = f"organism with taxid: {other_attributes['taxid']} not found"
             resp_obj['status'] = 400
             return resp_obj
-        exp_obj = Experiment(metadata=exp_metadata, **other_attributes).save()
-        organism_obj.modify(add_to_set__experiments=exp_obj.experiment_accession)
-        organism_obj.save()
         if 'sample_accession' in exp_metadata.keys():
-            biosample_obj = biosamples_service.create_related_biosample(exp_metadata['sample_accession'])
-            biosample_obj.modify(add_to_set__experiments=exp_obj.experiment_accession)   
+            biosamples_service.create_related_biosample(exp_metadata['sample_accession'])
+        exp_obj = Experiment(metadata=exp_metadata, **other_attributes).save()
         ##create data here
         saved_accessions.append(exp_obj.experiment_accession)
     if saved_accessions:
@@ -115,9 +112,5 @@ def delete_experiment(accession):
     experiment_to_delete = Experiment.objects(experiment_accession=accession).first()
     if not experiment_to_delete:
         raise NotFound
-    organism_to_update = Organism.objects(taxid=experiment_to_delete.taxid).first()
-    organism_to_update.modify(pull__experiments=accession)
-    sample_to_update = BioSample.objects(experiments=accession).update(pull__experiments=accession)
     experiment_to_delete.delete()
-    organism_to_update.save()
     return accession

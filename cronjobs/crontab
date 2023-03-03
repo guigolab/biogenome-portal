@@ -1,1 +1,5 @@
-0 0 * * * python /tasks.py >> /logfile
+* * * * * python /assembly_import.py
+* * * * * python /biosample_import.py
+* * * * * python /biosample_update.py 
+* * * * * python /countries_update.py 
+* * * * * python /read_update.py

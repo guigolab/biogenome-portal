@@ -2,13 +2,15 @@ version: '3'
 
 services:
 
-  biogenome_mongo:
+  bioG_mongo:
     image: mongo:5.0.10
     container_name: "${DB_DEV_HOST}"
     env_file:
       - .env
     volumes:
      - ./mongo-init.sh:/docker-entrypoint-initdb.d/mongo-init.sh
+    #  - ./mongo-restore.sh:/docker-entrypoint-initdb.d/mongo-restore.sh
+    #  - ./db-dump:/db-dump
      - mongodb-data:${MONGODB_DATA_DIR}
     ports:
       - "27015:${DB_PORT}"
@@ -34,17 +36,17 @@ services:
     restart: always
     volumes:
       - ./server:/server
-    env_file: 
+    env_file:
       - .env
 
-  # biogenome_cron:
-  #   build: ./cronjobs
-  #   container_name: biogenome_cron
-  #   env_file:
-  #     - .env
+  biogenome_cron:
+    build: ./cronjobs
+    container_name: biogenome_cron
+    env_file:
+      - .env
 
   biogenome_nginx:
-    build: 
+    build:
       context: ./biogenome-client
       dockerfile: Dockerfile
       args:
@@ -61,7 +63,7 @@ services:
       - API_PORT=${API_PORT}
       - API_HOST=${API_HOST}
     ports:
-        - "91:${API_PORT}"   
+        - "91:${API_PORT}"
 
 volumes:
   app:

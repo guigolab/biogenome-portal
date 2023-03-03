@@ -3,11 +3,14 @@ from ..utils import ena_client
 from mongoengine.queryset.visitor import Q
 import json
 
-def get_bioprojects(filter=None, offset=0, limit=20):
+def get_bioprojects(filter=None, offset=0, limit=20, sort_column=None, sort_order=None):
     if filter:
         bioprojects = BioProject.objects( Q(title__iexact=filter) | Q(title__icontains=filter) | Q(accession__iexact=filter) | Q(accession__icontains=filter)).exclude('id')
     else:
-        bioprojects = BioProject.object().exclude('id')
+        bioprojects = BioProject.objects().exclude('id')
+    if sort_column:
+        sort = '-'+sort_column if sort_order == 'desc' else sort_column
+        bioprojects = bioprojects.order_by(sort)
     return bioprojects.count(), bioprojects[int(offset):int(offset)+int(limit)]
 
 def get_bioproject(accession):
@@ -17,7 +20,7 @@ def get_bioproject(accession):
         resp['children'] = json.loads(BioProject.objects(accession__in=biop.children).exclude('id').to_json())
         return resp
         
-def create_bioprojects_from_NCBI(bioprojects,organism,sample=None):
+def create_bioprojects_from_NCBI(bioprojects,organism,sample):
     saved_bioprojects=list()
     for projects_container in bioprojects:
         for bioproject in projects_container['bioprojects']:
@@ -37,6 +40,12 @@ def create_bioprojects_from_NCBI(bioprojects,organism,sample=None):
             sample.modify(add_to_set__bioprojects=bioproject.accession)
     leaves_counter(saved_bioprojects)
 
+def get_bioproject_coordinates(bioproject,insdc_status=None):
+    query = ( Q(locations__exists=True) & Q(locations__not__size=0) & Q(bioprojects=bioproject.accession))
+    return Organism.objects(query).scalar('taxid','scientific_name','locations','image').exclude('id')
+
+def get_bioproject_countries(bioproject,insdc_status=None):
+    return Organism.objects(bioprojects=bioproject.accession).item_frequencies('countries')
 
 def create_bioproject_from_ENA(project_accession):
     bioproject =  BioProject.objects(accession=project_accession).first()

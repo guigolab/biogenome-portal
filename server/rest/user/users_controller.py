@@ -8,35 +8,28 @@ from db.models import BioGenomeUser
 
 class LoginApi(Resource):
     def post(self):
-        if request.is_json:
-            name = request.json["name"]
-            password = request.json["password"]
-        else:
-            name = request.form["name"]
-            password = request.form["password"]
-        user_obj = BioGenomeUser.objects(name=name).first()
-        if user_obj and user_obj.password == password:
-            role = user_obj.role.value
-            name = user_obj.name
-        else:
-            role = None
-        if role:
-            access_token = create_access_token(identity=name,expires_delta=timedelta(minutes=30))
-            response = Response(json.dumps(dict(msg=f"welcome {name}",role=role)), mimetype="application/json", status=200)
-            set_access_cookies(response,access_token)
-            return response
+        payload = request.json if request.is_json else request.form
+        if 'name' in payload.keys() and 'password' in payload.keys():
+            name = payload['name']
+            password = payload['password']
+            user_obj = BioGenomeUser.objects(name=name).first()
+            if user_obj and user_obj.password == password:
+                access_token = create_access_token(identity=name,expires_delta=timedelta(minutes=30))
+                response = Response(json.dumps(dict(msg=f"welcome {name}",role=user_obj.role.value)), mimetype="application/json", status=200)
+                set_access_cookies(response, access_token)
+                return response     
         return Response(json.dumps({"msg":"Bad User or Password"}), mimetype="application/json", status=401)
 
 class LogoutApi(Resource):
     @jwt_required()
     def get(self):
-        response = Response(json.dumps({"msg":"Logout succesfull"}), mimetype="application/json", status=201)
+        response = Response(json.dumps({"msg":"Logout succesfull"}), mimetype="application/json", status=200)
         unset_jwt_cookies(response)
         return response
 
 class UsersApi(Resource):
 
-    @jwt_required()
+    # @jwt_required()
     def get(self):
         total, data = users_service.get_users(**request.args)
         json_resp = dict(total=total,data=list(data.as_pymongo()))
@@ -48,6 +41,7 @@ class UsersApi(Resource):
         data = request.json if request.is_json else request.form
         response = users_service.create_user(data)
         return Response(json.dumps(response), mimetype="application/json", status=201)
+
 
 class UserApi(Resource):
 

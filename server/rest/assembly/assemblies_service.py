@@ -1,16 +1,12 @@
-from db.models import Assembly, BioSample, Chromosome, AssemblyTrack, Organism
+from db.models import Assembly, Chromosome
 from errors import NotFound
-from ..utils import ncbi_client,data_helper
+from ..utils import ncbi_client
 from ..organism import organisms_service
-from ..bioproject import bioprojects_service
 from ..biosample import biosamples_service
-from ..read import reads_service
 from mongoengine.queryset.visitor import Q
 from datetime import datetime
 
 ASSEMBLY_FIELDS = ['display_name','chromosomes','assembly_accession','biosample','bioproject_lineages','biosample_accession','org']
-
-TRACK_FIELDS = ['fasta_location','fai_location','gzi_location']
 
 ASSEMBLY_LEVELS = ['Chromosome', 'Scaffold', 'Complete Genome', 'Contig']
 
@@ -63,20 +59,30 @@ def get_filter(filter, option):
         return (Q(assembly_name__iexact=filter) | Q(assembly_name__icontains=filter))
 
 
-def create_assembly_from_ncbi_data(assembly,sample_accession=None):
+def create_assembly_from_ncbi_data(assembly):
     print('CREATING ASSEMBLY FROM NCBI DATA')
     ass_data = dict(accession = assembly['assembly_accession'],assembly_name= assembly['display_name'],scientific_name=assembly['org']['sci_name'],taxid=assembly['org']['tax_id'])
+    organism = organisms_service.get_or_create_organism(ass_data['taxid'])
+    if not organism:
+        return
     ass_metadata=dict()
     for key in assembly.keys():
         if key not in ASSEMBLY_FIELDS:
             ass_metadata[key] = assembly[key]
-    if sample_accession:
-        ass_data['sample_accession'] = sample_accession
-    ass_obj = Assembly(metadata=ass_metadata, **ass_data).save()
-    if 'chromosomes' in assembly.keys():
-        create_chromosomes(ass_obj, assembly['chromosomes'])
-    return ass_obj
-    
+    if 'biosample_accession' in assembly.keys() and assembly['biosample_accession']:
+        ass_data['sample_accession'] = assembly['biosample_accession']
+        if 'biosample' in assembly.keys() and 'attributes' in assembly['biosample'].keys():
+            saved_biosample = biosamples_service.create_biosample_from_ncbi_data( ass_data['sample_accession'],assembly,organism)
+        else:
+            saved_biosample = biosamples_service.create_related_biosample(ass_data['sample_accession'])
+        if not saved_biosample:
+            return
+        ass_obj = Assembly(metadata=ass_metadata, **ass_data).save()
+        if 'chromosomes' in assembly.keys():
+            create_chromosomes(ass_obj, assembly['chromosomes'])
+        return ass_obj
+
+
 def create_chromosomes(assembly,chromosomes):
     for chr in chromosomes:
         if not 'accession_version' in chr.keys():
@@ -111,7 +117,6 @@ def create_assembly_from_accession(accession):
         return resp_obj
     sample_accession = ncbi_response['biosample_accession'] if 'biosample_accession' in ncbi_response.keys() else None
     assembly_obj = create_assembly_from_ncbi_data(ncbi_response,sample_accession)
-    create_data_from_assembly(assembly_obj,ncbi_response)
     if assembly_obj:
         resp_obj['message'] = f'{assembly_obj.accession} correctly saved' 
         resp_obj['status'] = 201
@@ -119,64 +124,10 @@ def create_assembly_from_accession(accession):
     resp_obj['message'] = 'Unhandled error'
     resp_obj['status'] = 500
     return resp_obj
-
-
-def created_related_assembly(accession):
-    assembly_obj = Assembly.objects(accession=accession).first()
-    if assembly_obj:
-        return assembly_obj
-    ncbi_response = ncbi_client.get_assembly(accession)
-    if not ncbi_response:
-        return
-    sample_accession = ncbi_response['biosample_accession'] if 'biosample_accession' in ncbi_response.keys() else None
-    assembly_obj = create_assembly_from_ncbi_data(ncbi_response,sample_accession)
-    create_data_from_assembly(assembly_obj,ncbi_response)
-    return assembly_obj
-
-def create_assembly_track(data):
-    if data and [f for f in data.keys() if f in TRACK_FIELDS]:
-        return AssemblyTrack(**data)
     
 def delete_assembly(accession):
     assembly_obj = Assembly.objects(accession=accession).first()
     if not assembly_obj:
         raise NotFound 
-    sample_to_update = BioSample.objects(assemblies=accession).first()
-    if sample_to_update:
-        sample_to_update.modify(pull__assemblies=accession)
-    organism_to_update = Organism.objects(taxid=assembly_obj.taxid).first()
-    if organism_to_update:
-        organism_to_update.modify(pull__assemblies=accession)
-        organism_to_update.save()
     assembly_obj.delete()
     return accession
-
-def create_data_from_assembly(assembly_obj, ncbi_response):
-    organism_obj = organisms_service.get_or_create_organism(assembly_obj.taxid)
-    if 'biosample' in ncbi_response.keys() and 'attributes' in ncbi_response['biosample'].keys():
-        biosample_obj = biosamples_service.create_biosample_from_ncbi_data(assembly_obj.sample_accession,ncbi_response,organism_obj)
-    else:
-        print('CREATING BIOSAMPLE FROM ACCESSION')
-        print(assembly_obj.to_json())
-        biosample_obj = biosamples_service.create_related_biosample(assembly_obj.sample_accession)
-    if assembly_obj.sample_accession and biosample_obj:
-        organism_obj.modify(add_to_set__biosamples=biosample_obj.accession)
-        biosamples_to_update = [biosample_obj]
-        children_samples = biosamples_service.get_biosamples_derived_from(biosample_obj.accession)
-        if children_samples:
-            biosamples_to_update.extend(children_samples)
-        for saved_biosample in biosamples_to_update:
-            bioprojects_service.create_bioprojects_from_NCBI(ncbi_response['bioproject_lineages'],organism_obj, saved_biosample)
-            data_helper.create_coordinates(saved_biosample, organism_obj)
-            saved_reads = reads_service.create_reads_from_biosample_accession(saved_biosample.accession)
-            for read in saved_reads:
-                organism_obj.modify(add_to_set__experiments=read)
-                saved_biosample.modify(add_to_set__experiments=read)
-            if 'sample derived from' in saved_biosample.metadata.keys():
-                biosample_obj.modify(add_to_set__sub_samples=saved_biosample.accession)
-        biosample_obj.modify(add_to_set__assemblies=assembly_obj.accession)
-    else:
-        bioprojects_service.create_bioprojects_from_NCBI(ncbi_response['bioproject_lineages'],organism_obj)   
-    organism_obj.modify(add_to_set__assemblies=assembly_obj.accession)
-    organism_obj.save()
-    return organism_obj

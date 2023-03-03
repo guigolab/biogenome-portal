@@ -7,7 +7,7 @@ import os
 class TreeApi(Resource):
     def get(self, taxid):
         #TODO ADD LEVEL CONTROL ON TREE
-        tree = taxonomy_service.create_tree(taxid)
+        tree = taxonomy_service.create_tree(taxid, **request.args)
         return Response(json.dumps(tree), mimetype="application/json", status=200)
 
     def post(self):
@@ -17,7 +17,12 @@ class TreeApi(Resource):
 
 class TaxonomyTreeApi(Resource):
     def get(self,taxid):
-        tree = taxonomy_service.create_tree(taxid)
+        tree = taxonomy_service.create_tree(taxid, **request.args)
+        return Response(json.dumps(tree), mimetype="application/json", status=200)
+
+class TreeStatusApi(Resource):
+    def get(self,taxid):
+        tree = taxonomy_service.generate_status_tree(taxid, status='Assemblies Submitted')
         return Response(json.dumps(tree), mimetype="application/json", status=200)
 
 class TreeLevelsApi(Resource):

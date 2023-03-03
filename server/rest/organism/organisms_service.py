@@ -1,9 +1,10 @@
-from ..utils import ena_client,data_helper
+from ..utils import ena_client
 from ..taxon import taxons_service
 from flask import current_app as app
 from mongoengine.queryset.visitor import Q
-from db.models import Annotation, Assembly, BioProject, BioSample, CommonName, Experiment, GeoCoordinates, LocalSample, Organism, Publication,TaxonNode
+from db.models import CommonName, Organism, Publication
 import os 
+from lxml import etree
 
 ROOT_NODE=os.getenv('ROOT_NODE')
 PROJECT_ACCESSION=os.getenv('PROJECT_ACCESSION')
@@ -67,6 +68,7 @@ def get_filter(filter, option):
     else:
         return (Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter))
 
+
 def get_or_create_organism(taxid):
     organism = Organism.objects(taxid=taxid).first()
     if not organism:
@@ -77,7 +79,7 @@ def get_or_create_organism(taxid):
             print('TAXID NOT FOUND')
             print(taxid)
             return
-        lineage = data_helper.parse_taxon_from_ena(taxon_xml)
+        lineage = parse_taxon_from_ena(taxon_xml)
         tax_organism = lineage[0]
         tolid = ena_client.get_tolid(taxid)
         taxon_lineage = taxons_service.create_taxons_from_lineage(lineage)
@@ -89,8 +91,9 @@ def get_or_create_organism(taxid):
 
 def parse_organism_data(data,taxid=None):
     #organism creation
+    app.logger.info(data)
     if not taxid:
-        if not 'scientific_name' in data.keys() or not 'taxid' in data.keys():
+        if not 'taxid' in data.keys():
             return
         if Organism.objects(taxid=data['taxid']).first():
             return
@@ -104,6 +107,9 @@ def parse_organism_data(data,taxid=None):
     for key in data.keys():
         if isinstance(data[key],str):
             string_attrs[key] = data[key]
+    if 'image' in data.keys() and not data['image']:
+        app.logger.info('here')
+        organism.image = None
     for key in string_attrs.keys():
         organism[key] = string_attrs[key]
     if 'metadata' in data.keys():
@@ -125,23 +131,14 @@ def parse_organism_data(data,taxid=None):
     organism.save()
     return organism
 
-def delete_organism(taxid):
-    ## delete everything related to the organism
-    organism_to_delete = Organism.objects(taxid=taxid).first()
-    lineage = organism_to_delete.taxon_lineage
-    if not organism_to_delete:
-        return
-    Assembly.objects(taxid=taxid).delete()
-    Annotation.objects(taxid=taxid).delete()
-    Experiment.objects(taxid=taxid).delete()
-    LocalSample.objects(taxid=taxid).delete()
-    BioSample.objects(taxid=taxid).delete()
-    GeoCoordinates.objects(Q(organisms__not__size=0) & Q(organisms=taxid)).delete()
-    if organism_to_delete.bioprojects:
-        for bioproject in organism_to_delete.bioprojects:
-            organisms_in_bioprojects = Organism.objects(bioprojects=bioproject)
-            if organisms_in_bioprojects.count() == 1 and organisms_in_bioprojects.first().taxid == taxid:
-                bioproject_to_delete = BioProject.objects(accession=bioproject).delete()
-    organism_to_delete.delete()
-    taxons_service.delete_taxons(lineage)
-    return taxid
+
+def parse_taxon_from_ena(xml):
+    root = etree.fromstring(xml)
+    organism = root[0].attrib
+    lineage = []
+    for taxon in root[0]:
+        if taxon.tag == 'lineage':
+            for node in taxon:
+                lineage.append(node.attrib)
+    lineage.insert(0,organism)
+    return lineage

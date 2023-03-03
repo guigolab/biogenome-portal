@@ -1,11 +1,10 @@
 import openpyxl
 from db.models import BrokerSource, LocalSample
 from ..organism import organisms_service
-from ..utils import data_helper
 
 OPTIONS = ['SKIP','UPDATE']
 
-def parse_excel(excel=None, id=None, taxid=None, scientific_name=None, header=1, option="SKIP", source=None):
+def parse_excel(excel=None, id=None, taxid=None, scientific_name=None, latitude=None, longitude= None,header=1, option="SKIP", source=None):
 
 ##PARAMS VALIDATION
     param_errors=list()
@@ -61,7 +60,6 @@ def parse_excel(excel=None, id=None, taxid=None, scientific_name=None, header=1,
             e[field['key']] = [f"{field['value']} not found in {','.join(header_row)}"]
             param_errors.append(e)
 
-    #check if options are valid
     if not option in OPTIONS:
         e = dict()
         e['import options'] = [f"option must be SKIP or UPDATE, current is: {option}"]
@@ -72,8 +70,8 @@ def parse_excel(excel=None, id=None, taxid=None, scientific_name=None, header=1,
 
 
 ##EXCEL PARSING
-    all_errors = list()
-    saved_samples = list()
+    all_errors = None
+    saved_samples = None
     for index, row in enumerate(list(sheet_obj.rows)[header:]):
         
         ##check if the row contains something, at least three cells
@@ -95,12 +93,13 @@ def parse_excel(excel=None, id=None, taxid=None, scientific_name=None, header=1,
                     new_sample[key] = str(cell.value).strip()
             if cell.value:
                 new_sample['metadata'][key] = cell.value
-        
+
         if sample_error_obj[index+header+1]:
+            if not all_errors:
+                all_errors = list()
             all_errors.append(sample_error_obj)
             continue
 
-        ##continue if errors are present
         if all_errors:
             continue
 
@@ -120,10 +119,9 @@ def parse_excel(excel=None, id=None, taxid=None, scientific_name=None, header=1,
                 all_errors.append(sample_error_obj)
                 continue
             sample_obj = LocalSample(taxid=new_sample[taxid],local_id=new_sample[id],broker=source,metadata=new_sample['metadata'],scientific_name=new_sample[scientific_name]).save()                
-            data_helper.create_coordinates(sample_obj,organism)
-            organism.local_samples.append(sample_obj.local_id)
-            organism.save()
             saved_sample[index+1+header] = [f"{sample_obj.local_id} correctly saved"]
+        if not saved_samples:
+            saved_samples = list()
         saved_samples.append(saved_sample)
 
     if all_errors:
