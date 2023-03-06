@@ -1,3 +1,7 @@
 
 * * * * * python /countries_update.py 
 * * * * * python /locations_update.py
+* * * * * python /assembly_import.py
+* * * * * python /biosample_import.py
+* * * * * python /biosample_update.py
+* * * * * python /read_update.py

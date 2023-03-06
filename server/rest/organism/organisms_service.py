@@ -124,28 +124,31 @@ def parse_organism_data(data,taxid=None):
         if not Organism.objects(taxid=taxid).first():
             return
     organism = get_or_create_organism(taxid)
-    string_attrs = dict()
+    filtered_data = dict()
     for key in data.keys():
-        if isinstance(data[key],str):
-            string_attrs[key] = data[key]
-    if 'image' in data.keys() and not data['image']:
-        app.logger.info('here')
+        if data[key]:
+            filtered_data[key] = data[key]
+    string_attrs = dict()
+    for key in filtered_data.keys():
+        if isinstance(filtered_data[key],str):
+            string_attrs[key] = filtered_data[key]
+    if organism.image and not 'image' in filtered_data.keys():
         organism.image = None
     for key in string_attrs.keys():
         organism[key] = string_attrs[key]
-    if 'metadata' in data.keys():
-        organism.metadata = data['metadata']
-    if 'common_names' in data.keys():
+    if 'metadata' in filtered_data.keys():
+        organism.metadata = filtered_data['metadata']
+    if 'common_names' in filtered_data.keys():
         c_name_list=list()
-        for c_name in data['common_names']:
+        for c_name in filtered_data['common_names']:
             if 'value' in c_name.keys():
                 c_name_list.append(CommonName(**c_name))
         organism.common_names = c_name_list
-    if 'image_urls' in data.keys():
-        organism.image_urls = data['image_urls']
-    if 'publications' in data.keys():
+    if 'image_urls' in filtered_data.keys():
+        organism.image_urls = filtered_data['image_urls']
+    if 'publications' in filtered_data.keys():
         pub_list = list()
-        for pub in data['publications']:
+        for pub in filtered_data['publications']:
             if 'id' in pub.keys():
                 pub_list.append(Publication(**pub))
         organism.publications=pub_list

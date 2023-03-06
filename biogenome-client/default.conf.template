@@ -2,7 +2,7 @@
 server {
     
     listen ${API_PORT};
-
+    add_header 'Access-Control-Allow-Origin' '';
     location / {
         root /usr/share/nginx/html;
         try_files $uri $uri/ /index.html;

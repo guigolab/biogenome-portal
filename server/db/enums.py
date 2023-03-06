@@ -1,7 +1,5 @@
 from enum import Enum
 
-
-
 class BrokerSource(Enum):
     LOCAL = 'local'
     COPO = 'copo'

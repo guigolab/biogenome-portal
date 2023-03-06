@@ -44,6 +44,7 @@ def import_assemblies():
     fetched_assemblies=list()
     result = requests.get(f"https://api.ncbi.nlm.nih.gov/datasets/v1/genome/bioproject/{project_accession}?filters.reference_only=false&filters.assembly_source=all&page_size=100").json()
     counter = 1
+    print('Importing Assemblies')
     if 'assemblies' in result.keys():
         while 'next_page_token' in result.keys():
             fetched_assemblies.extend([ass['assembly'] for ass in result['assemblies']])
@@ -60,7 +61,9 @@ def import_assemblies():
         accessions = [assembly['assembly_accession'] for assembly in fetched_assemblies]
         existing_assemblies = Assembly.objects(accession__in=accessions).scalar('accession')
         for assembly_to_save in fetched_assemblies:
-            if assembly_to_save['assembly_accession'] in existing_assemblies:
+            assembly_to_save_accession = assembly_to_save['assembly_accession']
+            print(f'Importing Assembly: {assembly_to_save_accession}')
+            if assembly_to_save_accession in existing_assemblies:
                 continue
             saved_assembly = assemblies_service.create_assembly_from_ncbi_data(assembly_to_save)
             if not saved_assembly:
@@ -100,6 +103,7 @@ def import_biosamples():
                 saved_sample = biosamples_service.create_biosample_from_ebi_data(biosample_to_save)
                 if not saved_sample:
                     continue
+                print(saved_sample.to_json())
                 for parent_project in parent_bioprojects:
                     saved_sample.modify(add_to_set__bioprojects=parent_project.accession)
                     organism = organisms_service.get_or_create_organism(saved_sample.taxid)

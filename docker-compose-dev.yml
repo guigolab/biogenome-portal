@@ -39,15 +39,15 @@ services:
     env_file:
       - .env
 
-  # biogenome_cron:
-  #   build: ./cronjobs
-  #   container_name: biogenome_cron
-  #   env_file:
-  #     - .env
+  biogenome_cron:
+    build: ./cronjobs
+    container_name: biogenome_cron
+    env_file:
+      - .env
 
   biogenome_nginx:
     build:
-      context: ./biogenome-client
+      context: ./biogenome-clientv2
       dockerfile: Dockerfile
       args:
         - ROOT_NODE=$ROOT_NODE

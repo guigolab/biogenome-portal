@@ -84,41 +84,53 @@ class OrganismBioProjectsApi(Resource):
 		bioprojects = BioProject.objects(accession__in=organism_obj.bioprojects)		
 		return Response(bioprojects.to_json(),mimetype="application/json", status=200)
 
-class OrganismSankeyDataApi(Resource):
+class OrganismINSDCDataApi(Resource):
 	def get(self, taxid):
 		organism_obj = Organism.objects(taxid=taxid).first()
 		if not organism_obj:
 			raise NotFound
-		tree = dict(name=organism_obj.scientific_name, taxid=organism_obj.taxid, children=list())
+		tree = dict(taxid=organism_obj.taxid, children=list(), category=organism_obj.scientific_name)
 		tree['value'] = 10
 		biosamples = BioSample.objects(taxid=organism_obj.taxid)
 		if biosamples:
-			biosamples_children = dict(name='BioSamples', children=list())
+			biosamples_children = dict(category='BioSamples', children=list())
 			sub_samples = list(itertools.chain(*[bs.sub_samples for bs in biosamples]))
 			for biosample in biosamples:
 				if biosample.accession in sub_samples:
 					continue
-				sample_obj = dict(name=biosample.accession,category='biosamples')
+				category = biosample.accession
+				metadata = biosample.metadata
+				for key in metadata.keys():
+					if key == 'tissue' or key == 'organism_part' or key == 'organism part' or 'tissue' in key.lower():
+						category = metadata[key]
+				sample_obj = dict(name=biosample.accession,category=category)
 				if biosample.sub_samples:
 					sample_obj['children'] = list()
 					for sub_sample in BioSample.objects(accession__in=biosample.sub_samples):
-						sample_obj['children'].append(dict(name=sub_sample.accession))
+						category = sub_sample.accession
+						sub_sample_metadata = sub_sample.metadata
+						for key in sub_sample_metadata.keys():
+							if key == 'tissue' or key == 'organism_part' or key == 'organism part' or 'tissue' in key.lower():
+								category = sub_sample_metadata[key]	
+						sample_obj['children'].append(dict(name=sub_sample.accession, category=category))
 					sample_obj['value'] = len(sample_obj['children'])
 				biosamples_children['children'].append(sample_obj)
 			biosamples_children['value'] = len(biosamples_children['children'])
 			tree['children'].append(biosamples_children)
 		assemblies = Assembly.objects(taxid=organism_obj.taxid)
 		if assemblies:
-			assembly_children = dict(name='Assemblies', children=list())
+			assembly_children = dict(category='Assemblies', children=list())
 			for ass in assemblies:
-				assembly_children['children'].append(dict(name=ass.accession, links=[ass.sample_accession],category='assemblies'))
+				category = ass.assembly_name if ass.assembly_name else ass.accession
+				assembly_children['children'].append(dict(name=ass.accession, links=[ass.sample_accession],category=category))
 			assembly_children['value'] = len(assembly_children['children'])
 			tree['children'].append(assembly_children)
 		reads = Experiment.objects(taxid=organism_obj.taxid)
 		if reads:
-			read_children = dict(name='Reads', children=list())
+			read_children = dict(category='Reads', children=list())
 			for read in reads:
-				read_children['children'].append(dict(name=read.experiment_accession, links=[read.metadata['sample_accession']],category='reads'))
+				category = read.instrument_platform if read.instrument_platform else read.experiment_accession
+				read_children['children'].append(dict(name=read.experiment_accession, category=category, links=[read.metadata['sample_accession']]))
 			read_children['value'] = len(read_children['children'])
 			tree['children'].append(read_children)
 		return Response(json.dumps(tree),mimetype="application/json", status=200)

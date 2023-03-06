@@ -1,7 +1,7 @@
 from flask_restful import Resource
 from flask import Response, request
 import json
-from db.models import Assembly
+from db.models import Assembly,GenomeAnnotation
 from . import assemblies_service
 from errors import NotFound
 from flask_jwt_extended import jwt_required
@@ -37,3 +37,10 @@ class AssemblyApi(Resource):
         if deleted_accession:
             return Response(json.dumps(deleted_accession), mimetype="application/json", status=201)
 
+class AssemblyRelatedAnnotationsApi(Resource):
+    def get(self, accession):
+        assembly_obj = Assembly.objects(accession=accession).first()
+        if not assembly_obj:
+            raise NotFound
+        annotations = GenomeAnnotation.objects(assembly_accession=accession)
+        return Response(annotations.to_json(), mimetype="application/json", status=200)

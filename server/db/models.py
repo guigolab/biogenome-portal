@@ -26,14 +26,15 @@ def handler(event):
     return decorator
 
 
-@handler(db.post_save)
+@handler(db.pre_save)
 def add_to_related_data(sender, document, **kwargs):
     if 'created' in kwargs and kwargs['created']:
-        organism = Organism.objects(taxid=document.taxid).first()
+        print('HERE')
         if sender == BioSample:
             query = dict(add_to_set__biosamples=document.accession)
         if sender == LocalSample:
             query = dict(add_to_set__local_samples=document.local_id)
+            print('LOCAL SAMPLES')
         if sender == Assembly:
             query = dict(add_to_set__assemblies=document.accession)
             BioSample.objects(accession=document.sample_accession).update_one(**query)
@@ -44,7 +45,10 @@ def add_to_related_data(sender, document, **kwargs):
             query = dict(add_to_set__annotations=document.name)
         if sender == Publication:
             query = dict(add_to_set__publications=document.publication_id)
-        organism.update(**query)
+        organism = Organism.objects(taxid=document.taxid).first()
+        organism.modify(**query)
+        organism.save()
+
 
 
 @handler(db.post_delete)
@@ -58,7 +62,7 @@ def remove_from_related_data(sender, document, **kwargs):
         query = dict(pull__local_samples=document.local_id)
     if sender == Assembly:
         query = dict(pull__assemblies=document.accession)
-        GenomeAnnotation.objects(assembly_accession=document.accession)
+        GenomeAnnotation.objects(assembly_accession=document.accession).delete()
     if sender == Experiment:
         query = dict(pull__experiments=document.experiment_accession)
     if sender == GenomeAnnotation:
@@ -79,7 +83,7 @@ class TaxonNode(db.Document):
         ]
     }
 
-@handler(db.post_save)
+@handler(db.pre_save)
 def update_organism_status(sender, document, **kwargs):
     if os.getenv('PROJECT_ACCESSION'):
         if document.annotations:
@@ -247,6 +251,7 @@ class GenomeAnnotation(db.Document):
     assembly_accession = db.StringField(required=True)
     assembly_name = db.StringField()
     taxid = db.StringField(required=True)
+    scientific_name = db.StringField(required=True)
     name = db.StringField(required=True,unique=True)
     gff_gz_location = db.URLField(required=True)
     tab_index_location = db.URLField(required=True)

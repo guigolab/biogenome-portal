@@ -40,23 +40,22 @@ class BioProjectChildrenApi(Resource):
         bioproject = BioProject.objects(accession=accession).first()
         if not bioproject:
             raise NotFound
-        items = BioProject.objects(accession__in=bioproject.children)
-        bioprojects = list()
-        MODEL_LIST = {
-            'assemblies':Assembly,
-            'annotations':GenomeAnnotation,
-            'biosamples':BioSample,
-            'reads':Experiment,
-            }
-        for item in items:
-            bp = dict()
-            organisms = Organism.objects(bioprojects=item.accession)
-            taxids = organisms.scalar('taxid')
-            bp['organisms'] = organisms.count()
-            for key in MODEL_LIST.keys():
-                bp[key] = MODEL_LIST[key].objects(taxid__in=taxids).count()
-            bp['accession'] = item.accession
-            bp['title'] = item.title
-            bioprojects.append(bp)
-        return Response(json.dumps(bioprojects), mimetype="application/json", status=200)
+        items = BioProject.objects(accession__in=bioproject.children).to_json()
+        # bioprojects = list()
+        # MODEL_LIST = {
+        #     'assemblies':Assembly,
+        #     'biosamples':BioSample,
+        #     'reads':Experiment,
+        #     }
+        # for item in items:
+        #     bp = dict()
+        #     organisms = Organism.objects(bioprojects=item.accession)
+        #     taxids = organisms.scalar('taxid')
+        #     bp['organisms'] = organisms.count()
+        #     for key in MODEL_LIST.keys():
+        #         bp[key] = MODEL_LIST[key].objects(taxid__in=taxids).count()
+        #     bp['accession'] = item.accession
+        #     bp['title'] = item.title
+        #     bioprojects.append(bp)
+        return Response(items, mimetype="application/json", status=200)
 

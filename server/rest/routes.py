@@ -35,6 +35,7 @@ def initialize_routes(api):
 	##ASSEMBLIES
 	api.add_resource(assemblies_controller.AssembliesApi, '/api/assemblies')
 	api.add_resource(assemblies_controller.AssemblyApi,  '/api/assemblies/<accession>')
+	api.add_resource(assemblies_controller.AssemblyRelatedAnnotationsApi, '/api/assemblies/<accession>/annotations')
 
 	##BIOSAMPLES
 	api.add_resource(biosamples_controller.BioSamplesApi, '/api/biosamples')
@@ -57,12 +58,13 @@ def initialize_routes(api):
 	api.add_resource(organisms_controller.OrganismApi, '/api/organisms/<taxid>')
 	api.add_resource(organisms_controller.OrganismLineageApi, '/api/organisms/<taxid>/lineage')
 	api.add_resource(organisms_controller.OrganismBioProjectsApi, '/api/organisms/<taxid>/bioprojects')
-	api.add_resource(organisms_controller.OrganismSankeyDataApi, '/api/organisms/<taxid>/sankey')
+	api.add_resource(organisms_controller.OrganismINSDCDataApi, '/api/organisms/<taxid>/sankey')
 	api.add_resource(organisms_controller.OrganismRelatedDataApi, '/api/organisms/<taxid>/<model>') 
 
 	##BIOPROJECTS
 	api.add_resource(bioprojects_controller.BioProjectsApi, '/api/bioprojects')
 	api.add_resource(bioprojects_controller.BioProjectApi, '/api/bioprojects/<accession>')
+
 	api.add_resource(bioprojects_controller.BioProjectCoordinatesApi, '/api/bioprojects/<accession>/coordinates')
 	api.add_resource(bioprojects_controller.BioProjectCountriesApi, '/api/bioprojects/<accession>/countries')
 	api.add_resource(bioprojects_controller.BioProjectChildrenApi, '/api/bioprojects/<accession>/children')
