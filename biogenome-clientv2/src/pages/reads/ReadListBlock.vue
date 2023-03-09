@@ -40,7 +40,7 @@
                     mode="range"
                     type="month"
                     prevent-overflow
-                    :allowed-months="(date:Date) => date <= new Date()"
+                    :allowed-months="(date:Date) => date.getMonth() <= new Date().getMonth()+1"
                     :allowed-years="(date:Date) => date <= new Date()"
                   />
                 </div>

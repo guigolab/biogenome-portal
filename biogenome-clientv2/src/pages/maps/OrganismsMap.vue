@@ -57,8 +57,7 @@
 </template>
 <script setup lang="ts">
     import { AxiosResponse } from 'axios';
-    import { computed, onMounted, ref, watch } from 'vue';
-    // import CesiumNode from '../../components/maps/CesiumNode.vue'
+    import {  onMounted, ref, watch } from 'vue';
     import LeafletMap from '../../components/maps/LeafletMap.vue';
     import OrganismService from '../../services/clients/OrganismService';
     import { useLocationStore } from '../../stores/location-store';

@@ -11,11 +11,6 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('../pages/admin/dashboard/Dashboard.vue'),
   },
   {
-    name: 'home',
-    path: '/home',
-    component: () => import('../pages/home/Home.vue'),
-  },
-  {
     name: 'login',
     path: '/login',
     component: () => import('../pages/auth/login/Login.vue'),
@@ -126,15 +121,20 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('../pages/status/StatusPage.vue'),
   },
   {
-    name: 'cesium',
-    path: '/cesium',
-    component: () => import('../pages/maps/Cesium.vue'),
+    name:'swagger',
+    path: '/api-spec',
+    component: () => import('../pages/SwaggerUIPage.vue')
   },
-  {
-    name: 'cesium-node',
-    path: '/cesium-node',
-    component: () => import('../pages/maps/CesiumNode.vue'),
-  },
+  // {
+  //   name: 'cesium',
+  //   path: '/cesium',
+  //   component: () => import('../pages/maps/Cesium.vue'),
+  // },
+  // {
+  //   name: 'cesium-node',
+  //   path: '/cesium-node',
+  //   component: () => import('../pages/maps/CesiumNode.vue'),
+  // },
   {
     name: 'maps',
     path: '/maps',

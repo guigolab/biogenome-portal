@@ -64,7 +64,7 @@
   }
 
   function toRoute(routeName: string) {
-    console.log(isSidebarMinimized.value)
+    if(!routeName) return
     if(!isSidebarMinimized.value){
       isSidebarMinimized.value = true
     }

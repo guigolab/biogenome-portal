@@ -91,6 +91,9 @@
     <template #cell(first_created)="{ rowData }">
       {{ rowData.metadata.first_created }}
     </template>
+    <template #cell(created)="{ rowData }">
+      {{ new Date(rowData.created.$date).toISOString().split('T')[0]}}
+    </template>
   </va-data-table>
 </template>
 <script setup lang="ts">

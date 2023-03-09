@@ -1,85 +1,109 @@
 <template>
-  <va-tabs v-model="tab" grow>
-    <template #tabs>
-      <va-tab v-for="model in statusModel" :key="model.id" :name="model.id">
-        {{ model.label }}
-      </va-tab>
-    </template>
-  </va-tabs>
-  <va-divider style="margin: 0"></va-divider>
+  <div>
+  <p class="va-title">sequencing status</p>
+  <va-divider />
   <div class="row row-equal">
-    <div class="flex lg12 md12 sm12 xs12">
-      <va-tree-view
-        :nodes="tree.root"
-        track-by="taxid"
-        value-by="taxid"
-        :expanded="expandendNodes"
-        @update:expanded="fetchNode"
-      >
-        <template #content="node">
-          <div @click.stop.prevent>
-            <va-collapse :header="`${node.name} (${node.rank})`">
-              <Suspense>
-                <StatusNodeDetails
-                  :key="node.taxid"
-                  :taxid="node.taxid"
-                  :columns="filteredColumns"
-                  :filters="filteredFilters"
-                  :selected-status-model="selectedStatusModel"
-                />
-              </Suspense>
-            </va-collapse>
-          </div>
-          <!-- <div :class="selectedNode.taxid === node.taxid?'selected d-flex align-center':'d-flex align-center'">
-                    <div style="margin-right: 0.5rem">
-                      <b class="display-6">{{ node.name }}</b>
-                      <p class="text--secondary mb-0">{{ node.rank}}</p>
-                    </div>
-                    <va-chip v-if="node.leaves" color="warning" size="small">{{ node.leaves }}</va-chip>
-                    <va-button @click.prevent="selectNode(node)" preset="secondary" icon="open_in_new" style="margin-left: auto" />
-                  </div> -->
-        </template>
-      </va-tree-view>
+    <div class="flex lg6 md6 sm12 xs12">
+      <Suspense>
+        <PieChart
+          :field="'goat_status'"
+          :model="'organisms'"
+          :title="'GoaT Status'"
+          :label="'GoaT Status'"
+        />
+      </Suspense>
+      </div>
+      <div class="flex lg6 md6 sm12 xs12">
+      <Suspense>
+        <PieChart
+          :field="'target_list_status'"
+          :model="'organisms'"
+          :title="'Target List Status'"
+          :label="'Target List Status'"
+        />
+      </Suspense>
     </div>
   </div>
+  <div class="row row-equal">
+    <div class="flex lg12 md12 sm12 xs12">
+      <va-card>
+        <va-card-content>
+          <div class="row align-center justify-space-between">
+            <div class="flex">Total: {{ total }}</div>
+            <div class="flex">
+              <va-button preset="secondary" @click="downloadReport()" icon="fa-download"></va-button>
+            </div>
+          </div>
+        </va-card-content>
+        <va-card-content>
+          <va-form>
+            <va-card-content>
+              <div class="row align-center justify-start">
+                <div v-for="(filter, index) in filters" :key="index" class="flex lg4 md4 sm12 xs12">
+                  <div v-if="filter.type === 'input'">
+                    <va-input
+                      v-model="statusStore.searchForm[filter.key]"
+                      :label="filter.label"
+                      :placeholder="filter.placeholder"
+                    />
+                  </div>
+                  <div v-else>
+                    <va-select v-model="statusStore.searchForm[filter.key]" :label="filter.label" :options="filter.options" />
+                  </div>
+                </div>
+              </div>
+            </va-card-content>
+            <va-card-actions align="between">
+              <va-button @click="handleSubmit()">Search</va-button>
+              <va-button color="danger" @click="reset()">Reset</va-button>
+            </va-card-actions>
+          </va-form>
+          <va-card-content>
+            <DataTable :items="organisms" :columns="columns"/>
+            <div class="row align-center justify-center">
+              <div class="flex">
+                <va-pagination
+                  v-model="offset"
+                  :page-size="statusStore.pagination.limit"
+                  :total="total"
+                  :visible-pages="3"
+                  buttons-preset="secondary"
+                  rounded
+                  gapped
+                  border-color="primary"
+                  @update:model-value="handlePagination"
+                />
+              </div>
+            </div>
+          </va-card-content>
+        </va-card-content>
+      </va-card>
+    </div>
+  </div>
+</div>
 </template>
 <script setup lang="ts">
-  import { computed, onMounted, ref, watch, reactive } from 'vue'
+  import DataTable from '../../components/ui/DataTable.vue'
+  import { onMounted, ref } from 'vue'
   import { Filter } from '../../data/types'
   import { useStatusStore } from '../../stores/status-store'
   import OrganismService from '../../services/clients/OrganismService'
-  import TaxonService from '../../services/clients/TaxonService'
-  import StatusNodeDetails from './StatusNodeDetails.vue'
+  import PieChart from '../../components/charts/PieChart.vue'
+  import GoaTService from '../../services/clients/GoaTService'
 
-  const rootTaxid = '131567'
-  const tree = reactive({
-    root: [],
-  })
   const statusStore = useStatusStore()
-  const expandendNodes = ref([])
 
-  const statusModel = [
-    {
-      id: 'insdc_status',
-      label: 'INSDC Status',
-    },
-    {
-      id: 'goat_status',
-      label: 'GoaT Status',
-    },
-  ]
-  const columns = ['scientific_name', 'tolid_prefix', 'insdc_status', 'goat_status', 'target_list_status']
+  const offset = ref(1)
+  const total = ref(0)
 
-  const filteredColumns = computed(() => {
-    if (tab.value === 'goat_status') return columns.filter((f) => f !== 'insdc_status')
-    return columns.filter((f) => f !== 'goat_status' && f !== 'target_list_status')
-  })
+  const organisms = ref([])
+
+
 
   onMounted(async () => {
-    // const {data} = await OrganismService.getOrganisms({...statusStore.searchForm, ...statusStore.pagination})
-    // organisms.value = [...data.data]
-    // total.value = data.total
-    await getNodeInfo(rootTaxid)
+    const {data} = await OrganismService.getOrganisms({...statusStore.searchForm, ...statusStore.pagination})
+    organisms.value = [...data.data]
+    total.value = data.total
   })
 
   const filters: Filter[] = [
@@ -94,18 +118,6 @@
       key: 'filter_option',
       type: 'select',
       options: ['taxid', 'common_name', 'scientific_name', 'tolid'],
-    },
-    {
-      label: 'INSDC status',
-      key: 'insdc_status',
-      type: 'select',
-      options: [
-        'Sample Acquired',
-        'Biosample Submitted',
-        'Reads Submitted',
-        'Assemblies Submitted',
-        'Annotations Created',
-      ],
     },
     {
       label: 'GoaT status',
@@ -128,59 +140,49 @@
     },
   ]
 
-  const filteredFilters = computed(() => {
-    if (tab.value === 'goat_status') return filters.filter((f) => f.key !== 'insdc_status')
-    return filters.filter((f) => f.key !== 'goat_status' && f.key !== 'target_list_status')
-  })
-  const tab = ref(statusModel[0].id)
+  const columns = ['scientific_name','insdc_common_name', 'tolid_prefix', 'goat_status', 'target_list_status']
 
-  const selectedStatusModel = ref(statusModel[0])
+  async function handleSubmit() {
+    offset.value = 1
+    const { data } = await OrganismService.getOrganisms({ ...statusStore.searchForm, ...statusStore.pagination })
+    statusStore.resetPagination()
+    organisms.value = [...data.data]
+    total.value = data.total
+  }
 
-  watch(tab, () => {
-    selectedStatusModel.value = { ...statusModel.find((m) => m.id === tab.value) }
-  })
+  async function reset() {
+    offset.value = 1
+    statusStore.resetPagination()
+    statusStore.resetSearchForm()
+    const { data } = await OrganismService.getOrganisms({ ...statusStore.searchForm, ...statusStore.pagination })
+    organisms.value = [...data.data]
+    total.value = data.total
+  }
 
-  function traverseTree(treeData, target) {
-    if (!treeData.children) return
-    if (treeData.taxid === target) {
-      return treeData
+  async function handlePagination(value: number) {
+    statusStore.pagination.offset = value -1
+    const { data } = await OrganismService.getOrganisms({ ...statusStore.searchForm, ...statusStore.pagination })
+    organisms.value = [...data.data]
+    total.value = data.total
+  }
+
+  async function downloadReport() {
+    const response = await GoaTService.getGoatReport({download:true, ...statusStore.searchForm})
+    console.log(response)
+    const data = response.data
+    const href = URL.createObjectURL(data);
+
+// create "a" HTML element with href to file & click
+    const link = document.createElement('a');
+    link.href = href;
+    link.setAttribute('download', 'file.tsv'); //or any other extension
+    document.body.appendChild(link);
+    link.click();
+
+    // clean up "a" element & remove ObjectURL
+    document.body.removeChild(link);
+    URL.revokeObjectURL(href);
     }
-    for (const child of treeData.children) {
-      const found = traverseTree(child, target)
-      if (found) {
-        return found
-      }
-    }
-  }
-
-  //   async function selectNode(node) {
-  //     offset.value = 1
-  //     statusStore.resetSearchForm()
-  //     statusStore.resetPagination()
-  //     selectedNode.value = { ...node }
-  //     statusStore.searchForm.parent_taxid = node.taxid
-  //     query.value.taxon_lineage = node.taxid
-  //     const { data } = await OrganismService.getOrganisms({ ...statusStore.searchForm, ...statusStore.pagination })
-  //     organisms.value = [...data.data]
-  //     total.value = data.total
-  //     counter.value++
-  //   }
-
-  async function fetchNode(nodeList: []) {
-    if (nodeList.length < 1) return
-    const nodeToFetch = nodeList.find((n) => !expandendNodes.value.includes(n))
-    expandendNodes.value = nodeList
-    const nodeObject = traverseTree(tree.root[0], nodeToFetch)
-    if (!nodeObject) return
-    if (nodeObject.children.every((child) => child.children)) return
-    const { data } = await TaxonService.getTaxonChildren(nodeObject.taxid)
-    nodeObject.children = [...data]
-  }
-  async function getNodeInfo(taxid: string) {
-    const { data } = await TaxonService.getTaxon(taxid)
-    tree.root = [data]
-    return
-  }
 </script>
 
 <style lang="scss">

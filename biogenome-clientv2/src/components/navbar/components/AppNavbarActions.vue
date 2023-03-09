@@ -29,15 +29,6 @@
     (e: 'update:isTopBar', isTopBar: boolean): void
   }>()
 
-  // const isTopBarProxy = computed({
-  //   get() {
-  //     return props.isTopBar
-  //   },
-  //
-  //   set(isTopBar: boolean) {
-  //     emit('update:isTopBar', isTopBar)
-  //   },
-  // })
 </script>
 
 <style lang="scss">

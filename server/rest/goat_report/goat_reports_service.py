@@ -2,6 +2,7 @@ import csv
 from db.enums import GoaTStatus
 from db.models import Organism
 from io import StringIO
+from mongoengine.queryset.visitor import Q
 
 GOAT_STATUS_MAPPER={
     GoaTStatus.SAMPLE_COLLECTED.value: "sample_collected",
@@ -17,7 +18,7 @@ COLUMN_MAPPER = {
     'species': 'scientific_name',
 }
 
-def download_goat_report():
+def download_goat_report(download=False,goat_status=None, target_list_status=None, filter=None, filter_option='scientific_name'):
     encode='utf-8'
     report = open('./goat_report.tsv', 'r',newline='')
     tsv_template = csv.reader(report, delimiter='\t')
@@ -26,7 +27,13 @@ def download_goat_report():
     for row in tsv_template:
         tsv.writerow(row)
     goat_columns = ['ncbi_taxon_id','species','subspecies','family','target_list_status','sequencing_status','synonym','publication_id']
-    organisms = Organism.objects(goat_status__ne=None).as_pymongo()[:2]
+    query=dict()
+    filter_query = get_filter(filter,filter_option)
+    if goat_status:
+        query['goat_status'] = goat_status
+    if target_list_status:
+        query['target_list_status'] = target_list_status
+    organisms = Organism.objects(filter_query, **query).as_pymongo() if filter_query else Organism.objects.filter(**query).as_pymongo()
     for organism in organisms:
         new_row = list()
         for column in goat_columns:
@@ -43,7 +50,17 @@ def download_goat_report():
                 new_row.append(None)
         tsv.writerow(new_row)
     content = writer_file.getvalue()
-    return content.encode(encode)
+    return content.encode(encode), download
 
+
+def get_filter(filter, option):
+    if option == 'taxid':
+        return (Q(taxid__iexact=filter) | Q(taxid__icontains=filter))
+    elif option == 'common_name':
+        return (Q(insdc_common_name__iexact=filter) | Q(insdc_common_name__icontains=filter))
+    elif option == 'tolid':
+        return (Q(tolid_prefix__iexact=filter) | Q(tolid_prefix__icontains=filter))
+    else:
+        return (Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter))
 
 # def upload_goat_report():

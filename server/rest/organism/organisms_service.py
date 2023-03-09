@@ -33,7 +33,6 @@ def get_organisms(offset=0, limit=20,
     if sort_column:
         sort = '-'+sort_column if sort_order == 'desc' else sort_column
         organisms = organisms.order_by(sort)
-    
     return organisms.count(), organisms[int(offset):int(offset)+int(limit)]
 
 

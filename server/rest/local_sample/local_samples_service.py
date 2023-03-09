@@ -1,7 +1,6 @@
 from db.models import LocalSample
 from errors import NotFound
 from ..organism import organisms_service
-from flask import current_app as app
 from datetime import datetime
 from mongoengine.queryset.visitor import Q
 
@@ -19,13 +18,13 @@ def get_local_samples(offset=0,limit=20,
     else:
         date_query = None
     if filter_query and date_query:
-        local_samples = LocalSample.objects(filter_query,date_query).exclude('id','created')
+        local_samples = LocalSample.objects(filter_query,date_query).exclude('id')
     elif filter_query:
-        local_samples = LocalSample.objects(filter_query).exclude('id','created')
+        local_samples = LocalSample.objects(filter_query).exclude('id')
     elif date_query:
-        local_samples = LocalSample.objects(date_query).exclude('id','created')
+        local_samples = LocalSample.objects(date_query).exclude('id')
     else:
-        local_samples = LocalSample.objects().exclude('id','created')
+        local_samples = LocalSample.objects().exclude('id')
     if sort_column:
         sort = '-'+sort_column if sort_order == 'desc' else sort_column
         local_samples = local_samples.order_by(sort)

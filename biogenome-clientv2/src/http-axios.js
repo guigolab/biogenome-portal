@@ -9,6 +9,12 @@ const base = axios.create({
     'Content-type': 'application/json',
   },
 })
+
+const download =  axios.create({
+  baseURL: baseURL,
+  responseType: 'blob'
+})
+
 const submitInstance = axios.create({
   baseURL: baseURL,
   // withCredentials:true,
@@ -44,4 +50,5 @@ export default {
   base: base,
   ena: ena,
   ncbi: ncbi,
+  download:download
 }

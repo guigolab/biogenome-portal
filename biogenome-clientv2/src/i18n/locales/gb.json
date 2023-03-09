@@ -293,6 +293,7 @@
   },
   "menu": {
     "auth": "Auth",
+    "samples": "Samples",
     "sequencingStatus": "Sequencing Status",
     "localSamples": "Local Samples",
     "importLocalSamples": "Local Samples Import",

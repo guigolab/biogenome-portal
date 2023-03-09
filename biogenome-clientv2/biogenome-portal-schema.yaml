@@ -11,6 +11,8 @@ servers:
     description: server containing all the data submitted to INSDC under the EBP umbrella
   - url: https://data.biogenoma.cat/api
     description: server containing all the data generated under the CBP umbrella 
+  - url: http://localhost:91/api
+    description: server containing all the data generated under the CBP umbrella 
 
 tags:
 - name: "organisms"

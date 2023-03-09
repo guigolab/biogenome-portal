@@ -1,12 +1,11 @@
 <template>
     <div class="row row-equal">
-      <div class="flex lg3 md3 sm12 xs12">
-        <va-card>
-          <va-card-title> filters </va-card-title>
+      <div class="flex lg12 md12 sm12 xs12">
+        <va-card class="d-flex">
           <va-form tag="form" @submit.prevent="handleSubmit">
             <va-card-content>
               <div class="row align-center justify-start">
-                <div v-for="(filter, index) in filters" :key="index" class="flex lg12 md12 sm12 xs12">
+                <div v-for="(filter, index) in filters" :key="index" class="flex lg3 md4 sm12 xs12">
                   <div v-if="filter.type === 'input'">
                     <va-input
                       v-model="localSampleStore.searchForm[filter.key]"
@@ -31,7 +30,7 @@
                       mode="range"
                       type="month"
                       prevent-overflow
-                      :allowed-months="(date:Date) => date <= new Date()"
+                      :allowed-months="(date:Date) => date.getMonth() <= new Date().getMonth()+1"
                       :allowed-years="(date:Date) => date <= new Date()"
                     />
                   </div>
@@ -43,10 +42,6 @@
               <va-button color="danger" @click="reset()">Reset</va-button>
             </va-card-actions>
           </va-form>
-        </va-card>
-      </div>
-      <div class="flex lg9 md9 sm12 xs12">
-        <va-card class="d-flex">
           <va-card-content> Total: {{ total }} </va-card-content>
           <va-card-content>
             <DataTable :items="localSamples" :columns="columns" />
@@ -71,14 +66,24 @@
     </div>
   </template>
   <script setup lang="ts">
-    import { onMounted, ref } from 'vue'
+    import { onMounted, ref,watch } from 'vue'
     import { AxiosResponse } from 'axios'
     import DataTable from '../../components/ui/DataTable.vue'
     import { Filter } from '../../data/types'
     import { useLocalSampleStore } from '../../stores/local-sample-store'
     import LocalSampleService from '../../services/clients/LocalSampleService'
+    
     const localSampleStore = useLocalSampleStore()
-
+    const initDateRange = {
+      start: null,
+      end: null,
+    }
+  const dateRange = ref({ ...initDateRange })
+  watch(dateRange, () => {
+    if (dateRange.value.start)
+    localSampleStore.searchForm.start_date = new Date(dateRange.value.start).toISOString().split('T')[0]
+    if (dateRange.value.end) localSampleStore.searchForm.end_date = new Date(dateRange.value.end).toISOString().split('T')[0]
+  })
     const filters: Filter[] = [
       {
         label: 'search local sample',
@@ -132,10 +137,9 @@
       getLocalSamples(await LocalSampleService.getLocalSamples({ ...localSampleStore.searchForm, ...localSampleStore.pagination }))
     }
   
-    function handleDate(payload: Record<string, any>) {
-      localSampleStore.searchForm = { ...localSampleStore.searchForm, ...payload }
-    }
     async function reset() {
+      const { start, end } = dateRange.value
+      if (start || end) dateRange.value = { ...initDateRange }
       offset.value = 1
       localSampleStore.resetForm()
       localSampleStore.resetPagination()

@@ -1,21 +1,15 @@
 import { defineStore } from 'pinia'
-import { OrganismSearchForm } from '../data/types'
 
-const initSearchForm: OrganismSearchForm = {
-  insdc_status: '',
+const initSearchForm = {
   goat_status: '',
-  parent_taxid: '',
-  bioproject: '',
   target_list_status: '',
   filter: '',
   filter_option: '',
-  sort_column: '',
-  sort_order: '',
 }
 
 const initPagination = {
   offset: 0,
-  limit: 10,
+  limit: 15,
 }
 
 export const useStatusStore = defineStore('status', {
