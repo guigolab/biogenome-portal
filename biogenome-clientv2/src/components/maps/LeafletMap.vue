@@ -18,7 +18,16 @@
   import * as Leaflet from 'leaflet'
   import {MarkerClusterGroup} from 'leaflet.markercluster'
   import "leaflet.markercluster/dist/MarkerCluster.Default.css"; 
-import OrganismService from '../../services/clients/OrganismService'
+  import OrganismService from '../../services/clients/OrganismService'
+  import icon from 'leaflet/dist/images/marker-icon.png';
+  import iconShadow from 'leaflet/dist/images/marker-shadow.png';
+
+  const DefaultIcon = Leaflet.icon({
+      iconUrl: icon,
+      shadowUrl: iconShadow
+  });
+
+  Leaflet.Marker.prototype.options.icon = DefaultIcon;
 
   const props = defineProps({
     coordinates: Array,

@@ -54,6 +54,8 @@ def add_to_related_data(sender, document, **kwargs):
 @handler(db.post_delete)
 def remove_from_related_data(sender, document, **kwargs):
     organism = Organism.objects(taxid=document.taxid).first()
+    if not organism:
+        return
     if sender == BioSample:
         query = dict(pull__biosamples=document.accession)
         Experiment.objects(sample_accession=document.accession).delete()

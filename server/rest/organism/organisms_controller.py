@@ -21,6 +21,7 @@ MODEL_LIST = {
 class OrganismsApi(Resource):
 
 	def get(self):
+		print(Organism.objects(goat_status=None).to_json())
 		total, data = organisms_service.get_organisms(**request.args)
 		json_resp = dict(total=total,data=list(data.as_pymongo()))
 		return Response(json.dumps(json_resp), mimetype="application/json", status=200)

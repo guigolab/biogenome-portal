@@ -1,6 +1,5 @@
 <template>
   <va-card class="d-flex">
-    {{ crudObj }}
     <va-card-content>
       <va-inner-loading :loading="isLoading">
         <div class="row">

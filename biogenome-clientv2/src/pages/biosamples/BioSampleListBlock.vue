@@ -1,12 +1,11 @@
 <template>
   <div class="row row-equal">
-    <div class="flex lg3 md3 sm12 xs12">
-      <va-card>
-        <va-card-title> filters </va-card-title>
+    <div class="flex lg12 md12 sm12 xs12">
+      <va-card class="d-flex">
         <va-form tag="form" @submit.prevent="handleSubmit">
           <va-card-content>
             <div class="row align-center justify-start">
-              <div v-for="(filter, index) in filters" :key="index" class="flex lg12 md12 sm12 xs12">
+              <div v-for="(filter, index) in filters" :key="index" class="flex lg3 md4 sm12 xs12">
                 <div v-if="filter.type === 'input'">
                   <va-input
                     v-model="biosampleStore.searchForm[filter.key]"
@@ -43,10 +42,6 @@
             <va-button color="danger" @click="reset()">Reset</va-button>
           </va-card-actions>
         </va-form>
-      </va-card>
-    </div>
-    <div class="flex lg9 md9 sm12 xs12">
-      <va-card class="d-flex">
         <va-card-content> Total: {{ total }} </va-card-content>
         <va-card-content>
           <DataTable :items="biosamples" :columns="columns" />

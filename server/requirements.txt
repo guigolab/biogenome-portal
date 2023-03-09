@@ -37,3 +37,4 @@ Werkzeug==2.2.2
 WTForms==3.0.1
 zipp==3.12.0
 shapely==2.0.1
+Flask-Limiter==3.3.0

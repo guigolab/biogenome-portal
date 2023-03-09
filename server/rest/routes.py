@@ -12,6 +12,7 @@ from .cronjob import cronjobs_controller
 from .stats import stats_controller
 from .upload import uploads_controller
 from .taxonomy import taxonomy_controller
+from .goat_report import goat_reports_controller
 
 def initialize_routes(api):
 
@@ -21,6 +22,7 @@ def initialize_routes(api):
 	api.add_resource(cronjobs_controller.CronJobApi, '/api/cronjob', '/api/cronjob/<model>')
 	api.add_resource(dumps_controller.DumpApi, '/api/dumps/<model>')
 	api.add_resource(uploads_controller.ExcelParserApi, '/api/spreadsheet_upload')
+	api.add_resource(goat_reports_controller.GoaTReportApi,'/api/goat_report')
 
 	##TAXONOMY
 	api.add_resource(taxonomy_controller.TreeApi,'/api/tree', '/api/tree/<taxid>')

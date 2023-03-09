@@ -17,7 +17,7 @@
     </va-card-title>
     <va-card-content>
       <div v-for="(contributor, idx) in visibleList" :key="idx" class="mb-3">
-        <va-progress-bar :model-value="getPercent(contributor.contributions)" :color="getProgressBarColor(idx)">
+        <va-progress-bar :model-value="getPercent(contributor.contributions)" color="primary">
           {{ contributor.contributions }} {{ model }}
         </va-progress-bar>
         <p class="mt-2">{{ contributor.name }}</p>
@@ -83,14 +83,5 @@
     }
   }
 
-  function getProgressBarColor(idx: number) {
-    const themeColors = ['primary', 'success', 'info', 'danger', 'warning']
 
-    if (idx < themeColors.length) {
-      return themeColors[idx]
-    }
-
-    const keys = Object.keys(themeColors)
-    return themeColors[keys[(keys.length * Math.random()) << 0] as unknown as number]
-  }
 </script>

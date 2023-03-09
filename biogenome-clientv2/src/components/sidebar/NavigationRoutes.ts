@@ -128,6 +128,11 @@ export default {
       disabled: true,
       children: [
         {
+          name: 'crud-table',
+          displayName: 'menu.adminArea',
+          meta: {},
+        },
+        {
           name: 'insdc-forms',
           displayName: 'menu.insdcForms',
           meta: {},
@@ -135,6 +140,16 @@ export default {
         {
           name: 'organism-form',
           displayName: 'menu.organismForm',
+          meta: {},
+        },
+        {
+          name: 'spreadsheet-upload',
+          displayName: 'menu.importLocalSamples',
+          meta: {},
+        },
+        {
+          name: 'annotation-form',
+          displayName: 'menu.annotationForm',
           meta: {},
         },
         // {

@@ -36,13 +36,7 @@ paths:
           name: "download"
           schema:
             type: "boolean"
-        - in: "query"
-          name: "format"
-          schema:
-            type: "string"
-            enum:
-              - "tsv"
-              - "json"
+            default: false
       responses:
         "200":
           description: "successful operations"
