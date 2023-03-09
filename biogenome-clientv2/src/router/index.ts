@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory, RouteRecordRaw, RouterScrollBehavior } from 'vue-router'
+import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -24,7 +24,6 @@ const routes: Array<RouteRecordRaw> = [
     name: 'bioprojects',
     path: '/bioprojects',
     redirect: {name: 'bioproject', params: {accession: 'PRJNA533106'}}
-    // component: () => import('../pages/bioprojects/BioProjects.vue'),
   },
   {
     name: 'bioproject',
@@ -204,57 +203,12 @@ const routes: Array<RouteRecordRaw> = [
     path: '/taxonomy',
     component: () => import('../pages/taxons/Taxonomy.vue'),
   },
-  // {
-  //   path: "/admin",
-  //   name: "admin",
-  //   children:[
-  //     {path:'', component:adminHP, name:"admin-hp"},
-  //     {path: "excel-form", component:excel, name:"excel"},
-  //     {path: "organism-form/:taxid?",component:organismForm, name:"organism-form", props:true},
-  //     {path: "assembly-form",component:assembliesForm, name:"assembly-form"},
-  //     {path: "annotation-form/:accession/:name?",component:annotationForm, name:"annotation-form",props:true},
-  //     {path: "genome-browser-form/:accession",component:genomeBrowserForm, name:"genome-browser-form",props:true},
-  //     {path: "biosample-form",component:biosampleForm, name:"biosample-form"},
-  //     {path: "read-form",component:readForm, name:"read-form"}
-  //   ],
-  //   component: admin,
-  //   meta: { requiresAuth: true }
-  // },
+
 ]
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
-  //  mode: process.env.VUE_APP_ROUTER_MODE_HISTORY === 'true' ? 'history' : 'hash',
   routes,
-  scrollBehavior (to, from, savedPosition) {
-    console.log(to)
-    // window.scrollTo({});
-    const el = document.getElementById('top-container')
-    if(el) el.scrollTop = -100
-    return {el: '#top-container',top:-50, behavior:'smooth' }
-  }
-
-  // scrollBehavior(to, from, savedPosition): RouterScrollBehavior {
-  //   // savedPosition is only available for popstate navigations.
-  //   if (savedPosition) return savedPosition
-  //   // if the returned position is falsy or an empty object,
-  //   // will retain current scroll position.
-  //   if (to.params.savePosition) return {}
-
-  //   // scroll to anchor by returning the selector
-  //   if (to.hash) {
-  //     const position = { selector: to.hash }
-
-  //     // specify offset of the element
-  //     // if (to.hash === '#anchor2') {
-  //     //   position.offset = { y: 100 }
-  //     // }
-  //     return position
-  //   }
-
-  //   // scroll to top by default
-  //   return { x: 0, y: 0 }
-  // },
 })
 
 // router.beforeEach(async (to,from)=>{

@@ -154,10 +154,10 @@
     readStore.pagination.offset = value - 1
     getReads(await ReadService.getReads({ ...readStore.searchForm, ...readStore.pagination }))
   }
-  function handleDate(payload: Record<string, any>) {
-    readStore.searchForm = { ...readStore.searchForm, ...payload }
-  }
+
   async function reset() {
+    const { start, end } = dateRange.value
+    if (start || end) dateRange.value = { ...initDateRange }
     offset.value = 1
     readStore.resetForm()
     readStore.resetPagination()

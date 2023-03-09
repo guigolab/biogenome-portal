@@ -36,8 +36,8 @@
   const GlobalStore = useGlobalStore()
   const inputType = ref('password')
 
-  const mobileBreakPointPX = 400
-  const tabletBreakPointPX = 768
+  const mobileBreakPointPX = 350
+  const tabletBreakPointPX = 640
 
   const sidebarWidth = ref('100wv')
   const sidebarMinimizedWidth = ref(undefined)
@@ -74,14 +74,7 @@
 
   onResize()
 
-  function handleSubmit() {
-    GlobalStore.login()
-  }
-  const isFullScreenSidebar = computed(() => isTablet.value && !isSidebarMinimized.value)
 
-  const onCloseSidebarButtonClick = () => {
-    isSidebarMinimized.value = true
-  }
 </script>
 
 <style lang="scss">

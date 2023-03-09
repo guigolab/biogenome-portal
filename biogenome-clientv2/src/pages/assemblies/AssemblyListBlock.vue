@@ -76,7 +76,6 @@
   </div>
 </template>
 <script setup lang="ts">
-  import { useRouter } from 'vue-router'
   import { useAssemblyStore } from '../../stores/assembly-store'
   import AssemblyService from '../../services/clients/AssemblyService'
   import { computed, onMounted, ref, watch } from 'vue'
@@ -97,14 +96,7 @@
       assemblyStore.searchForm.end_date = new Date(dateRange.value.end).toISOString().split('T')[0]
   })
 
-  const router = useRouter()
   const assemblyStore = useAssemblyStore()
-
-  const validInputs = computed(() => {
-    return Object.keys(assemblyStore.searchForm)
-      .filter((k) => assemblyStore.searchForm[k])
-      .map((k) => assemblyStore.searchForm[k])
-  })
 
   const filters: Filter[] = [
     {
@@ -171,9 +163,6 @@
   async function handlePagination(value: number) {
     assemblyStore.pagination.offset = value - 1
     getAssemblies(await AssemblyService.getAssemblies({ ...assemblyStore.searchForm, ...assemblyStore.pagination }))
-  }
-  function handleDate(payload: Record<string, any>) {
-    assemblyStore.searchForm = { ...assemblyStore.searchForm, ...payload }
   }
   async function reset() {
     const { start, end } = dateRange.value

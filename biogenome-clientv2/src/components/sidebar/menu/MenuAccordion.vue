@@ -35,6 +35,9 @@
   import { useRoute, useRouter } from 'vue-router'
   import { useI18n } from 'vue-i18n'
   import { useGlobalStore } from '../../../stores/global-store'
+  import { storeToRefs } from 'pinia'
+
+  const GlobalStore = useGlobalStore()
 
   const router = useRouter()
   const { t } = useI18n()
@@ -48,6 +51,8 @@
     },
   )
 
+  const {isSidebarMinimized} = storeToRefs(GlobalStore)
+
   const accordionValue = ref<boolean[]>([])
 
   onMounted(() => {
@@ -59,8 +64,12 @@
   }
 
   function toRoute(routeName: string) {
+    console.log(isSidebarMinimized.value)
+    if(!isSidebarMinimized.value){
+      isSidebarMinimized.value = true
+    }
     router.push({ name: routeName })
-    useGlobalStore().isSidebarMinimized = true
+
   }
   function isItemExpanded(item: INavigationRoute): boolean {
     if (!item.children) {

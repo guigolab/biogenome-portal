@@ -67,14 +67,24 @@
 </template>
 <script setup lang="ts">
   import BioSampleService from '../../services/clients/BioSampleService'
-  import { onMounted, ref } from 'vue'
+  import { onMounted, ref, watch } from 'vue'
   import { AxiosResponse } from 'axios'
   import { useBioSampleStore } from '../../stores/biosample-store'
   import DataTable from '../../components/ui/DataTable.vue'
   import { Filter } from '../../data/types'
 
   const biosampleStore = useBioSampleStore()
-
+  const initDateRange = {
+    start: null,
+    end: null,
+  }
+  const dateRange = ref({ ...initDateRange })
+  watch(dateRange, () => {
+    if (dateRange.value.start)
+      biosampleStore.searchForm.start_date = new Date(dateRange.value.start).toISOString().split('T')[0]
+    if (dateRange.value.end)
+      biosampleStore.searchForm.end_date = new Date(dateRange.value.end).toISOString().split('T')[0]
+  })
   const filters: Filter[] = [
     {
       label: 'search biosample',
@@ -127,11 +137,9 @@
     biosampleStore.pagination.offset = value - 1
     getBioSamples(await BioSampleService.getBioSamples({ ...biosampleStore.searchForm, ...biosampleStore.pagination }))
   }
-
-  function handleDate(payload: Record<string, any>) {
-    biosampleStore.searchForm = { ...biosampleStore.searchForm, ...payload }
-  }
   async function reset() {
+    const { start, end } = dateRange.value
+    if (start || end) dateRange.value = { ...initDateRange }
     offset.value = 1
     biosampleStore.resetForm()
     biosampleStore.resetPagination()

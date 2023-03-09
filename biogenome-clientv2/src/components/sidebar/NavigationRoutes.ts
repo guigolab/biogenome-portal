@@ -32,17 +32,6 @@ export default {
         icon: 'fa-circle-nodes',
       },
     },
-    // {
-    //   name: 'organisms',
-    //   displayName: 'menu.organisms',
-    //   meta: {
-    //     icon: 'fa-paw',
-    //     name: 'organisms',
-    //   },
-    //   children:[
-    //     name:
-    //   ]
-    // },
     {
       name: 'organisms',
       displayName: 'menu.organisms',
@@ -75,21 +64,29 @@ export default {
         name: 'reads',
       },
     },
+
     {
-      name: 'biosamples',
-      displayName: 'menu.biosamples',
+      name: 'samples',
+      displayName: 'menu.samples',
       meta: {
         icon: 'fa-vial',
-        name: 'biosamples',
       },
-    },
-    {
-      name: 'local-samples',
-      displayName: 'menu.localSamples',
-      meta: {
-        icon: 'fa-regular fa-vial',
-        name: 'local-samples',
-      },
+      children:[
+        {
+          name: 'biosamples',
+          displayName: 'menu.biosamples',
+          meta: {
+            name: 'biosamples',
+          }
+        },
+        {
+          name: 'local-samples',
+          displayName: 'menu.localSamples',
+          meta: {
+            name: 'local-samples',
+          },
+        },
+      ]
     },
     {
       name: 'status',
