@@ -1,19 +1,8 @@
 from . import db
 import datetime
 import os
-import json
-from mongoengine.queryset.visitor import Q
 from .enums import INSDCStatus, GoaTStatus, TargetListStatus, PublicationSource, BrokerSource, CronJobStatus, Roles
 
-def update_countries(model, organism):
-    with open('./countries.json') as f:
-        countries = json.load(f)['features']
-        for country in countries:
-            geometry = country['geometry']
-            query = (Q(taxid__in=organism.taxid) & Q(location__geo_within=geometry))
-            samples = model.objects(query)
-            if samples:
-                organism.update(add_to_set__countries=country['id'])
 
 def handler(event):
     """Signal decorator to allow use of callback functions as class decorators."""
@@ -24,54 +13,6 @@ def handler(event):
         fn.apply = apply
         return fn
     return decorator
-
-
-@handler(db.pre_save)
-def add_to_related_data(sender, document, **kwargs):
-    if 'created' in kwargs and kwargs['created']:
-        print('HERE')
-        if sender == BioSample:
-            query = dict(add_to_set__biosamples=document.accession)
-        if sender == LocalSample:
-            query = dict(add_to_set__local_samples=document.local_id)
-            print('LOCAL SAMPLES')
-        if sender == Assembly:
-            query = dict(add_to_set__assemblies=document.accession)
-            BioSample.objects(accession=document.sample_accession).update_one(**query)
-        if sender == Experiment:
-            query = dict(add_to_set__experiments=document.experiment_accession)
-            BioSample.objects(accession=document.sample_accession).update_one(**query)
-        if sender == GenomeAnnotation:
-            query = dict(add_to_set__annotations=document.name)
-        if sender == Publication:
-            query = dict(add_to_set__publications=document.publication_id)
-        organism = Organism.objects(taxid=document.taxid).first()
-        organism.modify(**query)
-        organism.save()
-
-
-
-@handler(db.post_delete)
-def remove_from_related_data(sender, document, **kwargs):
-    organism = Organism.objects(taxid=document.taxid).first()
-    if not organism:
-        return
-    if sender == BioSample:
-        query = dict(pull__biosamples=document.accession)
-        Experiment.objects(sample_accession=document.accession).delete()
-        Assembly.objects(sample_accession=document.accession).delete()
-    if sender == LocalSample:
-        query = dict(pull__local_samples=document.local_id)
-    if sender == Assembly:
-        query = dict(pull__assemblies=document.accession)
-        GenomeAnnotation.objects(assembly_accession=document.accession).delete()
-    if sender == Experiment:
-        query = dict(pull__experiments=document.experiment_accession)
-    if sender == GenomeAnnotation:
-        query = dict(pull__annotations=document.name)
-    if sender == Publication:
-        query = dict(pull__local_samples=document.publication_id)
-    organism.update(**query)
 
 class TaxonNode(db.Document):
     children = db.ListField(db.StringField()) #stores taxids
@@ -102,9 +43,6 @@ def update_organism_status(sender, document, **kwargs):
         if document.publications:
             document.goat_status = GoaTStatus.PUBLICATION_AVAILABLE
 
-
-@add_to_related_data.apply
-@remove_from_related_data.apply
 class Experiment(db.Document):
     sample_accession= db.StringField()
     experiment_accession= db.StringField(unique=True)
@@ -118,8 +56,6 @@ class Experiment(db.Document):
         'indexes': ['experiment_accession']
     }
 
-@add_to_related_data.apply
-@remove_from_related_data.apply
 class Assembly(db.Document):
     accession = db.StringField(unique=True)
     assembly_name=db.StringField()
@@ -196,9 +132,6 @@ def set_location(sender, document, **kwargs):
             id = document.accession if document.accession else document.local_id
             print(f'Invalid latitude:{latitude} or longitude: {longitude} for sample:{id}')
 
-
-@add_to_related_data.apply
-@remove_from_related_data.apply
 @set_location.apply
 class LocalSample(db.Document):
     created = db.DateTimeField(default=datetime.datetime.utcnow)
@@ -219,8 +152,6 @@ class LocalSample(db.Document):
         'strict': False
     }
 
-@add_to_related_data.apply
-@remove_from_related_data.apply
 @set_location.apply
 class BioSample(db.Document):
     assemblies = db.ListField(db.StringField())
@@ -243,8 +174,6 @@ class BioSample(db.Document):
         'strict': False
     }
 
-@add_to_related_data.apply
-@remove_from_related_data.apply
 class GenomeAnnotation(db.Document):
     assembly_accession = db.StringField(required=True)
     assembly_name = db.StringField()
@@ -292,8 +221,6 @@ class Publication(db.EmbeddedDocument):
     source = db.EnumField(PublicationSource)
     id = db.StringField()
 
-@add_to_related_data.apply
-@remove_from_related_data.apply
 class OrganismPublication(db.Document):
     source = db.EnumField(PublicationSource)
     publication_id = db.StringField(required=True, unique=True)

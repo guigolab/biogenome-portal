@@ -98,6 +98,8 @@ def create_read_from_experiment_accession(accession):
         if 'sample_accession' in exp_metadata.keys():
             biosamples_service.create_related_biosample(exp_metadata['sample_accession'])
         exp_obj = Experiment(metadata=exp_metadata, **other_attributes).save()
+        organism_obj.modify(add_to_set__experiments=exp_obj.experiment_accession)
+        organism_obj.save()
         ##create data here
         saved_accessions.append(exp_obj.experiment_accession)
     if saved_accessions:
@@ -112,5 +114,10 @@ def delete_experiment(accession):
     experiment_to_delete = Experiment.objects(experiment_accession=accession).first()
     if not experiment_to_delete:
         raise NotFound
+    biosample = BioSample.objects(accession=experiment_to_delete.metadata['sample_accession']).first()
+    biosample.modify(pull__experiments=experiment_to_delete.experiment_accession)
+    organism = Organism.objects(taxid=biosample.taxid).first()
+    organism.modify(pull__experiments=experiment_to_delete.experiment_accession)
+    organism.save()
     experiment_to_delete.delete()
     return accession

@@ -7,39 +7,6 @@
             <h1 class="va-h1">{{ organism.scientific_name }}</h1>
             <p v-if="organism.insdc_common_name">{{ organism.insdc_common_name }}</p>
           </div>
-          <div class="flex">
-            <div class="row">
-              <div class="flex">
-                <va-button-dropdown
-                  v-if="organism.insdc_status"
-                  preset="plain"
-                  class="mr-2 mb-2"
-                  :label="organism.insdc_status"
-                >
-                <template #label>
-                  <!-- <va-icon :name="getIcon(organism.insdc_status)"/> -->
-                </template>
-                  INSDC Status
-                </va-button-dropdown>
-                <va-button-dropdown
-                  v-if="organism.goat_status"
-                  preset="plain"
-                  class="mr-2 mb-2"
-                  :label="organism.goat_status"
-                >
-                  GoaT Status
-                </va-button-dropdown>
-                <va-button-dropdown
-                  v-if="organism.target_list_status"
-                  preset="plain"
-                  class="mr-2 mb-2"
-                  :label="organism.target_list_status"
-                >
-                  Target list status
-                </va-button-dropdown>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
       <div class="flex">
@@ -66,17 +33,8 @@
           <va-chip v-for="(taxon, index) in taxons" :key="index" flat>{{ taxon.name }}</va-chip>
       </div>
     </div>
-    <div v-if="relatedData.length" class="row row-equal">
-      <div class="flex lg12 md12 sm12 xs12">
-        <va-collapse v-model="collapse" icon="info" color="success" header="Show INSDC Related Data" >
-          <div style="height:100vh">
-            <SankeyINSDC :taxid="organism.taxid" />
-          </div>
-        </va-collapse>
-      </div>
-    </div>
     <div class="row row-equal">
-      <!-- <div v-if="organism.local_samples.length" class="flex">
+      <div v-if="organism.local_samples.length" class="flex">
         <va-card class="mb-4" color="warning">
           <va-card-content>
             <h2 class="va-h4 ma-0" style="color: white">{{ organism.local_samples.length }}</h2>
@@ -115,7 +73,18 @@
             <p style="color: white">Annotations</p>
           </va-card-content>
         </va-card>
-      </div> -->
+      </div>
+    </div>
+    <div v-if="relatedData.length" class="row row-equal">
+      <div class="flex lg12 md12 sm12 xs12">
+        <va-collapse v-model="collapse" icon="info" color="success" header="Show INSDC Related Data" >
+          <div style="height:100vh">
+            <SankeyINSDC :taxid="organism.taxid" />
+          </div>
+        </va-collapse>
+      </div>
+    </div>
+    <div class="row row-equal">
       <div v-if="organism.image_urls.length" class="flex lg6 md6 sm12 xs12">
         <va-card>
           <va-card-title> Images </va-card-title>

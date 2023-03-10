@@ -1,4 +1,4 @@
-from db.models import Assembly, Chromosome
+from db.models import Assembly, Chromosome, BioSample, Organism
 from errors import NotFound
 from ..utils import ncbi_client
 from ..organism import organisms_service
@@ -62,8 +62,10 @@ def get_filter(filter, option):
 def create_assembly_from_ncbi_data(assembly):
     print('CREATING ASSEMBLY FROM NCBI DATA')
     ass_data = dict(accession = assembly['assembly_accession'],assembly_name= assembly['display_name'],scientific_name=assembly['org']['sci_name'],taxid=assembly['org']['tax_id'])
+    taxid = ass_data['taxid']
     organism = organisms_service.get_or_create_organism(ass_data['taxid'])
     if not organism:
+        print(f"organism with taxid: {taxid} not found!")
         return
     ass_metadata=dict()
     for key in assembly.keys():
@@ -78,6 +80,9 @@ def create_assembly_from_ncbi_data(assembly):
         if not saved_biosample:
             return
         ass_obj = Assembly(metadata=ass_metadata, **ass_data).save()
+        saved_biosample.modify(add_to_set__assemblies=ass_obj.accession)
+        organism.modify(add_to_set__assemblies=ass_obj.accession)
+        organism.save()
         if 'chromosomes' in assembly.keys():
             create_chromosomes(ass_obj, assembly['chromosomes'])
         return ass_obj
@@ -129,5 +134,11 @@ def delete_assembly(accession):
     assembly_obj = Assembly.objects(accession=accession).first()
     if not assembly_obj:
         raise NotFound 
+    organism = Organism.objects(taxid=assembly_obj.taxid).first()
+    organism.modify(pull__assemblies=assembly_obj.accession)
+    organism.save()
+    sample_accession = assembly_obj.sample_accession if assembly_obj.sample_accession else assembly_obj.metadata['sample_accession']
+    biosamples = BioSample.objects(accession=sample_accession).first()
+    biosamples.modify(pull__assemblies=assembly_obj.accession)
     assembly_obj.delete()
     return accession

@@ -78,7 +78,7 @@
             </div>
           </template>
           <template #after>
-            <va-chip :disabled="bc.name === taxName" class="mb-0" @click="goBack(bc)"> Go </va-chip>
+            <va-chip class="mb-0" @click="goBack(bc)"> Go </va-chip>
             <!-- <va-card stripe class="mb-0">
                     <va-card-content>
                       <p></p>{{ bc.taxid }}</va-card-content>

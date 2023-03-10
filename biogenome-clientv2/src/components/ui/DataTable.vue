@@ -95,11 +95,15 @@
       >
     </template>
     <template #cell(organisms)="{ rowData }">
-      <strong> {{ rowData.leaves }}</strong>
+      <strong v-if="rowData.leaves"> {{ rowData.leaves }}</strong>
     </template>
     <template #cell(first_created)="{ rowData }">
       {{ rowData.metadata.first_created }}
     </template>
+    <template #cell(taxon_taxid)="{ rowData }">
+      <va-chip outline size="small" :to="{ name: 'taxon', params: { taxid: rowData.taxid } }">
+        {{ rowData.taxid }}</va-chip
+      >    </template>
     <template #cell(created)="{ rowData }">
       {{ new Date(rowData.created.$date).toISOString().split('T')[0]}}
     </template>

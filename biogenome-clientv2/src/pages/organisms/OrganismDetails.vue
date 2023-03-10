@@ -25,7 +25,7 @@
       </div>
     </div>
     <div class="row row-equal">
-      <!-- <div v-if="organism.local_samples.length" class="flex">
+      <div v-if="organism.local_samples.length" class="flex">
           <va-card class="mb-4" color="warning">
             <va-card-content>
               <h2 class="va-h4 ma-0" style="color: white">{{ organism.local_samples.length }}</h2>
@@ -64,7 +64,7 @@
               <p style="color: white">Annotations</p>
             </va-card-content>
           </va-card>
-        </div> -->
+        </div>
       <div class="flex lg6 md6 sm12 xs12">
         <va-card>
           <va-card-title> taxonomic lineage </va-card-title>

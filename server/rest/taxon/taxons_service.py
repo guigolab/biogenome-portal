@@ -6,7 +6,7 @@ from errors import NotFound
 
 
 def get_taxons(offset=0, limit=20,
-                filter=None, rank=None):
+                filter=None, rank=None, sort_column='', sort_order=''):
     query=dict()
     if filter:
         filter_query = (Q(name__iexact=filter) | Q(name__icontains=filter) | Q(taxid__iexact=filter) | Q(taxid__icontains=filter))
@@ -18,6 +18,9 @@ def get_taxons(offset=0, limit=20,
         taxons = TaxonNode.objects(filter_query, **query).exclude('id')
     else:
         taxons = TaxonNode.objects(**query).exclude('id')
+    if sort_column:
+        sort = '-'+sort_column if sort_order == 'desc' else sort_column
+        taxons = taxons.order_by(sort)
     return taxons.count(), taxons[int(offset):int(offset)+int(limit)]
 
 def get_taxon_coordinates(taxon):

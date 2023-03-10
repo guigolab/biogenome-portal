@@ -8,7 +8,7 @@ const routes: Array<RouteRecordRaw> = [
   {
     name: 'dashboard',
     path: '/',
-    component: () => import('../pages/admin/dashboard/Dashboard.vue'),
+    component: () => import('../pages/dashboard/DashboardPage.vue'),
   },
   {
     name: 'login',
@@ -29,7 +29,13 @@ const routes: Array<RouteRecordRaw> = [
   {
     name: 'taxons',
     path: '/taxons',
-    component: () => import('../pages/taxons/Taxon.vue'),
+    component: () => import('../pages/taxons/TaxonPage.vue'),
+  },
+  {
+    name: 'taxon',
+    path: '/taxons/:taxid',
+    component: () => import('../pages/taxons/TaxonDetails.vue'),
+    props:true
   },
   {
     path: '/assemblies',

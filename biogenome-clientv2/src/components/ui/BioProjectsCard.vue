@@ -5,7 +5,7 @@
       <div v-for="(bp, index) in bioprojects" :key="index" style="padding: 0.5rem">
         <b class="display-6">{{ bp.title }}</b>
         <p>
-          <va-chip size="small" outline preset="secondary">{{ bp.accession }}</va-chip>
+          <va-chip size="small" :to="{name:'bioproject', params:{accession:bp.accession}}" outline preset="secondary">{{ bp.accession }}</va-chip>
         </p>
       </div>
     </va-card-content>

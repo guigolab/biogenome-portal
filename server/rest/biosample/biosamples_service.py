@@ -1,4 +1,4 @@
-from db.models import BioSample
+from db.models import BioSample,Assembly,Experiment,Organism
 from errors import NotFound
 from ..utils import ena_client
 from ..organism import organisms_service
@@ -90,6 +90,8 @@ def create_biosample_from_ncbi_data(accession, ncbi_response, organism):
         biosample_metadata[attr['name']] = [dict(text=attr['value'])] 
     extra_metadata = parse_sample_metadata(biosample_metadata)
     new_biosample = BioSample(metadata=extra_metadata,**required_metadata).save()
+    organism.modify(add_to_set__biosamples=new_biosample.accession)
+    organism.save()
     return new_biosample
 
 def create_biosample_from_ebi_data(sample):
@@ -109,6 +111,8 @@ def create_biosample_from_ebi_data(sample):
         required_metadata['scientific_name'] = organism.scientific_name
     extra_metadata = parse_sample_metadata({k:sample['characteristics'][k] for k in sample['characteristics'].keys() if k not in ['taxId','scientificName','accession','organism']})
     new_biosample = BioSample(metadata=extra_metadata,**required_metadata).save()
+    organism.modify(add_to_set__biosamples=new_biosample.accession)
+    organism.save()
     return new_biosample
     
 
@@ -116,6 +120,11 @@ def delete_biosample(accession):
     biosample_to_delete = BioSample.objects(accession=accession).first()
     if not biosample_to_delete:
         raise NotFound
+    Assembly.objects((Q(sample_accession=biosample_to_delete.accession) | Q(metadata__sample_accession=biosample_to_delete.accession))).delete()
+    Experiment.objects(metadata__sample_accession=biosample_to_delete.accession).delete()
+    organism = Organism.objects(taxid=biosample_to_delete.taxid).first()
+    organism.modify(pull__biosamples=biosample_to_delete.accession)
+    organism.save()
     biosample_to_delete.delete()
     return accession
 
