@@ -23,11 +23,9 @@ class GoaTStatus(Enum):
     PUBLICATION_AVAILABLE = 'Publication Available'
 
 class INSDCStatus(Enum):
-    LOCAL_SAMPLE = 'Sample Acquired'
     SAMPLE = 'Biosample Submitted'
     READS = 'Reads Submitted'
     ASSEMBLIES = 'Assemblies Submitted'
-    ANN_SUBMITTED = 'Annotations Created'
 
 class Roles(Enum):
     SAMPLE_MANAGER = 'SampleManager' # samples local (through excel) and public (biosamples)

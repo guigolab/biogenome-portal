@@ -44,6 +44,15 @@
         {{ rowData.accession }}
       </va-chip>
     </template>
+    <template #cell(bioproject_accession)="{ rowData }">
+      <va-chip
+        outline
+        :to="{ name: 'bioproject', params: { accession: rowData.accession } }"
+        size="small"
+      >
+        {{ rowData.accession }}
+      </va-chip>
+    </template>
       <template #cell(local_id)="{ rowData }">
       <va-chip
         outline
@@ -86,7 +95,7 @@
       >
     </template>
     <template #cell(organisms)="{ rowData }">
-      <va-chip outline size="small"> {{ rowData.leaves }}</va-chip>
+      <strong> {{ rowData.leaves }}</strong>
     </template>
     <template #cell(first_created)="{ rowData }">
       {{ rowData.metadata.first_created }}

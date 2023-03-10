@@ -59,3 +59,15 @@ class BioProjectChildrenApi(Resource):
         #     bioprojects.append(bp)
         return Response(items, mimetype="application/json", status=200)
 
+
+class BioProjectINSDCStatsApi(Resource):
+    def get(self,accession):
+        bioproject = BioProject.objects(accession=accession).first()
+        if not bioproject:
+            raise NotFound
+        response = dict()
+        biosamples = BioSample.objects(bioprojects=accession).scalar('accession')
+        response['assemblies'] = Assembly.objects(sample_accession__in=biosamples).count()
+        response['reads'] = Experiment.objects(metadata__sample_accession__in=biosamples).count()
+        response['biosamples'] = len(biosamples)
+        return Response(json.dumps(response), mimetype="application/json", status=200)

@@ -33,95 +33,101 @@
           </div>
         </div>
       </div>
+      <div class="row row-separated">
+          <div v-for="(key,index) in Object.keys(bioprojectStats)" :key="index" class="flex">
+            <va-card color="info">
+              <va-card-content>
+                <h2 class="va-h2 ma-0 va-text-center" style="color: white" >{{ bioprojectStats[key] }}</h2>
+                <p class="va-text-center" style="color: white">{{ key }}</p>
+              </va-card-content>
+            </va-card>
+          </div>
+      </div>
       <div class="row row-equal">
-        <div  :key="counter"
-            class="flex lg3 md4 sm12 xs12">
-        <Suspense>
-            <PieChart
-                :field="'insdc_status'"
-                :model="'organisms'"
-                :title="'INSDC Status'"
-                :label="'INSDC Status'"
-                :query="{bioprojects:props.accession}"
-            />
-        </Suspense>
+        <div :key="counter"
+            class="flex lg6 md6 sm12 xs12">
+          <Suspense>
+              <PieChart
+                  :field="'insdc_status'"
+                  :model="'organisms'"
+                  :title="'INSDC Status'"
+                  :label="'INSDC Status'"
+                  :query="{bioprojects:props.accession}"
+              />
+          </Suspense>
+        </div>
+        <div v-if="bioproject.children.length" class="flex lg6 md6 sm12 xs12">
+          <va-card style="max-height: 500px;overflow: scroll;" class="fill-height">
+              <va-card-content >
+                <va-list>
+                  <va-list-label>Related BioProjects</va-list-label>
+                  <va-list-item v-for="(bp, index) in children" :key="index" class="list__item" :to="{name:'bioproject', params:{accession:bp.accession}}">
+                      <va-list-item-section>
+                        <va-list-item-label>
+                            {{ bp.title }}
+                        </va-list-item-label>
+
+                        <va-list-item-label caption>
+                            {{ bp.accession }}
+                        </va-list-item-label>
+                      </va-list-item-section>
+                  </va-list-item>
+                </va-list>
+              </va-card-content>
+          </va-card>
         </div>
         <div
           v-if="coordinates.length"
-          class="flex lg9 md8 sm12 xs12"
+          class="flex lg6 md6 sm12 xs12"
         >
-            <LeafletMap 
-                :key="counter"
-                style="height: 500px;" :coordinates="coordinates"/>
+          <LeafletMap 
+              :key="counter"
+              style="height: 100%;" :coordinates="coordinates"/>
         </div>
-        <div :class=" coordinates.length?'flex lg12 md12 sm12 xs12':'flex lg9 md8 sm12 xs12'">
-            <div class="row row-equal">
-                <div :class="bioproject.children.length? 'flex lg6 md6 sm12 xs12':'flex lg12 md12 sm12 xs12'">
-                    <va-card class="fill-height">
-                        <va-card-content>
-                    <va-form>
-                        <va-card-content>
-                        <div class="row align-center justify-start">
-                            <div v-for="(filter, index) in filters" :key="index" class="flex lg4 md4 sm12 xs12">
-                            <div v-if="filter.type === 'input'">
-                                <va-input
-                                v-model="searchForm[filter.key]"
-                                :label="filter.label"
-                                :placeholder="filter.placeholder"
-                                />
-                            </div>
-                            <div v-else>
-                                <va-select v-model="searchForm[filter.key]" :label="filter.label" :options="filter.options" />
-                            </div>
-                            </div>
-                        </div>
-                        </va-card-content>
-                        <va-card-actions align="between">
-                        <va-button @click="handleSubmit()">Search</va-button>
-                        <va-button color="danger" @click="reset()">Reset</va-button>
-                        </va-card-actions>
-                    </va-form>
-                    <p>Total: {{ total }}</p>
-                    <va-data-table :items="organisms" :columns="columns" />
-                    <div class="row align-center justify-center">
-                        <div class="flex">
-                            <va-pagination
-                                v-model="offset"
-                                :page-size="pagination.limit"
-                                :total="total"
-                                :visible-pages="3"
-                                buttons-preset="secondary"
-                                rounded
-                                gapped
-                                border-color="primary"
-                                @update:model-value="handlePagination"
-                            />
-                        </div>
+        <div class="flex lg6 md6 sm12 xs12">
+          <va-card class="fill-height">
+            <va-form>
+              <va-card-content>
+                <div class="row align-center justify-start">
+                  <div v-for="(filter, index) in filters" :key="index" class="flex lg4 md4 sm12 xs12">
+                    <div v-if="filter.type === 'input'">
+                      <va-input
+                        v-model="searchForm[filter.key]"
+                        :label="filter.label"
+                        :placeholder="filter.placeholder"
+                      />
                     </div>
-                </va-card-content>
-                    </va-card>
+                    <div v-else>
+                      <va-select v-model="searchForm[filter.key]" :label="filter.label" :options="filter.options" />
+                    </div>
+                  </div>
                 </div>
-                <div v-if="bioproject.children.length" class="flex lg6 md6 sm12 xs12">
-                    <va-card class="fill-height">
-                        <va-card-content>
-                    <va-list>
-                        <va-list-label>Related BioProjects</va-list-label>
-                        <va-list-item v-for="(bp, index) in children" :key="index" class="list__item" :to="{name:'bioproject', params:{accession:bp.accession}}">
-                            <va-list-item-section>
-                            <va-list-item-label>
-                                {{ bp.title }}
-                            </va-list-item-label>
-
-                            <va-list-item-label caption>
-                                {{ bp.accession }}
-                            </va-list-item-label>
-                            </va-list-item-section>
-                        </va-list-item>
-                    </va-list>
-                </va-card-content>
-                    </va-card>
+              </va-card-content>
+              <va-card-actions align="between">
+                <va-button @click="handleSubmit()">Search</va-button>
+                <va-button color="danger" @click="reset()">Reset</va-button>
+              </va-card-actions>
+            </va-form>
+            <va-card-content>
+              <p>Total: {{ total }}</p>
+              <DataTable :items="organisms" :columns="columns"/>
+            <div class="row align-center justify-center">
+                <div class="flex">
+                  <va-pagination
+                    v-model="offset"
+                    :page-size="pagination.limit"
+                    :total="total"
+                    :visible-pages="3"
+                    buttons-preset="secondary"
+                    rounded
+                    gapped
+                    border-color="primary"
+                    @update:model-value="handlePagination"
+                  />
                 </div>
             </div>
+            </va-card-content>
+          </va-card>
         </div>
       </div>
     </div>
@@ -132,7 +138,7 @@
     </div>
   </template>
   <script setup lang="ts">
-    import { onMounted, ref, watch, computed } from 'vue'
+    import { onMounted, ref, watch } from 'vue'
     import { AxiosResponse } from 'axios'
     import LeafletMap from '../../components/maps/LeafletMap.vue'
     import { useRouter } from 'vue-router'
@@ -140,7 +146,9 @@
     import PieChart from '../../components/charts/PieChart.vue'
     import { Filter } from '../../data/types'
     import OrganismService from '../../services/clients/OrganismService'
+    import DataTable from '../../components/ui/DataTable.vue'
     const counter = ref(0)
+    const bioprojectStats = ref({})
     const filters: Filter[] = [
     {
       label: 'search organism',
@@ -184,6 +192,7 @@
       async (value) => {
         initSearchForm.bioproject = value
         await getBioProjectInfo(value)
+        await getBioProjectStats(value)
 
       }
     )
@@ -208,6 +217,7 @@
 
     onMounted(async () => {
      await getBioProjectInfo(props.accession)
+     await getBioProjectStats(props.accession)
     })
   
     function getBioProject({ data }: AxiosResponse) {
@@ -253,6 +263,10 @@
             if(e && e.response && e.response.data) error.value = accession + ' ' + e.response.data.message
             showData.value = false
       }
+    }
+    async function getBioProjectStats(accession:string){
+      const {data} = await BioProjectService.getBioprojectINSDCStats(accession)
+      bioprojectStats.value = {...data}
     }
     async function handleSubmit() {
     pagination.value = { ...initPagination }

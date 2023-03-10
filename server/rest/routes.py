@@ -70,8 +70,7 @@ def initialize_routes(api):
 	api.add_resource(bioprojects_controller.BioProjectCoordinatesApi, '/api/bioprojects/<accession>/coordinates')
 	api.add_resource(bioprojects_controller.BioProjectCountriesApi, '/api/bioprojects/<accession>/countries')
 	api.add_resource(bioprojects_controller.BioProjectChildrenApi, '/api/bioprojects/<accession>/children')
-	
-
+	api.add_resource(bioprojects_controller.BioProjectINSDCStatsApi, '/api/bioprojects/<accession>/insdc')
 
 	##TAXONS
 	api.add_resource(taxons_controller.TaxonsApi, '/api/taxons')

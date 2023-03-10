@@ -88,10 +88,7 @@ class TaxonNode(db.Document):
 @handler(db.pre_save)
 def update_organism_status(sender, document, **kwargs):
     if os.getenv('PROJECT_ACCESSION'):
-        if document.annotations:
-            document.insdc_status= INSDCStatus.ANN_SUBMITTED
-            document.goat_status=GoaTStatus.INSDC_SUBMITTED
-        elif document.assemblies:
+        if document.assemblies:
             document.insdc_status= INSDCStatus.ASSEMBLIES
             document.goat_status=GoaTStatus.INSDC_SUBMITTED
         elif document.experiments:
@@ -101,7 +98,6 @@ def update_organism_status(sender, document, **kwargs):
             document.insdc_status=INSDCStatus.SAMPLE
             document.goat_status = GoaTStatus.SAMPLE_ACQUIRED
         elif document.local_samples:
-            document.insdc_status=INSDCStatus.LOCAL_SAMPLE
             document.goat_status = GoaTStatus.SAMPLE_COLLECTED
         if document.publications:
             document.goat_status = GoaTStatus.PUBLICATION_AVAILABLE

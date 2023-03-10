@@ -18,7 +18,7 @@ const routes: Array<RouteRecordRaw> = [
   {
     name: 'bioprojects',
     path: '/bioprojects',
-    redirect: {name: 'bioproject', params: {accession: 'PRJNA533106'}}
+    component: () => import('../pages/bioprojects/BioProjects.vue'),
   },
   {
     name: 'bioproject',

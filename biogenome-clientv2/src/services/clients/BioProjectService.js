@@ -21,6 +21,9 @@ class BioProjectService {
   getBioprojectCountries(accession) {
     return base.get(`/bioprojects/${accession}/countries`)
   }
+  getBioprojectINSDCStats(accession) {
+    return base.get(`/bioprojects/${accession}/insdc`)
+  }
 }
 
 export default new BioProjectService()

@@ -34,17 +34,25 @@
       am5hierarchy.ForceDirected.new(root, {
         categoryField: 'category',
         idField: 'name',
-        downDepth: 1,
-        initialDepth: 1,
+        // downDepth: 1,
+        // initialDepth: 1,
         valueField: 'value',
         childDataField: 'children',
         linkWithField: 'links', 
         minRadius: 30,
         maxRadius: am5.percent(10),
         nodePadding: 5,
-        velocityDecay: 0.7,
+        velocityDecay: 0.9,
+        centerStrength: 0.2,
+        manyBodyStrength: 0.2,
+        linkWithStrength:0.5,
+        showOnFrame:50
       }),
     )
+    series.nodes.template.setAll({
+      toggleKey: "none",
+      cursorOverStyle: "default"
+    });
     series.nodes.template.set('tooltipText', '{id}')
     series.nodes.template.events.on('click', (event) => {
       console.log(event.target.dataItem.dataContext)
