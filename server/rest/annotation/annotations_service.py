@@ -1,16 +1,41 @@
 from mongoengine.queryset.visitor import Q
 from db.models import GenomeAnnotation, Organism, Assembly
+from datetime import datetime
 
-def get_annotations(filter=None, offset=0, limit=20):
-    query = get_filter(filter) if filter else None
-    if query:
-        annotations = GenomeAnnotation.objects(query).exclude('id','created')
+def get_annotations(offset=0,limit=20,
+                        filter=None, filter_option="name",
+                        sort_column=None,sort_order=None,
+                        start_date=None, end_date=datetime.utcnow):
+    if filter:
+        filter_query= get_filter(filter,filter_option)
     else:
-        annotations = GenomeAnnotation.objects().exclude('id','created')
+        filter_query = None
+    if start_date:
+        date_query = (Q(created__gte=start_date) & Q(created__lte=end_date))
+    else:
+        date_query = None
+    if filter_query and date_query:
+        annotations = GenomeAnnotation.objects(filter_query,date_query).exclude('id')
+    elif filter_query:
+        annotations = GenomeAnnotation.objects(filter_query).exclude('id')
+    elif date_query:
+        annotations = GenomeAnnotation.objects(date_query).exclude('id')
+    else:
+        annotations = GenomeAnnotation.objects().exclude('id')
+    if sort_column:
+        sort = '-'+sort_column if sort_order == 'desc' else sort_column
+        annotations = annotations.order_by(sort)
     return annotations.count(), annotations[int(offset):int(offset)+int(limit)]
 
-def get_filter(filter):
-    return (Q(name__iexact=filter) | Q(name__icontains=filter))
+
+
+def get_filter(filter, option):
+    if option == 'scientific_name':
+        return (Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter))
+    elif option == 'assembly_name':
+        return (Q(assembly_name__iexact=filter) | Q(assembly_name__icontains=filter))
+    else:
+        return (Q(name__iexact=filter) | Q(name__icontains=filter))
 
 
 def create_annotation(data):

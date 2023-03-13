@@ -136,7 +136,8 @@
   onMounted(async () => {
     getAssembly(await AssemblyService.getAssembly(props.accession))
     await getAnnotations()
-    showJBrowse.value = true
+    if(Object.keys(jbrowse.assembly).length) showJBrowse.value = true
+    console.log(Object.keys(jbrowse.assembly).length)
   })
 
   function getAssembly({ data }: AxiosResponse) {

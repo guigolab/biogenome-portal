@@ -3,16 +3,14 @@
       <va-breadcrumbs-item active label="Genome Annotations" />
     </va-breadcrumbs>
     <va-divider />
-    {{ annotations }}
+    <GenomeAnnotationListBlock/>
   </template>
   <script setup lang="ts">
-    import AssemblyService from '../../services/clients/AssemblyService'
     import { onMounted, reactive, ref } from 'vue'
     import { AxiosResponse } from 'axios'
-    import { AssemblyAdapter } from '../../data/types'
     import { useRouter } from 'vue-router'
     import AnnotationService from '../../services/clients/AnnotationService'
-  
+    import GenomeAnnotationListBlock from './GenomeAnnotationListBlock.vue'
     const router = useRouter()
     const props = defineProps({
       accession: String,

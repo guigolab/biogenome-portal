@@ -5,16 +5,17 @@ from . import annotations_service
 from errors import NotFound
 import json
 from flask_jwt_extended import jwt_required
+from bson import json_util
 
 FIELDS_TO_EXCLUDE = ['id','created']
 
 class AnnotationsApi(Resource):
     def get(self):
         total, data = annotations_service.get_annotations(**request.args)
-        json_resp = dict(total=total, data=list(data.as_pymongo()))
-        return Response(json.dumps(json_resp), mimetype="application/json", status=200)
+        json_resp = dict(total=total,data=list(data.as_pymongo()))
+        return Response(json.dumps(json_resp, default=json_util.default), mimetype="application/json", status=200)
 
-    # @jwt_required()
+    @jwt_required()
     def post(self):
         data = request.json if request.is_json else request.form
         message,status = annotations_service.create_annotation(data)
@@ -30,7 +31,7 @@ class AnnotationApi(Resource):
             raise NotFound
         return Response(ann_obj.to_json(),mimetype="application/json", status=200)
     
-    # @jwt_required()
+    @jwt_required()
     def put(self, name):
         ann_obj = GenomeAnnotation.objects(name=name).exclude(*FIELDS_TO_EXCLUDE).first()
         if not ann_obj:
@@ -39,7 +40,7 @@ class AnnotationApi(Resource):
         ann_obj.update(**data)
         return Response(ann_obj.to_json(), mimetype="application/json", status=201)
 
-    # @jwt_required()
+    @jwt_required()
     def delete(self,name):
         ann_obj = GenomeAnnotation.objects(name=name).first()
         if not ann_obj:

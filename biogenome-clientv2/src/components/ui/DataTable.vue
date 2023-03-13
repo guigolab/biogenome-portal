@@ -12,7 +12,20 @@
         :to="{ name: 'assembly', params: { accession: rowData.accession, savePosition: true } }"
         >{{ rowData.assembly_name }}</va-chip
       >
-      <!-- <router-link :to="{name: 'assembly', params: {accession:rowData.accession}}">{{ rowData.assembly_name }}</router-link> -->
+    </template>
+    <template #cell(related_assembly)="{ rowData }">
+      <va-chip
+        outline
+        size="small"
+        :to="{ name: 'assembly', params: { accession: rowData.assembly_accession, savePosition: true } }"
+        >{{ rowData.assembly_name }}</va-chip
+      >
+    </template>
+    <template #cell(gff_gz_location)="{ rowData }">
+      <a :href="rowData.gff_gz_location"><va-icon name="download"/></a>
+    </template>
+    <template #cell(tab_index_location)="{ rowData }">
+      <a :href="rowData.tab_index_location"><va-icon name="download"/></a>
     </template>
     <template #cell(contig_n50)="{ rowData }">
       {{ (rowData.metadata.contig_n50 / getContigN50(rowData.metadata.contig_n50)?.value).toFixed(2) }}
@@ -92,6 +105,11 @@
     <template #cell(scientific_name)="{ rowData }">
       <va-chip outline size="small" :to="{ name: 'organism', params: { taxid: rowData.taxid, savePosition: true } }">
         {{ rowData.scientific_name || rowData.metadata.scientific_name }}</va-chip
+      >
+    </template>
+    <template #cell(annotation_name)="{ rowData }">
+      <va-chip outline size="small" :to="{ name: 'annotation', params: { name: rowData.name} }">
+        {{ rowData.name }}</va-chip
       >
     </template>
     <template #cell(organisms)="{ rowData }">

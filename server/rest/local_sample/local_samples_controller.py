@@ -17,10 +17,11 @@ class LocalSamplesApi(Resource):
         json_resp = dict(total=total,data=list(data.as_pymongo()))
         return Response(json.dumps(json_resp, default=json_util.default), mimetype="application/json", status=200)
 
-    def post(self):
-        data = request.json if request.is_json else request.form
-        message, status = local_samples_service.create_local_sample(request.args)
-        return Response(json.dumps(message), mimetype="application/json", status=status)
+
+    # def post(self):
+    #     data = request.json if request.is_json else request.form
+    #     message, status = local_samples_service.create_local_sample(request.args)
+    #     return Response(json.dumps(message), mimetype="application/json", status=status)
 
 class LocalSampleApi(Resource):
 
