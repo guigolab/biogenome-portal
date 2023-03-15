@@ -15,7 +15,7 @@
           }}</va-chip>
         </template>
         <template #cell(local_id)="{ rowData }">
-          <va-chip size="small" :to="{name: 'local-sample', params: {id:rowData.local_id}}" outline>{{ rowData.local_id }}</va-chip>
+          <va-chip size="small" :to="{name: 'local_sample', params: {id:rowData.local_id}}" outline>{{ rowData.local_id }}</va-chip>
         </template>
         <template #cell(name)="{ rowData }">
           <va-chip size="small" outline>{{ rowData.name }}</va-chip>

@@ -237,7 +237,7 @@
       title: 'Local Samples',
       icon: 'hubs',
       key: 'local_samples',
-      route: 'local-sample',
+      route: 'local_sample',
       columns: ['local_id'],
     },
     {

@@ -1,5 +1,5 @@
 from flask import Response,request
-from db.models import Assembly,GenomeAnnotation,BioSample,LocalSample,Experiment,Organism, TaxonNode
+from db.models import Assembly,GenomeAnnotation,BioProject,BioSample,LocalSample,Experiment,Organism, TaxonNode
 from flask_restful import Resource
 import json
 from flask import current_app as app
@@ -13,6 +13,7 @@ MODEL_LIST = {
     'local_samples':LocalSample,
     'reads':Experiment,
     'organisms':Organism,
+    'bioprojects':BioProject
     }
 
 class FieldStatsApi(Resource):

@@ -1,6 +1,7 @@
 from db.models import Organism, TaxonNode
-from flask import current_app as app
-
+from ..utils import ena_client
+from ..organism import organisms_service
+from db.enums import INSDCStatus
 def bfs(root, nodes, max_leaves):
     queue = [(root,0)]
     while queue:
@@ -118,3 +119,30 @@ def dfs_status_tree(stack, tree):
             dfs_status_tree([(child, level+1)], child_dict,valid_lineages_taxid)
             tree["children"].append(child_dict)
     return tree
+
+
+def create_tree_from_relative_species(taxid, insdc_status=INSDCStatus.ASSEMBLIES):
+    organism = Organism.objects(taxid=taxid).first()
+    response=dict(tree=dict(), taxon='', query='')
+    if not organism:
+        taxon_xml = ena_client.get_taxon_from_ena(taxid)
+        if not taxon_xml:
+            return response
+        ena_lineage= organisms_service.parse_taxon_from_ena(taxon_xml)
+        lineage = [taxon['taxId'] for taxon in ena_lineage if taxon['scientificName'] != 'root']
+        response['scientific_name'] = ena_lineage[0]['scientificName']
+    else:
+        lineage = organism.taxon_lineage
+        response['scientific_name'] = organism.scientific_name
+    for taxon in lineage:
+        query =  {'taxon_lineage':taxon,'insdc_status':insdc_status}
+        organisms = Organism.objects(**query)
+        print(organisms.count())
+        if organisms.count() > 0:
+            root = TaxonNode.objects(taxid=taxon).first()
+            response['taxon'] = root.name
+            valid_taxids = list(set().union(*organisms.scalar('taxon_lineage')))
+            print(len(valid_taxids))
+            dfs_generator([(root,0)],response['tree'],list(valid_taxids))
+            return response
+    

@@ -1,7 +1,7 @@
 <template>
     <div>
       <va-breadcrumbs class="va-title" color="primary">
-        <va-breadcrumbs-item active :to="{ name: 'local-samples'}" label="local-samples" />
+        <va-breadcrumbs-item active :to="{ name: 'local_samples'}" label="local-samples" />
       </va-breadcrumbs>
       <va-divider />
       <LocalSampleListBlock />

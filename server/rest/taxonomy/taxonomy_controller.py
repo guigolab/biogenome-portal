@@ -20,6 +20,11 @@ class TaxonomyTreeApi(Resource):
         tree = taxonomy_service.create_tree(taxid, **request.args)
         return Response(json.dumps(tree), mimetype="application/json", status=200)
 
+class RelativeTaxonomyTreeApi(Resource):
+    def get(self,taxid):
+        response = taxonomy_service.create_tree_from_relative_species(taxid, **request.args)
+        return Response(json.dumps(response), mimetype="application/json", status=200)
+
 class TreeStatusApi(Resource):
     def get(self,taxid):
         tree = taxonomy_service.generate_status_tree(taxid, status='Assemblies Submitted')

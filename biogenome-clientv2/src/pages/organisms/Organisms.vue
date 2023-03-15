@@ -85,11 +85,9 @@
       key: 'insdc_status',
       type: 'select',
       options: [
-        'Sample Acquired',
         'Biosample Submitted',
         'Reads Submitted',
         'Assemblies Submitted',
-        'Annotations Created',
       ],
     },
     {

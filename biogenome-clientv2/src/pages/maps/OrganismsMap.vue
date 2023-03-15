@@ -4,7 +4,7 @@
   <va-inner-loading :loading="isLoading">
     <div class="row row-equal">
     <div class="flex lg12 md12 sm12 xs12">
-            <va-card-content>
+            <!-- <va-card-content>
                 <div class="row align-center justify-end">
                     <div class="flex lg4 md4 sm12 xs12">
                         <va-select
@@ -39,7 +39,7 @@
                         </va-card-action>
                     </div>
                 </div>
-            </va-card-content>
+            </va-card-content> -->
             <va-card-content  v-if="coordinates.length">
                 <div style="height: 80vh;" class="row row-equal">
                     <div class="flex lg12 md12 sm12 xs12">

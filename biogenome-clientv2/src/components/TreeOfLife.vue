@@ -1,5 +1,4 @@
 <template>
-  <va-card class="custom-card">
     <va-card-title>
       <div class="row justify-space-between align-center">
         <div class="flex">
@@ -61,7 +60,6 @@
       </div>
       <svg ref="tree" class="tree-svg"></svg>
     </va-card-content>
-  </va-card>
   <va-modal v-model="showModal" size="large">
     <div style="width: 300px">
       <va-timeline vertical>
@@ -102,7 +100,7 @@
   const router = useRouter()
   var linkExtension = null
   var link = null
-  var legendDomains = reactive([])
+  const legendDomains = ref([])
   const props = defineProps({
     // node:String,
     data: Object,
@@ -115,7 +113,7 @@
   const outerRadius = computed(() => width.value / 2)
   const innerRadius = computed(() => outerRadius.value - 170)
   const downloadType = ref('svg')
-  var domains = reactive([])
+  const domains = ref([])
   const tree = ref(null)
   const selectedNode = ref({})
   onMounted(() => {
@@ -192,9 +190,9 @@
 
     // .sort((a, b) => b.children.length+b.height - a.children.length+a.height)
     const slicedDomains = sortedDomains.length > 6 ? sortedDomains.slice(0, 6) : sortedDomains
-    legendDomains.push(...slicedDomains.map((d) => d.data))
+    legendDomains.value.push(...slicedDomains.map((d) => d.data))
 
-    domains = [...legendDomains.map((d) => d.name)]
+    domains.value = [...legendDomains.value.map((d) => d.name)]
     var cluster = radialCluster()
     cluster(root)
     setRadius(root, (root.data.length = 0), innerRadius.value / maxLength(root))
@@ -345,7 +343,7 @@
   }
 
   function color() {
-    const color = d3.scaleOrdinal().domain(domains).range(d3.schemeCategory10)
+    const color = d3.scaleOrdinal().domain(domains.value).range(d3.schemeCategory10)
     return color
   }
 
@@ -372,9 +370,9 @@
       .attr('y', 9)
       .attr('dy', '0.35em')
       .attr('class', 'legend-text')
-      .text((d) => d + ' (' + legendDomains.find((value) => value.name === d).rank + ')')
+      .text((d) => d + ' (' + legendDomains.value.find((value) => value.name === d).rank + ')')
       .on('click', function (event, d) {
-        const selectedDomain = legendDomains.find((value) => value.name === d)
+        const selectedDomain = legendDomains.value.find((value) => value.name === d)
         selectedNode.value = { ...selectedDomain }
         selectedNode.value.color = color()(d)
         div.style('left', event.layerX + 'px').style('top', event.layerY - 15 + 'px')

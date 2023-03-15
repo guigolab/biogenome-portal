@@ -69,7 +69,7 @@
       <template #cell(local_id)="{ rowData }">
       <va-chip
         outline
-        :to="{ name: 'local-sample', params: { id: rowData.local_id, savePosition: true } }"
+        :to="{ name: 'local_sample', params: { id: rowData.local_id, savePosition: true } }"
         size="small"
       >
         {{ rowData.local_id }}
@@ -119,7 +119,7 @@
       {{ rowData.metadata.first_created }}
     </template>
     <template #cell(taxon_taxid)="{ rowData }">
-      <va-chip outline size="small" :to="{ name: 'taxon', params: { taxid: rowData.taxid } }">
+      <va-chip outline size="small" :to="rowData.leaves?{ name: 'taxon', params: { taxid: rowData.taxid }}:{name:'organism', params:{taxid:rowData.taxid}}">
         {{ rowData.taxid }}</va-chip
       >    </template>
     <template #cell(created)="{ rowData }">

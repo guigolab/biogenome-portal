@@ -18,6 +18,9 @@ class TaxonService {
   getTaxonChildren(taxid) {
     return base.get(`/taxons/${taxid}/children`)
   }
+  getPhylogeneticallyCloseTree(taxid, params){
+    return base.get(`/tree/${taxid}/relative`, { params: params })
+  }
 }
 
 export default new TaxonService()

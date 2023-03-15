@@ -1,6 +1,6 @@
 <template>
     <va-breadcrumbs class="va-title" color="primary">
-      <va-breadcrumbs-item :to="{ name: 'local-samples' }" label="localSamples" />
+      <va-breadcrumbs-item :to="{ name: 'local_samples' }" label="localSamples" />
       <va-breadcrumbs-item
         v-if="router.currentRoute.value.name === 'localSample'"
         active

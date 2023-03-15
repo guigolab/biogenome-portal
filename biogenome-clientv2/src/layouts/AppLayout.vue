@@ -32,7 +32,8 @@
   import Login from '../components/modals/Login.vue'
   import Navbar from '../components/navbar/Navbar.vue'
   import Sidebar from '../components/sidebar/Sidebar.vue'
-
+  import StatisticsService from '../services/clients/StatisticsService'
+  
   const GlobalStore = useGlobalStore()
   const inputType = ref('password')
 

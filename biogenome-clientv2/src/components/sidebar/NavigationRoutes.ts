@@ -80,10 +80,10 @@ export default {
           }
         },
         {
-          name: 'local-samples',
+          name: 'local_samples',
           displayName: 'menu.localSamples',
           meta: {
-            name: 'local-samples',
+            name: 'local_samples',
           },
         },
       ]

@@ -3,8 +3,14 @@
     <va-breadcrumbs class="va-title" color="primary">
       <va-breadcrumbs-item active :to="{ name: 'taxons' }" label="taxonomy" />
     </va-breadcrumbs>
+    <div>
+
+    </div>
     <va-divider />
   <div class="row row-equal">
+    <div class="flex lg12 md12 sm12 xs12">
+      <RelatedTaxon/>
+    </div>
     <div class="flex lg4 md4 sm12 xs12">
 
       <Taxonomy @generate-tree="getTreeData" @emit-ranks="getRanks"/>
@@ -12,11 +18,22 @@
     <div class="flex lg8 md8 sm12 xs12">
       <TaxonListBlock/>
     </div>
+
     <Transition>
       <div v-if="showTree" class="flex lg6 md6 sm12 xs12">
         <TreeOfLife :data="treeData" @update-tree="getTreeData" />
       </div>
     </Transition>
+    <!-- 
+      taxon query closer species insdc status
+      indented tree
+      radial tree
+      taxon list
+      taxon by top ranks
+
+
+
+     -->
   </div>
 </div>
 </template>
@@ -27,7 +44,7 @@
   import Taxonomy from './Taxonomy.vue'
   import IndentedTree from '../organisms/IndentedTree.vue'
   import TaxonListBlock from './TaxonListBlock.vue'
-
+  import RelatedTaxon from './RelatedTaxon.vue'
   const showTree = ref(false)
   const treeData = ref({})
 

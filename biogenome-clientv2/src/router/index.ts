@@ -108,17 +108,17 @@ const routes: Array<RouteRecordRaw> = [
     },
   },
   {
-    name: 'local-samples',
-    path: '/local-samples',
+    name: 'local_samples',
+    path: '/local_samples',
     component: () => import('../pages/local-samples/LocalSamplePage.vue'),
   },
   {
-    name: 'local-sample',
-    path: '/local-samples/:id',
+    name: 'local_sample',
+    path: '/local_samples/:id',
     props: true,
     component: () => import('../pages/local-samples/LocalSampleDetails.vue'),
     meta: {
-      name: 'local-samples',
+      name: 'local_samples',
     },
   },
   {
