@@ -12,6 +12,7 @@
 import TaxonService from '../../services/clients/TaxonService';
 import IndentedTree from '../organisms/IndentedTree.vue';
 
-const {data} = await TaxonService.getTree('131567')
+const root = import.meta.env.VITE_ROOT_NODE?import.meta.env.VITE_ROOT_NODE:'131567'
+const {data} = await TaxonService.getTree(root)
 
 </script>

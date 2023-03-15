@@ -2,7 +2,14 @@
   <AppLayout />
 </template>
 <script setup>
+  import { onMounted } from 'vue'
   import AppLayout from './layouts/AppLayout.vue'
+  import {Application} from '../config.json'
+
+  onMounted(()=>{
+    document.title = Application.title
+  })
+  
 </script>
 
 <style lang="scss">

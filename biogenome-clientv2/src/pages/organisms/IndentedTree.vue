@@ -98,64 +98,14 @@
         const path = d.data.leaves === 0? 
         {name:'organism', params:{taxid:d.data.taxid}}:{name:'taxon', params:{taxid:d.data.taxid}}
         router.push(path)
-        //     console.log(d)
-        //     domains.value = d.data.children.map(d => d.name)
-        //     setColor(root)
-        // const link = svg.append("g")
-        //     .attr("fill", "none")
-        //     .attr('stroke', '#000')
-        //     .selectAll("path")
-        //     .data(root.links())
-        //     .join("path")
-        //         .attr('stroke', (d) => d.target.color)
-        //         .attr("d", d => `M${d.source.depth * nodeSize},${d.source.index * nodeSize} V${d.target.index * nodeSize} h${nodeSize}`);
       })
 
     node.append('title').text((d) =>
       d
         .ancestors()
         .reverse()
-        .map((d) => d.data.name)
-        .join('/'),
+        .map((d) => `${d.data.name} (${d.data.rank})`)
+        .join(' > '),
     )
-    // svg.append("text")
-    //   .attr("dy", "0.32em")
-    //   .attr("y", -nodeSize)
-    //   .attr("x", 0)
-    //   .attr("text-anchor", "end")
-    //   .attr("font-weight", "bold")
-    //   .text("Organisms");
-
-    // node.append("text")
-    //     .attr("dy", "0.32em")
-    //     .attr("x", )
-    //     .attr("text-anchor", "end")
-    //     .attr("fill", d => d.children ? null : "#555")
-    //         .data(root.descendants())
-    //         .text(d => d.data.leaves? d.data.leaves : '-');
   })
-  // function legend(svg) {
-  //   const g = svg
-  //     .selectAll('g')
-  //     .text('')
-  //     .attr('fill', null)
-  //     .attr('stroke', null)
-  //     .data(color().domain())
-  //     .join('g')
-  //     .attr('transform', (d, i) => `translate(0,${ i * 20})`)
-  //   g.append('rect').attr('width', 15).attr('height', 15).attr('fill', color())
-  //   g.append('text')
-  //     .attr('x', 24)
-  //     .attr('y', 9)
-  //     .attr('dy', '0.35em')
-  //     .attr('class', 'legend-text')
-  //     .text((d) => d + ' (' + legendDomains.value.find((value) => value.name === d).rank + ')')
-  //     .on('click', function (event, d) {
-  //       const selectedDomain = legendDomains.value.find((value) => value.name === d)
-  //       selectedNode.value = { ...selectedDomain }
-  //       selectedNode.value.color = color()(d)
-  //       div.style('left', event.layerX + 'px').style('top', event.layerY - 15 + 'px')
-  //       showDetails.value = true
-  //     })
-  // }
 </script>

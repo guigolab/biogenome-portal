@@ -149,27 +149,6 @@ export default {
           displayName: 'menu.annotationForm',
           meta: {},
         },
-        // {
-        //   name: 'local-samples-form',
-        //   displayName: 'menu.localSamplesForm',
-        //   meta: {
-        //     name: 'forms',
-        //   },
-        // },
-        // {
-        //   name: 'genome-browser-form',
-        //   displayName: 'menu.genomeBrowserForm',
-        //   meta: {
-        //     name: 'forms',
-        //   },
-        // },
-        // {
-        //   name: 'annotation-form',
-        //   displayName: 'menu.annotationForm',
-        //   meta: {
-        //     name: 'forms',
-        //   },
-        // }
       ],
     },
   ] as INavigationRoute[],

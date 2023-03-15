@@ -94,9 +94,9 @@
   import StatisticsService from '../../services/clients/StatisticsService'
   import am5geodata_worldLow from '@amcharts/amcharts5-geodata/worldLow'
   import OrganismService from '../../services/clients/OrganismService'
-
-  const accessToken =
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI1YWRkOTdlNy03ZDkzLTQwMWYtYWZmNC05MWNmMWM3NThlMGIiLCJpZCI6MTAyNjI1LCJpYXQiOjE2NTkwMDUzMTF9.2hswNBgOjEve43OMrT1ouf_l9nTBqRvf8RT9FgSCJCA'
+  
+  
+  const accessToken = import.meta.env.VITE_CESIUM_TOKEN
 
   const cesium = ref(null)
   const infobox = ref(null)

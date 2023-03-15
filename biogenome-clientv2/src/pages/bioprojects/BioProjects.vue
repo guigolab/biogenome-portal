@@ -1,6 +1,9 @@
 <template>
   <div>
-    <p class="va-title">stats</p>
+    <va-breadcrumbs class="va-title" color="primary">
+      <va-breadcrumbs-item active label="bioprojects" />
+    </va-breadcrumbs>
+    <va-divider/>
     <div class="row row-equal">
       <!-- <div class="flex lg4 md4 sm12 xs12">
         <va-card>
