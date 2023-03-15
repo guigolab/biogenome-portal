@@ -8,13 +8,13 @@
           :color="colors.primary"
           @click="isSidebarMinimized = !isSidebarMinimized"
         />
-        <router-link to="/">
-          <h1>BioGenome Portal</h1>
-        </router-link>
       </div>
     </template>
     <template #center>
       <div class="app-navbar-center">
+        <router-link to="/">
+          <va-icon color="success" size="3rem" name="app-logo"/>
+        </router-link>
       </div>
     </template>
     <template #right>
@@ -31,7 +31,9 @@
   import { useColors } from 'vuestic-ui'
   import VaIconMenuCollapsed from '../icons/VaIconMenuCollapsed.vue'
   import AppNavbarActions from './components/AppNavbarActions.vue'
+  import {NavBar} from '../../../config.json'
 
+  const imgUrl = new URL(`/src/assets/${NavBar.logoName}`, import.meta.url).href
   const GlobalStore = useGlobalStore()
   const { t } = useI18n()
 

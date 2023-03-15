@@ -105,9 +105,8 @@
     { "label": "Annotations Created", "icon": "query_stats" }
   ],
   "NavBar": {
-    "logoName": "EBG-Logo.png",
-    "bgColor": "",
-    "navItems": [{ "icon": "home", "pathName": "home" }]
+    "logoName": "CBPLogo.png",
+    "bgColor": ""
   },
   "ROLES": [
     { "value": "SampleCollector", "text": "Sample Collector", "description": "Submit sample metadata" },

@@ -1,4 +1,10 @@
+import NavBarLogo from '../../../components/navbar/components/NavBarLogo.vue'
 export default [
+  {
+    name: 'app-logo',
+    component: NavBarLogo,
+    color:'primary',
+  },
   {
     name: 'angle_down',
     to: 'fa4-angle-down',

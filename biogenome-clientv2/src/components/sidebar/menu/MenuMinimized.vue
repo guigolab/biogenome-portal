@@ -56,15 +56,10 @@
   // }
 
   function isRouteActive(item: INavigationRoute) {
-    // console.log(useRoute())
-    console.log(item.name)
-    return item.name === useRoute().name 
+    return item.name === useRoute().name || useRoute().fullPath.includes(item.name)
   }
 
   function isItemChildsActive(item: INavigationRoute): boolean {
-    // if (!item.children) {
-    //   return false
-    // }
 
     const isCurrentItemActive = isRouteActive(item)
 

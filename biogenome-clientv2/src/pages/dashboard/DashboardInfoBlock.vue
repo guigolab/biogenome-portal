@@ -3,7 +3,7 @@
     <div v-for="(k, idx) in Object.keys(stats)" :key="idx" class="flex">
       <va-card :to="{name:k}" class="mb-4">
         <va-card-content>
-          <h2 :style="{ color: colors.primary }" class="va-h2 ma-0" >{{ stats[k] }}</h2>
+          <h2 :style="{ color: colors.info }" class="va-h2 ma-0" >{{ stats[k] }}</h2>
           <p>{{ k }}</p>
         </va-card-content>
       </va-card>

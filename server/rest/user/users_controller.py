@@ -21,7 +21,7 @@ class LoginApi(Resource):
         return Response(json.dumps({"msg":"Bad User or Password"}), mimetype="application/json", status=401)
 
 class LogoutApi(Resource):
-    # @jwt_required()
+    @jwt_required()
     def get(self):
         response = Response(json.dumps({"msg":"Logout succesfull"}), mimetype="application/json", status=200)
         unset_jwt_cookies(response)
@@ -29,14 +29,14 @@ class LogoutApi(Resource):
 
 class UsersApi(Resource):
 
-    # @jwt_required()
+    @jwt_required()
     def get(self):
         total, data = users_service.get_users(**request.args)
         json_resp = dict(total=total,data=list(data.as_pymongo()))
         return Response(json.dumps(json_resp), mimetype="application/json", status=200)
 
     ##create user
-    # @jwt_required()
+    @jwt_required()
     def post(self):
         data = request.json if request.is_json else request.form
         message, status = users_service.create_user(data)
@@ -45,14 +45,14 @@ class UsersApi(Resource):
 
 class UserApi(Resource):
 
-    # @jwt_required()
+    @jwt_required()
     def put(self,name):
         data = request.json if request.is_json else request.form
         message, status = users_service.update_user(name,data)
         return Response(json.dumps(message), mimetype="application/json", status=status)
 
 
-    # @jwt_required()
+    @jwt_required()
     def delete(self,name):
         message, status = users_service.delete_user(name)
         return Response(json.dumps(message), mimetype="application/json", status=status)

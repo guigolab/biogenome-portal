@@ -60,7 +60,7 @@
   })
 
   function isRouteActive(item: INavigationRoute) {
-    return item.name === useRoute().name || useRoute().fullPath.includes(item.meta.name)
+    return item.name === useRoute().name || useRoute().fullPath.includes(item.name)
   }
 
   function toRoute(routeName: string) {
