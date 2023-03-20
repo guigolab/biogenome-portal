@@ -1,8 +1,5 @@
 <template>
   <div>
-    <va-card-content>
-      <va-chip size="small" color="warning"> Number of organisms </va-chip>
-    </va-card-content>
     <va-tree-view
       :nodes="nodes"
       :expanded="expandedNodes"
@@ -15,9 +12,6 @@
           <div class="flex">
             <b class="display-6">{{ node.name || node.title }}</b>
             <p class="text--secondary mb-0">{{ node.rank || node.accession }}</p>
-          </div>
-          <div class="flex">
-            <va-chip v-if="node.leaves" color="warning" size="small">{{ node.leaves }}</va-chip>
           </div>
           <div v-if="node.accession || node.taxid" class="flex">
             <va-button :to="node.accession ? {name:'bioproject', params: {accession:node.accession} }:{name:'taxon', params:{taxid:node.taxid}}" preset="secondary" icon="open_in_new" style="float: inline-end;" />

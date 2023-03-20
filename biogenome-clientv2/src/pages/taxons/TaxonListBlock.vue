@@ -50,6 +50,8 @@
   import { Filter } from '../../data/types'
     import { useTaxonomyStore } from '../../stores/taxonomy-store'
     import TaxonService from '../../services/clients/TaxonService'
+import StatisticsService from '../../services/clients/StatisticsService'
+import TaxonDetails from './TaxonDetails.vue'
   
 const TaxonomyStore = useTaxonomyStore()
   const offset = ref(1)
@@ -82,6 +84,8 @@ const TaxonomyStore = useTaxonomyStore()
 
   onMounted(async () => {
     getTaxons(await TaxonService.getTaxons({ ...TaxonomyStore.searchForm, ...TaxonomyStore.pagination }))
+    const {data} = await StatisticsService.getModelFieldStats('taxons', {field:'rank'})
+    TaxonomyStore.ranks = [...Object.keys(data)]
   })
 
   async function handleSubmit() {

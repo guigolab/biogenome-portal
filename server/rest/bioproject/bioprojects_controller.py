@@ -71,3 +71,12 @@ class BioProjectINSDCStatsApi(Resource):
         response['reads'] = Experiment.objects(metadata__sample_accession__in=biosamples).count()
         response['biosamples'] = len(biosamples)
         return Response(json.dumps(response), mimetype="application/json", status=200)
+
+class BioProjectTree(Resource):
+    def get(self, accession):
+        bioproject = BioProject.objects(accession=accession).first()
+        if not bioproject:
+            raise NotFound
+        tree = dict()
+        bioprojects_service.dfs([(bioproject,1)], tree)
+        return Response(json.dumps(tree), mimetype="application/json", status=200)

@@ -1,11 +1,6 @@
 <template>
     <va-card-title>
-      <div class="row justify-space-between align-center">
-        <div class="flex">
-          <va-badge transparent :text="taxonomyStore.breadcrumbs.length">
-            <va-button preset="secondary" icon="history" size="small" @click="showModal = true">History</va-button>
-          </va-badge>
-        </div>
+      <div class="row justify-end align-center">
         <div class="flex">
           <va-button-dropdown
             size="small"

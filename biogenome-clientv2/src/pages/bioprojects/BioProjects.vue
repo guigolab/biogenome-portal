@@ -8,7 +8,7 @@
 
       <div class="flex lg12 md12 sm12 xs12">
         <!-- <BioProjectsListBlock /> -->
-        <Tree :nodes="nodes" :expanded-nodes="expandedNodes" @update:expanded="updateExpanded" :track-by="'accession'"/>
+        <Tree :nodes="nodes" :expanded-nodes="expandedNodes" :track-by="'accession'"/>
       </div>
     </div>
   </div>
@@ -22,13 +22,10 @@ const rootProject = import.meta.env.VITE_PROJECT_ACCESSION? import.meta.env.VITE
 const nodes = ref([])
 const expandedNodes = ref([])
 onMounted(async() => {
-  const {data} = await BioProjectService.getBioprojectChildren(rootProject)
-  nodes.value = [...data]
+  const {data} = await BioProjectService.getBioprojectTree(rootProject)
+  nodes.value = [data]
 })
 
-function updateExpanded(value){
-  console.log(value)
-}
 
 </script>
 

@@ -47,9 +47,27 @@
           </Suspense>
         </div>
         <div v-if="children.length" class="flex lg6 md6 sm12 xs12">
-          <va-card style="max-height: 500px;overflow: scroll;" class="fill-height">
-              <va-card-content >
-                <va-list>
+          <va-card  class="fill-height">
+            <va-tabs v-model="treeType" grow>
+              <template #tabs>
+                <va-tab
+                  v-for="tab in ['Radial Tree', 'Indented Tree']"
+                  :key="tab"
+                  :name="tab"
+                >
+                  {{ tab }}
+                </va-tab>
+              </template>
+            </va-tabs>
+              <va-card-content style="max-height: 500px;overflow: scroll;" v-if="showTree">
+                <div v-if="treeType === 'Radial Tree'">
+                  <TreeOfLife :data="treeData"/>
+                </div>
+                <div v-else>
+                  <IndentedTree :data="treeData"/>
+
+                </div>
+                <!-- <va-list>
                   <va-list-label>Related Taxons</va-list-label>
                   <va-list-item v-for="(bp, index) in children" :key="index" class="list__item" :to="{name:'taxon', params:{taxid:bp.taxid}}">
                       <va-list-item-section>
@@ -62,7 +80,7 @@
                         </va-list-item-label>
                       </va-list-item-section>
                   </va-list-item>
-                </va-list>
+                </va-list> -->
               </va-card-content>
           </va-card>
         </div>
@@ -137,6 +155,12 @@
     import OrganismService from '../../services/clients/OrganismService'
     import DataTable from '../../components/ui/DataTable.vue'
     import TaxonService from '../../services/clients/TaxonService'
+    import IndentedTree from '../organisms/IndentedTree.vue'
+    import TreeOfLife from '../../components/TreeOfLife.vue'
+
+
+    const treeType = ref('Radial Tree')
+    const types = ref(['Radial Tree', 'Indented Tree'])
     const counter = ref(0)
 
     const filters: Filter[] = [
@@ -202,8 +226,17 @@
   const searchForm = ref({ ...initSearchForm })
   const pagination = ref({ ...initPagination })
 
+  const treeData = ref({})
+  const showTree = ref(false)
     onMounted(async () => {
         await getTaxonInfo(props.taxid)
+        const {data} = await TaxonService.getTree(props.taxid)
+        treeData.value = {...data}
+        showTree.value = true
+        if(taxon.value.leaves >= 200){
+          types.value = ['Indented Tree']
+          treeType.value = types.value[0]
+        }
     })
   
     function getTaxon({ data }: AxiosResponse) {

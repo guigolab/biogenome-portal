@@ -24,6 +24,9 @@ class BioProjectService {
   getBioprojectINSDCStats(accession) {
     return base.get(`/bioprojects/${accession}/insdc`)
   }
+  getBioprojectTree(accession){
+    return base.get(`/bioprojects/${accession}/tree`)
+  }
 }
 
 export default new BioProjectService()

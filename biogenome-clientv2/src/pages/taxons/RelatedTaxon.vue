@@ -1,17 +1,6 @@
 <template>
     <va-card :stripe="Boolean(message)" stripe-color="danger">
         <va-inner-loading :loading="isLoading">
-        <va-card-title>
-            search taxon phylogenetically close
-            <va-button-dropdown
-                style="float: inline-end;"
-                icon="info"
-                preset="secondary"
-                size="small"
-            >
-                Search taxons phylogenetically close to the taxon queried, if the taxon is not present in the database it will be retrieved from ENA
-            </va-button-dropdown>
-        </va-card-title>
         <va-form tag="form" @submit.prevent="handleSubmit">
           <va-card-content>
             <div class="row align-center justify-space-between">
@@ -25,9 +14,11 @@
                 </div>
                 <div v-else="filter.type === 'select'">
                   <va-select
+                    prevent-overflow
                     v-model="searchForm[filter.key]"
                     :label="filter.label"
                     :options="filter.options"
+
                   />
                 </div>
               </div>
@@ -42,7 +33,6 @@
         </va-form>
         <va-card-content v-if="showTree">
             {{ query }}
-            <TreeOfLife :data="tree"/>
             <IndentedTree :data="tree"/>
         </va-card-content>
         <va-card-content v-if="message">

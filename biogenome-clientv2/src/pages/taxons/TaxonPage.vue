@@ -7,23 +7,32 @@
 
     </div>
     <va-divider />
+
   <div class="row row-equal">
     <div class="flex lg12 md12 sm12 xs12">
-      <RelatedTaxon/>
+      <va-collapse
+        stateful
+        header="Search taxon phylogenetically close"
+      >
+        <RelatedTaxon/>
+      </va-collapse>
     </div>
-    <div class="flex lg4 md4 sm12 xs12">
+    <!-- <div class="flex lg4 md4 sm12 xs12">
 
       <Taxonomy @generate-tree="getTreeData" @emit-ranks="getRanks"/>
-    </div>
-    <div class="flex lg8 md8 sm12 xs12">
+    </div> -->
+    <div class="flex lg12 md12 sm12 xs12">
       <TaxonListBlock/>
     </div>
 
-    <Transition>
+    <!-- <Transition>
       <div v-if="showTree" class="flex lg6 md6 sm12 xs12">
         <TreeOfLife :data="treeData" @update-tree="getTreeData" />
       </div>
     </Transition>
+    <div class="flex lg4 md4 sm12 xs12">
+      <SunBurst/>
+    </div> -->
     <!-- 
       taxon query closer species insdc status
       indented tree
@@ -45,6 +54,8 @@
   import IndentedTree from '../organisms/IndentedTree.vue'
   import TaxonListBlock from './TaxonListBlock.vue'
   import RelatedTaxon from './RelatedTaxon.vue'
+  import SunBurst from '../../components/tree/SunBurst.vue'
+
   const showTree = ref(false)
   const treeData = ref({})
 

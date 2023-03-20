@@ -61,3 +61,16 @@ def leaves_counter(bioproject_list):
         # node.leaves=count_species(node)
         node.leaves=Organism.objects(bioprojects=node.accession).count()
         node.save()
+
+def dfs(stack, tree):
+    node, level = stack.pop(0)
+    tree["title"] = node.title
+    tree["accession"] = node.accession
+    tree["children"] = []
+    if node.children:
+        children = BioProject.objects(accession__in=node.children)
+        for child in children:
+            child_dict = {}
+            dfs([(child, level+1)], child_dict)
+            tree["children"].append(child_dict)
+    return tree
