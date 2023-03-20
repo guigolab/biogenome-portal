@@ -75,7 +75,7 @@
         </va-card>
       </div>
     </div>
-    <div v-if="relatedData.length" class="row row-equal">
+    <!-- <div v-if="relatedData.length" class="row row-equal">
       <div class="flex lg12 md12 sm12 xs12">
         <va-collapse v-model="collapse" icon="info" color="success" header="Show INSDC Related Data" >
           <div style="height:100vh">
@@ -83,7 +83,7 @@
           </div>
         </va-collapse>
       </div>
-    </div>
+    </div> -->
     <div class="row row-equal">
       <div v-if="organism.image_urls.length" class="flex lg6 md6 sm12 xs12">
         <va-card>
@@ -178,26 +178,6 @@
         </va-card>
       </div>
     </div>
-    <!-- <div class="row row-equal">
-      <div class="flex lg6 md6 sm12 xs12">
-        <va-card-title>metatada</va-card-title>
-        <va-card-content style="max-height: 350px; overflow-y: scroll">
-          <Metadata :metadata="biosample.metadata" />
-        </va-card-content>
-      </div>
-      <div
-        v-if="biosample.latitude && biosample.longitude && Number(biosample.latitude) && Number(biosample.longitude)"
-        class="flex lg6 md6 sm12 xs12"
-      >
-        <va-card>
-          <LeafletMap
-            :latitude="Number(biosample.latitude)"
-            :longitude="Number(biosample.longitude)"
-            :html="`${biosample.accession}`"
-          />
-        </va-card>
-      </div>
-    </div> -->
   </div>
   <div v-else>
     <h3 class="va-h3">
