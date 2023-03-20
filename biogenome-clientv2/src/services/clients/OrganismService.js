@@ -34,9 +34,6 @@ class OrganismService {
     return base.get(`/organisms/${taxid}/sankey`)
   }
 
-  deleteOrganism(taxid){
-    return base.delete(`/organisms/${taxid}`)
-  }
 }
 
 export default new OrganismService()

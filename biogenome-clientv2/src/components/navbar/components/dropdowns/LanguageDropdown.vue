@@ -23,7 +23,7 @@
 
 <script setup lang="ts">
   import { useI18n } from 'vue-i18n'
-
+  import {languages} from '../../../../../config.json'
   const { t, locale } = useI18n()
 
   withDefaults(
@@ -31,16 +31,7 @@
       options?: { code: string; name: string }[]
     }>(),
     {
-      options: () => [
-        {
-          code: 'gb',
-          name: 'english',
-        },
-        {
-          code: 'es-ct',
-          name: 'catalan',
-        },
-      ],
+      options: () => languages
     },
   )
 

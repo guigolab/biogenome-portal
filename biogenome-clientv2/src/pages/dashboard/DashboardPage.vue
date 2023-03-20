@@ -1,5 +1,15 @@
 <template>
     <div class="dashboard">
+      <div class="row align-center">
+        <div class="flex">
+          <va-icon size="5rem" name=app-logo></va-icon>
+        </div>
+        <div class="flex lg8 md8">
+          <h1 class="va-h1">{{ Application.title }}</h1>
+          <p>{{ Application.description }}</p>
+        </div>
+      </div>
+      <va-divider/>
       <DashboardInfoBlock />
         <DashboardCharts />
         <div class="row row-equal">
@@ -22,7 +32,7 @@ import DashboardInfoBlock from './DashboardInfoBlock.vue';
 import DashboardCharts from './DashboardCharts.vue';
 import DashBoardMap from './DashBoardMap.vue';
 import DashboardTree from './DashboardTree.vue';
-
+import {Application} from '../../../config.json'
 </script>
 <style lang="scss">
   .row-equal .flex {

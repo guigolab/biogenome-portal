@@ -45,7 +45,7 @@
   import AnnotationService from '../../../services/clients/AnnotationService'
   import { useGlobalStore } from '../../../stores/global-store';
   import { useToast } from 'vuestic-ui'
-
+import AuthService from '../../../services/clients/AuthService';
   const { init } = useToast()
 
   const GlobalStore = useGlobalStore()
@@ -94,7 +94,7 @@
   }
 
   async function deleteAnnotation() {
-    const { data } = await AnnotationService.deleteAnnotation(annotationTodelete.value.name)
+    const { data } = await AuthService.deleteAnnotation(annotationTodelete.value.name)
     pagination.value = { ...initPagination }
     filter.value = {...initFilter}
     annotations.value = (await AnnotationService.getAnnotations({ ...pagination.value })).data.data

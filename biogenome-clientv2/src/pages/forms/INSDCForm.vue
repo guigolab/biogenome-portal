@@ -50,7 +50,7 @@
   import NCBIClientService from '../../services/clients/NCBIClientService'
   import { useToast } from 'vuestic-ui'
   import Metadata from '../../components/ui/Metadata.vue'
-
+  import AuthService from '../../services/clients/AuthService'
   const { init } = useToast()
 
   const model = ref('biosample')
@@ -76,21 +76,21 @@
       label: 'import BioSample',
       value: 'biosample',
       getFromDB: BioSampleService.getBioSample,
-      postToDB: BioSampleService.importBioSample,
+      postToDB: AuthService.importBioSample,
       getFromINSDC: ENAClientService.getBioSample,
     },
     {
       label: 'import Assembly',
       value: 'assembly',
       getFromDB: AssemblyService.getAssembly,
-      postToDB: AssemblyService.importAssembly,
+      postToDB: AuthService.importAssembly,
       getFromINSDC: NCBIClientService.getAssembly,
     },
     {
       label: 'import Read',
       value: 'read',
       getFromDB: ReadService.getRead,
-      postToDB: ReadService.importRead,
+      postToDB: AuthService.importRead,
       getFromINSDC: ENAClientService.getRead,
     },
   ]

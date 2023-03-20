@@ -63,7 +63,7 @@
   import UserService from '../../../services/clients/UserService'
   import { useGlobalStore } from '../../../stores/global-store';
   import { useToast } from 'vuestic-ui'
-
+import AuthService from '../../../services/clients/AuthService';
 const { init } = useToast()
   const GlobalStore = useGlobalStore()
   const initPagination = {
@@ -119,7 +119,7 @@ const { init } = useToast()
   }
 
   async function deleteUser() {
-    const { data } = await UserService.deleteUser(userToDelete.value.name)
+    const { data } = await AuthService.deleteUser(userToDelete.value.name)
     pagination.value = { ...initPagination }
     filter.value = {...initFilter}
     const response = await UserService.getUsers({ ...pagination.value, ...filter.value })
@@ -130,7 +130,7 @@ const { init } = useToast()
   }
 
   async function createUser(){
-    const {data} = await UserService.createUser(newUser.value)
+    const {data} = await AuthService.createUser(newUser.value)
     showCreationModal.value =false
     pagination.value = { ...initPagination }
     filter.value = {...initFilter}

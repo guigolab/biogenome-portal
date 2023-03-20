@@ -1,92 +1,5 @@
 {
-  "jbrowse2": {
-    "assemblyObject": {
-      "name": "",
-      "sequence": {
-        "type": "ReferenceSequenceTrack",
-        "trackId": "",
-        "adapter": {
-          "type": "BgzipFastaAdapter",
-          "fastaLocation": {
-            "uri": "",
-            "locationType": "UriLocation"
-          },
-          "faiLocation": {
-            "uri": "",
-            "locationType": "UriLocation"
-          },
-          "gziLocation": {
-            "uri": "",
-            "locationType": "UriLocation"
-          }
-        }
-      }
-    },
-    "refNameAliases": {
-      "adapter": {
-        "type": "RefNameAliasAdapter",
-        "location": {
-          "uri": ""
-        }
-      }
-    },
-    "annotationTrackObject": {
-      "type": "FeatureTrack",
-      "trackId": "",
-      "name": "",
-      "assemblyNames": [],
-      "category": ["Genes"],
-      "adapter": {
-        "type": "Gff3TabixAdapter",
-        "gffGzLocation": {
-          "uri": "",
-          "locationType": "UriLocation"
-        },
-        "index": {
-          "location": {
-            "uri": "",
-            "locationType": "UriLocation"
-          }
-        }
-      }
-    }
-  },
-  "dataIcons": {
-    "local_samples": {
-      "fields": ["local_id", "bioprojects", "metadata", "latitude", "longitude"],
-      "icon": "hub",
-      "color": "#40e583"
-    },
-    "biosamples": {
-      "fields": ["accession", "latitude", "longitude", "bioprojects", "sub_samples", "metadata"],
-      "icon": "hub",
-      "color": "#9BEC15"
-    },
-    "assemblies": {
-      "fields": ["accession", "assembly_name", "metadata", "chromosomes"],
-      "icon": "library_books",
-      "color": "#2c82e0"
-    },
-    "experiments": {
-      "fields": ["experiment_accession", "metadata"],
-      "icon": "widgets",
-      "color": "#FFAC0A"
-    },
-    "annotations": {
-      "fields": ["name", "assembly_accession", "metadata"],
-      "icon": "query_stats",
-      "color": "#babfc2"
-    },
-    "organisms": {
-      "icon": "pets"
-    },
-    "coordinates": {
-      "icon": "travel_explore"
-    },
-    "users": {
-      "icon": "group"
-    }
-  },
+
   "GoaTStatus": [
     { "label": "Sample Collected", "icon": "hiking" },
     { "label": "Sample Acquired", "icon": "biotech" },
@@ -105,7 +18,7 @@
     { "label": "Annotations Created", "icon": "query_stats" }
   ],
   "NavBar": {
-    "logoName": "CBPLogo.png",
+    "logoName": "EBG-Logo.png",
     "bgColor": ""
   },
   "ROLES": [
@@ -113,13 +26,20 @@
     { "value": "SampleManager", "text": "Sample Manager", "description": "Validate sample metadata" },
     { "value": "Admin", "text": "Data Admin", "description": "All powers" }
   ],
-  "HomePage": {
+  "Application": {
     "title": "BioGenome Portal Community Edition",
     "description": "This portal tracks the progress of the earth biogenome project and its affiliated projects, giving the biodiversity community the opportunity to share photos, vernacular names, and gene annotations of sequenced species"
   },
-  "Application": {
-    "title": "BioGenome Portal Community Edition"
-  },
+  "languages":[
+    {
+      "code": "gb",
+      "name": "english"
+    },
+    {
+      "code": "es-ct",
+      "name": "catalan"
+    }
+  ],
   "navigationRoutes":[
     {
       "name": "dashboard",

@@ -40,10 +40,10 @@
       <h2 style="color: red">Delete {{ readToDelete.accession }}</h2>
     </template>
     <div style="padding: 10px">
-      Are you sure you want to delete assembly: <strong>{{ readToDelete.accession }}</strong> ?
+      Are you sure you want to delete read: <strong>{{ readToDelete.accession }}</strong> ?
     </div>
     <template #footer>
-      <va-button color="danger" @click="deleteOrganism"> Delete </va-button>
+      <va-button color="danger" @click="deleteRead"> Delete </va-button>
     </template>
   </va-modal>
 </template>
@@ -51,7 +51,7 @@
   import { ref, onMounted } from 'vue'
   import AssemblyService from '../../../services/clients/AssemblyService'
   import ReadService from '../../../services/clients/ReadService'
-
+import AuthService from '../../../services/clients/AuthService';
   const initPagination = {
     offset: 0,
     limit: 10,
@@ -97,7 +97,7 @@
   }
 
   async function deleteRead() {
-    const { data } = await AssemblyService.deleteAssembly(readToDelete.value.accession)
+    const { data } = await AuthService.deleteRead(readToDelete.value.accession)
     console.log(data)
   }
 </script>

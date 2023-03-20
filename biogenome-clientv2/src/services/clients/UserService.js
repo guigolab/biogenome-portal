@@ -8,21 +8,8 @@ class UserService {
       params: params,
     })
   }
-
   getUser(name) {
     return base.get(`/users/${name}`)
-  }
-
-  createUser(data) {
-    return base.post('/users', data)
-  }
-
-  deleteUser(name) {
-    return base.delete(`/users/${name}`)
-  }
-
-  updateUser(name, data) {
-    return base.post(`/users/${name}`, data)
   }
 }
 

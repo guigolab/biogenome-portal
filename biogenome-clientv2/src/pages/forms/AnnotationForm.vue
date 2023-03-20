@@ -76,7 +76,7 @@
   import { useGlobalStore } from '../../stores/global-store'
   import { useAnnotationStore } from '../../stores/annotation-store'
   import AnnotationService from '../../services/clients/AnnotationService'
-
+import AuthService from '../../services/clients/AuthService'
   const annotationStore = useAnnotationStore()
   const globalStore = useGlobalStore()
 
@@ -168,11 +168,11 @@
     annotationStore.annotationForm.metadata = { ...metadata }
 
       if(isUpdate.value){
-        const {data} = await AnnotationService.updateAnnotation(props.name, annotationStore.annotationForm)
+        const {data} = await AuthService.updateAnnotation(props.name, annotationStore.annotationForm)
         init({ message: data, color: 'success' })
         return
       }
-        const {data} = await AnnotationService.createAnnotation(annotationStore.annotationForm)
+        const {data} = await AuthService.createAnnotation(annotationStore.annotationForm)
         init({ message: data, color: 'success' })
         return
   }

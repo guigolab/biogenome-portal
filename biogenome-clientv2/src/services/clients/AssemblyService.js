@@ -9,12 +9,6 @@ class AssemblyService {
   getAssembly(accession) {
     return base.get(`/assemblies/${accession}`)
   }
-  importAssembly(accession) {
-    return base.post(`/assemblies/${accession}`)
-  }
-  deleteAssembly(accession) {
-    return base.delete(`/assemblies/${accession}`)
-  }
   getRelatedAnnotations(accession){
     return base.get(`/assemblies/${accession}/annotations`)
   }

@@ -23,10 +23,11 @@
     </div>
     <div class="flex lg3 md3 sm12 xs12">
       <Suspense>
-        <ContributorList
-          :field="'metadata.GAL'"
-          :model="'biosamples'"
-          :title="'Genome Aquisition Labs (GAL)'"
+        <PieChart
+          :field="'insdc_status'"
+          :model="'organisms'"
+          :title="'organism insdc submission status'"
+          :label="'Reads by instrument platform'"
         />
       </Suspense>
     </div>
@@ -36,7 +37,6 @@
 <script setup lang="ts">
   import PieChart from '../../components/charts/PieChart.vue';
   import DateLineChart from '../../components/charts/DateLineChart.vue';
-  import ContributorList from '../../components/stats/ContributorList.vue';
 
 
 </script>

@@ -17,7 +17,6 @@
   const width = 750
   const domains = ref([])
   const legendDomains = ref([])
-  const selectedNode = ref({})
   function color() {
     const color = d3.scaleOrdinal().domain(domains.value).range(d3.schemeCategory10)
     return color

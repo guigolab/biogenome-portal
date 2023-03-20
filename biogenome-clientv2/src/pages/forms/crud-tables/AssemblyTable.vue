@@ -48,7 +48,7 @@
   import { ref, onMounted } from 'vue'
   import AssemblyService from '../../../services/clients/AssemblyService'
   import { useToast } from 'vuestic-ui'
-
+import AuthService from '../../../services/clients/AuthService'
   const { init } = useToast()
   const initPagination = {
     offset: 0,
@@ -97,7 +97,7 @@
   }
 
   async function deleteAssembly() {
-    const { data } = await AssemblyService.deleteAssembly(assemblyToDelete.value.accession)
+    const { data } = await AuthService.deleteAssembly(assemblyToDelete.value.accession)
     pagination.value = {...initPagination}
     filter.value = {...initFilter}
     assemblies.value = (await AssemblyService.getAssemblies({ ...pagination.value })).data.data

@@ -62,9 +62,9 @@ def import_assemblies():
         existing_assemblies = Assembly.objects(accession__in=accessions).scalar('accession')
         for assembly_to_save in fetched_assemblies:
             assembly_to_save_accession = assembly_to_save['assembly_accession']
-            print(f'Importing Assembly: {assembly_to_save_accession}')
             if assembly_to_save_accession in existing_assemblies:
                 continue
+            print(f'Importing Assembly: {assembly_to_save_accession}')
             saved_assembly = assemblies_service.create_assembly_from_ncbi_data(assembly_to_save)
             if not saved_assembly:
                 continue
@@ -75,7 +75,10 @@ def import_assemblies():
 def update_reads():
     biosamples = BioSample.objects()
     for biosample in biosamples:
-        reads_service.create_reads_from_biosample_accession(biosample.accession)
+        accessions = reads_service.create_reads_from_biosample_accession(biosample.accession)
+        organism = organisms_service.get_or_create_organism(biosample.taxid)
+        for acc in accessions:
+            organism.modify(add_to_set__experiments=acc)
 
 def import_biosamples():
     project_list = [p.strip() for p in os.getenv('PROJECTS').split(',') if p] if os.getenv('PROJECTS') else None

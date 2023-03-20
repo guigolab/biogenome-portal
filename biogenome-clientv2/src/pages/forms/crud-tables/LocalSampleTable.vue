@@ -48,6 +48,7 @@
   import { ref, onMounted } from 'vue'
   import LocalSampleService from '../../../services/clients/LocalSampleService'
   import { useToast } from 'vuestic-ui'
+import AuthService from '../../../services/clients/AuthService'
 
   const { init } = useToast()
   const initPagination = {
@@ -95,7 +96,7 @@
   }
 
   async function deleteLocalSample() {
-    const { data } = await LocalSampleService.deleteLocalSample(sampleToDelete.value.id)
+    const { data } = await AuthService.deleteLocalSample(sampleToDelete.value.id)
     pagination.value = {...initPagination}
     filter.value = {...initFilter}
     localSamples.value  = (await LocalSampleService.getLocalSamples({ ...pagination.value })).data.data

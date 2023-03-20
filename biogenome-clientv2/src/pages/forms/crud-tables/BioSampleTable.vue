@@ -48,7 +48,7 @@
   import { ref, onMounted } from 'vue'
   import BioSampleService from '../../../services/clients/BioSampleService'
   import { useToast } from 'vuestic-ui'
-
+import AuthService from '../../../services/clients/AuthService';
   const { init } = useToast()
   const initPagination = {
     offset: 0,
@@ -95,7 +95,7 @@
   }
 
   async function deleteBioSample() {
-    const { data } = await BioSampleService.deleteBioSample(sampleToDelete.value.accession)
+    const { data } = await AuthService.deleteBioSample(sampleToDelete.value.accession)
     pagination.value = {...initPagination}
     filter.value = {...initFilter}
     biosamples.value  = (await BioSampleService.getBioSamples({ ...pagination.value })).data.data

@@ -15,12 +15,6 @@ class BioSampleService {
   getBioSampleBioProjects(accession) {
     return base.get(`/biosamples/${accession}/bioprojects`)
   }
-  importBioSample(accession) {
-    return base.post(`/biosamples/${accession}`)
-  }
-  deleteBioSample(accession) {
-    return base.delete(`/biosamples/${accession}`)
-  }
 }
 
 export default new BioSampleService()

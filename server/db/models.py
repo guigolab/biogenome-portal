@@ -86,6 +86,8 @@ class BioProject(db.Document):
 def set_location(sender, document, **kwargs):
     if document.location:
         return
+    id = document.accession if document.accession else document.local_id
+    print('setting location of', id)
     sample_metadata = document.metadata
     lowered_keys_dict = dict()
     latitude = None
@@ -121,13 +123,13 @@ def set_location(sender, document, **kwargs):
                 if ',' in latitude and ',' in longitude:
                     latitude = latitude.replace(',', '.')
                     longitude = longitude.replace(',', '.')
-                elif "'" in latitude and "'" in longitude:
+                if "'" in latitude and "'" in longitude:
                     latitude = latitude.replace("'", ".")
                     longitude = longitude.replace("'", ".")
-                    if float(latitude) >= -90.0 and float(latitude) <= 90.0 and float(longitude) >= -180.0 and float(longitude) <= 180.0:
-                        lng = float(longitude)
-                        lat = float(latitude)
-                        document.location = [lng, lat]
+                if float(latitude) >= -90.0 and float(latitude) <= 90.0 and float(longitude) >= -180.0 and float(longitude) <= 180.0:
+                    lng = float(longitude)
+                    lat = float(latitude)
+                    document.location = [lng, lat]
         except:
             id = document.accession if document.accession else document.local_id
             print(f'Invalid latitude:{latitude} or longitude: {longitude} for sample:{id}')

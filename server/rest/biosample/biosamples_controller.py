@@ -13,6 +13,7 @@ FIELDS_TO_EXCLUDE = ['id','created','last_check']
 class BioSampleApi(Resource):
     def get(self, accession):
         biosample_obj=BioSample.objects(accession=accession).exclude('id').first()
+        print(biosample_obj.location)
         if not biosample_obj:
             raise NotFound
         return Response(biosample_obj.to_json(),mimetype="application/json", status=200)

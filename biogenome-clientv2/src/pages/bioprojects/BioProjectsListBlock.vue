@@ -62,18 +62,6 @@
       key: 'filter',
       type: 'input',
     },
-    {
-      label: 'sort_column',
-      key: 'sort_column',
-      type: 'select',
-      options: ['leaves'],
-    },
-    {
-      label: 'sort_order',
-      key: 'sort_order',
-      type: 'select',
-      options: ['asc', 'desc'],
-    },
   ]
 
   const bioprojects = ref([])
@@ -91,16 +79,11 @@
     BioProjectStore.pagination.offset = value - 1
     getBioProjects(await BioProjectService.getBioprojects({ ...BioProjectStore.searchForm, ...BioProjectStore.pagination }))
   }
-  async function reset() {
-    offset.value = 1
-    BioProjectStore.resetForm()
-    BioProjectStore.resetPagination()
-    getBioProjects(await BioProjectService.getBioprojects({ ...BioProjectStore.searchForm, ...BioProjectStore.pagination }))
-  }
+
 
   function getBioProjects({ data }: AxiosResponse) {
-    bioprojects.value = data.data
-    total.value = data.total
+    bioprojects.value = data
+    total.value = data.length
     return data
   }
 </script>

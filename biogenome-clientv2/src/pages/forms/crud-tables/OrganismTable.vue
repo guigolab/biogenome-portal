@@ -50,7 +50,7 @@
 <script setup lang="ts">
   import OrganismService from '../../../services/clients/OrganismService'
   import { ref, onMounted } from 'vue'
-
+import AuthService from '../../../services/clients/AuthService';
   const initPagination = {
     offset: 0,
     limit: 10,
@@ -98,7 +98,7 @@
   }
 
   async function deleteOrganism() {
-    const { data } = await OrganismService.deleteOrganism(organismToDelete.value.taxid)
+    const { data } = await AuthService.deleteOrganism(organismToDelete.value.taxid)
     console.log(data)
   }
 </script>
