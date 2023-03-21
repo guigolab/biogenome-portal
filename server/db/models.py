@@ -39,6 +39,7 @@ def update_organism_status(sender, document, **kwargs):
             document.insdc_status=INSDCStatus.SAMPLE
             document.goat_status = GoaTStatus.SAMPLE_ACQUIRED
         elif document.local_samples:
+            document.insdc_status=None
             document.goat_status = GoaTStatus.SAMPLE_COLLECTED
         if document.publications:
             document.goat_status = GoaTStatus.PUBLICATION_AVAILABLE
