@@ -6,7 +6,7 @@ from flask_jwt_extended import jwt_required
 from errors import NotFound, RecordAlreadyExistError
 from . import cronjob_service
 
-CRONJOB_TYPES = ['update_reads', 'update_samples', 'import_assemblies', 'update_countries', 'import_biosamples', 'update_locations']
+CRONJOB_TYPES = ['update_reads', 'update_samples', 'import_assemblies', 'update_countries', 'import_biosamples', 'update_locations', 'update_sample_coordinates']
 
 ## persist cronjob status
 class CronJobApi(Resource):
@@ -25,7 +25,6 @@ class CronJobApi(Resource):
         if cronjob:
             raise RecordAlreadyExistError
         cronjob = CronJob(cronjob_type=model, status= CronJobStatus.PENDING).save()
-        # try:
         if model == 'update_samples':
             cronjob_service.update_samples()
         elif model == 'update_reads':
@@ -38,9 +37,7 @@ class CronJobApi(Resource):
             cronjob_service.import_biosamples()
         elif model == 'update_locations':
             cronjob_service.update_organism_locations()
-        # except:
-        #     print(f' Error in {cronjob.cronjob_type}')
-        # finally:
-        #     cronjob.delete()
+        elif model == 'update_sample_coordinates':
+            cronjob_service.update_sample_coordinates()
         return Response(cronjob.to_json(), mimetype="application/json", status=201)
 

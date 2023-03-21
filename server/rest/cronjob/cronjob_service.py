@@ -1,4 +1,4 @@
-from db.models import Organism, Assembly, BioSample, BioProject, LocalSample
+from db.models import Organism, Assembly, BioSample, BioProject, LocalSample, set_location
 from ..utils import ena_client
 from ..biosample import biosamples_service
 from ..organism import organisms_service
@@ -130,6 +130,8 @@ def update_countries():
 
 def update_organism_locations():
     for organism in Organism.objects():
+        if organism.coordinates:
+            del organism.coordinates
         for model in [BioSample, LocalSample]:
             samples = model.objects(taxid=organism.taxid,location__ne=None)
             locations = list()
@@ -147,3 +149,12 @@ def update_organism_locations():
             if locations:
                 organism.locations=[[float(loc[0]), float(loc[1])] for loc in locations]
                 organism.save()
+
+def update_sample_coordinates():
+    for model in [BioSample, LocalSample]:
+        samples = model.objects()
+        for sample in samples:
+            if sample.latitude and sample.longitude:
+                del sample.latitude
+                del sample.longitude
+            set_location(document=sample)
