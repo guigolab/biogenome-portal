@@ -112,7 +112,8 @@ def parse_excel(excel=None, id=None, taxid=None, scientific_name=None, latitude=
                 sample_obj.update(taxid=new_sample[taxid],local_id=new_sample[id],broker=source,metadata=new_sample['metadata'],scientific_name=new_sample[scientific_name])
                 saved_sample[index+1+header] = [f"{sample_obj.local_id} correctly updated"]
         else:
-            organism = organisms_service.get_or_create_organism(new_sample[taxid])
+            str_taxid = str(new_sample[taxid])
+            organism = organisms_service.get_or_create_organism(str_taxid)
             if not organism:
                 msg = 'TAXID not found in NCBI'
                 sample_error_obj[index+header+1].append(msg)
@@ -120,7 +121,7 @@ def parse_excel(excel=None, id=None, taxid=None, scientific_name=None, latitude=
                     all_errors = list()
                 all_errors.append(sample_error_obj)
                 continue
-            sample_obj = LocalSample(taxid=new_sample[taxid],local_id=new_sample[id],broker=source,metadata=new_sample['metadata'],scientific_name=new_sample[scientific_name]).save()                
+            sample_obj = LocalSample(taxid=str_taxid,local_id=new_sample[id],broker=source,metadata=new_sample['metadata'],scientific_name=new_sample[scientific_name]).save()                
             saved_sample[index+1+header] = [f"{sample_obj.local_id} correctly saved"]
         if not saved_samples:
             saved_samples = list()
