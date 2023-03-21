@@ -9,11 +9,11 @@
     <va-input v-model="filter.filter" label="search local sample" class="flex lg4 md4 sm12 xs12"></va-input>
     <va-button :disabled="filter.filter.length <= 2" icon="search" @click="handleSubmit"> Search </va-button>
   </div>
-  <va-data-table :items="localSamples" :columns="['local_id', 'scientific_name']">
+  <va-data-table :items="localSamples" :columns="['local_id', 'scientific_name','actions']">
     <template #cell(actions)="{ rowData }">
-      <va-chip :to="{ name: 'local-sample-form', params: { id: rowData.local_id } }" icon="edit"
+      <!-- <va-chip :to="{ name: 'local-sample-form', params: { id: rowData.local_id } }" icon="edit"
         >Edit Local Sample</va-chip
-      >
+      > -->
       <va-chip color="danger" icon="delete" @click="deleteConfirmation(rowData)">Delete Local Sample</va-chip>
     </template>
   </va-data-table>
