@@ -154,4 +154,51 @@ def update_sample_coordinates():
     for model in [BioSample, LocalSample]:
         samples = model.objects()
         for sample in samples:
-            set_location(sender=None,document=sample)
+            if sample.location:
+                return
+            print('setting location of', sample)
+            sample_metadata = sample.metadata
+            lowered_keys_dict = dict()
+            latitude = None
+            longitude = None
+            for key in sample_metadata.keys():
+                low_key = key.lower()
+                lowered_keys_dict[low_key] = sample_metadata[key]
+            if 'lat_lon' in sample_metadata.keys():
+                values = sample_metadata['lat_lon'].split(' ')
+                if len(values) == 4:
+                    lat,lat_value,long,long_value = values
+                    latitude = '-'+lat if lat_value == 'S' else lat
+                    longitude = '-'+long if long_value == 'W' else long
+            elif 'lat lon' in sample_metadata.keys():
+                values = sample_metadata['lat lon'].split(' ')
+                if len(values) == 4:
+                    lat,lat_value,long,long_value = values
+                    latitude = '-'+lat if lat_value == 'S' else lat
+                    longitude = '-'+long if long_value == 'W' else long
+            elif 'geographic location (latitude)' in sample_metadata.keys() and 'geographic location (longitude)' in sample_metadata.keys():
+                latitude = str(sample_metadata['geographic location (latitude)'])
+                longitude = str(sample_metadata['geographic location (longitude)'])
+            elif 'latitude' in lowered_keys_dict and 'longitude' in lowered_keys_dict:
+                latitude = str(lowered_keys_dict['latitude'])
+                longitude  = str(lowered_keys_dict['longitude'])
+            elif 'decimal_latitude' in lowered_keys_dict and 'decimal_longitude' in lowered_keys_dict:
+                latitude = str(lowered_keys_dict['decimal_latitude'])
+                longitude  = str(lowered_keys_dict['decimal_longitude'])
+            if latitude and longitude:
+                try:
+                    if any(c.isdigit() for c in str(latitude)) and any(c.isdigit() for c in str(longitude)):
+                        ##replace , with .
+                        if ',' in latitude and ',' in longitude:
+                            latitude = latitude.replace(',', '.')
+                            longitude = longitude.replace(',', '.')
+                        if "'" in latitude and "'" in longitude:
+                            latitude = latitude.replace("'", ".")
+                            longitude = longitude.replace("'", ".")
+                        if float(latitude) >= -90.0 and float(latitude) <= 90.0 and float(longitude) >= -180.0 and float(longitude) <= 180.0:
+                            lng = float(longitude)
+                            lat = float(latitude)
+                            sample.location = [lng, lat]
+                            sample.save()
+                except:
+                    print(f'Invalid latitude:{latitude} or longitude: {longitude} for sample:{document}')

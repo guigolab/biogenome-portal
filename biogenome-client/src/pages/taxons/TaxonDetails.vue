@@ -230,13 +230,6 @@
   const showTree = ref(false)
     onMounted(async () => {
         await getTaxonInfo(props.taxid)
-        const {data} = await TaxonService.getTree(props.taxid)
-        treeData.value = {...data}
-        showTree.value = true
-        if(taxon.value.leaves >= 200){
-          types.value = ['Indented Tree']
-          treeType.value = types.value[0]
-        }
     })
   
     function getTaxon({ data }: AxiosResponse) {
@@ -278,6 +271,13 @@
             organisms.value = [...data.data]
             total.value = data.total
             showData.value = true
+            const tree = (await TaxonService.getTree(props.taxid)).data
+            treeData.value = {...tree}
+            showTree.value = true
+            if(Number(taxon.value.leaves) >= 200){
+              types.value = ['Indented Tree']
+              treeType.value = types.value[0]
+            }
         } catch (e) {
             if(e && e.response && e.response.data) error.value = taxid + ' ' + e.response.data.message
             showData.value = false
