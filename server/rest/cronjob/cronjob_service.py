@@ -154,7 +154,4 @@ def update_sample_coordinates():
     for model in [BioSample, LocalSample]:
         samples = model.objects()
         for sample in samples:
-            if sample.latitude and sample.longitude:
-                del sample.latitude
-                del sample.longitude
             set_location(document=sample)
