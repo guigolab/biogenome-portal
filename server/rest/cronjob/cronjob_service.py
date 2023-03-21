@@ -130,8 +130,6 @@ def update_countries():
 
 def update_organism_locations():
     for organism in Organism.objects():
-        if organism.coordinates:
-            del organism.coordinates
         for model in [BioSample, LocalSample]:
             samples = model.objects(taxid=organism.taxid,location__ne=None)
             locations = list()
