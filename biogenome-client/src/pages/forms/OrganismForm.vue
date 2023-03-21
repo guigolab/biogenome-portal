@@ -196,12 +196,7 @@
 
   const metadataList = reactive<Metatada[]>([])
 
-  const goatStatusOptions = ref([
-    { value: 'Sample Collected', disabled: false },
-    { value: 'Sample Acquired', disabled: false },
-    { value: 'Data Generation', disabled: false },
-    { value: 'In Assembly', disabled: false },
-  ])
+  const goatStatusOptions = ['Sample Collected', 'Sample Acquired','Data Generation','In Assembly']
   const targetListStatusOptions = ['long_list', 'family_representative', 'other_priority']
 
   const images = reactive<Record<string, string>[]>([])
