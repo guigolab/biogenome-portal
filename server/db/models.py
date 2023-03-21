@@ -86,8 +86,7 @@ class BioProject(db.Document):
 def set_location(sender, document, **kwargs):
     if document.location:
         return
-    id = document.accession if document.accession else document.local_id
-    print('setting location of', id)
+    print('setting location of', document)
     sample_metadata = document.metadata
     lowered_keys_dict = dict()
     latitude = None
@@ -131,8 +130,7 @@ def set_location(sender, document, **kwargs):
                     lat = float(latitude)
                     document.location = [lng, lat]
         except:
-            id = document.accession if document.accession else document.local_id
-            print(f'Invalid latitude:{latitude} or longitude: {longitude} for sample:{id}')
+            print(f'Invalid latitude:{latitude} or longitude: {longitude} for sample:{document}')
 
 @set_location.apply
 class LocalSample(db.Document):
