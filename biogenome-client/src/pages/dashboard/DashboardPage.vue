@@ -1,7 +1,7 @@
 <template>
     <div class="dashboard">
       <div class="row align-center">
-        <div class="flex">
+        <div v-if="NavBar.logoName" class="flex">
           <va-icon size="5rem" name=app-logo></va-icon>
         </div>
         <div class="flex lg8 md8">
@@ -32,7 +32,7 @@ import DashboardInfoBlock from './DashboardInfoBlock.vue';
 import DashboardCharts from './DashboardCharts.vue';
 import DashBoardMap from './DashBoardMap.vue';
 import DashboardTree from './DashboardTree.vue';
-import {Application} from '../../../config.json'
+import {Application,NavBar } from '../../../config.json'
 </script>
 <style lang="scss">
   .row-equal .flex {

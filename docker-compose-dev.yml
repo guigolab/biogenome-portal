@@ -47,7 +47,7 @@ services:
 
   biogenome_nginx:
     build:
-      context: ./biogenome-clientv2
+      context: ./biogenome-client
       dockerfile: Dockerfile
       args:
         - ROOT_NODE=$ROOT_NODE
