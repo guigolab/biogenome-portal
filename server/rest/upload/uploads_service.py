@@ -110,6 +110,8 @@ def parse_excel(excel=None, id=None, taxid=None, scientific_name=None, latitude=
                 continue
             elif option == 'UPDATE':
                 sample_obj.update(taxid=new_sample[taxid],local_id=new_sample[id],broker=source,metadata=new_sample['metadata'],scientific_name=new_sample[scientific_name])
+                organism = organisms_service.get_or_create_organism(sample_obj.taxid)
+                organism.modify(add_to_set__local_samples=sample_obj.local_id)
                 saved_sample[index+1+header] = [f"{sample_obj.local_id} correctly updated"]
         else:
             str_taxid = str(new_sample[taxid])
@@ -121,8 +123,10 @@ def parse_excel(excel=None, id=None, taxid=None, scientific_name=None, latitude=
                     all_errors = list()
                 all_errors.append(sample_error_obj)
                 continue
-            sample_obj = LocalSample(taxid=str_taxid,local_id=new_sample[id],broker=source,metadata=new_sample['metadata'],scientific_name=new_sample[scientific_name]).save()                
+            sample_obj = LocalSample(taxid=str_taxid,local_id=new_sample[id],broker=source,metadata=new_sample['metadata'],scientific_name=new_sample[scientific_name]).save()   
+            organism.modify(add_to_set__local_samples=sample_obj.local_id)
             saved_sample[index+1+header] = [f"{sample_obj.local_id} correctly saved"]
+        
         if not saved_samples:
             saved_samples = list()
         saved_samples.append(saved_sample)
