@@ -1,8 +1,7 @@
 import axios from 'axios'
 
-const BASE_URL = import.meta.env.VITE_BASE_PATH
+const baseURL = import.meta.env.VITE_BASE_PATH? import.meta.env.VITE_BASE_PATH : 'http://localhost:91/api'
 
-const baseURL = 'http://localhost:91/api'
 const base = axios.create({
   baseURL: baseURL,
   headers: {

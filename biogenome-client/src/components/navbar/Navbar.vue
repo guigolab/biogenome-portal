@@ -12,9 +12,6 @@
     </template>
     <template #center>
       <div class="app-navbar-center">
-        <router-link to="/">
-          <va-icon color="success" size="3rem" name="app-logo"/>
-        </router-link>
       </div>
     </template>
     <template #right>
