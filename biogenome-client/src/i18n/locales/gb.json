@@ -3,21 +3,172 @@
     "login": "Login",
     "password": "Password"
   },
-  "404": {
-    "text": "not found"
+  "buttons":{
+    "submit":"Submit",
+    "reset":"Reset",
+    "search":"Search",
+    "download":"Download",
+    "view":"View"
+  },
+  "table":{
+    "total":"Total"
+  },
+  "uiComponents":{
+    "bioprojectsCard":"bioprojects",
+    "relatedDataCard":{
+      "biosamples":"BioSamples",
+      "local_samples":"LocalSamples",
+      "assemblies":"Assemblies",
+      "experiments":"Experiments",
+      "annotations":"Annotations"
+    },
+    "metadata": "Metadata"
   },
   "dashboard": {
-    "versions": "Versions",
-    "setupRemoteConnections": "Setup Remote Connections",
-    "currentVisitors": "Current Visitors",
+    "statistics":{
+      "organisms":"Organisms",
+      "biosamples":"BioSamples",
+      "experiments":"Experiments",
+      "assemblies":"Assemblies",
+      "annotations":"Annotations",
+      "local_samples":"Local Samples"
+    },
     "charts": {
-      "trendyTrends": "Trendy Trends",
-      "showInMoreDetail": "Show in more detail",
-      "showInLessDetail": "Show in less detail",
-      "loadingSpeed": "Loading speed",
-      "topContributors": "Top contributors",
-      "showNextFive": "Show next five",
-      "commits": "Commits"
+      "firstPiechart":{
+        "title":"Platform Used",
+        "label":"Experiments by instrument platform"
+      },
+      "secondPiechart":{
+        "title":"Organism INSDC submission status",
+        "label":"Organism INSDC submission status"
+      },
+      "dateLineChart":{
+        "title":"Assemblies submitted by month",
+        "label":"Assemblies"
+      }
+    },
+    "tree":"Phylogenetic Tree"
+  },
+  "organismList":{
+    "filters":{
+      "searchInput":"Search Organism",
+      "searchSelect":"Search By",
+      "searchCountry":"Search by country"
+    }
+  },
+  "annotationDetails":{
+    "genomeBrowser":"Genome Browser"
+  },
+  "annotationList":{
+    "filters":{
+
+    }
+  },
+
+  "assemblyList":{
+    "filters":{
+      "submitterSelect":"label",
+      "dateRangeSelect":{
+        "label":"Date",
+        "placeholder":"Select a date"
+      },
+      "searchInput":"Search Assembly",
+      "searchSelect":"Filter By",
+      "assemblyLevel":"Assembly level",
+      "sortColumn":"Sort Column",
+      "sortOrder":"Sort Order",
+      "date": "Date"
+    },
+    "charts":{
+      "pieChart":{
+        "title":"Assembly Levels",
+        "label":"Assemblies by assembly level"
+      },
+      "dateLineChart":{
+        "title":"Assemblies submitted by month",
+        "label":"Assemblies"
+      },
+      "contributorList":{
+        "title":"Submitters"
+      }
+    }
+  },
+  "experimentDetails":{
+    "instrumentPlatform":"Instrument Platform",
+    "instrumentModel":"Instrument Model",
+    "baseCount":"Base Count",
+    "centerName":"Center Name",
+    "firstCreated":"First Created"
+  },
+  "experimentList":{
+    "breadcrumb":"Experiments",
+    "charts":{
+      "pieChart":{
+        "title":"Platform Used",
+        "label":"Experiments by instrument platform"
+      },
+      "dateLineChart":{
+        "label":"Experiments",
+        "title":"Experiments submitted by month"
+      },
+      "contributorList":"Centers"
+    },
+    "filters":{
+      "textInput":"Search Experiment",
+      "filterBy":"Filter By",
+      "sortColumn":"Sort Column",
+      "sortOrder":"Sort Order",
+      "date":"Date"
+    }
+  },
+  "assemblyDetails":{
+    "contigN50":"Contig n50",
+    "genomeSize":"Genome Size",
+    "assemblyLevel":"Assembly Level",
+    "chromosomes": "Chromosomes",
+    "submitter":"Submitter",
+    "submissionDate":"Submission Date",
+    "genomeBrowser":"Genome Browser"
+  },
+  "biosampleList":{
+    "breadcrumb":"BioSamples",
+    "filters":{
+      "searchInput":"Search BioSample",
+      "searchSelect":"Filter By",
+      "sortColumn":"Sort Column",
+      "sortOrder":"Sort Order",
+      "date":"Date",
+      "sequencingCenters":"Sequencing Centers"
+    },
+    "charts":{
+      "contributorList":"Genome Aquisition Labs (GAL)",
+      "dateLineChart":{
+        "title":"BioSample collected by month",
+        "label":"BioSamples"
+      },
+      "habitatList":"Habitats"
+    }
+  },
+  "biosampleDetails":{
+    "genomeAquisitionLab":"Genome Aquisition Lab",
+    "organismPart":"Organism Part",
+    "tissue":"Tissue",
+    "habitat":"Habitat",
+    "collectionDate":"Collection Date",
+    "geoLocation":"Geolocation",
+    "country":"Country",
+    "region":"Region"
+  },
+  "statusList":{
+    "charts":{
+      "firstPiechart":"GoaT Status",
+      "secondPiechart":"Target List Status"
+    },
+    "filters":{
+      "searchInput":"Search Organism",
+      "filterBy":"Filter By",
+      "goatStatus":"Goat Status",
+      "targetListStatus":"Target List Status"
     }
   },
   "language": {
@@ -34,7 +185,6 @@
     "annotations": "Annotations",
     "organismsMap": "Organisms Map",
     "countriesMap": "Countries Map",
-    "bioprojects": "BioProjects",
     "adminArea": "Admin Area",
     "taxons": "Taxonomy",
     "assemblies": "Assemblies",

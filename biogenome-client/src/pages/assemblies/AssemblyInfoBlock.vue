@@ -5,17 +5,17 @@
         <PieChart
           :field="'metadata.assembly_level'"
           :model="'assemblies'"
-          :title="'assembly levels'"
-          :label="'Assemblies by assembly level'"
+          :title="t('assemblyList.charts.pieChart.title')"
+          :label="t('assemblyList.charts.pieChart.title')"
         />
       </Suspense>
     </div>
     <div class="flex lg6 md6 sm12 xs12">
       <Suspense>
         <DateLineChart
-          :label="'Assemblies'"
+          :label="t('assemblyList.charts.dateLineChart.label')"
           :field="'metadata.submission_date'"
-          :title="'Assemblies submitted by month'"
+          :title="t('assemblyList.charts.dateLineChart.title')"
           :model="'assemblies'"
           :color="'#2c82e0'"
         />
@@ -26,7 +26,7 @@
         <ContributorList
           :field="'metadata.submitter'"
           :model="'assemblies'"
-          :title="'Submitters'"
+          :title="t('assemblyList.charts.contributorList')"
           @list-created="getSubmitters"
         />
       </Suspense>
@@ -39,7 +39,9 @@
   import PieChart from '../../components/charts/PieChart.vue'
   import { useAssemblyStore } from '../../stores/assembly-store'
   import { Contributor } from '../../data/types'
-
+  import { useI18n } from 'vue-i18n'
+  
+  const { t } = useI18n()
   const assemblyStore = useAssemblyStore()
 
   function getSubmitters(value: Contributor[]) {

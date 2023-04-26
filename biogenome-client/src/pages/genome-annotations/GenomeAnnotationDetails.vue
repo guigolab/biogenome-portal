@@ -32,13 +32,13 @@
       </div>
       <div class="row row-equal">
         <div v-if="showJBrowse" class="flex lg12 md12 sm12 xs12">
-          <va-card-title> genome browser </va-card-title>
+          <va-card-title> {{ t('annotationDetails.genomeBrowser') }} </va-card-title>
           <va-card-content>
             <Jbrowse2 :assembly="jbrowse.assembly" :tracks="jbrowse.annotations"/>
           </va-card-content>
         </div>
         <div v-if="annotation.metadata && Object.keys(annotation.metadata).length" class="flex lg12 md12 sm12 xs12">
-          <va-card-title>metatada</va-card-title>
+          <va-card-title>{{t('uiComponents.metadata')}}</va-card-title>
           <va-card-content>
             <Metadata :metadata="annotation.metadata" />
           </va-card-content>
@@ -56,7 +56,9 @@
     import Metadata from '../../components/ui/Metadata.vue'
     import { useRouter } from 'vue-router'
     import AnnotationService from '../../services/clients/AnnotationService'
-  
+    import { useI18n } from 'vue-i18n'
+    const { t } = useI18n()
+
     const router = useRouter()
     const annotation = ref({})
     const assembly = ref({})

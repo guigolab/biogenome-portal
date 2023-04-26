@@ -1,7 +1,7 @@
 <template>
   <div>
     <va-breadcrumbs class="va-title" color="primary">
-      <va-breadcrumbs-item :to="{ name: 'reads' }" label="reads" />
+      <va-breadcrumbs-item :to="{ name: 'reads' }" :label="t('experimentList.breadcrumb')" />
       <va-breadcrumbs-item
         v-if="router.currentRoute.value.name === 'read'"
         active
@@ -14,22 +14,14 @@
   </div>
 </template>
 <script setup lang="ts">
-  import { Contributor } from '../../data/types'
-  import DateLineChart from '../../components/charts/DateLineChart.vue'
-  import PieChart from '../../components/charts/PieChart.vue'
-  import ContributorList from '../../components/stats/ContributorList.vue'
   import { useRouter } from 'vue-router'
-  import { useReadStore } from '../../stores/read-store'
   import ReadInfoBlock from './ReadInfoBlock.vue'
   import ReadListBlock from './ReadListBlock.vue'
-
-  const readStore = useReadStore()
+  import { useI18n } from 'vue-i18n'
+  const { t } = useI18n()
 
   const router = useRouter()
 
-  function getSubmitters(value: Contributor[]) {
-    readStore.submitters = [...value]
-  }
 </script>
 
 <style lang="scss">

@@ -105,16 +105,16 @@ def parse_excel(excel=None, id=None, taxid=None, scientific_name=None, latitude=
 
         saved_sample=dict()
         sample_obj = LocalSample.objects(local_id = new_sample[id]).first()
+        str_taxid = str(new_sample[taxid])
         if sample_obj:
             if option == 'SKIP':
                 continue
             elif option == 'UPDATE':
-                sample_obj.update(taxid=new_sample[taxid],local_id=new_sample[id],broker=source,metadata=new_sample['metadata'],scientific_name=new_sample[scientific_name])
-                organism = organisms_service.get_or_create_organism(sample_obj.taxid)
+                sample_obj.update(taxid=str_taxid,local_id=new_sample[id],broker=source,metadata=new_sample['metadata'],scientific_name=new_sample[scientific_name])
+                organism = organisms_service.get_or_create_organism(str_taxid)
                 organism.modify(add_to_set__local_samples=sample_obj.local_id)
                 saved_sample[index+1+header] = [f"{sample_obj.local_id} correctly updated"]
         else:
-            str_taxid = str(new_sample[taxid])
             organism = organisms_service.get_or_create_organism(str_taxid)
             if not organism:
                 msg = 'TAXID not found in NCBI'

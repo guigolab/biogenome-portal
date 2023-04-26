@@ -1,19 +1,16 @@
 from flask import Response,request
-from db.models import Assembly,GenomeAnnotation,BioProject,BioSample,LocalSample,Experiment,Organism, TaxonNode
+from db.models import Assembly,GenomeAnnotation,BioSample,LocalSample,Experiment,Organism
 from flask_restful import Resource
 import json
-from flask import current_app as app
 
 
 MODEL_LIST = {
     'assemblies':Assembly,
-    'taxons': TaxonNode,
     'annotations':GenomeAnnotation,
     'biosamples':BioSample,
     'local_samples':LocalSample,
     'reads':Experiment,
     'organisms':Organism,
-    'bioprojects':BioProject
     }
 
 class FieldStatsApi(Resource):

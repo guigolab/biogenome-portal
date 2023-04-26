@@ -52,8 +52,6 @@
     import Metadata from '../../components/ui/Metadata.vue'
     import LeafletMap from '../../components/maps/LeafletMap.vue'
     import { useRouter } from 'vue-router'
-    import RelatedDataCard from '../../components/ui/RelatedDataCard.vue'
-    import BioProjectsCard from '../../components/ui/BioProjectsCard.vue'
     import LocalSampleService from '../../services/clients/LocalSampleService'
 
     const router = useRouter()
@@ -78,32 +76,7 @@
         }
       },
     )
-    const relatedData = [
-      {
-        title: 'Related localSamples',
-        icon: 'hubs',
-        key: 'sub_samples',
-        route: 'localSample',
-        columns: ['accession', 'organism_part'],
-      },
-      {
-        title: 'Related Reads',
-        icon: 'widgets',
-        key: 'experiments',
-        route: 'read',
-        columns: ['experiment_accession', 'instrument_platform'],
-      },
-      {
-        title: 'Related Assemblies',
-        icon: 'library_books',
-        key: 'assemblies',
-        route: 'assembly',
-        columns: ['accession', 'assembly_name', 'assembly_level'],
-      },
-    ]
     const localSample = ref({})
-  
-  
     onMounted(async () => {
       try {
         getLocalSample(await LocalSampleService.getLocalSample(props.id))
@@ -115,7 +88,6 @@
         showData.value = false
       }
     })
-  
     function getLocalSample({ data }: AxiosResponse) {
       localSample.value = { ...data }
     }

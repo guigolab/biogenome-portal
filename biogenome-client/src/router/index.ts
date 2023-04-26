@@ -16,17 +16,6 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('../pages/auth/login/Login.vue'),
   },
   {
-    name: 'bioprojects',
-    path: '/bioprojects',
-    component: () => import('../pages/bioprojects/BioProjects.vue'),
-  },
-  {
-    name: 'bioproject',
-    path: '/bioprojects/:accession',
-    component: () => import('../pages/bioprojects/BioProjectDetails.vue'),
-    props: true
-  },
-  {
     name: 'taxons',
     path: '/taxons',
     component: () => import('../pages/taxons/TaxonPage.vue'),
@@ -127,21 +116,6 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('../pages/status/StatusPage.vue'),
   },
   {
-    name:'swagger',
-    path: '/api-spec',
-    component: () => import('../pages/SwaggerUIPage.vue')
-  },
-  // {
-  //   name: 'cesium',
-  //   path: '/cesium',
-  //   component: () => import('../pages/maps/Cesium.vue'),
-  // },
-  // {
-  //   name: 'cesium-node',
-  //   path: '/cesium-node',
-  //   component: () => import('../pages/maps/CesiumNode.vue'),
-  // },
-  {
     name: 'maps',
     path: '/maps',
     component: () => import('../layouts/RouterBypass.vue'),
@@ -217,14 +191,4 @@ const router = createRouter({
   routes,
 })
 
-// router.beforeEach(async (to,from)=>{
-//   const authStore = auth()
-//   if(to.matched.some((record)=>record.meta.requiresAuth)){
-//     if(!authStore.isAuthenticated){
-//       alert('Authentication required')
-//       authStore.showModal = true
-//       return
-//     }
-//   }
-// })
 export default router

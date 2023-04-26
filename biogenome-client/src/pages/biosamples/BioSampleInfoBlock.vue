@@ -5,7 +5,7 @@
         <ContributorList
           :field="'metadata.GAL'"
           :model="'biosamples'"
-          :title="'Genome Aquisition Labs (GAL)'"
+          :title="t('biosampleList.charts.contributorList')"
           @list-created="getSubmitters"
         />
       </Suspense>
@@ -13,9 +13,9 @@
     <div class="flex lg6 md6 sm12 xs12">
       <Suspense>
         <DateLineChart
-          :label="'BioSamples'"
+          :label="t('biosampleList.charts.dateLineChart.label')"
           :field="'metadata.collection_date'"
-          :title="'BioSamples collected by month'"
+          :title="t('biosampleList.charts.dateLineChart.title')"
           :model="'biosamples'"
           :color="'#2c82e0'"
         />
@@ -23,7 +23,7 @@
     </div>
     <div class="flex lg3 md3 sm12 xs12">
       <va-card class="px-3">
-        <va-card-title> Habitats </va-card-title>
+        <va-card-title> {{ t('biosampleList.charts.habitatList') }} </va-card-title>
         <va-card-content style="max-height: 350px; overflow: scroll">
           <va-list class="py-4">
             <template v-for="(habitat, i) in habitats" :key="i">
@@ -57,6 +57,8 @@
   import { Contributor } from '../../data/types'
   import { useBioSampleStore } from '../../stores/biosample-store'
   import DateLineChart from '../../components/charts/DateLineChart.vue'
+  import { useI18n } from 'vue-i18n'
+  const { t } = useI18n()
 
   const biosampleStore = useBioSampleStore()
 

@@ -10,7 +10,6 @@
                   <va-input
                     v-model="biosampleStore.searchForm[filter.key]"
                     :label="filter.label"
-                    :placeholder="filter.placeholder"
                   />
                 </div>
                 <div v-else-if="filter.type === 'select'">
@@ -24,8 +23,7 @@
                   <va-date-input
                     v-model="dateRange"
                     :format-date="(date:Date) => date.toISOString().substring(0,10)"
-                    label="Date"
-                    placeholder="select a date range"
+                    :label="t('biosampleList.filters.date')"
                     style="width: 100%"
                     mode="range"
                     type="month"
@@ -38,11 +36,11 @@
             </div>
           </va-card-content>
           <va-card-actions align="between">
-            <va-button type="submit">Search</va-button>
-            <va-button color="danger" @click="reset()">Reset</va-button>
+            <va-button type="submit">{{t('buttons.submit')}}</va-button>
+            <va-button color="danger" @click="reset()">{{t('buttons.reset')}}</va-button>
           </va-card-actions>
         </va-form>
-        <va-card-content> Total: {{ total }} </va-card-content>
+        <va-card-content> {{t('table.total')}}: {{ total }} </va-card-content>
         <va-card-content>
           <DataTable :items="biosamples" :columns="columns" />
           <div class="row align-center justify-center">
@@ -72,7 +70,9 @@
   import { useBioSampleStore } from '../../stores/biosample-store'
   import DataTable from '../../components/ui/DataTable.vue'
   import { Filter } from '../../data/types'
-
+  import { useI18n } from 'vue-i18n'
+  const { t } = useI18n()
+  
   const biosampleStore = useBioSampleStore()
   const initDateRange = {
     start: null,
@@ -87,31 +87,30 @@
   })
   const filters: Filter[] = [
     {
-      label: 'search biosample',
-      placeholder: 'Search by species, taxid, gal or habitat',
+      label: t('biosampleList.filters.searchInput'),
       key: 'filter',
       type: 'input',
     },
     {
-      label: 'filter by',
+      label: t('biosampleList.filters.searchInput'),
       key: 'filter_option',
       type: 'select',
       options: ['taxid', 'gal', 'scientific_name', 'habitat'],
     },
     {
-      label: 'sort_column',
+      label: t('biosampleList.filters.sortColumn'),
       key: 'sort_column',
       type: 'select',
       options: ['collection_date'],
     },
     {
-      label: 'sort_order',
+      label: t('biosampleList.filters.sortOrder'),
       key: 'sort_order',
       type: 'select',
       options: ['asc', 'desc'],
     },
     {
-      label: 'Date',
+      label: t('biosampleList.filters.date'),
       key: 'date',
       type: 'date',
     },

@@ -10,7 +10,6 @@
                     <va-input
                       v-model="annotationStore.searchForm[filter.key]"
                       :label="filter.label"
-                      :placeholder="filter.placeholder"
                     />
                   </div>
                   <div v-else-if="filter.type === 'select'">
@@ -25,7 +24,6 @@
                       v-model="dateRange"
                       :format-date="(date:Date) => date.toISOString().substring(0,10)"
                       label="Date"
-                      placeholder="select a date range"
                       style="width: 100%"
                       mode="range"
                       type="month"
@@ -38,11 +36,11 @@
               </div>
             </va-card-content>
             <va-card-actions align="between">
-              <va-button type="submit">Search</va-button>
-              <va-button color="danger" @click="reset()">Reset</va-button>
+              <va-button type="submit">{{t('buttons.submit')}}</va-button>
+              <va-button color="danger" @click="reset()">{{t('buttons.reset')}}</va-button>
             </va-card-actions>
           </va-form>
-          <va-card-content> Total: {{ total }} </va-card-content>
+          <va-card-content> {{t('table.total')}}: {{ total }} </va-card-content>
           <va-card-content>
             <DataTable :items="annotations" :columns="columns" />
             <div class="row align-center justify-center">
@@ -72,7 +70,9 @@
     import { Filter } from '../../data/types'
     import { useAnnotationStore } from '../../stores/annotation-store'
     import AnnotationService from '../../services/clients/AnnotationService'
-
+    import { useI18n } from 'vue-i18n'
+    
+    const { t } = useI18n()
 
     const annotationStore = useAnnotationStore()
 

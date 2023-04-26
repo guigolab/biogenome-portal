@@ -1,6 +1,6 @@
 <template>
   <va-breadcrumbs class="va-title" color="primary">
-    <va-breadcrumbs-item :to="{ name: 'reads' }" label="reads" />
+    <va-breadcrumbs-item :to="{ name: 'reads' }" label="experiments" />
     <va-breadcrumbs-item
       v-if="router.currentRoute.value.name === 'read'"
       active
@@ -52,7 +52,7 @@
         <va-card class="mb-4" color="danger">
           <va-card-content>
             <h2 class="va-h4 ma-0" style="color: white">{{ read.instrument_platform }}</h2>
-            <p style="color: white">instrument platform</p>
+            <p style="color: white">{{ t('experimentDetails.instrumentPlatform') }}</p>
           </va-card-content>
         </va-card>
       </div>
@@ -60,7 +60,7 @@
         <va-card class="mb-4" color="info">
           <va-card-content>
             <h2 class="va-h4 ma-0" style="color: white">{{ read.instrument_model }}</h2>
-            <p style="color: white">instrument model</p>
+            <p style="color: white">{{ t('experimentDetails.instrumentModel') }}</p>
           </va-card-content>
         </va-card>
       </div>
@@ -68,7 +68,7 @@
         <va-card class="mb-4" color="secondart">
           <va-card-content>
             <h2 class="va-h4 ma-0" style="color: white">{{ read.metadata.base_count }}</h2>
-            <p style="color: white">base count</p>
+            <p style="color: white">{{ t('experimentDetails.baseCount') }}</p>
           </va-card-content>
         </va-card>
       </div>
@@ -76,7 +76,7 @@
         <va-card class="mb-4" color="warning">
           <va-card-content>
             <h2 class="va-h4 ma-0" style="color: white">{{ read.metadata.center_name }}</h2>
-            <p style="color: white">center name</p>
+            <p style="color: white">{{ t('experimentDetails.centerName') }}</p>
           </va-card-content>
         </va-card>
       </div>
@@ -84,14 +84,14 @@
         <va-card class="mb-4" color="secondary">
           <va-card-content>
             <h2 class="va-h4 ma-0" style="color: white">{{ read.metadata.first_created }}</h2>
-            <p style="color: white">first created</p>
+            <p style="color: white">{{ t('experimentDetails.firstCreated') }}</p>
           </va-card-content>
         </va-card>
       </div>
     </div>
     <div class="row row-equal">
       <div class="flex lg12 md12 sm12 xs12">
-        <va-card-title>metatada</va-card-title>
+        <va-card-title>{{ t('uiComponents.metadata') }}</va-card-title>
         <va-card-content>
           <Metadata :metadata="read.metadata" />
         </va-card-content>
@@ -105,6 +105,8 @@
   import { AxiosResponse } from 'axios'
   import Metadata from '../../components/ui/Metadata.vue'
   import { useRouter } from 'vue-router'
+  import { useI18n } from 'vue-i18n'
+  const { t } = useI18n()
 
   const router = useRouter()
   const props = defineProps({

@@ -1,5 +1,4 @@
 {
-
   "GoaTStatus": [
     { "label": "Sample Collected", "icon": "hiking" },
     { "label": "Sample Acquired", "icon": "biotech" },
@@ -46,13 +45,6 @@
       "displayName": "menu.dashboard",
       "meta": {
         "icon": "vuestic-iconset-dashboard"
-      }
-    },
-    {
-      "name": "bioprojects",
-      "displayName": "menu.bioprojects",
-      "meta": {
-        "icon": "fa-diagram-project"
       }
     },
     {

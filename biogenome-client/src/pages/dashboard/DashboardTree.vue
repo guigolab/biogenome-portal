@@ -1,7 +1,7 @@
 <template>
     <va-card >
         <va-card-title>
-            phylogenetic tree
+            {{ t('dashboard.tree') }}
         </va-card-title>
         <va-card-content class="chart" style="overflow: scroll;">
             <IndentedTree :data="data"/>
@@ -11,7 +11,9 @@
 <script setup lang="ts">
 import TaxonService from '../../services/clients/TaxonService';
 import IndentedTree from '../organisms/IndentedTree.vue';
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const root = import.meta.env.VITE_ROOT_NODE?import.meta.env.VITE_ROOT_NODE:'131567'
 const {data} = await TaxonService.getTree(root)
 

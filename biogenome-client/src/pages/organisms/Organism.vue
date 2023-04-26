@@ -75,15 +75,6 @@
         </va-card>
       </div>
     </div>
-    <!-- <div v-if="relatedData.length" class="row row-equal">
-      <div class="flex lg12 md12 sm12 xs12">
-        <va-collapse v-model="collapse" icon="info" color="success" header="Show INSDC Related Data" >
-          <div style="height:100vh">
-            <SankeyINSDC :taxid="organism.taxid" />
-          </div>
-        </va-collapse>
-      </div>
-    </div> -->
     <div class="row row-equal">
       <div v-if="organism.image_urls.length" class="flex lg6 md6 sm12 xs12">
         <va-card>
@@ -191,7 +182,6 @@
   import LeafletMap from '../../components/maps/LeafletMap.vue'
   import Metadata from '../../components/ui/Metadata.vue'
   import RelatedDataCard from '../../components/ui/RelatedDataCard.vue'
-  import SankeyINSDC from './SankeyINSDC.vue'
   import BioProjectsCard from '../../components/ui/BioProjectsCard.vue'
 
   const showData = ref(false)

@@ -1,24 +1,23 @@
 <template>
-  <!-- <va-card class="d-flex"> -->
   <va-card-content>
     <div class="row align-center justify-space-between">
       <div class="flex">
         <va-form tag="form" @submit.prevent="handleSubmit">
           <div class="row align-center">
             <div class="flex">
-              <va-input v-model="organismStore.searchForm.filter" label="search organism" />
+              <va-input v-model="organismStore.searchForm.filter" :label="t('organismList.filters.searchInput')" />
             </div>
             <div class="flex">
               <va-select
                 v-model="organismStore.searchForm.filter_option"
-                label="Search By"
+                :label="t('organismList.filters.searchSelect')"
                 :options="['taxid', 'common_name', 'scientific_name', 'tolid']"
               />
             </div>
             <div v-if="countries.length" class="flex">
               <va-select
                 v-model="organismStore.searchForm.country"
-                label="Countries"
+                :label="t('organismList.filters.searchCountry')"
                 :options="countries"
                 searchable
                 value-by="value"
@@ -26,8 +25,8 @@
               </va-select>
             </div>
             <va-card-actions>
-              <va-button type="submit">submit</va-button>
-              <va-button color="danger" @click="reset()">reset</va-button>
+              <va-button type="submit">{{ t('buttons.submit') }}</va-button>
+              <va-button color="danger" @click="reset()">{{t('buttons.reset')}}</va-button>
             </va-card-actions>
           </div>
         </va-form>
@@ -46,7 +45,7 @@
   </va-card-content>
   <va-card-content>
     <div class="row align-center justify-space-between">
-      <div class="flex">Total: {{ total }}</div>
+      <div class="flex">{{t('table.total')}}: {{ total }}</div>
       <div class="flex">
         <va-pagination
           v-model="offset"
@@ -132,7 +131,7 @@
                 <p v-if="org.insdc_common_name" class="va-text-secondary">{{ org.insdc_common_name }}</p>
               </va-card-content>
               <va-card-content>
-                <va-button size="small">view</va-button>
+                <va-button size="small">{{t('buttons.view')}}</va-button>
               </va-card-content>
             </div>
             <va-card-actions v-if="hasINSDCData(org)" vertical align="between" style="flex: 0 auto; padding: 0px">
@@ -145,65 +144,28 @@
       </div>
     </div>
   </va-card-content>
-
-  <!-- 
-      <DataTable :items="organisms" :columns="columns" />
-
-    </va-card-content> -->
-  <!-- </va-card> -->
 </template>
 <script setup lang="ts">
   import OrganismService from '../../services/clients/OrganismService'
-  import { onMounted, ref, watch } from 'vue'
+  import { onMounted, ref } from 'vue'
   import { AxiosResponse } from 'axios'
   import { useOrganismStore } from '../../stores/organism-store'
-  import DataTable from '../../components/ui/DataTable.vue'
-  import BioProjectService from '../../services/clients/BioProjectService'
-  import TaxonService from '../../services/clients/TaxonService'
-  import { Filter } from '../../data/types'
-  import { string } from 'prop-types'
-  import StatisticsService from '../../services/clients/StatisticsService'
-  import am5geodata_worldLow from '@amcharts/amcharts5-geodata/worldLow'
+  import { useI18n } from 'vue-i18n'
+  const { t } = useI18n()
 
   const listView = ref(true)
 
   const organismStore = useOrganismStore()
 
-  const bioprojects = ref([])
-  const taxons = ref([])
-
   const offset = ref(1 + organismStore.pagination.offset)
-
-  const columns = ['image', 'scientific_name', 'insdc_common_name', 'tolid_prefix', 'taxid']
 
   const organisms = ref([])
   const total = ref(0)
 
   const countries = ref([])
 
-  watch(
-    () => organismStore.searchForm.bioproject,
-    (bioproject) => {
-      handleSubmit()
-    },
-  )
-
-  watch(
-    () => organismStore.searchForm.parent_taxid,
-    (parent) => {
-      handleSubmit()
-    },
-  )
-
   onMounted(async () => {
     getOrganisms(await OrganismService.getOrganisms({ ...organismStore.searchForm, ...organismStore.pagination }))
-    const { data } = await StatisticsService.getModelFieldStats('organisms', { field: 'countries' })
-
-    const validCountries = (countries.value = am5geodata_worldLow.features
-      .filter((f) => Object.keys(data).includes(f.properties.id))
-      .map((f) => {
-        return { text: f.properties.name, value: f.properties.id }
-      }))
   })
 
   function hasINSDCData(org) {
@@ -232,18 +194,6 @@
     total.value = data.total
     return data
   }
-  // async function searchBioProject(value: string) {
-  //   if (value.length >= 3) {
-  //     const { data } = await BioProjectService.getBioprojects({ filter: value })
-  //     bioprojects.value = [...data.data]
-  //   }
-  // }
-  // async function searchTaxon(value: string) {
-  //   if (value.length >= 3) {
-  //     const { data } = await TaxonService.getTaxons({ filter: value })
-  //     taxons.value = [...data.data]
-  //   }
-  // }
 </script>
 <style lang="scss" scoped>
   @import 'flag-icons/css/flag-icons.css';

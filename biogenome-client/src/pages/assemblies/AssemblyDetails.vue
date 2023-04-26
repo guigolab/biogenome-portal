@@ -52,7 +52,7 @@
         <va-card class="mb-4" color="danger">
           <va-card-content>
             <h2 class="va-h4 ma-0" style="color: white">{{ assembly.metadata.contig_n50 }}</h2>
-            <p style="color: white">Contig n50</p>
+            <p style="color: white">{{ t('assemblyDetails.contigN50') }}</p>
           </va-card-content>
         </va-card>
       </div>
@@ -60,7 +60,7 @@
         <va-card class="mb-4" color="info">
           <va-card-content>
             <h2 class="va-h4 ma-0" style="color: white">{{ assembly.metadata.estimated_size }}</h2>
-            <p style="color: white">genome size</p>
+            <p style="color: white">{{t('assemblyDetails.genomeSize')}}</p>
           </va-card-content>
         </va-card>
       </div>
@@ -68,7 +68,7 @@
         <va-card class="mb-4" color="warning">
           <va-card-content>
             <h2 class="va-h4 ma-0" style="color: white">{{ assembly.metadata.assembly_level }}</h2>
-            <p style="color: white">assembly level</p>
+            <p style="color: white">{{t('assemblyDetails.assembly_level')}}</p>
           </va-card-content>
         </va-card>
       </div>
@@ -76,7 +76,7 @@
         <va-card class="mb-4" color="primary">
           <va-card-content>
             <h2 class="va-h4 ma-0" style="color: white">{{ assembly.chromosomes.length }}</h2>
-            <p style="color: white">chromosomes</p>
+            <p style="color: white">{{ t('assemblyDetails.chromosomes') }}</p>
           </va-card-content>
         </va-card>
       </div>
@@ -84,7 +84,7 @@
         <va-card class="mb-4" color="secondary">
           <va-card-content>
             <h2 class="va-h4 ma-0" style="color: white">{{ assembly.metadata.submitter }}</h2>
-            <p style="color: white">submitter</p>
+            <p style="color: white">{{t('assemblyDetails.submitter')}}</p>
           </va-card-content>
         </va-card>
       </div>
@@ -92,20 +92,20 @@
         <va-card class="mb-4" color="success">
           <va-card-content>
             <h2 class="va-h4 ma-0" style="color: white">{{ assembly.metadata.submission_date }}</h2>
-            <p style="color: white">submission date</p>
+            <p style="color: white">{{t('assemblyDetails.submissionDate')}}</p>
           </va-card-content>
         </va-card>
       </div>
     </div>
     <div class="row row-equal">
       <div v-if="showJBrowse" class="flex lg12 md12 sm12 xs12">
-        <va-card-title> genome browser </va-card-title>
+        <va-card-title> {{ t('assemblyDetails.genomeBrowser') }} </va-card-title>
         <va-card-content>
           <Jbrowse2 :assembly="jbrowse.assembly" :tracks="jbrowse.annotations"/>
         </va-card-content>
       </div>
       <div class="flex lg12 md12 sm12 xs12">
-        <va-card-title>metatada</va-card-title>
+        <va-card-title>{{t('uiComponents.metadata')}}</va-card-title>
         <va-card-content>
           <Metadata :metadata="assembly.metadata" />
         </va-card-content>
@@ -121,6 +121,9 @@
   import { AssemblyAdapter } from '../../data/types'
   import Metadata from '../../components/ui/Metadata.vue'
   import { useRouter } from 'vue-router'
+  import { useI18n } from 'vue-i18n'
+  const { t } = useI18n()
+
 
   const router = useRouter()
   const props = defineProps({

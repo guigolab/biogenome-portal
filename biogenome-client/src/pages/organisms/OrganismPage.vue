@@ -5,17 +5,6 @@
     </va-breadcrumbs>
     <va-divider />
     <div class="row row-equal">
-      <!-- <IndentedTree/> -->
-
-      <!-- <div class="flex lg4 md4">
-        <va-card>
-          <va-card-title>
-            Phylogenetic tree
-          </va-card-title>
-          <va-card-content style="overflow: scroll;max-height: 100vh;" >
-          </va-card-content>
-        </va-card>
-      </div> -->
       <div class="flex lg12 md12">
         <OrganismListBlock />
       </div>
@@ -24,8 +13,6 @@
 </template>
 <script setup lang="ts">
   import OrganismListBlock from './OrganismListBlock.vue'
-  import TreeDiagram from './TreeDiagram.vue'
-  import IndentedTree from './IndentedTree.vue'
 </script>
 
 <style lang="scss">

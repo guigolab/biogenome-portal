@@ -5,17 +5,17 @@
         <PieChart
           :field="'instrument_platform'"
           :model="'reads'"
-          :title="'platform used'"
-          :label="'Reads by instrument platform'"
+          :title="t('dashboard.firstPiechart.title')"
+          :label="t('dashboard.firstPiechart.label')"
         />
       </Suspense>
     </div>
     <div class="flex lg6 md6 sm12 xs12">
       <Suspense>
         <DateLineChart
-          :label="'Assemblies'"
+          :label="t('dashboard.dateLineChart.label')"
           :field="'metadata.submission_date'"
-          :title="'Assemblies submitted by month'"
+          :title="t('dashboard.dateLineChart.title')"
           :model="'assemblies'"
           :color="'#2c82e0'"
         />
@@ -26,8 +26,8 @@
         <PieChart
           :field="'insdc_status'"
           :model="'organisms'"
-          :title="'organism insdc submission status'"
-          :label="'Reads by instrument platform'"
+          :title="t('dashboard.secondaPiechart.title')"
+          :label="t('dashboard.secondaPiechart.label')"
         />
       </Suspense>
     </div>
@@ -37,7 +37,9 @@
 <script setup lang="ts">
   import PieChart from '../../components/charts/PieChart.vue';
   import DateLineChart from '../../components/charts/DateLineChart.vue';
+  import { useI18n } from 'vue-i18n'
 
+  const { t } = useI18n()
 
 </script>
 

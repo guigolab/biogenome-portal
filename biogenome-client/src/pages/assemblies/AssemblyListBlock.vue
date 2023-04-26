@@ -9,7 +9,7 @@
                 <va-select
                   v-model="assemblyStore.searchForm.submitter"
                   :options="assemblyStore.submitters"
-                  label="Assembly Submitters"
+                  :label="t('assemblyList.filters.submitterSelect')"
                   value-by="name"
                   text-by="name"
                   searchable
@@ -20,7 +20,6 @@
                   <va-input
                     v-model="assemblyStore.searchForm[filter.key]"
                     :label="filter.label"
-                    :placeholder="filter.placeholder"
                   />
                 </div>
                 <div v-else-if="filter.type === 'select'">
@@ -34,8 +33,8 @@
                   <va-date-input
                     v-model="dateRange"
                     :format-date="(date:Date) => date.toISOString().substring(0,10)"
-                    label="Date"
-                    placeholder="select a date range"
+                    :label="t('assemblyList.filters.dateRangeSelect.label')"
+                    :placeholder="t('assemblyList.filters.dateRangeSelect.placeholder')"
                     style="width: 100%"
                     mode="range"
                     type="month"
@@ -48,11 +47,11 @@
             </div>
           </va-card-content>
           <va-card-actions align="between">
-            <va-button type="submit">Search</va-button>
-            <va-button color="danger" @click="reset()">Reset</va-button>
+            <va-button type="submit">{{ t('buttons.submit') }}</va-button>
+            <va-button color="danger" @click="reset()">{{t('buttons.reset')}}</va-button>
           </va-card-actions>
         </va-form>
-        <va-card-content> Total: {{ total }} </va-card-content>
+        <va-card-content> {{ t('table.total') }}: {{ total }} </va-card-content>
         <va-card-content>
           <DataTable :items="assemblies" :columns="columns" />
           <div class="row align-center justify-center">
@@ -78,10 +77,12 @@
 <script setup lang="ts">
   import { useAssemblyStore } from '../../stores/assembly-store'
   import AssemblyService from '../../services/clients/AssemblyService'
-  import { computed, onMounted, ref, watch } from 'vue'
+  import { onMounted, ref, watch } from 'vue'
   import { AxiosResponse } from 'axios'
   import DataTable from '../../components/ui/DataTable.vue'
   import { Filter } from '../../data/types'
+  import { useI18n } from 'vue-i18n'
+  const { t } = useI18n()
 
   const initDateRange = {
     start: null,
@@ -100,37 +101,36 @@
 
   const filters: Filter[] = [
     {
-      label: 'search assembly',
-      placeholder: 'Search by species, taxid or assembly name',
+      label: t('assemblyList.filters.searchInput.label'),
       key: 'filter',
       type: 'input',
     },
     {
-      label: 'filter by',
+      label: t('assemblyList.filters.searchSelect.label'),
       key: 'filter_option',
       type: 'select',
       options: ['taxid', 'assembly_name', 'scientific_name'],
     },
     {
-      label: 'assembly level',
+      label: t('assemblyList.filters.assemblyLevel'),
       key: 'assembly_level',
       type: 'select',
       options: ['Chromosome', 'Complete Genome', 'Contig', 'Scaffold'],
     },
     {
-      label: 'sort_column',
+      label: t('assemblyList.filters.sortColumn'),
       key: 'sort_column',
       type: 'select',
       options: ['contig_n50', 'size', 'submission_date'],
     },
     {
-      label: 'sort_order',
+      label: t('assemblyList.filters.sortOrder'),
       key: 'sort_order',
       type: 'select',
       options: ['asc', 'desc'],
     },
     {
-      label: 'Date',
+      label: t('assemblyList.filters.date'),
       key: 'date',
       type: 'date',
     },

@@ -8,8 +8,8 @@
         <PieChart
           :field="'goat_status'"
           :model="'organisms'"
-          :title="'GoaT Status'"
-          :label="'GoaT Status'"
+          :title="t('statusList.firstPiechart')"
+          :label="t('statusList.firstPiechart')"
         />
       </Suspense>
       </div>
@@ -18,8 +18,8 @@
         <PieChart
           :field="'target_list_status'"
           :model="'organisms'"
-          :title="'Target List Status'"
-          :label="'Target List Status'"
+          :title="t('statusList.secondPiechart')"
+          :label="t('statusList.secondPiechart')"
         />
       </Suspense>
     </div>
@@ -29,7 +29,7 @@
       <va-card>
         <va-card-content>
           <div class="row align-center justify-space-between">
-            <div class="flex">Total: {{ total }}</div>
+            <div class="flex">{{t('table.total')}}: {{ total }}</div>
             <div class="flex">
               <va-button preset="secondary" @click="downloadReport()" icon="fa-download"></va-button>
             </div>
@@ -44,7 +44,6 @@
                     <va-input
                       v-model="statusStore.searchForm[filter.key]"
                       :label="filter.label"
-                      :placeholder="filter.placeholder"
                     />
                   </div>
                   <div v-else>
@@ -54,8 +53,8 @@
               </div>
             </va-card-content>
             <va-card-actions align="between">
-              <va-button @click="handleSubmit()">Search</va-button>
-              <va-button color="danger" @click="reset()">Reset</va-button>
+              <va-button @click="handleSubmit()">{{ t('buttons.submit') }}</va-button>
+              <va-button color="danger" @click="reset()">{{t('buttons.reset')}}</va-button>
             </va-card-actions>
           </va-form>
           <va-card-content>
@@ -90,6 +89,8 @@
   import OrganismService from '../../services/clients/OrganismService'
   import PieChart from '../../components/charts/PieChart.vue'
   import GoaTService from '../../services/clients/GoaTService'
+  import { useI18n } from 'vue-i18n'
+  const { t } = useI18n()
 
   const statusStore = useStatusStore()
 
@@ -108,19 +109,18 @@
 
   const filters: Filter[] = [
     {
-      label: 'search organism',
-      placeholder: 'Search by species, taxid, common_name or tolid',
+      label: t('statusList.filters.searchInput'),
       key: 'filter',
       type: 'input',
     },
     {
-      label: 'filter by',
+      label: t('statusList.filters.filterBy'),
       key: 'filter_option',
       type: 'select',
       options: ['taxid', 'common_name', 'scientific_name', 'tolid'],
     },
     {
-      label: 'GoaT status',
+      label: t('statusList.filters.goatStatus'),
       key: 'goat_status',
       type: 'select',
       options: [
@@ -133,7 +133,7 @@
       ],
     },
     {
-      label: 'target list status',
+      label: t('statusList.filters.targetListStatus'),
       key: 'target_list_status',
       type: 'select',
       options: ['long_list', 'family_representative', 'other_priority'],

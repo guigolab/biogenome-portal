@@ -5,9 +5,6 @@
         <div class="flex lg12 md12 sm12 xs12">
           <h6 class="va-h6">{{ key }}</h6>
           <div v-if="typeof metadata[key] === 'string'">
-            <!-- <div v-if="!isNaN(metadata[key])">
-              <p>{{ metadata[key] }}</p>
-            </div> -->
             <div v-if="metadata[key].split(';').length > 1">
               <ul>
                 <li v-for="(v, index) in metadata[key].split(';')" :key="index">

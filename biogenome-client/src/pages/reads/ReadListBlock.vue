@@ -9,7 +9,7 @@
                 <va-select
                   v-model="readStore.searchForm.center"
                   :options="readStore.submitters"
-                  label="Sequencing Centers"
+                  :label="t('experimentList.filters.sequencingCenters')"
                   value-by="name"
                   text-by="name"
                   searchable
@@ -20,7 +20,6 @@
                   <va-input
                     v-model="readStore.searchForm[filter.key]"
                     :label="filter.label"
-                    :placeholder="filter.placeholder"
                   />
                 </div>
                 <div v-else-if="filter.type === 'select'">
@@ -34,8 +33,7 @@
                   <va-date-input
                     v-model="dateRange"
                     :format-date="(date:Date) => date.toISOString().substring(0,10)"
-                    label="Date"
-                    placeholder="select a date range"
+                    :label="t('experimentList.filters.date')"
                     style="width: 100%"
                     mode="range"
                     type="month"
@@ -48,11 +46,11 @@
             </div>
           </va-card-content>
           <va-card-actions align="between">
-            <va-button type="submit">Search</va-button>
-            <va-button color="danger" @click="reset()">Reset</va-button>
+            <va-button type="submit">{{t('buttons.submit')}}</va-button>
+            <va-button color="danger" @click="reset()">{{t('buttons.reset')}}</va-button>
           </va-card-actions>
         </va-form>
-        <va-card-content> Total: {{ total }} </va-card-content>
+        <va-card-content> {{ t('table.total') }}: {{ total }} </va-card-content>
         <va-card-content>
           <DataTable :items="reads" :columns="columns" />
           <div class="row align-center justify-center">
@@ -82,6 +80,8 @@
   import { useReadStore } from '../../stores/read-store'
   import DataTable from '../../components/ui/DataTable.vue'
   import { Filter } from '../../data/types'
+  import { useI18n } from 'vue-i18n'
+  const { t } = useI18n()
 
   const initDateRange = {
     start: null,
@@ -107,31 +107,30 @@
 
   const filters: Filter[] = [
     {
-      label: 'search read',
-      placeholder: 'Search by species, taxid, experiment title or instrument platform',
+      label: t('experimentList.filters.textinput'),
       key: 'filter',
       type: 'input',
     },
     {
-      label: 'filter by',
+      label: t('experimentList.filters.filterBy'),
       key: 'filter_option',
       type: 'select',
       options: ['taxid', 'experiment_title', 'instrument_platform', 'scientific_name'],
     },
     {
-      label: 'sort_column',
+      label: t('experimentList.filters.sortColumn'),
       key: 'sort_column',
       type: 'select',
       options: ['first_created'],
     },
     {
-      label: 'sort_order',
+      label: t('experimentList.filters.sortOrder'),
       key: 'sort_order',
       type: 'select',
       options: ['asc', 'desc'],
     },
     {
-      label: 'Date',
+      label: t('experimentList.filters.date'),
       key: 'date',
       type: 'date',
     },

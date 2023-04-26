@@ -53,7 +53,7 @@
         <va-card class="mb-4" color="danger">
           <va-card-content>
             <h2 class="va-h4 ma-0" style="color: white">{{ biosample.metadata.GAL }}</h2>
-            <p style="color: white">Genome Aquisition Lab</p>
+            <p style="color: white">{{ t('biosampleDetails.genomeAquisitionLab') }}</p>
           </va-card-content>
         </va-card>
       </div>
@@ -61,7 +61,7 @@
         <va-card class="mb-4" color="secondary">
           <va-card-content>
             <h2 class="va-h4 ma-0" style="color: white">{{ biosample.metadata['organism part'] }}</h2>
-            <p style="color: white">organism part</p>
+            <p style="color: white">{{ t('biosampleDetails.organismPart') }}</p>
           </va-card-content>
         </va-card>
       </div>
@@ -69,7 +69,7 @@
         <va-card class="mb-4" color="warning">
           <va-card-content>
             <h2 class="va-h4 ma-0" style="color: white">{{ biosample.metadata.tissue }}</h2>
-            <p style="color: white">tissue</p>
+            <p style="color: white">{{t('biosampleDetails.tissue')}}</p>
           </va-card-content>
         </va-card>
       </div>
@@ -77,7 +77,7 @@
         <va-card class="mb-4" color="info">
           <va-card-content>
             <h2 class="va-h4 ma-0" style="color: white">{{ biosample.metadata.habitat }}</h2>
-            <p style="color: white">habitat</p>
+            <p style="color: white">{{t('biosampleDetails.habitat')}}</p>
           </va-card-content>
         </va-card>
       </div>
@@ -85,7 +85,7 @@
         <va-card class="mb-4" color="success">
           <va-card-content>
             <h2 class="va-h4 ma-0" style="color: white">{{ biosample.metadata['collection date'] }}</h2>
-            <p style="color: white">collection date</p>
+            <p style="color: white">{{t('biosampleDetails.collectionDate')}}</p>
           </va-card-content>
         </va-card>
       </div>
@@ -93,7 +93,7 @@
         <va-card class="mb-4" color="success">
           <va-card-content>
             <h2 class="va-h4 ma-0" style="color: white">{{ biosample.metadata.collection_date }}</h2>
-            <p style="color: white">collection date</p>
+            <p style="color: white">{{t('biosampleDetails.collectionDate')}}</p>
           </va-card-content>
         </va-card>
       </div>
@@ -101,7 +101,7 @@
         <va-card class="mb-4" color="primary">
           <va-card-content>
             <h2 class="va-h4 ma-0" style="color: white">{{ biosample.metadata.geo_loc_name }}</h2>
-            <p style="color: white">Geolocation</p>
+            <p style="color: white">{{t('biosampleDetails.geoLocation')}}</p>
           </va-card-content>
         </va-card>
       </div>
@@ -111,7 +111,7 @@
             <h2 class="va-h4 ma-0" style="color: white">
               {{ biosample.metadata['geographic location (country and/or sea)'] }}
             </h2>
-            <p style="color: white">Country</p>
+            <p style="color: white">{{t('biosampleDetails.country')}}</p>
           </va-card-content>
         </va-card>
       </div>
@@ -121,7 +121,7 @@
             <h2 class="va-h4 ma-0" style="color: white">
               {{ biosample.metadata['geographic location (region and locality)'] }}
             </h2>
-            <p style="color: white">Region</p>
+            <p style="color: white">{{t('biosampleDetails.region')}}</p>
           </va-card-content>
         </va-card>
       </div>
@@ -150,7 +150,7 @@
         <BioProjectsCard :bioprojects="bioprojects" />
       </div>
       <div class="flex lg12 md12 sm12 xs12">
-        <va-card-title>metatada</va-card-title>
+        <va-card-title>{{t('uiComponents.metadata')}}</va-card-title>
         <va-card-content>
           <Metadata :metadata="biosample.metadata" />
         </va-card-content>
@@ -172,7 +172,8 @@
   import { useRouter } from 'vue-router'
   import RelatedDataCard from '../../components/ui/RelatedDataCard.vue'
   import BioProjectsCard from '../../components/ui/BioProjectsCard.vue'
-
+  import { useI18n } from 'vue-i18n'
+  const { t } = useI18n()  
   const router = useRouter()
   const showData = ref(false)
   const error = ref('')

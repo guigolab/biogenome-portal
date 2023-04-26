@@ -5,17 +5,17 @@
         <PieChart
           :field="'instrument_platform'"
           :model="'reads'"
-          :title="'platform used'"
-          :label="'Reads by instrument platform'"
+          :title="t('experimentList.charts.pieChart.title')"
+          :label="t('experimentList.charts.pieChart.label')"
         />
       </Suspense>
     </div>
     <div class="flex lg6 md6 sm12 xs12">
       <Suspense>
         <DateLineChart
-          :label="'Reads'"
+          :label="t('experimentList.dateLineChart.label')"
           :field="'metadata.first_public'"
-          :title="'Reads submitted by month'"
+          :title="t('experimentList.dateLineChart.title')"
           :model="'reads'"
           :color="'#2c82e0'"
         />
@@ -26,7 +26,7 @@
         <ContributorList
           :field="'metadata.center_name'"
           :model="'reads'"
-          :title="'Centers'"
+          :title="t('experimentList.contributorList')"
           @list-created="getSubmitters"
         />
       </Suspense>
@@ -39,6 +39,8 @@
   import PieChart from '../../components/charts/PieChart.vue'
   import ContributorList from '../../components/stats/ContributorList.vue'
   import { useReadStore } from '../../stores/read-store'
+  import { useI18n } from 'vue-i18n'
+  const { t } = useI18n()
 
   const readStore = useReadStore()
 
