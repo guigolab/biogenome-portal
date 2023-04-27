@@ -13,9 +13,9 @@
     <div class="flex lg6 md6 sm12 xs12">
       <Suspense>
         <DateLineChart
-          :label="t('experimentList.dateLineChart.label')"
+          :label="t('experimentList.charts.dateLineChart.label')"
           :field="'metadata.first_public'"
-          :title="t('experimentList.dateLineChart.title')"
+          :title="t('experimentList.charts.dateLineChart.title')"
           :model="'reads'"
           :color="'#2c82e0'"
         />
@@ -26,7 +26,7 @@
         <ContributorList
           :field="'metadata.center_name'"
           :model="'reads'"
-          :title="t('experimentList.contributorList')"
+          :title="t('experimentList.charts.contributorList')"
           @list-created="getSubmitters"
         />
       </Suspense>

@@ -26,7 +26,7 @@
         <ContributorList
           :field="'metadata.submitter'"
           :model="'assemblies'"
-          :title="t('assemblyList.charts.contributorList')"
+          :title="t('assemblyList.charts.contributorList.title')"
           @list-created="getSubmitters"
         />
       </Suspense>

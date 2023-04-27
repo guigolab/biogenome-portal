@@ -23,7 +23,7 @@
                     <va-date-input
                       v-model="dateRange"
                       :format-date="(date:Date) => date.toISOString().substring(0,10)"
-                      label="Date"
+                      :label="t('annotationList.filters.date')"
                       style="width: 100%"
                       mode="range"
                       type="month"
@@ -71,7 +71,6 @@
     import { useAnnotationStore } from '../../stores/annotation-store'
     import AnnotationService from '../../services/clients/AnnotationService'
     import { useI18n } from 'vue-i18n'
-    
     const { t } = useI18n()
 
     const annotationStore = useAnnotationStore()
@@ -80,39 +79,38 @@
       start: null,
       end: null,
     }
-  const dateRange = ref({ ...initDateRange })
-  watch(dateRange, () => {
-    if (dateRange.value.start)
-    annotationStore.searchForm.start_date = new Date(dateRange.value.start).toISOString().split('T')[0]
-    if (dateRange.value.end) annotationStore.searchForm.end_date = new Date(dateRange.value.end).toISOString().split('T')[0]
-  })
+    const dateRange = ref({ ...initDateRange })
+    watch(dateRange, () => {
+      if (dateRange.value.start)
+      annotationStore.searchForm.start_date = new Date(dateRange.value.start).toISOString().split('T')[0]
+      if (dateRange.value.end) annotationStore.searchForm.end_date = new Date(dateRange.value.end).toISOString().split('T')[0]
+    })
     const filters: Filter[] = [
       {
-        label: 'search annotation',
-        placeholder: 'Search by name, assembly_name, scientific_name',
+        label: t('annotationList.filters.textInput'),
         key: 'filter',
         type: 'input',
       },
       {
-        label: 'filter by',
+        label: t('annotationList.filters.filterBy'),
         key: 'filter_option',
         type: 'select',
         options: ['name', 'assembly_name','scientific_name'],
       },
       {
-        label: 'sort_column',
+        label: t('annotationList.filters.sortColumn'),
         key: 'sort_column',
         type: 'select',
         options: ['created'],
       },
       {
-        label: 'sort_order',
+        label: t('annotationList.filters.sortOrder'),
         key: 'sort_order',
         type: 'select',
         options: ['asc', 'desc'],
       },
       {
-        label: 'Date',
+        label: t('annotationList.filters.date'),
         key: 'date',
         type: 'date',
       },

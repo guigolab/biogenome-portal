@@ -1,7 +1,7 @@
 <template>
   <div>
     <va-breadcrumbs class="va-title" color="primary">
-      <va-breadcrumbs-item active :to="{ name: 'assemblies' }" label="assemblies" />
+      <va-breadcrumbs-item active :to="{ name: 'assemblies' }" :label="t('assemblyDetails.breadcrumb')" />
     </va-breadcrumbs>
     <va-divider />
     <AssemblyInfoBlock />
@@ -9,11 +9,10 @@
   </div>
 </template>
 <script setup lang="ts">
-  import { useRouter } from 'vue-router'
   import AssemblyInfoBlock from './AssemblyInfoBlock.vue'
   import AssemblyListBlock from './AssemblyListBlock.vue'
-
-  const router = useRouter()
+  import { useI18n } from 'vue-i18n'
+  const { t } = useI18n()
 </script>
 
 <style lang="scss">

@@ -11,6 +11,7 @@
   import VaChart from '../../components/va-charts/VaChart.vue'
   import { TLineChartData } from '../../data/types'
 
+
   const props = defineProps({
     model: String,
     field: String,

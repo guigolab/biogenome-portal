@@ -1,6 +1,6 @@
 <template>
   <va-breadcrumbs class="va-title" color="primary">
-    <va-breadcrumbs-item :to="{ name: 'biosamples' }" label="biosamples" />
+    <va-breadcrumbs-item :to="{ name: 'biosamples' }" :label="t('biosampleList.breadcrumb')"/>
     <va-breadcrumbs-item
       v-if="router.currentRoute.value.name === 'biosample'"
       active
@@ -198,21 +198,21 @@
   )
   const relatedData = [
     {
-      title: 'Related BioSamples',
+      title: t('uiComponents.relatedDataCard.biosamples'),
       icon: 'hubs',
       key: 'sub_samples',
       route: 'biosample',
       columns: ['accession', 'organism_part'],
     },
     {
-      title: 'Related Reads',
+      title: t('uiComponents.relatedDataCard.experiments'),
       icon: 'widgets',
       key: 'experiments',
       route: 'read',
       columns: ['experiment_accession', 'instrument_platform'],
     },
     {
-      title: 'Related Assemblies',
+      title: t('uiComponents.relatedDataCard.assemblies'),
       icon: 'library_books',
       key: 'assemblies',
       route: 'assembly',

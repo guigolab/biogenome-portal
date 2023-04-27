@@ -107,7 +107,7 @@
 
   const filters: Filter[] = [
     {
-      label: t('experimentList.filters.textinput'),
+      label: t('experimentList.filters.textInput'),
       key: 'filter',
       type: 'input',
     },

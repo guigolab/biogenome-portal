@@ -101,12 +101,12 @@
 
   const filters: Filter[] = [
     {
-      label: t('assemblyList.filters.searchInput.label'),
+      label: t('assemblyList.filters.searchInput'),
       key: 'filter',
       type: 'input',
     },
     {
-      label: t('assemblyList.filters.searchSelect.label'),
+      label: t('assemblyList.filters.searchSelect'),
       key: 'filter_option',
       type: 'select',
       options: ['taxid', 'assembly_name', 'scientific_name'],

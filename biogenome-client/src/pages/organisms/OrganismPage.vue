@@ -1,7 +1,7 @@
 <template>
   <div>
     <va-breadcrumbs class="va-title" color="primary">
-      <va-breadcrumbs-item active :to="{ name: 'organisms' }" label="organisms" />
+      <va-breadcrumbs-item active :to="{ name: 'organisms' }" :label="t('organismList.breadcrumb')" />
     </va-breadcrumbs>
     <va-divider />
     <div class="row row-equal">
@@ -13,6 +13,9 @@
 </template>
 <script setup lang="ts">
   import OrganismListBlock from './OrganismListBlock.vue'
+  import { useI18n } from 'vue-i18n'
+    
+  const { t } = useI18n()
 </script>
 
 <style lang="scss">

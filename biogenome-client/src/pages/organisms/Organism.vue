@@ -38,7 +38,7 @@
         <va-card class="mb-4" color="warning">
           <va-card-content>
             <h2 class="va-h4 ma-0" style="color: white">{{ organism.local_samples.length }}</h2>
-            <p style="color: white">Local Samples</p>
+            <p style="color: white">{{ t('modelStats.localSamples') }}</p>
           </va-card-content>
         </va-card>
       </div>
@@ -46,7 +46,7 @@
         <va-card class="mb-4" color="success">
           <va-card-content>
             <h2 class="va-h4 ma-0" style="color: white">{{ organism.biosamples.length }}</h2>
-            <p style="color: white">BioSamples</p>
+            <p style="color: white">{{t('modelStats.biosamples')}}</p>
           </va-card-content>
         </va-card>
       </div>
@@ -54,7 +54,7 @@
         <va-card class="mb-4" color="primary">
           <va-card-content>
             <h2 class="va-h4 ma-0" style="color: white">{{ organism.experiments.length }}</h2>
-            <p style="color: white">Reads</p>
+            <p style="color: white">{{t('modelStats.experiments')}}</p>
           </va-card-content>
         </va-card>
       </div>
@@ -62,7 +62,7 @@
         <va-card class="mb-4" color="secondary">
           <va-card-content>
             <h2 class="va-h4 ma-0" style="color: white">{{ organism.assemblies.length }}</h2>
-            <p style="color: white">Assemblies</p>
+            <p style="color: white">{{t('modelStats.assemblies')}}</p>
           </va-card-content>
         </va-card>
       </div>
@@ -70,7 +70,7 @@
         <va-card class="mb-4" color="secondary">
           <va-card-content>
             <h2 class="va-h4 ma-0" style="color: white">{{ organism.annotations.length }}</h2>
-            <p style="color: white">Annotations</p>
+            <p style="color: white">{{t('modelStats.annotations')}}</p>
           </va-card-content>
         </va-card>
       </div>
@@ -78,7 +78,7 @@
     <div class="row row-equal">
       <div v-if="organism.image_urls.length" class="flex lg6 md6 sm12 xs12">
         <va-card>
-          <va-card-title> Images </va-card-title>
+          <va-card-title> {{t('organismDetails.images')}} </va-card-title>
           <va-carousel stateful :items="organism.image_urls"> </va-carousel>
         </va-card>
       </div>
@@ -105,7 +105,7 @@
         <va-card >
           <va-card-content>
             <va-list>
-              <va-list-label> publications </va-list-label>
+              <va-list-label> {{t('organismDetails.publications')}} </va-list-label>
 
               <va-list-item
                 v-for="(pub, index) in organism.publications"
@@ -133,7 +133,7 @@
         <va-card >
           <va-card-content>
             <va-list>
-              <va-list-label> Vernacular Names </va-list-label>
+              <va-list-label> {{ t('organismDetails.vernacularNames') }} </va-list-label>
 
               <va-list-item
                 v-for="(name, index) in organism.common_names"
@@ -162,7 +162,7 @@
       </div>
       <div v-if="Object.keys(organism.metadata).length" class="flex lg6 md6 sm12 xs12">
         <va-card>
-          <va-card-title> metadata </va-card-title>
+          <va-card-title> {{ t('uiComponents.metadata') }} </va-card-title>
           <va-card-content>
             <Metadata :metadata="organism.metadata" />
           </va-card-content>
@@ -183,6 +183,9 @@
   import Metadata from '../../components/ui/Metadata.vue'
   import RelatedDataCard from '../../components/ui/RelatedDataCard.vue'
   import BioProjectsCard from '../../components/ui/BioProjectsCard.vue'
+  import { useI18n } from 'vue-i18n'
+    
+  const { t } = useI18n()
 
   const showData = ref(false)
   const error = ref('')

@@ -8,8 +8,8 @@
         <PieChart
           :field="'goat_status'"
           :model="'organisms'"
-          :title="t('statusList.firstPiechart')"
-          :label="t('statusList.firstPiechart')"
+          :title="t('statusList.charts.firstPiechart')"
+          :label="t('statusList.charts.firstPiechart')"
         />
       </Suspense>
       </div>
@@ -18,8 +18,8 @@
         <PieChart
           :field="'target_list_status'"
           :model="'organisms'"
-          :title="t('statusList.secondPiechart')"
-          :label="t('statusList.secondPiechart')"
+          :title="t('statusList.charts.secondPiechart')"
+          :label="t('statusList.charts.secondPiechart')"
         />
       </Suspense>
     </div>

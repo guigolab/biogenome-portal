@@ -23,10 +23,10 @@
                 </div>
               </div>
               <div class="flex">
-                <va-button :disabled="!Boolean(searchForm.taxid)" type="submit">Search</va-button>
+                <va-button :disabled="!Boolean(searchForm.taxid)" type="submit">{{t('buttons.submit')}}</va-button>
               </div>
               <div class="flex">
-                <va-button color="danger" type="reset">Reset</va-button>
+                <va-button color="danger" type="reset">{{t('buttons.reset')}}</va-button>
               </div>
             </div>
           </va-card-content>
@@ -43,14 +43,16 @@
 </template>
 <script setup lang="ts">
   import { ref } from 'vue'
-import { Filter } from '../../data/types'
-import TaxonService from '../../services/clients/TaxonService';
-import TreeOfLife from '../../components/TreeOfLife.vue';  
-import IndentedTree from '../organisms/IndentedTree.vue';
-const initSearchForm = {
-    taxid:'',
-    insdc_status:'Assemblies Submitted'
-  }
+  import { Filter } from '../../data/types'
+  import TaxonService from '../../services/clients/TaxonService';
+  import IndentedTree from '../organisms/IndentedTree.vue';
+  import { useI18n } from 'vue-i18n'
+      
+  const { t } = useI18n()
+  const initSearchForm = {
+      taxid:'',
+      insdc_status:'Assemblies Submitted'
+    }
 
   const showTree = ref(false)
   const tree = ref({})

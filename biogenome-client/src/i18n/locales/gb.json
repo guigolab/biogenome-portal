@@ -24,6 +24,14 @@
     },
     "metadata": "Metadata"
   },
+  "modelStats":{
+    "organisms":"Organisms",
+    "experiments":"Experiments",
+    "assemblies":"Assemblies",
+    "biosamples":"BioSamples",
+    "localSamples":"Local Samples",
+    "annotations":"Annotations"
+  },
   "dashboard": {
     "statistics":{
       "organisms":"Organisms",
@@ -50,17 +58,29 @@
     "tree":"Phylogenetic Tree"
   },
   "organismList":{
+    "breadcrumb":"Organisms",
     "filters":{
       "searchInput":"Search Organism",
       "searchSelect":"Search By",
       "searchCountry":"Search by country"
     }
   },
+  "organismDetails":{
+    "images":"Images",
+    "publications":"Publications"
+  },
   "annotationDetails":{
-    "genomeBrowser":"Genome Browser"
+    "breadcrumb":"Annotations",
+    "genomeBrowser":"Genome Browser",
+    "vernacularNames":"Vernacular Names"
   },
   "annotationList":{
     "filters":{
+      "textInput":"Search Annotation",
+      "filterBy":"Filter By",
+      "sortColumn":"Sort Column",
+      "sortOrder":"Sort Order",
+      "date":"Date"
 
     }
   },
@@ -122,6 +142,7 @@
     }
   },
   "assemblyDetails":{
+    "breadcrumb":"Assemblies",
     "contigN50":"Contig n50",
     "genomeSize":"Genome Size",
     "assemblyLevel":"Assembly Level",
