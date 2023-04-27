@@ -28,9 +28,7 @@
   import { useColors } from 'vuestic-ui'
   import VaIconMenuCollapsed from '../icons/VaIconMenuCollapsed.vue'
   import AppNavbarActions from './components/AppNavbarActions.vue'
-  import {NavBar} from '../../../config.json'
 
-  const imgUrl = new URL(`/src/assets/${NavBar.logoName}`, import.meta.url).href
   const GlobalStore = useGlobalStore()
   const { t } = useI18n()
 

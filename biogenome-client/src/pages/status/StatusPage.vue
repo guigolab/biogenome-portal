@@ -1,6 +1,6 @@
 <template>
   <div>
-  <p class="va-title">sequencing status</p>
+  <p class="va-title">{{t('statusList.breadcrumb')}}</p>
   <va-divider />
   <div class="row row-equal">
     <div class="flex lg6 md6 sm12 xs12">

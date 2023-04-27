@@ -10,7 +10,6 @@
                     <va-input
                       v-model="localSampleStore.searchForm[filter.key]"
                       :label="filter.label"
-                      :placeholder="filter.placeholder"
                     />
                   </div>
                   <div v-else-if="filter.type === 'select'">
@@ -24,8 +23,7 @@
                     <va-date-input
                       v-model="dateRange"
                       :format-date="(date:Date) => date.toISOString().substring(0,10)"
-                      label="Date"
-                      placeholder="select a date range"
+                      :label="t('localSampleList.filters.date')"
                       style="width: 100%"
                       mode="range"
                       type="month"
@@ -38,11 +36,11 @@
               </div>
             </va-card-content>
             <va-card-actions align="between">
-              <va-button type="submit">Search</va-button>
-              <va-button color="danger" @click="reset()">Reset</va-button>
+              <va-button type="submit">{{t('buttons.submit')}}</va-button>
+              <va-button color="danger" @click="reset()">{{t('buttons.reset')}}</va-button>
             </va-card-actions>
           </va-form>
-          <va-card-content> Total: {{ total }} </va-card-content>
+          <va-card-content> {{t('table.total')}}: {{ total }} </va-card-content>
           <va-card-content>
             <DataTable :items="localSamples" :columns="columns" />
             <div class="row align-center justify-center">
@@ -72,7 +70,9 @@
     import { Filter } from '../../data/types'
     import { useLocalSampleStore } from '../../stores/local-sample-store'
     import LocalSampleService from '../../services/clients/LocalSampleService'
-    
+    import { useI18n } from 'vue-i18n'
+      
+    const { t } = useI18n()
     const localSampleStore = useLocalSampleStore()
     const initDateRange = {
       start: null,
@@ -86,31 +86,30 @@
   })
     const filters: Filter[] = [
       {
-        label: 'search local sample',
-        placeholder: 'Search by species, taxid',
+        label: t('localSampleList.filters.searchInput'),
         key: 'filter',
         type: 'input',
       },
       {
-        label: 'filter by',
+        label: t('localSampleList.filters.filterBy'),
         key: 'filter_option',
         type: 'select',
         options: ['taxid', 'scientific_name'],
       },
       {
-        label: 'sort_column',
+        label: t('localSampleList.filters.sortColumn'),
         key: 'sort_column',
         type: 'select',
         options: ['created'],
       },
       {
-        label: 'sort_order',
+        label: t('localSampleList.filters.sortOrder'),
         key: 'sort_order',
         type: 'select',
         options: ['asc', 'desc'],
       },
       {
-        label: 'Date',
+        label: t('localSampleList.filters.date'),
         key: 'date',
         type: 'date',
       },

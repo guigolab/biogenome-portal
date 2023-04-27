@@ -1,6 +1,6 @@
 <template>
     <va-breadcrumbs class="va-title" color="primary">
-      <va-breadcrumbs-item :to="{ name: 'taxons' }" label="taxonomy" />
+      <va-breadcrumbs-item :to="{ name: 'taxons' }" :label="t('taxonDetails.breadcrumb')" />
       <va-breadcrumbs-item
         v-if="router.currentRoute.value.name === 'taxon'"
         active
@@ -40,8 +40,8 @@
               <PieChart
                   :field="'insdc_status'"
                   :model="'organisms'"
-                  :title="'INSDC Status'"
-                  :label="'INSDC Status'"
+                  :title="t('taxonDetails.pieChart')"
+                  :label="t('taxonDetails.pieChart')"
                   :query="{taxon_lineage:props.taxid}"
               />
           </Suspense>
@@ -51,36 +51,21 @@
             <va-tabs v-model="treeType" grow>
               <template #tabs>
                 <va-tab
-                  v-for="tab in ['Radial Tree', 'Indented Tree']"
-                  :key="tab"
-                  :name="tab"
+                  v-for="tab in types"
+                  :key="tab.value"
+                  :name="tab.label"
                 >
                   {{ tab }}
                 </va-tab>
               </template>
             </va-tabs>
-              <va-card-content style="max-height: 500px;overflow: scroll;" v-if="showTree">
-                <div v-if="treeType === 'Radial Tree'">
+              <va-card-content style="height: 500px;overflow: scroll;" v-if="showTree">
+                <div v-if="treeType === 'radial'">
                   <TreeOfLife :data="treeData"/>
                 </div>
                 <div v-else>
                   <IndentedTree :data="treeData"/>
-
                 </div>
-                <!-- <va-list>
-                  <va-list-label>Related Taxons</va-list-label>
-                  <va-list-item v-for="(bp, index) in children" :key="index" class="list__item" :to="{name:'taxon', params:{taxid:bp.taxid}}">
-                      <va-list-item-section>
-                        <va-list-item-label>
-                            {{ bp.name }}
-                        </va-list-item-label>
-
-                        <va-list-item-label caption>
-                            {{ bp.rank }}
-                        </va-list-item-label>
-                      </va-list-item-section>
-                  </va-list-item>
-                </va-list> -->
               </va-card-content>
           </va-card>
         </div>
@@ -102,7 +87,6 @@
                       <va-input
                         v-model="searchForm[filter.key]"
                         :label="filter.label"
-                        :placeholder="filter.placeholder"
                       />
                     </div>
                     <div v-else>
@@ -112,12 +96,12 @@
                 </div>
               </va-card-content>
               <va-card-actions align="between">
-                <va-button @click="handleSubmit()">Search</va-button>
-                <va-button color="danger" @click="reset()">Reset</va-button>
+                <va-button @click="handleSubmit()">{{t('buttons.submit')}}</va-button>
+                <va-button color="danger" @click="reset()">{{t('buttons.reset')}}</va-button>
               </va-card-actions>
             </va-form>
             <va-card-content>
-              <p>Total: {{ total }}</p>
+              <p>{{t('table.total')}}: {{ total }}</p>
               <DataTable :items="organisms" :columns="columns"/>
             <div class="row align-center justify-center">
                 <div class="flex">
@@ -157,27 +141,31 @@
     import TaxonService from '../../services/clients/TaxonService'
     import IndentedTree from '../organisms/IndentedTree.vue'
     import TreeOfLife from '../../components/TreeOfLife.vue'
+    import { useI18n } from 'vue-i18n'
+      
+    const { t } = useI18n()
 
-
-    const treeType = ref('Radial Tree')
-    const types = ref(['Radial Tree', 'Indented Tree'])
+    const treeType = ref('radial')
+    const types = ref([
+      {value:'radial',label:t('taxonDetails.radial')},
+      {value:'indented', label:t('taxonDetails.indented')}
+    ])
     const counter = ref(0)
 
     const filters: Filter[] = [
     {
-      label: 'search organism',
-      placeholder: 'Search by species, taxid, common_name or tolid',
+      label: t('organismList.filters.searchInput'),
       key: 'filter',
       type: 'input',
     },
     {
-      label: 'filter by',
+      label: t('organismList.filters.searchSelect'),
       key: 'filter_option',
       type: 'select',
       options: ['taxid', 'common_name', 'scientific_name', 'tolid'],
     },
     {
-      label: 'INSDC status',
+      label: t('organismList.filters.insdcStatus'),
       key: 'insdc_status',
       type: 'select',
       options: [
@@ -275,8 +263,8 @@
             treeData.value = {...tree}
             showTree.value = true
             if(Number(taxon.value.leaves) >= 200){
-              types.value = ['Indented Tree']
-              treeType.value = types.value[0]
+              types.value = [{value:'indented', label:t('taxonDetails.indented')}]
+              treeType.value = 'indented'
             }
         } catch (e) {
             if(e && e.response && e.response.data) error.value = taxid + ' ' + e.response.data.message

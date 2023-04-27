@@ -18,7 +18,6 @@
                     v-model="searchForm[filter.key]"
                     :label="filter.label"
                     :options="filter.options"
-
                   />
                 </div>
               </div>
@@ -63,13 +62,13 @@
   const message = ref('')
   const filters: Filter[] = [
     {
-      label: 'search taxon',
-      placeholder: 'Search by NCBI TaxID',
+      label: t('relatedTaxon.searchInput.label'),
+      placeholder: t('relatedTaxon.searchInput.placeholder'),
       key: 'taxid',
       type: 'input',
     },
     {
-      label: 'INSDC status',
+      label: t('relatedTaxon.selectInput'),
       key: 'insdc_status',
       type: 'select',
       options: [

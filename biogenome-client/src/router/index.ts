@@ -176,14 +176,7 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import('../pages/forms/LocalSampleForm.vue'),
       },
     ],
-  },
-
-  {
-    name: 'taxonomy',
-    path: '/taxonomy',
-    component: () => import('../pages/taxons/Taxonomy.vue'),
-  },
-
+  }
 ]
 
 const router = createRouter({

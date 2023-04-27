@@ -1,5 +1,5 @@
 <template>
-  <p class="va-title">Organisms collected in each country</p>
+  <p class="va-title">{{t('countriesMap')}}</p>
   <va-divider />
   <div ref="cesium" class="cesium-container">
     <div id="infobox" ref="infobox">
@@ -94,7 +94,9 @@
   import StatisticsService from '../../services/clients/StatisticsService'
   import am5geodata_worldLow from '@amcharts/amcharts5-geodata/worldLow'
   import OrganismService from '../../services/clients/OrganismService'
-  
+  import { useI18n } from 'vue-i18n'
+      
+  const { t } = useI18n()
   
   const accessToken = import.meta.env.VITE_CESIUM_TOKEN
 
@@ -166,7 +168,6 @@
         entity.polygon.extrudedHeight = entity.properties.oganisms * 1000
       })
     })
-    //   updateSource(props.geojson)
   })
   async function handlePagination(offset: number) {
     pagination.value.offset = offset
@@ -179,12 +180,7 @@
   function hasINSDCData(org) {
     return org.biosamples.length || org.experiments.length || org.assemblies.length
   }
-  // onBeforeUnmount(() => {
-  //     if(viewer){
-  //         viewer.entities.removeAll()
-  //         viewer.destroy()
-  //     }
-  // })
+
 </script>
 <style lang="scss" scoped>
   #infobox {

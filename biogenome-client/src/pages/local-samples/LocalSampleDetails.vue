@@ -1,6 +1,6 @@
 <template>
     <va-breadcrumbs class="va-title" color="primary">
-      <va-breadcrumbs-item :to="{ name: 'local_samples' }" label="localSamples" />
+      <va-breadcrumbs-item :to="{ name: 'local_samples' }" :label="t('localSampleDetails.breadcrumb')" />
       <va-breadcrumbs-item
         v-if="router.currentRoute.value.name === 'localSample'"
         active
@@ -33,7 +33,7 @@
           </va-card>
         </div>
         <div class="flex lg12 md12 sm12 xs12">
-          <va-card-title>metatada</va-card-title>
+          <va-card-title>{{t('uiComponents.metadata')}}</va-card-title>
           <va-card-content>
             <Metadata :metadata="localSample.metadata" />
           </va-card-content>
@@ -53,7 +53,9 @@
     import LeafletMap from '../../components/maps/LeafletMap.vue'
     import { useRouter } from 'vue-router'
     import LocalSampleService from '../../services/clients/LocalSampleService'
-
+    import { useI18n } from 'vue-i18n'
+      
+    const { t } = useI18n()
     const router = useRouter()
     const showData = ref(false)
     const error = ref('')

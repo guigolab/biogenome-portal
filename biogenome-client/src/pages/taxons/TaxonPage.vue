@@ -1,7 +1,7 @@
 <template>
   <div>
     <va-breadcrumbs class="va-title" color="primary">
-      <va-breadcrumbs-item active :to="{ name: 'taxons' }" label="taxonomy" />
+      <va-breadcrumbs-item active :to="{ name: 'taxons' }" :label="t('taxonDetails.breadcrumb')" />
     </va-breadcrumbs>
     <div>
 
@@ -12,64 +12,23 @@
     <div class="flex lg12 md12 sm12 xs12">
       <va-collapse
         stateful
-        header="Search taxon phylogenetically close"
+        :header="t('relatedTaxon.header')"
       >
         <RelatedTaxon/>
       </va-collapse>
     </div>
-    <!-- <div class="flex lg4 md4 sm12 xs12">
-
-      <Taxonomy @generate-tree="getTreeData" @emit-ranks="getRanks"/>
-    </div> -->
     <div class="flex lg12 md12 sm12 xs12">
       <TaxonListBlock/>
     </div>
-
-    <!-- <Transition>
-      <div v-if="showTree" class="flex lg6 md6 sm12 xs12">
-        <TreeOfLife :data="treeData" @update-tree="getTreeData" />
-      </div>
-    </Transition>
-    <div class="flex lg4 md4 sm12 xs12">
-      <SunBurst/>
-    </div> -->
-    <!-- 
-      taxon query closer species insdc status
-      indented tree
-      radial tree
-      taxon list
-      taxon by top ranks
-
-
-
-     -->
   </div>
 </div>
 </template>
 <script setup lang="ts">
-  import { onMounted, ref } from 'vue'
-  import TaxonService from '../../services/clients/TaxonService'
-  import TreeOfLife from '../../components/TreeOfLife.vue'
-  import Taxonomy from './Taxonomy.vue'
-  import IndentedTree from '../organisms/IndentedTree.vue'
   import TaxonListBlock from './TaxonListBlock.vue'
   import RelatedTaxon from './RelatedTaxon.vue'
-  import SunBurst from '../../components/tree/SunBurst.vue'
-
-  const showTree = ref(false)
-  const treeData = ref({})
-
-  onMounted(async () => {
-    getTreeData('2759')
-  })
-
-  async function getTreeData(taxid: string) {
-    showTree.value = false
-    const { data } = await TaxonService.getTree(taxid, { limit: 166 })
-    treeData.value = data
-    showTree.value = true
-    return data
-  }
+  import { useI18n } from 'vue-i18n'
+      
+  const { t } = useI18n()
 
 </script>
 

@@ -62,7 +62,8 @@
     "filters":{
       "searchInput":"Search Organism",
       "searchSelect":"Search By",
-      "searchCountry":"Search by country"
+      "searchCountry":"Search by country",
+      "insdcStatus":"INSDC Status"
     }
   },
   "organismDetails":{
@@ -81,10 +82,8 @@
       "sortColumn":"Sort Column",
       "sortOrder":"Sort Order",
       "date":"Date"
-
     }
   },
-
   "assemblyList":{
     "filters":{
       "submitterSelect":"label",
@@ -181,6 +180,7 @@
     "region":"Region"
   },
   "statusList":{
+    "breadcrumb":"Sequencing Status",
     "charts":{
       "firstPiechart":"GoaT Status",
       "secondPiechart":"Target List Status"
@@ -192,10 +192,44 @@
       "targetListStatus":"Target List Status"
     }
   },
+  "localSampleDetails":{
+    "breadcrumb":"Local Samples"
+  },
+  "localSampleList":{
+    "filters":{
+      "searchInput":"Search Local Sample",
+      "filterBy":"Filter By",
+      "sortColumn":"Sort Column",
+      "sortOrder":"Sort Order",
+      "date":"Date"
+    }
+  },
+  "relatedTaxon":{
+    "searchInput":{
+      "label":"Search Taxon",
+      "placeholder":"Search by NCBI TaxID"
+    },
+    "selectInput":"INSDC status",
+    "header":"Search taxon phylogenetically close"
+  },
+  "taxonList":{
+    "filters":{
+      "searchInput":"Search Taxon",
+      "sortColumn":"Sort Column",
+      "sortOrder":"Sort Order"
+    }
+  },
+  "taxonDetails":{
+    "breadcrumb":"Taxonomy",
+    "pieChart":"INSDC Status",
+    "radial":"Radial Tree",
+    "indented":"Indented Tree"
+  },
+  "organismMap":"Organism geographic locations",
+  "countrisMap":"Organism collected in each country",
   "language": {
     "english": "English",
-    "catalan": "Catalan",
-    "spanish": "Spanish"
+    "catalan": "Catalan"
   },
   "menu": {
     "auth": "Auth",
@@ -212,7 +246,7 @@
     "biosamples": "BioSamples",
     "local_samples": "Local Samples",
     "organismStatistics": "Organisms Stats",
-    "reads": "Reads",
+    "reads": "Experiments",
     "organisms": "Organisms",
     "insdcForms": "Import from INSDC",
     "organismForm": "Create Organism",
@@ -221,12 +255,6 @@
     "dashboard": "Dashboard",
     "forms": "Forms",
     "maps": "Maps"
-  },
-  "navbar": {
-    "messageUs": "Web development inquiries:",
-    "repository": "GitHub Repo"
-  },
-  "tables": {
   },
   "user": {
     "logout": "Logout"

@@ -5,7 +5,7 @@
           <div class="row align-center justify-start">
             <div v-for="(filter, index) in filters" :key="index" class="flex lg4 md4 sm12 xs12">
               <div v-if="filter.type === 'input'">
-                <va-input v-model="TaxonomyStore.searchForm[filter.key]" :label="filter.label" :placeholder="filter.placeholder" />
+                <va-input v-model="TaxonomyStore.searchForm[filter.key]" :label="filter.label" />
               </div>
               <div v-else>
                 <va-select v-model="TaxonomyStore.searchForm[filter.key]" :label="filter.label" :options="filter.options" />
@@ -18,11 +18,11 @@
           </div>
         </va-card-content>
         <va-card-actions align="between">
-          <va-button type="submit">Search</va-button>
-          <va-button color="danger" @click="reset()">Reset</va-button>
+          <va-button type="submit">{{t('buttons.submit')}}</va-button>
+          <va-button color="danger" @click="reset()">{{t('buttons.reset')}}</va-button>
         </va-card-actions>
       </va-form>
-      <va-card-content> Total: {{ total }} </va-card-content>
+      <va-card-content> {{t('table.total')}}: {{ total }} </va-card-content>
       <va-card-content>
         <DataTable :items="taxons" :columns="columns" />
         <div class="row align-center justify-center">
@@ -48,12 +48,13 @@
   import { AxiosResponse } from 'axios'
   import DataTable from '../../components/ui/DataTable.vue'
   import { Filter } from '../../data/types'
-    import { useTaxonomyStore } from '../../stores/taxonomy-store'
-    import TaxonService from '../../services/clients/TaxonService'
-import StatisticsService from '../../services/clients/StatisticsService'
-import TaxonDetails from './TaxonDetails.vue'
-  
-const TaxonomyStore = useTaxonomyStore()
+  import { useTaxonomyStore } from '../../stores/taxonomy-store'
+  import TaxonService from '../../services/clients/TaxonService'
+  import StatisticsService from '../../services/clients/StatisticsService'
+  import { useI18n } from 'vue-i18n'
+      
+  const { t } = useI18n()
+  const TaxonomyStore = useTaxonomyStore()
   const offset = ref(1)
   const total = ref(0)
 
@@ -61,19 +62,19 @@ const TaxonomyStore = useTaxonomyStore()
 
   const filters: Filter[] = [
     {
-      label: 'search Taxon',
+      label: t('taxonList.filters.searchInput'),
       placeholder: 'Search by name or taxid',
       key: 'filter',
       type: 'input',
     },
     {
-      label: 'sort_column',
+      label: t('taxonList.filters.sortColumn'),
       key: 'sort_column',
       type: 'select',
       options: ['leaves'],
     },
     {
-      label: 'sort_order',
+      label: t('taxonList.filters.sortOrder'),
       key: 'sort_order',
       type: 'select',
       options: ['asc', 'desc'],
