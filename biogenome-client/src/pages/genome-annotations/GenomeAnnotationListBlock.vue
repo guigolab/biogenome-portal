@@ -9,13 +9,13 @@
                   <div v-if="filter.type === 'input'">
                     <va-input
                       v-model="annotationStore.searchForm[filter.key]"
-                      :label="filter.label"
+                      :label="t(filter.label)"
                     />
                   </div>
                   <div v-else-if="filter.type === 'select'">
                     <va-select
                       v-model="annotationStore.searchForm[filter.key]"
-                      :label="filter.label"
+                      :label="t(filter.label)"
                       :options="filter.options"
                     />
                   </div>
@@ -87,30 +87,30 @@
     })
     const filters: Filter[] = [
       {
-        label: t('annotationList.filters.textInput'),
+        label: 'annotationList.filters.textInput',
         key: 'filter',
         type: 'input',
       },
       {
-        label: t('annotationList.filters.filterBy'),
+        label: 'annotationList.filters.filterBy',
         key: 'filter_option',
         type: 'select',
         options: ['name', 'assembly_name','scientific_name'],
       },
       {
-        label: t('annotationList.filters.sortColumn'),
+        label: 'annotationList.filters.sortColumn',
         key: 'sort_column',
         type: 'select',
         options: ['created'],
       },
       {
-        label: t('annotationList.filters.sortOrder'),
+        label: 'annotationList.filters.sortOrder',
         key: 'sort_order',
         type: 'select',
         options: ['asc', 'desc'],
       },
       {
-        label: t('annotationList.filters.date'),
+        label: 'annotationList.filters.date',
         key: 'date',
         type: 'date',
       },

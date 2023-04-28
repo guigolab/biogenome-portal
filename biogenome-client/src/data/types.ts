@@ -30,7 +30,7 @@ export type Filter = {
   key: string
 }
 
-interface SearchForm {
+export interface SearchForm {
   filter: string
   filter_option: string
   sort_column: string

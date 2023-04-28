@@ -198,21 +198,21 @@
   )
   const relatedData = [
     {
-      title: t('uiComponents.relatedDataCard.biosamples'),
+      title: 'uiComponents.relatedDataCard.biosamples',
       icon: 'hubs',
       key: 'sub_samples',
       route: 'biosample',
       columns: ['accession', 'organism_part'],
     },
     {
-      title: t('uiComponents.relatedDataCard.experiments'),
+      title: 'uiComponents.relatedDataCard.experiments',
       icon: 'widgets',
       key: 'experiments',
-      route: 'read',
+      route: 'experiment',
       columns: ['experiment_accession', 'instrument_platform'],
     },
     {
-      title: t('uiComponents.relatedDataCard.assemblies'),
+      title: 'uiComponents.relatedDataCard.assemblies',
       icon: 'library_books',
       key: 'assemblies',
       route: 'assembly',

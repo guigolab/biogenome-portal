@@ -5,7 +5,7 @@
         <ContributorList
           :field="'metadata.GAL'"
           :model="'biosamples'"
-          :title="t('biosampleList.charts.contributorList')"
+          :title="'biosampleList.charts.contributorList'"
           @list-created="getSubmitters"
         />
       </Suspense>

@@ -3,7 +3,7 @@
     <va-card-title>
       <div class="row align-center justify-space-between">
         <div class="flex">
-          <h1>{{ title }}</h1>
+          <h1>{{ t(title) }}</h1>
         </div>
         <div style="padding: 0" class="flex">
           <va-button
@@ -30,7 +30,9 @@
   import { onMounted, ref } from 'vue'
   import { Contributor } from '../../data/types'
   import StatisticsService from '../../services/clients/StatisticsService'
+  import { useI18n } from 'vue-i18n'
 
+  const {t} = useI18n()
   const props = defineProps<{
     title: string
     model: string

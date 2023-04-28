@@ -11,7 +11,7 @@
     "view": "Veure"
   },
   "table": {
-    "total": "Total"
+    "total": "Total:"
   },
   "uiComponents": {
     "bioprojectsCard": "bio-projectes",
@@ -130,11 +130,12 @@
         "label": "Experiments",
         "title": "Experiments enviats per mes"
       },
-      "contributorList": "Centers"
+      "contributorList": "Centres de seqüenciació"
     },
     "filters": {
       "textInput": "Cerca d'experiments",
       "filterBy": "Filtrar per",
+      "sequencingCenters":"Centres de seqüenciació",
       "sortColumn": "Columna d'ordenació",
       "sortOrder": "Ordre de classificació",
       "date": "Data"
@@ -216,7 +217,8 @@
     "filters": {
       "searchInput": "Cerca taxon",
       "sortColumn": "Ordena columna",
-      "sortOrder": "Ordena ordre"
+      "sortOrder": "Ordena ordre",
+      "ranks":"Rangs"
     }
   },
   "taxonDetails": {

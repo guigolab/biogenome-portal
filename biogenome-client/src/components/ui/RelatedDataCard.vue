@@ -3,7 +3,7 @@
     <va-tabs v-model="selectedData" grow>
       <template #tabs>
         <va-tab v-for="model in relatedData" :key="model.key" :name="model.key">
-          {{ model.title }}
+          {{ t(model.title) }}
         </va-tab>
       </template>
     </va-tabs>
@@ -37,6 +37,9 @@
 </template>
 <script setup lang="ts">
   import { watch, ref } from 'vue'
+  import { useI18n } from 'vue-i18n'
+    
+  const { t } = useI18n()
 
   const props = defineProps({
     relatedData: Array,

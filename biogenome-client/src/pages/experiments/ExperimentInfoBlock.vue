@@ -26,7 +26,7 @@
         <ContributorList
           :field="'metadata.center_name'"
           :model="'experiments'"
-          :title="t('experimentList.charts.contributorList')"
+          :title="'experimentList.charts.contributorList'"
           @list-created="getSubmitters"
         />
       </Suspense>

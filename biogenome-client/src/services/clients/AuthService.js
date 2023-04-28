@@ -25,27 +25,6 @@ auth.interceptors.request.use(
   },
 )
 
-// auth.interceptors.response.use(
-//   function (response) {
-//     return response
-//   },
-//   async function (error) {
-//     const originalRequest = error.config
-
-//     if (401 === error.response.status) {
-//       console.log('here')
-//       const globalStore = useGlobalStore()
-//       if(globalStore.isAuthenticated){
-//         await globalStore.login()
-//         return auth(originalRequest)
-
-//       }
-
-//     } else {
-//       return Promise.reject(error)
-//     }
-//   },
-// )
 
 class AuthService {
   login(payload) {
@@ -93,10 +72,10 @@ class AuthService {
     return auth.delete(`/local_samples/${local_id}`)
   }
   importRead(accession) {
-    return auth.post(`/reads/${accession}`)
+    return auth.post(`/experiments/${accession}`)
   }
   deleteRead(accession) {
-    return auth.delete(`/reads/${accession}`)
+    return auth.delete(`/experiments/${accession}`)
   }
   createUser(data) {
     return auth.post('/users', data)

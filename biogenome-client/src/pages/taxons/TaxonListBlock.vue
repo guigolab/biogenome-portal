@@ -5,15 +5,15 @@
           <div class="row align-center justify-start">
             <div v-for="(filter, index) in filters" :key="index" class="flex lg4 md4 sm12 xs12">
               <div v-if="filter.type === 'input'">
-                <va-input v-model="TaxonomyStore.searchForm[filter.key]" :label="filter.label" />
+                <va-input v-model="TaxonomyStore.searchForm[filter.key]" :label="t(filter.label)" />
               </div>
               <div v-else>
-                <va-select v-model="TaxonomyStore.searchForm[filter.key]" :label="filter.label" :options="filter.options" />
+                <va-select v-model="TaxonomyStore.searchForm[filter.key]" :label="t(filter.label)" :options="filter.options" />
               </div>
 
             </div>
-            <div v-if="TaxonomyStore.ranks" class="flex lg4 md4 sm12 xs12">
-                <va-select searchable v-model="TaxonomyStore.searchForm.rank" label="ranks" :options="TaxonomyStore.ranks" />
+            <div v-if="TaxonomyStore.ranks.length" class="flex lg4 md4 sm12 xs12">
+                <va-select searchable v-model="TaxonomyStore.searchForm.rank" :label="t('taxonList.filters.ranks')" :options="TaxonomyStore.ranks" />
             </div>
           </div>
         </va-card-content>
@@ -62,19 +62,19 @@
 
   const filters: Filter[] = [
     {
-      label: t('taxonList.filters.searchInput'),
+      label: 'taxonList.filters.searchInput',
       placeholder: 'Search by name or taxid',
       key: 'filter',
       type: 'input',
     },
     {
-      label: t('taxonList.filters.sortColumn'),
+      label: 'taxonList.filters.sortColumn',
       key: 'sort_column',
       type: 'select',
       options: ['leaves'],
     },
     {
-      label: t('taxonList.filters.sortOrder'),
+      label: 'taxonList.filters.sortOrder',
       key: 'sort_order',
       type: 'select',
       options: ['asc', 'desc'],

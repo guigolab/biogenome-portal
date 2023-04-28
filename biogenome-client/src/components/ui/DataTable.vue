@@ -60,7 +60,6 @@
     <template #cell(bioproject_accession)="{ rowData }">
       <va-chip
         outline
-        :to="{ name: 'bioproject', params: { accession: rowData.accession } }"
         size="small"
       >
         {{ rowData.accession }}
@@ -88,7 +87,7 @@
       <va-chip
         outline
         size="small"
-        :to="{ name: 'read', params: { accession: rowData.experiment_accession, savePosition: true } }"
+        :to="{ name: 'experiment', params: { accession: rowData.experiment_accession, savePosition: true } }"
         >{{ rowData.experiment_accession }}</va-chip
       >
     </template>

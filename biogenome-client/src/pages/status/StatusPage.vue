@@ -43,11 +43,11 @@
                   <div v-if="filter.type === 'input'">
                     <va-input
                       v-model="statusStore.searchForm[filter.key]"
-                      :label="filter.label"
+                      :label="t(filter.label)"
                     />
                   </div>
                   <div v-else>
-                    <va-select v-model="statusStore.searchForm[filter.key]" :label="filter.label" :options="filter.options" />
+                    <va-select v-model="statusStore.searchForm[filter.key]" :label="t(filter.label)" :options="filter.options" />
                   </div>
                 </div>
               </div>
@@ -109,18 +109,18 @@
 
   const filters: Filter[] = [
     {
-      label: t('statusList.filters.searchInput'),
+      label: 'statusList.filters.searchInput',
       key: 'filter',
       type: 'input',
     },
     {
-      label: t('statusList.filters.filterBy'),
+      label: 'statusList.filters.filterBy',
       key: 'filter_option',
       type: 'select',
       options: ['taxid', 'common_name', 'scientific_name', 'tolid'],
     },
     {
-      label: t('statusList.filters.goatStatus'),
+      label: 'statusList.filters.goatStatus',
       key: 'goat_status',
       type: 'select',
       options: [
@@ -133,7 +133,7 @@
       ],
     },
     {
-      label: t('statusList.filters.targetListStatus'),
+      label: 'statusList.filters.targetListStatus',
       key: 'target_list_status',
       type: 'select',
       options: ['long_list', 'family_representative', 'other_priority'],

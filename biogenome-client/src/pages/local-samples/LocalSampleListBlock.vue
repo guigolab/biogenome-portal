@@ -9,13 +9,13 @@
                   <div v-if="filter.type === 'input'">
                     <va-input
                       v-model="localSampleStore.searchForm[filter.key]"
-                      :label="filter.label"
+                      :label="t(filter.label)"
                     />
                   </div>
                   <div v-else-if="filter.type === 'select'">
                     <va-select
                       v-model="localSampleStore.searchForm[filter.key]"
-                      :label="filter.label"
+                      :label="t(filter.label)"
                       :options="filter.options"
                     />
                   </div>
@@ -86,30 +86,30 @@
   })
     const filters: Filter[] = [
       {
-        label: t('localSampleList.filters.searchInput'),
+        label: 'localSampleList.filters.searchInput',
         key: 'filter',
         type: 'input',
       },
       {
-        label: t('localSampleList.filters.filterBy'),
+        label: 'localSampleList.filters.filterBy',
         key: 'filter_option',
         type: 'select',
         options: ['taxid', 'scientific_name'],
       },
       {
-        label: t('localSampleList.filters.sortColumn'),
+        label: 'localSampleList.filters.sortColumn',
         key: 'sort_column',
         type: 'select',
         options: ['created'],
       },
       {
-        label: t('localSampleList.filters.sortOrder'),
+        label: 'localSampleList.filters.sortOrder',
         key: 'sort_order',
         type: 'select',
         options: ['asc', 'desc'],
       },
       {
-        label: t('localSampleList.filters.date'),
+        label: 'localSampleList.filters.date',
         key: 'date',
         type: 'date',
       },

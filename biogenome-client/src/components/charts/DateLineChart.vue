@@ -2,7 +2,7 @@
   <va-card class="chart-widget">
     <va-card-title>{{ t(title) }}</va-card-title>
     <va-card-content>
-      <va-chart class="chart" :data="createLineChartData(data)" type="line" />
+      <va-chart class="chart" :options="{scales:{yAxes:{display:false}}}" :data="createLineChartData(data)" type="line" />
     </va-card-content>
   </va-card>
 </template>
@@ -55,6 +55,7 @@
           data: sortedData.map((data) => data.value),
         },
       ],
+
     }
     return lineChart
   }

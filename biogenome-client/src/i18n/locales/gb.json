@@ -11,7 +11,7 @@
     "view":"View"
   },
   "table":{
-    "total":"Total"
+    "total":"Total:"
   },
   "uiComponents":{
     "bioprojectsCard":"bioprojects",
@@ -130,11 +130,12 @@
         "label":"Experiments",
         "title":"Experiments submitted by month"
       },
-      "contributorList":"Centers"
+      "contributorList":"Sequencing Centers"
     },
     "filters":{
       "textInput":"Search Experiment",
       "filterBy":"Filter By",
+      "sequencingCenters":"Sequencing Centers",
       "sortColumn":"Sort Column",
       "sortOrder":"Sort Order",
       "date":"Date"
@@ -216,7 +217,8 @@
     "filters":{
       "searchInput":"Search Taxon",
       "sortColumn":"Sort Column",
-      "sortOrder":"Sort Order"
+      "sortOrder":"Sort Order",
+      "ranks":"Ranks"
     }
   },
   "taxonDetails":{
