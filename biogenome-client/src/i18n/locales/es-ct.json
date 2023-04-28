@@ -246,7 +246,7 @@
     "biosamples": "BioMostres",
     "local_samples": "Mostres locals",
     "organismStatistics": "Estadístiques d'organismes",
-    "reads": "Experiments",
+    "experiments": "Experiments",
     "organisms": "Organismes",
     "insdcForms": "Importa des de l'INSDC",
     "organismForm": "Crea organismes",

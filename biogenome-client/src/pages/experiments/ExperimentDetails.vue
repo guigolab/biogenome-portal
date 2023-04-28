@@ -1,6 +1,6 @@
 <template>
   <va-breadcrumbs class="va-title" color="primary">
-    <va-breadcrumbs-item :to="{ name: 'reads' }" label="experiments" />
+    <va-breadcrumbs-item :to="{ name: 'experiments' }" label="experiments" />
     <va-breadcrumbs-item
       v-if="router.currentRoute.value.name === 'read'"
       active

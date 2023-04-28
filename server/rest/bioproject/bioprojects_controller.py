@@ -68,7 +68,7 @@ class BioProjectINSDCStatsApi(Resource):
         response = dict()
         biosamples = BioSample.objects(bioprojects=accession).scalar('accession')
         response['assemblies'] = Assembly.objects(sample_accession__in=biosamples).count()
-        response['reads'] = Experiment.objects(metadata__sample_accession__in=biosamples).count()
+        response['experiments'] = Experiment.objects(metadata__sample_accession__in=biosamples).count()
         response['biosamples'] = len(biosamples)
         return Response(json.dumps(response), mimetype="application/json", status=200)
 

@@ -5,17 +5,17 @@
         <PieChart
           :field="'metadata.assembly_level'"
           :model="'assemblies'"
-          :title="t('assemblyList.charts.pieChart.title')"
-          :label="t('assemblyList.charts.pieChart.title')"
+          :title="'assemblyList.charts.pieChart.title'"
+          :label="'assemblyList.charts.pieChart.title'"
         />
       </Suspense>
     </div>
     <div class="flex lg6 md6 sm12 xs12">
       <Suspense>
         <DateLineChart
-          :label="t('assemblyList.charts.dateLineChart.label')"
+          :label="'assemblyList.charts.dateLineChart.label'"
           :field="'metadata.submission_date'"
-          :title="t('assemblyList.charts.dateLineChart.title')"
+          :title="'assemblyList.charts.dateLineChart.title'"
           :model="'assemblies'"
           :color="'#2c82e0'"
         />

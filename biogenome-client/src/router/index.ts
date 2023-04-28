@@ -55,17 +55,17 @@ const routes: Array<RouteRecordRaw> = [
     },
   },
   {
-    path: '/reads',
-    name: 'reads',
-    component: () => import('../pages/reads/ReadPage.vue'),
+    path: '/experiments',
+    name: 'experiments',
+    component: () => import('../pages/experiments/ExperimentPage.vue'),
   },
   {
-    path: '/reads/:accession',
-    name: 'read',
+    path: '/experiments/:accession',
+    name: 'experiment',
     props: true,
-    component: () => import('../pages/reads/ReadDetails.vue'),
+    component: () => import('../pages/experiments/ExperimentDetails.vue'),
     meta: {
-      name: 'reads',
+      name: 'experiments',
     },
   },
   {
@@ -77,10 +77,7 @@ const routes: Array<RouteRecordRaw> = [
     path: '/biosamples/:accession',
     name: 'biosample',
     props: true,
-    component: () => import('../pages/biosamples/BioSampleDetails.vue'),
-    meta: {
-      name: 'reads',
-    },
+    component: () => import('../pages/biosamples/BioSampleDetails.vue')
   },
   {
     name: 'organisms',

@@ -4,19 +4,19 @@
       <Suspense>
         <PieChart
           :field="'instrument_platform'"
-          :model="'reads'"
-          :title="t('experimentList.charts.pieChart.title')"
-          :label="t('experimentList.charts.pieChart.label')"
+          :model="'experiments'"
+          :title="'experimentList.charts.pieChart.title'"
+          :label="'experimentList.charts.pieChart.label'"
         />
       </Suspense>
     </div>
     <div class="flex lg6 md6 sm12 xs12">
       <Suspense>
         <DateLineChart
-          :label="t('experimentList.charts.dateLineChart.label')"
+          :label="'experimentList.charts.dateLineChart.label'"
           :field="'metadata.first_public'"
-          :title="t('experimentList.charts.dateLineChart.title')"
-          :model="'reads'"
+          :title="'experimentList.charts.dateLineChart.title'"
+          :model="'experiments'"
           :color="'#2c82e0'"
         />
       </Suspense>
@@ -25,7 +25,7 @@
       <Suspense>
         <ContributorList
           :field="'metadata.center_name'"
-          :model="'reads'"
+          :model="'experiments'"
           :title="t('experimentList.charts.contributorList')"
           @list-created="getSubmitters"
         />

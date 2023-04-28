@@ -40,8 +40,8 @@
               <PieChart
                   :field="'insdc_status'"
                   :model="'organisms'"
-                  :title="t('taxonDetails.pieChart')"
-                  :label="t('taxonDetails.pieChart')"
+                  :title="'taxonDetails.pieChart'"
+                  :label="'taxonDetails.pieChart'"
                   :query="{taxon_lineage:props.taxid}"
               />
           </Suspense>

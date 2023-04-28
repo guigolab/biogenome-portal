@@ -1,7 +1,7 @@
 <template>
   <div>
     <va-breadcrumbs class="va-title" color="primary">
-      <va-breadcrumbs-item :to="{ name: 'reads' }" :label="t('experimentList.breadcrumb')" />
+      <va-breadcrumbs-item :to="{ name: 'experiments' }" :label="t('experimentList.breadcrumb')" />
       <va-breadcrumbs-item
         v-if="router.currentRoute.value.name === 'read'"
         active
@@ -9,14 +9,14 @@
       />
     </va-breadcrumbs>
     <va-divider />
-    <ReadInfoBlock />
-    <ReadListBlock />
+    <ExperimentInfoBlock />
+    <ExperimentListBlock />
   </div>
 </template>
 <script setup lang="ts">
   import { useRouter } from 'vue-router'
-  import ReadInfoBlock from './ReadInfoBlock.vue'
-  import ReadListBlock from './ReadListBlock.vue'
+  import ExperimentInfoBlock from './ExperimentInfoBlock.vue'
+  import ExperimentListBlock from './ExperimentListBlock.vue'
   import { useI18n } from 'vue-i18n'
   const { t } = useI18n()
 

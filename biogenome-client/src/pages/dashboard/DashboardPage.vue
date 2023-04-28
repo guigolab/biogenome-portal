@@ -2,7 +2,7 @@
     <div class="dashboard">
       <div class="row align-center">
         <div v-if="NavBar.logoName" class="flex">
-          <va-icon size="5rem" name=app-logo></va-icon>
+          <a :href="NavBar.url" target="_blank" ><va-icon size="5rem" name=app-logo></va-icon></a>
         </div>
         <div class="flex lg8 md8">
           <h1 class="va-h1">{{ Application.title }}</h1>

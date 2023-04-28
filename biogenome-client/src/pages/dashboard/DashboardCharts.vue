@@ -4,18 +4,18 @@
       <Suspense>
         <PieChart
           :field="'instrument_platform'"
-          :model="'reads'"
-          :title="t('dashboard.charts.firstPiechart.title')"
-          :label="t('dashboard.charts.firstPiechart.label')"
+          :model="'experiments'"
+          :title="'dashboard.charts.firstPiechart.title'"
+          :label="'dashboard.charts.firstPiechart.label'"
         />
       </Suspense>
     </div>
     <div class="flex lg6 md6 sm12 xs12">
       <Suspense>
         <DateLineChart
-          :label="t('dashboard.charts.dateLineChart.label')"
+          :label="'dashboard.charts.dateLineChart.label'"
           :field="'metadata.submission_date'"
-          :title="t('dashboard.charts.dateLineChart.title')"
+          :title="'dashboard.charts.dateLineChart.title'"
           :model="'assemblies'"
           :color="'#2c82e0'"
         />
@@ -26,8 +26,8 @@
         <PieChart
           :field="'insdc_status'"
           :model="'organisms'"
-          :title="t('dashboard.charts.secondPiechart.title')"
-          :label="t('dashboard.charts.secondPiechart.label')"
+          :title="'dashboard.charts.secondPiechart.title'"
+          :label="'dashboard.charts.secondPiechart.label'"
         />
       </Suspense>
     </div>

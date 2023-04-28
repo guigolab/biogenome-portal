@@ -4,7 +4,7 @@
       <va-card :to="{name: m.key}" class="mb-4">
         <va-card-content>
           <h2 :style="{ color: colors.info }" class="va-h2 ma-0" >{{ m.value }}</h2>
-          <p>{{ m.label }}</p>
+          <p>{{ t(m.label) }}</p>
         </va-card-content>
       </va-card>
     </div>
@@ -26,27 +26,27 @@
   const showTree = ref(false)
   const models = [
     {
-      label:t('modelStats.organisms'),
+      label:'modelStats.organisms',
       key:"organisms"
     },
     {
-      label:t('modelStats.biosamples'),
+      label:'modelStats.biosamples',
       key:"biosamples"
     },    
     {
-      label:t('modelStats.localSamples'),
+      label:'modelStats.localSamples',
       key:"local_samples"
     },    
     {
-      label:t('modelStats.assemblies'),
+      label:'modelStats.assemblies',
       key:"assemblies"
     },
     {
-      label:t('modelStats.experiments'),
+      label:'modelStats.experiments',
       key:"experiments"
     },
     {
-      label:t('modelStats.annotations'),
+      label:'modelStats.annotations',
       key:"annotations"
     }
   ]

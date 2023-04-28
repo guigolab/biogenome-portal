@@ -120,8 +120,7 @@ def create_assembly_from_accession(accession):
         resp_obj['message'] = f"{accession} not found in INSDC"
         resp_obj['status'] = 400
         return resp_obj
-    sample_accession = ncbi_response['biosample_accession'] if 'biosample_accession' in ncbi_response.keys() else None
-    assembly_obj = create_assembly_from_ncbi_data(ncbi_response,sample_accession)
+    assembly_obj = create_assembly_from_ncbi_data(ncbi_response)
     if assembly_obj:
         resp_obj['message'] = f'{assembly_obj.accession} correctly saved' 
         resp_obj['status'] = 201

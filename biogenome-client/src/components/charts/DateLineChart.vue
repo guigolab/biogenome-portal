@@ -1,6 +1,6 @@
 <template>
   <va-card class="chart-widget">
-    <va-card-title>{{ title }}</va-card-title>
+    <va-card-title>{{ t(title) }}</va-card-title>
     <va-card-content>
       <va-chart class="chart" :data="createLineChartData(data)" type="line" />
     </va-card-content>
@@ -10,7 +10,8 @@
   import StatisticsService from '../../services/clients/StatisticsService'
   import VaChart from '../../components/va-charts/VaChart.vue'
   import { TLineChartData } from '../../data/types'
-
+  import { useI18n } from 'vue-i18n'
+  const { t } = useI18n()
 
   const props = defineProps({
     model: String,
@@ -45,12 +46,11 @@
           value: submissionDates[k],
         }
       })
-    console.log(sortedData)
     const lineChart: TLineChartData = {
       labels: sortedData.map((data) => data.label),
       datasets: [
         {
-          label: props.label,
+          label: t(props.label),
           backgroundColor: props.color,
           data: sortedData.map((data) => data.value),
         },

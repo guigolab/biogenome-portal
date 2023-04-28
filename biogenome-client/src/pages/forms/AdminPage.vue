@@ -15,7 +15,7 @@
       <va-card-content v-else-if="model === 'assemblies'">
         <AssemblyTable />
       </va-card-content>
-      <va-card-content v-else-if="model === 'reads'">
+      <va-card-content v-else-if="model === 'experiments'">
         <ReadTable />
       </va-card-content>
       <va-card-content v-else-if="model === 'biosamples'">
@@ -46,7 +46,7 @@
 
   const model = ref('organisms')
 
-  const models = ['organisms', 'assemblies', 'reads', 'biosamples', 'local_samples', 'annotations', 'users']
+  const models = ['organisms', 'assemblies', 'experiments', 'biosamples', 'local_samples', 'annotations', 'users']
 
 
 </script>

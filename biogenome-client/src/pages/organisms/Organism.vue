@@ -30,7 +30,7 @@
     </div>
     <div class="row row-equal">
       <div class="flex lg12 md12 sm12 xs12">
-          <va-chip v-for="(taxon, index) in taxons" :key="index" flat>{{ taxon.name }}</va-chip>
+          <va-chip :to="{name:'taxon', params:{taxid:taxon.taxid}}" v-for="(taxon, index) in taxons" :key="index" flat>{{ taxon.name }}</va-chip>
       </div>
     </div>
     <div class="row row-equal">
@@ -197,7 +197,6 @@
   const organism = ref({})
   const relatedData = ref([])
   const coordinates = ref([])
-  const collapse = ref(false)
   const models = [
     {
       title: 'BioSamples',

@@ -18,7 +18,8 @@
   ],
   "NavBar": {
     "logoName": "EBG-Logo.png",
-    "bgColor": ""
+    "bgColor": "",
+    "url":""
   },
   "ROLES": [
     { "value": "SampleCollector", "text": "Sample Collector", "description": "Submit sample metadata" },
@@ -79,11 +80,11 @@
       }
     },
     {
-      "name": "reads",
-      "displayName": "menu.reads",
+      "name": "experiments",
+      "displayName": "menu.experiments",
       "meta": {
         "icon": "fa-file-lines",
-        "name": "reads"
+        "name": "experiments"
       }
     },
     {

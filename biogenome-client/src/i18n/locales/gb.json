@@ -246,7 +246,7 @@
     "biosamples": "BioSamples",
     "local_samples": "Local Samples",
     "organismStatistics": "Organisms Stats",
-    "reads": "Experiments",
+    "experiments": "Experiments",
     "organisms": "Organisms",
     "insdcForms": "Import from INSDC",
     "organismForm": "Create Organism",

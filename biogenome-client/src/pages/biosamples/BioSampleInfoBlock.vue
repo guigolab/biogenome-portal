@@ -13,9 +13,9 @@
     <div class="flex lg6 md6 sm12 xs12">
       <Suspense>
         <DateLineChart
-          :label="t('biosampleList.charts.dateLineChart.label')"
+          :label="'biosampleList.charts.dateLineChart.label'"
           :field="'metadata.collection_date'"
-          :title="t('biosampleList.charts.dateLineChart.title')"
+          :title="'biosampleList.charts.dateLineChart.title'"
           :model="'biosamples'"
           :color="'#2c82e0'"
         />

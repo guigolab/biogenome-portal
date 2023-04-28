@@ -9,7 +9,7 @@ MODEL_LIST = {
     'annotations':GenomeAnnotation,
     'biosamples':BioSample,
     'local_samples':LocalSample,
-    'reads':Experiment,
+    'experiments':Experiment,
     'organisms':Organism,
     }
 

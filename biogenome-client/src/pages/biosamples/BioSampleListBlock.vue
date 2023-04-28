@@ -92,7 +92,7 @@
       type: 'input',
     },
     {
-      label: t('biosampleList.filters.searchInput'),
+      label: t('biosampleList.filters.searchSelect'),
       key: 'filter_option',
       type: 'select',
       options: ['taxid', 'gal', 'scientific_name', 'habitat'],

@@ -1,7 +1,7 @@
 <template>
   <va-card class="d-flex">
     <va-card-title>
-      <h1>{{ title }}</h1>
+      <h1>{{ t(title) }}</h1>
       <va-button icon="print" plain @click="printChart" />
     </va-card-title>
     <va-card-content>
@@ -13,6 +13,8 @@
 <script setup lang="ts">
   import VaChart from '../../components/va-charts/VaChart.vue'
   import StatisticsService from '../../services/clients/StatisticsService'
+  import { useI18n } from 'vue-i18n'
+  const { t } = useI18n()
 
   const props = defineProps({
     model: String,
@@ -33,7 +35,7 @@
       datasets: [
         {
           backgroundColor: primaryColorVariants,
-          label: props.label,
+          label: t(props.label),
           data: Object.values(data),
         },
       ],

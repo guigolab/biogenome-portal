@@ -9,7 +9,7 @@
     <va-input v-model="filter.filter" label="search read" class="flex lg4 md4 sm12 xs12"></va-input>
     <va-button :disabled="filter.filter.length <= 2" icon="search" @click="handleSubmit"> Search </va-button>
   </div>
-  <va-data-table :items="reads" :columns="['experiment_accession', 'scientific_name', 'experiment_title', 'actions']">
+  <va-data-table :items="experiments" :columns="['experiment_accession', 'scientific_name', 'experiment_title', 'actions']">
     <template #cell(experiment_title)="{ rowData }">
       {{ rowData.metadata.experiment_title }}
     </template>
@@ -66,7 +66,7 @@ import AuthService from '../../../services/clients/AuthService';
   const filter = ref({ ...initFilter })
   const pagination = ref({ ...initPagination })
   const offset = ref(1 + pagination.value.offset)
-  const reads = ref([])
+  const experiments = ref([])
   const total = ref(0)
 
   const readToDelete = ref({
@@ -74,19 +74,19 @@ import AuthService from '../../../services/clients/AuthService';
   })
   onMounted(async () => {
     const { data } = await ReadService.getReads({ ...pagination.value })
-    reads.value = data.data
+    experiments.value = data.data
     total.value = data.total
   })
 
   async function handlePagination(value: number) {
     pagination.value.offset = value - 1
     const { data } = await ReadService.getReads({ ...pagination.value, ...filter.value })
-    reads.value = data.data
+    experiments.value = data.data
     total.value = data.total
   }
   async function handleSubmit() {
     const { data } = await ReadService.getReads({ ...pagination.value, ...filter.value })
-    reads.value = data.data
+    experiments.value = data.data
     total.value = data.total
     pagination.value = { ...initPagination }
   }

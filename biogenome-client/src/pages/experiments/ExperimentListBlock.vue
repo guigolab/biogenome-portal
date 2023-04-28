@@ -52,7 +52,7 @@
         </va-form>
         <va-card-content> {{ t('table.total') }}: {{ total }} </va-card-content>
         <va-card-content>
-          <DataTable :items="reads" :columns="columns" />
+          <DataTable :items="experiments" :columns="columns" />
           <div class="row align-center justify-center">
             <div class="flex">
               <va-pagination
@@ -137,7 +137,7 @@
   ]
   const offset = ref(1 + readStore.pagination.offset)
 
-  const reads = ref([])
+  const experiments = ref([])
   const total = ref(0)
 
   onMounted(async () => {
@@ -164,7 +164,7 @@
   }
 
   function getReads({ data }: AxiosResponse) {
-    reads.value = data.data
+    experiments.value = data.data
     total.value = data.total
     return data
   }

@@ -52,8 +52,8 @@ def initialize_routes(api):
 	api.add_resource(local_samples_controller.LocalSampleApi, '/api/local_samples/<local_id>')
 	
 	##READS (Experiment Document in DB)
-	api.add_resource(reads_controller.ExperimentApi, '/api/reads/<accession>')
-	api.add_resource(reads_controller.ExperimentsApi, '/api/reads')
+	api.add_resource(reads_controller.ExperimentApi, '/api/experiments/<accession>')
+	api.add_resource(reads_controller.ExperimentsApi, '/api/experiments')
 	
 	##ORGANISMS
 	api.add_resource(organisms_controller.OrganismsApi, '/api/organisms')
