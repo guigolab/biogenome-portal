@@ -3,7 +3,7 @@
 </template>
 <script setup lang="ts">
 
-import {NavBar} from '../../../../config.json'
-const imgUrl = new URL(`/src/assets/${NavBar.logoName}`, import.meta.url).href
+import {navBar} from '../../../../config.json'
+const imgUrl = new URL(`/src/assets/${navBar.logoName}`, import.meta.url).href
 
 </script>

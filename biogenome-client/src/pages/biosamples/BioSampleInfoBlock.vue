@@ -1,4 +1,5 @@
 <template>
+  <InfoBlock :charts="bioSampleInfoBlocks"/>
   <div class="row row-equal">
     <div class="flex lg3 md3 sm12 xs12">
       <Suspense>
@@ -51,63 +52,10 @@
   </div>
 </template>
 <script setup lang="ts">
-  import StatisticsService from '../../services/clients/StatisticsService'
-  import { onMounted, ref } from 'vue'
   import ContributorList from '../../components/stats/ContributorList.vue'
-  import { Contributor } from '../../data/types'
-  import { useBioSampleStore } from '../../stores/biosample-store'
   import DateLineChart from '../../components/charts/DateLineChart.vue'
-  import { useI18n } from 'vue-i18n'
-  const { t } = useI18n()
+  import {bioSampleInfoBlocks} from '../../../config.json'
 
-  const biosampleStore = useBioSampleStore()
-
-  function getSubmitters(value: Contributor[]) {
-    biosampleStore.gals = [...value]
-  }
-
-  const habitats = ref([])
-
-  onMounted(async () => {
-    const { data } = await StatisticsService.getModelFieldStats('biosamples', { field: 'metadata.habitat' })
-    habitats.value = Object.keys(data)
-      .map((k: string) => {
-        return { label: k, value: data[k] }
-      })
-      .sort((a, b) => b.value - a.value)
-  })
-
-  function getIcon(habitat: string) {
-    const lowCase = habitat.toLowerCase()
-    if (
-      lowCase.includes('wood') ||
-      lowCase.includes('leaves') ||
-      lowCase.includes('tree') ||
-      lowCase.includes('forest')
-    )
-      return 'forest'
-    if (
-      lowCase.includes('water') ||
-      lowCase.includes('stream') ||
-      lowCase.includes('aqua') ||
-      lowCase.includes('marin') ||
-      lowCase.includes('sea') ||
-      lowCase.includes('wet') ||
-      lowCase.includes('river')
-    )
-      return 'water'
-    if (lowCase.includes('rock') || lowCase.includes('mount')) return 'landscape'
-    if (lowCase.includes('wall') || lowCase.includes('city')) return 'apartment'
-
-    if (
-      lowCase.includes('garden') ||
-      lowCase.includes('soil') ||
-      lowCase.includes('botan') ||
-      lowCase.includes('weed') ||
-      lowCase.includes('grass')
-    )
-      return 'grass'
-  }
 </script>
 
 <style lang="scss">

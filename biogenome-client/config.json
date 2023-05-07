@@ -1,34 +1,18 @@
 {
-  "GoaTStatus": [
-    { "label": "Sample Collected", "icon": "hiking" },
-    { "label": "Sample Acquired", "icon": "biotech" },
-    { "label": "Data Generation", "icon": "engineering" },
-    { "label": "In Assembly", "icon": "model_training" },
-    { "label": "INSDC Submitted", "icon": "drive_folder_upload" },
-    { "label": "Publication Available", "icon": "post_add" }
-  ],
-  "TargetListStatus": [{ "label": "long_list" }, { "label": "family_representative" }, { "label": "other_priority" }],
-  "PublicationSource": [{ "label": "DOI" }, { "label": "PubMed ID" }, { "label": "PubMed CentralID" }],
-  "INSDCStatus": [
-    { "label": "Sample Acquired", "icon": "biotech" },
-    { "label": "Biosample Submitted", "icon": "checklist_rtl" },
-    { "label": "Reads Submitted", "icon": "upload_file" },
-    { "label": "Assemblies Submitted", "icon": "drive_folder_upload" },
-    { "label": "Annotations Created", "icon": "query_stats" }
-  ],
-  "NavBar": {
+  "navBar":{
     "logoName": "EBG-Logo.png",
     "bgColor": "",
     "url":""
   },
-  "ROLES": [
-    { "value": "SampleCollector", "text": "Sample Collector", "description": "Submit sample metadata" },
-    { "value": "SampleManager", "text": "Sample Manager", "description": "Validate sample metadata" },
-    { "value": "Admin", "text": "Data Admin", "description": "All powers" }
-  ],
-  "Application": {
-    "title": "BioGenome Portal Community Edition",
-    "description": "This portal tracks the progress of the earth biogenome project and its affiliated projects, giving the biodiversity community the opportunity to share photos, vernacular names, and gene annotations of sequenced species"
+  "appInfo":{
+    "gb":{
+      "title": "BioGenome Portal Community Edition",
+      "description": "This portal tracks the progress of the Earth Biogenome Project (EBP) and its affiliated projects, giving the biodiversity community the opportunity to share photos, vernacular names, and gene annotations of sequenced species"
+    },
+    "es-ct":{
+      "title": "BioGenome Portal Community Edition",
+      "description": "Aquest portal segueix el progrés del projecte del biogenoma de la Terra (EBP) i els seus projectes afiliats, donant a la comunitat de biodiversitat l'oportunitat de compartir fotos, noms vernacles i anotacions genètiques d'espècies seqüenciades"
+    }
   },
   "languages":[
     {
@@ -40,6 +24,117 @@
       "name": "catalan"
     }
   ],
+  "dashboardInfoBlocks":[
+    {
+      "model":"experiments",
+      "field":"instrument_platform",
+      "title":"dashboard.charts.firstPiechart.title",
+      "label":"dashboard.charts.firstPiechart.label",
+      "class":"flex lg3 md3 sm12 xs12",
+      "type":"pie"
+    },
+    {
+      "model":"assemblies",
+      "field":"metadata.submission_date",
+      "title":"dashboard.charts.dateLineChart.title",
+      "label":"dashboard.charts.dateLineChart.label",
+      "isDate":true,
+      "color":"#2c82e0",
+      "type":"dateline",
+      "class":"flex lg6 md6 sm12 xs12"
+    },
+    {
+      "model":"organisms",
+      "field":"insdc_status",
+      "title":"dashboard.charts.secondPiechart.title",
+      "label":"dashboard.charts.secondPiechart.label",
+      "class":"flex lg3 md3 sm12 xs12",
+      "type":"pie"
+    }
+  ],
+  "bioSampleInfoBlocks":[
+    {
+      "type":"contribution",
+      "title":"biosampleList.charts.contributorList",
+      "model":"biosamples",
+      "field":"metadata.GAL",
+      "class":"flex lg3 md3 sm12 xs12"
+    },
+    {
+      "type":"dateline",
+      "isDate":true,
+      "field":"metadata.collection_date",
+      "label":"biosampleList.charts.dateLineChart.label",
+      "title":"biosampleList.charts.dateLineChart.title",
+      "color":"#2c82e0",
+      "model":"biosamples",
+      "class":"flex lg6 md6 sm12 xs12"
+    },
+    {
+      "type":"list",
+      "title":"biosampleList.charts.habitatList",
+      "model":"biosamples",
+      "field":"metadata.habitat",
+      "isHabitat":true,
+      "class":"flex lg3 md3 sm12 xs12"
+    }
+  ],
+  "experimentInfoBlocks":[
+    {
+      "model":"experiments",
+      "field":"instrument_platform",
+      "title":"dashboard.charts.firstPiechart.title",
+      "label":"dashboard.charts.firstPiechart.label",
+      "class":"flex lg3 md3 sm12 xs12",
+      "type":"pie"
+    },
+    {
+      "type":"dateline",
+      "isDate":true,
+      "field":"metadata.first_public",
+      "label":"experimentList.charts.dateLineChart.label",
+      "title":"experimentList.charts.dateLineChart.title",
+      "color":"#2c82e0",
+      "model":"experiments",
+      "class":"flex lg6 md6 sm12 xs12"
+    },
+    {
+      "type":"contribution",
+      "title":"experimentList.charts.contributorList",
+      "model":"experiments",
+      "field":"metadata.center_name",
+      "class":"flex lg3 md3 sm12 xs12"
+    }
+  ],
+  "assemblyInfoBlocks":[
+    {
+      "model":"assemblies",
+      "field":"metadata.assembly_leve",
+      "title":"assemblyList.charts.pieChart.title",
+      "label":"assemblyList.charts.pieChart.title",
+      "class":"flex lg3 md3 sm12 xs12",
+      "type":"pie"
+    },
+    {
+      "type":"dateline",
+      "isDate":true,
+      "field":"metadata.submission_date",
+      "label":"assemblyList.charts.dateLineChart.labe",
+      "title":"assemblyList.charts.dateLineChart.title",
+      "color":"#2c82e0",
+      "model":"assemblies",
+      "class":"flex lg6 md6 sm12 xs12"
+    },
+    {
+      "type":"contribution",
+      "title":"assemblyList.charts.contributorList.title",
+      "model":"assemblies",
+      "field":"metadata.submitter",
+      "class":"flex lg3 md3 sm12 xs12"
+    }
+  ],
+  "annotations":{},
+  "local_samples":{},
   "navigationRoutes":[
     {
       "name": "dashboard",

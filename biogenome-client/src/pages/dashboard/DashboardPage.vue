@@ -1,17 +1,17 @@
 <template>
     <div class="dashboard">
       <div class="row align-center">
-        <div v-if="NavBar.logoName" class="flex">
-          <a :href="NavBar.url" target="_blank" ><va-icon size="5rem" name=app-logo></va-icon></a>
+        <div v-if="navBar.logoName" class="flex">
+          <a :href="navBar.url" target="_blank" ><va-icon size="5rem" name=app-logo></va-icon></a>
         </div>
         <div class="flex lg8 md8">
-          <h1 class="va-h1">{{ Application.title }}</h1>
-          <p>{{ Application.description }}</p>
+          <h1 class="va-h1">{{ appInfo[locale].title }}</h1>
+          <p>{{ appInfo[locale].description }}</p>
         </div>
       </div>
       <va-divider/>
-      <DashboardInfoBlock />
-        <DashboardCharts />
+      <DashboardModelStats />
+        <InfoBlock :charts="dashboardInfoBlocks"/>
         <div class="row row-equal">
             <div style="min-height: 400px;" class="flex lg6 md6 sm12 xs12">
                 <Suspense>
@@ -28,11 +28,16 @@
 </template>
 
 <script setup lang="ts">
-import DashboardInfoBlock from './DashboardInfoBlock.vue';
-import DashboardCharts from './DashboardCharts.vue';
+import DashboardModelStats from './DashboardModelStats.vue';
 import DashBoardMap from './DashBoardMap.vue';
 import DashboardTree from './DashboardTree.vue';
-import {Application,NavBar } from '../../../config.json'
+import InfoBlock from '../../components/InfoBlock.vue'
+import {dashboardInfoBlocks} from '../../../config.json'
+
+import {appInfo,navBar } from '../../../config.json'
+import { useI18n } from 'vue-i18n'
+const { locale } = useI18n() 
+
 </script>
 <style lang="scss">
   .row-equal .flex {

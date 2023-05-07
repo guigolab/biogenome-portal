@@ -4,13 +4,14 @@
       <va-breadcrumbs-item active :to="{ name: 'assemblies' }" :label="t('assemblyDetails.breadcrumb')" />
     </va-breadcrumbs>
     <va-divider />
-    <AssemblyInfoBlock />
+    <InfoBlock :charts="assemblyInfoBlocks"/>
     <AssemblyListBlock />
   </div>
 </template>
 <script setup lang="ts">
-  import AssemblyInfoBlock from './AssemblyInfoBlock.vue'
+  import InfoBlock from '../../components/InfoBlock.vue'
   import AssemblyListBlock from './AssemblyListBlock.vue'
+  import {assemblyInfoBlocks} from '../../../config.json'
   import { useI18n } from 'vue-i18n'
   const { t } = useI18n()
 </script>

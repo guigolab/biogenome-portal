@@ -1,0 +1,10 @@
+config json modules:
+
+-app layouts
+    languages
+    application informations
+
+-app components
+    routes
+    charts
+    filters

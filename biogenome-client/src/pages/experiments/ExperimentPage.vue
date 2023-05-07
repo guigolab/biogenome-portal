@@ -4,15 +4,15 @@
       <va-breadcrumbs-item :to="{ name: 'experiments' }" :label="t('experimentList.breadcrumb')" />
     </va-breadcrumbs>
     <va-divider />
-    <ExperimentInfoBlock />
+    <InfoBlock :charts="experimentInfoBlocks"/>
     <ExperimentListBlock />
   </div>
 </template>
 <script setup lang="ts">
-  import ExperimentInfoBlock from './ExperimentInfoBlock.vue'
   import ExperimentListBlock from './ExperimentListBlock.vue'
+  import {experimentInfoBlocks} from '../../../config.json'
   import { useI18n } from 'vue-i18n'
-
+  import InfoBlock from '../../components/InfoBlock.vue'
   const { t } = useI18n()
 
 </script>

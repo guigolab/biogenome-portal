@@ -16,13 +16,13 @@
   import { useI18n } from 'vue-i18n'
   const { t } = useI18n()
 
-  const props = defineProps({
-    model: String,
-    field: String,
-    title: String,
-    label: String,
-    query: Object,
-  })
+  const props = defineProps<{
+    model: string,
+    field:string,
+    title: string,
+    label:string,
+    query?: object,
+  }>()
   const primaryColorVariants = ['#2c82e0', '#ef476f', '#ffd166', '#06d6a0', '#8338ec']
 
   const { data } = props.query

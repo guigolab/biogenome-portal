@@ -122,3 +122,15 @@ export type AssemblyAdapter = {
   name: string
   sequence: Sequence
 }
+
+export type InfoBlock = {
+    field:string,
+    model:string,
+    title:string,
+    label?:string,
+    type: 'pie' | 'dateline' | 'contribution' | 'list'
+    isDate?:boolean
+    isHabitat?:boolean
+    color?:string
+    class:string
+}

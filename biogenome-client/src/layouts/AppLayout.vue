@@ -126,4 +126,12 @@
       overflow-y: scroll;
     }
   }
+  .chart {
+    height: 400px;
+  }
+  .row-equal .flex {
+    .va-card {
+      height: 100%;
+    }
+  }
 </style>

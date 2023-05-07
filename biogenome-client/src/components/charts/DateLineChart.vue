@@ -13,50 +13,44 @@
   import { useI18n } from 'vue-i18n'
   const { t } = useI18n()
 
-  const props = defineProps({
-    model: String,
-    field: String,
-    title: String,
-    label: String,
-    color: String,
-  })
-  const { data } = await StatisticsService.getModelFieldStats(props.model, { field: props.field })
-  const toDate = (dateStr: string) => {
-    const date = new Date()
-    const [year, month] = dateStr.split('-')
-    date.setFullYear(Number(year), Number(month))
-    return date
-  }
-  function createLineChartData(data) {
-    let submissionDates = {}
-    Object.keys(data)
-      .filter((k: string) => k.split('-').length > 1)
-      .forEach((k: string) => {
-        const values = k.split('-')
-        const date = `${values[0]}-${values[1]}`
-        submissionDates[date] = submissionDates[date] ? submissionDates[date] + data[k] : data[k]
-      })
-    const sortedData = Object.keys(submissionDates)
-      .sort((a, b) => {
-        return toDate(a) > toDate(b) ? 1 : -1
-      })
-      .map((k: string) => {
-        return {
-          label: k,
-          value: submissionDates[k],
-        }
-      })
-    const lineChart: TLineChartData = {
-      labels: sortedData.map((data) => data.label),
-      datasets: [
-        {
-          label: t(props.label),
-          backgroundColor: props.color,
-          data: sortedData.map((data) => data.value),
-        },
-      ],
+  const props = defineProps<{
+    model: string,
+    field: string,
+    title: string,
+    label?: string,
+    color?: string,
+  }>()
 
-    }
-    return lineChart
+  const { data } = await StatisticsService.getModelFieldStats(props.model, { field: props.field })
+  
+  function toDate(dateString: string): Date {
+    const [year, month] = dateString.split('-').map(Number);
+    return new Date(year, month);
+  }
+  function createLineChartData(submissionData: Record<string, string>): TLineChartData {
+    const submissionDatesByMonth: Record<string, number> = Object.keys(submissionData)
+      .filter((key) => key.includes('-'))
+      .reduce((acc:Record<string, number>, key:string) => {
+        const [year, month] = key.split('-');
+        const date = `${year}-${month}`;
+        acc[date] = acc[date] ? acc[date]++ : 1
+        return acc;
+      }, {});
+
+    const sortedDates = Object.keys(submissionDatesByMonth)
+      .sort((a, b) => toDate(a) > toDate(b) ? 1 : -1);
+
+    const datasets = [
+      {
+        label: t(props.label) ,
+        backgroundColor: props.color,
+        data: sortedDates.map((date) => submissionDatesByMonth[date]),
+      }
+    ];
+
+    return {
+      labels: sortedDates,
+      datasets,
+    };
   }
 </script>
