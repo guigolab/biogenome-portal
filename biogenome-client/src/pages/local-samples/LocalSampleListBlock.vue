@@ -40,7 +40,7 @@
               <va-button color="danger" @click="reset()">{{t('buttons.reset')}}</va-button>
             </va-card-actions>
           </va-form>
-          <va-card-content> {{t('table.total')}}: {{ total }} </va-card-content>
+          <va-card-content> {{t('table.total')}} {{ total }} </va-card-content>
           <va-card-content>
             <DataTable :items="localSamples" :columns="columns" />
             <div class="row align-center justify-center">

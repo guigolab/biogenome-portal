@@ -3,23 +3,23 @@
     <va-breadcrumbs class="va-title" color="primary">
       <va-breadcrumbs-item active :to="{ name: 'taxons' }" :label="t('taxonDetails.breadcrumb')" />
     </va-breadcrumbs>
-    <div>
-
-    </div>
     <va-divider />
 
-  <div class="row row-equal">
-    <div class="flex lg12 md12 sm12 xs12">
-      <va-collapse
+  <div class="row row-equal justify-end">
+    <div class="flex">
+      <va-button @click="showModal = !showModal" size="small">{{t('relatedTaxon.header')}}</va-button>
+      <!-- launch modal -->
+      <!-- <va-collapse
         stateful
         :header="t('relatedTaxon.header')"
       >
         <RelatedTaxon/>
-      </va-collapse>
+      </va-collapse> -->
     </div>
     <div class="flex lg12 md12 sm12 xs12">
       <TaxonListBlock/>
     </div>
+    <RelatedTaxon :show-modal="showModal"/>
   </div>
 </div>
 </template>
@@ -27,9 +27,9 @@
   import TaxonListBlock from './TaxonListBlock.vue'
   import RelatedTaxon from './RelatedTaxon.vue'
   import { useI18n } from 'vue-i18n'
-      
+  import {ref} from 'vue'
   const { t } = useI18n()
-
+  const showModal = ref(false)
 </script>
 
 <style lang="scss">

@@ -45,7 +45,7 @@
   </va-card-content>
   <va-card-content>
     <div class="row align-center justify-space-between">
-      <div class="flex">{{t('table.total')}}: {{ total }}</div>
+      <div class="flex">{{t('table.total')}} {{ total }}</div>
       <div class="flex">
         <va-pagination
           v-model="offset"

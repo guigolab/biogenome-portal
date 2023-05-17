@@ -2,7 +2,6 @@
   <va-breadcrumbs class="va-title" color="primary">
     <va-breadcrumbs-item :to="{ name: 'biosamples' }" :label="t('biosampleList.breadcrumb')"/>
     <va-breadcrumbs-item
-      v-if="router.currentRoute.value.name === 'biosample'"
       active
       :label="router.currentRoute.value.params.accession"
     />

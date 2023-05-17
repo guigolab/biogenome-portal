@@ -33,7 +33,7 @@
       .reduce((acc:Record<string, number>, key:string) => {
         const [year, month] = key.split('-');
         const date = `${year}-${month}`;
-        acc[date] = acc[date] ? acc[date]++ : 1
+        acc[date] = acc[date] ? acc[date]+1 : 1
         return acc;
       }, {});
 

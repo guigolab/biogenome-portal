@@ -3,7 +3,6 @@
    <va-breadcrumbs class="va-title" color="primary">
       <va-breadcrumbs-item :to="{ name: 'annotations' }" :label="t('annotationDetails.breadcrumb')" />
       <va-breadcrumbs-item
-        v-if="router.currentRoute.value.name === 'annotation'"
         active
         :label="router.currentRoute.value.params.name"
       />

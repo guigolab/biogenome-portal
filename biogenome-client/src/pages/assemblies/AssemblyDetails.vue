@@ -2,7 +2,6 @@
   <va-breadcrumbs class="va-title" color="primary">
     <va-breadcrumbs-item :to="{ name: 'assemblies' }" :label="t('assemblyDetails.breadcrumb')" />
     <va-breadcrumbs-item
-      v-if="router.currentRoute.value.name === 'assembly'"
       active
       :label="router.currentRoute.value.params.accession"
     />

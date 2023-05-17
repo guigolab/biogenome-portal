@@ -93,14 +93,8 @@ def generate_tree(data):
     dfs_generator([(root,0)],tree,list(result))
     return tree
 
-def generate_status_tree(taxid, status_type='insdc_status', status=None):
+def generate_status_tree(taxid):
     root = TaxonNode.objects(taxid=taxid).first()
-    result=list()
-    # if status:
-    #     query=dict(taxon_lineage=taxid)
-    #     query[status_type]=status
-    #     lineages = Organism.objects(**query).scalar('taxon_lineage')
-    #     result = list(set().union(*lineages))
     tree = {}
     dfs_status_tree([(root,0)], tree)
     return tree
@@ -116,7 +110,7 @@ def dfs_status_tree(stack, tree):
         children = TaxonNode.objects(taxid__in=node.children)
         for child in children:
             child_dict = {}
-            dfs_status_tree([(child, level+1)], child_dict,valid_lineages_taxid)
+            dfs_status_tree([(child, level+1)], child_dict)
             tree["children"].append(child_dict)
     return tree
 
@@ -137,12 +131,10 @@ def create_tree_from_relative_species(taxid, insdc_status=INSDCStatus.ASSEMBLIES
     for taxon in lineage:
         query =  {'taxon_lineage':taxon,'insdc_status':insdc_status}
         organisms = Organism.objects(**query)
-        print(organisms.count())
         if organisms.count() > 0:
             root = TaxonNode.objects(taxid=taxon).first()
             response['taxon'] = root.name
             valid_taxids = list(set().union(*organisms.scalar('taxon_lineage')))
-            print(len(valid_taxids))
             dfs_generator([(root,0)],response['tree'],list(valid_taxids))
             return response
     

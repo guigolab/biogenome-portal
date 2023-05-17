@@ -5,11 +5,9 @@
   import { onMounted } from 'vue'
   import AppLayout from './layouts/AppLayout.vue'
   import {appInfo} from '../config.json'
-  import { useI18n } from 'vue-i18n'
-  const { locale } = useI18n()  
 
     onMounted(()=>{
-      document.title = appInfo[locale].title
+      document.title = appInfo.title
     })
   
 </script>

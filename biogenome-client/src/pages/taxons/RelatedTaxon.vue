@@ -1,5 +1,5 @@
 <template>
-    <va-card :stripe="Boolean(message)" stripe-color="danger">
+    <va-modal v-model="showModal" hide-default-actions no-esc-dismiss no-outside-dismiss no-dismiss fullscreen>
         <va-inner-loading :loading="isLoading">
         <va-form tag="form" @submit.prevent="handleSubmit">
           <va-card-content>
@@ -8,15 +8,15 @@
                 <div v-if="filter.type === 'input'">
                   <va-input
                     v-model="searchForm[filter.key]"
-                    :label="filter.label"
-                    :placeholder="filter.placeholder"
+                    :label="t(filter.label)"
+                    :placeholder="t(filter.placeholder)"
                   />
                 </div>
-                <div v-else="filter.type === 'select'">
+                <div v-else>
                   <va-select
                     prevent-overflow
                     v-model="searchForm[filter.key]"
-                    :label="filter.label"
+                    :label="t(filter.label)"
                     :options="filter.options"
                   />
                 </div>
@@ -38,13 +38,13 @@
             <p class="va-h5">{{ message }}</p>
         </va-card-content>
     </va-inner-loading>
-    </va-card>
+    </va-modal>
 </template>
 <script setup lang="ts">
   import { ref } from 'vue'
   import { Filter } from '../../data/types'
   import TaxonService from '../../services/clients/TaxonService';
-  import IndentedTree from '../organisms/IndentedTree.vue';
+  import IndentedTree from '../../components/tree/IndentedTree.vue'
   import { useI18n } from 'vue-i18n'
       
   const { t } = useI18n()
@@ -52,7 +52,9 @@
       taxid:'',
       insdc_status:'Assemblies Submitted'
     }
-
+  const props = defineProps<{
+    showModal:boolean
+  }>()
   const showTree = ref(false)
   const tree = ref({})
   const query = ref('')
@@ -62,13 +64,13 @@
   const message = ref('')
   const filters: Filter[] = [
     {
-      label: t('relatedTaxon.searchInput.label'),
-      placeholder: t('relatedTaxon.searchInput.placeholder'),
+      label: 'relatedTaxon.searchInput.label',
+      placeholder: 'relatedTaxon.searchInput.placeholder',
       key: 'taxid',
       type: 'input',
     },
     {
-      label: t('relatedTaxon.selectInput'),
+      label: 'relatedTaxon.selectInput',
       key: 'insdc_status',
       type: 'select',
       options: [
@@ -80,6 +82,7 @@
   ]
 
   async function handleSubmit(){
+    message.value = ''
     showTree.value = false
     isLoading.value = true
     const {data} = await TaxonService.getPhylogeneticallyCloseTree(searchForm.value.taxid, {insdc_status:searchForm.value.insdc_status})

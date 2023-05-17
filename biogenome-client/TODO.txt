@@ -1,10 +1,17 @@
-config json modules:
+MAPS:
+    3D map
+        countries
+        species
+    2D map
+        species
 
--app layouts
-    languages
-    application informations
+TAXONOMY:
+    refactor color selection tree
+    cards in page
 
--app components
-    routes
-    charts
-    filters
+FORMS:
+    fix response messages
+    add loading animation
+    check organism form creation/update
+
+COPO Cronjob

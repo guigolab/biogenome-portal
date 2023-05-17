@@ -15,7 +15,7 @@ servers:
 tags:
 - name: "organisms"
 - name: "assemblies"
-- name: "reads"
+- name: "experiments"
 - name: "taxons"
 - name: "biosamples"
 - name: "local_samples"
@@ -49,11 +49,11 @@ paths:
                 type: string
                 format: binary
 
-  /spreadsheet_upload:
+  /spexperimentsheet_upload:
     post:
       tags:
         - "local_samples"
-      summary: "Endpoint for local sample creation from spreadsheet file"
+      summary: "Endpoint for local sample creation from spexperimentsheet file"
       requestBody:
         content:
           multipart/form-data:
@@ -209,7 +209,7 @@ paths:
               - 'biosamples'
               - 'local_samples'
               - 'assemblies'
-              - 'reads'
+              - 'experiments'
               - 'annotations'
       responses:
         "200":
@@ -341,11 +341,11 @@ paths:
         "404":
           description: "Assembly not found"
 
-  /reads:
+  /experiments:
     get:
       tags:
-        - "reads"
-      summary: "Endpoint to retrieve a paginated list of reads"
+        - "experiments"
+      summary: "Endpoint to retrieve a paginated list of experiments"
       parameters:
         - in: 'query'
           name: 'filter'
@@ -412,10 +412,10 @@ paths:
         "405":
           description: "Invalid input"
 
-  /reads/{accession}:
+  /experiments/{accession}:
     get:
       tags:
-        - "reads"
+        - "experiments"
       parameters:
         - in: 'path'
           name: 'accession'
@@ -915,7 +915,7 @@ components:
     
     Experiment:
       type: "object"
-      description: "Raw or Mapped Reads"
+      description: "Raw or Mapped experiments"
       properties:
         sample_accession:
           type: "string"
@@ -1068,7 +1068,7 @@ components:
       enum:
       - "Sample Acquired"
       - "Biosample Submitted"
-      - "Reads Submitted"
+      - "experiments Submitted"
       - "Assemblies Submitted"
       - "Annotations Created"
     

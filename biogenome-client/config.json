@@ -5,12 +5,11 @@
     "url":""
   },
   "appInfo":{
+    "title": "BioGenome Portal Community Edition",
     "gb":{
-      "title": "BioGenome Portal Community Edition",
       "description": "This portal tracks the progress of the Earth Biogenome Project (EBP) and its affiliated projects, giving the biodiversity community the opportunity to share photos, vernacular names, and gene annotations of sequenced species"
     },
     "es-ct":{
-      "title": "BioGenome Portal Community Edition",
       "description": "Aquest portal segueix el progrés del projecte del biogenoma de la Terra (EBP) i els seus projectes afiliats, donant a la comunitat de biodiversitat l'oportunitat de compartir fotos, noms vernacles i anotacions genètiques d'espècies seqüenciades"
     }
   },
@@ -109,7 +108,7 @@
   "assemblyInfoBlocks":[
     {
       "model":"assemblies",
-      "field":"metadata.assembly_leve",
+      "field":"metadata.assembly_level",
       "title":"assemblyList.charts.pieChart.title",
       "label":"assemblyList.charts.pieChart.title",
       "class":"flex lg3 md3 sm12 xs12",
@@ -119,7 +118,7 @@
       "type":"dateline",
       "isDate":true,
       "field":"metadata.submission_date",
-      "label":"assemblyList.charts.dateLineChart.labe",
+      "label":"assemblyList.charts.dateLineChart.label",
       "title":"assemblyList.charts.dateLineChart.title",
       "color":"#2c82e0",
       "model":"assemblies",
