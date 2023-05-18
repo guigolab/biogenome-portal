@@ -27,13 +27,13 @@
     const [year, month] = dateString.split('-').map(Number);
     return new Date(year, month);
   }
-  function createLineChartData(submissionData: Record<string, string>): TLineChartData {
+  function createLineChartData(submissionData: Record<string, number>): TLineChartData {
     const submissionDatesByMonth: Record<string, number> = Object.keys(submissionData)
       .filter((key) => key.includes('-'))
       .reduce((acc:Record<string, number>, key:string) => {
         const [year, month] = key.split('-');
         const date = `${year}-${month}`;
-        acc[date] = acc[date] ? acc[date]+1 : 1
+        acc[date] = acc[date] ? acc[date]+submissionData[key] : submissionData[key]
         return acc;
       }, {});
 

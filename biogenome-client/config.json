@@ -90,7 +90,7 @@
     {
       "type":"dateline",
       "isDate":true,
-      "field":"metadata.first_public",
+      "field":"metadata.first_created",
       "label":"experimentList.charts.dateLineChart.label",
       "title":"experimentList.charts.dateLineChart.title",
       "color":"#2c82e0",
