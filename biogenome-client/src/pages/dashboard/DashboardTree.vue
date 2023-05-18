@@ -15,6 +15,6 @@ import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
 const taxid = import.meta.env.VITE_ROOT_NODE ? import.meta.env.VITE_ROOT_NODE: '1'
-const {data} = await TaxonService.getTree('8457')
+const {data} = await TaxonService.getTree(taxid)
 
 </script>

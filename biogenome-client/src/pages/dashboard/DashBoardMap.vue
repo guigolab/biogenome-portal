@@ -4,13 +4,14 @@
 <script setup lang="ts">
 import LeafletMap from '../../components/maps/LeafletMap.vue';
 import TaxonService from '../../services/clients/TaxonService'
-
-const coordinates =  await getCoordinates()
+import {ref,onMounted} from 'vue'
+const coordinates =  ref([])
 
 const root = import.meta.env.VITE_ROOT_NODE
-
+onMounted(async() =>{
+    await getCoordinates()
+})
 async function getCoordinates() {
-        const coordinates = []
         const {data} = await TaxonService.getTaxonCoordinates(root)
         data.forEach(organism => {
             organism.locations.forEach(location => {
@@ -25,7 +26,7 @@ async function getCoordinates() {
                 if(organism.image){
                     value.image = organism.image
                 }
-                coordinates.push(value)
+                coordinates.value.push(value)
             })
         })
         return coordinates

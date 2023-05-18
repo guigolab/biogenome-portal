@@ -21,7 +21,7 @@
           <va-chip size="small" outline>{{ rowData.name }}</va-chip>
         </template>
         <template #cell(experiment_accession)="{ rowData }">
-          <va-chip :to="{ name: 'read', params: { accession: rowData.experiment_accession } }" size="small" outline>{{
+          <va-chip :to="{ name: 'experiment', params: { accession: rowData.experiment_accession } }" size="small" outline>{{
             rowData.experiment_accession
           }}</va-chip>
         </template>
