@@ -3,7 +3,7 @@
     <div class="flex lg12 md12 sm12 xs12">
       <va-card class="d-flex">
         <FilterForm :filters="filters" @on-reset="reset" @on-submit="handleSubmit"/>
-        <va-card-content> {{ t('table.total') }}: {{ total }} </va-card-content>
+        <va-card-content> {{ t('table.total') }} {{ total }} </va-card-content>
         <va-card-content>
           <DataTable :items="experiments" :columns="columns" />
           <div class="row align-center justify-center">
