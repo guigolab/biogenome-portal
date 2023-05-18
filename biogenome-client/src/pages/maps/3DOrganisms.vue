@@ -18,6 +18,8 @@ import * as Cesium from 'cesium'
 import TaxonService from '../../services/clients/TaxonService'
 import { useI18n } from 'vue-i18n'
 import OrganismCard from '../../components/organism/OrganismCard.vue'
+import OrganismService from '../../services/clients/OrganismService'
+
 const { t } = useI18n()
 
 const root = import.meta.env.VITE_ROOT_NODE
@@ -37,11 +39,16 @@ onMounted(async () => {
   await getOrganisms(viewer)
 })
 
+async function getOrganism(taxid:string){
+  const {data} = await OrganismService.getOrganism(taxid)
+  selectedOrganism.value = {...data}
+}
 async function getOrganisms(viewer: Cesium.Viewer) {
   const { data } = await TaxonService.getTaxonCoordinates(root)
+
   viewer.selectedEntityChanged.addEventListener((selectedEntity: Cesium.Entity) => {
     if (Cesium.defined(selectedEntity)) {
-      selectedOrganism.value = {...selectedEntity.organism}
+      getOrganism(selectedEntity.organism.taxid)
       showDetails.value = true
     } else {
       showDetails.value = false
@@ -49,29 +56,29 @@ async function getOrganisms(viewer: Cesium.Viewer) {
   })
   data.forEach((organism) => {
     organism.locations.forEach((tuple) => {
-    const image = organism.image ? organism.image : null
+      const image = organism.image ? organism.image : null
+      const entity = 
       viewer.entities.add({
         position: Cesium.Cartesian3.fromDegrees(tuple[0], tuple[1]),
         label: {
           text: organism.scientific_name,
-          heightReference:Cesium.HeightReference.RELATIVE_TO_GROUND,
-          verticalOrigin: Cesium.VerticalOrigin.TOP
+          heightReference: Cesium.HeightReference.RELATIVE_TO_GROUND,
+          verticalOrigin: Cesium.VerticalOrigin.TOP,
         },
-        billboard:{
-          image:image,
-          height:65,
-          width:65,
+        billboard: {
+          image: image,
+          height: 65,
+          width: 65,
           verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
           pixelOffset: Cesium.Cartesian2.ONE,
-          heightReference: Cesium.HeightReference.RELATIVE_TO_GROUND
+          heightReference: Cesium.HeightReference.RELATIVE_TO_GROUND,
         },
-        ...organism
+        organism:organism
       })
     })
   })
   viewer.zoomTo(viewer.entities)
 }
-
 </script>
 <style lang="scss" scoped>
 #infobox {

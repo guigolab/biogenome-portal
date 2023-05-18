@@ -39,6 +39,7 @@ def get_filter(filter, option):
 
 
 def create_annotation(data):
+    GenomeAnnotation.drop_collection()
     valid_data = dict()
     for key in data.keys():
         if data[key]:
@@ -46,15 +47,16 @@ def create_annotation(data):
     if not 'taxid' in valid_data.keys():
         return 'taxid field is required', 400
     organism = Organism.objects(taxid=valid_data['taxid']).first()
+    print(organism.scientific_name)
     if not organism:
         return 'organism not found', 400
-    valid_data['scientific_name'] = organism.scientfic_name
+    valid_data['scientific_name'] = organism.scientific_name
     if not 'assembly_accession' in data.keys():
         return 'assembly_accession is required', 400
     assembly = Assembly.objects(accession=data['assembly_accession']).first()
     if not assembly:
         return 'Assembly not found', 400
-    valid_data['assembly_name'] = assembly.assembly_name
+    print(valid_data)
     new_genome_annotation = GenomeAnnotation(**valid_data).save()
     return f'genome annotation {new_genome_annotation.name} correctly saved',201
 

@@ -19,8 +19,6 @@ class AnnotationsApi(Resource):
     def post(self):
         data = request.json if request.is_json else request.form
         message,status = annotations_service.create_annotation(data)
-        new_annotation = GenomeAnnotation(**data)
-        new_annotation.save()
         return Response(json.dumps(message), mimetype="application/json", status=status)
     
 
