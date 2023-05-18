@@ -1,8 +1,8 @@
 <template>
-    <div>
-    <va-card-actions align="end">
-      <va-button size="small" @click="downloadSVGImage(tree)">SVG</va-button>
-    </va-card-actions>
+  <div style="padding:20px">
+    <div class="row justify-space-between">
+      <div class="flex"><va-button size="small" @click="downloadSVGImage(tree)">SVG</va-button></div>
+    </div>
       <svg ref="tree" class="tree-svg"></svg>
     </div>
 </template>
@@ -31,8 +31,7 @@
   .leaves-class,
   .legend-text {
     cursor: pointer;
-    font-size: 0.8rem;
-    /* font-size: inherit; */
+    font-size: inherit;
   }
   .tree-svg {
     width: inherit;

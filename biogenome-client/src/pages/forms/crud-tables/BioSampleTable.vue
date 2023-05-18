@@ -34,10 +34,10 @@
   </div>
   <va-modal v-model="showModal" hide-default-actions>
     <template #header>
-      <h2 style="color: red">Delete {{ sampleToDelete.id }}</h2>
+      <h2 style="color: red">Delete {{ sampleToDelete.accession }}</h2>
     </template>
     <div style="padding: 10px">
-      Are you sure you want to delete sample: <strong>{{ sampleToDelete.id }}</strong> ?
+      Are you sure you want to delete sample: <strong>{{ sampleToDelete.accession }}</strong> ?
     </div>
     <template #footer>
       <va-button color="danger" @click="deleteBioSample"> Delete </va-button>
@@ -95,11 +95,8 @@ import AuthService from '../../../services/clients/AuthService';
   }
 
   async function deleteBioSample() {
-    const { data } = await AuthService.deleteBioSample(sampleToDelete.value.accession)
-    pagination.value = {...initPagination}
-    filter.value = {...initFilter}
-    biosamples.value  = (await BioSampleService.getBioSamples({ ...pagination.value })).data.data
-    total.value = data.total
-    init({message: data, color:'success'})
+    showModal.value = false
+    await AuthService.deleteBioSample(sampleToDelete.value.accession)
+    handleSubmit()
   }
 </script>

@@ -97,12 +97,8 @@ import AuthService from '../../../services/clients/AuthService'
   }
 
   async function deleteAssembly() {
-    const { data } = await AuthService.deleteAssembly(assemblyToDelete.value.accession)
-    pagination.value = {...initPagination}
-    filter.value = {...initFilter}
-    assemblies.value = (await AssemblyService.getAssemblies({ ...pagination.value })).data.data
-    total.value = data.total
     showModal.value = false
-    init({message:data, color:'success'})
+    await AuthService.deleteAssembly(assemblyToDelete.value.accession)
+    handleSubmit()
   }
 </script>

@@ -17,7 +17,7 @@
       {{ rowData.metadata.scientific_name }}
     </template>
     <template #cell(actions)="{ rowData }">
-      <va-chip color="danger" icon="delete" @click="deleteConfirmation(rowData)">Delete Read</va-chip>
+      <va-chip color="danger" icon="delete" @click="deleteConfirmation(rowData)">Delete Experiment</va-chip>
     </template>
   </va-data-table>
   <div class="row justify-center">
@@ -40,7 +40,7 @@
       <h2 style="color: red">Delete {{ readToDelete.accession }}</h2>
     </template>
     <div style="padding: 10px">
-      Are you sure you want to delete read: <strong>{{ readToDelete.accession }}</strong> ?
+      Are you sure you want to delete experiment: <strong>{{ readToDelete.accession }}</strong> ?
     </div>
     <template #footer>
       <va-button color="danger" @click="deleteRead"> Delete </va-button>
@@ -92,12 +92,13 @@ import AuthService from '../../../services/clients/AuthService';
   }
 
   function deleteConfirmation(rowData) {
-    readToDelete.value.accession = rowData.accession
+    readToDelete.value.accession = rowData.experiment_accession
     showModal.value = true
   }
 
   async function deleteRead() {
-    const { data } = await AuthService.deleteRead(readToDelete.value.accession)
-    console.log(data)
+    showModal.value = false
+    await AuthService.deleteRead(readToDelete.value.accession)
+    handleSubmit()
   }
 </script>

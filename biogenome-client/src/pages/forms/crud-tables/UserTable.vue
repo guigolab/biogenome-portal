@@ -119,14 +119,9 @@ const { init } = useToast()
   }
 
   async function deleteUser() {
-    const { data } = await AuthService.deleteUser(userToDelete.value.name)
-    pagination.value = { ...initPagination }
-    filter.value = {...initFilter}
-    const response = await UserService.getUsers({ ...pagination.value, ...filter.value })
-    users.value = response.data.data
-    total.value = response.data.total
     showModal.value=false
-    init({message:data, color:'success'})
+    const { data } = await AuthService.deleteUser(userToDelete.value.name)
+    handleSubmit()
   }
 
   async function createUser(){

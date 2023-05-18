@@ -26,7 +26,7 @@
             </div>
             <va-card-actions>
               <va-button type="submit">{{ t('buttons.submit') }}</va-button>
-              <va-button color="danger" @click="reset()">{{t('buttons.reset')}}</va-button>
+              <va-button color="danger" @click="reset()">{{ t('buttons.reset') }}</va-button>
             </va-card-actions>
           </div>
         </va-form>
@@ -45,7 +45,7 @@
   </va-card-content>
   <va-card-content>
     <div class="row align-center justify-space-between">
-      <div class="flex">{{t('table.total')}} {{ total }}</div>
+      <div class="flex">{{ t('table.total') }} {{ total }}</div>
       <div class="flex">
         <va-pagination
           v-model="offset"
@@ -131,7 +131,7 @@
                 <p v-if="org.insdc_common_name" class="va-text-secondary">{{ org.insdc_common_name }}</p>
               </va-card-content>
               <va-card-content>
-                <va-button size="small">{{t('buttons.view')}}</va-button>
+                <va-button size="small">{{ t('buttons.view') }}</va-button>
               </va-card-content>
             </div>
             <va-card-actions v-if="hasINSDCData(org)" vertical align="between" style="flex: 0 auto; padding: 0px">
@@ -146,59 +146,70 @@
   </va-card-content>
 </template>
 <script setup lang="ts">
-  import OrganismService from '../../services/clients/OrganismService'
-  import { onMounted, ref } from 'vue'
-  import { AxiosResponse } from 'axios'
-  import { useOrganismStore } from '../../stores/organism-store'
-  import { useI18n } from 'vue-i18n'
-  const { t } = useI18n()
+import OrganismService from '../../services/clients/OrganismService'
+import { onMounted, ref } from 'vue'
+import { AxiosResponse } from 'axios'
+import { useOrganismStore } from '../../stores/organism-store'
+import { useI18n } from 'vue-i18n'
+import am5geodata_worldLow from '@amcharts/amcharts5-geodata/worldLow'
+import StatisticsService from '../../services/clients/StatisticsService'
 
-  const listView = ref(true)
+const { t } = useI18n()
 
-  const organismStore = useOrganismStore()
+const listView = ref(true)
 
-  const offset = ref(1 + organismStore.pagination.offset)
+const organismStore = useOrganismStore()
 
-  const organisms = ref([])
-  const total = ref(0)
+const offset = ref(1 + organismStore.pagination.offset)
 
-  const countries = ref([])
+const organisms = ref([])
+const total = ref(0)
 
-  onMounted(async () => {
-    getOrganisms(await OrganismService.getOrganisms({ ...organismStore.searchForm, ...organismStore.pagination }))
+const countries = ref([])
+
+onMounted(async () => {
+  getOrganisms(await OrganismService.getOrganisms({ ...organismStore.searchForm, ...organismStore.pagination }))
+  const { data } = await StatisticsService.getModelFieldStats('organisms', { field: 'countries' })
+  if(data){
+    countries.value = am5geodata_worldLow.features
+    .filter((f) => Object.keys(data).includes(f.properties.id))
+    .map((f) => {
+    return { text: f.properties.name, value: f.properties.id }
   })
+  }
+})
 
-  function hasINSDCData(org) {
-    return org.biosamples.length || org.experiments.length || org.assemblies.length
-  }
-  async function handleSubmit() {
-    organismStore.resetPagination()
-    offset.value = 1
-    getOrganisms(await OrganismService.getOrganisms({ ...organismStore.searchForm, ...organismStore.pagination }))
-  }
+function hasINSDCData(org) {
+  return org.biosamples.length || org.experiments.length || org.assemblies.length
+}
+async function handleSubmit() {
+  organismStore.resetPagination()
+  offset.value = 1
+  getOrganisms(await OrganismService.getOrganisms({ ...organismStore.searchForm, ...organismStore.pagination }))
+}
 
-  async function handlePagination(value: number) {
-    organismStore.pagination.offset = value - 1
-    getOrganisms(await OrganismService.getOrganisms({ ...organismStore.searchForm, ...organismStore.pagination }))
-  }
+async function handlePagination(value: number) {
+  organismStore.pagination.offset = value - 1
+  getOrganisms(await OrganismService.getOrganisms({ ...organismStore.searchForm, ...organismStore.pagination }))
+}
 
-  async function reset() {
-    offset.value = 1
-    organismStore.resetSearchForm()
-    organismStore.resetPagination()
-    getOrganisms(await OrganismService.getOrganisms({ ...organismStore.pagination }))
-  }
+async function reset() {
+  offset.value = 1
+  organismStore.resetSearchForm()
+  organismStore.resetPagination()
+  getOrganisms(await OrganismService.getOrganisms({ ...organismStore.pagination }))
+}
 
-  function getOrganisms({ data }: AxiosResponse) {
-    organisms.value = data.data
-    total.value = data.total
-    return data
-  }
+function getOrganisms({ data }: AxiosResponse) {
+  organisms.value = data.data
+  total.value = data.total
+  return data
+}
 </script>
 <style lang="scss" scoped>
-  @import 'flag-icons/css/flag-icons.css';
+@import 'flag-icons/css/flag-icons.css';
 
-  .list__item + .list__item {
-    margin-top: 20px;
-  }
+.list__item + .list__item {
+  margin-top: 20px;
+}
 </style>

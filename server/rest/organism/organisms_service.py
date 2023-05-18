@@ -38,7 +38,7 @@ def get_organisms(offset=0, limit=20,
 
 def get_organisms_locations(filter=None, filter_option='scientfic_name', parent_taxid=None, country=None, bioproject=None,
                 goat_status=None, insdc_status=None, target_list_status=None):
-    query=dict(locations__0__ne=None)
+    query=dict(locations__not__size=0)
     filter_query = get_filter(filter, filter_option) if filter else None
     if parent_taxid:
         query['taxon_lineage'] = parent_taxid

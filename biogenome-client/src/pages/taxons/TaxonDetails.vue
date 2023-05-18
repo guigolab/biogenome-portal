@@ -44,7 +44,7 @@
           />
         </Suspense>
       </div>
-      <div v-if="taxon.children >= 1" class="flex lg6 md6 sm12 xs12">
+      <div class="flex lg6 md6 sm12 xs12">
         <Suspense>
           <TreeCard :taxid="taxid"/>
         </Suspense>

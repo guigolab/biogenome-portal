@@ -1,6 +1,6 @@
 <template>
   <div v-if="Object.keys(organism).length">
-    <va-card style="height: min-content;" :to="{ name: 'organism', params: { taxid: organism.taxid } }">
+    <va-card :to="{ name: 'organism', params: { taxid: organism.taxid } }">
       <va-card-block class="flex-nowrap" horizontal>
         <va-image fit v-if="organism.image" style="flex: 0 0 150px" :src="organism.image" />
         <div style="flex: auto">
@@ -19,6 +19,9 @@
             </div>
             <p v-if="organism.insdc_common_name" class="va-text-secondary">{{ organism.insdc_common_name }}</p>
           </va-card-content>
+          <va-card-content>
+            <va-button size="small">{{ t('buttons.view') }}</va-button>
+          </va-card-content>
         </div>
         <va-card-actions v-if="hasINSDCData(organism)" vertical align="between" style="flex: 0 auto; padding: 0px">
           <va-button v-if="organism.assemblies.length" icon="fa-dna" plain />
@@ -28,14 +31,16 @@
       </va-card-block>
     </va-card>
   </div>
-
 </template>
 <script setup lang="ts">
-  const props = defineProps({
-    organism: Object
-  })
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 
-  function hasINSDCData(org) {
-    return org.biosamples.length || org.experiments.length || org.assemblies.length
-  }
+const props = defineProps({
+  organism: Object,
+})
+
+function hasINSDCData(org) {
+  return org.biosamples.length || org.experiments.length || org.assemblies.length
+}
 </script>

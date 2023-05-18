@@ -113,19 +113,24 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('../pages/status/StatusPage.vue'),
   },
   {
-    name: 'maps',
-    path: '/maps',
+    name: '2d-map',
+    path: '/2d-map',
+    component: () => import('../pages/maps/2DOrganisms.vue'),
+  },
+  {
+    name: '3d-map',
+    path: '/3d-map',
     component: () => import('../layouts/RouterBypass.vue'),
     children: [
       {
         name: 'countries-map',
-        path: 'countries',
-        component: () => import('../pages/maps/CountriesMap.vue'),
+        path: 'countries-map',
+        component: () => import('../pages/maps/3DCountries.vue'),
       },
       {
         name: 'organisms-map',
-        path: 'organisms',
-        component: () => import('../pages/maps/OrganismsMap.vue'),
+        path: 'organisms-map',
+        component: () => import('../pages/maps/3DOrganisms.vue'),
       },
     ],
   },

@@ -98,7 +98,8 @@ import AuthService from '../../../services/clients/AuthService';
   }
 
   async function deleteOrganism() {
-    const { data } = await AuthService.deleteOrganism(organismToDelete.value.taxid)
-    console.log(data)
+    showModal.value = false
+    await AuthService.deleteOrganism(organismToDelete.value.taxid)
+    handleSubmit()
   }
 </script>

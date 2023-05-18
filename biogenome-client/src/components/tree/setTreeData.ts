@@ -27,7 +27,6 @@ function getTopBranches(root:d3.HierarchyNode<any>){
         }
     })
     // Now you have the selected top branches with the most descendants
-    console.log(selectedBranches)
     const mappedBranches = selectedBranches.map(n => n.data.name)
     setColor(root, mappedBranches)
     return selectedBranches
@@ -36,7 +35,6 @@ function getTopBranches(root:d3.HierarchyNode<any>){
 export function useTreeData(data:Object){
     let i = 0
     const root = d3.hierarchy(data, (d) => d.children).eachBefore((d) => (d.index = i++))
-    console.log(root)
     const domains = getTopBranches(root)
     return {root,domains}
 }

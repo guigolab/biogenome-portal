@@ -213,10 +213,17 @@
       }
     },
     {
-      "name": "maps",
-      "displayName": "menu.maps",
+      "name": "2d-map",
+      "displayName": "menu.organismsMap",
       "meta": {
         "icon": "fa-map"
+      }
+    },
+    {
+      "name": "3d-map",
+      "displayName": "menu.3Dmaps",
+      "meta": {
+        "icon": "public"
       },
       "disabled": true,
       "children": [

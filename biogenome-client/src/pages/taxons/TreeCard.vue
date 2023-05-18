@@ -33,14 +33,13 @@ const props = defineProps<{
 const treeType = ref('indented')
 
 const { data } = await TaxonService.getTree(props.taxid)
-
 const types = computed(() => {
-  if (data && data.leaves <= 200) {
-    return [
-      { value: 'indented', label: 'taxonDetails.indented' },
-      { value: 'radial', label: 'taxonDetails.radial' },
-    ]
+  if (data && (data.leaves >= 200 || data.leaves === 1)) {
+    return [{ value: 'indented', label: 'taxonDetails.indented' }]
   }
-  return [{ value: 'indented', label: 'taxonDetails.indented' }]
+  return [
+    { value: 'indented', label: 'taxonDetails.indented' },
+    { value: 'radial', label: 'taxonDetails.radial' },
+  ]
 })
 </script>

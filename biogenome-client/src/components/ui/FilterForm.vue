@@ -1,7 +1,7 @@
 <template>
   <va-form tag="form" @submit.prevent="onSubmit">
     <va-card-content>
-      <div class="row align-center justify-start">
+      <div class="row align-center justify-space-between">
         <div v-for="(filter, index) in filters" :key="index" class="flex lg3 md4 sm12 xs12">
           <div v-if="filter.type === 'input'">
             <va-input

@@ -96,11 +96,8 @@ import AuthService from '../../../services/clients/AuthService'
   }
 
   async function deleteLocalSample() {
-    const { data } = await AuthService.deleteLocalSample(sampleToDelete.value.id)
-    pagination.value = {...initPagination}
-    filter.value = {...initFilter}
-    localSamples.value  = (await LocalSampleService.getLocalSamples({ ...pagination.value })).data.data
-    total.value = data.total
-    init({message: data, color:'success'})
+    showModal.value = false
+    await AuthService.deleteLocalSample(sampleToDelete.value.id)
+    handleSubmit()
   }
 </script>

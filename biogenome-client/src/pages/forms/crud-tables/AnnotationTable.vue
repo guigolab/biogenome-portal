@@ -94,11 +94,8 @@ import AuthService from '../../../services/clients/AuthService';
   }
 
   async function deleteAnnotation() {
-    const { data } = await AuthService.deleteAnnotation(annotationTodelete.value.name)
-    pagination.value = { ...initPagination }
-    filter.value = {...initFilter}
-    annotations.value = (await AnnotationService.getAnnotations({ ...pagination.value })).data.data
-    total.value = data.total   
-    init({message:data, color:'success'}) 
+    showModal.value = false
+    await AuthService.deleteAnnotation(annotationTodelete.value.name)
+    handleSubmit()
   }
 </script>
