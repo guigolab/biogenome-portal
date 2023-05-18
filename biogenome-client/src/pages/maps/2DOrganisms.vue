@@ -22,9 +22,6 @@ import LeafletMap from '../../components/maps/LeafletMap.vue'
 import { useI18n } from 'vue-i18n'
 import TaxonService from '../../services/clients/TaxonService'
 const { t } = useI18n()
-const errorMessage = ref('')
-const counter = ref(0)
-const isLoading = ref(false)
 const root = import.meta.env.VITE_ROOT_NODE
 const coordinates = ref([])
 

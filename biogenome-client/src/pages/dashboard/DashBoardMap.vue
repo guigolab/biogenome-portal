@@ -1,5 +1,7 @@
 <template>
-    <LeafletMap :coordinates="coordinates"/>
+    <div style="height: 100%"  v-if="coordinates.length">
+        <LeafletMap :coordinates="coordinates"/>
+    </div>
 </template>
 <script setup lang="ts">
 import LeafletMap from '../../components/maps/LeafletMap.vue';
@@ -29,7 +31,5 @@ async function getCoordinates() {
                 coordinates.value.push(value)
             })
         })
-        return coordinates
-
     }
 </script>

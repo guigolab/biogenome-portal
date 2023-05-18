@@ -33,7 +33,6 @@ import DashBoardMap from './DashBoardMap.vue';
 import DashboardTree from './DashboardTree.vue';
 import InfoBlock from '../../components/InfoBlock.vue'
 import {dashboardInfoBlocks} from '../../../config.json'
-
 import {appInfo,navBar } from '../../../config.json'
 import { useI18n } from 'vue-i18n'
 const { locale } = useI18n() 
