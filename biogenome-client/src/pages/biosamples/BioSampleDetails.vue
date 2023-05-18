@@ -145,9 +145,6 @@
           />
         </Suspense>
       </div>
-      <div v-if="bioprojects.length" class="flex lg6 md6 sm12 xs12">
-        <BioProjectsCard :bioprojects="bioprojects" />
-      </div>
       <div class="flex lg12 md12 sm12 xs12">
         <va-card-title>{{t('uiComponents.metadata')}}</va-card-title>
         <va-card-content>
@@ -170,7 +167,6 @@
   import LeafletMap from '../../components/maps/LeafletMap.vue'
   import { useRouter } from 'vue-router'
   import RelatedDataCard from '../../components/ui/RelatedDataCard.vue'
-  import BioProjectsCard from '../../components/ui/BioProjectsCard.vue'
   import { useI18n } from 'vue-i18n'
   const { t } = useI18n()  
   const router = useRouter()
@@ -180,14 +176,12 @@
     accession: String,
   })
 
-  const bioprojects = ref([])
   watch(
     () => props.accession,
     async (value) => {
       try {
         showData.value = false
         getBioSample(await BioSampleService.getBioSample(props.accession))
-        bioprojects.value = [...(await BioSampleService.getBioSampleBioProjects(props.accession)).data]
         showData.value = true
       } catch (e) {
         error.value = props.accession + ' ' + e.response.data.message
@@ -225,7 +219,6 @@
   onMounted(async () => {
     try {
       getBioSample(await BioSampleService.getBioSample(props.accession))
-      bioprojects.value = [...(await BioSampleService.getBioSampleBioProjects(props.accession)).data]
       showData.value = true
     } catch (e) {
       error.value = props.accession + ' ' + e.response.data.message

@@ -68,12 +68,12 @@
   },
   "organismDetails": {
     "images": "Imatges",
-    "publications": "Publicacions"
+    "publications": "Publicacions",
+    "vernacularNames": "Noms vernacles"
   },
   "annotationDetails": {
     "breadcrumb": "Anotacions",
-    "genomeBrowser": "Navegador del genoma",
-    "vernacularNames": "Noms vernacles"
+    "genomeBrowser": "Navegador del genoma"
   },
   "annotationList": {
     "filters": {

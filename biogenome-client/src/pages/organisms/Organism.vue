@@ -98,9 +98,6 @@
           />
         </va-card>
       </div>
-      <div v-if="organism.bioprojects.length" class="flex lg6 md6 sm12 xs12">
-        <BioProjectsCard :bioprojects="bioprojects"/>
-      </div>
       <div v-if="organism.publications.length" class="flex lg6 md6 sm12 xs12">
         <va-card >
           <va-card-content>
@@ -182,7 +179,6 @@
   import LeafletMap from '../../components/maps/LeafletMap.vue'
   import Metadata from '../../components/ui/Metadata.vue'
   import RelatedDataCard from '../../components/ui/RelatedDataCard.vue'
-  import BioProjectsCard from '../../components/ui/BioProjectsCard.vue'
   import { useI18n } from 'vue-i18n'
     
   const { t } = useI18n()
@@ -193,7 +189,6 @@
     taxid: String,
   })
   const taxons = ref([])
-  const bioprojects = ref([])
   const organism = ref({})
   const relatedData = ref([])
   const coordinates = ref([])
@@ -240,13 +235,6 @@
       const { data } = await OrganismService.getOrganism(props.taxid)
       organism.value = { ...data }
       taxons.value = (await OrganismService.getOrganismLineage(props.taxid)).data
-      const unorderedBioProjects: [] = (await OrganismService.getOrganismBioprojects(props.taxid)).data
-      bioprojects.value = unorderedBioProjects.sort((a, b) => {
-        if (b.children && b.children.includes(a.accession)) {
-          return -1
-        }
-        return 1
-      })
       relatedData.value = models.filter(
         (m) => Object.keys(organism.value).includes(m.key) && organism.value[m.key].length,
       )

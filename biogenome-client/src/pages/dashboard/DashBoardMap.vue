@@ -3,16 +3,15 @@
 </template>
 <script setup lang="ts">
 import LeafletMap from '../../components/maps/LeafletMap.vue';
-import OrganismService from '../../services/clients/OrganismService';
-
+import TaxonService from '../../services/clients/TaxonService'
 
 const coordinates =  await getCoordinates()
 
-
+const root = import.meta.env.VITE_ROOT_NODE
 
 async function getCoordinates() {
         const coordinates = []
-        const {data} = await OrganismService.getOrganismsLocations()
+        const {data} = await TaxonService.getTaxonCoordinates(root)
         data.forEach(organism => {
             organism.locations.forEach(location => {
                 const lng = location[0]

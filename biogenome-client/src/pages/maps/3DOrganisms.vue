@@ -13,13 +13,14 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import * as Cesium from 'cesium'
-import OrganismService from '../../services/clients/OrganismService'
+import TaxonService from '../../services/clients/TaxonService'
 import { useI18n } from 'vue-i18n'
 import OrganismCard from '../../components/organism/OrganismCard.vue'
 const { t } = useI18n()
 
+const root = import.meta.env.VITE_ROOT_NODE
 const accessToken = import.meta.env.VITE_CESIUM_TOKEN
 
 const cesium = ref(null)
@@ -37,7 +38,7 @@ onMounted(async () => {
 })
 
 async function getOrganisms(viewer: Cesium.Viewer) {
-  const { data } = await OrganismService.getOrganismsLocations()
+  const { data } = await TaxonService.getTaxonCoordinates(root)
   viewer.selectedEntityChanged.addEventListener((selectedEntity: Cesium.Entity) => {
     if (Cesium.defined(selectedEntity)) {
       selectedOrganism.value = {...selectedEntity.organism}

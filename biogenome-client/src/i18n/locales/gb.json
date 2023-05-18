@@ -68,12 +68,12 @@
   },
   "organismDetails":{
     "images":"Images",
-    "publications":"Publications"
+    "publications":"Publications",
+    "vernacularNames":"Vernacular Names"
   },
   "annotationDetails":{
     "breadcrumb":"Annotations",
-    "genomeBrowser":"Genome Browser",
-    "vernacularNames":"Vernacular Names"
+    "genomeBrowser":"Genome Browser"
   },
   "annotationList":{
     "filters":{
