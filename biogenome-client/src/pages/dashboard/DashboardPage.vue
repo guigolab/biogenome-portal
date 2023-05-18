@@ -5,7 +5,7 @@
           <a :href="navBar.url" target="_blank" ><va-icon size="5rem" name=app-logo></va-icon></a>
         </div>
         <div class="flex lg8 md8">
-          <h1 class="va-h1">{{ appInfo[locale].title }}</h1>
+          <h1 class="va-h1">{{ appInfo.title }}</h1>
           <p>{{ appInfo[locale].description }}</p>
         </div>
       </div>
