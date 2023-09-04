@@ -61,6 +61,7 @@ The config.json file is used to customize the user interface, such as the layout
 
 It is also possible to provide a .json file containing language specific text content (see i18n in biogenome-client directory)
 
+
 ### Env variables configuration
 
 The env file is necessary to run the app. Below a list of all the environment variables needed to run the app:
@@ -101,6 +102,10 @@ The env file is necessary to run the app. Below a list of all the environment va
 
 - CESIUM_TOKEN=***** --> the token needed to use the Cesium 3D world map, to generate a token go to: https://cesium.com/ion/tokens
 
+
+### Back-end configuration
+
+The back end container contains a [Genomes On A Tree](https://goat.genomehubs.org/) tsv file template: this can be modified and used to generate reports of the species sequencing progresses.
 
 ### Installation
 
