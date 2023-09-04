@@ -1,72 +1,13 @@
-<div id="top"></div>
-
-<!-- PROJECT LOGO -->
-<br />
-<div align="center">
-
-  <h3 align="center">Biogenome data portal</h3>
-
-  <p align="center">
-    A web interface for biodiversity!
-    <br />
-    <br />
-    <a href="/../../issues">Report Bug</a>
-    <a href="/../../issues">Request Feature</a>
-  </p>
-</div>
-
-
-
-<!-- TABLE OF CONTENTS -->
-<details>
-  <summary>Table of Contents</summary>
-  <ol>
-    <li>
-      <a href="#about-the-project">About The Project</a>
-    </li>
-    <li><a href="#built-with">Built With</a></li>
-    <li>
-      <a href="#getting-started">Getting Started</a>
-      <ol>
-        <li><a href="#containers">Containers</a>
-          <ol>
-            <li><a href="#front-end">Front end</a></li>
-            <li><a href="#back-end">Back end</a></li>
-            <li><a href="#database">Database</a></li>
-            <li><a href="#cronjob">cronjob</a></li>
-          </ol>
-        </li>
-        <li><a href="#configurations">Configurations</a>
-          <ol>
-            <li><a href="#config-json">Front end configuration</a></li>
-            <li><a href="#env-file">Env variables configuration</a></li>
-          </ol>
-        </li>
-        <li><a href="#run-locally">Run locally</a></li>
-        <li><a href="#deploy">Deploy</a></li>
-      </ol>
-    </li>
-    <li><a href="#usage">Usage</a></li>
-    <li><a href="#External APIs">External APIs</a></li>
-    <li><a href="#SequencingProject">Sequencing project services</a></li>
-    <li><a href="#roadmap">Roadmap</a></li>
-    <li><a href="#contributing">Contributing</a></li>
-    <li><a href="#license">License</a></li>
-    <li><a href="#contact">Contact</a></li>
-    <li><a href="#acknowledgments">Acknowledgments</a></li>
-  </ol>
-</details>
-
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-This project aims to provide a user-friendly interface to show and manage biodiversity metadata.
+This project aims to provide a user-friendly interface to show and manage biodiversity genomic metadata.
 
 ### Built With
 
 This project is built with the following stack:
 
-* [Vue.js](https://vuejs.org/)
+* [Vuesti Admin Template](https://vuestic.epicmax.co/admin/dashboard)
 * [FlaskRESTful](https://flask-restful.readthedocs.io/en/latest/)
 * [MongoDB](https://www.mongodb.com/) 
 
@@ -83,36 +24,42 @@ This app is composed by 4 docker containers that are built and launched via a do
 
 ### Front End
 
-The Front-end container compile the Vue3 app with Vite and serve it via NGINX
+The Front-end container compile the Vue3 SPA with Vite and serve the static files via NGINX
 
 ### Back end
 
-The Back-end container consists in a API, implemented in flaskRESTful, and exposed via uWSGI web server that communicates with the NGINX proxy present in the front-end container. This container is the one that manages the client requests from the front-end container, query the database and return the JSON response to the front-end container
+The Back-end container consists in a uWSGI web server that communicates with the NGINX proxy present in the front-end container. This container is the one that manages the client requests from the front-end container, query the database and return the JSON response to the front-end container.
 
 ### Database
 
 The database container is a MongoDB image
 
+
 ### Cronjob
 
-The cronjob container is optional as it is necessary only to run scheduled jobs that downloads metadata already published in INSDC.
+The cronjob container is optional as it is necessary only to run scheduled jobs.
 
-It downloads assemblies and related metadata generated under a bioproject accession at the following endpoint: https://api.ncbi.nlm.nih.gov/datasets/v1/genome/bioproject/{project_accession}
+The scheduled jobs can perform the following tasks:
 
-It downloads biosamples via the project name attribute at the following endpoint: https://www.ebi.ac.uk/biosamples/samples?size=200&filter=attr%3Aproject%20name%3A{project_name}
-
-It checks for new reads for each biosample already saved in the database at the following endpoint: https://www.ebi.ac.uk/ena/portal/api/filereport?result=read_run&accession={accession}
+- Download the metadata already published in INSDC, either under a bioproject(bulk) or via specific attributes (ex. biosamples).
+- Parse, map and integrate data from any other source.
+- Perform heavy calculation tasks (ex: check if sample coordinates are with a country's boundaries)
 
 
 ### Configurations
 
-Before running the project it is necessary to configure an environment file to place in the root of the project, this will be used by all the containers, and a config.json file that will be used by the front-end container.
+Before running the project it is necessary to configure:
+
+- An .env file to place in the root of the project, this will be used by all the containers.
+- A config.json file that will be used by the front-end container.
 
 By default the portal is configured to retrieve public data under the EBP umbrella (https://www.earthbiogenome.org/) it will load (at building stage) and seed the database with the last dump (/dump-db directory)
 
 ### Front end configuration
 
-The config.json file is used to customize the user interface, such as the layout, icons, logos, app title and description.
+The config.json file is used to customize the user interface, such as the layout, icons, logos, app title and description, charts to be used and which field to query for each charts and pages to display.
+
+It is also possible to provide a .json file containing language specific text content (see i18n in biogenome-client directory)
 
 ### Env variables configuration
 
@@ -147,7 +94,7 @@ The env file is necessary to run the app. Below a list of all the environment va
 - THREADS=2
 - JWT_SECRET_KEY=secret_restKey --> key used to encrypt the JWT token of the admin area
 
-- PROJECT_ACCESSION=PRJNA533106 --> the INSDC bioproject accession of the root bioproject
+- PROJECT_ACCESSION=PRJNA533106 --> the INSDC bioproject accession of the root bioproject that will be used to start tracking the submission progresses of it through cronjobs.
 - PROJECTS= --> the list of project which name is present in the project name field of the published biosample metadata, it must be composed by {PROJECT_NAME}_{BIOPROJECT_ACCESSION}: ex: ERGA_PRJEB43510
 
 - ROOT_NODE=2759 --> the NCBI taxonomic identifier of the root node
@@ -187,22 +134,7 @@ Annotations can be added from an imported assembly (link to download the annotat
 
 ### Genome Browser
 
-The app provides a genome browser (JBrowse2: https://jbrowse.org/jb2/ ) to visualize genomic annotations related to an imported assembly.
-
-The genome browser data requires the links to the following files:
-
-  Genome:
-    genome.fa.gz
-    genome.fa.gz.fai
-    genome.fa.gz.gzi
-    chromosome_aliases.txt -_> this field is mandatory if the gff file uses a different chromosome nomenclature
-
-
-To generate the files above follow this steps:
-
-    bgzip -i genome.fa
-
-    samtools faidx genome.fa.gz
+The app provides a genome browser (JBrowse2: https://jbrowse.org/jb2/ ) to visualize genomic annotations related to an imported chromosome-level assembly.
 
   Annotation (the gff must be sorted):
     genes.gff.gz
@@ -223,18 +155,7 @@ For more informations visit: https://jbrowse.org/jb2/docs/
 
 
 IMPORTANT:
- It is possible to add just one fasta per assembly, while it is possible to add as many gene annotations as desired.
-
  The app does not provide a way to directly store the file, but files can be stored in any cloud provider (which supports range requests and return the correct http code (206)) or can be served by the front-end container (NGINX) see example in the code in the /genome-browser-data path.
-
-
-<!-- ROADMAP -->
-## Roadmap
-
-- [ ] Add Changelog
-- [ ] Add API Documentation
-- [ ] Add tests (I know..)
-
 
 <!-- CONTRIBUTING -->
 ## Contributing
