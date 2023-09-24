@@ -52,7 +52,7 @@
     showNext()
   })
 
-  function getContributors(data): Contributor[] {
+  function getContributors(data: Record<string,number>){
     contributors.value = Object.keys(data)
       .sort((a, b) => data[b] - data[a])
       .map((key: string) => {

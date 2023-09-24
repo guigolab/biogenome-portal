@@ -75,7 +75,8 @@ export interface TaxonNode extends Node {
 
 export type BreadCrumb = {
   name: string
-  path: string
+  path: Record<string, any>
+  active: boolean
 }
 
 export type TreeNode = {
@@ -97,7 +98,7 @@ export type CommonName = {
 }
 
 export type Contributor = {
-  contributions?: number
+  contributions: number
   name: string
 }
 
@@ -124,13 +125,50 @@ export type AssemblyAdapter = {
 }
 
 export type InfoBlock = {
-    field:string,
-    model:string,
-    title:string,
-    label?:string,
-    type: 'pie' | 'dateline' | 'contribution' | 'list'
-    isDate?:boolean
-    isHabitat?:boolean
-    color?:string
-    class:string
+  field: string,
+  model: string,
+  title: string,
+  label: string,
+  type: 'pie' | 'dateline' | 'contribution' | 'list' | 'habitat'
+  color: string
+  class: string
+}
+
+export interface Assembly {
+  accession: string,
+  assembly_name: string,
+  scientific_name: string,
+  taxid: string,
+  sample_accession: string,
+  chromosomes: Record<string, any>[],
+  metadata: Record<string, string>
+}
+
+export interface Details {
+  title: string,
+  button1?: {
+    route: Record<string, any>
+    label: string
+  },
+  button2?: {
+    route: Record<string, any>
+    label: string
+  },
+  ncbiPath?: string,
+  ebiPath?: string
+}
+
+export interface OrganismLocations {
+  taxid:string
+  scientific_name:string
+  locations:Record<number,number>[]
+  image?:string
+}
+
+export interface OrganismCoordinates {
+  latitude:number
+  longitude:number
+  id:string,
+  taxid:string
+  image?:string
 }

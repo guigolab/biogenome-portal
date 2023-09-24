@@ -29,13 +29,13 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/assemblies',
     name: 'assemblies',
-    component: () => import('../pages/assemblies/AssemblyPage.vue'),
+    component: () => import('../pages/assemblies/Assemblies.vue'),
   },
   {
     path: '/assemblies/:accession',
     name: 'assembly',
     props: true,
-    component: () => import('../pages/assemblies/AssemblyDetails.vue'),
+    component: () => import('../pages/assemblies/Assembly.vue'),
     meta: {
       name: 'assemblies',
     },

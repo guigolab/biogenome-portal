@@ -1,6 +1,6 @@
 import * as d3 from 'd3'
 
-function setColor(d:d3.HierarchyNode<any>, domains:string[]) {
+function setColor(d, domains) {
     var name = d.data.name
     const color = d3.scaleOrdinal().domain(domains).range(d3.schemeCategory10)
     d.color = color.domain().indexOf(name) >= 0 ? color(name) : d.parent ? d.parent.color : null
@@ -11,7 +11,7 @@ function setColor(d:d3.HierarchyNode<any>, domains:string[]) {
     }
   }
 
-function getTopBranches(root:d3.HierarchyNode<any>){
+function getTopBranches(root){
     root.each(node => {
         node.data.descendantCount = node.descendants().length;
     });
@@ -32,7 +32,7 @@ function getTopBranches(root:d3.HierarchyNode<any>){
     return selectedBranches
 }
 
-export function useTreeData(data:Object){
+export function useTreeData(data){
     let i = 0
     const root = d3.hierarchy(data, (d) => d.children).eachBefore((d) => (d.index = i++))
     const domains = getTopBranches(root)

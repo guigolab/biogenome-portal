@@ -3,7 +3,7 @@ from flask import Response,request
 from flask_restful import Resource
 import json
 import os
-
+from errors import NotFound
 class TreeApi(Resource):
     def get(self, taxid):
         #TODO ADD LEVEL CONTROL ON TREE
@@ -23,6 +23,8 @@ class TaxonomyTreeApi(Resource):
 class RelativeTaxonomyTreeApi(Resource):
     def get(self,taxid):
         response = taxonomy_service.create_tree_from_relative_species(taxid, **request.args)
+        if not response:
+            raise NotFound
         return Response(json.dumps(response), mimetype="application/json", status=200)
 
 class TreeStatusApi(Resource):

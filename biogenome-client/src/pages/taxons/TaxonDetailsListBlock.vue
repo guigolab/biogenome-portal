@@ -1,6 +1,8 @@
 <template>
-  <va-card class="fill-height">
-    <va-form>
+  <div class="fill-height">
+  <va-skeleton v-if="isLoading" height="inherit"></va-skeleton>
+  <div v-else >
+    <va-form >
       <va-card-content>
         <div class="row align-center justify-start">
           <div v-for="(filter, index) in filters" :key="index" class="flex lg4 md4 sm12 xs12">
@@ -37,7 +39,9 @@
         </div>
       </div>
     </va-card-content>
-  </va-card>
+  </div>
+</div>
+
 </template>
 
 <script setup lang="ts">
@@ -48,7 +52,7 @@ import {onMounted, ref} from 'vue'
 import DataTable from '../../components/ui/DataTable.vue'
 
 const { t } = useI18n()
-
+const isLoading = ref(false)
 const props = defineProps<{
     taxid:string
 }>()
@@ -65,12 +69,12 @@ const initSearchForm = {
 }
 const offset = ref(1)
 const total = ref(0)
-const searchForm = ref({ ...initSearchForm })
-const pagination = ref({ ...initPagination })
-const organisms = ref([])
+const searchForm = ref<Record<string,any>>({ ...initSearchForm })
+const pagination = ref<Record<string,any>>({ ...initPagination })
+const organisms = ref<Record<string,any>[]>([])
 
-onMounted(async ()=>{
-    await handleSubmit()
+onMounted(()=>{
+    handleSubmit()
 })
 
 const filters: Filter[] = [
@@ -90,39 +94,38 @@ const filters: Filter[] = [
     key: 'insdc_status',
     type: 'select',
     options: [
-      'Sample Acquired',
       'Biosample Submitted',
       'Reads Submitted',
       'Assemblies Submitted',
-      'Annotations Created',
     ],
   },
 ]
 const columns = ['scientific_name', 'tolid_prefix', 'insdc_status']
 
-
-async function handleSubmit() {
-  pagination.value = { ...initPagination }
-  offset.value = 1
-  const { data } = await OrganismService.getOrganisms({ ...searchForm.value, ...pagination.value })
+async function getOrganisms(query:Record<string,any>) {
+  isLoading.value = true
+  const {data} = await OrganismService.getOrganisms(query)
   organisms.value = [...data.data]
   total.value = data.total
+  isLoading.value = false
 }
 
-async function reset() {
+function handleSubmit() {
+  pagination.value = { ...initPagination }
+  offset.value = 1
+  getOrganisms({ ...searchForm.value, ...pagination.value })
+}
+
+function reset() {
   offset.value = 1
   searchForm.value = { ...initSearchForm }
   pagination.value = { ...initPagination }
-  const { data } = await OrganismService.getOrganisms({ ...searchForm.value, ...pagination.value })
-  organisms.value = [...data.data]
-  total.value = data.total
+  getOrganisms({ ...searchForm.value, ...pagination.value })
 }
 
-async function handlePagination(value: number) {
+function handlePagination(value: number) {
   pagination.value.offset = value - 1
-  const { data } = await OrganismService.getOrganisms({ ...searchForm.value, ...pagination.value })
-  organisms.value = [...data.data]
-  total.value = data.total
+  getOrganisms({ ...searchForm.value, ...pagination.value })
 }
 </script>
 

@@ -7,10 +7,7 @@
     </div>
 </template>
 <script setup lang="ts">
-  import { reactive, onMounted, ref, computed } from 'vue'
-  import * as d3 from 'd3'
-  import { useRouter } from 'vue-router'
-  import { Canvg } from 'canvg'
+  import { onMounted, ref } from 'vue'
   import {createRadialTree} from './scripts/createRadialTree'
   import {useTreeData} from './setTreeData'
   import {downloadSVGImage} from './scripts/generateImage'

@@ -117,7 +117,7 @@ def dfs_status_tree(stack, tree):
 
 def create_tree_from_relative_species(taxid, insdc_status=INSDCStatus.ASSEMBLIES):
     organism = Organism.objects(taxid=taxid).first()
-    response=dict(tree=dict(), taxon='', query='')
+    response=dict(tree=dict(), taxon='')
     if not organism:
         taxon_xml = ena_client.get_taxon_from_ena(taxid)
         if not taxon_xml:

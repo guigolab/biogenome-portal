@@ -6,14 +6,17 @@
             </Suspense>
             <Suspense v-else-if="chart.type === 'dateline'">
                 <DateLineChart :label="chart.label" :field="chart.field" :title="chart.title" :model="chart.model"
-                    :color="chart.color" :is-date="chart.isDate" />
+                    :color="chart.color" />
             </Suspense>
             <Suspense v-else-if="chart.type === 'contribution'">
                 <ContributorList :field="chart.field" :model="chart.model"
                     :title="chart.title" />
             </Suspense>
             <Suspense v-else-if="chart.type === 'list'">  
-                <CustomList :title="chart.title" :field="chart.field" :model="chart.model" :is-habitat="chart.isHabitat"/>   
+                <CustomList :title="chart.title" :field="chart.field" :model="chart.model" :is-habitat="false"/>   
+            </Suspense>
+            <Suspense v-else-if="chart.type === 'habitat'">  
+                <CustomList :title="chart.title" :field="chart.field" :model="chart.model" :is-habitat="true"/>   
             </Suspense>
         </div>
     </div>

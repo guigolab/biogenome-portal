@@ -37,7 +37,6 @@
       "field":"metadata.submission_date",
       "title":"dashboard.charts.dateLineChart.title",
       "label":"dashboard.charts.dateLineChart.label",
-      "isDate":true,
       "color":"#2c82e0",
       "type":"dateline",
       "class":"flex lg6 md6 sm12 xs12"
@@ -61,7 +60,6 @@
     },
     {
       "type":"dateline",
-      "isDate":true,
       "field":"metadata.collection_date",
       "label":"biosampleList.charts.dateLineChart.label",
       "title":"biosampleList.charts.dateLineChart.title",
@@ -89,7 +87,6 @@
     },
     {
       "type":"dateline",
-      "isDate":true,
       "field":"metadata.first_created",
       "label":"experimentList.charts.dateLineChart.label",
       "title":"experimentList.charts.dateLineChart.title",
@@ -105,33 +102,64 @@
       "class":"flex lg3 md3 sm12 xs12"
     }
   ],
-  "assemblyInfoBlocks":[
+  "assemblyInfoBlock":[
     {
+      "type":"pie",
       "model":"assemblies",
       "field":"metadata.assembly_level",
       "title":"assemblyList.charts.pieChart.title",
       "label":"assemblyList.charts.pieChart.title",
-      "class":"flex lg3 md3 sm12 xs12",
-      "type":"pie"
+      "color":"#2c82e0",
+      "class":"flex lg3 md3 sm12 xs12"
     },
     {
       "type":"dateline",
-      "isDate":true,
-      "field":"metadata.submission_date",
-      "label":"assemblyList.charts.dateLineChart.label",
-      "title":"assemblyList.charts.dateLineChart.title",
-      "color":"#2c82e0",
       "model":"assemblies",
+      "field":"metadata.submission_date",
+      "title":"assemblyList.charts.dateLineChart.title",
+      "label":"assemblyList.charts.dateLineChart.label",
+      "color":"#2c82e0",
       "class":"flex lg6 md6 sm12 xs12"
     },
     {
       "type":"contribution",
-      "title":"assemblyList.charts.contributorList.title",
       "model":"assemblies",
       "field":"metadata.submitter",
+      "title":"assemblyList.charts.contributorList.title",
+      "label":"assemblyList.charts.contributorList.title",
+      "color":"#2c82e0",
       "class":"flex lg3 md3 sm12 xs12"
     }
   ],
+  "assemblySelectedMetadata":[
+    {
+      "key":"contig_n50",
+      "label":"assemblyDetails.contigN50",
+      "color":"danger"
+    },
+    {
+      "key":"estimated_size",
+      "label":"assemblyDetails.genomeSize",
+      "color":"info"
+    },
+    {
+      "key":"assembly_level",
+      "label":"assemblyDetails.assemblyLevel",
+      "color":"secondary"
+    },
+    {
+      "key":"submitter",
+      "label":"assemblyDetails.submitter",
+      "color":"warning"
+    },
+    {
+      "key":"submission_date",
+      "label":"assemblyDetails.submissionDate",
+      "color":"success"
+    }
+  ],
+  "annotationsInfoBlock":[],
+  "localSamplesInfoBlock":[],
   "annotations":{},
   "local_samples":{},
   "navigationRoutes":[

@@ -41,6 +41,9 @@
       "annotations":"Annotations",
       "local_samples":"Local Samples"
     },
+    "info":{
+      "exploreGallery":"Explore gallery"
+    },
     "charts": {
       "firstPiechart":{
         "title":"Platform Used",
@@ -211,7 +214,7 @@
       "placeholder":"Search by NCBI TaxID"
     },
     "selectInput":"INSDC status",
-    "header":"Search taxon phylogenetically close"
+    "header":"Find a taxon by its Taxonomic identifier, or return the closest phylogenetic match if not found."
   },
   "taxonList":{
     "filters":{
@@ -220,6 +223,11 @@
       "sortOrder":"Sort Order",
       "ranks":"Ranks"
     }
+  },
+  "taxonomyTabs":{
+    "explorer":"Explorer",
+    "table":"Table",
+    "search":"Search"
   },
   "taxonDetails":{
     "breadcrumb":"Taxonomy",

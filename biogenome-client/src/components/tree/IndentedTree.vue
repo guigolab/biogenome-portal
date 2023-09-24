@@ -8,13 +8,11 @@
   </div>
 </template>
 <script lang="ts" setup>
-import * as d3 from 'd3'
 import { onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
 import { useTreeData } from './setTreeData'
 import { createIndentedTree } from './scripts/createIndentedTree'
 import { downloadSVGImage, downloadPGNImage } from './scripts/generateImage'
-
+import { useRouter } from 'vue-router'
 const router = useRouter()
 const tree = ref(null)
 
@@ -25,6 +23,6 @@ const props = defineProps<{
 const { root } = useTreeData(props.data)
 
 onMounted(() => {
-  createIndentedTree(tree, root)
+  createIndentedTree(tree, root, router)
 })
 </script>

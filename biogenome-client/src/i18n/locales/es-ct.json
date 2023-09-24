@@ -41,6 +41,9 @@
       "annotations": "Anotacions",
       "local_samples": "Mostres locals"
     },
+    "info":{
+      "exploreGallery":"Explora la galeria"
+    },
     "charts": {
       "firstPiechart": {
         "title": "Plataforma utilitzada",
@@ -211,7 +214,7 @@
       "placeholder": "Cerca per NCBI TaxID"
     },
     "selectInput": "Estat INSDC",
-    "header": "Cerca taxon filogenèticament proper"
+    "header":"Cerca un taxó pel seu identificador taxonòmic, o retorna la coincidència filogenètica més propera si no es troba."
   },
   "taxonList": {
     "filters": {
@@ -220,6 +223,11 @@
       "sortOrder": "Ordena ordre",
       "ranks":"Rangs"
     }
+  },
+  "taxonomyTabs":{
+    "explorer":"Explorador",
+    "table":"Taula",
+    "search":"Cerca"
   },
   "taxonDetails": {
     "breadcrumb": "Taxonomia",
