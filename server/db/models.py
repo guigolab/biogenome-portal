@@ -186,6 +186,7 @@ class GenomeAnnotation(db.Document):
     created = db.DateTimeField(default=datetime.datetime.utcnow)
     metadata=db.DictField()
     user=db.StringField()
+    external=db.BooleanField(default=True)
    
 @handler(db.post_delete)
 def delete_related_data( sender, document ):

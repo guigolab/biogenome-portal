@@ -2,7 +2,7 @@
   <va-accordion v-model="accordionValue" class="sidebar-accordion va-sidebar__menu__inner" multiple>
     <va-collapse v-for="(route, idx) in items" :key="idx">
       <template #header>
-        <va-sidebar-item :active="isRouteActive(route)" @click="toRoute(route.children ? undefined : route.name)">
+        <va-sidebar-item :active="isRouteActive(route)" @click="route.children?.length ? undefined : toRoute(route.name)">
           <va-sidebar-item-content>
             <va-icon :name="route.meta.icon" class="va-sidebar-item__icon" />
 

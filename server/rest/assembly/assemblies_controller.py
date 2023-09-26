@@ -14,6 +14,7 @@ class AssembliesApi(Resource):
     def get(self):
         total, data = assemblies_service.get_assemblies(**request.args)
         json_resp = dict(total=total, data=list(data.as_pymongo()))
+        assemblies_service.get_assemblies_from_bioproject('PRJNA533106')
         return Response(json.dumps(json_resp), mimetype="application/json", status=200)
 
 class AssemblyApi(Resource):

@@ -26,15 +26,12 @@ def initialize_routes(api):
 
 	##TAXONOMY
 	api.add_resource(taxonomy_controller.TreeApi,'/api/tree', '/api/tree/<taxid>')
-	api.add_resource(taxonomy_controller.TreeStatusApi,'/api/tree/<taxid>/status')
-	api.add_resource(taxonomy_controller.TreeLevelsApi, '/api/tree_levels', '/api/tree_levels/<taxid>')
-	api.add_resource(taxonomy_controller.TaxonomyTreeApi, '/api/taxonomy_tree/<taxid>') 
 	api.add_resource(taxonomy_controller.RelativeTaxonomyTreeApi, '/api/tree/<taxid>/relative') 
 
 	##ANNOTATIONS
 	api.add_resource(annotations_controller.AnnotationsApi, '/api/annotations')
 	api.add_resource(annotations_controller.AnnotationApi,  '/api/annotations/<name>')
-
+	api.add_resource(annotations_controller.StreamAnnotations, '/api/download/<filename>')
 	##ASSEMBLIES
 	api.add_resource(assemblies_controller.AssembliesApi, '/api/assemblies')
 	api.add_resource(assemblies_controller.AssemblyApi,  '/api/assemblies/<accession>')

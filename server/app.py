@@ -21,7 +21,6 @@ app.config["JWT_TOKEN_LOCATION"] = ["cookies"]
 app.config["JWT_COOKIE_SAMESITE"] = "None"
 # app.config["JWT_COOKIE_SECURE"] = True
 app.config['CORS_SUPPORTS_CREDENTIALS'] = True
-app.config['CORS_ORIGINS'] = ['http://localhost:3000']
 
 initialize_db(app)
 

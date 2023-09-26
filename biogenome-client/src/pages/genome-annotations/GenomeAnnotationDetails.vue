@@ -108,7 +108,7 @@
             category: ["Genes"],
             adapter: {
                 type: "Gff3TabixAdapter",
-                gffGzLocation: {
+                gff_gz_location: {
                     uri: annotation.value.gff_gz_location,
                     locationType: "UriLocation"
                 },

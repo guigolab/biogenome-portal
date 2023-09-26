@@ -53,6 +53,7 @@ import DataTable from '../../components/ui/DataTable.vue'
 
 const { t } = useI18n()
 const isLoading = ref(false)
+
 const props = defineProps<{
     taxid:string
 }>()

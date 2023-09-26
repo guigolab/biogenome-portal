@@ -22,7 +22,8 @@
       "experiments":"Experiments",
       "annotations":"Annotations"
     },
-    "metadata": "Metadata"
+    "metadata": "Metadata",
+    "wikipedia": "Wikipedia"
   },
   "modelStats":{
     "organisms":"Organisms",
@@ -251,6 +252,9 @@
     "organismsMap": "Organisms Map",
     "countriesMap": "Countries Map",
     "adminArea": "Admin Area",
+    "taxonExplorer":"Explorer",
+    "taxonTable":"Table",
+    "taxonLookup":"Finder",
     "taxons": "Taxonomy",
     "assemblies": "Assemblies",
     "biosamples": "BioSamples",

@@ -111,7 +111,6 @@ def get_or_create_organism(taxid):
 
 def parse_organism_data(data,taxid=None):
     #organism creation
-    app.logger.info(data)
     if not taxid:
         if not 'taxid' in data.keys():
             return

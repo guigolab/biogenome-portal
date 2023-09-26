@@ -1,19 +1,19 @@
 {
-  "navBar":{
+  "navBar": {
     "logoName": "EBG-Logo.png",
     "bgColor": "",
-    "url":""
+    "url": ""
   },
-  "appInfo":{
+  "appInfo": {
     "title": "BioGenome Portal Community Edition",
-    "gb":{
+    "gb": {
       "description": "This portal tracks the progress of the Earth Biogenome Project (EBP) and its affiliated projects, giving the biodiversity community the opportunity to share photos, vernacular names, and gene annotations of sequenced species"
     },
-    "es-ct":{
+    "es-ct": {
       "description": "Aquest portal segueix el progrés del projecte del biogenoma de la Terra (EBP) i els seus projectes afiliats, donant a la comunitat de biodiversitat l'oportunitat de compartir fotos, noms vernacles i anotacions genètiques d'espècies seqüenciades"
     }
   },
-  "languages":[
+  "languages": [
     {
       "code": "gb",
       "name": "english"
@@ -23,146 +23,176 @@
       "name": "catalan"
     }
   ],
-  "dashboardInfoBlocks":[
+  "wiki": {
+    "gb": "https://en.m.wikipedia.org/wiki",
+    "es-ct": "https://ca.m.wikipedia.org/wiki"
+  },
+  "dashboardModelStats": [
     {
-      "model":"experiments",
-      "field":"instrument_platform",
-      "title":"dashboard.charts.firstPiechart.title",
-      "label":"dashboard.charts.firstPiechart.label",
-      "class":"flex lg3 md3 sm12 xs12",
-      "type":"pie"
+      "label": "modelStats.organisms",
+      "key": "organisms"
     },
     {
-      "model":"assemblies",
-      "field":"metadata.submission_date",
-      "title":"dashboard.charts.dateLineChart.title",
-      "label":"dashboard.charts.dateLineChart.label",
-      "color":"#2c82e0",
-      "type":"dateline",
-      "class":"flex lg6 md6 sm12 xs12"
+      "label": "modelStats.biosamples",
+      "key":"biosamples"
     },
     {
-      "model":"organisms",
-      "field":"insdc_status",
-      "title":"dashboard.charts.secondPiechart.title",
-      "label":"dashboard.charts.secondPiechart.label",
-      "class":"flex lg3 md3 sm12 xs12",
-      "type":"pie"
+      "label": "modelStats.localSamples",
+      "key": "local_samples"
+    },
+    {
+      "label": "modelStats.assemblies",
+      "key": "assemblies"
+    },
+    {
+      "label": "modelStats.experiments",
+      "key": "experiments"
+    },
+    {
+      "label": "modelStats.annotations",
+      "key": "annotations"
     }
   ],
-  "bioSampleInfoBlocks":[
+  "dashboardInfoBlocks": [
     {
-      "type":"contribution",
-      "title":"biosampleList.charts.contributorList",
-      "model":"biosamples",
-      "field":"metadata.GAL",
-      "class":"flex lg3 md3 sm12 xs12"
+      "model": "experiments",
+      "field": "instrument_platform",
+      "title": "dashboard.charts.firstPiechart.title",
+      "label": "dashboard.charts.firstPiechart.label",
+      "class": "flex lg3 md3 sm12 xs12",
+      "type": "pie"
     },
     {
-      "type":"dateline",
-      "field":"metadata.collection_date",
-      "label":"biosampleList.charts.dateLineChart.label",
-      "title":"biosampleList.charts.dateLineChart.title",
-      "color":"#2c82e0",
-      "model":"biosamples",
-      "class":"flex lg6 md6 sm12 xs12"
+      "model": "assemblies",
+      "field": "metadata.submission_date",
+      "title": "dashboard.charts.dateLineChart.title",
+      "label": "dashboard.charts.dateLineChart.label",
+      "color": "#2c82e0",
+      "type": "dateline",
+      "class": "flex lg6 md6 sm12 xs12"
     },
     {
-      "type":"list",
-      "title":"biosampleList.charts.habitatList",
-      "model":"biosamples",
-      "field":"metadata.habitat",
-      "isHabitat":true,
-      "class":"flex lg3 md3 sm12 xs12"
+      "model": "organisms",
+      "field": "insdc_status",
+      "title": "dashboard.charts.secondPiechart.title",
+      "label": "dashboard.charts.secondPiechart.label",
+      "class": "flex lg3 md3 sm12 xs12",
+      "type": "pie"
     }
   ],
-  "experimentInfoBlocks":[
+  "bioSampleInfoBlocks": [
     {
-      "model":"experiments",
-      "field":"instrument_platform",
-      "title":"dashboard.charts.firstPiechart.title",
-      "label":"dashboard.charts.firstPiechart.label",
-      "class":"flex lg3 md3 sm12 xs12",
-      "type":"pie"
+      "type": "contribution",
+      "title": "biosampleList.charts.contributorList",
+      "model": "biosamples",
+      "field": "metadata.GAL",
+      "class": "flex lg3 md3 sm12 xs12"
     },
     {
-      "type":"dateline",
-      "field":"metadata.first_created",
-      "label":"experimentList.charts.dateLineChart.label",
-      "title":"experimentList.charts.dateLineChart.title",
-      "color":"#2c82e0",
-      "model":"experiments",
-      "class":"flex lg6 md6 sm12 xs12"
+      "type": "dateline",
+      "field": "metadata.collection_date",
+      "label": "biosampleList.charts.dateLineChart.label",
+      "title": "biosampleList.charts.dateLineChart.title",
+      "color": "#2c82e0",
+      "model": "biosamples",
+      "class": "flex lg6 md6 sm12 xs12"
     },
     {
-      "type":"contribution",
-      "title":"experimentList.charts.contributorList",
-      "model":"experiments",
-      "field":"metadata.center_name",
-      "class":"flex lg3 md3 sm12 xs12"
+      "type": "list",
+      "title": "biosampleList.charts.habitatList",
+      "model": "biosamples",
+      "field": "metadata.habitat",
+      "isHabitat": true,
+      "class": "flex lg3 md3 sm12 xs12"
     }
   ],
-  "assemblyInfoBlock":[
+  "experimentInfoBlocks": [
     {
-      "type":"pie",
-      "model":"assemblies",
-      "field":"metadata.assembly_level",
-      "title":"assemblyList.charts.pieChart.title",
-      "label":"assemblyList.charts.pieChart.title",
-      "color":"#2c82e0",
-      "class":"flex lg3 md3 sm12 xs12"
+      "model": "experiments",
+      "field": "instrument_platform",
+      "title": "dashboard.charts.firstPiechart.title",
+      "label": "dashboard.charts.firstPiechart.label",
+      "class": "flex lg3 md3 sm12 xs12",
+      "type": "pie"
     },
     {
-      "type":"dateline",
-      "model":"assemblies",
-      "field":"metadata.submission_date",
-      "title":"assemblyList.charts.dateLineChart.title",
-      "label":"assemblyList.charts.dateLineChart.label",
-      "color":"#2c82e0",
-      "class":"flex lg6 md6 sm12 xs12"
+      "type": "dateline",
+      "field": "metadata.first_created",
+      "label": "experimentList.charts.dateLineChart.label",
+      "title": "experimentList.charts.dateLineChart.title",
+      "color": "#2c82e0",
+      "model": "experiments",
+      "class": "flex lg6 md6 sm12 xs12"
     },
     {
-      "type":"contribution",
-      "model":"assemblies",
-      "field":"metadata.submitter",
-      "title":"assemblyList.charts.contributorList.title",
-      "label":"assemblyList.charts.contributorList.title",
-      "color":"#2c82e0",
-      "class":"flex lg3 md3 sm12 xs12"
+      "type": "contribution",
+      "title": "experimentList.charts.contributorList",
+      "model": "experiments",
+      "field": "metadata.center_name",
+      "class": "flex lg3 md3 sm12 xs12"
     }
   ],
-  "assemblySelectedMetadata":[
+  "assemblyInfoBlock": [
     {
-      "key":"contig_n50",
-      "label":"assemblyDetails.contigN50",
-      "color":"danger"
+      "type": "pie",
+      "model": "assemblies",
+      "field": "metadata.assembly_level",
+      "title": "assemblyList.charts.pieChart.title",
+      "label": "assemblyList.charts.pieChart.title",
+      "color": "#2c82e0",
+      "class": "flex lg3 md3 sm12 xs12"
     },
     {
-      "key":"estimated_size",
-      "label":"assemblyDetails.genomeSize",
-      "color":"info"
+      "type": "dateline",
+      "model": "assemblies",
+      "field": "metadata.submission_date",
+      "title": "assemblyList.charts.dateLineChart.title",
+      "label": "assemblyList.charts.dateLineChart.label",
+      "color": "#2c82e0",
+      "class": "flex lg6 md6 sm12 xs12"
     },
     {
-      "key":"assembly_level",
-      "label":"assemblyDetails.assemblyLevel",
-      "color":"secondary"
-    },
-    {
-      "key":"submitter",
-      "label":"assemblyDetails.submitter",
-      "color":"warning"
-    },
-    {
-      "key":"submission_date",
-      "label":"assemblyDetails.submissionDate",
-      "color":"success"
+      "type": "contribution",
+      "model": "assemblies",
+      "field": "metadata.submitter",
+      "title": "assemblyList.charts.contributorList.title",
+      "label": "assemblyList.charts.contributorList.title",
+      "color": "#2c82e0",
+      "class": "flex lg3 md3 sm12 xs12"
     }
   ],
-  "annotationsInfoBlock":[],
-  "localSamplesInfoBlock":[],
-  "annotations":{},
-  "local_samples":{},
-  "navigationRoutes":[
+  "assemblySelectedMetadata": [
+    {
+      "key": "contig_n50",
+      "label": "assemblyDetails.contigN50",
+      "color": "danger"
+    },
+    {
+      "key": "estimated_size",
+      "label": "assemblyDetails.genomeSize",
+      "color": "info"
+    },
+    {
+      "key": "assembly_level",
+      "label": "assemblyDetails.assemblyLevel",
+      "color": "secondary"
+    },
+    {
+      "key": "submitter",
+      "label": "assemblyDetails.submitter",
+      "color": "warning"
+    },
+    {
+      "key": "submission_date",
+      "label": "assemblyDetails.submissionDate",
+      "color": "success"
+    }
+  ],
+  "annotationsInfoBlock": [],
+  "localSamplesInfoBlock": [],
+  "annotations": {},
+  "local_samples": {},
+  "navigationRoutes": [
     {
       "name": "dashboard",
       "displayName": "menu.dashboard",
@@ -215,7 +245,7 @@
       "meta": {
         "icon": "fa-vial"
       },
-      "children":[
+      "children": [
         {
           "name": "biosamples",
           "displayName": "menu.biosamples",
@@ -288,10 +318,6 @@
         {
           "name": "spreadsheet-upload",
           "displayName": "menu.importLocalSamples"
-        },
-        {
-          "name": "annotation-form",
-          "displayName": "menu.annotationForm"
         }
       ]
     }

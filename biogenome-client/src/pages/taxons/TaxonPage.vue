@@ -3,7 +3,33 @@
     <va-breadcrumbs class="va-title" color="primary">
       <va-breadcrumbs-item active :to="{ name: 'taxons' }" :label="t('taxonDetails.breadcrumb')" />
     </va-breadcrumbs>
-    <va-tabs v-model="tabValue" grow>
+    <va-divider/>
+    <va-card>
+      <va-card-content class="row justify-end">
+        <va-button-toggle class="flex" icon-color="primary" v-model="tabValue" preset="secondary" border-color="primary"
+          :options="tabs" value-by="title" :text-by="(option: Record<string, any>) => t(option.title)" />
+      </va-card-content>
+      <va-divider />
+      <!-- <va-card-content class="row row-equal justify-end">
+          <Transition name="slide-fade">
+            <div v-if="tabValue === 'taxonomyTabs.table'" class="flex lg12 md12 sm12 xs12">
+              <TaxonListBlock />
+            </div>
+            <div v-else-if="tabValue === 'taxonomyTabs.search'" class="flex lg12 md12 sm12 xs12">
+              <RelatedTaxon />
+            </div>
+            <div v-else class="flex lg12 md12 sm12 xs12">
+              <Suspense>
+                <D3HyperTree :taxid="rootNode" />
+                <template #fallback>
+                  <va-skeleton animation="wave" :height="'90vh'" />
+                </template>
+              </Suspense>
+            </div>
+          </Transition>
+      </va-card-content> -->
+    </va-card>
+    <!-- <va-tabs v-model="tabValue" grow>
       <template #tabs>
         <va-tab v-for="tab in tabs" :key="tab.title" :name="tab.title">
           <va-icon class="mr-2" :name="tab.icon">
@@ -11,7 +37,8 @@
           {{ t(tab.title) }}
         </va-tab>
       </template>
-    </va-tabs>
+    </va-tabs> -->
+    <va-divider style="margin: 0;" />
     <div class="row row-equal justify-end">
       <Transition name="slide-fade">
         <div v-if="tabValue === 'taxonomyTabs.table'" class="flex lg12 md12 sm12 xs12">
@@ -24,7 +51,7 @@
           <Suspense>
             <D3HyperTree :taxid="rootNode" />
             <template #fallback>
-              <va-skeleton  animation="wave" :height="'90vh'" />
+              <va-skeleton animation="wave" :height="'90vh'" />
             </template>
           </Suspense>
         </div>
@@ -82,5 +109,19 @@ const tabValue = ref(tabs[0].title)
     display: flex;
     justify-content: space-between;
   }
+}
+
+.slide-fade-enter-active {
+  transition: all 0.3s ease-out;
+}
+
+.slide-fade-leave-active {
+  transition: all 0.3s cubic-bezier(1, 0.5, 0.8, 1);
+}
+
+.slide-fade-enter-from,
+.slide-fade-leave-to {
+  transform: translateX(20px);
+  opacity: 0;
 }
 </style>

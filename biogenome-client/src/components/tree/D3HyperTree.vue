@@ -1,32 +1,6 @@
 <template>
-    <va-card>
-        <va-card-content>
-            <div class="row row-equal">
-                <div class="flex lg8 md7 sm12 xs12" style="height: 100vh;">
-                    <va-card style="box-shadow: none;" :bordered="false">
-                        <div ref="hypertree"></div>
-                    </va-card>
-                </div>
-                <div class="flex lg4 md5 sm12 xs12">
-                    <va-card style="box-shadow: none;" :bordered="false">
-                        <h2 class="va-h2">{{ currentTaxon.name }}</h2>
-                        <p>{{ currentTaxon.rank }}</p>
-                        <div class="row justify-end">
-                            <div class="flex">
-                                <va-button-toggle icon-color="primary" round v-model="tabValue" preset="secondary"
-                                    border-color="primary" :options="tabs" value-by="title"
-                                    :text-by="(option) => t(option.title)" />
-                            </div>
-                        </div>
-                        <va-divider />
-                        <div v-if="tabValue === 'Wikipedia'" style="overflow: scroll;">
-                            <iframe style="width: 100%;height: 100vh;" :src="src" :key="src"></iframe>
-                        </div>
-                        <TaxonDetailsListBlock v-else :key="currentTaxon.taxid" :taxid="currentTaxon.taxid" />
-                    </va-card>
-                </div>
-            </div>
-        </va-card-content>
+    <va-card style="box-shadow: none;" :bordered="false">
+        <div ref="hypertree"></div>
     </va-card>
 </template>
 
@@ -34,36 +8,21 @@
 import * as hyt from 'd3-hypertree'
 import TaxonService from '../../services/clients/TaxonService'
 import { useTreeData } from './setTreeData'
-import { onMounted, reactive, ref } from 'vue'
-import TaxonDetailsListBlock from '../../pages/taxons/TaxonDetailsListBlock.vue'
-import { useI18n } from 'vue-i18n'
+import { onMounted, ref } from 'vue'
+import {TreeNode} from '../../data/types'
+const rootNode = import.meta.env.VITE_ROOT_NODE ?
+    import.meta.env.VITE_ROOT_NODE : '131567'
 
-const { t } = useI18n()
-const accordionTab = ref([true, false])
 const hypertree = ref()
-const src = ref('')
-const currentTaxon = reactive({
-    taxid: '',
-    name: '',
-    rank: '',
-    leaves: ''
+
+const props = defineProps({
+    taxid:String
 })
-const props = defineProps<{
-    taxid: string
-}>()
-const { data } = await TaxonService.getTree(props.taxid)
+
+
+const { data } = await TaxonService.getTree(taxid)
 const { root } = useTreeData(data)
-const tabs = [
-    {
-        title: 'Wikipedia',
-        icon: 'wiki'
-    },
-    {
-        title: 'modelStats.organisms',
-        icon: 'fa-paw'
-    }
-]
-const tabValue = ref(tabs[0].title)
+const emits = defineEmits(['nodeChange'])
 onMounted(() => {
     hypertree.value.focus()
     const hyperTree = new hyt.Hypertree(
@@ -77,21 +36,16 @@ onMounted(() => {
             },
             interaction: {
                 onCenterNodeChange(n) {
-                    const name = n.data.data.name
-                    currentTaxon.name = name
-                    currentTaxon.taxid = n.data.data.taxid
-                    currentTaxon.rank = n.data.data.rank
-                    currentTaxon.leaves = n.data.data.leaves
-                    src.value = `https://en.m.wikipedia.org/wiki/${n.data.data.name}`
-                },
-                onNodeSelect(n) {
-                    const name = n.data.data.name
-                    currentTaxon.name = name
-                    currentTaxon.taxid = n.data.data.taxid
-                    currentTaxon.rank = n.data.data.rank
-                    currentTaxon.leaves = n.data.data.leaves
-                    src.value = `https://en.m.wikipedia.org/wiki/${n.data.data.name}`
+                    emits('nodeChange', n.data.data as TreeNode)
                 }
+                // onNodeSelect(n) {
+                //     const name = n.data.data.name
+                //     currentTaxon.name = name
+                //     currentTaxon.taxid = n.data.data.taxid
+                //     currentTaxon.rank = n.data.data.rank
+                //     currentTaxon.leaves = n.data.data.leaves
+                //     src.value = `${wikiURL.value}/${n.data.data.name}`
+                // }
             }
         }
     )
@@ -102,12 +56,6 @@ onMounted(() => {
 
 
 </script>
-<style lang="scss">
+<style lang="scss" scoped>
 @import '../../styles/d3-hypertree-light.css';
-
-@media all and (max-width: 576) {
-    #tree-row {
-        flex-direction: column-reverse;
-    }
-}
 </style>

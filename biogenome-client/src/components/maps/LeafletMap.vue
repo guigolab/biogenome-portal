@@ -4,7 +4,12 @@
     </div>
     <div v-show="false">
       <div class="organism-card" ref="organismCard">
-        <OrganismCard :organism="selectedOrganism" :key="selectedTaxid" />
+        <Suspense v-if="selectedTaxid">
+          <template #fallback>
+            <va-skeleton height="150px" />
+          </template>
+          <OrganismCard :taxid="selectedTaxid" :key="selectedTaxid" />
+        </Suspense>
       </div>
     </div>
   </va-card>
@@ -18,9 +23,9 @@ import 'leaflet/dist/leaflet.css'
 import * as Leaflet from 'leaflet'
 import { MarkerClusterGroup } from 'leaflet.markercluster'
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
-import OrganismService from '../../services/clients/OrganismService'
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
+import { OrganismCoordinates } from '../../data/types'
 
 const DefaultIcon = Leaflet.icon({
   iconUrl: icon,
@@ -29,17 +34,17 @@ const DefaultIcon = Leaflet.icon({
 
 Leaflet.Marker.prototype.options.icon = DefaultIcon;
 
-const props = defineProps({
-  coordinates: Array,
-})
+const props = defineProps<{
+  coordinates: OrganismCoordinates[]
+}>()
+
 const mapRef = ref()
 const organismCard = ref()
 const clicked = ref(false)
-const selectedTaxid = ref('')
-const selectedOrganism = ref({})
+const selectedTaxid = ref<string | null>(null)
+
 onMounted(() => {
   const map = Leaflet.map(mapRef.value)
-  map.fitWorld()
   const markerCluster = new MarkerClusterGroup()
   const bounds = new Leaflet.LatLngBounds(props.coordinates?.map(({ latitude, longitude }) => [latitude, longitude]))
   Leaflet.tileLayer('https://{s}.tile.osm.org/{z}/{x}/{y}.png', {
@@ -48,35 +53,25 @@ onMounted(() => {
 
   props.coordinates.forEach(({ latitude, longitude, id, taxid, image }) => {
     const marker = Leaflet.marker([latitude, longitude], { title: id, taxid: taxid })
-    if (image) {
-      const icon = new Leaflet.Icon({
-        iconUrl: image,
-        iconSize: [66, 66],
-        className: 'organism-avatar'
-      })
-      marker.options.icon = icon
-    }
-    marker.off('click', marker.openPopup)
+    if (image) marker.options.icon = setIcon(image)
+    marker.bindPopup(() => organismCard.value, { closeButton: false, className: 'organism-popup flex', minWidth: 300, maxHeight: 65 })
     marker.on('click', async (event) => {
-      clicked.value = false
-      if (!event.target.options) return
-      const { data } = await OrganismService.getOrganism(taxid)
-      selectedOrganism.value = { ...data }
       selectedTaxid.value = taxid
-      if (selectedTaxid.value) {
-        clicked.value = true
-        marker.bindPopup(() => organismCard.value, { closeButton: false, className: 'organism-popup flex', minWidth: 300, maxHeight:150 })
-        marker.togglePopup()
-      }
     })
-
-
     markerCluster.addLayer(marker)
   })
   map.addLayer(markerCluster)
   map.fitBounds(bounds)
+  map.fitWorld()
 })
 
+function setIcon(image: string) {
+  return new Leaflet.Icon({
+    iconUrl: image,
+    iconSize: [66, 66],
+    className: 'organism-avatar'
+  })
+}
 
 
 </script>

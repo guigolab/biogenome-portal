@@ -36,6 +36,7 @@ services:
     restart: always
     volumes:
       - ./server:/server
+      - ${ANNOTATIONS_PATH}:/server/annotations_data
     env_file:
       - .env
 
@@ -58,7 +59,6 @@ services:
     volumes:
       - ./biogenome-client:/biogenome-client
       - node_modules:/biogenome-client/node_modules
-      - ./genome-browser-data-example:/var/www/statics
     environment:
       - API_PORT=${API_PORT}
       - API_HOST=${API_HOST}

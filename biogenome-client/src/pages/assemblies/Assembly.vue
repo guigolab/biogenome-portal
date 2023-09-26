@@ -173,7 +173,7 @@ async function getAnnotations(assemblyName: string) {
       category: ["Genes"],
       adapter: {
         type: "Gff3TabixAdapter",
-        gffGzLocation: {
+        gff_gz_location: {
           uri: d.gff_gz_location,
           locationType: "UriLocation"
         },

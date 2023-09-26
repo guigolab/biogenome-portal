@@ -22,7 +22,8 @@
       "experiments": "Experiments",
       "annotations": "Anotacions"
     },
-    "metadata": "Metadades"
+    "metadata": "Metadades",
+    "wikipedia": "Viquipèdia"
   },
   "modelStats": {
     "organisms": "Organismes",
@@ -251,6 +252,9 @@
     "organismsMap": "Mapa d'organismes",
     "countriesMap": "Mapa de països",
     "adminArea": "Àrea d'administració",
+    "taxonExplorer":"Explorador",
+    "taxonTable":"Taula",
+    "taxonFinder":"Cercador",
     "taxons": "Taxonomia",
     "assemblies": "Assemblatges",
     "biosamples": "BioMostres",

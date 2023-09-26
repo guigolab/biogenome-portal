@@ -66,11 +66,10 @@ def get_reads(accession):
                                         f'submitted_ftp,submitted_aspera,'
                                         f'submitted_galaxy,submitted_format,'
                                         f'sra_bytes,sra_md5,sra_ftp,sra_aspera,'
-                                        f'sra_galaxy,cram_index_ftp,'
-                                        f'cram_index_aspera,cram_index_galaxy,'
-                                        f'sample_alias,broker_name,'
-                                        f'sample_title,nominal_sdev,'
-                                        f'first_created')
+                                        f'sra_galaxy,sample_alias,broker_name,'
+                                        f'sample_title,nominal_sdev,first_created')
+    
+    print(experiments_data.json())
     if experiments_data.status_code != 200:
         return list()
     return experiments_data.json()
