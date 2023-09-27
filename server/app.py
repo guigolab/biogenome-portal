@@ -1,13 +1,13 @@
 from flask import Flask
 from flask_cors import CORS
 from config import BaseConfig
-from db import initialize_db
 from rest import initialize_api
 from flask_jwt_extended import JWTManager
-from db.models import BioGenomeUser, CronJob,Roles,BioSample,LocalSample
+from db.models import BioGenomeUser, CronJob,Roles
 from rest.bioproject import bioprojects_service
 from tendo.singleton import SingleInstance
-import json
+from flask_mongoengine import MongoEngine
+
 import os
 
 
@@ -22,7 +22,9 @@ app.config["JWT_COOKIE_SAMESITE"] = "None"
 # app.config["JWT_COOKIE_SECURE"] = True
 app.config['CORS_SUPPORTS_CREDENTIALS'] = True
 
-initialize_db(app)
+db = MongoEngine()
+app.logger.info("Initializing MongoDB")
+db.init_app(app)
 
 initialize_api(app)
 

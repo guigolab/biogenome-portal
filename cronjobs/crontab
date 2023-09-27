@@ -1,8 +1,2 @@
 
-* * * * * python /countries_update.py 
-* * * * * python /locations_update.py
-* * * * * python /assembly_import.py
-* * * * * python /biosample_import.py
-* * * * * python /biosample_update.py
-* * * * * python /read_update.py
-* * * * * python /sample_coordinates_update.py
+* * * * * python /cronjobs/assembly_import.py 

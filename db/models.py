@@ -1,8 +1,8 @@
-from . import db
+# from . import db
 import datetime
 import os
 from .enums import INSDCStatus, GoaTStatus, TargetListStatus, PublicationSource, BrokerSource, CronJobStatus, Roles
-
+import mongoengine as db
 
 def handler(event):
     """Signal decorator to allow use of callback functions as class decorators."""

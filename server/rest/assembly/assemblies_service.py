@@ -6,11 +6,13 @@ from ..biosample import biosamples_service
 from mongoengine.queryset.visitor import Q
 from datetime import datetime
 from subprocess import check_output
+import json
 
 ASSEMBLY_FIELDS = ['display_name','chromosomes','assembly_accession','biosample','bioproject_lineages','biosample_accession','org']
 
 ASSEMBLY_LEVELS = ['Chromosome', 'Scaffold', 'Complete Genome', 'Contig']
 
+DATASETS = '/ncbi/datasets'
 
 def get_assemblies(filter=None, filter_option='assembly_name', 
                     offset=0, submitter=None,
@@ -143,11 +145,3 @@ def delete_assembly(accession):
     assembly_obj.delete()
     return accession
 
-"""
-Use NCBI datasets to retrieve all the assemblies under a bioproject accession
-"""
-def get_assemblies_from_bioproject(accession):
-    cmd_args = ['datasets', 'summary', 'genome', accession ]
-    assemblies = check_output(cmd_args)
-    print(assemblies)
-#           ./datasets summary genome accession ${{env.PROJECT_ACCESSION}} ${{env.DATASET_EXTRA_ARGS}} | ./dataformat tsv genome --fields ${{env.TSV_FIELDS}}

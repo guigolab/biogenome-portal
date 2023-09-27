@@ -37,12 +37,15 @@ services:
     volumes:
       - ./server:/server
       - ${ANNOTATIONS_PATH}:/server/annotations_data
+      - ./db:/server/db
     env_file:
       - .env
 
   # biogenome_cron:
   #   build: ./cronjobs
   #   container_name: biogenome_cron
+  #   volumes:
+  #     - ./db:/cronjobs/db
   #   env_file:
   #     - .env
 

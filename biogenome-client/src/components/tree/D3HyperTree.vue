@@ -10,8 +10,7 @@ import TaxonService from '../../services/clients/TaxonService'
 import { useTreeData } from './setTreeData'
 import { onMounted, ref } from 'vue'
 import {TreeNode} from '../../data/types'
-const rootNode = import.meta.env.VITE_ROOT_NODE ?
-    import.meta.env.VITE_ROOT_NODE : '131567'
+
 
 const hypertree = ref()
 
@@ -20,9 +19,10 @@ const props = defineProps({
 })
 
 
-const { data } = await TaxonService.getTree(taxid)
+const { data } = await TaxonService.getTree(props.taxid)
 const { root } = useTreeData(data)
 const emits = defineEmits(['nodeChange'])
+
 onMounted(() => {
     hypertree.value.focus()
     const hyperTree = new hyt.Hypertree(
@@ -56,6 +56,7 @@ onMounted(() => {
 
 
 </script>
-<style lang="scss" scoped>
+<style lang="scss">
 @import '../../styles/d3-hypertree-light.css';
+
 </style>

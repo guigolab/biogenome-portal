@@ -1,7 +1,12 @@
-FROM python:3.6.12-alpine3.12
+FROM python:3.7.11-alpine3.13
 
+WORKDIR /cronjobs
 
-COPY . .
+ADD . /cronjobs
+
+ADD https://ftp.ncbi.nlm.nih.gov/pub/datasets/command-line/v2/linux-amd64/datasets /ncbi/datasets
+
+RUN chmod +x /ncbi/datasets
 
 RUN pip install -r requirements.txt
 

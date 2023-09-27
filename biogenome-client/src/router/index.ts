@@ -11,6 +11,11 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('../pages/dashboard/DashboardPage.vue'),
   },
   {
+    name: 'taxonomy-explorer',
+    path:'/taxonomy-explorer',
+    component: () => import('../pages/taxonomy/TaxonomyExplorer.vue')
+  },
+  {
     name: 'login',
     path: '/login',
     component: () => import('../pages/auth/login/Login.vue'),
