@@ -1,6 +1,5 @@
 from .user import users_controller
 from .local_sample import local_samples_controller 
-from .bioproject import bioprojects_controller
 from .biosample import biosamples_controller
 from .assembly import assemblies_controller
 from .read import reads_controller
@@ -8,21 +7,26 @@ from .organism import organisms_controller
 from .taxon import taxons_controller
 from .annotation import annotations_controller
 from .dump import dumps_controller
-from .cronjob import cronjobs_controller
 from .stats import stats_controller
 from .upload import uploads_controller
 from .taxonomy import taxonomy_controller
 from .goat_report import goat_reports_controller
+from .sample_location import sample_locations_controller
 
 def initialize_routes(api):
 
 	##ADMIN
 	api.add_resource(users_controller.LoginApi, '/api/login')
 	api.add_resource(users_controller.LogoutApi, '/api/logout')
-	api.add_resource(cronjobs_controller.CronJobApi, '/api/cronjob', '/api/cronjob/<model>')
 	api.add_resource(dumps_controller.DumpApi, '/api/dumps/<model>')
 	api.add_resource(uploads_controller.ExcelParserApi, '/api/spreadsheet_upload')
 	api.add_resource(goat_reports_controller.GoaTReportApi,'/api/goat_report')
+
+	##GEOGRAPHIC LOCATIONS
+	api.add_resource(sample_locations_controller.SampleLocationsByTaxon, '/api/taxons/<taxid>/coordinates')
+	api.add_resource(sample_locations_controller.SampleLocationsByOrganism, '/api/organisms/<taxid>/coordinates')
+	api.add_resource(sample_locations_controller.SampleLocationsByBioSample, '/api/biosamples/<accession>/coordinates' )
+	api.add_resource(sample_locations_controller.SampleLocationsByLocalSample, '/api/local_samples/<local_id>/coordinates')
 
 	##TAXONOMY
 	api.add_resource(taxonomy_controller.TreeApi,'/api/tree', '/api/tree/<taxid>')
@@ -40,7 +44,6 @@ def initialize_routes(api):
 	##BIOSAMPLES
 	api.add_resource(biosamples_controller.BioSamplesApi, '/api/biosamples')
 	api.add_resource(biosamples_controller.BioSampleApi, '/api/biosamples/<accession>')
-	api.add_resource(biosamples_controller.BioSampleBioProjectsApi, '/api/biosamples/<accession>/bioprojects') 
 	api.add_resource(biosamples_controller.BioSampleRelatedDataApi, '/api/biosamples/<accession>/<model>') 
 
 
@@ -54,26 +57,14 @@ def initialize_routes(api):
 	
 	##ORGANISMS
 	api.add_resource(organisms_controller.OrganismsApi, '/api/organisms')
-	api.add_resource(organisms_controller.OrganismsCoordinatesApi, '/api/organisms/locations')
 	api.add_resource(organisms_controller.OrganismApi, '/api/organisms/<taxid>')
 	api.add_resource(organisms_controller.OrganismLineageApi, '/api/organisms/<taxid>/lineage')
-	api.add_resource(organisms_controller.OrganismBioProjectsApi, '/api/organisms/<taxid>/bioprojects')
 	api.add_resource(organisms_controller.OrganismINSDCDataApi, '/api/organisms/<taxid>/sankey')
 	api.add_resource(organisms_controller.OrganismRelatedDataApi, '/api/organisms/<taxid>/<model>') 
 
-	##BIOPROJECTS
-	api.add_resource(bioprojects_controller.BioProjectsApi, '/api/bioprojects')
-	api.add_resource(bioprojects_controller.BioProjectApi, '/api/bioprojects/<accession>')
-
-	api.add_resource(bioprojects_controller.BioProjectCoordinatesApi, '/api/bioprojects/<accession>/coordinates')
-	api.add_resource(bioprojects_controller.BioProjectCountriesApi, '/api/bioprojects/<accession>/countries')
-	api.add_resource(bioprojects_controller.BioProjectChildrenApi, '/api/bioprojects/<accession>/children')
-	api.add_resource(bioprojects_controller.BioProjectINSDCStatsApi, '/api/bioprojects/<accession>/insdc')
-	api.add_resource(bioprojects_controller.BioProjectTree, '/api/bioprojects/<accession>/tree')
 	##TAXONS
 	api.add_resource(taxons_controller.TaxonsApi, '/api/taxons')
 	api.add_resource(taxons_controller.TaxonApi, '/api/taxons/<taxid>')
-	api.add_resource(taxons_controller.TaxonCoordinatesApi, '/api/taxons/<taxid>/coordinates')
 	api.add_resource(taxons_controller.TaxonChildrenApi, '/api/taxons/<taxid>/children')
 
 

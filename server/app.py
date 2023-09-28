@@ -3,8 +3,7 @@ from flask_cors import CORS
 from config import BaseConfig
 from rest import initialize_api
 from flask_jwt_extended import JWTManager
-from db.models import BioGenomeUser, CronJob,Roles
-from rest.bioproject import bioprojects_service
+from db.models import BioGenomeUser, Assembly,Roles,SampleCoordinates,BioSample,LocalSample,Chromosome, Organism,Experiment,TaxonNode
 from tendo.singleton import SingleInstance
 from flask_mongoengine import MongoEngine
 
@@ -34,7 +33,6 @@ jwt = JWTManager(app)
 
 username = os.getenv('DB_USER')
 password = os.getenv('DB_PASS')
-bioproject_accession = os.getenv('PROJECT_ACCESSION')
 
 ##create root user if does not exist
 try:
@@ -42,9 +40,14 @@ try:
     user = BioGenomeUser.objects(name = username).first()
     if not user:
         BioGenomeUser(name = username, password = password, role= Roles.DATA_ADMIN).save()
-    if bioproject_accession:
-        bioprojects_service.create_bioproject_from_ENA(bioproject_accession)
-    cronjob = CronJob.drop_collection() ##remove all cronjobs at each start
+    BioSample.drop_collection()
+    TaxonNode.drop_collection()
+    Organism.drop_collection()
+    LocalSample.drop_collection()
+    Experiment.drop_collection()
+    Assembly.drop_collection()
+    Chromosome.drop_collection()
+    SampleCoordinates.drop_collection()
 
 except:
     pass

@@ -76,14 +76,6 @@ class OrganismLineageApi(Resource):
 		taxon_lineage = list(reversed(parsed_lineage))
 		return Response(json.dumps(taxon_lineage),mimetype="application/json", status=200)
 
-class OrganismBioProjectsApi(Resource):
-	def get(self, taxid):
-		organism_obj = Organism.objects(taxid=taxid).first()
-		if not organism_obj:
-			raise NotFound
-		bioprojects = BioProject.objects(accession__in=organism_obj.bioprojects)		
-		return Response(bioprojects.to_json(),mimetype="application/json", status=200)
-
 class OrganismINSDCDataApi(Resource):
 	def get(self, taxid):
 		organism_obj = Organism.objects(taxid=taxid).first()

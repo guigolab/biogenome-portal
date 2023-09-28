@@ -1,5 +1,5 @@
 from db.models import Assembly,Chromosome
-import cronjobs.helpers.utils as utils
+from . import utils 
 import os
 
 DATASETS = '/ncbi/datasets'
@@ -7,55 +7,6 @@ PROJECT_ACCESSION = os.getenv('PROJECT_ACCESSION')
 SEQUENCE_REPORT_ARGS = ['--report', 'sequence', '--assembly-level','chromosome,complete']
 
 
-
-def parse_ncbi_assemblies(ncbi_assemblies):
-    assemblies_to_save=[]
-    for assembly in ncbi_assemblies:
-        #parse metadata
-        metadata=dict()
-        for attribute_name in assembly['assembly_info'].keys():
-            if attribute_name not in ['biosample','bioproject_lineage','assembly_name']:
-                metadata[attribute_name] = assembly['assembly_info'][attribute_name]
-        assembly_name = assembly['assembly_info']['assembly_name']
-        metadata.update(**assembly['assembly_stats'])
-        if 'annotation_info' in assembly.keys():
-            metadata['annotation_info'] = assembly['annotation_info']
-        assembly_to_save=dict(accession=assembly['accession'],
-                              taxid=assembly['organism']['tax_id'],
-                              sample_accession=assembly['assembly_info']['biosample']['accession'],
-                              assembly_name=assembly_name,
-                              metadata=metadata)
-        assemblies_to_save.append(Assembly(**assembly_to_save))
-    return assemblies_to_save
-
-
-"""
-expected keys:
-
--accession
--assembly_info assembly_name
-
-"""
-# def parse_ncbi_assembly(assembly):
-#     assembly_accession = assembly['accession']
-#     print(f"Parsing assembly: {assembly_accession}")
-#     metadata=dict()
-#     for attribute_name in assembly['assembly_info'].keys():
-#         if attribute_name not in ['biosample','bioproject_lineage','assembly_name']:
-#             metadata[attribute_name] = assembly['assembly_info'][attribute_name]
-#     assembly_name = assembly['assembly_info']['assembly_name']
-#     if'assembly_stats' in assembly.keys():
-#         metadata.update(**assembly['assembly_stats'])
-#     if 'annotation_info' in assembly.keys():
-#         metadata['annotation_info'] = assembly['annotation_info']
-#     assembly_to_save=dict(accession=assembly['accession'],
-#                             taxid=assembly['organism']['tax_id'],
-#                             sample_accession=assembly['assembly_info']['biosample']['accession'],
-#                             assembly_name=assembly_name,
-#                             metadata=metadata)
-#     assembly_to_save = Assembly(**assembly_to_save)
-#     print(f'Assembly {assembly_to_save.accession} ready to be saved')
-#     return assembly_to_save
 
 def parse_ncbi_assembly(assembly):
     assembly_accession = assembly['accession']
@@ -77,7 +28,8 @@ def parse_ncbi_assembly(assembly):
     # Create assembly_to_save dictionary
     assembly_to_save = {
         'accession': assembly_accession,
-        'taxid': assembly['organism']['tax_id'],
+        'scientific_name': assembly['organism']['organism_name'],
+        'taxid': str(assembly['organism']['tax_id']),
         'sample_accession': assembly['assembly_info']['biosample']['accession'],
         'assembly_name': assembly_name,
         'metadata': metadata
@@ -123,16 +75,17 @@ def parse_ncbi_sequences(ncbi_sequences, assemblies_to_save):
 ## return parsed chromosomes mapped by assembly accession
 def parse_chromosomes_from_ncbi_sequence_report(sequences):
     sequences_by_assembly = {}
-
-    for seq in sequences:
+    existing_assemblies = utils.get_objects_by_scalar_id(Assembly,'accession',dict(accession__in=[seq['assembly_accession'] for seq in sequences])) 
+    
+    for seq in [sequence for sequence in sequences if sequence['assembly_accession'] not in existing_assemblies]:
         # Skip sequences without 'chr_name' attribute
-        if 'chr_name' not in seq.keys():
+        if 'chr_name' not in seq.keys() or not 'genbank_accession' in seq.keys() and not seq['role'] == 'assemblied-molecule':
             continue
 
         accession = seq['assembly_accession']
         chr_name = seq['chr_name']
         length = seq['length']
-        gc_count = seq['gc_count']
+        gc_count = seq.get('gc_count')
         genbank_accession = seq['genbank_accession']
 
         metadata = {

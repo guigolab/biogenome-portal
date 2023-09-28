@@ -124,7 +124,7 @@ The env file is necessary to run the app. Below a list of all the environment va
 
 *When first launched the app will create a User with the same credentials as the admin user of the database, this user will be able to log in into the admin UI and to manage all the data as creating/deleting/updating users, organisms etc.
 
-- DB_DEV_HOST=biogenome-devdb --> this is the name of the database container (host) # default dev db host
+- DB_HOST=biogenome-devdb --> this is the name of the database container (host) # default dev db host
 
 
 - DB_PORT=27017

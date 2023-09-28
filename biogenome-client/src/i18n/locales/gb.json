@@ -14,7 +14,6 @@
     "total":"Total:"
   },
   "uiComponents":{
-    "bioprojectsCard":"bioprojects",
     "relatedDataCard":{
       "biosamples":"BioSamples",
       "local_samples":"LocalSamples",

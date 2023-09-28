@@ -1,7 +1,9 @@
 from datetime import datetime
 import os
-from helpers import biosample_helper, taxonomy_helper, utils
-from db.models import BioSample,Organism
+from helpers import biosample_helper, taxonomy_helper, utils, sample_coordinates_helper
+from db.models import BioSample
+from connect_to_db import connect_to_db, disconnect_from_db
+
 
 PROJECTS = os.getenv('PROJECTS')
 
@@ -20,26 +22,46 @@ def import_biosamples_from_bioproject_names():
     
     for p in PROJECTS.split(','):
         ebi_biosamples = biosample_helper.retrieve_biosamples_from_ebi_by_project(p.strip())
-        taxids = set()
-        ebi_biosample_accessions = []
-        for ebi_biosample in ebi_biosamples:
-            taxids.add(str(ebi_biosample['taxId']))
-            ebi_biosample_accessions.append(ebi_biosample['accession'])
-            
+        if not ebi_biosamples:
+            print('No biosamples retrieved')
+            print(f'skipping project {p}')
+            continue
+        print(f'a total of {len(ebi_biosamples)} found for project {p} ')
+        taxids = set(str(sample['taxId']) for sample in ebi_biosamples)
+
+        # create organisms and taxons
+        taxonomy_helper.create_organisms_and_lineage(list(taxids))
+
+        ebi_biosample_accessions = [sample['accession'] for sample in ebi_biosamples]
         existing_samples = utils.get_objects_by_scalar_id(BioSample,'accession',dict(accession__in=ebi_biosample_accessions))
-        existing_organisms = utils.get_objects_by_scalar_id(Organism, 'taxid',dict(taxid__in=list(taxids)))
-        new_organisms = [taxid for taxid in list(taxids) if not taxid in existing_organisms]
-        organisms_lineage_tuples = taxonomy_helper.get_taxons_from_ena(new_organisms)
-        utils.insert_data(Organism, [t[0] for t in organisms_lineage_tuples] )
+        new_biosample_accessions = [accession for accession in ebi_biosample_accessions if not accession in existing_samples]
+        if not new_biosample_accessions:
+            print(f'no new biosamples found for project {p}')
+            continue
+        print(f'A total of {len(new_biosample_accessions)} new biosamples have been found')
+        biosamples_to_save = [biosample_helper.parse_biosample_from_ebi_data(biosample) for biosample in ebi_biosamples if biosample['accession'] in new_biosample_accessions]
 
-        # taxonomy_helper.update_organisms(saved_biosamples,'add_to_set__biosamples')
+        parent_children_biosamples_map = biosample_helper.map_samples_by_relationship(biosamples_to_save)
 
-        for lineage in [t[1] for t in organisms_lineage_tuples]:
-            taxon_lineage = taxonomy_helper.create_taxons_from_lineage(lineage)
-            for taxon in taxon_lineage:
-                taxon.update(leaves=Organism.objects(taxon_lineage=taxon.taxid, taxid__ne=taxon.taxid).count())
+        parent_samples = [biosample for biosample in biosamples_to_save if biosample.accession in parent_children_biosamples_map.keys()]
 
+        for parent_sample in parent_samples:
+            children = parent_children_biosamples_map.get(parent_sample.accession)
+            parent_sample.sub_samples = [child.accession for child in children]
+
+        print(f'A total of {len(biosamples_to_save)} is ready to be saved')
+        saved_biosamples = utils.insert_data(BioSample, biosamples_to_save)
+    
+        print(f'A total of {len(saved_biosamples)} have been saved')
+        #update organisms
+        taxonomy_helper.update_organisms(parent_samples,'accession','biosamples',True)
+        sample_coordinates_helper.create_coordinates_from_saved_biosamples(saved_biosamples)
+        sample_coordinates_helper.update_countries_from_biosamples(saved_biosamples)
+        #update biosamples by searching for sub samples
 
 if __name__ == "__main__":
     print(f"Running import_biosamples at {datetime.now()}")
+    connect_to_db()
+    import_biosamples_from_bioproject_names()
+    disconnect_from_db()
     #import biosamples from project tags

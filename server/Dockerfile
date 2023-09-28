@@ -2,6 +2,8 @@ FROM python:3.7.11-stretch
 
 WORKDIR /server
 
+ADD ./requirements.txt /server/requirements.txt
+
 ADD . /server
 
 RUN python -m pip install --upgrade pip

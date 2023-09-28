@@ -28,6 +28,7 @@ class TaxonNode(db.Document):
 
 @handler(db.pre_save)
 def update_organism_status(sender, document, **kwargs):
+    print(f'UPDATING ORGANISM STATUS {document.scientific_name}')
     if os.getenv('PROJECT_ACCESSION'):
         if document.assemblies:
             document.insdc_status= INSDCStatus.ASSEMBLIES
@@ -70,6 +71,7 @@ class Assembly(db.Document):
         'indexes': ['accession']
     }
 
+
 class Chromosome(db.Document):
     accession_version = db.StringField(required=True,unique=True)
     metadata=db.DictField()
@@ -83,8 +85,20 @@ class BioProject(db.Document):
         'indexes': ['accession']
     }
 
+class SampleCoordinates(db.Document):
+    taxid = db.StringField(required=True)
+    scientific_name = db.StringField(required=True)
+    sample_accession = db.StringField(required=True, unique=True)
+    is_local_sample = db.BooleanField(default=False)
+    coordinates = db.PointField()
+    image = db.URLField()
+    meta = {
+        'indexes': ['sample_accession','taxid']
+    }
+
 @handler(db.pre_save)
 def set_location(sender, document, **kwargs):
+    print(f'SETTING LOCATION OF {document.accession} of {document.scientific_name}')
     if document.location:
         return
     print('setting location of', document)
@@ -197,14 +211,6 @@ def delete_related_data( sender, document ):
     LocalSample.objects(taxid=taxid).delete()
     BioSample.objects(taxid=taxid).delete()
     OrganismPublication.objects(taxid=taxid).delete()
-    if document.bioprojects:
-        for accession in document.bioprojects:
-            bioproject = BioProject.objects(accession=accession).first()
-            bioproject.leaves = bioproject.leaves -1
-            if bioproject.leaves <= 0:
-                bioproject.delete()
-            else:
-                bioproject.save()
     taxons = TaxonNode.objects(taxid__in=document.taxon_lineage)
     for node in taxons:
         node.leaves=node.leaves - 1

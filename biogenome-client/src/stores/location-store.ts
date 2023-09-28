@@ -4,7 +4,6 @@ const initSearchForm = {
   insdc_status: '',
   goat_status: '',
   parent_taxid: '',
-  bioproject: '',
   target_list_status: '',
   filter: '',
   filter_option: '',

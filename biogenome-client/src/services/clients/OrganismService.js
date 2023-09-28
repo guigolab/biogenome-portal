@@ -22,9 +22,6 @@ class OrganismService {
     return base.get(`/organisms/${taxid}/lineage`)
   }
 
-  getOrganismBioprojects(taxid) {
-    return base.get(`/organisms/${taxid}/bioprojects`)
-  }
 
   getOrganismRelatedData(taxid, model) {
     return base.get(`/organisms/${taxid}/${model}`)

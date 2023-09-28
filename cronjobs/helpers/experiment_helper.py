@@ -1,37 +1,6 @@
-import requests
 import time
-
-def get_taxon_from_ena(taxon_id):
-    time.sleep(1)
-    response = requests.get(f"https://www.ebi.ac.uk/ena/browser/api/xml/{taxon_id}?download=false") ## 
-    if response.status_code != 200:
-        return
-    return response.content
-
-def get_sample_from_biosamples(accession):
-    time.sleep(1)
-    response = requests.get(f"https://www.ebi.ac.uk/biosamples/samples?size=10&filter=acc:{accession}").json()
-    if '_embedded' in response.keys() and 'samples' in response['_embedded'] and response['_embedded']['samples']:
-        return response['_embedded']['samples'][0]
-
-def get_samples_derived_from(accession):
-    biosamples=[]
-    href=f"https://www.ebi.ac.uk/biosamples/samples?size=200&filter=attr%3Asample%20derived%20from%3A{accession}"
-    resp = requests.get(href).json()
-    while 'next' in resp['_links'].keys():
-        href=resp['_links']['next']['href']
-        biosamples.extend(resp['_embedded']['samples'])
-        resp = requests.get(href).json()
-    return biosamples
-    
-def get_tolid(taxid):
-    time.sleep(1)
-    response = requests.get(f"https://id.tol.sanger.ac.uk/api/v2/species/{taxid}").json()
-    if not isinstance(response, list):
-        return ''
-    else:
-        return response[0]['prefix']
-
+import requests
+from db.models import Experiment
 
 def get_reads(accession):
     time.sleep(1)
@@ -63,8 +32,25 @@ def get_reads(accession):
                                         f'sra_galaxy,sample_alias,broker_name,'
                                         f'sample_title,nominal_sdev,first_created')
     
-    print(experiments_data.json())
     if experiments_data.status_code != 200:
         return list()
     return experiments_data.json()
 
+
+def parse_experiments_from_ena_response(experiments):
+    experiments_to_save=[]
+    for exp in experiments:
+        print('paring experimen')
+        print(exp)
+        exp_metadata = dict()
+        other_attributes = dict()
+        for k in exp.keys():
+            if k == 'tax_id':
+                other_attributes['taxid'] = exp[k]
+            elif k in ['instrument_model','instrument_platform','experiment_accession']:
+                other_attributes[k] = exp[k]
+            else:
+                exp_metadata[k] = exp[k]
+        ##create data here
+        experiments_to_save.append(Experiment(metadata=exp_metadata, **other_attributes))
+    return experiments_to_save

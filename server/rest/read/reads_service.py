@@ -45,29 +45,6 @@ def get_filter(filter, option):
     else:
         return (Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter))
 
-
-def create_reads_from_biosample_accession(accession):
-    response = ena_client.get_reads(accession)
-    saved_accessions = list()
-    if not response:
-        return saved_accessions
-    for exp in response:
-        if Experiment.objects(experiment_accession=exp['experiment_accession']).first():
-            continue
-        exp_metadata = dict()
-        other_attributes = dict()
-        for k in exp.keys():
-            if k == 'tax_id':
-                other_attributes['taxid'] = exp[k]
-            elif k in ['instrument_model','instrument_platform','experiment_accession']:
-                other_attributes[k] = exp[k]
-            else:
-                exp_metadata[k] = exp[k]
-        exp_obj = Experiment(metadata=exp_metadata, **other_attributes).save()
-        ##create data here
-        saved_accessions.append(exp_obj.experiment_accession)
-    return saved_accessions
-
 def create_read_from_experiment_accession(accession):
     response = ena_client.get_reads(accession)
     saved_accessions = list()

@@ -2,6 +2,7 @@ from db.models import BioSample,Assembly,Experiment,Organism
 from errors import NotFound
 from ..utils import ena_client
 from ..organism import organisms_service
+from ..sample_location import sample_locations_service
 from datetime import datetime
 from mongoengine.queryset.visitor import Q
 import os
@@ -90,6 +91,7 @@ def create_biosample_from_ncbi_data(accession, ncbi_response, organism):
         biosample_metadata[attr['name']] = [dict(text=attr['value'])] 
     extra_metadata = parse_sample_metadata(biosample_metadata)
     new_biosample = BioSample(metadata=extra_metadata,**required_metadata).save()
+    sample_locations_service.save_coordinates(new_biosample)
     organism.modify(add_to_set__biosamples=new_biosample.accession)
     organism.save()
     return new_biosample
@@ -111,6 +113,7 @@ def create_biosample_from_ebi_data(sample):
         required_metadata['scientific_name'] = organism.scientific_name
     extra_metadata = parse_sample_metadata({k:sample['characteristics'][k] for k in sample['characteristics'].keys() if k not in ['taxId','scientificName','accession','organism']})
     new_biosample = BioSample(metadata=extra_metadata,**required_metadata).save()
+    sample_locations_service.save_coordinates(new_biosample)
     organism.modify(add_to_set__biosamples=new_biosample.accession)
     organism.save()
     return new_biosample

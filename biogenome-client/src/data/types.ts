@@ -43,7 +43,6 @@ export interface OrganismSearchForm extends SearchForm {
   insdc_status: string
   goat_status: string
   parent_taxid: string
-  bioproject: string
   target_list_status: string
   country: string
 }
@@ -61,11 +60,6 @@ export interface AssemblySearchForm extends SearchForm {
 export type LocalSampleSearchForm = SearchForm
 
 export type ModelSearchForm = OrganismSearchForm | AssemblySearchForm | ReadSearchForm | BioSampleSearchForm
-
-export interface BioProjectNode extends Node {
-  title: string
-  accession: string
-}
 
 export interface TaxonNode extends Node {
   name: string
@@ -161,7 +155,17 @@ export interface Details {
 export interface OrganismLocations {
   taxid:string
   scientific_name:string
-  locations:Record<number,number>[]
+  coordinates:Record<number,number>[]
+  image?:string
+}
+
+
+export interface SampleLocations {
+  taxid:string
+  scientific_name:string
+  sample_accession:string
+  coordinates:number[]
+  is_local_sample:boolean
   image?:string
 }
 

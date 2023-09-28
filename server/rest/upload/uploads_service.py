@@ -1,7 +1,7 @@
 import openpyxl
 from db.models import BrokerSource, LocalSample
 from ..organism import organisms_service
-
+from ..sample_location import sample_locations_service
 OPTIONS = ['SKIP','UPDATE']
 
 def parse_excel(excel=None, id=None, taxid=None, scientific_name=None, latitude=None, longitude= None,header=1, option="SKIP", source=None):
@@ -111,6 +111,8 @@ def parse_excel(excel=None, id=None, taxid=None, scientific_name=None, latitude=
                 continue
             elif option == 'UPDATE':
                 sample_obj.update(taxid=str_taxid,local_id=new_sample[id],broker=source,metadata=new_sample['metadata'],scientific_name=new_sample[scientific_name])
+                sample_obj.reload()
+                sample_locations_service.save_coordinates(sample_obj,'local_id')
                 organism = organisms_service.get_or_create_organism(str_taxid)
                 organism.modify(add_to_set__local_samples=sample_obj.local_id)
                 saved_sample[index+1+header] = [f"{sample_obj.local_id} correctly updated"]
@@ -123,7 +125,8 @@ def parse_excel(excel=None, id=None, taxid=None, scientific_name=None, latitude=
                     all_errors = list()
                 all_errors.append(sample_error_obj)
                 continue
-            sample_obj = LocalSample(taxid=str_taxid,local_id=new_sample[id],broker=source,metadata=new_sample['metadata'],scientific_name=new_sample[scientific_name]).save()   
+            sample_obj = LocalSample(taxid=str_taxid,local_id=new_sample[id],broker=source,metadata=new_sample['metadata'],scientific_name=new_sample[scientific_name]).save() 
+            sample_locations_service.save_coordinates(sample_obj,'local_id')
             organism.modify(add_to_set__local_samples=sample_obj.local_id)
             saved_sample[index+1+header] = [f"{sample_obj.local_id} correctly saved"]
         
