@@ -25,8 +25,9 @@ def import_experiments():
         print(f'A total of {len(new_experiments)} experiments found for sample {biosample_accession}')
         experiments_to_save.extend(experiment_helper.parse_experiments_from_ena_response(new_experiments))
         samples_to_update.append(biosample_accession)
+    
     if experiments_to_save:
-        print(f'Saving a total of {len(experiments_to_save)}')
+        print(f'Saving a total of {len(experiments_to_save)} experiment')
         saved_experiments = utils.insert_data(Experiment, experiments_to_save)
         biosample_helper.add_data_to_biosamples(saved_experiments,samples_to_update,'push_all__experiments','experiment_accession')
         taxonomy_helper.update_organisms(saved_experiments,'experiment_accession','experiments',True)

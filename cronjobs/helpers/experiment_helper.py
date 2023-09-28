@@ -40,8 +40,8 @@ def get_reads(accession):
 def parse_experiments_from_ena_response(experiments):
     experiments_to_save=[]
     for exp in experiments:
-        print('paring experimen')
-        print(exp)
+        accession = exp['experiment_accession']
+        print(f'parsing experiment {accession}')
         exp_metadata = dict()
         other_attributes = dict()
         for k in exp.keys():

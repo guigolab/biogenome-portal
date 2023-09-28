@@ -38,12 +38,13 @@ def save_coordinates(saved_sample, id_field='accession'):
     
     if latitude and longitude:
         try:
-            # Check if latitude and longitude are valid numbers
+            latitude = latitude.replace(',', '.').replace("'", ".")
+            longitude = longitude.replace(',', '.').replace("'", ".")            
             lat, long = float(latitude), float(longitude)
+           
             if -90.0 <= lat <= 90.0 and -180.0 <= long <= 180.0:
                 # Replace ',' and "'" with '.' for better compatibility
-                latitude = latitude.replace(',', '.').replace("'", ".")
-                longitude = longitude.replace(',', '.').replace("'", ".")
+
                 existing_coordinates = SampleCoordinates.objects(sample_accession=saved_sample[id_field]).first()
                 if existing_coordinates:
                     existing_coordinates.coordinates = [longitude,latitude]
@@ -81,7 +82,7 @@ def update_countries_from_biosample(saved_biosample):
         countries = json.load(f)['features']
 
     # Create a spatial index for country polygons
-    country_polygons = [(shape(country['geometry']), country['property']['id']) for country in countries]
+    country_polygons = [(shape(country['geometry']), country['id'], country['properties']['name']) for country in countries]
 
 # Iterate through saved biosamples
     accession = saved_biosample.accession
@@ -90,20 +91,20 @@ def update_countries_from_biosample(saved_biosample):
 
     # Check if the biosample has a country name
     if accession in accession_country_map:
-        country_names = accession_country_map[accession]
+        country_name_to_check = accession_country_map[accession]
 
         # Find matching countries by name or ID
-        for country_name in country_names:
-            for polygon, country_id in country_polygons:
-                if country_name == country_id:
-                    country_to_add = country_id
+        for country_poligon in country_polygons:
+            polygon, country_id, country_name = country_poligon
+            if country_name_to_check == country_name:
+                country_to_add = country_id
 
     # If no country names found, use spatial check
     if not country_to_add:
         coordinates = SampleCoordinates.objects(sample_accession=accession).first()
 
         if coordinates:
-            point = Point(coordinates['coordinates'])
+            point = Point(coordinates.coordinates['coordinates'])
             for polygon, country_id in country_polygons:
                 if polygon.contains(point):
                     country_to_add = country_id

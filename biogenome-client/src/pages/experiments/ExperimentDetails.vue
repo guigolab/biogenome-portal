@@ -22,7 +22,7 @@
               :to="{ name: 'biosample', params: { accession: read.metadata.sample_accession } }"
               preset="primary"
               icon="hub"
-              >{{ read.metadata.sample_accession }}</va-button
+              >{{ read.sample_accession || read.metadata.sample_accession }}</va-button
             >
           </div>
         </div>

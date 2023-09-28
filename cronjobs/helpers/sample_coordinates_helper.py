@@ -3,6 +3,8 @@ from . import utils
 from shapely.geometry import shape, Point
 import json
 
+COUNTRIES_PATH = '/countries/countries.json'
+
 # Helper function to convert coordinates with different formats
 def convert_coordinates(lat, lat_value, long, long_value):
     lat = '-' + lat if lat_value == 'S' else lat
@@ -38,13 +40,14 @@ def parse_coordinates(saved_sample):
     
     if latitude and longitude:
         try:
+                # Replace ',' and "'" with '.' for better compatibility
+            latitude = latitude.replace(',', '.').replace("'", ".")
+            longitude = longitude.replace(',', '.').replace("'", ".")
+                
             # Check if latitude and longitude are valid numbers
             lat, long = float(latitude), float(longitude)
             if -90.0 <= lat <= 90.0 and -180.0 <= long <= 180.0:
-                # Replace ',' and "'" with '.' for better compatibility
-                latitude = latitude.replace(',', '.').replace("'", ".")
-                longitude = longitude.replace(',', '.').replace("'", ".")
-                
+
                 sample_coordinates_to_save = {
                     'sample_accession': saved_sample.accession,
                     'scientific_name':saved_sample.scientific_name,
@@ -87,11 +90,11 @@ def update_countries_from_biosamples(saved_biosamples):
             accession_country_map[saved_biosample.accession] = country_name
 
     # Load country polygons from JSON
-    with open('./countries.json') as f:
+    with open(COUNTRIES_PATH) as f:
         countries = json.load(f)['features']
 
     # Create a spatial index for country polygons
-    country_polygons = [(shape(country['geometry']), country['property']['id']) for country in countries]
+    country_polygons = [(shape(country['geometry']), country['id'], country['properties']['name']) for country in countries]
 
     # Iterate through saved biosamples
     for saved_biosample in saved_biosamples:
@@ -101,21 +104,23 @@ def update_countries_from_biosamples(saved_biosamples):
 
         # Check if the biosample has a country name
         if accession in accession_country_map:
-            country_names = accession_country_map[accession]
+            country_name_to_check = accession_country_map[accession]
 
             # Find matching countries by name or ID
-            for country_name in country_names:
-                for polygon, country_id in country_polygons:
-                    if country_name == country_id:
-                        country_to_add = country_id
+            for country_poligon in country_polygons:
+                polygon, country_id, country_name = country_poligon
+                if country_name_to_check == country_name:
+                    country_to_add = country_id
 
         # If no country names found, use spatial check
         if not country_to_add:
-            coordinates = SampleCoordinates.objects(sample_accession=accession).first()
+            sample_coords = SampleCoordinates.objects(sample_accession=accession).first()
 
-            if coordinates:
-                point = Point(coordinates['coordinates'])
-                for polygon, country_id in country_polygons:
+            if sample_coords:
+                lng, lat = sample_coords.coordinates['coordinates']
+                point = Point(lng, lat)
+                for polygon in country_polygons:
+                    polygon, country_id, country_name = country_poligon
                     if polygon.contains(point):
                         country_to_add = country_id
 

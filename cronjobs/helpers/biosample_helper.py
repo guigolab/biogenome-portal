@@ -59,17 +59,20 @@ def parse_biosample_from_ncbi_datasets_assemblies(biosample):
 
 def add_data_to_biosamples(new_data, sample_accessions, field_to_modify, id_field):
     # Create a dictionary to group new data by sample_accession
+    print(f'Appending {len(new_data)} of {field_to_modify} to {len(sample_accessions)} samples')
     data_by_sample = {}
     for data_item in new_data:
-        sample_accession = data_item.sample_accession
+        sample_accession = data_item.sample_accession if data_item.sample_accession else data_item.metadata['sample_accession']
         if sample_accession not in data_by_sample:
             data_by_sample[sample_accession] = []
         data_by_sample[sample_accession].append(data_item[id_field])
     # Query biosamples to update
     biosamples_to_update = BioSample.objects(accession__in=sample_accessions)
+    print(f'Biosamples to update {len(data_by_sample.keys())}')
     for biosample_to_update in biosamples_to_update:
         sample_accession = biosample_to_update.accession
         if sample_accession in data_by_sample:
+            print('Passing here')
             # Determine which field to modify based on data_type
             biosample_to_update.modify(**{field_to_modify: data_by_sample[sample_accession]})
 
