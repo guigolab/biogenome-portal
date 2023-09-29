@@ -134,10 +134,14 @@ export interface Assembly {
   scientific_name: string,
   taxid: string,
   sample_accession: string,
-  chromosomes: string[],
+  chromosomes: Record<string,any>[],
   metadata: Record<string, any>
 }
-
+export interface TrackData {
+  name: string;
+  gff_gz_location: string;
+  tab_index_location: string;
+}
 export interface BioSample {
   accession: string
   scientific_name: string

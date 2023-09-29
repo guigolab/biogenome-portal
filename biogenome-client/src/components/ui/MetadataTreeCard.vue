@@ -1,16 +1,16 @@
 <template>
-    <va-card>
+    <va-card stripe stripe-color="info">
         <va-card-title>{{ t('uiComponents.metadata') }}</va-card-title>
-        <div class="row justify-center">
-            <div class="flex lg6 md6">
-                <va-input v-model="filter" placeholder="Filter..." clearable />
+        <va-card-content>
+            <div class="row align-center">
+                <div class="flex lg6 md6">
+                    <va-input v-model="filter" placeholder="Filter..." clearable />
+                </div>
             </div>
-            <div class="flex">
-                <va-checkbox v-model="isFilterCaseSensitive" label="Case sensitive" />
-            </div>
-        </div>
+        </va-card-content>
+        <va-divider />
         <div style="max-height: 400px;overflow: scroll;">
-            <va-tree-view :nodes="nodes" :filter="filter" :filter-method="customFilterMethod" expand-all>
+            <va-tree-view :nodes="nodes" :filter="filter" :filter-method="customFilterMethod">
                 <template #content="node">
                     <div class="flex items-center">
                         <div class="mr-2">
@@ -32,46 +32,53 @@ import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 
 const filter = ref('')
-const isFilterCaseSensitive = ref(false)
 const props = defineProps<{
     metadata: Record<string, any>
 }>()
 const customFilterMethod = computed(() => {
-    return isFilterCaseSensitive.value
-        ? (node: TreeNode, filterText: string, key: any) => node[key].includes(filterText)
-        : undefined;
+    return (node: TreeNode, filterText: string, key: any) => {
+        console.log(node)
+        return (node.label && node.label.includes(filterText)) || 
+        (node.description && typeof node.description === 'string' && node.description.includes(filterText))}
 })
 
-const nodes = buildTree(props.metadata)
-function buildTree(data: Record<string, any>): TreeNode[] {
+const nodes = buildTree(props.metadata, undefined)
+
+function buildTree(data: Record<string, any>, parentKey: string | undefined): TreeNode[] {
     const keys = Object.keys(data);
     const treeNodes: TreeNode[] = [];
-
-
+    //
     for (const key of keys) {
         const value = data[key];
-
+        const id = parentKey ? `${parentKey}-${key}` : key
+        if (!Boolean(value)) continue
         if (Array.isArray(value)) {
             // If the value is an array, create child nodes for each item in the array
-            const childNodes = value.map((item: any) => {
+            const childNodes = value.flatMap((item: any) => {
                 if (typeof item === 'string') {
-                    return { id: `${value}-${item}`, description: item };
+                    return { id: `${value}-${item}`, label: key, description: item };
                 } else {
-                    return buildTree(item);
+                    return buildTree(item,id);
                 }
             });
-            treeNodes.push({ id: key, label: key, children: childNodes });
+            treeNodes.push({ id: id, label: key, children: childNodes });
         }
         else if (typeof value === 'object') {
             // If the value is an object, recursively build child nodes
-            const childNode = buildTree(value);
-            treeNodes.push({ id: key, label: key, children: [childNode] });
-        } else {
+            const childNodes = buildTree(value, id);
+            treeNodes.push({ id: id, label: key, children: childNodes });
+        } else if (typeof value == 'string' && value.split(';').length > 1) {
+            const childNodes = value.split(';').map((v: string, i: number) => {
+                return { id: `${id}-${i}` ,description: v }
+            })
             // If the value is a primitive, create a leaf node
-            treeNodes.push({ id: key, label: key, description: value });
+            treeNodes.push({ id: id, label: key, children: childNodes });
+        } else {
+            treeNodes.push({ id: id, label: key, description: value });
+
         }
     }
-
+    console.log(treeNodes)
     return treeNodes;
 }
 </script>

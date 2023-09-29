@@ -168,6 +168,24 @@
       "color": "#2c82e0"
     }
   ],
+  "experimentSelectedMetadata": [
+    {
+      "key": "instrument_model",
+      "color": "danger"
+    },
+    {
+      "key": "base count",
+      "color": "info"
+    },
+    {
+      "key": "center_name",
+      "color": "secondary"
+    },
+    {
+      "key": "first created",
+      "color": "warning"
+    }
+  ],
   "assemblyInfoBlock": [
     {
       "type": "pie",

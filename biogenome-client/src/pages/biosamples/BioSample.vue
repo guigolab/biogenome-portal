@@ -14,13 +14,12 @@
   </div>
   <div v-else>
     <DetailsHeader :details="details" />
-    <KeyValueCard v-if="bioSampleSelectedMetadata" :metadata="metadata" :selected-metadata="bioSampleSelectedMetadata" />
+    <KeyValueCard v-if="bioSampleSelectedMetadata && bioSampleSelectedMetadata.length" :metadata="metadata" :selected-metadata="bioSampleSelectedMetadata" />
     <div class="row row-equal">
       <div v-for="(dt, index) in validData" class="flex lg6 md6 sm12 xs12">
         <Suspense>
           <template #default>
             <RelatedDataCard :object-id="accession" :related-data="dt" :callback="'biosample'" :key="index" />
-
           </template>
           <template #fallback>
             <va-skeleton height="300px" />
@@ -34,7 +33,7 @@
           </template>
         </Suspense>
       </div>
-      <div class="flex lg6 md6 sm12 xs12">
+      <div v-if="metadata && Object.keys(metadata)" class="flex lg6 md6 sm12 xs12">
         <MetadataTreeCard :metadata="metadata"/>
       </div>
     </div>
@@ -43,7 +42,6 @@
 <script setup lang="ts">
 import BioSampleService from '../../services/clients/BioSampleService'
 import { onMounted, ref, watch } from 'vue'
-import Metadata from '../../components/ui/Metadata.vue'
 import RelatedDataCard from '../../components/ui/RelatedDataCard.vue'
 import { useI18n } from 'vue-i18n'
 import { BioSample, Details } from '../../data/types'

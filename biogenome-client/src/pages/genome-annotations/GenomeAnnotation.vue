@@ -4,7 +4,7 @@
       <va-breadcrumbs-item :to="{ name: 'annotations' }" :label="t('annotationDetails.breadcrumb')" />
       <va-breadcrumbs-item
         active
-        :label="router.currentRoute.value.params.name"
+        :label="name"
       />
     </va-breadcrumbs>
     <va-divider />

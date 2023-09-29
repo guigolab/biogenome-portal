@@ -40,6 +40,14 @@ try:
     user = BioGenomeUser.objects(name = username).first()
     if not user:
         BioGenomeUser(name = username, password = password, role= Roles.DATA_ADMIN).save()
+    BioSample.drop_collection()
+    TaxonNode.drop_collection()
+    Organism.drop_collection()
+    LocalSample.drop_collection()
+    Experiment.drop_collection()
+    Assembly.drop_collection()
+    Chromosome.drop_collection()
+    SampleCoordinates.drop_collection()
 
 except:
     pass

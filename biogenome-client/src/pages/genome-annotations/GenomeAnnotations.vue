@@ -39,6 +39,7 @@ import { InfoBlock, Filter } from '../../data/types';
 import FilterForm from '../../components/ui/FilterForm.vue';
 import { ref, onMounted } from 'vue';
 import AnnotationService from '../../services/clients/AnnotationService'
+import DataTable from '../../components/ui/DataTable.vue';
 
 const { t } = useI18n()
 const annotationStore = useAnnotationStore()

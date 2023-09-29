@@ -5,7 +5,6 @@
   </va-breadcrumbs>
   <va-divider />
   <va-skeleton v-if="isLoading" />
-
   <div v-else-if="errorMessage">
     <va-card stripe stripe-color="danger">
       <va-card-content>
@@ -14,89 +13,58 @@
     </va-card>
   </div>
   <div v-else>
-    
     <DetailsHeader :details="details" />
-    <KeyValueCard v-if="assemblySelectedMetadata.length" :metadata="metadata" :selected-metadata="assemblySelectedMetadata" />
-    <va-tabs v-model="tabValue" grow>
-      <template #tabs>
-        <va-tab v-for="(tab, index) in tabs" :key="index" :name="tab">
-          {{ t(tab) }}
-        </va-tab>
-      </template>
-    </va-tabs>
+    <KeyValueCard v-if="assemblySelectedMetadata.length" :metadata="metadata"
+      :selected-metadata="assemblySelectedMetadata" />
+      <!-- TODO add ideogram -->
+    <!-- <Ideogram v-if="assembly && assembly.taxid && hasChromosomes" :taxid="assembly.taxid" :accession="accession" /> -->
     <div class="row row-equal">
-      <div v-if="tabValue === 'assemblyDetails.genomeBrowser'" class="flex lg12 md12 sm12 xs12">
-        <va-inner-loading :loading="!showJBrowse">
-          <va-card-content>
-            <Jbrowse2 :assembly="jbrowse.assembly" :tracks="jbrowse.annotations" />
-          </va-card-content>
-        </va-inner-loading>
+      <div v-if="hasChromosomes" class="flex lg12 md12 sm12 xs12">
+        <Jbrowse2 :assembly="assembly" :annotations="annotations" />
       </div>
-      <div v-else-if="'uiComponents.metadata'" class="flex lg12 md12 sm12 xs12">
-        <va-card-content>
-          <Metadata :metadata="metadata" />
-        </va-card-content>
-      </div>
-      <div v-else class="flex lg12 md12 sm12 xs12">
-        <va-card-content>
-          <div id="ideo-container"></div>
-        </va-card-content>
+      <div v-if="metadata && Object.keys(metadata)" class="flex lg12 md12 sm12 xs12">
+        <MetadataTreeCard :metadata="metadata" />
       </div>
     </div>
   </div>
 </template>
 <script setup lang="ts">
 import AssemblyService from '../../services/clients/AssemblyService'
-import { onMounted, reactive, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import Jbrowse2 from '../../components/genome-browser/Jbrowse2.vue'
-import { AssemblyAdapter, Assembly, Details } from '../../data/types'
-import Metadata from '../../components/ui/Metadata.vue'
+import { Assembly, Details, TrackData } from '../../data/types'
 import { useI18n } from 'vue-i18n'
 import DetailsHeader from '../../components/ui/DetailsHeader.vue'
 import KeyValueCard from '../../components/ui/KeyValueCard.vue'
 import { assemblySelectedMetadata } from "../../../config.json";
-import Ideogram from 'ideogram'
+import MetadataTreeCard from '../../components/ui/MetadataTreeCard.vue'
+import Ideogram from '../../components/ui/Ideogram.vue'
 
 const { t } = useI18n()
-const tabs = ref([
-  'uiComponents.metadata',
-])
-const tabValue = ref(tabs.value[0])
 const metadata = ref<Record<string, any>>({})
 const props = defineProps<{
   accession: string
 }>()
-const isLoading = ref(false)
+const isLoading = ref(true)
 const errorMessage = ref<string | any>(null)
 const details = ref<
   Details | any
 >()
-
-const jbrowse = reactive<
-  Record<string, any>
->({
-  assembly: {},
-  annotations: []
-})
-const showJBrowse = ref(false)
-
+const assembly = ref<Assembly>()
+const annotations = ref<TrackData[]>([])
+const hasChromosomes = ref(false)
 onMounted(async () => {
   try {
 
     isLoading.value = true
     const { data } = await AssemblyService.getAssembly(props.accession)
-    new Ideogram({
-      organism: data.taxid,
-      assembly: props.accession,
-      container: '#ideo-container'
-    })
+    assembly.value = { ...data }
     details.value = parseDetails(data)
-    metadata.value = data.metadata
-    if (data && data.chromosomes.length) {
-      parseAssembly(data)
-      getAnnotations(data.assembly_name)
-      tabs.value.push('assemblyDetails.genomeBrowser')
-      showJBrowse.value = true
+    if (data.metadata) metadata.value = data.metadata
+    hasChromosomes.value = data && data.chromosomes.length
+    if (hasChromosomes.value) {
+      const { data } = await AssemblyService.getRelatedAnnotations(props.accession)
+      annotations.value = data
     }
   } catch (e) {
     errorMessage.value = e
@@ -104,6 +72,7 @@ onMounted(async () => {
     isLoading.value = false
   }
 })
+
 
 function parseDetails(assembly: Assembly) {
   const accession = assembly.accession
@@ -122,78 +91,11 @@ function parseDetails(assembly: Assembly) {
   }
   return details
 }
-function parseAssembly(assembly: Assembly) {
-  const assemblyAdapter: AssemblyAdapter = {
-    name: assembly.assembly_name,
-    sequence: {
-      name: assembly.assembly_name,
-      trackId: assembly.accession,
-      type: 'ReferenceSequenceTrack',
-      adapter: {
-        type: 'RefGetAdapter',
-        sequenceData: {},
-      },
-    },
-  }
-  assembly.chromosomes.forEach((chr) => {
-    const key = 'insdc:' + chr.accession_version
-    assemblyAdapter.sequence.adapter.sequenceData[key] = {
-      name: chr.metadata.name,
-      size: Number(chr.metadata.length),
-    }
-  })
-  jbrowse.assembly = { ...assemblyAdapter }
-}
 
-function setDefaultSession() {
-  const defaultSession = {
-    name: 'My session',
-    view: {
-      id: 'linearGenomeView',
-      type: 'LinearGenomeView',
-      tracks: [
-        {
-          // the first track displayed
-        },
-        {
-          // the second track displayed
-        },
-        {
-          // ...
-        },
-      ],
-    },
-  }
-}
 
-async function getAnnotations(assemblyName: string) {
-  const { data } = await AssemblyService.getRelatedAnnotations(props.accession)
-  if (!data.length) return
-  data.forEach((d: { name: any; gff_gz_location: any; tab_index_location: any }) => {
-    const track = {
-      type: "FeatureTrack",
-      trackId: d.name,
-      name: d.name,
-      assemblyNames: [assemblyName],
-      category: ["Genes"],
-      adapter: {
-        type: "Gff3TabixAdapter",
-        gff_gz_location: {
-          uri: d.gff_gz_location,
-          locationType: "UriLocation"
-        },
-        index: {
-          location: {
-            uri: d.tab_index_location,
-            locationType: "UriLocation"
-          }
-        }
-      }
-    }
-    jbrowse.annotations.push({ ...track })
-  })
 
-}
+
+
 </script>
 
 <style lang="scss">
@@ -218,11 +120,5 @@ async function getAnnotations(assemblyName: string) {
 
 .list__item+.list__item {
   margin-top: 10px;
-}
-
-#ideo-container {
-  height: 300px;
-  width: 50%;
-  margin: auto;
 }
 </style>

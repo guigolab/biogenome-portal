@@ -79,27 +79,25 @@ def parse_chromosomes_from_ncbi_sequence_report(sequences):
     
     for seq in [sequence for sequence in sequences if sequence['assembly_accession'] not in existing_assemblies]:
         # Skip sequences without 'chr_name' attribute
-        if 'chr_name' not in seq.keys() or not 'genbank_accession' in seq.keys() and not seq['role'] == 'assemblied-molecule':
-            continue
+        if all(key in seq for key in ['chr_name', 'genbank_accession']) and seq.get('role') == 'assembled-molecule' and seq.get('assigned_molecule_location_type') == 'Chromosome':
+            accession = seq['assembly_accession']
+            chr_name = seq['chr_name']
+            length = seq['length']
+            gc_count = seq.get('gc_count')
+            genbank_accession = seq['genbank_accession']
 
-        accession = seq['assembly_accession']
-        chr_name = seq['chr_name']
-        length = seq['length']
-        gc_count = seq.get('gc_count')
-        genbank_accession = seq['genbank_accession']
+            metadata = {
+                'name': chr_name,
+                'length': length,
+                'gc_count': gc_count
+            }
 
-        metadata = {
-            'name': chr_name,
-            'length': length,
-            'gc_count': gc_count
-        }
-
-        sequence_obj = Chromosome(
-            accession_version=genbank_accession,
-            metadata=metadata
-        )
-        # Use setdefault to simplify code
-        sequences_by_assembly.setdefault(accession, []).append(sequence_obj)
+            sequence_obj = Chromosome(
+                accession_version=genbank_accession,
+                metadata=metadata
+            )
+            # Use setdefault to simplify code
+            sequences_by_assembly.setdefault(accession, []).append(sequence_obj)
 
     return sequences_by_assembly
 
