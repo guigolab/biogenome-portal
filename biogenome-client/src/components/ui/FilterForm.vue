@@ -46,7 +46,7 @@
 
   const props = defineProps<{filters:Array<Filter>}>()
 
-  const initSearchForm = {}
+  const initSearchForm:Record<string,any> = {}
 
   const searchForm = ref({...initSearchForm})
 

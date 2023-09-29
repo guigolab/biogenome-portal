@@ -134,13 +134,26 @@ export interface Assembly {
   scientific_name: string,
   taxid: string,
   sample_accession: string,
-  chromosomes: Record<string, any>[],
-  metadata: Record<string, string>
+  chromosomes: string[],
+  metadata: Record<string, any>
 }
 
+export interface BioSample {
+  accession: string
+  scientific_name: string
+  taxid:string
+  assemblies:string[]
+  experiments:string[]
+  metadata:Record<string,any>
+}
+
+export interface ChromosomeInterface {
+  accession_version:string
+  metadata:Record<string,any>
+}
 export interface Details {
   title: string,
-  button1?: {
+  button1: {
     route: Record<string, any>
     label: string
   },
@@ -164,7 +177,9 @@ export interface SampleLocations {
   taxid:string
   scientific_name:string
   sample_accession:string
-  coordinates:number[]
+  coordinates:{
+    coordinates:[number, number]
+  }
   is_local_sample:boolean
   image?:string
 }

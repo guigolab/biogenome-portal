@@ -15,10 +15,7 @@ const initSearchForm = {
   filter: '',
   filter_option: '',
   sort_column: '',
-  sort_order: '',
-  start_date:'',
-  end_date:''
-}
+  sort_order: '',}
 
 const initPagination = {
   offset: 0,

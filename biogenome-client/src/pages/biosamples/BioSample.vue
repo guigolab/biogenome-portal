@@ -1,0 +1,137 @@
+<template>
+  <va-breadcrumbs class="va-title" color="primary">
+    <va-breadcrumbs-item :to="{ name: 'biosamples' }" :label="t('biosampleList.breadcrumb')" />
+    <va-breadcrumbs-item active :label="accession" />
+  </va-breadcrumbs>
+  <va-divider />
+  <va-skeleton v-if="isLoading" height="90vh" />
+  <div v-else-if="errorMessage">
+    <va-card stripe stripe-color="danger">
+      <va-card-content>
+        {{ errorMessage }}
+      </va-card-content>
+    </va-card>
+  </div>
+  <div v-else>
+    <DetailsHeader :details="details" />
+    <KeyValueCard v-if="bioSampleSelectedMetadata" :metadata="metadata" :selected-metadata="bioSampleSelectedMetadata" />
+    <div class="row row-equal">
+      <div v-for="(dt, index) in validData" class="flex lg6 md6 sm12 xs12">
+        <Suspense>
+          <template #default>
+            <RelatedDataCard :object-id="accession" :related-data="dt" :callback="'biosample'" :key="index" />
+
+          </template>
+          <template #fallback>
+            <va-skeleton height="300px" />
+          </template>
+        </Suspense>
+      </div>
+      <div class="flex lg6 md6 sm12 xs12">
+        <Suspense>
+          <MapCard :model="'biosample'" :id="accession" />
+          <template #fallback>
+          </template>
+        </Suspense>
+      </div>
+      <div class="flex lg6 md6 sm12 xs12">
+        <MetadataTreeCard :metadata="metadata"/>
+      </div>
+    </div>
+  </div>
+</template>
+<script setup lang="ts">
+import BioSampleService from '../../services/clients/BioSampleService'
+import { onMounted, ref, watch } from 'vue'
+import Metadata from '../../components/ui/Metadata.vue'
+import RelatedDataCard from '../../components/ui/RelatedDataCard.vue'
+import { useI18n } from 'vue-i18n'
+import { BioSample, Details } from '../../data/types'
+import { relatedData } from './configs'
+import { bioSampleSelectedMetadata } from '../../../config.json'
+import DetailsHeader from '../../components/ui/DetailsHeader.vue'
+import KeyValueCard from '../../components/ui/KeyValueCard.vue'
+import MapCard from '../../components/ui/MapCard.vue'
+import MetadataTreeCard from '../../components/ui/MetadataTreeCard.vue'
+
+const { t } = useI18n()
+const props = defineProps<{
+  accession: string
+}>()
+const isLoading = ref(true)
+const errorMessage = ref<string | any>(null)
+const details = ref<
+  Details | any
+>()
+const metadata = ref<Record<string, any>>({})
+const validData = ref<Record<string, string>[]>([])
+
+watch(
+  () => props.accession,
+  async (value) => {
+    await getBioSample(value)
+  }
+)
+
+onMounted(async () => {
+  await getBioSample(props.accession)
+})
+
+async function getBioSample(accession: string) {
+  try {
+    isLoading.value = true
+    const { data } = await BioSampleService.getBioSample(accession)
+    details.value = { ...parseDetails(data) }
+    if (data.metadata) metadata.value = { ...data.metadata }
+    const models = relatedData.filter(
+      (relatedModel) => Object.keys(data).includes(relatedModel.key) && data[relatedModel.key].length,
+    )
+    console.log(models)
+    validData.value = [...models]
+  } catch (e) {
+    errorMessage.value = e
+  } finally {
+    isLoading.value = false
+  }
+
+}
+
+function parseDetails(biosample: BioSample) {
+  const accession = biosample.accession
+  const details: Details = {
+    title: accession,
+    button1: {
+      route: { name: 'organism', params: { taxid: biosample.taxid } },
+      label: biosample.scientific_name
+    },
+    ncbiPath: `https://www.ncbi.nlm.nih.gov/biosample/${accession}`,
+    ebiPath: `https://www.ebi.ac.uk/ena/browser/view/${accession}`
+  }
+  return details
+}
+</script>
+
+<style lang="scss">
+.chart {
+  height: 400px;
+}
+
+.row-equal .flex {
+  .va-card {
+    height: 100%;
+  }
+}
+
+.va-card {
+  margin-bottom: 0 !important;
+
+  &__title {
+    display: flex;
+    justify-content: space-between;
+  }
+}
+
+.list__item+.list__item {
+  margin-top: 10px;
+}
+</style>

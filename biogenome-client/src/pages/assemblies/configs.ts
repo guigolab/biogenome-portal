@@ -1,4 +1,4 @@
-import { BreadCrumb, Filter } from "../../data/types"
+import { Filter } from "../../data/types"
 
 export const tableFilters: Filter[] = [
     {
@@ -46,12 +46,6 @@ export const tableColumns = [
     'size',
     'chromosomes',
 ]
-
-export const assembliesBc: BreadCrumb[] = [{
-    name: 'assemblyDetails.breadcrumb',
-    path: { name: 'assemblies' },
-    active: false
-}]
 
 export const tabs = [
     'uiComponents.metadata',

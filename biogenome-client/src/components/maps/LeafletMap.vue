@@ -39,7 +39,6 @@ const props = defineProps<{
 
 const mapRef = ref()
 const organismCard = ref()
-const clicked = ref(false)
 const selectedSample = ref<{
   sample_accession:string
   is_local_sample:boolean
@@ -49,16 +48,16 @@ const selectedSample = ref<{
 onMounted(() => {
   const map = Leaflet.map(mapRef.value).fitWorld()
   const markerCluster = new MarkerClusterGroup()
-  const bounds = new Leaflet.LatLngBounds(props.coordinates?.map(({ coordinates }) => [coordinates[1], coordinates[0]]))
+  const bounds = new Leaflet.LatLngBounds(props.coordinates?.map(({ coordinates }) => [coordinates.coordinates[1], coordinates.coordinates[0]]))
   Leaflet.tileLayer('https://{s}.tile.osm.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors',
   }).addTo(map)
 
   // Batch the markers for better performance
   const markersToAdd: Leaflet.Marker[] = [];
-
   props.coordinates.forEach(({ coordinates, sample_accession, image, is_local_sample }) => {
-    const marker = Leaflet.marker([coordinates[1], coordinates[0]], {
+    console.log(coordinates)
+    const marker = Leaflet.marker([coordinates.coordinates[1], coordinates.coordinates[0]], {
       title: sample_accession
     });
 

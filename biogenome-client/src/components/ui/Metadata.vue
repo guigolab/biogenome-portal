@@ -3,7 +3,6 @@
     <li v-for="(key, index) in Object.keys(metadata).filter((k) => metadata[k])" :key="index">
       <div class="row row-equal">
         <div class="flex lg12 md12 sm12 xs12">
-          <h6 class="va-h6">{{ key }}</h6>
           <div v-if="typeof metadata[key] === 'string'">
             <div v-if="metadata[key].split(';').length > 1">
               <ul>
@@ -13,7 +12,7 @@
               </ul>
             </div>
             <div v-else>
-              <p>{{ metadata[key] }}</p>
+              <p>{{ key }}</p>
             </div>
           </div>
           <div v-else-if="typeof metadata[key] === 'object' && !metadata[key].length">
@@ -30,7 +29,7 @@
             </div>
           </div>
           <div v-else>
-            <p>{{ metadata[key] }}</p>
+            <p>{{ key }}</p>
           </div>
         </div>
       </div>
@@ -38,13 +37,15 @@
   </ul>
 </template>
 <script setup lang="ts">
-  const props = defineProps({
-    metadata: Object,
-  })
+  const props = defineProps<{
+    metadata: Record<string,any>
+  }>()
+
+
 </script>
 <style>
   ul {
-    list-style: outside;
+    list-style: none;
     padding-left: 20px;
   }
 </style>

@@ -172,7 +172,6 @@ class BioSample(db.Document):
     assemblies = db.ListField(db.StringField())
     experiments = db.ListField(db.StringField())
     accession = db.StringField(required=True,unique=True)
-    country=db.StringField()
     collection_date=db.StringField() #TODO: add job to parse collection date form metadata 
     location = db.PointField()
     bioprojects = db.ListField(db.StringField())

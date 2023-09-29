@@ -17,7 +17,6 @@ Use NCBI datasets to retrieve all the assemblies under a bioproject accession
 def import_assemblies(accession):
 
     print(f'GETTING NCBI ASSEMBLIES FOR BIOPROJECT: {accession}')
-
     get_all_assemblies_cmd = [DATASETS, 'summary', 'genome','accession', accession]
     ncbi_assemblies = utils.get_data_from_ncbi_datasets(get_all_assemblies_cmd)['reports']
     ncbi_accessions = [assembly['accession'] for assembly in ncbi_assemblies]
@@ -45,7 +44,6 @@ def import_assemblies(accession):
     #retrieve chromosomes 
     chromosome_dataset = utils.get_data_from_ncbi_datasets(get_all_assemblies_cmd+ SEQUENCE_REPORT_ARGS).get('reports')
     if chromosome_dataset:
-        print(len(chromosome_dataset))
         chromosomes_assembly_map = assembly_helper.parse_chromosomes_from_ncbi_sequence_report(chromosome_dataset)
         print(f'FOUND A TOTAL OF {len(chromosomes_assembly_map.keys())} assemblies with chromosomes')
         

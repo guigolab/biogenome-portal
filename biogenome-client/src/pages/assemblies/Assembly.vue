@@ -4,32 +4,44 @@
     <va-breadcrumbs-item active :label="accession" />
   </va-breadcrumbs>
   <va-divider />
-  <Transition>
-    <DetailsHeader v-if="details" :details="details" />
-  </Transition>
-  <Transition>
-    <KeyValueCard v-if="metadata" :metadata="metadata" :selected-metadata="assemblySelectedMetadata" />
-  </Transition>
-  <div id="ideo-container"></div>
-  <va-tabs v-model="tabValue" grow>
-    <template #tabs>
-      <va-tab v-for="(tab, index) in tabs" :key="index" :name="tab">
-        {{ t(tab) }}
-      </va-tab>
-    </template>
-  </va-tabs>
-  <div class="row row-equal">
-    <div v-if="tabValue === 'assemblyDetails.genomeBrowser'" class="flex lg12 md12 sm12 xs12">
-      <va-inner-loading :loading="!showJBrowse">
-        <va-card-content>
-          <Jbrowse2 :assembly="jbrowse.assembly" :tracks="jbrowse.annotations" />
-        </va-card-content>
-      </va-inner-loading>
-    </div>
-    <div v-else class="flex lg12 md12 sm12 xs12">
+  <va-skeleton v-if="isLoading" />
+
+  <div v-else-if="errorMessage">
+    <va-card stripe stripe-color="danger">
       <va-card-content>
-        <Metadata :metadata="metadata" />
+        {{ errorMessage }}
       </va-card-content>
+    </va-card>
+  </div>
+  <div v-else>
+    
+    <DetailsHeader :details="details" />
+    <KeyValueCard v-if="assemblySelectedMetadata.length" :metadata="metadata" :selected-metadata="assemblySelectedMetadata" />
+    <va-tabs v-model="tabValue" grow>
+      <template #tabs>
+        <va-tab v-for="(tab, index) in tabs" :key="index" :name="tab">
+          {{ t(tab) }}
+        </va-tab>
+      </template>
+    </va-tabs>
+    <div class="row row-equal">
+      <div v-if="tabValue === 'assemblyDetails.genomeBrowser'" class="flex lg12 md12 sm12 xs12">
+        <va-inner-loading :loading="!showJBrowse">
+          <va-card-content>
+            <Jbrowse2 :assembly="jbrowse.assembly" :tracks="jbrowse.annotations" />
+          </va-card-content>
+        </va-inner-loading>
+      </div>
+      <div v-else-if="'uiComponents.metadata'" class="flex lg12 md12 sm12 xs12">
+        <va-card-content>
+          <Metadata :metadata="metadata" />
+        </va-card-content>
+      </div>
+      <div v-else class="flex lg12 md12 sm12 xs12">
+        <va-card-content>
+          <div id="ideo-container"></div>
+        </va-card-content>
+      </div>
     </div>
   </div>
 </template>
@@ -40,30 +52,22 @@ import Jbrowse2 from '../../components/genome-browser/Jbrowse2.vue'
 import { AssemblyAdapter, Assembly, Details } from '../../data/types'
 import Metadata from '../../components/ui/Metadata.vue'
 import { useI18n } from 'vue-i18n'
-import { assembliesBc } from './configs'
 import DetailsHeader from '../../components/ui/DetailsHeader.vue'
 import KeyValueCard from '../../components/ui/KeyValueCard.vue'
 import { assemblySelectedMetadata } from "../../../config.json";
-// import Ideogram from 'ideogram'
+import Ideogram from 'ideogram'
 
 const { t } = useI18n()
 const tabs = ref([
   'uiComponents.metadata',
 ])
 const tabValue = ref(tabs.value[0])
-const metadata = ref<Record<string, any>>()
+const metadata = ref<Record<string, any>>({})
 const props = defineProps<{
   accession: string
 }>()
 const isLoading = ref(false)
-const bcs = [...assembliesBc]
-bcs.push(
-  {
-    name: props.accession,
-    path: { name: 'assemblies', params: { accession: props.accession } },
-    active: true
-  }
-)
+const errorMessage = ref<string | any>(null)
 const details = ref<
   Details | any
 >()
@@ -81,21 +85,22 @@ onMounted(async () => {
 
     isLoading.value = true
     const { data } = await AssemblyService.getAssembly(props.accession)
-    // new Ideogram({
-    //   organism: data.taxid,
-    //   assembly: props.accession,
-    //   container: '#ideo-container'
-    // })
+    new Ideogram({
+      organism: data.taxid,
+      assembly: props.accession,
+      container: '#ideo-container'
+    })
     details.value = parseDetails(data)
     metadata.value = data.metadata
     if (data && data.chromosomes.length) {
       parseAssembly(data)
-      await getAnnotations(data.assembly_name)
+      getAnnotations(data.assembly_name)
       tabs.value.push('assemblyDetails.genomeBrowser')
       showJBrowse.value = true
     }
-    isLoading.value = false
-  } catch {
+  } catch (e) {
+    errorMessage.value = e
+  } finally {
     isLoading.value = false
   }
 })
@@ -214,9 +219,10 @@ async function getAnnotations(assemblyName: string) {
 .list__item+.list__item {
   margin-top: 10px;
 }
+
 #ideo-container {
-    height: 300px;
-    width: 50%;
-    margin: auto;
-  }
+  height: 300px;
+  width: 50%;
+  margin: auto;
+}
 </style>

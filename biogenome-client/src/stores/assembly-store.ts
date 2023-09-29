@@ -21,7 +21,6 @@ const initPagination = {
 export const useAssemblyStore = defineStore('assembly', {
   state: () => {
     return {
-      submitters: [] as Contributor[],
       breadcrumbs: [] as BreadCrumb[],
       searchForm: { ...initSearchForm },
       pagination: { ...initPagination },

@@ -6,7 +6,13 @@
   <InfoBlockVue v-if="charts.length" :charts="charts" />
   <div class="row row-equal">
     <div class="flex lg12 md12 sm12 xs12">
-      <va-card>
+      <va-skeleton v-if="isLoading" height="100%" />
+      <va-card stripe-color="danger" stripe v-else-if="errorMessage">
+        <va-card-content>
+          {{ errorMessage }}
+        </va-card-content>
+      </va-card>
+      <va-card v-else>
         <FilterForm :filters="filters" @on-submit="handleSubmit" @on-reset="reset" />
         <va-card-content> {{ t('table.total') }} {{ total }} </va-card-content>
         <va-card-content>
@@ -34,25 +40,15 @@ import { onMounted, ref, watch } from 'vue'
 import DataTable from '../../components/ui/DataTable.vue'
 import { AssemblySearchForm, Filter } from '../../data/types'
 import FilterForm from '../../components/ui/FilterForm.vue'
-import { tableFilters, tableColumns, assembliesBc } from './configs'
-
-
-const bc = [...assembliesBc]
-bc[0].active = true
+import { tableFilters, tableColumns } from './configs'
 
 const { t } = useI18n()
 
 const charts = <InfoBlock[]>assemblyInfoBlock
 
 const assemblyStore = useAssemblyStore()
-watch(() => assemblyStore.submitters, () => {
-  filters.value.push({
-    label: 'assemblyList.charts.contributorList.title',
-    key: 'submitter',
-    type: 'select',
-    options: assemblyStore.submitters.map(({ name }) => name)
-  })
-})
+const isLoading = ref(false)
+const errorMessage = ref<string | null>(null)
 
 const filters = ref<Filter[]>(tableFilters)
 const offset = ref(1 + assemblyStore.pagination.offset)
@@ -81,10 +77,17 @@ function reset() {
 }
 
 async function getAssemblies(query: Record<string, any>) {
-  const { data } = await AssemblyService.getAssemblies(query)
-  assemblies.value = data.data
-  total.value = data.total
-  return data
+  try {
+    isLoading.value = true
+    const { data } = await AssemblyService.getAssemblies(query)
+    assemblies.value = data.data
+    total.value = data.total
+  } catch (e) {
+    errorMessage.value = 'Something happened'
+  } finally {
+    isLoading.value = false
+  }
+
 }
 </script>
 

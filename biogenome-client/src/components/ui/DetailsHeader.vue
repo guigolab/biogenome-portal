@@ -6,7 +6,7 @@
                 <div class="flex">
                     <va-button preset="primary" icon="pets" :to="details.button1.route">{{ details.button1.label }}</va-button>
                 </div>
-                <div class="flex">
+                <div v-if="details.button2" class="flex">
                     <va-button :to="details.button2.route" preset="primary" icon="hub">{{ details.button2.label }}</va-button>
                 </div>
             </div>

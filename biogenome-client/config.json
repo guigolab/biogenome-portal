@@ -34,7 +34,7 @@
     },
     {
       "label": "modelStats.biosamples",
-      "key":"biosamples"
+      "key": "biosamples"
     },
     {
       "label": "modelStats.localSamples",
@@ -84,26 +84,59 @@
     {
       "type": "contribution",
       "title": "biosampleList.charts.contributorList",
-      "model": "biosamples",
       "field": "metadata.GAL",
+      "model": "biosamples",
+      "label": "",
+      "color": "#2c82e0",
       "class": "flex lg3 md3 sm12 xs12"
     },
     {
       "type": "dateline",
-      "field": "metadata.collection_date",
-      "label": "biosampleList.charts.dateLineChart.label",
       "title": "biosampleList.charts.dateLineChart.title",
-      "color": "#2c82e0",
+      "field": "metadata.collection_date",
       "model": "biosamples",
+      "label": "biosampleList.charts.dateLineChart.label",
+      "color": "#2c82e0",
       "class": "flex lg6 md6 sm12 xs12"
     },
     {
-      "type": "list",
+      "type": "habitat",
       "title": "biosampleList.charts.habitatList",
-      "model": "biosamples",
       "field": "metadata.habitat",
-      "isHabitat": true,
+      "model": "biosamples",
+      "label": "",
+      "color": "#2c82e0",
       "class": "flex lg3 md3 sm12 xs12"
+    }
+  ],
+  "bioSampleSelectedMetadata": [
+    {
+      "key": "GAL",
+      "color": "danger"
+    },
+    {
+      "key": "organism part",
+      "color": "info"
+    },
+    {
+      "key": "tissue",
+      "color": "secondary"
+    },
+    {
+      "key": "collection date",
+      "color": "warning"
+    },
+    {
+      "key": "collection_date",
+      "color": "warning"
+    },
+    {
+      "key": "geo_loc_name",
+      "color": "success"
+    },
+    {
+      "key": "geographic location (country and/or sea)",
+      "color": "success"
     }
   ],
   "experimentInfoBlocks": [
@@ -113,6 +146,7 @@
       "title": "dashboard.charts.firstPiechart.title",
       "label": "dashboard.charts.firstPiechart.label",
       "class": "flex lg3 md3 sm12 xs12",
+      "color": "#2c82e0",
       "type": "pie"
     },
     {
@@ -127,9 +161,11 @@
     {
       "type": "contribution",
       "title": "experimentList.charts.contributorList",
+      "label": "",
       "model": "experiments",
       "field": "metadata.center_name",
-      "class": "flex lg3 md3 sm12 xs12"
+      "class": "flex lg3 md3 sm12 xs12",
+      "color": "#2c82e0"
     }
   ],
   "assemblyInfoBlock": [
@@ -188,8 +224,8 @@
       "color": "success"
     }
   ],
-  "annotationsInfoBlock": [],
-  "localSamplesInfoBlock": [],
+  "annotationInfoBlock": [],
+  "localSampleInfoBlock": [],
   "annotations": {},
   "local_samples": {},
   "navigationRoutes": [
