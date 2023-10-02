@@ -6,7 +6,7 @@
   <InfoBlockVue v-if="charts.length" :charts="charts" />
   <div class="row row-equal">
     <div class="flex lg12 md12 sm12 xs12">
-      <va-skeleton v-if="isLoading" height="100%" />
+      <va-skeleton v-if="isLoading" height="300px" />
       <va-card stripe-color="danger" stripe v-else-if="errorMessage">
         <va-card-content>
           {{ errorMessage }}
@@ -36,7 +36,7 @@ import { useI18n } from 'vue-i18n'
 import { InfoBlock } from '../../data/types'
 import { useAssemblyStore } from '../../stores/assembly-store'
 import AssemblyService from '../../services/clients/AssemblyService'
-import { onMounted, ref, watch } from 'vue'
+import { onMounted, ref } from 'vue'
 import DataTable from '../../components/ui/DataTable.vue'
 import { AssemblySearchForm, Filter } from '../../data/types'
 import FilterForm from '../../components/ui/FilterForm.vue'

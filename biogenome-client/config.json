@@ -13,6 +13,7 @@
       "description": "Aquest portal segueix el progrés del projecte del biogenoma de la Terra (EBP) i els seus projectes afiliats, donant a la comunitat de biodiversitat l'oportunitat de compartir fotos, noms vernacles i anotacions genètiques d'espècies seqüenciades"
     }
   },
+  "showCountries":true,
   "languages": [
     {
       "code": "gb",
@@ -242,8 +243,12 @@
       "color": "success"
     }
   ],
+  "organismInfoBlock":[],
+  "organismSelectedMetadata":[],
   "annotationInfoBlock": [],
+  "annotationSelectedMetadata":[],
   "localSampleInfoBlock": [],
+  "localSampleSelectedMetadata":[],
   "annotations": {},
   "local_samples": {},
   "navigationRoutes": [
@@ -315,6 +320,14 @@
           }
         }
       ]
+    },
+    {
+      "name": "taxonomy-explorer",
+      "displayName": "menu.taxonExplorer",
+      "meta": {
+        "icon": "travel_explore",
+        "name": "taxonomy-explorer"
+      }
     },
     {
       "name": "status",

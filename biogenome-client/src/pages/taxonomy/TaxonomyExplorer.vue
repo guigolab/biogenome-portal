@@ -1,47 +1,34 @@
 <template>
-    <va-card style="min-height: 90vh;">
-        <va-card-content>
-            <div class="row row-equal">
-                <div class="flex lg8 md7 sm12 xs12">
-                    <Suspense>
-                        <template #fallback>
-                            <va-skeleton height="inherit" />
-                        </template>
-                        <D3HyperTree :taxid="rootNode" @node-change="setCurrentTaxon" />
-                    </Suspense>
+    <div class="row">
+        <div class="flex lg8 md8 md12 sm12">
+            <Suspense>
+                <template #fallback>
+                    <va-skeleton height="100vh" />
+                </template>
+                <div class="hypertree-wrapper">
+                    <D3HyperTree :taxid="rootNode" @node-change="setCurrentTaxon" />
                 </div>
-                <div v-if="currentTaxon" class="flex lg4 md5 sm12 xs12">
-                    <va-card style="box-shadow: none;" :bordered="false">
-                        <h2 class="va-h2">{{ currentTaxon.name }}</h2>
-                        <p>{{ currentTaxon.rank }}</p>
-                        <div class="row justify-end">
-                            <div class="flex">
-                                <va-button-toggle icon-color="primary" round v-model="tabValue" preset="secondary"
-                                    border-color="primary" :options="tabs" value-by="title"
-                                    :text-by="(option: Record<string, string>) => t(option.title)" />
-                            </div>
-                        </div>
-                        <va-divider />
-                        <div v-if="tabValue === 'uiComponents.wikipedia'" style="overflow: scroll;">
-                            <iframe style="width: 100%;height: 100vh;" :src="src" :key="src"></iframe>
-                        </div>
-                        <TaxonDetailsListBlock v-else :key="currentTaxon.taxid" :taxid="currentTaxon.taxid" />
-                    </va-card>
-                </div>
-                <div v-else>
-                    <va-skeleton height="100vh"></va-skeleton>
+            </Suspense>
+        </div>
+        <div v-if="currentTaxon" :key="currentTaxon.taxid" class="flex lg 4 md4 sm12 xs12">
+            <div class="row align-end">
+                <div class="flex">
+                    <h2 class="va-h2">{{ currentTaxon.name }}</h2>
+                    <p class="mb-4">{{ currentTaxon.rank }}</p>
                 </div>
             </div>
-        </va-card-content>
-    </va-card>
+            <SideBar :name="currentTaxon?.name" :taxid="currentTaxon?.taxid" />
+        </div>
+    </div>
 </template>
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import TaxonDetailsListBlock from '../../pages/taxons/TaxonDetailsListBlock.vue'
 import { useI18n } from 'vue-i18n'
 import { wiki } from '../../../config.json'
 import D3HyperTree from '../../components/tree/D3HyperTree.vue'
 import { TreeNode } from '../../data/types'
+import SideBar from './components/SideBar.vue'
+
 
 const rootNode = import.meta.env.VITE_ROOT_NODE ? import.meta.env.VITE_ROOT_NODE : '131567'
 
@@ -60,7 +47,7 @@ watch(locale, () => {
     wikiURL.value = wikiMapper[locale.value]
     if (src.value && currentTaxon.value) src.value = `${wikiURL.value}/${currentTaxon.value.name}`
 })
-
+//wiki, organisms, map
 const tabs = [
     {
         title: 'uiComponents.wikipedia',
@@ -73,7 +60,6 @@ const tabs = [
 ]
 const tabValue = ref(tabs[0].title)
 function setCurrentTaxon(taxon: TreeNode) {
-    console.log(taxon)
     currentTaxon.value = { ...taxon }
     src.value = `${wikiURL.value}/${currentTaxon.value.name}`
 }
@@ -82,5 +68,7 @@ function setCurrentTaxon(taxon: TreeNode) {
 
 </script>
 <style lang="scss">
-
+.hypertree-wrapper {
+    height: 100vh;
+}
 </style>

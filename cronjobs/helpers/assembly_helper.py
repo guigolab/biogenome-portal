@@ -9,9 +9,7 @@ SEQUENCE_REPORT_ARGS = ['--report', 'sequence', '--assembly-level','chromosome,c
 
 
 def parse_ncbi_assembly(assembly):
-    assembly_accession = assembly['accession']
-    print(f"Parsing assembly: {assembly_accession}")
-    
+    assembly_accession = assembly['accession']    
     # Initialize metadata dictionary
     metadata = {key: value for key, value in assembly['assembly_info'].items()
                 if key not in ['biosample', 'bioproject_lineage', 'assembly_name']}
@@ -37,9 +35,7 @@ def parse_ncbi_assembly(assembly):
 
     # Create an Assembly instance
     assembly_to_save = Assembly(**assembly_to_save)
-    
-    print(f'Assembly {assembly_to_save.accession} ready to be saved')
-    
+        
     return assembly_to_save
 
 """

@@ -1,5 +1,5 @@
 <template>
-  <va-card>
+  <va-card style="height: 100%;">
     <div ref="mapRef" style="padding: 0;margin: 0;" class="leaflet-map fill-height">
     </div>
     <div v-show="false">
@@ -16,7 +16,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import 'leaflet-map'
 import 'leaflet/dist/leaflet.css'
 import * as Leaflet from 'leaflet'
@@ -37,17 +37,20 @@ const props = defineProps<{
   coordinates: SampleLocations[]
 }>()
 
+
+
 const mapRef = ref()
 const organismCard = ref()
 const selectedSample = ref<{
-  sample_accession:string
-  is_local_sample:boolean
-  image?:string
-}|null>(null)
+  sample_accession: string
+  is_local_sample: boolean
+  image?: string
+} | null>(null)
 
 onMounted(() => {
   const map = Leaflet.map(mapRef.value).fitWorld()
   const markerCluster = new MarkerClusterGroup()
+  if(!props.coordinates.length) return
   const bounds = new Leaflet.LatLngBounds(props.coordinates?.map(({ coordinates }) => [coordinates.coordinates[1], coordinates.coordinates[0]]))
   Leaflet.tileLayer('https://{s}.tile.osm.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors',
@@ -73,7 +76,7 @@ onMounted(() => {
     });
 
     marker.on('click', async (event) => {
-      selectedSample.value = image ? {sample_accession,is_local_sample,image} :{sample_accession,is_local_sample}
+      selectedSample.value = image ? { sample_accession, is_local_sample, image } : { sample_accession, is_local_sample }
     });
 
     markersToAdd.push(marker);

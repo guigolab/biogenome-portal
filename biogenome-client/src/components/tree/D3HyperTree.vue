@@ -1,5 +1,5 @@
 <template>
-    <va-card style="box-shadow: none;" :bordered="false">
+    <va-card style="height:100%;box-shadow: none;" :bordered="false">
         <div ref="hypertree"></div>
     </va-card>
 </template>

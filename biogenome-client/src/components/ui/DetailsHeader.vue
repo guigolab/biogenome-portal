@@ -2,8 +2,9 @@
     <div class="row row-equal justify-space-between">
         <div class="flex">
             <h1 class="va-h1">{{ details.title }}</h1>
-            <div class="row">
-                <div class="flex">
+            <p v-if="details.description">{{ details.description }}</p>
+            <div v-if="hasButtons" class="row">
+                <div v-if="details.button1" class="flex">
                     <va-button preset="primary" icon="pets" :to="details.button1.route">{{ details.button1.label }}</va-button>
                 </div>
                 <div v-if="details.button2" class="flex">
@@ -32,8 +33,13 @@
     </div>
 </template>
 <script setup lang="ts">
+import { computed } from 'vue';
 import { Details } from '../../data/types';
 
 
 const props = defineProps<{details: Details}>()
+
+const hasButtons = computed(()=>{
+    return props.details.button1 || props.details.button2
+})
 </script>

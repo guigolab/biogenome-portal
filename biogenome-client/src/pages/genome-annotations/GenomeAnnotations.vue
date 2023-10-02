@@ -6,7 +6,7 @@
   <InfoBlockVue v-if="charts.length" :charts="charts"></InfoBlockVue>
   <div class="row row-equal">
     <div class="flex lg12 md12 sm12 xs12">
-      <va-skeleton v-if="isLoading" height="100%" />
+      <va-skeleton v-if="isLoading" height="300px" />
       <va-card stripe-color="danger" stripe v-else-if="errorMessage">
         <va-card-content>
           {{ errorMessage }}

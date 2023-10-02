@@ -21,6 +21,6 @@ COPY ./countries.json /countries/countries.json
 
 RUN chmod +x /ncbi/datasets
 
-RUN /usr/bin/crontab /etc/cron.d/crontab
+# RUN /usr/bin/crontab /etc/cron.d/crontab
 
-CMD ["/bin/bash", "-c", "printenv > /etc/environment && cron -f"]
+CMD ["python3", "-u","/cronjobs/assembly_import.py"]

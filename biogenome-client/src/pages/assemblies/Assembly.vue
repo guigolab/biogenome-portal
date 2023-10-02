@@ -4,7 +4,7 @@
     <va-breadcrumbs-item active :label="accession" />
   </va-breadcrumbs>
   <va-divider />
-  <va-skeleton v-if="isLoading" />
+  <va-skeleton v-if="isLoading" height="90vh" />
   <div v-else-if="errorMessage">
     <va-card stripe stripe-color="danger">
       <va-card-content>
@@ -14,7 +14,7 @@
   </div>
   <div v-else>
     <DetailsHeader :details="details" />
-    <KeyValueCard v-if="assemblySelectedMetadata.length" :metadata="metadata"
+    <KeyValueCard v-if="assemblySelectedMetadata.length && metadata" :metadata="metadata"
       :selected-metadata="assemblySelectedMetadata" />
       <!-- TODO add ideogram -->
     <!-- <Ideogram v-if="assembly && assembly.taxid && hasChromosomes" :taxid="assembly.taxid" :accession="accession" /> -->
@@ -22,7 +22,7 @@
       <div v-if="hasChromosomes" class="flex lg12 md12 sm12 xs12">
         <Jbrowse2 :assembly="assembly" :annotations="annotations" />
       </div>
-      <div v-if="metadata && Object.keys(metadata)" class="flex lg12 md12 sm12 xs12">
+      <div v-if="metadata && Object.keys(metadata).length" class="flex lg12 md12 sm12 xs12">
         <MetadataTreeCard :metadata="metadata" />
       </div>
     </div>
@@ -41,7 +41,7 @@ import MetadataTreeCard from '../../components/ui/MetadataTreeCard.vue'
 import Ideogram from '../../components/ui/Ideogram.vue'
 
 const { t } = useI18n()
-const metadata = ref<Record<string, any>>({})
+const metadata = ref<Record<string, any> | null>(null)
 const props = defineProps<{
   accession: string
 }>()

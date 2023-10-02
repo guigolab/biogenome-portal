@@ -3,8 +3,8 @@ from db.enums import GoaTStatus,INSDCStatus
 from lxml import etree
 import requests
 from . import utils 
-
-CHUNK_SIZE = 9999
+import time
+CHUNK_SIZE = 100
 
 def parse_taxons_from_ena(xml):
     taxon_tuples = []
@@ -63,11 +63,12 @@ def fetch_taxons_from_ena(taxids):
     for chunk in chunks:
         try:
             data = dict(accessions=chunk)
+            time.sleep(5)
             response = requests.post("https://www.ebi.ac.uk/ena/browser/api/xml?download=false", params=data)
             all_mapped_taxons.extend(parse_taxons_from_ena(response.content))
         except Exception as e:
             print(f'An error occurred while fetching taxons from ena: {e}')
-            break
+            return all_mapped_taxons
     return all_mapped_taxons
 
 

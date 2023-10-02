@@ -14,10 +14,7 @@ Use NCBI datasets to retrieve all the assemblies under a bioproject accession
 
 """
 def import_assemblies(accession):
-    if not cronjob_helper.set_job(CRON_NAME):
-        return
     try:
-
         print(f'GETTING NCBI ASSEMBLIES FOR BIOPROJECT: {accession}')
         get_all_assemblies_cmd = [DATASETS, 'summary', 'genome','accession', accession]
         ncbi_assemblies = utils.get_data_from_ncbi_datasets(get_all_assemblies_cmd)['reports']
@@ -33,6 +30,7 @@ def import_assemblies(accession):
         related_taxids=set()
         assemblies_to_save=[assembly_helper.parse_ncbi_assembly(new_assembly) for new_assembly in new_assemblies]
 
+        print(f'A total of {len(assemblies_to_save)} parsed and ready to be saved')
         for ass_to_save in assemblies_to_save:
             related_samples.append(ass_to_save.sample_accession)
             #if no errors save assemblies
@@ -85,14 +83,13 @@ def import_assemblies(accession):
         print(f'ALL ASSEMBLIES AND THE RELATED DATA HAVE BEEN IMPORTED')
     except Exception as e:
         print('Error in execution',e)
-    finally:
-        cronjob_helper.terminate_job(CRON_NAME)
 
 
 if __name__ == "__main__":
     connect_to_db()
     print(f"Running import_assemblies at {datetime.now()}")
     import_assemblies(PROJECT_ACCESSION)
+    cronjob_helper.terminate_job(CRON_NAME)
     disconnect_from_db()
 
 

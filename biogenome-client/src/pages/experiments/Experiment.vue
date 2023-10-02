@@ -14,9 +14,9 @@
   </div>
   <div v-else>
     <DetailsHeader :details="details" />
-    <KeyValueCard v-if="experimentSelectedMetadata && experimentSelectedMetadata.length" :metadata="metadata" :selected-metadata="experimentSelectedMetadata" />
+    <KeyValueCard v-if="experimentSelectedMetadata.length && metadata" :metadata="metadata" :selected-metadata="experimentSelectedMetadata" />
     <div class="row row-equal">
-      <div v-if="metadata && Object.keys(metadata)" class="flex lg6 md6 sm12 xs12">
+      <div v-if="metadata && Object.keys(metadata).length" class="flex lg12 md12 sm12 xs12">
         <MetadataTreeCard :metadata="metadata" />
       </div>
     </div>
@@ -39,7 +39,7 @@ const errorMessage = ref<string | any>(null)
 const details = ref<
   Details | any
 >()
-const metadata = ref<Record<string, any>>({})
+const metadata = ref<Record<string, any> | null>(null)
 
 onMounted(async () => {
   await getRead(props.accession)

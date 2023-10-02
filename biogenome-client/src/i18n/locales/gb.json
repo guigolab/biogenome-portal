@@ -72,7 +72,8 @@
   "organismDetails":{
     "images":"Images",
     "publications":"Publications",
-    "vernacularNames":"Vernacular Names"
+    "vernacularNames":"Vernacular Names",
+    "breadcrumb":"Organisms"
   },
   "annotationDetails":{
     "breadcrumb":"Annotations",

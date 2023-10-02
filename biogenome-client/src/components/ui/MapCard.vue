@@ -1,14 +1,5 @@
 <template>
-    <div v-if="noLocations">
-        <va-card stripe stripe-color="warning">
-            <va-card-content>
-                Geographic locations not found
-            </va-card-content>
-        </va-card>
-    </div>
-    <div v-else style="height: 100%">
-        <LeafletMap :coordinates="coordinates" />
-    </div>
+    <LeafletMap :coordinates="coordinates" />
 </template>
 <script setup lang="ts">
 import LeafletMap from '../../components/maps/LeafletMap.vue';
@@ -17,7 +8,6 @@ import GeoLocationService from '../../services/clients/GeoLocationService'
 
 import { ref, } from 'vue'
 
-const noLocations = ref(false)
 const callbackObj: Record<string, any> =
 {
     'organism': GeoLocationService.getLocationsByOrganims,
@@ -42,7 +32,6 @@ const props = defineProps({
 
 const { data } = await callbackObj[props.model](props.id)
 coordinates.value = [...data]
-if (!coordinates.value.length) noLocations.value = true
 
 
 

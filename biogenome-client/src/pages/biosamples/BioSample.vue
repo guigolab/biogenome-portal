@@ -14,7 +14,8 @@
   </div>
   <div v-else>
     <DetailsHeader :details="details" />
-    <KeyValueCard v-if="bioSampleSelectedMetadata && bioSampleSelectedMetadata.length" :metadata="metadata" :selected-metadata="bioSampleSelectedMetadata" />
+    <KeyValueCard v-if="bioSampleSelectedMetadata.length && metadata" :metadata="metadata"
+      :selected-metadata="bioSampleSelectedMetadata" />
     <div class="row row-equal">
       <div v-for="(dt, index) in validData" class="flex lg6 md6 sm12 xs12">
         <Suspense>
@@ -26,15 +27,16 @@
           </template>
         </Suspense>
       </div>
-      <div class="flex lg6 md6 sm12 xs12">
+      <div v-if="metadata && Object.keys(metadata).length" class="flex lg6 md6 sm12 xs12">
+        <MetadataTreeCard :metadata="metadata" />
+      </div>
+      <div class="flex lg6 md6 sm12 xs12 chart">
         <Suspense>
           <MapCard :model="'biosample'" :id="accession" />
           <template #fallback>
+            <va-skeleton height="300px" />
           </template>
         </Suspense>
-      </div>
-      <div v-if="metadata && Object.keys(metadata)" class="flex lg6 md6 sm12 xs12">
-        <MetadataTreeCard :metadata="metadata"/>
       </div>
     </div>
   </div>
@@ -61,7 +63,7 @@ const errorMessage = ref<string | any>(null)
 const details = ref<
   Details | any
 >()
-const metadata = ref<Record<string, any>>({})
+const metadata = ref<Record<string, any> | null>(null)
 const validData = ref<Record<string, string>[]>([])
 
 watch(
@@ -84,8 +86,7 @@ async function getBioSample(accession: string) {
     const models = relatedData.filter(
       (relatedModel) => Object.keys(data).includes(relatedModel.key) && data[relatedModel.key].length,
     )
-    console.log(models)
-    validData.value = [...models]
+    if (models.length) validData.value = [...models]
   } catch (e) {
     errorMessage.value = e
   } finally {

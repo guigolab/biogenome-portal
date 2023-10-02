@@ -26,7 +26,7 @@ export type Filter = {
   label: string
   placeholder?: string
   type: 'input' | 'select' | 'date'
-  options?: Array<string>
+  options?: Array<string | Record<string,any>>
   key: string
 }
 
@@ -157,7 +157,8 @@ export interface ChromosomeInterface {
 }
 export interface Details {
   title: string,
-  button1: {
+  description?:string
+  button1?: {
     route: Record<string, any>
     label: string
   },

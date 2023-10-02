@@ -1,5 +1,5 @@
 <template>
-    <va-card stripe stripe-color="info">
+    <va-card>
         <va-card-title>{{ t('uiComponents.metadata') }}</va-card-title>
         <va-card-content>
             <div class="row align-center">
