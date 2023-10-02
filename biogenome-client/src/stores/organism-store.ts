@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { Contributor, BreadCrumb, Publication, CommonName } from '../data/types'
+import {  Publication, CommonName } from '../data/types'
 import { OrganismSearchForm } from '../data/types'
 
 const initSearchForm: OrganismSearchForm = {
@@ -33,8 +33,6 @@ const initPagination = {
 export const useOrganismStore = defineStore('organism', {
   state: () => {
     return {
-      gals: [] as Contributor[],
-      breadcrumbs: [] as BreadCrumb[],
       searchForm: { ...initSearchForm },
       organismForm: { ...initOrganismForm },
       pagination: { ...initPagination },

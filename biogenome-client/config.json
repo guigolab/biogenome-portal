@@ -247,6 +247,7 @@
   "organismSelectedMetadata":[],
   "annotationInfoBlock": [],
   "annotationSelectedMetadata":[],
+  "taxonInfoBlock":[],
   "localSampleInfoBlock": [],
   "localSampleSelectedMetadata":[],
   "annotations": {},

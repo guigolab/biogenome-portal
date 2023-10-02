@@ -37,7 +37,6 @@ const props = defineProps<{
 }>()
 const customFilterMethod = computed(() => {
     return (node: TreeNode, filterText: string, key: any) => {
-        console.log(node)
         return (node.label && node.label.includes(filterText)) || 
         (node.description && typeof node.description === 'string' && node.description.includes(filterText))}
 })

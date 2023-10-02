@@ -16,7 +16,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import 'leaflet-map'
 import 'leaflet/dist/leaflet.css'
 import * as Leaflet from 'leaflet'

@@ -3,91 +3,48 @@
     <va-breadcrumbs class="va-title" color="primary">
       <va-breadcrumbs-item active :to="{ name: 'taxons' }" :label="t('taxonDetails.breadcrumb')" />
     </va-breadcrumbs>
-    <va-divider/>
-    <va-card>
-      <va-card-content class="row justify-end">
-        <va-button-toggle class="flex" icon-color="primary" v-model="tabValue" preset="secondary" border-color="primary"
-          :options="tabs" value-by="title" :text-by="(option: Record<string, any>) => t(option.title)" />
-      </va-card-content>
-      <va-divider />
-      <!-- <va-card-content class="row row-equal justify-end">
-          <Transition name="slide-fade">
-            <div v-if="tabValue === 'taxonomyTabs.table'" class="flex lg12 md12 sm12 xs12">
-              <TaxonListBlock />
-            </div>
-            <div v-else-if="tabValue === 'taxonomyTabs.search'" class="flex lg12 md12 sm12 xs12">
-              <RelatedTaxon />
-            </div>
-            <div v-else class="flex lg12 md12 sm12 xs12">
-              <Suspense>
-                <D3HyperTree :taxid="rootNode" />
-                <template #fallback>
-                  <va-skeleton animation="wave" :height="'90vh'" />
-                </template>
-              </Suspense>
-            </div>
-          </Transition>
-      </va-card-content> -->
-    </va-card>
-    <!-- <va-tabs v-model="tabValue" grow>
-      <template #tabs>
-        <va-tab v-for="tab in tabs" :key="tab.title" :name="tab.title">
-          <va-icon class="mr-2" :name="tab.icon">
-          </va-icon>
-          {{ t(tab.title) }}
-        </va-tab>
-      </template>
-    </va-tabs> -->
-    <va-divider style="margin: 0;" />
-    <div class="row row-equal justify-end">
+    <va-divider />
+    <InfoBlockVue v-if="charts.length" :charts="charts" />
+    <div class="row justify-end">
+      <div class="flex">
+        <va-button-toggle style="float: right;" icon-color="primary" v-model="tabValue" preset="secondary"
+          border-color="primary" :options="tabs" value-by="icon" />
+      </div>
+    </div>
+    <div class="row row-equal justify-center">
       <Transition name="slide-fade">
-        <div v-if="tabValue === 'taxonomyTabs.table'" class="flex lg12 md12 sm12 xs12">
+        <div v-if="tabValue === 'table_chart'" class="flex lg12 md12 sm12 xs12">
           <TaxonListBlock />
         </div>
-        <div v-else-if="tabValue === 'taxonomyTabs.search'" class="flex lg12 md12 sm12 xs12">
+        <div v-else-if="tabValue === 'search'" class="flex lg12 md12 sm12 xs12">
           <RelatedTaxon />
         </div>
-        <div v-else class="flex lg12 md12 sm12 xs12">
+        <div class="flex lg12 md12 sm12 xs12" v-else>
           <Suspense>
-            <D3HyperTree :taxid="rootNode" />
+            <TaxonsTreeView />
             <template #fallback>
-              <va-skeleton animation="wave" :height="'90vh'" />
+              <va-skeleton height="500px"></va-skeleton>
             </template>
           </Suspense>
         </div>
-        <!-- <Pack :data="data" /> -->
       </Transition>
     </div>
   </div>
 </template>
 <script setup lang="ts">
-import TaxonListBlock from './TaxonListBlock.vue'
-import RelatedTaxon from './RelatedTaxon.vue'
-// import Pack from '../../components/tree/Pack.vue'
+import TaxonListBlock from './components/TaxonListBlock.vue'
+import RelatedTaxon from './components/RelatedTaxon.vue'
+import { taxonInfoBlock } from '../../../config.json'
 import { useI18n } from 'vue-i18n'
 import { ref } from 'vue'
-import D3HyperTree from '../../components/tree/D3HyperTree.vue'
+import InfoBlockVue from '../../components/InfoBlock.vue'
+import { InfoBlock } from '../../data/types'
+import { tabs } from './configs'
+import TaxonsTreeView from './components/TaxonsTreeView.vue'
 const { t } = useI18n()
 
-
-const rootNode = import.meta.env.VITE_ROOT_NODE ?
-  import.meta.env.VITE_ROOT_NODE : '131567'
-// let data: any
-const tabs = [
-  {
-    title: 'taxonomyTabs.table',
-    icon: 'table_chart'
-  },
-  {
-    title: 'taxonomyTabs.search',
-    icon: 'search'
-  },
-  {
-    title: 'taxonomyTabs.explorer',
-    icon: 'travel_explore'
-  }
-]
-const tabValue = ref(tabs[0].title)
+const charts = <InfoBlock[]>taxonInfoBlock
+const tabValue = ref(tabs[0].icon)
 
 
 

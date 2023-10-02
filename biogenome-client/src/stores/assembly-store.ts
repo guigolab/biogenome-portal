@@ -1,5 +1,4 @@
 import { defineStore } from 'pinia'
-import { Contributor, BreadCrumb } from '../data/types'
 import { AssemblySearchForm } from '../data/types'
 
 const initSearchForm: AssemblySearchForm = {
@@ -21,7 +20,6 @@ const initPagination = {
 export const useAssemblyStore = defineStore('assembly', {
   state: () => {
     return {
-      breadcrumbs: [] as BreadCrumb[],
       searchForm: { ...initSearchForm },
       pagination: { ...initPagination },
     }

@@ -1,19 +1,19 @@
-from flask import Response, request
+from flask import Response
 from flask_restful import Resource
 from . import goat_reports_service
 import os
 # #CRUD operations on sample
 
+PROJECT_ACCESSION = os.getenv('PROJECT_ACCESSION')
+
 class GoaTReportApi(Resource):
 
     #download goat_report
     def get(self):
-        goat_report, download = goat_reports_service.download_goat_report(**request.args)
-        if download:   
-            project_name = os.getenv('PROJECT_ACCESSION')
-            file_name = f"{project_name}_species_goat.tsv"
-            return Response(goat_report, mimetype="text/tsv", headers={"Content-disposition": f"attachment; filename={file_name}"})
-        else:
-            return Response(goat_report, mimetype="text/tsv") 
+        tsv_goat_report = goat_reports_service.download_goat_report()
+        mimetype="text/tab-separated-values"
+        encode='utf-8'            
+        file_name = f"{PROJECT_ACCESSION}_species_goat.tsv"
+        return Response(tsv_goat_report.encode(encode), mimetype=mimetype, headers={"Content-disposition": f"attachment; filename={file_name}"})
 
 

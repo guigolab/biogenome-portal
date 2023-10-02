@@ -14,6 +14,7 @@
               v-model="searchForm[filter.key]"
               :label="t(filter.label)"
               :options="filter.options"
+              searchable
             />
           </div>
           <div v-else-if="filter.type === 'date'">

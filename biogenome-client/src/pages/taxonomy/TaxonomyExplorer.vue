@@ -13,7 +13,9 @@
         <div v-if="currentTaxon" :key="currentTaxon.taxid" class="flex lg 4 md4 sm12 xs12">
             <div class="row align-end">
                 <div class="flex">
-                    <h2 class="va-h2">{{ currentTaxon.name }}</h2>
+                    <h2 class="va-h2 va-text-primary"><router-link
+                            :to="currentTaxon.leaves ? { name: 'taxon', params: { taxid: currentTaxon.taxid } } : { name: 'organism', params: { taxid: currentTaxon.taxid } }">{{
+                                currentTaxon.name }}</router-link></h2>
                     <p class="mb-4">{{ currentTaxon.rank }}</p>
                 </div>
             </div>

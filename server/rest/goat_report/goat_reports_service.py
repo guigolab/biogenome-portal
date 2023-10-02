@@ -18,8 +18,7 @@ COLUMN_MAPPER = {
     'species': 'scientific_name',
 }
 
-def download_goat_report(download=False,goat_status=None, target_list_status=None, filter=None, filter_option='scientific_name'):
-    encode='utf-8'
+def download_goat_report():
     report = open('./goat_report.tsv', 'r',newline='')
     tsv_template = csv.reader(report, delimiter='\t')
     writer_file = StringIO()
@@ -27,13 +26,7 @@ def download_goat_report(download=False,goat_status=None, target_list_status=Non
     for row in tsv_template:
         tsv.writerow(row)
     goat_columns = ['ncbi_taxon_id','species','subspecies','family','target_list_status','sequencing_status','synonym','publication_id']
-    query=dict()
-    filter_query = get_filter(filter,filter_option)
-    if goat_status:
-        query['goat_status'] = goat_status
-    if target_list_status:
-        query['target_list_status'] = target_list_status
-    organisms = Organism.objects(filter_query, **query).as_pymongo() if filter_query else Organism.objects.filter(**query).as_pymongo()
+    organisms = Organism.objects().as_pymongo()
     for organism in organisms:
         new_row = list()
         for column in goat_columns:
@@ -49,8 +42,7 @@ def download_goat_report(download=False,goat_status=None, target_list_status=Non
             else:
                 new_row.append(None)
         tsv.writerow(new_row)
-    content = writer_file.getvalue()
-    return content.encode(encode), download
+    return writer_file.getvalue()
 
 
 def get_filter(filter, option):

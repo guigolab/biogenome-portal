@@ -1,5 +1,4 @@
 import { defineStore } from 'pinia'
-import { TreeNode } from '../data/types'
 
 const initSearchForm = {
   filter: '',
@@ -16,10 +15,8 @@ const initPagination = {
 export const useTaxonomyStore = defineStore('taxonomy', {
   state: () => {
     return {
-      breadcrumbs: [] as TreeNode[],
       searchForm: { ...initSearchForm },
       pagination: { ...initPagination },
-      ranks: []
     }
   },
 

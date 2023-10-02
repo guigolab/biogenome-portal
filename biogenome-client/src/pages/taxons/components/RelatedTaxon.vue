@@ -35,10 +35,11 @@
 </template>
 <script setup lang="ts">
 import { ref } from 'vue'
-import { Filter } from '../../data/types'
-import TaxonService from '../../services/clients/TaxonService'
-import IndentedTree from '../../components/tree/IndentedTree.vue'
+import { Filter } from '../../../data/types'
+import TaxonService from '../../../services/clients/TaxonService'
+import IndentedTree from '../../../components/tree/IndentedTree.vue'
 import { useI18n } from 'vue-i18n'
+import {relatedTaxonFilters} from '../configs'
 
 const { t } = useI18n()
 const initSearchForm = {
