@@ -92,9 +92,9 @@ const offset = ref(1 + organismStore.pagination.offset)
 const organisms = ref<Record<string, any>[]>([])
 const total = ref(0)
 
-onMounted(() => {
-  if (showCountry.value) setCountries()
-  getOrganisms({ ...organismStore.searchForm, ...organismStore.pagination })
+onMounted(async() => {
+  if (showCountry.value) await setCountries()
+  await getOrganisms({ ...organismStore.searchForm, ...organismStore.pagination })
 })
 
 function handleSubmit(payload: OrganismSearchForm) {

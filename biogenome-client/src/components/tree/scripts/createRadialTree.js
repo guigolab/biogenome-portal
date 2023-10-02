@@ -65,9 +65,6 @@ function mouseovered(active) {
   }
 export function createRadialTree(ref, root, domains){
 
-    const width = 954
-    const outerRadius = width/2
-    const innerRadius = outerRadius - 170
     const cluster = radialCluster()
 
     cluster(root)

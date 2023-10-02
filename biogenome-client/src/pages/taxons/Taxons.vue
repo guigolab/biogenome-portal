@@ -4,7 +4,6 @@
       <va-breadcrumbs-item active :to="{ name: 'taxons' }" :label="t('taxonDetails.breadcrumb')" />
     </va-breadcrumbs>
     <va-divider />
-    <InfoBlockVue v-if="charts.length" :charts="charts" />
     <div class="row justify-end">
       <div class="flex">
         <va-button-toggle style="float: right;" icon-color="primary" v-model="tabValue" preset="secondary"
@@ -34,16 +33,12 @@
 <script setup lang="ts">
 import TaxonListBlock from './components/TaxonListBlock.vue'
 import RelatedTaxon from './components/RelatedTaxon.vue'
-import { taxonInfoBlock } from '../../../config.json'
 import { useI18n } from 'vue-i18n'
 import { ref } from 'vue'
-import InfoBlockVue from '../../components/InfoBlock.vue'
-import { InfoBlock } from '../../data/types'
 import { tabs } from './configs'
 import TaxonsTreeView from './components/TaxonsTreeView.vue'
 const { t } = useI18n()
 
-const charts = <InfoBlock[]>taxonInfoBlock
 const tabValue = ref(tabs[0].icon)
 
 

@@ -17,7 +17,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import DataTable from '../../../components/ui/DataTable.vue'
-import { Filter } from '../../../data/types'
+import { Filter, SearchForm } from '../../../data/types'
 import { useTaxonomyStore } from '../../../stores/taxonomy-store'
 import TaxonService from '../../../services/clients/TaxonService'
 import StatisticsService from '../../../services/clients/StatisticsService'
@@ -37,15 +37,16 @@ const filters = ref<Filter[]>(tableFilters)
 
 const taxons = ref([])
 
-onMounted(() => {
-  setRanks()
-  getTaxons({ ...TaxonomyStore.searchForm, ...TaxonomyStore.pagination })
+onMounted(async () => {
+  await getTaxons({ ...TaxonomyStore.searchForm, ...TaxonomyStore.pagination })
+  await setRanks()
 
 })
 
-function handleSubmit() {
-  offset.value = 1
+function handleSubmit(payload: SearchForm) {
+  TaxonomyStore.searchForm = { ...payload }
   TaxonomyStore.resetPagination()
+  offset.value = 1
   getTaxons({ ...TaxonomyStore.searchForm, ...TaxonomyStore.pagination })
 }
 function handlePagination(value: number) {

@@ -41,13 +41,8 @@
       <div v-if="metadata && Object.keys(metadata).length" class="flex lg6 md6 sm12 xs12">
         <MetadataTreeCard :metadata="metadata" />
       </div>
-      <div class="flex lg6 md6 sm12 xs12 chart">
-        <Suspense>
-          <MapCard :model="'organism'" :id="taxid" />
-          <template #fallback>
-            <va-skeleton height="300px" />
-          </template>
-        </Suspense>
+      <div v-if="coordinates.length" class="flex lg6 md6 sm12 xs12 chart">
+        <LeafletMap :coordinates="coordinates"/>
       </div>
       <div v-if="publications.length" class="flex lg6 md6 sm12 xs12">
         <Publications :publications="publications" />
@@ -61,20 +56,21 @@
 </template>
 <script setup lang="ts">
 import OrganismService from '../../services/clients/OrganismService'
-import MapCard from '../../components/ui/MapCard.vue'
 import MetadataTreeCard from '../../components/ui/MetadataTreeCard.vue'
 import KeyValueCard from '../../components/ui/KeyValueCard.vue'
 import DetailsHeader from '../../components/ui/DetailsHeader.vue'
 import { onMounted, ref } from 'vue'
 import RelatedDataCard from '../../components/ui/RelatedDataCard.vue'
 import { useI18n } from 'vue-i18n'
-import { Details } from '../../data/types'
+import { Details, SampleLocations } from '../../data/types'
 import TaxonLineage from './components/TaxonLineage.vue'
 import Images from './components/Images.vue'
 import Publications from './components/Publications.vue'
 import VernacularNames from './components/VernacularNames.vue'
 import { relatedData } from './configs'
 import { organismSelectedMetadata } from '../../../config.json'
+import GeoLocationService from '../../services/clients/GeoLocationService'
+import LeafletMap from '../../components/maps/LeafletMap.vue'
 
 const { t } = useI18n()
 const props = defineProps<{
@@ -90,6 +86,7 @@ const validData = ref<Record<string, string>[]>([])
 const commonNames = ref<Record<string, string>[]>([])
 const publications = ref<Record<string, string>[]>([])
 const images = ref<string[]>([])
+const coordinates = ref<SampleLocations[]>([])
 
 onMounted(async () => {
   try {
@@ -108,7 +105,7 @@ onMounted(async () => {
       (relatedModel) => Object.keys(data).includes(relatedModel.key) && data[relatedModel.key].length,
     )
     if (models.length) validData.value = [...models]
-
+    await getCoordinates(props.taxid)
   } catch (e) {
     errorMessage.value = e
   } finally {
@@ -125,6 +122,10 @@ function parseDetails(organism: Record<string, any>) {
   return details
 }
 
+async function getCoordinates(taxid:string) {
+  const {data} = await GeoLocationService.getLocationsByOrganims(taxid)
+  coordinates.value = [...data]
+}
 
 </script>
 

@@ -1,6 +1,6 @@
 <template>
-  <div style="padding:20px">
-    <svg ref="tree" style="width: 1000px"></svg>
+  <div>
+    <svg ref="tree"></svg>
   </div>
 </template>
 <script lang="ts" setup>

@@ -1,9 +1,9 @@
 import * as d3 from 'd3'
+const width = 768
 
 
 export function createIndentedTree(ref, root, router){
     const nodeSize = 17
-    const width = 750
     const nodes = root.descendants()
     const svg = d3
     .select(ref.value)

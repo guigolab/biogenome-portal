@@ -3,8 +3,8 @@
     <div ref="mapRef" style="padding: 0;margin: 0;" class="leaflet-map fill-height">
     </div>
     <div v-show="false">
-      <div class="organism-card" ref="organismCard">
-        <Suspense v-if="selectedSample?.sample_accession">
+      <div v-if="selectedSample?.sample_accession" class="organism-card" ref="organismCard">
+        <Suspense>
           <template #fallback>
             <va-skeleton height="150px" />
           </template>
@@ -70,9 +70,9 @@ onMounted(() => {
 
     marker.bindPopup(() => organismCard.value, {
       closeButton: false,
-      className: 'organism-popup flex',
+      className: 'organism-popup',
       minWidth: 300,
-      maxHeight: 65,
+      maxHeight: 150,
     });
 
     marker.on('click', async (event) => {

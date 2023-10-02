@@ -4,101 +4,121 @@
     <va-breadcrumbs-item active :label="taxid" />
   </va-breadcrumbs>
   <va-divider />
-  <Transition>
+  <va-skeleton v-if="isLoading" height="90vh" />
+  <div style="height: 90vh;" v-else-if="errorMessage">
+    <va-card stripe stripe-color="danger">
+      <va-card-content>
+        {{ errorMessage }}
+      </va-card-content>
+    </va-card>
+  </div>
+  <div v-else>
     <DetailsHeader v-if="details" :details="details" />
-  </Transition>
-  <va-tabs v-model="tabValue" grow>
-    <template #tabs>
-      <va-tab v-for="tab in tabs" :key="tab.title" :name="tab.title">
-        <va-icon class="mr-2" :name="tab.icon">
-        </va-icon>
-        {{ t(tab.title) }}
-      </va-tab>
-    </template>
-  </va-tabs>
-  <div id="top-container" v-if="showData">
-    <div class="row row-equal">
-      <div class="flex lg6 md6 sm12 xs12">
-        <Suspense>
-          <PieChart :field="'insdc_status'" :model="'organisms'" :title="'taxonDetails.pieChart'"
-            :label="'taxonDetails.pieChart'" :query="{ taxon_lineage: props.taxid }" />
-        </Suspense>
+    <div class="row">
+      <div class="flex">
+        <va-inner-loading :loading="loadIndentedTree">
+          <va-button size="small" @click="loadTree('indented')">{{ t('taxonDetails.indented') }}</va-button>
+        </va-inner-loading>
       </div>
-      <div class="flex lg6 md6 sm12 xs12">
-        <Suspense>
-          <TreeCard :taxid="taxid" />
-        </Suspense>
-      </div>
-      <div v-if="coordinates.length" class="flex lg6 md6 sm12 xs12">
-        <LeafletMap style="height: 100%" :coordinates="coordinates" />
-      </div>
-      <div class="flex lg6 md6 sm12 xs12">
-        <TaxonDetailsListBlock :taxid="taxid" />
+      <div class="flex">
+        <va-inner-loading :loading="loadRadialTree">
+          <va-button size="small" @click="loadTree('radial')" :disabled="Number(taxon.leaves) >= 250">{{
+            t('taxonDetails.radial') }}</va-button>
+        </va-inner-loading>
       </div>
     </div>
+    <div class="row">
+      <div class="flex lg12 md12 sm12 xs12">
+        <SideBar :name="taxon.name" :taxid="taxid" />
+      </div>
+    </div>
+    <va-modal fullscreen v-model="showModal">
+      <TreeOfLife v-if="treeType === 'radial'" :data="treeData" />
+      <IndentedTree v-else :data="treeData" />
+    </va-modal>
   </div>
 </template>
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
-import LeafletMap from '../../components/maps/LeafletMap.vue'
-import PieChart from '../../components/charts/PieChart.vue'
+import { onMounted, reactive, ref, watch } from 'vue'
 import TaxonService from '../../services/clients/TaxonService'
-import TreeCard from './TreeCard.vue'
-import TaxonDetailsListBlock from './TaxonDetailsListBlock.vue'
 import { useI18n } from 'vue-i18n'
 import DetailsHeader from '../../components/ui/DetailsHeader.vue'
-import { Details, OrganismCoordinates, OrganismLocations, TaxonNode } from '../../data/types'
-
+import { Details, TaxonNode } from '../../data/types'
+import SideBar from '../taxonomy/components/SideBar.vue'
+import TreeOfLife from '../../components/tree/TreeOfLife.vue'
+import IndentedTree from '../../components/tree/IndentedTree.vue'
 const { t } = useI18n()
-
-const counter = ref(0)
+const showModal = ref(false)
 const details = ref<
   Details | any
 >()
-const showData = ref(false)
+
 const props = defineProps<{
   taxid: string
 }>()
-const coordinates = ref([])
 const taxon = ref<TaxonNode | any>({})
-const isLoading = ref(false)
+const isLoading = ref(true)
+const errorMessage = ref('')
+const loadIndentedTree = ref(false)
+const loadRadialTree = ref(false)
+const treeData = reactive<Record<string, any>>({})
+
+watch(
+  () => props.taxid,
+  async (value) => {
+    await getTaxon()
+    details.value = parseDetails(taxon.value)
+    showModal.value=false
+  }
+)
 /*
   get taxon
   get phylogenetic tree
   get coordinates
   get list
 */
-
+const treeType = ref('')
 
 onMounted(async () => {
-  getTaxon()
-  parseDetails(taxon.value)
-  getCoordinates(props.taxid)
+  await getTaxon()
+  details.value = parseDetails(taxon.value)
 })
 
 async function getTaxon() {
-  const { data } = await TaxonService.getTaxon(props.taxid)
-  taxon.value = { ...data }
+  try {
+    isLoading.value = true
+    const { data } = await TaxonService.getTaxon(props.taxid)
+    taxon.value = { ...data }
+  } catch (e) {
+    errorMessage.value = `Something happened: ${e}`
+  } finally {
+    isLoading.value = false
+  }
+}
 
+async function loadTree(type: 'indented' | 'radial') {
+  treeType.value = type
+  try {
+    if (type === 'indented') {
+      loadIndentedTree.value = true
+    } else {
+      loadRadialTree.value = true
+    }
+    const { data } = await TaxonService.getTree(props.taxid)
+    Object.assign(treeData, data)
+  } catch (e) {
+    console.log(e)
+  } finally {
+    loadIndentedTree.value = false
+    loadRadialTree.value = false
+    showModal.value = true
+  }
 }
-async function getCoordinates(taxid: string) {
-  const { data } = await TaxonService.getTaxonCoordinates(taxid)
-  coordinates.value = data.reduce((accumulator: OrganismCoordinates[], organism: OrganismLocations) => {
-    const tuples: OrganismCoordinates[] = organism.locations.map((location) => {
-      return {
-        latitude: Number(location[0]),
-        longitude: Number(location[1]),
-        id: organism.scientific_name,
-        taxid: organism.taxid,
-        image: organism.image || undefined
-      }
-    })
-    return accumulator.concat(tuples);
-  }, []);
-}
+
 function parseDetails(taxon: TaxonNode) {
   const details: Details = {
     title: taxon.name,
+    description: taxon.rank,
     ncbiPath: `https://www.ncbi.nlm.nih.gov/assembly/${taxon.taxid}`,
     ebiPath: `https://www.ebi.ac.uk/ena/browser/view/${taxon.taxid}`
   }
@@ -107,6 +127,8 @@ function parseDetails(taxon: TaxonNode) {
 </script>
   
 <style lang="scss">
+
+
 .chart {
   height: 400px;
 }

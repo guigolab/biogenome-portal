@@ -32,11 +32,12 @@ export type Filter = {
 
 export interface SearchForm {
   filter: string
-  filter_option: string
+  filter_option?: string
   sort_column: string
   sort_order: string
   start_date?: string
   end_date?: string
+  rank?:string
 }
 
 export interface OrganismSearchForm extends SearchForm {

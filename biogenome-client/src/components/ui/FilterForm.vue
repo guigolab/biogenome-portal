@@ -32,7 +32,7 @@
         </div>
       </div>
     </va-card-content>
-    <va-card-actions>
+    <va-card-actions align="right">
       <va-button type="submit">{{t('buttons.submit')}}</va-button>
       <va-button color="danger" @click="onReset">{{t('buttons.reset')}}</va-button>
     </va-card-actions>

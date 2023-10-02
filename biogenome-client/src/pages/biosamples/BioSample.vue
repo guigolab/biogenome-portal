@@ -30,13 +30,8 @@
       <div v-if="metadata && Object.keys(metadata).length" class="flex lg6 md6 sm12 xs12">
         <MetadataTreeCard :metadata="metadata" />
       </div>
-      <div class="flex lg6 md6 sm12 xs12 chart">
-        <Suspense>
-          <MapCard :model="'biosample'" :id="accession" />
-          <template #fallback>
-            <va-skeleton height="300px" />
-          </template>
-        </Suspense>
+      <div v-if="coordinates.length" class="flex lg6 md6 sm12 xs12 chart">
+        <LeafletMap :coordinates="coordinates"/>
       </div>
     </div>
   </div>
@@ -46,13 +41,14 @@ import BioSampleService from '../../services/clients/BioSampleService'
 import { onMounted, ref, watch } from 'vue'
 import RelatedDataCard from '../../components/ui/RelatedDataCard.vue'
 import { useI18n } from 'vue-i18n'
-import { BioSample, Details } from '../../data/types'
+import { BioSample, Details, SampleLocations } from '../../data/types'
 import { relatedData } from './configs'
 import { bioSampleSelectedMetadata } from '../../../config.json'
 import DetailsHeader from '../../components/ui/DetailsHeader.vue'
 import KeyValueCard from '../../components/ui/KeyValueCard.vue'
-import MapCard from '../../components/ui/MapCard.vue'
 import MetadataTreeCard from '../../components/ui/MetadataTreeCard.vue'
+import GeoLocationService from '../../services/clients/GeoLocationService'
+import LeafletMap from '../../components/maps/LeafletMap.vue'
 
 const { t } = useI18n()
 const props = defineProps<{
@@ -65,6 +61,7 @@ const details = ref<
 >()
 const metadata = ref<Record<string, any> | null>(null)
 const validData = ref<Record<string, string>[]>([])
+const coordinates = ref<SampleLocations[]>([])
 
 watch(
   () => props.accession,
@@ -94,7 +91,10 @@ async function getBioSample(accession: string) {
   }
 
 }
-
+async function getCoordinates(accession:string) {
+  const {data} = await GeoLocationService.getLocationsByBioSample(accession)
+  coordinates.value = [...data]
+}
 function parseDetails(biosample: BioSample) {
   const accession = biosample.accession
   const details: Details = {

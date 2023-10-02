@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
+import { SearchForm } from '../data/types'
 
-const initSearchForm = {
+const initSearchForm:SearchForm = {
   filter: '',
   sort_column: '',
   sort_order: '',

@@ -1,7 +1,7 @@
 <template>
     <div class="row row-equal">
-        <div style="padding: 0;" v-for="(taxon, index) in taxons" :key="index" class="flex">
-            <span class="ml-2">
+        <div class="flex">
+            <span v-for="(taxon, index) in taxons" :key="index" class="mr-2">
                 <router-link class="va-text-secondary" :to="{ name: 'taxon', params: { taxid: taxon.taxid } }">
                     {{ taxon.name }}
                 </router-link>
