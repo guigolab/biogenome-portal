@@ -127,10 +127,10 @@
   </va-data-table>
 </template>
 <script setup lang="ts">
-  const props = defineProps({
-    columns: Array,
-    items: Array,
-  })
+  const props = defineProps<{
+    columns: string[]
+    items: Record<string,any>[]
+  }>()
 
   const contigs = [
     {

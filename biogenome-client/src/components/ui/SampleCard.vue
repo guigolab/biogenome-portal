@@ -40,7 +40,4 @@ const { data } = props.selectedSample.is_local_sample ?
     await LocalSampleService.getLocalSample(props.selectedSample.sample_accession) :
     await BioSampleService.getBioSample(props.selectedSample.sample_accession)
 
-
-
 </script>
-<style></style>

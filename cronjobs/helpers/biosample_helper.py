@@ -117,7 +117,6 @@ def retrieve_biosamples_from_ebi_by_project(project_name):
             # Handle exceptions (e.g., connection error, JSON parsing error) here
             print(f"An error occurred while fetching biosample from EBI: {e}")
             break  # Exit the loop on error
-
     return biosamples
 
 

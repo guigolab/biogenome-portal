@@ -1,6 +1,6 @@
 from ..utils import ena_client
 from ..taxon import taxons_service
-from flask import current_app as app
+from ..sample_location import sample_locations_service
 from mongoengine.queryset.visitor import Q
 from db.models import CommonName, Organism, Publication
 import os 
@@ -128,6 +128,7 @@ def parse_organism_data(data,taxid=None):
             string_attrs[key] = filtered_data[key]
     if organism.image and not 'image' in filtered_data.keys():
         organism.image = None
+        sample_locations_service.add_image(organism.taxid, None) ## remove images
     for key in string_attrs.keys():
         organism[key] = string_attrs[key]
     if 'metadata' in filtered_data.keys():
@@ -140,6 +141,8 @@ def parse_organism_data(data,taxid=None):
         organism.common_names = c_name_list
     if 'image_urls' in filtered_data.keys():
         organism.image_urls = filtered_data['image_urls']
+    if 'image' in filtered_data.keys():
+        sample_locations_service.add_image(organism.taxid, filtered_data['image'])
     if 'publications' in filtered_data.keys():
         pub_list = list()
         for pub in filtered_data['publications']:
@@ -160,3 +163,16 @@ def parse_taxon_from_ena(xml):
                 lineage.append(node.attrib)
     lineage.insert(0,organism)
     return lineage
+
+# def delete_organism(taxid):
+#     organism = Organism.objects(taxid=taxid).first()
+#     if not organism:
+#         raise NotFound
+#     related_taxons = TaxonNode.objects(taxid__in=organism.taxon_lineage)
+#     SampleCoordinates.objects(taxid=taxid).delete()
+#     Assembly.objects(taxid=taxid).delete()
+#     LocalSample.objects(taxid=taxid).delete()
+#     Experiment.objects(taxid=taxid).delete()
+#     GenomeAnnotation.objects(taxid=taxid).delete()
+#     BioSample.objects(taxid=taxid).delete()
+

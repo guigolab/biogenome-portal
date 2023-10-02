@@ -96,58 +96,6 @@ class SampleCoordinates(db.Document):
         'indexes': ['sample_accession','taxid']
     }
 
-@handler(db.pre_save)
-def set_location(sender, document, **kwargs):
-    print(f'SETTING LOCATION OF {document.accession} of {document.scientific_name}')
-    if document.location:
-        return
-    print('setting location of', document)
-    sample_metadata = document.metadata
-    lowered_keys_dict = dict()
-    latitude = None
-    longitude = None
-    for key in sample_metadata.keys():
-        low_key = key.lower()
-        lowered_keys_dict[low_key] = sample_metadata[key]
-    if 'lat_lon' in sample_metadata.keys():
-        values = sample_metadata['lat_lon'].split(' ')
-        if len(values) == 4:
-            lat,lat_value,long,long_value = values
-            latitude = '-'+lat if lat_value == 'S' else lat
-            longitude = '-'+long if long_value == 'W' else long
-    elif 'lat lon' in sample_metadata.keys():
-        values = sample_metadata['lat lon'].split(' ')
-        if len(values) == 4:
-            lat,lat_value,long,long_value = values
-            latitude = '-'+lat if lat_value == 'S' else lat
-            longitude = '-'+long if long_value == 'W' else long
-    elif 'geographic location (latitude)' in sample_metadata.keys() and 'geographic location (longitude)' in sample_metadata.keys():
-        latitude = str(sample_metadata['geographic location (latitude)'])
-        longitude = str(sample_metadata['geographic location (longitude)'])
-    elif 'latitude' in lowered_keys_dict and 'longitude' in lowered_keys_dict:
-        latitude = str(lowered_keys_dict['latitude'])
-        longitude  = str(lowered_keys_dict['longitude'])
-    elif 'decimal_latitude' in lowered_keys_dict and 'decimal_longitude' in lowered_keys_dict:
-        latitude = str(lowered_keys_dict['decimal_latitude'])
-        longitude  = str(lowered_keys_dict['decimal_longitude'])
-    if latitude and longitude:
-        try:
-            if any(c.isdigit() for c in str(latitude)) and any(c.isdigit() for c in str(longitude)):
-                ##replace , with .
-                if ',' in latitude and ',' in longitude:
-                    latitude = latitude.replace(',', '.')
-                    longitude = longitude.replace(',', '.')
-                if "'" in latitude and "'" in longitude:
-                    latitude = latitude.replace("'", ".")
-                    longitude = longitude.replace("'", ".")
-                if float(latitude) >= -90.0 and float(latitude) <= 90.0 and float(longitude) >= -180.0 and float(longitude) <= 180.0:
-                    lng = float(longitude)
-                    lat = float(latitude)
-                    document.location = [lng, lat]
-        except:
-            print(f'Invalid latitude:{latitude} or longitude: {longitude} for sample:{document}')
-
-@set_location.apply
 class LocalSample(db.Document):
     created = db.DateTimeField(default=datetime.datetime.utcnow)
     local_id = db.StringField(required=True,unique=True)
@@ -167,7 +115,6 @@ class LocalSample(db.Document):
         'strict': False
     }
 
-@set_location.apply
 class BioSample(db.Document):
     assemblies = db.ListField(db.StringField())
     experiments = db.ListField(db.StringField())
@@ -210,6 +157,8 @@ def delete_related_data( sender, document ):
     LocalSample.objects(taxid=taxid).delete()
     BioSample.objects(taxid=taxid).delete()
     OrganismPublication.objects(taxid=taxid).delete()
+    Publication.objects(taxid=taxid).delete()
+    SampleCoordinates.objects(taxid=taxid).delete()
     taxons = TaxonNode.objects(taxid__in=document.taxon_lineage)
     for node in taxons:
         node.leaves=node.leaves - 1

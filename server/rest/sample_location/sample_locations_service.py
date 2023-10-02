@@ -2,19 +2,20 @@ from db.models import SampleCoordinates,Organism
 import json
 from shapely.geometry import shape, Point
 
+    # Helper function to convert coordinates with different formats
+def convert_coordinates(lat, lat_value, long, long_value):
+    lat = '-' + lat if lat_value == 'S' else lat
+    long = '-' + long if long_value == 'W' else long
+    return lat, long
+
 def save_coordinates(saved_sample, id_field='accession'):
     print(f'SETTING LOCATION OF {saved_sample[id_field]} of {saved_sample.scientific_name}')
-    
     sample_metadata = saved_sample.metadata
     lowered_keys_dict = {key.lower(): value for key, value in sample_metadata.items()}
     
     latitude, longitude = None, None
     
-    # Helper function to convert coordinates with different formats
-    def convert_coordinates(lat, lat_value, long, long_value):
-        lat = '-' + lat if lat_value == 'S' else lat
-        long = '-' + long if long_value == 'W' else long
-        return lat, long
+
     
     if 'lat_lon' in sample_metadata:
         values = sample_metadata['lat_lon'].split(' ')
@@ -112,3 +113,7 @@ def update_countries_from_biosample(saved_biosample):
     # Perform batch update for countries
     if country_to_add:
         Organism.objects(taxid=taxid).modify(add_to_set__countries=country_to_add)
+
+
+def add_image(taxid, image):
+    SampleCoordinates.objects(taxid=taxid).update(image=image)

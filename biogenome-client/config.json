@@ -81,6 +81,24 @@
       "type": "pie"
     }
   ],
+  "statusInfoBlocks": [
+    {
+      "model": "organisms",
+      "field": "goat_status",
+      "title": "statusList.charts.firstPiechart",
+      "label": "statusList.charts.firstPiechart",
+      "class": "flex lg6 md6 sm12 xs12",
+      "type": "pie"
+    },
+    {
+      "model": "organisms",
+      "field": "target_list_status",
+      "title": "statusList.charts.secondPiechart",
+      "label": "statusList.charts.secondPiechart",
+      "class": "flex lg6 md6 sm12 xs12",
+      "type": "pie"
+    }
+  ],
   "bioSampleInfoBlocks": [
     {
       "type": "contribution",

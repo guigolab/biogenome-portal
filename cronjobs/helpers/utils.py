@@ -27,3 +27,14 @@ def get_new_objects(model, id_field, query_key, objects):
     query = dict().setdefault(query_key,objects)
     existing_objects = get_objects_by_scalar_id(model, id_field, query)
     return [new_object for new_object in objects if not new_object in existing_objects]
+
+
+def trigger_cronjob(model):
+    cronjobs = requests.get(f"{API_URL}/cronjob").json()
+    for cronjob in cronjobs:
+        if cronjob['cronjob_type'] == model:
+            return
+    cookies = login()
+    crsf = cookies['csrf_access_token']
+    headers = {"X-CSRF-TOKEN":crsf}
+    requests.post(f"{API_URL}/cronjob/{model}",headers=headers,cookies=cookies)

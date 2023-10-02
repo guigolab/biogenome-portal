@@ -1,4 +1,4 @@
-from db.models import LocalSample
+from db.models import LocalSample,SampleCoordinates
 from errors import NotFound
 from ..organism import organisms_service
 from datetime import datetime
@@ -41,6 +41,7 @@ def delete_local_sample(id):
     sample_to_delete = LocalSample.objects(local_id=id).first()
     if not sample_to_delete:
         raise NotFound
+    SampleCoordinates.objects(sample_accession=id).delete()
     sample_to_delete.delete()
     return id
 

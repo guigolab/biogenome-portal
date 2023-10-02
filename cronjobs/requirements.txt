@@ -1,13 +1,1 @@
-blinker==1.5
-certifi==2022.12.7
-charset-normalizer==3.0.1
-dnspython==2.3.0
-idna==3.4
-mongoengine==0.26.0
-pymongo==4.3.3
-requests==2.28.2
-shapely==2.0.1
-urllib3==1.26.14
-lxml==4.9.2
-
-
+requests==2.27.1

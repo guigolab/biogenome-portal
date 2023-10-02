@@ -98,3 +98,25 @@ def delete_experiment(accession):
     organism.save()
     experiment_to_delete.delete()
     return accession
+
+
+def create_reads_from_biosample_accession(accession):
+    response = ena_client.get_reads(accession)
+    saved_accessions = list()
+    if not response:
+        print(f'Reads for {accession} not found')
+        return
+    for exp in response:
+        exp_metadata = dict()
+        other_attributes = dict()
+        for k in exp.keys():
+            if k == 'tax_id':
+                other_attributes['taxid'] = exp[k]
+            elif k in ['instrument_model','instrument_platform','experiment_accession']:
+                other_attributes[k] = exp[k]
+            else:
+                exp_metadata[k] = exp[k]
+        exp_obj = Experiment(metadata=exp_metadata, **other_attributes).save()
+        ##create data here
+        saved_accessions.append(exp_obj.experiment_accession)
+    return saved_accessions
