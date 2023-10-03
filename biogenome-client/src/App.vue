@@ -33,4 +33,7 @@
   .fade-enter-active {
     transition: opacity 0.5s ease;
   }
+  text {
+    font-size: 1rem;
+  }
 </style>
