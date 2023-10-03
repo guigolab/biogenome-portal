@@ -23,12 +23,13 @@
         <Suspense>
           <TaxonLineage :taxid="taxid"></TaxonLineage>
           <template #fallback>
-            <va-skeleton height="300px"></va-skeleton>
+            <va-skeleton height="400px"></va-skeleton>
           </template>
         </Suspense>
       </div>
       <div v-if="images.length" class="flex lg6 md6 sm12 xs12">
-        <Images :images="images" />
+        <Images :images="images"/>
+        <!-- <va-carousel height="400px" :items="images" stateful /> -->
       </div>
       <div v-for="(dt, index) in validData" class="flex lg6 md6 sm12 xs12">
         <Suspense>
@@ -66,14 +67,13 @@ import RelatedDataCard from '../../components/ui/RelatedDataCard.vue'
 import { useI18n } from 'vue-i18n'
 import { Details, SampleLocations } from '../../data/types'
 import TaxonLineage from './components/TaxonLineage.vue'
-import Images from './components/Images.vue'
 import Publications from './components/Publications.vue'
 import VernacularNames from './components/VernacularNames.vue'
 import { relatedData } from './configs'
 import { organismSelectedMetadata } from '../../../config.json'
 import GeoLocationService from '../../services/clients/GeoLocationService'
 import LeafletMap from '../../components/maps/LeafletMap.vue'
-
+import Images from './components/Images.vue'
 const { t } = useI18n()
 const props = defineProps<{
   taxid: string

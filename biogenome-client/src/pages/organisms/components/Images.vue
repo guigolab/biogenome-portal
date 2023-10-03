@@ -1,14 +1,14 @@
 <template>
     <va-card>
-        <va-image fit="fill" :src="images[currentImageIndex]" style="height: 300px" />
+        <va-image :ratio="1" :src="images[currentImageIndex]" style="height: 400px" />
         <va-card-title>
             <va-button preset="plain" icon-right="fa-arrow-circle-right" @click="showModal">
                 {{ t('dashboard.info.exploreGallery') }}
             </va-button>
         </va-card-title>
     </va-card>
-    <va-modal size="large" v-model="modal">
-        <va-carousel height="400" lazy fit="contain" v-model="currentImageIndex" :items="images" class="gallery-carousel" />
+    <va-modal v-model="modal">
+        <va-carousel :ratio="4/3" lazy v-model="currentImageIndex" :items="images" class="gallery-carousel" />
     </va-modal>
 </template>
 <script setup lang="ts">
@@ -27,3 +27,14 @@ function showModal() {
     modal.value = true
 }
 </script>
+<style lang="scss" scoped>
+
+.gallery-carousel {
+    width: 80vw;
+    max-width: 100%;
+
+    @media all and (max-width: 576px){
+        width: 100%;
+    }
+}
+</style>

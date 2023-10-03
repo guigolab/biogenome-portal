@@ -4,23 +4,10 @@ from ..organism import organisms_service
 from db.enums import INSDCStatus
 from collections import deque
 
-def create_tree(taxid, limit=None):
+def create_tree(taxid):
     # Fetch the initial taxon node
     node = TaxonNode.objects(taxid=taxid).exclude('id').first()
-
-    # Initialize the tree and node_counts
-    tree = {}
-    node_counts = {}
-
-    # If a limit is provided, calculate the maximum level
-    max_level = None
-    if limit:
-        max_level = bfs(node, node_counts, int(limit))
-        dfs_with_limit([(node, 1)], tree, max_level, node_counts)
-    else:
-    # Build the tree using depth-first search
-        dfs([(node, 1)], tree, node_counts)
-
+    tree = dfs(node)
     return tree
 
 def bfs(root, nodes, max_leaves):
@@ -42,45 +29,19 @@ def bfs(root, nodes, max_leaves):
         if nodes[level] > max_leaves:
             return level - 1
 
-def dfs_with_limit(stack, tree, max_level, node_counts):
-    while stack:
-        node, level = stack.pop()
-
-        tree["name"] = node.name
-        tree["taxid"] = node.taxid
-        tree["children"] = []
-        tree['rank'] = node.rank
-        tree['leaves'] = node.leaves
-
-        if max_level is not None and max_level <= level:
-            return
-
-        if node.children:
-            children = TaxonNode.objects(taxid__in=node.children)
-
-            for child in children:
-                child_dict = {}
-                dfs([(child, level + 1)], child_dict, max_level, node_counts)
-                tree["children"].append(child_dict)
-    return tree
-
-def dfs(stack, tree, node_counts):
-    while stack:
-        node, level = stack.pop()
-
-        tree["name"] = node.name
-        tree["taxid"] = node.taxid
-        tree["children"] = []
-        tree['rank'] = node.rank
-        tree['leaves'] = node.leaves
-
-        if node.children:
-            children = TaxonNode.objects(taxid__in=node.children)
-
-            for child in children:
-                child_dict = {}
-                dfs([(child, level + 1)], child_dict, node_counts)
-                tree["children"].append(child_dict)
+def dfs(node):
+    tree = {
+        "name": node.name,
+        "taxid": node.taxid,
+        "rank": node.rank,
+        "leaves": node.leaves,
+        "children": []
+    }
+    if node.children:
+        children = TaxonNode.objects(taxid__in=node.children)
+        for child in children:
+            child_dict = dfs(child)
+            tree["children"].append(child_dict)
     return tree
 
 

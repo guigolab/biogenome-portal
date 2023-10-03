@@ -7,7 +7,7 @@ from errors import NotFound
 class TreeApi(Resource):
     def get(self, taxid):
         #TODO ADD LEVEL CONTROL ON TREE
-        tree = taxonomy_service.create_tree(taxid, **request.args)
+        tree = taxonomy_service.create_tree(taxid)
         return Response(json.dumps(tree), mimetype="application/json", status=200)
 
     def post(self):

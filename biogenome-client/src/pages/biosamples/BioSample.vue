@@ -30,7 +30,7 @@
       <div v-if="metadata && Object.keys(metadata).length" class="flex lg6 md6 sm12 xs12">
         <MetadataTreeCard :metadata="metadata" />
       </div>
-      <div v-if="coordinates.length" class="flex lg6 md6 sm12 xs12">
+      <div v-if="coordinates.length" class="flex lg6 md6 sm12 xs12 chart">
         <LeafletMap :coordinates="coordinates" />
       </div>
     </div>
@@ -64,16 +64,18 @@ const validData = ref<Record<string, string>[]>([])
 const coordinates = ref<SampleLocations[]>([])
 
 watch(
-  () => props.accession,
-  async (value) => {
-    await getBioSample(value)
-    await getCoordinates(props.accession)
+   () => props.accession,
+   async (value) => {
+   await getBioSample(value)
+    await getCoordinates(value)
+
   }
 )
 
-onMounted(async () => {
+onMounted(async() => {
   await getBioSample(props.accession)
   await getCoordinates(props.accession)
+
 })
 
 async function getBioSample(accession: string) {
@@ -90,6 +92,7 @@ async function getBioSample(accession: string) {
     } else {
       validData.value = []
     }
+    getCoordinates(accession)
   } catch (e) {
     errorMessage.value = e
   } finally {
@@ -98,15 +101,8 @@ async function getBioSample(accession: string) {
 
 }
 async function getCoordinates(accession: string) {
-  try {
-    isLoading.value = true
     const { data } = await GeoLocationService.getLocationsByBioSample(accession)
     coordinates.value = [...data]
-  }catch(e){
-    console.log(e)
-  }finally{
-    isLoading.value=false
-  }
 }
 
 function parseDetails(biosample: BioSample) {

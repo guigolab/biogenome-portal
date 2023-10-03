@@ -1,28 +1,21 @@
 <template>
-    <va-card style="height: 150px;">
-        <va-card-content>
-            <div class="row justify-space-between align-center">
-                <div v-if="selectedSample.image" style="margin: 0;padding: 0;" class="flex">
-                    <img :src="selectedSample.image" />
-                </div>
-                <div class="flex">
-                    <h6 class="va-h6" style="word-wrap:break-word ;">
-                        <router-link
-                            style="color: inherit;"
-                            :to="selectedSample.is_local_sample ?
-                                { name: 'local_sample', params: { id: selectedSample.sample_accession } } : { name: 'biosample', params: { accession: selectedSample.sample_accession } }">
-                            {{ selectedSample.sample_accession }}
-                        </router-link>
-                    </h6>
-                    <p class="va-text-secondary">{{ data.scientific_name }}</p>
-                </div>
-                <div class="flex">
-                    <va-icon v-if="data.sub_samples.length" name="fa-vial" color="background-tertiary" />
-                    <va-icon v-if="data.assemblies.length" name="fa-dna" color="background-tertiary" />
-                    <va-icon v-if="data.experiments.length" name="fa-file-lines" color="background-tertiary" />
-                </div>
-            </div>
-        </va-card-content>
+    <va-card class="row justify-space-between align-center">
+        <div class="flex">
+            <h6 class="va-h6">
+                <router-link style="color: inherit;"
+                    :to="selectedSample.is_local_sample ?
+                        { name: 'local_sample', params: { id: selectedSample.sample_accession } } : { name: 'biosample', params: { accession: selectedSample.sample_accession } }">
+                    {{ selectedSample.sample_accession }}
+                </router-link>
+            </h6>
+            <p class="va-text-secondary">{{ data.scientific_name }}</p>
+        </div>
+        <div class="flex">
+            <va-button-actions vertical align="between">
+                <va-button preset="plain" size="small" v-if="data.assemblies.length" icon="fa-dna" color="background-tertiary" />
+                <va-button preset="plain" size="small" v-if="data.experiments.length" icon="fa-file-lines" color="background-tertiary" />
+            </va-button-actions>
+        </div>
     </va-card>
 </template>
 <script setup lang="ts">
@@ -42,3 +35,14 @@ const { data } = props.selectedSample.is_local_sample ?
     await BioSampleService.getBioSample(props.selectedSample.sample_accession)
 
 </script>
+<style>
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    /* Adjust column width as needed */
+    gap: 20px;
+    /* Adjust the gap between cards as needed */
+    justify-content: center;
+    /* Center the grid horizontally */
+}
+</style>

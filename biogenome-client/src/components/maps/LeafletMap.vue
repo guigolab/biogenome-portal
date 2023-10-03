@@ -3,7 +3,7 @@
     <div ref="mapRef" style="padding: 0;margin: 0;" class="leaflet-map fill-height">
     </div>
     <div v-show="false">
-      <div  class="organism-card" ref="organismCard">
+      <div class="organism-card" ref="organismCard">
         <Suspense v-if="selectedSample?.sample_accession">
           <template #fallback>
             <va-skeleton height="150px" />
@@ -59,7 +59,6 @@ onMounted(() => {
   // Batch the markers for better performance
   const markersToAdd: Leaflet.Marker[] = [];
   props.coordinates.forEach(({ coordinates, sample_accession, image, is_local_sample }) => {
-    console.log(coordinates)
     const marker = Leaflet.marker([coordinates.coordinates[1], coordinates.coordinates[0]], {
       title: sample_accession
     });
@@ -107,7 +106,6 @@ function setIcon(image: string) {
 .organism-avatar {
   border-radius: 25%;
 }
-
 .leaflet-popup-content {
   margin: 0 !important;
 }

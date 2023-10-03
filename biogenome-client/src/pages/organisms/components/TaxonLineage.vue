@@ -3,7 +3,8 @@
         <va-card-title>
             {{ t('organismDetails.lineage') }}
         </va-card-title>
-        <va-card-content v-if="tree" class="chart" style="overflow: scroll;">
+        <va-divider />
+        <div style="max-height: 400px;overflow: scroll;">
             <va-tree-view expand-all :nodes="[tree]" text-by="name" value-by="taxid" track-by="taxid">
                 <template #content="node">
                     <div class="flex items-center">
@@ -21,7 +22,7 @@
                     </div>
                 </template>
             </va-tree-view>
-        </va-card-content>
+        </div>
     </va-card>
 </template>
 <script setup lang="ts">
