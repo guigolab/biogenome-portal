@@ -32,7 +32,7 @@ const props = defineProps<{
     model: string,
     field: string,
     title: string,
-    isHabitat: boolean
+    isHabitat?: boolean
 }>()
 
 const { data } = await StatisticsService.getModelFieldStats(props.model, { field: props.field })

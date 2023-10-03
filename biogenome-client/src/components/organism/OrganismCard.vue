@@ -1,46 +1,57 @@
 <template>
-  <div v-if="Object.keys(organism).length">
-    <va-card :to="{ name: 'organism', params: { taxid: organism.taxid } }">
-      <va-card-block class="flex-nowrap" horizontal>
-        <va-image fit v-if="organism.image" style="flex: 0 0 150px" :src="organism.image" />
-        <div style="flex: auto">
-          <va-card-content>
-            <div class="row align-center">
-              <div class="flex va-h6">
-                {{ organism.scientific_name }}
-              </div>
-              <div v-if="organism.countries && organism.countries.length" class="flex">
-                <div class="row">
-                  <div v-for="country in organism.countries" :key="country" class="flex">
-                    <va-icon :name="`flag-icon-${country.toLowerCase()} small`"></va-icon>
-                  </div>
+  <va-card style="height:100%" :to="{ name: 'organism', params: { taxid: data.taxid } }">
+    <va-list-item class="list__item">
+      <va-list-item-section avatar>
+        <va-avatar size="large">
+          <img :src="data.image" />
+        </va-avatar>
+      </va-list-item-section>
+
+      <va-list-item-section>
+        <va-list-item-label>
+          <div class="row align-center">
+            <div class="flex">
+              {{ data.scientific_name }}
+            </div>
+            <div v-if="data.countries && data.countries.length" class="flex">
+              <div class="row">
+                <div v-for="country in data.countries" :key="country" class="flex">
+                  <va-icon :name="`flag-icon-${country.toLowerCase()} small`" color="warning" />
                 </div>
               </div>
             </div>
-            <p v-if="organism.insdc_common_name" class="va-text-secondary">{{ organism.insdc_common_name }}</p>
-          </va-card-content>
-          <va-card-content>
-            <va-button size="small">{{ t('buttons.view') }}</va-button>
-          </va-card-content>
-        </div>
-        <va-card-actions v-if="hasINSDCData(organism)" vertical align="between" style="flex: 0 auto; padding: 0px">
-          <va-button v-if="organism.assemblies.length" icon="fa-dna" plain />
-          <va-button v-if="organism.biosamples.length" icon="fa-vial" plain />
-          <va-button v-if="organism.experiments.length" icon="fa-file-lines" plain />
-        </va-card-actions>
-      </va-card-block>
-    </va-card>
-  </div>
+          </div>
+        </va-list-item-label>
+        <va-list-item-label v-if="data.insdc_common_name" caption>
+          {{ data.insdc_common_name }}
+        </va-list-item-label>
+        <va-list-item-label> </va-list-item-label>
+      </va-list-item-section>
+      <va-list-item-section icon>
+        <va-icon class="ml-4" v-if="data.biosamples.length" name="fa-vial" color="background-tertiary" />
+        <va-icon class="ml-4" v-if="data.assemblies.length" name="fa-dna" color="background-tertiary" />
+        <va-icon class="ml-4" v-if="data.experiments.length" name="fa-file-lines" color="background-tertiary" />
+
+      </va-list-item-section>
+    </va-list-item>
+  </va-card>
 </template>
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import OrganismService from '../../services/clients/OrganismService'
 const { t } = useI18n()
 
-const props = defineProps({
-  organism: Object,
-})
+const props = defineProps<{
+  taxid: string
+}>()
 
-function hasINSDCData(org) {
-  return org.biosamples.length || org.experiments.length || org.assemblies.length
-}
+
+const { data } = await OrganismService.getOrganism(props.taxid)
+
+
 </script>
+<style>
+.w-100 {
+  width: 100px;
+}
+</style>

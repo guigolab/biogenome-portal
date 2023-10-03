@@ -1,23 +1,21 @@
 import { defineStore } from 'pinia'
 
-const initAnnotationForm = {
+const initAnnotationForm:Record<string,any> = {
   name: '',
   assembly_accession: '',
   assembly_name: '',
   taxid: '',
   gff_gz_location: '',
   tab_index_location: '',
-  metadata: {} as Record<string, string>,
+  gzipAnnotation: undefined,
+  tabixAnnotation: undefined,
 }
 
 const initSearchForm = {
   filter: '',
   filter_option: '',
   sort_column: '',
-  sort_order: '',
-  start_date:'',
-  end_date:''
-}
+  sort_order: '',}
 
 const initPagination = {
   offset: 0,

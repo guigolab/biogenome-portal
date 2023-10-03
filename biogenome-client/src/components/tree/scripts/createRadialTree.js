@@ -65,13 +65,10 @@ function mouseovered(active) {
   }
 export function createRadialTree(ref, root, domains){
 
-    const width = 954
-    const outerRadius = width/2
-    const innerRadius = outerRadius - 170
     const cluster = radialCluster()
 
     cluster(root)
-    setRadius(root, (root.data.length = 0), innerRadius.value / maxLength(root))
+    setRadius(root, (root.data.length = 0), innerRadius / maxLength(root))
 
     const svg = d3
     .select(ref.value)

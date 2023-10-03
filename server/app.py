@@ -1,13 +1,12 @@
 from flask import Flask
 from flask_cors import CORS
 from config import BaseConfig
-from db import initialize_db
 from rest import initialize_api
 from flask_jwt_extended import JWTManager
-from db.models import BioGenomeUser, CronJob,Roles,BioSample,LocalSample
-from rest.bioproject import bioprojects_service
+from db.models import BioGenomeUser,GenomeAnnotation, CronJob,Assembly,Roles,SampleCoordinates,BioSample,LocalSample,Chromosome, Organism,Experiment,TaxonNode
 from tendo.singleton import SingleInstance
-import json
+from flask_mongoengine import MongoEngine
+
 import os
 
 
@@ -21,9 +20,10 @@ app.config["JWT_TOKEN_LOCATION"] = ["cookies"]
 app.config["JWT_COOKIE_SAMESITE"] = "None"
 # app.config["JWT_COOKIE_SECURE"] = True
 app.config['CORS_SUPPORTS_CREDENTIALS'] = True
-app.config['CORS_ORIGINS'] = ['http://localhost:3000']
 
-initialize_db(app)
+db = MongoEngine()
+app.logger.info("Initializing MongoDB")
+db.init_app(app)
 
 initialize_api(app)
 
@@ -33,17 +33,24 @@ jwt = JWTManager(app)
 
 username = os.getenv('DB_USER')
 password = os.getenv('DB_PASS')
-bioproject_accession = os.getenv('PROJECT_ACCESSION')
 
 ##create root user if does not exist
 try:
     FIRST_START = SingleInstance()
     user = BioGenomeUser.objects(name = username).first()
+    cronjobs = CronJob.objects().count()
+    if cronjobs:
+        CronJob.drop_collection()
     if not user:
         BioGenomeUser(name = username, password = password, role= Roles.DATA_ADMIN).save()
-    if bioproject_accession:
-        bioprojects_service.create_bioproject_from_ENA(bioproject_accession)
-    cronjob = CronJob.drop_collection() ##remove all cronjobs at each start
-
+    # BioSample.drop_collection()
+    # TaxonNode.drop_collection()
+    # Organism.drop_collection()
+    # LocalSample.drop_collection()
+    # Experiment.drop_collection()
+    # Assembly.drop_collection()
+    # Chromosome.drop_collection()
+    # SampleCoordinates.drop_collection()
+    # GenomeAnnotation.drop_collection()
 except:
     pass

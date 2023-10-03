@@ -1,5 +1,4 @@
 import { defineStore } from 'pinia'
-import { Contributor, BreadCrumb } from '../data/types'
 import { BioSampleSearchForm } from '../data/types'
 
 const initSearchForm: BioSampleSearchForm = {
@@ -19,8 +18,6 @@ const initPagination = {
 export const useBioSampleStore = defineStore('biosample', {
   state: () => {
     return {
-      gals: [] as Contributor[],
-      breadcrumbs: [] as BreadCrumb[],
       searchForm: { ...initSearchForm },
       pagination: { ...initPagination },
     }

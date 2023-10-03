@@ -1,8 +1,9 @@
 from ..utils import ena_client
 from ..taxon import taxons_service
-from flask import current_app as app
+from ..taxonomy import taxonomy_service
+from ..sample_location import sample_locations_service
 from mongoengine.queryset.visitor import Q
-from db.models import CommonName, Organism, Publication
+from db.models import CommonName,TaxonNode, Organism, Publication
 import os 
 from lxml import etree
 
@@ -13,14 +14,12 @@ PROJECT_ACCESSION=os.getenv('PROJECT_ACCESSION')
 def get_organisms(offset=0, limit=20, 
                 sort_order=None, sort_column=None,
                 filter=None, parent_taxid=None,
-                filter_option='scientific_name', country=None, bioproject=None,
+                filter_option='scientific_name', country=None,
                 goat_status=None, insdc_status=None, target_list_status=None):
     query=dict()
     filter_query = get_filter(filter, filter_option) if filter else None
     if parent_taxid:
         query['taxon_lineage'] = parent_taxid
-    if bioproject:
-        query['bioprojects'] = bioproject
     if goat_status:
         query['goat_status'] = goat_status
     if country:
@@ -34,26 +33,6 @@ def get_organisms(offset=0, limit=20,
         sort = '-'+sort_column if sort_order == 'desc' else sort_column
         organisms = organisms.order_by(sort)
     return organisms.count(), organisms[int(offset):int(offset)+int(limit)]
-
-
-def get_organisms_locations(filter=None, filter_option='scientfic_name', parent_taxid=None, country=None, bioproject=None,
-                goat_status=None, insdc_status=None, target_list_status=None):
-    query=dict(locations__not__size=0)
-    filter_query = get_filter(filter, filter_option) if filter else None
-    if parent_taxid:
-        query['taxon_lineage'] = parent_taxid
-    if bioproject:
-        query['bioprojects'] = bioproject
-    if goat_status:
-        query['goat_status'] = goat_status
-    if country:
-        query['countries'] = country
-    if insdc_status:
-        query['insdc_status'] = insdc_status
-    if target_list_status:
-        query['target_list_status'] = target_list_status
-    organisms = Organism.objects(filter_query, **query).exclude('id') if filter_query else Organism.objects.filter(**query).exclude('id')
-    return organisms
 
 
 def get_organism_related_data(taxid, model):
@@ -111,7 +90,6 @@ def get_or_create_organism(taxid):
 
 def parse_organism_data(data,taxid=None):
     #organism creation
-    app.logger.info(data)
     if not taxid:
         if not 'taxid' in data.keys():
             return
@@ -133,6 +111,7 @@ def parse_organism_data(data,taxid=None):
             string_attrs[key] = filtered_data[key]
     if organism.image and not 'image' in filtered_data.keys():
         organism.image = None
+        sample_locations_service.add_image(organism.taxid, None) ## remove images
     for key in string_attrs.keys():
         organism[key] = string_attrs[key]
     if 'metadata' in filtered_data.keys():
@@ -145,6 +124,8 @@ def parse_organism_data(data,taxid=None):
         organism.common_names = c_name_list
     if 'image_urls' in filtered_data.keys():
         organism.image_urls = filtered_data['image_urls']
+    if 'image' in filtered_data.keys():
+        sample_locations_service.add_image(organism.taxid, filtered_data['image'])
     if 'publications' in filtered_data.keys():
         pub_list = list()
         for pub in filtered_data['publications']:
@@ -165,3 +146,23 @@ def parse_taxon_from_ena(xml):
                 lineage.append(node.attrib)
     lineage.insert(0,organism)
     return lineage
+
+#map lineage into tree structure
+def map_organism_lineage(lineage):
+    root_to_organism = list(reversed(lineage))
+    tree=dict()
+    root = TaxonNode.objects(taxid=root_to_organism[0]).first()
+    taxonomy_service.dfs_generator([(root,0)],tree, root_to_organism)
+    return tree
+# def delete_organism(taxid):
+#     organism = Organism.objects(taxid=taxid).first()
+#     if not organism:
+#         raise NotFound
+#     related_taxons = TaxonNode.objects(taxid__in=organism.taxon_lineage)
+#     SampleCoordinates.objects(taxid=taxid).delete()
+#     Assembly.objects(taxid=taxid).delete()
+#     LocalSample.objects(taxid=taxid).delete()
+#     Experiment.objects(taxid=taxid).delete()
+#     GenomeAnnotation.objects(taxid=taxid).delete()
+#     BioSample.objects(taxid=taxid).delete()
+

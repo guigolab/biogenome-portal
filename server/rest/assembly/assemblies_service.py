@@ -5,11 +5,14 @@ from ..organism import organisms_service
 from ..biosample import biosamples_service
 from mongoengine.queryset.visitor import Q
 from datetime import datetime
+from subprocess import check_output
+import json
 
 ASSEMBLY_FIELDS = ['display_name','chromosomes','assembly_accession','biosample','bioproject_lineages','biosample_accession','org']
 
 ASSEMBLY_LEVELS = ['Chromosome', 'Scaffold', 'Complete Genome', 'Contig']
 
+DATASETS = '/ncbi/datasets'
 
 def get_assemblies(filter=None, filter_option='assembly_name', 
                     offset=0, submitter=None,
@@ -141,3 +144,4 @@ def delete_assembly(accession):
     biosamples.modify(pull__assemblies=assembly_obj.accession)
     assembly_obj.delete()
     return accession
+

@@ -14,7 +14,6 @@
     "total":"Total:"
   },
   "uiComponents":{
-    "bioprojectsCard":"bioprojects",
     "relatedDataCard":{
       "biosamples":"BioSamples",
       "local_samples":"LocalSamples",
@@ -22,7 +21,8 @@
       "experiments":"Experiments",
       "annotations":"Annotations"
     },
-    "metadata": "Metadata"
+    "metadata": "Metadata",
+    "wikipedia": "Wikipedia"
   },
   "modelStats":{
     "organisms":"Organisms",
@@ -40,6 +40,10 @@
       "assemblies":"Assemblies",
       "annotations":"Annotations",
       "local_samples":"Local Samples"
+    },
+    "toExplorer": "Explore Taxonomy",
+    "info":{
+      "exploreGallery":"Explore gallery"
     },
     "charts": {
       "firstPiechart":{
@@ -69,7 +73,9 @@
   "organismDetails":{
     "images":"Images",
     "publications":"Publications",
-    "vernacularNames":"Vernacular Names"
+    "vernacularNames":"Vernacular Names",
+    "breadcrumb":"Organisms",
+    "lineage":"Taxon lineage"
   },
   "annotationDetails":{
     "breadcrumb":"Annotations",
@@ -211,7 +217,7 @@
       "placeholder":"Search by NCBI TaxID"
     },
     "selectInput":"INSDC status",
-    "header":"Search taxon phylogenetically close"
+    "header":"Find a taxon by its Taxonomic identifier, or return the closest phylogenetic match if not found."
   },
   "taxonList":{
     "filters":{
@@ -220,6 +226,11 @@
       "sortOrder":"Sort Order",
       "ranks":"Ranks"
     }
+  },
+  "taxonomyTabs":{
+    "explorer":"Explorer",
+    "table":"Table",
+    "search":"Search"
   },
   "taxonDetails":{
     "breadcrumb":"Taxonomy",
@@ -243,6 +254,9 @@
     "organismsMap": "Organisms Map",
     "countriesMap": "Countries Map",
     "adminArea": "Admin Area",
+    "taxonExplorer":"Explorer",
+    "taxonTable":"Table",
+    "taxonLookup":"Finder",
     "taxons": "Taxonomy",
     "assemblies": "Assemblies",
     "biosamples": "BioSamples",

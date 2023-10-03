@@ -48,13 +48,3 @@ class BioSampleRelatedDataApi(Resource):
         else:
             items = Assembly.objects(sample_accession=biosample_obj.accession)
         return Response(items.to_json(),mimetype="application/json", status=200)
-
-class BioSampleBioProjectsApi(Resource):
-    def get(self, accession):
-        biosample_obj=BioSample.objects(accession=accession).exclude('id').first()
-        if not biosample_obj:
-            raise NotFound
-        bioprojects = BioProject.objects(accession__in=biosample_obj.bioprojects)
-        return Response(bioprojects.to_json(),mimetype="application/json", status=200)
-
-        

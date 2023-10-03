@@ -17,7 +17,7 @@
     model: string,
     field: string,
     title: string,
-    label?: string,
+    label: string,
     color?: string,
   }>()
 

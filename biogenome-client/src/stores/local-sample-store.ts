@@ -22,8 +22,8 @@ export const useLocalSampleStore = defineStore('local-sample', {
   state: () => {
     return {
       localSampleForm: { ...initLocalSampleForm },
-      pagination: {...initPagination},
-      searchForm : {...initSearchForm}
+      pagination: { ...initPagination },
+      searchForm: { ...initSearchForm }
     }
   },
   actions: {

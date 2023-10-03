@@ -1,4 +1,4 @@
-FROM node:14 as build-stage
+FROM node:17 as build-stage
 
 ARG ROOT_NODE
 
@@ -12,9 +12,11 @@ WORKDIR /client
 
 COPY package*.json ./
 
-RUN npm install
+RUN npm install --legacy-peer-deps
 
 COPY . .
+
+COPY ./ducd node_modules/ducd 
 
 ENV VITE_ROOT_NODE=${ROOT_NODE}
 ENV VITE_PROJECT_ACCESSION=${PROJECT_ACCESSION}

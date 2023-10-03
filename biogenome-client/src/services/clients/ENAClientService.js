@@ -8,10 +8,6 @@ class ENAClientService {
     return ena.get(`/ena/portal/api/links/taxon?accession=${taxonId}&format=JSON&result=taxon`)
   }
 
-  getBioProjectXML(accession) {
-    return ena.get(`ena/browser/api/xml/${accession}`)
-  }
-
   getBioSample(accession) {
     return ena.get(`/biosamples/samples?size=10&filter=acc:${accession}`)
   }

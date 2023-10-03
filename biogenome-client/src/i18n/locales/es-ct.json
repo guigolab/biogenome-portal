@@ -14,7 +14,6 @@
     "total": "Total:"
   },
   "uiComponents": {
-    "bioprojectsCard": "bio-projectes",
     "relatedDataCard": {
       "biosamples": "Bio-mostres",
       "local_samples": "Mostres locals",
@@ -22,7 +21,8 @@
       "experiments": "Experiments",
       "annotations": "Anotacions"
     },
-    "metadata": "Metadades"
+    "metadata": "Metadades",
+    "wikipedia": "Viquipèdia"
   },
   "modelStats": {
     "organisms": "Organismes",
@@ -40,6 +40,10 @@
       "assemblies": "Assemblatges",
       "annotations": "Anotacions",
       "local_samples": "Mostres locals"
+    },
+    "toExplorer": "Explora La Taxonomia",
+    "info":{
+      "exploreGallery":"Explora la galeria"
     },
     "charts": {
       "firstPiechart": {
@@ -69,7 +73,10 @@
   "organismDetails": {
     "images": "Imatges",
     "publications": "Publicacions",
-    "vernacularNames": "Noms vernacles"
+    "vernacularNames": "Noms vernacles",
+    "breadcrumb":"Organismes",
+    "lineage":"Línia Taxonòmica"
+
   },
   "annotationDetails": {
     "breadcrumb": "Anotacions",
@@ -211,7 +218,7 @@
       "placeholder": "Cerca per NCBI TaxID"
     },
     "selectInput": "Estat INSDC",
-    "header": "Cerca taxon filogenèticament proper"
+    "header":"Cerca un taxó pel seu identificador taxonòmic, o retorna la coincidència filogenètica més propera si no es troba."
   },
   "taxonList": {
     "filters": {
@@ -220,6 +227,11 @@
       "sortOrder": "Ordena ordre",
       "ranks":"Rangs"
     }
+  },
+  "taxonomyTabs":{
+    "explorer":"Explorador",
+    "table":"Taula",
+    "search":"Cerca"
   },
   "taxonDetails": {
     "breadcrumb": "Taxonomia",
@@ -243,6 +255,9 @@
     "organismsMap": "Mapa d'organismes",
     "countriesMap": "Mapa de països",
     "adminArea": "Àrea d'administració",
+    "taxonExplorer":"Explorador",
+    "taxonTable":"Taula",
+    "taxonFinder":"Cercador",
     "taxons": "Taxonomia",
     "assemblies": "Assemblatges",
     "biosamples": "BioMostres",

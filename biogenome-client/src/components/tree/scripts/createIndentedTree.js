@@ -1,9 +1,9 @@
 import * as d3 from 'd3'
+const width = 768
 
 
-export function createIndentedTree(ref, root){
+export function createIndentedTree(ref, root, router){
     const nodeSize = 17
-    const width = 750
     const nodes = root.descendants()
     const svg = d3
     .select(ref.value)
@@ -44,11 +44,11 @@ export function createIndentedTree(ref, root){
         .attr('dy', '0.32em')
         .attr('x', (d) => d.depth * nodeSize + 6)
         .text((d) => `${d.data.name} (${d.data.rank})`)
-        // .on('click', (event, d) => {
-        //     const path = d.data.leaves === 0? 
-        //     {name:'organism', params:{taxid:d.data.taxid}}:{name:'taxon', params:{taxid:d.data.taxid}}
-        //     router.push(path)
-        // })
+        .on('click', (event, d) => {
+            const path = d.data.leaves === 0? 
+            {name:'organism', params:{taxid:d.data.taxid}}:{name:'taxon', params:{taxid:d.data.taxid}}
+            router.push(path)
+        })
 
     node.append('title').text((d) =>
         d

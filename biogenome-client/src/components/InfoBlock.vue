@@ -1,19 +1,22 @@
 <template>
     <div class="row row-equal">
         <div v-for="chart, index in charts" :key="index" :class="chart.class">
-            <Suspense v-if="chart.type === 'pie'">
-                <PieChart :field="chart.field" :model="chart.model" :title="chart.title" :label="chart.label" />
-            </Suspense>
-            <Suspense v-else-if="chart.type === 'dateline'">
-                <DateLineChart :label="chart.label" :field="chart.field" :title="chart.title" :model="chart.model"
-                    :color="chart.color" :is-date="chart.isDate" />
-            </Suspense>
-            <Suspense v-else-if="chart.type === 'contribution'">
-                <ContributorList :field="chart.field" :model="chart.model"
-                    :title="chart.title" />
-            </Suspense>
-            <Suspense v-else-if="chart.type === 'list'">  
-                <CustomList :title="chart.title" :field="chart.field" :model="chart.model" :is-habitat="chart.isHabitat"/>   
+            <Suspense>
+                <template #default>
+                    <PieChart v-if="chart.type === 'pie'" :field="chart.field" :model="chart.model" :title="chart.title"
+                        :label="chart.label" />
+                    <DateLineChart v-else-if="chart.type === 'dateline'" :label="chart.label" :field="chart.field"
+                        :title="chart.title" :model="chart.model" :color="chart.color" />
+                    <ContributorList v-else-if="chart.type === 'contribution'" :field="chart.field" :model="chart.model"
+                        :title="chart.title" />
+                    <CustomList v-else-if="chart.type === 'list'" :title="chart.title" :field="chart.field"
+                        :model="chart.model" :is-habitat="false" />
+                    <CustomList v-else-if="chart.type === 'habitat'" :title="chart.title" :field="chart.field"
+                        :model="chart.model" :is-habitat="true" />
+                </template>
+                <template #fallback>
+                    <va-skeleton height="400px" />
+                </template>
             </Suspense>
         </div>
     </div>
@@ -28,6 +31,8 @@ import CustomList from './stats/CustomList.vue'
 const props = defineProps<{
     charts: InfoBlock[]
 }>()
+
+
 
 </script>
   

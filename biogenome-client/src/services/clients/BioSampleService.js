@@ -12,9 +12,6 @@ class BioSampleService {
   getBioSampleRelatedData(accession, model) {
     return base.get(`/biosamples/${accession}/${model}`)
   }
-  getBioSampleBioProjects(accession) {
-    return base.get(`/biosamples/${accession}/bioprojects`)
-  }
 }
 
 export default new BioSampleService()

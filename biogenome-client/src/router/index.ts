@@ -11,6 +11,11 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('../pages/dashboard/DashboardPage.vue'),
   },
   {
+    name: 'taxonomy-explorer',
+    path:'/taxonomy-explorer',
+    component: () => import('../pages/taxonomy/TaxonomyExplorer.vue')
+  },
+  {
     name: 'login',
     path: '/login',
     component: () => import('../pages/auth/login/Login.vue'),
@@ -18,24 +23,24 @@ const routes: Array<RouteRecordRaw> = [
   {
     name: 'taxons',
     path: '/taxons',
-    component: () => import('../pages/taxons/TaxonPage.vue'),
+    component: () => import('../pages/taxons/Taxons.vue'),
   },
   {
     name: 'taxon',
     path: '/taxons/:taxid',
-    component: () => import('../pages/taxons/TaxonDetails.vue'),
+    component: () => import('../pages/taxons/Taxon.vue'),
     props:true
   },
   {
     path: '/assemblies',
     name: 'assemblies',
-    component: () => import('../pages/assemblies/AssemblyPage.vue'),
+    component: () => import('../pages/assemblies/Assemblies.vue'),
   },
   {
     path: '/assemblies/:accession',
     name: 'assembly',
     props: true,
-    component: () => import('../pages/assemblies/AssemblyDetails.vue'),
+    component: () => import('../pages/assemblies/Assembly.vue'),
     meta: {
       name: 'assemblies',
     },
@@ -43,13 +48,13 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/annotations',
     name: 'annotations',
-    component: () => import('../pages/genome-annotations/GenomeAnnotationPage.vue'),
+    component: () => import('../pages/genome-annotations/GenomeAnnotations.vue'),
   },
   {
     path: '/annotations/:name',
     name: 'annotation',
     props: true,
-    component: () => import('../pages/genome-annotations/GenomeAnnotationDetails.vue'),
+    component: () => import('../pages/genome-annotations/GenomeAnnotation.vue'),
     meta: {
       name: 'assemblies',
     },
@@ -57,13 +62,13 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/experiments',
     name: 'experiments',
-    component: () => import('../pages/experiments/ExperimentPage.vue'),
+    component: () => import('../pages/experiments/Experiments.vue'),
   },
   {
     path: '/experiments/:accession',
     name: 'experiment',
     props: true,
-    component: () => import('../pages/experiments/ExperimentDetails.vue'),
+    component: () => import('../pages/experiments/Experiment.vue'),
     meta: {
       name: 'experiments',
     },
@@ -71,18 +76,18 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/biosamples',
     name: 'biosamples',
-    component: () => import('../pages/biosamples/BioSamplePage.vue'),
+    component: () => import('../pages/biosamples/BioSamples.vue'),
   },
   {
     path: '/biosamples/:accession',
     name: 'biosample',
     props: true,
-    component: () => import('../pages/biosamples/BioSampleDetails.vue')
+    component: () => import('../pages/biosamples/BioSample.vue')
   },
   {
     name: 'organisms',
     path: '/organisms',
-    component: () => import('../pages/organisms/OrganismPage.vue'),
+    component: () => import('../pages/organisms/Organisms.vue'),
   },
   {
     name: 'organism',
@@ -96,13 +101,13 @@ const routes: Array<RouteRecordRaw> = [
   {
     name: 'local_samples',
     path: '/local_samples',
-    component: () => import('../pages/local-samples/LocalSamplePage.vue'),
+    component: () => import('../pages/local-samples/LocalSamples.vue'),
   },
   {
     name: 'local_sample',
     path: '/local_samples/:id',
     props: true,
-    component: () => import('../pages/local-samples/LocalSampleDetails.vue'),
+    component: () => import('../pages/local-samples/LocalSample.vue'),
     meta: {
       name: 'local_samples',
     },
@@ -110,7 +115,7 @@ const routes: Array<RouteRecordRaw> = [
   {
     name: 'status',
     path: '/status',
-    component: () => import('../pages/status/StatusPage.vue'),
+    component: () => import('../pages/status/Status.vue'),
   },
   {
     name: '2d-map',

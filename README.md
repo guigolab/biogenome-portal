@@ -34,6 +34,7 @@ The Front-end container compile the Vue3 SPA with Vite and serve the static file
 
 ### Back end
 
+
 The Back-end container consists in a uWSGI web server that communicates with the NGINX proxy present in the front-end container. This container is the one that manages the client requests from the front-end container, query the database and return the JSON response to the front-end container.
 
 ### Database
@@ -78,7 +79,7 @@ The env file is necessary to run the app. Below a list of all the environment va
 
 *When first launched the app will create a User with the same credentials as the admin user of the database, this user will be able to log in into the admin UI and to manage all the data as creating/deleting/updating users, organisms etc.
 
-- DB_DEV_HOST=biogenome-devdb --> this is the name of the database container (host) # default dev db host
+- DB_HOST=biogenome-devdb --> this is the name of the database container (host) # default dev db host
 
 
 - DB_PORT=27017
@@ -101,8 +102,8 @@ The env file is necessary to run the app. Below a list of all the environment va
 - THREADS=2
 - JWT_SECRET_KEY=secret_restKey --> key used to encrypt the JWT token of the admin area
 
-- PROJECT_ACCESSION=PRJNA533106 --> the INSDC bioproject accession of the root bioproject that will be used to start tracking the submission progresses of it through cronjobs.
-- PROJECTS= --> the list of project which name is present in the project name field of the published biosample metadata, it must be composed by {PROJECT_NAME}_{BIOPROJECT_ACCESSION}: ex: ERGA_PRJEB43510
+- PROJECT_ACCESSION=PRJNA533106 --> the INSDC bioproject accession of the root bioproject that will be used to start tracking the submission progress of it via cronjobs.
+- PROJECTS= --> the list of project which name is present in the project name field of the published biosample metadata (EBI BioSamples), it must be composed by comma separated list of project names: ex: ERGA,VGP,DTOL,CBP
 
 - ROOT_NODE=2759 --> the NCBI taxonomic identifier of the root node
 

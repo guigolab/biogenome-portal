@@ -20,7 +20,6 @@ tags:
 - name: "biosamples"
 - name: "local_samples"
 - name: "annotations"
-- name: "bioprojects"
 - name: "goat_report"
 - name: "countries"
 
@@ -92,10 +91,6 @@ paths:
       parameters:
         - in: 'query'
           name: 'parent_taxid'
-          schema:
-            type: 'string'
-        - in: 'query'
-          name: 'bioproject'
           schema:
             type: 'string'
         - in: 'query'
@@ -204,7 +199,6 @@ paths:
           schema:
             type: 'string'
             enum:
-              - 'bioprojects'
               - 'taxons'
               - 'biosamples'
               - 'local_samples'
@@ -665,83 +659,6 @@ paths:
         "404":
           description: "annotation not found"
           
-  /bioprojects:
-    get:
-      tags:
-        - "bioprojects"
-      summary: "Endpoint to retrieve a paginated list of bioprojects"
-      parameters:
-        - in: 'query'
-          name: 'filter'
-          schema:  
-            type: 'string'
-        - in: 'query'
-          name: 'offset'
-          schema:
-            type: 'number'
-            default: 0
-        - in: 'query'
-          name: 'limit'
-          schema:
-            type: 'number'
-            default: 20
-      responses:
-        "200":
-          description: "successful operation"
-          content:
-            application/json:
-              schema:
-                type: "object"
-                properties:
-                  data:
-                    type: "array"
-                    items:
-                      $ref: "#/components/schemas/BioProject"
-                  total:
-                    type: "number"
-        "405":
-          description: "Invalid input"
-
-  /bioprojects/{accession}:
-    get:
-      tags:
-        - "bioprojects"
-      parameters:
-        - in: 'path'
-          name: 'accession'
-          required: true
-          schema:  
-            type: 'string'
-      responses:
-        "200":
-          description: "successful operation"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/BioProject"
-        "404":
-          description: "BioProject not found"
-
-  /bioprojects/{accession}/coordinates:
-    get:
-      tags:
-        - "bioprojects"
-      parameters:
-        - in: 'path'
-          name: 'accession'
-          required: true
-          schema:  
-            type: 'string'
-      responses:
-        "200":
-          description: "successful operation"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/BioProject"
-        "404":
-          description: "BioProject not found"
-      
   /taxons:
     get:
       tags:
@@ -904,11 +821,6 @@ components:
           items:
             type: "string"
           description: "array of taxids"
-        bioprojects:
-          type: "array"
-          items:
-            type: "string"
-          description: "list of bioproject's accessions"
         geometry:
           $ref: "#/components/schemas/Geometry"
           
@@ -950,11 +862,6 @@ components:
           type: "string"
         longitude:
           type: "string"
-        bioprojects:
-          type: "array"
-          items:
-            type: "string"
-          description: "list of related bioproject accessions"
         sub_samples:
           type: "array"
           items:
@@ -967,22 +874,7 @@ components:
         metadata:
           type: "object"
           description: "INSDC biosample metadata"
-    
-    BioProject:
-      type: "object"
-      properties:
-        accession:
-          type: "string"
-        title:
-          type: "string"
-        leaves:
-          type: "number"
-        children:
-          type: "array"
-          items: 
-            type: "string"
-          description: "list of children bioproject accessions"
-      
+
     LocalSample:
       type: "object"
       properties:
@@ -1162,11 +1054,6 @@ components:
           type: "array"
           items:
             $ref: "#/components/schemas/CommonName"
-        bioprojects:
-          type: "array"
-          items:
-            type: "string"
-          description: "list of related bioproject accessions"
         coordinates:
           type: "array"
           items:

@@ -4,10 +4,14 @@
     <va-divider />
     <div class="row row-equal">
       <div class="flex lg12 md12 sm12 xs12">
-        <va-card-content v-if="coordinates.length">
+        <va-card-content>
           <div style="height: 100vh" class="row row-equal">
             <div class="flex lg12 md12 sm12 xs12">
-              <LeafletMap :coordinates="coordinates" />
+              <va-skeleton height="90vh" v-if="isLoading"></va-skeleton>
+              <div v-else-if="isError">
+                <p>{{ errorMessage }}</p>
+              </div>
+              <LeafletMap v-else :coordinates="coordinates" />
             </div>
           </div>
         </va-card-content>
@@ -16,37 +20,31 @@
   </div>
 </template>
 <script setup lang="ts">
-import { AxiosResponse } from 'axios'
 import { onMounted, ref } from 'vue'
 import LeafletMap from '../../components/maps/LeafletMap.vue'
 import { useI18n } from 'vue-i18n'
-import TaxonService from '../../services/clients/TaxonService'
-const { t } = useI18n()
-const root = import.meta.env.VITE_ROOT_NODE
-const coordinates = ref([])
+import GeoLocationService from '../../services/clients/GeoLocationService'
+import { SampleLocations } from '../../data/types'
 
+const { t } = useI18n()
+const rootNode = import.meta.env.VITE_ROOT_NODE ? import.meta.env.VITE_ROOT_NODE : '131567'
+const coordinates = ref<SampleLocations[]>([])
+const isLoading = ref(false)
+const isError = ref(false)
+const errorMessage = ref('')
 onMounted(async () => {
-  getCoordinates(await TaxonService.getTaxonCoordinates(root))
+  try {
+    isLoading.value = true
+    const { data } = await GeoLocationService.getLocationsByTaxon(rootNode)
+    coordinates.value = [...data]
+  } catch(e) {
+    isError.value = true
+    errorMessage.value = 'Error fetching data'
+  } finally {
+    isLoading.value = false
+  }
 })
-function getCoordinates({ data }: AxiosResponse) {
-  coordinates.value = []
-  data.forEach((organism) => {
-    organism.locations.forEach((location) => {
-      const lng = location[0]
-      const lat = location[1]
-      const value = {
-        latitude: Number(lat),
-        longitude: Number(lng),
-        id: organism.scientific_name,
-        taxid: organism.taxid,
-      }
-      if (organism.image) {
-        value.image = organism.image
-      }
-      coordinates.value.push(value)
-    })
-  })
-}
+
 </script>
 
 <style lang="scss">

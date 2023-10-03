@@ -1,202 +1,215 @@
-from db.models import Organism, Assembly, BioSample, BioProject, LocalSample, set_location
+from db.models import Organism, Assembly, BioSample, SampleCoordinates, LocalSample, Experiment
 from ..utils import ena_client
 from ..biosample import biosamples_service
 from ..organism import organisms_service
 from ..read import reads_service
 from ..assembly import assemblies_service
-from ..bioproject import bioprojects_service
+from ..sample_location import sample_locations_service
 from shapely.geometry import shape, Point
-from decimal import Decimal
 import time
 import os
 import requests
 import json
 
-## get samples derived from or samples container
-def update_samples():
-    biosamples = BioSample.objects()
-    counter=0
-    for biosample in biosamples:
-        if counter >= 3:
-            time.sleep(3)
-            counter=0
-        if 'sample derived from' in biosample.metadata.keys() and biosample.metadata['sample derived from']:
-            sample_derived_from_accession = biosample.metadata['sample derived from']
-            if BioSample.objects(accession=sample_derived_from_accession).first():
-                continue
-            ebi_biosample_response = ena_client.get_sample_from_biosamples(sample_derived_from_accession)
-            counter = counter + 1
-            if not ebi_biosample_response:
-                continue
-            biosamples_service.create_biosample_from_ebi_data(ebi_biosample_response[0])
-        else:
-            ebi_biosample_response = ena_client.get_samples_derived_from(biosample.accession)
-            counter = counter + 1
-            if not ebi_biosample_response:
-                continue
-            for sample_to_save in ebi_biosample_response:
-                biosamples_service.create_biosample_from_ebi_data(sample_to_save)
+PROJECTS = os.getenv('PROJECTS')
+COUNTRIES_PATH = './countries.json'
 
+def get_biosamples_derived_from():
+    possible_parent_samples = BioSample.objects(__raw__ = {'metadata.sample derived from' : {"$exists": False}, 'sub_samples':None})
+    for possible_parent in possible_parent_samples:
+        ebi_biosample_response = ena_client.get_samples_derived_from(possible_parent.accession)
+        if not ebi_biosample_response:
+            continue
+        time.sleep(3)
+        for sample_to_save in ebi_biosample_response:
+            biosample_child = biosamples_service.create_biosample_from_ebi_data(sample_to_save)
+            time.sleep(3)
+            possible_parent.modify(add_to_set__sub_samples=biosample_child.accession)
+
+def get_biosample_parents():
+    biosample_siblings = BioSample.objects(__raw__ = {'metadata.sample derived from' : {"$exists": True}})
+    print(f'Found a total of: {len(biosample_siblings)} biosample siblings')
+    if not biosample_sibling:
+        print('No sibling to map')
+        return
+    parent_accessions = set([biosample_sibling.metadata['sample derived from'] for biosample_sibling in biosample_siblings])
+    existing_parents = BioSample.objects(accession__in=parent_accessions).scalar('accession')
+    for biosample_sibling in biosample_siblings:
+        derived_from = biosample_sibling.metadata['sample derived from']
+        if derived_from in existing_parents:
+            continue
+        biosample_response = ena_client.get_sample_from_biosamples(derived_from)
+        if not biosample_response:
+            print(f'Unable to retrieve parent biosample {derived_from} from EBI BioSamples API')
+        biosample_obj = biosamples_service.create_biosample_from_ebi_data(biosample_response)
+        biosample_obj.modify(add_to_set__sub_samples=biosample_sibling.accession)
+
+#the NCBI API WILL CHANGE SOON, BETTER SWITCH TO DATASETS CLI
 def import_assemblies():
     project_accession = os.getenv('PROJECT_ACCESSION')
     if not project_accession:
         return
-    fetched_assemblies=list()
-    result = requests.get(f"https://api.ncbi.nlm.nih.gov/datasets/v1/genome/bioproject/{project_accession}?filters.reference_only=false&filters.assembly_source=all&page_size=100").json()
-    counter = 1
-    print('Importing Assemblies')
-    if 'assemblies' in result.keys():
-        while 'next_page_token' in result.keys():
-            fetched_assemblies.extend([ass['assembly'] for ass in result['assemblies']])
-            next_page_token = result['next_page_token']
-            #max 3 requests per second without auth token
-            if counter >= 3:
-                time.sleep(1)
-                counter = 0
-            result = requests.get(f"https://api.ncbi.nlm.nih.gov/datasets/v1/genome/bioproject/{project_accession}?filters.reference_only=false&filters.assembly_source=all&page_size=100&page_token={next_page_token}").json()
-            counter+=1
-        if 'assemblies' in result.keys():
-            fetched_assemblies.extend([ass['assembly'] for ass in result['assemblies']])
-    if fetched_assemblies:
-        accessions = [assembly['assembly_accession'] for assembly in fetched_assemblies]
-        existing_assemblies = Assembly.objects(accession__in=accessions).scalar('accession')
-        for assembly_to_save in fetched_assemblies:
-            assembly_to_save_accession = assembly_to_save['assembly_accession']
-            if assembly_to_save_accession in existing_assemblies:
-                continue
-            print(f'Importing Assembly: {assembly_to_save_accession}')
-            saved_assembly = assemblies_service.create_assembly_from_ncbi_data(assembly_to_save)
-            if not saved_assembly:
-                continue
-            organism = organisms_service.get_or_create_organism(saved_assembly.taxid)
-            sample = BioSample.objects(accession=saved_assembly.sample_accession).first()
-            bioprojects_service.create_bioprojects_from_NCBI(assembly_to_save['bioproject_lineages'],organism,sample)
+    fetched_assemblies = []
+    page_token = None
 
-def update_reads():
-    biosamples = BioSample.objects()
+    while True:
+        params = {
+            "filters.reference_only": False,
+            "filters.assembly_source": "all",
+            "page_size": 100,
+            "page_token": page_token,
+        }
+
+        try:
+            response = requests.get(f"https://api.ncbi.nlm.nih.gov/datasets/v1/genome/bioproject/{project_accession}", params=params)
+            response.raise_for_status()
+            data = response.json()
+
+            if "assemblies" in data:
+                fetched_assemblies.extend(ass["assembly"] for ass in data["assemblies"])
+
+            page_token = data.get("next_page_token")
+            if not page_token:
+                break
+
+            time.sleep(1)  # Limit requests per second if needed
+
+        except requests.exceptions.RequestException as e:
+            print(f"An error occurred while fetching assemblies: {e}")
+            break
+    if not fetched_assemblies:
+        print('no assemblies found')
+        return
+    existing_assemblies = Assembly.objects(accession__in=[assembly["assembly_accession"] for assembly in fetched_assemblies]).scalar('accession')
+    for assembly in fetched_assemblies:
+        assembly_accession = assembly["assembly_accession"]
+        if assembly_accession in existing_assemblies:
+            continue
+
+        print(f"Importing Assembly: {assembly_accession}")
+        assemblies_service.create_assembly_from_ncbi_data(assembly)
+
+#TRACK EXPERIMENTS
+def get_experiments():
+    query = {'assemblies': [], 'experiments':[]}
+    biosamples = BioSample.objects(**query)
+    print(f'Biosamples to retrieve experiments from {len(biosamples)}')
     for biosample in biosamples:
         accessions = reads_service.create_reads_from_biosample_accession(biosample.accession)
         organism = organisms_service.get_or_create_organism(biosample.taxid)
+        if not accessions:
+            continue
         for acc in accessions:
+            biosample.modify(add_to_set__experiments=acc)
             organism.modify(add_to_set__experiments=acc)
+        biosample.save()
+        organism.save()
 
 def import_biosamples():
-    project_list = [p.strip() for p in os.getenv('PROJECTS').split(',') if p] if os.getenv('PROJECTS') else None
-    project_mapper = {p.split('_')[0]:p.split('_')[1] for p in project_list}
-    for project_accession in project_mapper.keys():
-        biosamples = []
-        href = f"https://www.ebi.ac.uk/biosamples/samples?size=200&filter=attr%3Aproject%20name%3A{project_accession}"
-        resp = requests.get(href).json()
-        while 'next' in resp['_links'].keys():
-            time.sleep(2)
-            href=resp['_links']['next']['href']
-            existing_accessions = BioSample.objects(accession__in=[sample['accession'] for sample in resp['_embedded']['samples']]).scalar('accession')
-            for sample in resp['_embedded']['samples']:
-                if sample['accession'] in existing_accessions:
-                    continue
-                biosamples.append(sample)
-            resp = requests.get(href).json()
-        if biosamples:
-            parent_bioprojects = [BioProject.objects(accession=project_mapper[project_accession]).first()]
-            if not parent_bioprojects:
-                parent_bioprojects = [bioprojects_service.create_bioproject_from_ENA(project_mapper[project_accession])]
-                if parent_bioprojects:
-                    parent_bioprojects.extend(BioProject.objects(children=project_mapper[project_accession]))
-            for biosample_to_save in biosamples:
-                saved_sample = biosamples_service.create_biosample_from_ebi_data(biosample_to_save)
-                if not saved_sample:
-                    continue
-                print(saved_sample.to_json())
-                for parent_project in parent_bioprojects:
-                    saved_sample.modify(add_to_set__bioprojects=parent_project.accession)
-                    organism = organisms_service.get_or_create_organism(saved_sample.taxid)
-                    organism.modify(add_to_set__bioprojects=parent_project.accession)
-                bioprojects_service.leaves_counter(parent_bioprojects)
+    if not PROJECTS:
+        return
+    for project_accession in PROJECTS.split(','):
+        biosamples = ena_client.retrieve_biosamples_from_ebi_by_project(project_accession)
+        if not biosamples:
+            print('no biosamples found')
+            continue
+        accessions = [biosample['accession'] for biosample in biosamples]
+        existing_biosamples = BioSample.objects(accession__in=accessions).scalar('accession')
+        for biosample_to_save in biosamples:
+            if biosample_to_save['accession'] in existing_biosamples:
+                continue
+            biosamples_service.create_biosample_from_ebi_data(biosample_to_save)
+
+
+def update_sample_locations():
+    biosamples = BioSample.objects(location__ne=None)
+    local_samples = LocalSample.objects(location__ne=None)
+    existing_coordinates = SampleCoordinates.objects().scalar('sample_accession')
+    for biosample in biosamples:
+        if biosample.accession in existing_coordinates:
+            continue
+        SampleCoordinates(taxid=biosample.taxid,
+                          sample_accession=biosample.accession,
+                          scientific_name=biosample.scientific_name, 
+                          coordinates=biosample.location.coordinates).save()
+    for local_sample in local_samples:
+        if local_sample.local_id in existing_coordinates:
+            continue
+        SampleCoordinates(taxid=local_sample.taxid,
+                sample_accession=local_sample.accession,
+                scientific_name=local_sample.scientific_name, 
+                coordinates=local_sample.location.coordinates,
+                is_local_sample=True).save()
+    #get all organisms with images and add image to biosamples
+    organisms = Organism.objects(image__ne=None)
+    for org in organisms:
+        sample_locations_service.add_image(org.taxid,org.image)
 
 def update_countries():
-    with open('./countries.json') as f:
+    ##update from biosample
+    # Collect information for all biosamples
+    accession_country_map = {}
+    biosamples = BioSample.objects()
+    for biosample in biosamples:
+        geo_loc = biosample.metadata.get('geo_loc_name')
+        if not geo_loc:
+            geo_loc = biosample.metadata.get('geographic location (country and/or sea)')
+        
+        if geo_loc:
+            if ':' in geo_loc or '|' in geo_loc:
+                country_name = geo_loc.split(':')[0]
+            else:
+                country_name = geo_loc
+            accession_country_map[biosample.accession] = country_name
+
+    # Load country polygons from JSON
+    with open(COUNTRIES_PATH) as f:
         countries = json.load(f)['features']
-        for model in [BioSample, LocalSample]:
-            samples = model.objects(location__ne=None)
-            for sample in samples:
-                lng,lat = sample.location['coordinates']
+
+    # Create a spatial index for country polygons
+    country_polygons = [(shape(country['geometry']), country['id'], country['properties']['name']) for country in countries]
+
+    # Iterate through saved biosamples
+    for biosample in biosamples:
+        accession = biosample.accession
+        taxid = biosample.taxid
+        country_to_add = None
+
+        # Check if the biosample has a country name
+        if accession in accession_country_map:
+            country_name_to_check = accession_country_map[accession]
+
+            # Find matching countries by name or ID
+            for country_poligon in country_polygons:
+                polygon, country_id, country_name = country_poligon
+                if country_name_to_check == country_name:
+                    country_to_add = country_id
+
+        # If no country names found, use spatial check
+        if not country_to_add:
+            sample_coords = SampleCoordinates.objects(sample_accession=accession).first()
+
+            if sample_coords:
+                lng, lat = sample_coords.coordinates['coordinates']
                 point = Point(lng, lat)
-                for country in countries:
-                    geometry=country['geometry']
-                    polygon = shape(geometry)
+                for polygon in country_polygons:
+                    polygon, country_id, country_name = country_poligon
                     if polygon.contains(point):
-                        Organism.objects(taxid=sample.taxid).update(add_to_set__countries=country['id'])
+                        country_to_add = country_id
+
+        # Perform batch update for countries
+        if country_to_add:
+            print(f'Adding country {country_to_add} to organism {taxid}')
+            Organism.objects(taxid=taxid).modify(add_to_set__countries=country_to_add)
 
 
-def update_organism_locations():
-    for organism in Organism.objects():
-        for model in [BioSample, LocalSample]:
-            samples = model.objects(taxid=organism.taxid,location__ne=None)
-            locations = list()
-            for sample in samples:
-                lng,lat = sample.location['coordinates']
-                decimal_lng = Decimal(str(lng))
-                decimal_lat = Decimal(str(lat))
-                location_exists=False
-                for location in locations:
-                    existing_lng, existing_lat = location
-                    if existing_lat.compare(decimal_lat) == 0 and existing_lng.compare(decimal_lng) == 0:
-                        location_exists=True
-                if not location_exists:
-                    locations.append([decimal_lng, decimal_lat])
-            if locations:
-                organism.locations=[[float(loc[0]), float(loc[1])] for loc in locations]
-                organism.save()
-
-def update_sample_coordinates():
-    for model in [BioSample, LocalSample]:
-        samples = model.objects()
-        for sample in samples:
-            if sample.location:
-                return
-            print('setting location of', sample)
-            sample_metadata = sample.metadata
-            lowered_keys_dict = dict()
-            latitude = None
-            longitude = None
-            for key in sample_metadata.keys():
-                low_key = key.lower()
-                lowered_keys_dict[low_key] = sample_metadata[key]
-            if 'lat_lon' in sample_metadata.keys():
-                values = sample_metadata['lat_lon'].split(' ')
-                if len(values) == 4:
-                    lat,lat_value,long,long_value = values
-                    latitude = '-'+lat if lat_value == 'S' else lat
-                    longitude = '-'+long if long_value == 'W' else long
-            elif 'lat lon' in sample_metadata.keys():
-                values = sample_metadata['lat lon'].split(' ')
-                if len(values) == 4:
-                    lat,lat_value,long,long_value = values
-                    latitude = '-'+lat if lat_value == 'S' else lat
-                    longitude = '-'+long if long_value == 'W' else long
-            elif 'geographic location (latitude)' in sample_metadata.keys() and 'geographic location (longitude)' in sample_metadata.keys():
-                latitude = str(sample_metadata['geographic location (latitude)'])
-                longitude = str(sample_metadata['geographic location (longitude)'])
-            elif 'latitude' in lowered_keys_dict and 'longitude' in lowered_keys_dict:
-                latitude = str(lowered_keys_dict['latitude'])
-                longitude  = str(lowered_keys_dict['longitude'])
-            elif 'decimal_latitude' in lowered_keys_dict and 'decimal_longitude' in lowered_keys_dict:
-                latitude = str(lowered_keys_dict['decimal_latitude'])
-                longitude  = str(lowered_keys_dict['decimal_longitude'])
-            if latitude and longitude:
-                try:
-                    if any(c.isdigit() for c in str(latitude)) and any(c.isdigit() for c in str(longitude)):
-                        ##replace , with .
-                        if ',' in latitude and ',' in longitude:
-                            latitude = latitude.replace(',', '.')
-                            longitude = longitude.replace(',', '.')
-                        if "'" in latitude and "'" in longitude:
-                            latitude = latitude.replace("'", ".")
-                            longitude = longitude.replace("'", ".")
-                        if float(latitude) >= -90.0 and float(latitude) <= 90.0 and float(longitude) >= -180.0 and float(longitude) <= 180.0:
-                            lng = float(longitude)
-                            lat = float(latitude)
-                            sample.location = [lng, lat]
-                            sample.save()
-                except:
-                    print(f'Invalid latitude:{latitude} or longitude: {longitude} for sample:{document}')
+def get_samples_collection_date():
+    biosamples = BioSample.objects(collection_date=None)
+    for biosample in biosamples:
+        if 'collection_date' in biosample.metadata.keys():
+            collection_date = biosample.metadata['collection_date']
+        elif 'collection date' in biosample.metadata.keys():
+            collection_date = biosample.metadata['collection date']
+        else:
+            continue
+        biosample.modify(collection_date=collection_date)

@@ -32,12 +32,6 @@ def get_tolid(taxid):
     else:
         return response[0]['prefix']
 
-def get_bioproject(project_accession):
-    time.sleep(1)
-    resp = requests.get(f"https://www.ebi.ac.uk/ena/portal/api/filereport?accession={project_accession}&format=JSON&result=study")
-    if resp.status_code != 200:
-        return list()
-    return resp.json()
 
 def get_reads(accession):
     time.sleep(1)
@@ -66,12 +60,37 @@ def get_reads(accession):
                                         f'submitted_ftp,submitted_aspera,'
                                         f'submitted_galaxy,submitted_format,'
                                         f'sra_bytes,sra_md5,sra_ftp,sra_aspera,'
-                                        f'sra_galaxy,cram_index_ftp,'
-                                        f'cram_index_aspera,cram_index_galaxy,'
-                                        f'sample_alias,broker_name,'
-                                        f'sample_title,nominal_sdev,'
-                                        f'first_created')
+                                        f'sra_galaxy,sample_alias,broker_name,'
+                                        f'sample_title,nominal_sdev,first_created')
+    
     if experiments_data.status_code != 200:
         return list()
     return experiments_data.json()
 
+def retrieve_biosamples_from_ebi_by_project(project_name):
+    biosamples = []
+    # Start with the first API request
+    href = f"https://www.ebi.ac.uk/biosamples/samples?size=200&filter=attr%3Aproject%20name%3A{project_name}"
+
+    while href:
+        try:
+            # Make the API request
+            resp = requests.get(href).json()
+
+            time.sleep(2)
+            # Extract samples from the response
+            samples = resp.get('_embedded', {}).get('samples', [])
+            # Check for existing accessions and add non-existing samples
+            biosamples.extend(samples)
+            # Check for the 'next' link to continue pagination
+            if 'next' in resp.get('_links', {}):
+                href = resp['_links']['next']['href']
+            else:
+                href = None
+            # Introduce a delay before the next request to avoid overloading the API
+            time.sleep(2)
+        except Exception as e:
+            # Handle exceptions (e.g., connection error, JSON parsing error) here
+            print(f"An error occurred while fetching biosample from EBI: {e}")
+            break  # Exit the loop on error
+    return biosamples

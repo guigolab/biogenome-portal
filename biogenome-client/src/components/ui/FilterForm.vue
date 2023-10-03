@@ -1,7 +1,7 @@
 <template>
   <va-form tag="form" @submit.prevent="onSubmit">
     <va-card-content>
-      <div class="row align-center justify-space-between">
+      <div class="row align-center">
         <div v-for="(filter, index) in filters" :key="index" class="flex lg3 md4 sm12 xs12">
           <div v-if="filter.type === 'input'">
             <va-input
@@ -14,6 +14,7 @@
               v-model="searchForm[filter.key]"
               :label="t(filter.label)"
               :options="filter.options"
+              searchable
             />
           </div>
           <div v-else-if="filter.type === 'date'">
@@ -31,7 +32,7 @@
         </div>
       </div>
     </va-card-content>
-    <va-card-actions align="between">
+    <va-card-actions align="right">
       <va-button type="submit">{{t('buttons.submit')}}</va-button>
       <va-button color="danger" @click="onReset">{{t('buttons.reset')}}</va-button>
     </va-card-actions>
@@ -46,7 +47,7 @@
 
   const props = defineProps<{filters:Array<Filter>}>()
 
-  const initSearchForm = {}
+  const initSearchForm:Record<string,any> = {}
 
   const searchForm = ref({...initSearchForm})
 

@@ -1,7 +1,8 @@
-from db.models import BioSample,Assembly,Experiment,Organism
+from db.models import BioSample,Assembly,Experiment,Organism,SampleCoordinates
 from errors import NotFound
 from ..utils import ena_client
 from ..organism import organisms_service
+from ..sample_location import sample_locations_service
 from datetime import datetime
 from mongoengine.queryset.visitor import Q
 import os
@@ -90,6 +91,8 @@ def create_biosample_from_ncbi_data(accession, ncbi_response, organism):
         biosample_metadata[attr['name']] = [dict(text=attr['value'])] 
     extra_metadata = parse_sample_metadata(biosample_metadata)
     new_biosample = BioSample(metadata=extra_metadata,**required_metadata).save()
+    sample_locations_service.save_coordinates(new_biosample)
+    sample_locations_service.update_countries_from_biosample(new_biosample)
     organism.modify(add_to_set__biosamples=new_biosample.accession)
     organism.save()
     return new_biosample
@@ -100,19 +103,27 @@ def create_biosample_from_ebi_data(sample):
         return existing_biosample
     required_metadata=dict(accession=sample['accession'],taxid=str(sample['taxId']))
     organism = organisms_service.get_or_create_organism(required_metadata['taxid'])
-    if not organism:
-        return
-    if 'scientificName' in sample.keys():
-        required_metadata['scientific_name'] = sample['scientificName']
-    elif 'organism' in sample['characteristics'].keys():
-        required_metadata['scientific_name'] = sample['characteristics']['organism'][0]['text']
-    else:
-        organism = organisms_service.get_or_create_organism(sample['taxId'])
+    if organism:
         required_metadata['scientific_name'] = organism.scientific_name
+    else:
+        print(f'Unable to save sample, taxid not found in {sample}')
+        return
     extra_metadata = parse_sample_metadata({k:sample['characteristics'][k] for k in sample['characteristics'].keys() if k not in ['taxId','scientificName','accession','organism']})
     new_biosample = BioSample(metadata=extra_metadata,**required_metadata).save()
-    organism.modify(add_to_set__biosamples=new_biosample.accession)
-    organism.save()
+    sample_locations_service.save_coordinates(new_biosample)
+    sample_locations_service.update_countries_from_biosample(new_biosample)
+    sample_derived_from = extra_metadata.get('sample derived from', None)
+    if sample_derived_from:
+        print(f'creating father sample {sample_derived_from}')
+        father_biosample = create_related_biosample(sample_derived_from)
+        if father_biosample:
+            print(f'father sample {father_biosample.accession} created')
+            father_biosample.modify(add_to_set__sub_samples=new_biosample.accession)
+            organism.modify(add_to_set__biosamples=sample_derived_from)
+    else:
+        print(f'appending sample {new_biosample.accession} to {organism.scientific_name}')
+        organism.modify(add_to_set__biosamples=new_biosample.accession)
+        organism.save()
     return new_biosample
     
 
@@ -122,6 +133,7 @@ def delete_biosample(accession):
         raise NotFound
     Assembly.objects((Q(sample_accession=biosample_to_delete.accession) | Q(metadata__sample_accession=biosample_to_delete.accession))).delete()
     Experiment.objects(metadata__sample_accession=biosample_to_delete.accession).delete()
+    SampleCoordinates.objects(sample_accession=accession).delete()
     organism = Organism.objects(taxid=biosample_to_delete.taxid).first()
     organism.modify(pull__biosamples=biosample_to_delete.accession)
     organism.save()
@@ -133,3 +145,13 @@ def parse_sample_metadata(metadata):
     for k in metadata.keys():
         sample_metadata[k] = metadata[k][0]['text']
     return sample_metadata
+
+def map_samples_by_relationship(biosamples):
+    samples_derived_from = {}
+    for biosample in biosamples:
+        if biosample.metadata and 'sample derived from' in biosample.metadata.keys():
+            parent_accession = biosample.metadata['sample derived from']
+            if not parent_accession in samples_derived_from.keys():
+                samples_derived_from[parent_accession]=[]
+            samples_derived_from[parent_accession].append(biosample)
+    return samples_derived_from

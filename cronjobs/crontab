@@ -1,8 +1,12 @@
+* * * * * python /trigger_cronjob.py get_biosamples_derived_from
+* * * * * python /trigger_cronjob.py get_biosamples_parents
+* * * * * python /trigger_cronjob.py get_experiments
+* * * * * python /trigger_cronjob.py import_assemblies
+* * * * * python /trigger_cronjob.py update_countries
+* * * * * python /trigger_cronjob.py update_sample_locations
+* * * * * python /trigger_cronjob.py get_samples_collection_date
+* * * * * python /trigger_cronjob.py import_biosamples
 
-* * * * * python /countries_update.py 
-* * * * * python /locations_update.py
-* * * * * python /assembly_import.py
-* * * * * python /biosample_import.py
-* * * * * python /biosample_update.py
-* * * * * python /read_update.py
-* * * * * python /sample_coordinates_update.py
+
+
+

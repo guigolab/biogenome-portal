@@ -1,9 +1,16 @@
 import NavBarLogo from '../../../components/navbar/components/NavBarLogo.vue'
+import Wiki from '../../../components/icons/Wiki.vue'
+
 export default [
   {
     name: 'app-logo',
     component: NavBarLogo,
     color:'primary',
+  },
+  {
+    name: 'wiki',
+    component: Wiki,
+    color: 'primary'
   },
   {
     name: 'angle_down',

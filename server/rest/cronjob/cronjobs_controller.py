@@ -6,38 +6,42 @@ from flask_jwt_extended import jwt_required
 from errors import NotFound, RecordAlreadyExistError
 from . import cronjob_service
 
-CRONJOB_TYPES = ['update_reads', 'update_samples', 'import_assemblies', 'update_countries', 'import_biosamples', 'update_locations', 'update_sample_coordinates']
 
+JOB_MAP = {
+    'get_biosamples_derived_from': cronjob_service.get_biosamples_derived_from,
+    'get_biosamples_parents':cronjob_service.get_biosample_parents,
+    'get_experiments': cronjob_service.get_experiments,
+    'import_assemblies': cronjob_service.import_assemblies,
+    'update_countries': cronjob_service.update_countries,
+    'import_biosamples': cronjob_service.import_biosamples,
+    'update_sample_locations': cronjob_service.update_sample_locations,
+    'get_samples_collection_date':cronjob_service.get_samples_collection_date
+}
 ## persist cronjob status
 class CronJobApi(Resource):
 
     def get(self):
-        CronJob.objects().delete()
         cronjob = CronJob.objects().to_json()
         return Response(cronjob, mimetype="application/json", status=200)
 
     #create cronjob
     @jwt_required()
     def post(self, model):
-        if not model in CRONJOB_TYPES:
+        if not model in JOB_MAP.keys():
             raise NotFound
         cronjob = CronJob.objects(cronjob_type=model).first()
         if cronjob:
             raise RecordAlreadyExistError
         cronjob = CronJob(cronjob_type=model, status= CronJobStatus.PENDING).save()
-        if model == 'update_samples':
-            cronjob_service.update_samples()
-        elif model == 'update_reads':
-            cronjob_service.update_reads()
-        elif model == 'import_assemblies':
-            cronjob_service.import_assemblies()
-        elif model == 'update_countries':
-            cronjob_service.update_countries()
-        elif model == 'import_biosamples':
-            cronjob_service.import_biosamples()
-        elif model == 'update_locations':
-            cronjob_service.update_organism_locations()
-        elif model == 'update_sample_coordinates':
-            cronjob_service.update_sample_coordinates()
-        return Response(cronjob.to_json(), mimetype="application/json", status=201)
+        resp = cronjob.to_json()
+        print(f'Triggering job {model}')
+        JOB_MAP[model]()
+        cronjob.delete()
+        return Response(resp, mimetype="application/json", status=201)
 
+    @jwt_required()
+    def delete(self, model):
+        cron = CronJob.onjects(cronjob_type=model)
+        if not cron:
+            raise NotFound
+        cron.delete()
