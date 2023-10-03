@@ -138,7 +138,7 @@ def update_sample_locations():
             continue
         coordinates = local_sample.location['coordinates']
         SampleCoordinates(taxid=local_sample.taxid,
-                sample_accession=local_sample.accession,
+                sample_accession=local_sample.local_id,
                 scientific_name=local_sample.scientific_name, 
                 coordinates=coordinates,
                 is_local_sample=True).save()
