@@ -34,6 +34,6 @@
     transition: opacity 0.5s ease;
   }
   text {
-    font-size: 1rem;
+    font-size: .8rem;
   }
 </style>
