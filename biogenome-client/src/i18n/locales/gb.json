@@ -41,6 +41,7 @@
       "annotations":"Annotations",
       "local_samples":"Local Samples"
     },
+    "toExplorer": "Explore Taxonomy",
     "info":{
       "exploreGallery":"Explore gallery"
     },
@@ -73,7 +74,8 @@
     "images":"Images",
     "publications":"Publications",
     "vernacularNames":"Vernacular Names",
-    "breadcrumb":"Organisms"
+    "breadcrumb":"Organisms",
+    "lineage":"Taxon lineage"
   },
   "annotationDetails":{
     "breadcrumb":"Annotations",

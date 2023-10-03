@@ -22,7 +22,7 @@
           <Suspense>
             <TaxonsTreeView />
             <template #fallback>
-              <va-skeleton height="500px"></va-skeleton>
+              <va-skeleton height="100vh"></va-skeleton>
             </template>
           </Suspense>
         </div>

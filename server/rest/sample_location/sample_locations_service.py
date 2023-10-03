@@ -15,8 +15,6 @@ def save_coordinates(saved_sample, id_field='accession'):
     
     latitude, longitude = None, None
     
-
-    
     if 'lat_lon' in sample_metadata:
         values = sample_metadata['lat_lon'].split(' ')
         if len(values) == 4:
@@ -54,7 +52,8 @@ def save_coordinates(saved_sample, id_field='accession'):
                     sample_coordinates_to_save = {
                         'sample_accession': saved_sample[id_field],
                         'taxid': saved_sample.taxid,
-                        'coordinates': [longitude, latitude]
+                        'scientific_name':saved_sample.scientific_name,
+                        'coordinates': [long, lat]
                     }
                     if id_field == 'local_id':
                         sample_coordinates_to_save['is_local_sample'] = True
@@ -106,7 +105,8 @@ def update_countries_from_biosample(saved_biosample):
 
         if coordinates:
             point = Point(coordinates.coordinates['coordinates'])
-            for polygon, country_id in country_polygons:
+            for country_poligon in country_polygons:
+                polygon, country_id, country_name = country_poligon
                 if polygon.contains(point):
                     country_to_add = country_id
 

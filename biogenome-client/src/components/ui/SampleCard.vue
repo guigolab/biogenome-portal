@@ -8,6 +8,7 @@
                 <div class="flex">
                     <h6 class="va-h6" style="word-wrap:break-word ;">
                         <router-link
+                            style="color: inherit;"
                             :to="selectedSample.is_local_sample ?
                                 { name: 'local_sample', params: { id: selectedSample.sample_accession } } : { name: 'biosample', params: { accession: selectedSample.sample_accession } }">
                             {{ selectedSample.sample_accession }}

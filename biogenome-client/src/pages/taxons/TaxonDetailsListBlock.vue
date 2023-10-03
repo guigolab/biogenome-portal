@@ -1,7 +1,5 @@
 <template>
   <div class="fill-height">
-  <va-skeleton v-if="isLoading" height="inherit"></va-skeleton>
-  <div v-else >
     <va-form >
       <va-card-content>
         <div class="row align-center justify-start">
@@ -20,7 +18,8 @@
         <va-button color="danger" @click="reset()">{{ t('buttons.reset') }}</va-button>
       </va-card-actions>
     </va-form>
-    <va-card-content>
+    <va-skeleton v-if="isLoading" height="inherit"></va-skeleton>
+    <va-card-content v-else>
       <p>{{ t('table.total') }} {{ total }}</p>
       <DataTable :items="organisms" :columns="columns" />
       <div class="row align-center justify-center">
@@ -39,7 +38,6 @@
         </div>
       </div>
     </va-card-content>
-  </div>
 </div>
 
 </template>

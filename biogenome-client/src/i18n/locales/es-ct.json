@@ -41,6 +41,7 @@
       "annotations": "Anotacions",
       "local_samples": "Mostres locals"
     },
+    "toExplorer": "Explora La Taxonomia",
     "info":{
       "exploreGallery":"Explora la galeria"
     },
@@ -73,7 +74,9 @@
     "images": "Imatges",
     "publications": "Publicacions",
     "vernacularNames": "Noms vernacles",
-    "breadcrumb":"Organismes"
+    "breadcrumb":"Organismes",
+    "lineage":"Línia Taxonòmica"
+
   },
   "annotationDetails": {
     "breadcrumb": "Anotacions",

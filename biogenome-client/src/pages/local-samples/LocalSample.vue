@@ -17,12 +17,8 @@
     <KeyValueCard v-if="localSampleSelectedMetadata.length && metadata" :metadata="metadata"
       :selected-metadata="localSampleSelectedMetadata" />
     <div class="row row-equal">
-      <div class="flex lg6 md6 sm12 xs12 chart">
-        <Suspense>
-          <MapCard :model="'local_sample'" :id="id" />
-          <template #fallback>
-          </template>
-        </Suspense>
+      <div v-if="coordinates.length" class="flex lg6 md6 sm12 xs12">
+        <LeafletMap :coordinates="coordinates" />
       </div>
       <div v-if="metadata && Object.keys(metadata).length" class="flex lg12 md12 sm12 xs12">
         <MetadataTreeCard :metadata="metadata" />
@@ -34,12 +30,13 @@
 import { onMounted, ref } from 'vue'
 import LocalSampleService from '../../services/clients/LocalSampleService'
 import { useI18n } from 'vue-i18n'
-import { Details } from '../../data/types'
+import { Details, SampleLocations } from '../../data/types'
 import { localSampleSelectedMetadata } from '../../../config.json'
 import KeyValueCard from '../../components/ui/KeyValueCard.vue'
 import DetailsHeader from '../../components/ui/DetailsHeader.vue'
-import MapCard from '../../components/ui/MapCard.vue'
 import MetadataTreeCard from '../../components/ui/MetadataTreeCard.vue'
+import GeoLocationService from '../../services/clients/GeoLocationService'
+import LeafletMap from '../../components/maps/LeafletMap.vue'
 const isLoading = ref(true)
 const errorMessage = ref<string | any>(null)
 const details = ref<
@@ -50,6 +47,7 @@ const props = defineProps<{
   id: string
 }>()
 const metadata = ref<Record<string, any> | null>(null)
+const coordinates = ref<SampleLocations[]>([])
 
 onMounted(async () => {
   try {
@@ -58,13 +56,24 @@ onMounted(async () => {
     // localSample.value = {...data}
     if (data.metadata) metadata.value = data.metadata
     details.value = parseDetails(data)
-
+    await getCoordinates(props.id)
   } catch (e) {
     errorMessage.value = e
   } finally {
     isLoading.value = false
   }
 })
+async function getCoordinates(accession: string) {
+  try {
+    isLoading.value = true
+    const { data } = await GeoLocationService.getLocationsByLocalSample(accession)
+    coordinates.value = [...data]
+  } catch (e) {
+    console.log(e)
+  } finally {
+    isLoading.value = false
+  }
+}
 function parseDetails(localSample: Record<string, any>) {
   const id = localSample.local_id
   const details: Details = {

@@ -1,4 +1,4 @@
-from db.models import Organism, Assembly, BioSample, SampleCoordinates, LocalSample
+from db.models import Organism, Assembly, BioSample, SampleCoordinates, LocalSample, Experiment
 from ..utils import ena_client
 from ..biosample import biosamples_service
 from ..organism import organisms_service
@@ -91,13 +91,18 @@ def import_assemblies():
 
 #TRACK EXPERIMENTS
 def get_experiments():
-    biosamples = BioSample.objects(assemblies=[], experiments=[])
+    query = {'assemblies': [], 'experiments':[]}
+    biosamples = BioSample.objects(**query)
+    print(f'Biosamples to retrieve experiments from {len(biosamples)}')
     for biosample in biosamples:
         accessions = reads_service.create_reads_from_biosample_accession(biosample.accession)
         organism = organisms_service.get_or_create_organism(biosample.taxid)
+        if not accessions:
+            continue
         for acc in accessions:
             biosample.modify(add_to_set__experiments=acc)
             organism.modify(add_to_set__experiments=acc)
+        biosample.save()
         organism.save()
 
 def import_biosamples():
@@ -196,3 +201,15 @@ def update_countries():
         if country_to_add:
             print(f'Adding country {country_to_add} to organism {taxid}')
             Organism.objects(taxid=taxid).modify(add_to_set__countries=country_to_add)
+
+
+def get_samples_collection_date():
+    biosamples = BioSample.objects(collection_date=None)
+    for biosample in biosamples:
+        if 'collection_date' in biosample.metadata.keys():
+            collection_date = biosample.metadata['collection_date']
+        elif 'collection date' in biosample.metadata.keys():
+            collection_date = biosample.metadata['collection date']
+        else:
+            continue
+        biosample.modify(collection_date=collection_date)

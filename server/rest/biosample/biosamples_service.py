@@ -109,14 +109,19 @@ def create_biosample_from_ebi_data(sample):
         print(f'Unable to save sample, taxid not found in {sample}')
         return
     extra_metadata = parse_sample_metadata({k:sample['characteristics'][k] for k in sample['characteristics'].keys() if k not in ['taxId','scientificName','accession','organism']})
-        
     new_biosample = BioSample(metadata=extra_metadata,**required_metadata).save()
     sample_locations_service.save_coordinates(new_biosample)
     sample_locations_service.update_countries_from_biosample(new_biosample)
     sample_derived_from = extra_metadata.get('sample derived from', None)
     if sample_derived_from:
-        create_biosample_from_accession(sample_derived_from)
+        print(f'creating father sample {sample_derived_from}')
+        father_biosample = create_related_biosample(sample_derived_from)
+        if father_biosample:
+            print(f'father sample {father_biosample.accession} created')
+            father_biosample.modify(add_to_set__sub_samples=new_biosample.accession)
+            organism.modify(add_to_set__biosamples=sample_derived_from)
     else:
+        print(f'appending sample {new_biosample.accession} to {organism.scientific_name}')
         organism.modify(add_to_set__biosamples=new_biosample.accession)
         organism.save()
     return new_biosample

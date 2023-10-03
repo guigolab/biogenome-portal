@@ -7,13 +7,13 @@
         </div>
     </va-card-content>
     <va-divider />
-    <va-tree-view expand-all track-by="taxid" text-by="name" value-by="taxid" :nodes="nodes" :filter="filter"
+    <va-tree-view track-by="taxid" text-by="name" value-by="taxid" :nodes="nodes" :filter="filter"
         :filter-method="customFilterMethod">
         <template #content="node">
             <div class="flex items-center">
                 <div class="mr-2">
                     <b class="display-6">
-                        <router-link
+                        <router-link style="color: inherit;"
                             :to="node.leaves ? { name: 'taxon', params: { taxid: node.taxid } } : { name: 'organism', params: { taxid: node.taxid } }">{{
                                 node.name }}
                         </router-link>

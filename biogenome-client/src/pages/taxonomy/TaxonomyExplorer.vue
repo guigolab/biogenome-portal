@@ -14,6 +14,7 @@
             <div class="row align-end">
                 <div class="flex">
                     <h2 class="va-h2 va-text-primary"><router-link
+                        style="color: inherit;"
                             :to="currentTaxon.leaves ? { name: 'taxon', params: { taxid: currentTaxon.taxid } } : { name: 'organism', params: { taxid: currentTaxon.taxid } }">{{
                                 currentTaxon.name }}</router-link></h2>
                     <p class="mb-4">{{ currentTaxon.rank }}</p>

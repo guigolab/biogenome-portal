@@ -28,7 +28,6 @@ class TaxonNode(db.Document):
 
 @handler(db.pre_save)
 def update_organism_status(sender, document, **kwargs):
-    print(f'UPDATING ORGANISM STATUS {document.scientific_name}')
     if os.getenv('PROJECT_ACCESSION'):
         if document.assemblies:
             document.insdc_status= INSDCStatus.ASSEMBLIES
@@ -70,7 +69,6 @@ class Assembly(db.Document):
     meta = {
         'indexes': ['accession']
     }
-
 
 class Chromosome(db.Document):
     accession_version = db.StringField(required=True,unique=True)

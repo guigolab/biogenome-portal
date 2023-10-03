@@ -6,62 +6,58 @@
   <InfoBlockVue v-if="charts.length" :charts="charts" />
   <div class="row row-equal">
     <div class="flex lg12 md12 sm12 xs12">
-      <va-skeleton v-if="isLoading" height="300px" />
-      <va-card stripe-color="danger" stripe v-else-if="errorMessage">
-        <va-card-content>
-          {{ errorMessage }}
-        </va-card-content>
-      </va-card>
-      <div v-else>
-        <FilterForm :filters="filters" @on-submit="handleSubmit" @on-reset="reset" />
-        <va-divider />
-        <va-card-content>
-          <div class="row align-center justify-end">
-            <div class="flex">{{ t('table.total') }} {{ total }}</div>
-            <div class="flex">
-              <va-pagination v-model="offset" :page-size="organismStore.pagination.limit" :total="total"
-                :visible-pages="3" buttons-preset="secondary" rounded gapped border-color="primary"
-                @update:model-value="handlePagination" />
-            </div>
+      <FilterForm :filters="filters" @on-submit="handleSubmit" @on-reset="reset" />
+      <va-divider />
+      <va-card-content>
+        <div class="row align-center justify-end">
+          <div class="flex">{{ t('table.total') }} {{ total }}</div>
+          <div class="flex">
+            <va-pagination v-model="offset" :page-size="organismStore.pagination.limit" :total="total" :visible-pages="3"
+              buttons-preset="secondary" rounded gapped border-color="primary" @update:model-value="handlePagination" />
           </div>
-        </va-card-content>
-        <va-card-content>
-          <va-list spaced>
-            <va-list-item v-for="(organism, index) in organisms" :key="index" class="list__item"
-              :to="{ name: 'organism', params: { taxid: organism.taxid } }">
-              <va-list-item-section avatar>
-                <va-avatar size="large">
-                  <img :src="organism.image" />
-                </va-avatar>
-              </va-list-item-section>
-              <va-list-item-section>
-                <va-list-item-label>
-                  <div class="row align-center">
-                    <div class="flex">
-                      {{ organism.scientific_name }}
-                    </div>
-                    <div v-if="showCountry" class="flex">
-                      <div class="row">
-                        <div v-for="country in organism.countries" :key="country" class="flex">
-                          <va-icon :name="`flag-icon-${country.toLowerCase()} small`" color="warning" />
-                        </div>
+        </div>
+      </va-card-content>
+      <va-skeleton v-if="isLoading" height="400px">
+      </va-skeleton>
+      <va-card-content v-else-if="errorMessage">
+        {{ errorMessage }}
+      </va-card-content>
+      <va-card-content v-else>
+        <va-list spaced>
+          <va-list-item v-for="(organism, index) in organisms" :key="index" class="list__item"
+            :to="{ name: 'organism', params: { taxid: organism.taxid } }">
+            <va-list-item-section avatar>
+              <va-avatar size="large">
+                <img :src="organism.image" />
+              </va-avatar>
+            </va-list-item-section>
+            <va-list-item-section>
+              <va-list-item-label>
+                <div class="row align-center">
+                  <div class="flex">
+                    {{ organism.scientific_name }}
+                  </div>
+                  <div v-if="showCountry" class="flex">
+                    <div class="row">
+                      <div v-for="country in organism.countries" :key="country" class="flex">
+                        <va-icon :name="`flag-icon-${country.toLowerCase()} small`" color="warning" />
                       </div>
                     </div>
                   </div>
-                </va-list-item-label>
-                <va-list-item-label v-if="organism.insdc_common_name" caption>
-                  {{ organism.insdc_common_name }}
-                </va-list-item-label>
-              </va-list-item-section>
-              <va-list-item-section v-for="(f, i) in getOrganismRelatedData(organism)" :key="i" icon>
-                <va-popover class="mr-2 mb-2" :message="f.key" :color="f.color">
-                  <va-icon :name="f.icon" :color="f.color" />
-                </va-popover>
-              </va-list-item-section>
-            </va-list-item>
-          </va-list>
-        </va-card-content>
-      </div>
+                </div>
+              </va-list-item-label>
+              <va-list-item-label v-if="organism.insdc_common_name" caption>
+                {{ organism.insdc_common_name }}
+              </va-list-item-label>
+            </va-list-item-section>
+            <va-list-item-section v-for="(f, i) in getOrganismRelatedData(organism)" :key="i" icon>
+              <va-popover class="mr-2 mb-2" :message="f.key" :color="f.color">
+                <va-icon :name="f.icon" :color="f.color" />
+              </va-popover>
+            </va-list-item-section>
+          </va-list-item>
+        </va-list>
+      </va-card-content>
     </div>
   </div>
 </template>
@@ -92,7 +88,7 @@ const offset = ref(1 + organismStore.pagination.offset)
 const organisms = ref<Record<string, any>[]>([])
 const total = ref(0)
 
-onMounted(async() => {
+onMounted(async () => {
   if (showCountry.value) await setCountries()
   await getOrganisms({ ...organismStore.searchForm, ...organismStore.pagination })
 })
@@ -134,7 +130,7 @@ function getOrganismRelatedData(organism: Record<string, any>) {
 }
 
 async function setCountries() {
-  if (filters.value.findIndex(f => f.key === 'country')) return
+  if (filters.value.findIndex(f => f.key === 'country') === -1) return
   try {
     isLoading.value = true
     const { data } = await StatisticsService.getModelFieldStats('organisms', { field: 'countries' })
@@ -144,12 +140,14 @@ async function setCountries() {
       .map((f: Record<string, any>) => {
         return { text: f.properties.name, value: f.properties.id }
       })
-    filters.value.push({
+    const newFilters = [...filters.value]
+    newFilters.push({
       label: 'organismList.filters.searchCountry',
       key: 'country',
       type: 'select',
       options: countries,
     })
+    filters.value = [...newFilters]
   } catch (e) {
     errorMessage.value = 'Something happened'
   } finally {

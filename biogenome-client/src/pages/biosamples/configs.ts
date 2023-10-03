@@ -36,7 +36,7 @@ export const tableColumns = ['accession', 'scientific_name', 'collection_date', 
 export const relatedData:Record<string,any>[] = [
     {
       title: 'uiComponents.relatedDataCard.biosamples',
-      icon: 'hubs',
+      icon: 'fa-vial',
       key: 'sub_samples',
       color: 'success',
       route: 'biosample',

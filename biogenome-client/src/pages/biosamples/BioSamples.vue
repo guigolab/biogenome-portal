@@ -8,16 +8,14 @@
     <InfoBlockVue v-if="charts.length" :charts="charts" />
     <div class="row row-equal">
       <div class="flex lg12 md12 sm12 xs12">
-        <va-skeleton v-if="isLoading" height="300px"/>
-        <va-card stripe-color="danger" stripe v-else-if="errorMessage">
-          <va-card-content>
-            {{ errorMessage }}
-          </va-card-content>
-        </va-card>
-        <va-card v-else>
+        <va-card :stripe="Boolean(errorMessage)" stripe-color="danger">
           <FilterForm :filters="filters" @on-submit="handleSubmit" @on-reset="reset" />
           <va-card-content> {{ t('table.total') }} {{ total }} </va-card-content>
-          <va-card-content>
+          <va-skeleton v-if="isLoading" height="400px" />
+          <va-card-content v-else-if="errorMessage">
+            {{ errorMessage }}
+          </va-card-content>
+          <va-card-content v-else>
             <DataTable :items="biosamples" :columns="tableColumns" />
             <div class="row align-center justify-center">
               <div class="flex">
@@ -52,7 +50,7 @@ const biosamples = ref([])
 const total = ref(0)
 const offset = ref(1 + biosampleStore.pagination.offset)
 const isLoading = ref(false)
-const errorMessage = ref<string|null>(null)
+const errorMessage = ref<string | null>(null)
 onMounted(() => {
   getBioSamples({ ...biosampleStore.searchForm, ...biosampleStore.pagination })
 })
@@ -82,9 +80,9 @@ async function getBioSamples(query: Record<string, any>) {
     const { data } = await BioSampleService.getBioSamples(query)
     biosamples.value = data.data
     total.value = data.total
-  } catch(e){
+  } catch (e) {
     errorMessage.value = 'Something happened'
-  }finally{
+  } finally {
     isLoading.value = false
   }
 

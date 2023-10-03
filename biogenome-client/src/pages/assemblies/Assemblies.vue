@@ -6,16 +6,14 @@
   <InfoBlockVue v-if="charts.length" :charts="charts" />
   <div class="row row-equal">
     <div class="flex lg12 md12 sm12 xs12">
-      <va-skeleton v-if="isLoading" height="300px" />
-      <va-card stripe-color="danger" stripe v-else-if="errorMessage">
-        <va-card-content>
-          {{ errorMessage }}
-        </va-card-content>
-      </va-card>
-      <va-card v-else>
+      <va-card :stripe="Boolean(errorMessage)" stripe-color="danger">
         <FilterForm :filters="filters" @on-submit="handleSubmit" @on-reset="reset" />
         <va-card-content> {{ t('table.total') }} {{ total }} </va-card-content>
-        <va-card-content>
+        <va-skeleton v-if="isLoading" height="400px" />
+        <va-card-content v-else-if="errorMessage">
+          {{ errorMessage }}
+        </va-card-content>
+        <va-card-content v-else>
           <DataTable :items="assemblies" :columns="tableColumns" />
           <div class="row align-center justify-center">
             <div class="flex">

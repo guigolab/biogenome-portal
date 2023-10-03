@@ -20,7 +20,6 @@
   </div>
 </template>
 <script setup lang="ts">
-import { AxiosResponse } from 'axios'
 import { onMounted, ref } from 'vue'
 import LeafletMap from '../../components/maps/LeafletMap.vue'
 import { useI18n } from 'vue-i18n'

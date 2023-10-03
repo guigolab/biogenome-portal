@@ -3,7 +3,7 @@ from flask_cors import CORS
 from config import BaseConfig
 from rest import initialize_api
 from flask_jwt_extended import JWTManager
-from db.models import BioGenomeUser, CronJob,Assembly,Roles,SampleCoordinates,BioSample,LocalSample,Chromosome, Organism,Experiment,TaxonNode
+from db.models import BioGenomeUser,GenomeAnnotation, CronJob,Assembly,Roles,SampleCoordinates,BioSample,LocalSample,Chromosome, Organism,Experiment,TaxonNode
 from tendo.singleton import SingleInstance
 from flask_mongoengine import MongoEngine
 
@@ -51,6 +51,6 @@ try:
     # Assembly.drop_collection()
     # Chromosome.drop_collection()
     # SampleCoordinates.drop_collection()
-
+    # GenomeAnnotation.drop_collection()
 except:
     pass

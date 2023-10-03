@@ -1,9 +1,12 @@
 <template>
-  <va-skeleton height="400px" v-if="isLoading"></va-skeleton>
-  <va-card v-else>
+  <va-card :stripe="Boolean(errorMessage)" stripe-color="danger">
     <FilterForm :filters="filters" @on-submit="handleSubmit" @on-reset="reset" />
     <va-card-content> {{ t('table.total') }} {{ total }} </va-card-content>
-    <va-card-content>
+    <va-skeleton v-if="isLoading" height="400px" />
+    <va-card-content v-else-if="errorMessage">
+      {{ errorMessage }}
+    </va-card-content>
+    <va-card-content v-else>
       <DataTable :items="taxons" :columns="tableColumns" />
       <div class="row align-center justify-center">
         <div class="flex">
@@ -75,17 +78,19 @@ async function getTaxons(query: Record<string, any>) {
 
 
 async function setRanks() {
-  if (filters.value.findIndex(f => f.key === 'ranks')) return
+  if (filters.value.findIndex(f => f.key === 'ranks') === -1) return
   try {
     isLoading.value = true
     const { data } = await StatisticsService.getModelFieldStats('taxons', { field: 'rank' })
     const ranks = Object.keys(data)
-    filters.value.push({
+    const newFilters = [...filters.value]
+    newFilters.push({
       label: 'taxonList.filters.ranks',
       key: 'rank',
       type: 'select',
       options: ranks,
     })
+    filters.value = [...newFilters]
   } catch (e) {
     errorMessage.value = 'Something happened'
   } finally {

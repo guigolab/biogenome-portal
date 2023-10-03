@@ -61,7 +61,6 @@ def initialize_routes(api):
 	api.add_resource(organisms_controller.OrganismsApi, '/api/organisms')
 	api.add_resource(organisms_controller.OrganismApi, '/api/organisms/<taxid>')
 	api.add_resource(organisms_controller.OrganismLineageApi, '/api/organisms/<taxid>/lineage')
-	api.add_resource(organisms_controller.OrganismINSDCDataApi, '/api/organisms/<taxid>/sankey')
 	api.add_resource(organisms_controller.OrganismRelatedDataApi, '/api/organisms/<taxid>/<model>') 
 
 	##TAXONS

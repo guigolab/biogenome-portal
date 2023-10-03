@@ -14,17 +14,19 @@
   </div>
   <div v-else>
     <DetailsHeader :details="details" />
-    <Suspense>
-      <TaxonLineage :taxid="taxid" />
-      <template #fallback>
-        <va-skeleton height="150px"></va-skeleton>
-      </template>
-    </Suspense>
     <KeyValueCard v-if="organismSelectedMetadata.length && metadata" :metadata="metadata"
       :selected-metadata="organismSelectedMetadata" />
     <!-- TODO add ideogram -->
     <!-- <Ideogram v-if="assembly && assembly.taxid && hasChromosomes" :taxid="assembly.taxid" :accession="accession" /> -->
     <div class="row row-equal">
+      <div class="flex lg6 md6 sm12 xs12">
+        <Suspense>
+          <TaxonLineage :taxid="taxid"></TaxonLineage>
+          <template #fallback>
+            <va-skeleton height="300px"></va-skeleton>
+          </template>
+        </Suspense>
+      </div>
       <div v-if="images.length" class="flex lg6 md6 sm12 xs12">
         <Images :images="images" />
       </div>
@@ -42,7 +44,7 @@
         <MetadataTreeCard :metadata="metadata" />
       </div>
       <div v-if="coordinates.length" class="flex lg6 md6 sm12 xs12 chart">
-        <LeafletMap :coordinates="coordinates"/>
+        <LeafletMap :coordinates="coordinates" />
       </div>
       <div v-if="publications.length" class="flex lg6 md6 sm12 xs12">
         <Publications :publications="publications" />
@@ -122,8 +124,8 @@ function parseDetails(organism: Record<string, any>) {
   return details
 }
 
-async function getCoordinates(taxid:string) {
-  const {data} = await GeoLocationService.getLocationsByOrganims(taxid)
+async function getCoordinates(taxid: string) {
+  const { data } = await GeoLocationService.getLocationsByOrganims(taxid)
   coordinates.value = [...data]
 }
 

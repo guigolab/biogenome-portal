@@ -78,7 +78,7 @@
       {{ rowData.metadata.habitat }}
     </template>
     <template #cell(collection_date)="{ rowData }">
-      {{ rowData.metadata.collection_date }}
+      {{ rowData.collection_date || rowData.metadata.collection_date || rowData.metadata['collection date']}}
     </template>
     <template #cell(gal)="{ rowData }">
       {{ rowData.metadata.GAL }}
