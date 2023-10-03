@@ -1,9 +1,8 @@
-
 import requests
 import os
 import login_to_api
 import sys
-
+import json
 PROXY_HOST=os.getenv('PROXY_HOST')
 
 API_URL = f"http://{PROXY_HOST}/api"

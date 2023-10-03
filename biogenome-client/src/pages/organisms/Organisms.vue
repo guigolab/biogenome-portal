@@ -95,6 +95,7 @@ onMounted(async () => {
 
 function handleSubmit(payload: OrganismSearchForm) {
   organismStore.searchForm = { ...payload }
+  if(payload.country && payload.country.value) organismStore.searchForm.country = payload.country.value
   organismStore.resetPagination()
   offset.value = 1
   getOrganisms({ ...organismStore.searchForm, ...organismStore.pagination })

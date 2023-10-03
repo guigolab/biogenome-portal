@@ -4,7 +4,7 @@ services:
 
   bioG_mongo:
     image: mongo:5.0.3
-    container_name: "${DB_HOST}"
+    container_name: "${DB_DEV_HOST}"
     env_file:
       - .env
     volumes:
@@ -22,15 +22,12 @@ services:
     volumes:
       - ./server:/server
       - ${ANNOTATIONS_PATH}:/server/annotations_data
-      - ./db:/server/db
     env_file:
       - .env
 
   biogenome_cron:
     build: ./cronjobs
     container_name: biogenome_cron
-    volumes:
-      - ./db:/cronjobs/db
     env_file:
       - .env
 
