@@ -11,10 +11,8 @@
             <p class="va-text-secondary">{{ data.scientific_name }}</p>
         </div>
         <div class="flex">
-            <va-button-actions vertical align="between">
-                <va-button preset="plain" size="small" v-if="data.assemblies.length" icon="fa-dna" color="background-tertiary" />
-                <va-button preset="plain" size="small" v-if="data.experiments.length" icon="fa-file-lines" color="background-tertiary" />
-            </va-button-actions>
+            <va-button preset="plain" size="small" v-if="data.assemblies && data.assemblies.length" icon="fa-dna" color="background-tertiary" />
+            <va-button class="ml-2" preset="plain" size="small" v-if="data.experiments && data.experiments.length" icon="fa-file-lines" color="background-tertiary" />
         </div>
     </va-card>
 </template>

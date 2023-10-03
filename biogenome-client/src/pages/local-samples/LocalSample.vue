@@ -17,7 +17,7 @@
     <KeyValueCard v-if="localSampleSelectedMetadata.length && metadata" :metadata="metadata"
       :selected-metadata="localSampleSelectedMetadata" />
     <div class="row row-equal">
-      <div v-if="coordinates.length" class="flex lg6 md6 sm12 xs12">
+      <div v-if="coordinates.length" class="flex lg6 md6 sm12 xs12 chart">
         <LeafletMap :coordinates="coordinates" />
       </div>
       <div v-if="metadata && Object.keys(metadata).length" class="flex lg12 md12 sm12 xs12">
