@@ -132,15 +132,15 @@ def update_sample_locations():
         SampleCoordinates(taxid=biosample.taxid,
                           sample_accession=biosample.accession,
                           scientific_name=biosample.scientific_name, 
-                          coordinates=biosample.location.coordinates).save()
+                          coordinates=coordinates).save()
     for local_sample in local_samples:
         if local_sample.local_id in existing_coordinates:
             continue
-        coordinates = biosample.location['coordinates']
+        coordinates = local_sample.location['coordinates']
         SampleCoordinates(taxid=local_sample.taxid,
                 sample_accession=local_sample.accession,
                 scientific_name=local_sample.scientific_name, 
-                coordinates=local_sample.location.coordinates,
+                coordinates=coordinates,
                 is_local_sample=True).save()
     #get all organisms with images and add image to biosamples
     organisms = Organism.objects(image__ne=None)
