@@ -128,6 +128,7 @@ def update_sample_locations():
     for biosample in biosamples:
         if biosample.accession in existing_coordinates:
             continue
+        coordinates = biosample.location['coordinates']
         SampleCoordinates(taxid=biosample.taxid,
                           sample_accession=biosample.accession,
                           scientific_name=biosample.scientific_name, 
@@ -135,6 +136,7 @@ def update_sample_locations():
     for local_sample in local_samples:
         if local_sample.local_id in existing_coordinates:
             continue
+        coordinates = biosample.location['coordinates']
         SampleCoordinates(taxid=local_sample.taxid,
                 sample_accession=local_sample.accession,
                 scientific_name=local_sample.scientific_name, 

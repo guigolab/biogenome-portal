@@ -78,7 +78,7 @@ async function getTaxons(query: Record<string, any>) {
 
 
 async function setRanks() {
-  if (filters.value.findIndex(f => f.key === 'ranks') === -1) return
+  if (filters.value.findIndex(f => f.key === 'ranks') !== -1) return
   try {
     isLoading.value = true
     const { data } = await StatisticsService.getModelFieldStats('taxons', { field: 'rank' })

@@ -130,7 +130,7 @@ function getOrganismRelatedData(organism: Record<string, any>) {
 }
 
 async function setCountries() {
-  if (filters.value.findIndex(f => f.key === 'country') === -1) return
+  if (filters.value.findIndex(f => f.key === 'country') !== -1) return
   try {
     isLoading.value = true
     const { data } = await StatisticsService.getModelFieldStats('organisms', { field: 'countries' })
