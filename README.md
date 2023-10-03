@@ -101,8 +101,8 @@ The env file is necessary to run the app. Below a list of all the environment va
 - THREADS=2
 - JWT_SECRET_KEY=secret_restKey --> key used to encrypt the JWT token of the admin area
 
-- PROJECT_ACCESSION=PRJNA533106 --> the INSDC bioproject accession of the root bioproject that will be used to start tracking the submission progresses of it through cronjobs.
-- PROJECTS= --> the list of project which name is present in the project name field of the published biosample metadata, it must be composed by {PROJECT_NAME}_{BIOPROJECT_ACCESSION}: ex: ERGA_PRJEB43510
+- PROJECT_ACCESSION=PRJNA533106 --> the INSDC bioproject accession of the root bioproject that will be used to start tracking the submission progress of it via cronjobs.
+- PROJECTS= --> the list of project which name is present in the project name field of the published biosample metadata (EBI BioSamples), it must be composed by comma separated list of project names: ex: ERGA,VGP,DTOL,CBP
 
 - ROOT_NODE=2759 --> the NCBI taxonomic identifier of the root node
 
