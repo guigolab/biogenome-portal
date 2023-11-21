@@ -1,7 +1,7 @@
 openapi: 3.0.0
 
 info:
-  version: "2.0.0"
+  version: "3.1.2"
   title: "BioGenome Portal API"
   contact:
     email: "emilio.righi@crg.eu"
@@ -21,21 +21,15 @@ tags:
 - name: "local_samples"
 - name: "annotations"
 - name: "goat_report"
-- name: "countries"
+- name: "taxonomy"
+- name: "stats"
 
 paths:
-  
   /goat_report:
     get:
       tags: 
         - "goat_report"
       summary: "retrieve GoaT report of organisms' sequencing status"
-      parameters:
-        - in: "query"
-          name: "download"
-          schema:
-            type: "boolean"
-            default: false
       responses:
         "200":
           description: "successful operations"
@@ -48,41 +42,170 @@ paths:
                 type: string
                 format: binary
 
-  /spexperimentsheet_upload:
-    post:
-      tags:
-        - "local_samples"
-      summary: "Endpoint for local sample creation from spexperimentsheet file"
-      requestBody:
-        content:
-          multipart/form-data:
-            schema:
-              type: "object"
-              properties:
-                excel:
-                  type: "string"
-                  format: "binary"
-                  nullable: true
-                id:
-                  type: "string"
-                  description: "Unique identifier of the local sample"
-                taxid:
-                  type: "string"
-                option:
-                  type: "string"
-                  enum:
-                    - "SKIP"
-                    - "UPDATE"
-                  description: "Skip or update existing sample"
-                header:
-                  type: "number"
-                  description: "row number 1-based of the header"
+  /stats:
+    get:
+      tags: 
+        - "stats"
+      summary: "Database stats"
       responses:
         "200":
-          description: "samples correctly uploaded"
-        "400":
-          description: "Invalid fields"
-          
+          description: "successful operations"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  assemblies:
+                    type: "number"
+                  annotations:
+                    type: number
+                  biosamples:
+                    type: number
+                  local_samples:
+                    type: number
+                  experiments:
+                    type: number
+                  organisms:
+                    type: number
+                  taxons:
+                    type: number
+  /stats/{model}:
+    get:
+      tags: 
+        - "stats"
+      summary: "get object properties statistics"
+      parameters:
+        - in: 'path'
+          name: 'model'
+          required: true
+          schema:
+            type: "string"
+            enum:
+            - "assemblies"
+            - "annotations"
+            - "biosamples"
+            - "local_samples"
+            - "experiments"
+            - "organisms"
+            - "taxons"
+        - in: 'query'
+          name: 'field'
+          required: true
+          schema:
+            type: string
+        - in: 'query'
+          name: 'query'
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "successfull operations"
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /tree:
+    get:
+      tags:
+        - "taxonomy"
+      summary: "retrieve all the taxons contained in the database in a taxonomic tree"
+      responses:
+        "200":
+          description: "successful operations"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TreeNode"
+            
+  /tree/{taxid}:
+    get:
+      tags:
+        - "taxonomy"
+      summary: "generate a tree using the provided taxid as root"
+      parameters:
+        - in: 'path'
+          name: 'taxid'
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "successful operation"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TreeNode"
+        "404":
+          description: "Taxon not found"
+
+  /tree/{taxid}/relative:
+    get:
+      tags:
+        - "taxonomy"
+      summary: "Get the closest taxons, with a specific insdc submission status, to the taxid provided,"
+      parameters:
+        - in: 'path'
+          name: 'taxid'
+          required: true
+          schema:
+            type: "string"
+        - in: 'query'
+          name: 'insdc_status'
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/INSDCStatus'
+            default: "Assemblies Submitted"
+      responses:
+        "200":
+          description: "successful operation"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TreeNode"
+        "404":
+          description: "Taxon not found"
+  # /spreadsheet_upload:
+  #   post:
+  #     tags:
+  #       - "spreadsheet upload"
+  #     summary: "Endpoint for local sample creation from spexperimentsheet file"
+  #     requestBody:
+  #       content:
+  #         multipart/form-data:
+  #           schema:
+  #             type: "object"
+  #             properties:
+  #               excel:
+  #                 type: "string"
+  #                 format: "binary"
+  #                 nullable: true
+  #               id:
+  #                 type: "string"
+  #                 description: "Unique identifier of the local sample"
+  #               taxid:
+  #                 type: "string"
+  #               scientific_name:
+  #                 type: "string"
+  #               source:
+  #                 type: "string"
+  #               option:
+  #                 type: "string"
+  #                 default: "SKIP"
+  #                 enum:
+  #                   - "SKIP"
+  #                   - "UPDATE"
+  #                 description: "Skip or update existing sample"
+  #               header:
+  #                 type: "number"
+  #                 description: "row number 1-based of the header"
+  #     responses:
+  #       "200":
+  #         description: "samples correctly uploaded"
+  #       "400":
+  #         description: "Invalid fields"
+
   /organisms:
     get:
       tags:
@@ -101,6 +224,7 @@ paths:
           name: 'filter_option'
           schema:
             type: "string"
+            default: "scientific_name"
             enum:
             - "taxid"
             - "common_name"
@@ -183,7 +307,7 @@ paths:
         "404":
           description: "Organism not found"
 
-  /organisms/{taxid}/{model}:
+  /organisms/{taxid}/lineage:
     get:
       tags:
         - "organisms"
@@ -193,32 +317,26 @@ paths:
           required: true
           schema:
             type: "string"
-        - in: 'path'
-          name: 'model'
-          required: true
-          schema:
-            type: 'string'
-            enum:
-              - 'taxons'
-              - 'biosamples'
-              - 'local_samples'
-              - 'assemblies'
-              - 'experiments'
-              - 'annotations'
       responses:
         "200":
           description: "successful operation"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Organism"
+                $ref: "#/components/schemas/TreeNode"
         "404":
           description: "Organism not found"
-  
-  /countries:
+
+  /organisms/{taxid}/biosamples:
     get:
       tags:
-        - "countries"
+        - "organisms"
+      parameters:
+        - in: 'path'
+          name: 'taxid'
+          required: true
+          schema:
+            type: "string"
       responses:
         "200":
           description: "successful operation"
@@ -227,15 +345,120 @@ paths:
               schema:
                 type: "array"
                 items:
-                  type: "object"
-                  properties:
-                    name:
-                      type: "string"
-                    id:
-                      type: "string"
-                    organism_count:
-                      type: "number"
-                    
+                  $ref: "#/components/schemas/BioSample"
+        "404":
+          description: "Organism not found"
+
+  /organisms/{taxid}/local_samples:
+    get:
+      tags:
+        - "organisms"
+      parameters:
+        - in: 'path'
+          name: 'taxid'
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "successful operation"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/LocalSample"
+        "404":
+          description: "Organism not found"
+
+  /organisms/{taxid}/assemblies:
+    get:
+      tags:
+        - "organisms"
+      parameters:
+        - in: 'path'
+          name: 'taxid'
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "successful operation"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/Assembly"
+        "404":
+          description: "Organism not found"
+
+  /organisms/{taxid}/experiments:
+    get:
+      tags:
+        - "organisms"
+      parameters:
+        - in: 'path'
+          name: 'taxid'
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "successful operation"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/Experiment"
+        "404":
+          description: "Organism not found"
+
+  /organisms/{taxid}/annotations:
+    get:
+      tags:
+        - "organisms"
+      parameters:
+        - in: 'path'
+          name: 'taxid'
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "successful operation"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/Annotation"
+        "404":
+          description: "Organism not found"
+
+  /organisms/{taxid}/coordinates:
+    get:
+      tags:
+        - "organisms"
+      parameters:
+        - in: 'path'
+          name: 'taxid'
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "successful operation"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/SampleCoordinates"
+        "404":
+          description: "Organism not found"
+                                 
   /assemblies:
     get:
       tags:
@@ -332,6 +555,28 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Assembly"
+        "404":
+          description: "Assembly not found"
+
+  /assemblies/{accession}/annotations:
+    get:
+      tags:
+        - "assemblies"
+      parameters:
+        - in: 'path'
+          name: 'accession'
+          required: true
+          schema:
+            type: 'string'
+      responses:
+        "200":
+          description: "successful operation"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/Annotation"
         "404":
           description: "Assembly not found"
 
@@ -514,8 +759,93 @@ paths:
                 $ref: "#/components/schemas/BioSample"
         "404":
           description: "Read not found"
-          
 
+  /biosamples/{accession}/sub_samples:
+    get:
+      tags:
+        - "biosamples"
+      parameters:
+        - in: 'path'
+          name: 'accession'
+          schema:
+            type: 'string'
+          required: true
+      responses:
+        "200":
+          description: "successful operation"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/BioSample"
+        "404":
+          description: "Read not found"
+
+  /biosamples/{accession}/experiments:
+    get:
+      tags:
+        - "biosamples"
+      parameters:
+        - in: 'path'
+          name: 'accession'
+          schema:
+            type: 'string'
+          required: true
+      responses:
+        "200":
+          description: "successful operation"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/Experiment"
+        "404":
+          description: "Read not found"
+
+  /biosamples/{accession}/assemblies:
+    get:
+      tags:
+        - "biosamples"
+      parameters:
+        - in: 'path'
+          name: 'accession'
+          schema:
+            type: 'string'
+          required: true
+      responses:
+        "200":
+          description: "successful operation"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/Assembly"
+        "404":
+          description: "Read not found"
+
+  /biosamples/{accession}/coordinates:
+    get:
+      tags:
+        - "biosamples"
+      parameters:
+        - in: 'path'
+          name: 'accession'
+          schema:
+            type: 'string'
+          required: true
+      responses:
+        "200":
+          description: "successful operation"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SampleCoordinates"
+        "404":
+          description: "Read not found"
+             
   /local_samples:
     get:
       tags:
@@ -600,8 +930,27 @@ paths:
                 $ref: "#/components/schemas/LocalSample"
         "404":
           description: "local sample not found"
-          
-        
+
+  /local_samples/{id}/coordinates:
+    get:
+      tags:
+        - "local_samples"
+      parameters:
+        - in: 'path'
+          name: 'id'
+          required: true
+          schema:
+            type: 'string'
+      responses:
+        "200":
+          description: "successful operation"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SampleCoordinates"
+        "404":
+          description: "local sample not found"
+                 
   /annotations:
     get:
       tags:
@@ -639,13 +988,13 @@ paths:
         "405":
           description: "Invalid input"
 
-  /annotations/{id}:
+  /annotations/{name}:
     get:
       tags:
         - "annotations"
       parameters:
         - in: 'path'
-          name: 'id'
+          name: 'name'
           required: true
           schema:
             type: 'string'
@@ -716,7 +1065,6 @@ paths:
           required: true
           schema:  
             type: 'string'
-
       responses:
         "200":
           description: "successful operation"
@@ -726,7 +1074,7 @@ paths:
                 $ref: "#/components/schemas/TaxonNode"
         "404":
           description: "Taxon not found"
-          
+
   /taxons/{taxid}/coordinates:
     get:
       tags:
@@ -737,14 +1085,37 @@ paths:
           required: true
           schema:  
             type: 'string'
-
       responses:
         "200":
           description: "successful operation"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/TaxonNode"
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/SampleCoordinates"
+        "404":
+          description: "Taxon not found"
+  
+  /taxons/{taxid}/children:
+    get:
+      tags:
+        - "taxons"
+      parameters:
+        - in: 'path'
+          name: 'taxid'
+          required: true
+          schema:  
+            type: 'string'
+      responses:
+        "200":
+          description: "successful operation"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/TaxonNode"
         "404":
           description: "Taxon not found"
         
@@ -958,11 +1329,9 @@ components:
     INSDCStatus:
       type: "string"
       enum:
-      - "Sample Acquired"
       - "Biosample Submitted"
       - "experiments Submitted"
       - "Assemblies Submitted"
-      - "Annotations Created"
     
     TargetListStatus:
       type: "string"
@@ -970,7 +1339,22 @@ components:
         - "long_list"
         - "family_representative"
         - "other_priority"
-    
+    TreeNode:
+      type: "object"
+      properties:
+        taxid: 
+          type: "string"
+        name:
+          type: "string"
+        rank:
+          type: "string"
+        leaves:
+          type: "number"
+        children:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/TreeNode"
+
     Publication:
       type: "object"
       properties:
@@ -1009,7 +1393,22 @@ components:
           type: "number"
         taxid:
           type: "string"
-          
+    
+    SampleCoordinates:
+      type: "object"
+      properties:
+        taxid:
+          type: "string"
+        scientific_name:
+          type: "string"
+        sample_accession:
+          type: "string"
+        is_local_sample:
+          type: "boolean"
+        image:
+          type: "string"
+        coordinates:
+          $ref: "#/components/schemas/Geometry"
   
     Organism:
       type: "object"
