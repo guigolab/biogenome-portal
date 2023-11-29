@@ -16,11 +16,23 @@
     <DetailsHeader :details="details" />
     <KeyValueCard v-if="assemblySelectedMetadata.length && metadata" :metadata="metadata"
       :selected-metadata="assemblySelectedMetadata" />
+      <!-- <va-tabs v-model="value">
+        <template #tabs>
+            <va-tab
+              v-for="tab in ['One', 'Two', 'Three']"
+              :key="tab"
+            >
+              {{ tab }}
+            </va-tab>
+        </template>
+      </va-tabs> -->
       <!-- TODO add ideogram -->
     <!-- <Ideogram v-if="assembly && assembly.taxid && hasChromosomes" :taxid="assembly.taxid" :accession="accession" /> -->
     <div class="row row-equal">
       <div v-if="hasChromosomes" class="flex lg12 md12 sm12 xs12">
-        <Jbrowse2 :assembly="assembly" :annotations="annotations" />
+        <KeepAlive>
+          <Jbrowse2 :assembly="assembly" :annotations="annotations" />
+        </KeepAlive>
       </div>
       <div v-if="metadata && Object.keys(metadata).length" class="flex lg12 md12 sm12 xs12">
         <MetadataTreeCard :metadata="metadata" />
@@ -89,6 +101,7 @@ function parseDetails(assembly: Assembly) {
     ncbiPath: `https://www.ncbi.nlm.nih.gov/assembly/${accession}`,
     ebiPath: `https://www.ebi.ac.uk/ena/browser/view/${accession}`
   }
+  if(assembly.blobtoolkit_id)details.blobtoolkit = assembly.blobtoolkit_id
   return details
 }
 

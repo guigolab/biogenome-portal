@@ -15,7 +15,8 @@ JOB_MAP = {
     'update_countries': cronjob_service.update_countries,
     'import_biosamples': cronjob_service.import_biosamples,
     'update_sample_locations': cronjob_service.update_sample_locations,
-    'get_samples_collection_date':cronjob_service.get_samples_collection_date
+    'get_samples_collection_date':cronjob_service.get_samples_collection_date,
+    'add_blob_link':cronjob_service.add_blob_link
 }
 ## persist cronjob status
 class CronJobApi(Resource):

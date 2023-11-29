@@ -142,6 +142,7 @@ export interface Assembly {
   scientific_name: string,
   taxid: string,
   sample_accession: string,
+  blobtoolkit_id?:string
   chromosomes: Record<string,any>[],
   metadata: Record<string, any>
 }
@@ -175,7 +176,8 @@ export interface Details {
     label: string
   },
   ncbiPath?: string,
-  ebiPath?: string
+  ebiPath?: string,
+  blobtoolkit?: string,
 }
 
 export interface OrganismLocations {

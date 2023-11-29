@@ -1,5 +1,5 @@
 from db.models import Organism, Assembly, BioSample, SampleCoordinates, LocalSample, Experiment
-from ..utils import ena_client
+from ..utils import ena_client,genomehubs_client
 from ..biosample import biosamples_service
 from ..organism import organisms_service
 from ..read import reads_service
@@ -215,3 +215,16 @@ def get_samples_collection_date():
         else:
             continue
         biosample.modify(collection_date=collection_date)
+
+
+# def remove_orphan_data():
+
+
+
+def add_blob_link():
+    assemblies = Assembly.objects()
+    for ass in assemblies:
+        response = genomehubs_client.get_blobtoolkit_id(ass.accession)
+        if len(response) and 'names' in response[0].keys() and len(response[0]['names']):
+            ass.blobtoolkit_id = response[0]['names'][0]
+            ass.save()

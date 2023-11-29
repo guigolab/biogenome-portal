@@ -10,6 +10,9 @@
                 <div v-if="details.button2" class="flex">
                     <va-button :to="details.button2.route" preset="primary" icon="hub">{{ details.button2.label }}</va-button>
                 </div>
+                <div v-if="details.blobtoolkit" class="flex">
+                    <va-button target="_blank" :href="`https://blobtoolkit.genomehubs.org/view/GCA_905340225.1/dataset/${details.blobtoolkit}/blob#Filters`" preset="primary" color="#9c528b" icon-right="arrow_forward">BlobToolKit</va-button>
+                </div>
             </div>
         </div>
         <div class="flex" v-if="details.ncbiPath || details.ebiPath">
@@ -40,6 +43,6 @@ import { Details } from '../../data/types';
 const props = defineProps<{details: Details}>()
 
 const hasButtons = computed(()=>{
-    return props.details.button1 || props.details.button2
+    return props.details.button1 || props.details.button2 || props.details.blobtoolkit
 })
 </script>
