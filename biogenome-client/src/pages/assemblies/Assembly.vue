@@ -16,26 +16,20 @@
     <DetailsHeader :details="details" />
     <KeyValueCard v-if="assemblySelectedMetadata.length && metadata" :metadata="metadata"
       :selected-metadata="assemblySelectedMetadata" />
-      <!-- <va-tabs v-model="value">
-        <template #tabs>
-            <va-tab
-              v-for="tab in ['One', 'Two', 'Three']"
-              :key="tab"
-            >
-              {{ tab }}
-            </va-tab>
-        </template>
-      </va-tabs> -->
-      <!-- TODO add ideogram -->
+    <!-- TODO add ideogram -->
     <!-- <Ideogram v-if="assembly && assembly.taxid && hasChromosomes" :taxid="assembly.taxid" :accession="accession" /> -->
     <div class="row row-equal">
       <div v-if="hasChromosomes" class="flex lg12 md12 sm12 xs12">
-        <KeepAlive>
-          <Jbrowse2 :assembly="assembly" :annotations="annotations" />
-        </KeepAlive>
+        <va-collapse v-model="showJBrowse" flat header="Genome Browser" color="#721e63">
+          <KeepAlive>
+            <Jbrowse2 :assembly="assembly" :annotations="annotations" />
+          </KeepAlive>
+        </va-collapse>
       </div>
       <div v-if="metadata && Object.keys(metadata).length" class="flex lg12 md12 sm12 xs12">
-        <MetadataTreeCard :metadata="metadata" />
+        <va-collapse v-model="showMetadata" header="Metadata" flat color="secondary">
+          <MetadataTreeCard :metadata="metadata" />
+        </va-collapse>
       </div>
     </div>
   </div>
@@ -50,8 +44,10 @@ import DetailsHeader from '../../components/ui/DetailsHeader.vue'
 import KeyValueCard from '../../components/ui/KeyValueCard.vue'
 import { assemblySelectedMetadata } from "../../../config.json";
 import MetadataTreeCard from '../../components/ui/MetadataTreeCard.vue'
-import Ideogram from '../../components/ui/Ideogram.vue'
+// import Ideogram from '../../components/ui/Ideogram.vue'
 
+const showJBrowse = ref(true)
+const showMetadata = ref(false)
 const { t } = useI18n()
 const metadata = ref<Record<string, any> | null>(null)
 const props = defineProps<{
@@ -101,7 +97,7 @@ function parseDetails(assembly: Assembly) {
     ncbiPath: `https://www.ncbi.nlm.nih.gov/assembly/${accession}`,
     ebiPath: `https://www.ebi.ac.uk/ena/browser/view/${accession}`
   }
-  if(assembly.blobtoolkit_id)details.blobtoolkit = assembly.blobtoolkit_id
+  if (assembly.blobtoolkit_id) details.blobtoolkit = assembly.blobtoolkit_id
   return details
 }
 
