@@ -112,7 +112,6 @@ function reset() {
 }
 async function getOrganisms(query: Record<string, any>) {
   try {
-    isLoading.value = true
     const { data } = await OrganismService.getOrganisms(query)
     organisms.value = data.data
     total.value = data.total

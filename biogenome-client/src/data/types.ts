@@ -48,6 +48,13 @@ export interface OrganismSearchForm extends SearchForm {
   country: string
 }
 
+export type StatusSearchForm = {
+  goat_status:string
+  target_list_status:string
+  filter:string
+  filter_option:string
+}
+
 export type BioSampleSearchForm = SearchForm
 
 export interface ReadSearchForm extends SearchForm {

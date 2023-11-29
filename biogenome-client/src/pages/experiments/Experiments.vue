@@ -45,7 +45,7 @@ const readStore = useReadStore()
 const { t } = useI18n()
 const filters = ref<Filter[]>(tableFilters)
 const charts = <InfoBlock[]>experimentInfoBlocks
-const isLoading = ref(false)
+const isLoading = ref(true)
 const errorMessage = ref<string | null>(null)
 
 const offset = ref(1 + readStore.pagination.offset)
@@ -77,7 +77,6 @@ async function reset() {
 
 async function getReads(query: Record<string, any>) {
   try {
-    isLoading.value = true
     const { data } = await ReadService.getReads(query)
     experiments.value = data.data
     total.value = data.total

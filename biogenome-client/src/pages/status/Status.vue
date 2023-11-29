@@ -34,7 +34,7 @@
 <script setup lang="ts">
 import DataTable from '../../components/ui/DataTable.vue'
 import { onMounted, ref } from 'vue'
-import { Filter, InfoBlock } from '../../data/types'
+import { Filter, InfoBlock, StatusSearchForm } from '../../data/types'
 import { useStatusStore } from '../../stores/status-store'
 import OrganismService from '../../services/clients/OrganismService'
 import GoaTService from '../../services/clients/GoaTService'
@@ -60,11 +60,12 @@ const organisms = ref<Record<string, any>[]>([])
 
 
 
-onMounted(async () => {
-  await getOrganisms({ ...statusStore.searchForm, ...statusStore.pagination })
+onMounted(() => {
+  getOrganisms({ ...statusStore.searchForm, ...statusStore.pagination })
 })
 
-function handleSubmit() {
+function handleSubmit(payload:StatusSearchForm) {
+  statusStore.searchForm = { ...payload }
   offset.value = 1
   statusStore.resetPagination()
   getOrganisms({ ...statusStore.searchForm, ...statusStore.pagination })
@@ -84,7 +85,6 @@ async function handlePagination(value: number) {
 
 async function getOrganisms(query: Record<string, any>) {
   try {
-    isLoading.value = true
     const { data } = await OrganismService.getOrganisms(query)
     organisms.value = data.data
     total.value = data.total

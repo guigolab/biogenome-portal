@@ -44,7 +44,7 @@ import { useLocalSampleStore } from '../../stores/local-sample-store'
 const { t } = useI18n()
 
 const charts = <InfoBlock[]>localSampleInfoBlock
-const isLoading = ref(false)
+const isLoading = ref(true)
 const errorMessage = ref<string | null>(null)
 const localSampleStore = useLocalSampleStore()
 
@@ -78,7 +78,6 @@ async function reset() {
 
 async function getLocalSamples(query: Record<string, any>) {
   try {
-    isLoading.value = true
     const { data } = await LocalSampleService.getLocalSamples(query)
     localSamples.value = data.data
     total.value = data.total

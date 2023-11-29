@@ -45,7 +45,7 @@ const { t } = useI18n()
 const charts = <InfoBlock[]>assemblyInfoBlock
 
 const assemblyStore = useAssemblyStore()
-const isLoading = ref(false)
+const isLoading = ref(true)
 const errorMessage = ref<string | null>(null)
 
 const filters = ref<Filter[]>(tableFilters)
@@ -76,14 +76,13 @@ function reset() {
 
 async function getAssemblies(query: Record<string, any>) {
   try {
-    isLoading.value = true
     const { data } = await AssemblyService.getAssemblies(query)
     assemblies.value = data.data
     total.value = data.total
   } catch (e) {
     errorMessage.value = 'Something happened'
   } finally {
-    isLoading.value = false
+    isLoading.value = false 
   }
 
 }

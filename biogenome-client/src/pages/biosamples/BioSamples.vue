@@ -49,7 +49,7 @@ const { t } = useI18n()
 const biosamples = ref([])
 const total = ref(0)
 const offset = ref(1 + biosampleStore.pagination.offset)
-const isLoading = ref(false)
+const isLoading = ref(true)
 const errorMessage = ref<string | null>(null)
 onMounted(() => {
   getBioSamples({ ...biosampleStore.searchForm, ...biosampleStore.pagination })
@@ -76,7 +76,6 @@ function reset() {
 
 async function getBioSamples(query: Record<string, any>) {
   try {
-    isLoading.value = true
     const { data } = await BioSampleService.getBioSamples(query)
     biosamples.value = data.data
     total.value = data.total

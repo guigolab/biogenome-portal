@@ -44,7 +44,7 @@ const annotationStore = useAnnotationStore()
 const annotations = ref([])
 const total = ref(0)
 const offset = ref(1 + annotationStore.pagination.offset)
-const isLoading = ref(false)
+const isLoading = ref(true)
 const errorMessage = ref<string | null>(null)
 const filters = ref<Filter[]>(tableFilters)
 const charts = <InfoBlock[]>annotationInfoBlock
@@ -72,7 +72,6 @@ async function reset() {
 
 async function getAnnotations(query: Record<string, any>) {
   try {
-    isLoading.value = true
     const { data } = await AnnotationService.getAnnotations(query)
     annotations.value = data.data
     total.value = data.total
