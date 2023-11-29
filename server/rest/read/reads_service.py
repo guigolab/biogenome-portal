@@ -13,14 +13,12 @@ def get_reads(offset=0,limit=20,
     query = dict()
     if center:
         query['metadata__center_name'] = center
+    filter_query = None
     if filter:
         filter_query = get_filter(filter,filter_option)
-    else:
-        filter_query = None
+    date_query = None        
     if start_date:
         date_query = (Q(metadata__first_created__gte=start_date) & Q(metadata__first_created__lte=end_date))
-    else:
-        date_query = None
     if filter_query and date_query:
         reads = Experiment.objects(filter_query & date_query, **query).exclude('id','created')
     elif filter_query:
@@ -43,7 +41,7 @@ def get_filter(filter, option):
     elif option == 'experiment_title':
         return (Q(metadata__experiment_title__icontains=filter))
     else:
-        return (Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter))
+        return (Q(metadata__scientific_name__iexact=filter) | Q(metadata__scientific_name__icontains=filter))
 
 def create_read_from_experiment_accession(accession):
     response = ena_client.get_reads(accession)

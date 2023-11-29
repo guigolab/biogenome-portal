@@ -21,18 +21,16 @@ def get_assemblies(filter=None, filter_option='assembly_name',
                     sort_order=None, sort_column=None):  
     query=dict()
     ## filter match for accession, assembly name or species name
+    filter_query = None   
+    date_query = None
     if filter:
-        filter_query = get_filter(filter, filter_option)
-    else:
-        filter_query = None
+        filter_query = get_filter(filter, filter_option)        
     if assembly_level and assembly_level in ASSEMBLY_LEVELS:
         query['metadata__assembly_level'] = assembly_level
     if submitter:
         query['metadata__submitter'] = submitter
     if start_date:
         date_query = (Q(metadata__submission_date__gte=start_date) & Q(metadata__submission_date__lte=end_date))
-    else:
-        date_query = None
     if filter_query and date_query:
         visitor_query = filter_query & date_query
         assemblies = Assembly.objects(visitor_query, **query).exclude('id','created')
