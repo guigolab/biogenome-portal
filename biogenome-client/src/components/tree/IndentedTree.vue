@@ -8,11 +8,12 @@ import { onMounted, ref } from 'vue'
 import { useTreeData } from './setTreeData'
 import { createIndentedTree } from './scripts/createIndentedTree'
 import { useRouter } from 'vue-router'
+import { TaxonNode } from '../../data/types'
 const router = useRouter()
 const tree = ref(null)
 
 const props = defineProps<{
-  data: Object
+  data: TaxonNode
 }>()
 
 const { root } = useTreeData(props.data)
