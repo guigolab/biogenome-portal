@@ -9,6 +9,7 @@
       <va-chip
         outline
         size="small"
+        :color="rowData.blobtoolkit_id? '#9c528b':undefined"
         :to="{ name: 'assembly', params: { accession: rowData.accession, savePosition: true } }"
         >{{ rowData.assembly_name }}</va-chip
       >

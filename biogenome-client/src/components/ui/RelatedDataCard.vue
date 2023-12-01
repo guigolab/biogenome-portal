@@ -6,7 +6,7 @@
     <va-divider style="margin: 0;"/>
     <va-data-table sticky-header height="300px" :items="items" :columns="relatedData.columns">
       <template #cell(accession)="{ rowData }">
-        <va-chip size="small" outline :to="{ name: relatedData.route, params: { accession: rowData.accession } }">{{
+        <va-chip size="small" :color="rowData.blobtoolkit_id? '#9c528b':undefined" outline :to="{ name: relatedData.route, params: { accession: rowData.accession } }">{{
           rowData.accession
         }}</va-chip>
       </template>
