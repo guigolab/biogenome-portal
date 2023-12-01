@@ -1,10 +1,10 @@
 <template>
   <va-sidebar :width="width" :minimized="minimized" :minimized-width="minimizedWidth" :animated="animated">
-    <div class="row justify-center align-center" v-if="navBar.logoName">
-      <div class="flex logo">
-        <a :href="navBar.url" target="_blank"><va-icon color="success" :size="minimized? '2rem' :'4rem'" name=app-logo></va-icon></a>
-      </div>
+    <div v-if="navBar.logoName" class="logo">
+      <a :href="navBar.url" target="_blank"><va-icon color="success" :size="minimized ? '2rem' : '4rem'"
+          name=app-logo></va-icon></a>
     </div>
+    <va-divider />
     <menu-minimized v-if="minimized" :items="items" />
     <menu-accordion v-else :items="items" />
   </va-sidebar>
@@ -45,13 +45,16 @@ const items = computed(() => {
 
 <style lang="scss">
 .logo {
-  padding-bottom: 10px;
+  padding: 10px;
+  display: flex;
+  justify-content: center;
 }
+
 .va-sidebar {
   width: 100%;
 
   &__menu {
-    padding: 2rem 0;
+    padding: 0.5rem 0;
   }
 
   &-item {
