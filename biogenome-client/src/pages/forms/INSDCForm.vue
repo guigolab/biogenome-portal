@@ -2,23 +2,16 @@
   <va-inner-loading :loading="isLoading">
     <va-card class="d-flex">
       <va-card-content>
-        <div class="row">
+        <div class="row align-center">
           <div class="flex">
-            <va-radio
-              v-for="(m, index) in crudList"
-              :key="index"
-              v-model="model"
-              :disabled="metadata && Object.keys(metadata).length"
-              :label="m.label"
-              :option="m.value"
-            />
+            <va-radio v-for="(m, index) in crudList" :key="index" v-model="model"
+              :disabled="metadata && Object.keys(metadata).length" :label="m.label" :option="m.value" />
           </div>
           <div class="flex">
             <va-input v-model="input" label="accession number">
               <template #append>
-                <va-button :disabled="input.length <= 3" type="submit" icon="search" @click="getObject()"
-                  >Search</va-button
-                >
+                <va-button :disabled="input.length <= 3" type="submit" icon="search"
+                  @click="getObject()">Search</va-button>
               </template>
             </va-input>
           </div>
@@ -26,18 +19,16 @@
       </va-card-content>
     </va-card>
     <Transition name="slide">
-      <va-card v-if="metadata">
+      <div v-if="metadata">
         <va-card-content>
           <h5 class="va-h5">{{ input }}</h5>
-        </va-card-content>
-        <va-card-content>
-          <Metadata :metadata="metadata" />
+          <MetadataTreeCard :metadata="metadata" />
         </va-card-content>
         <va-card-actions align="between">
           <va-button type="submit" @click="submit()">Submit</va-button>
           <va-button color="danger" type="reset" @click="reset()">Reset</va-button>
         </va-card-actions>
-      </va-card>
+      </div>
     </Transition>
   </va-inner-loading>
 </template>
@@ -49,7 +40,7 @@ import ReadService from '../../services/clients/ReadService'
 import ENAClientService from '../../services/clients/ENAClientService'
 import NCBIClientService from '../../services/clients/NCBIClientService'
 import { useToast } from 'vuestic-ui'
-import Metadata from '../../components/ui/Metadata.vue'
+import MetadataTreeCard from '../../components/ui/MetadataTreeCard.vue'
 import AuthService from '../../services/clients/AuthService'
 const { init } = useToast()
 
@@ -102,7 +93,8 @@ async function getObject() {
   isLoading.value = false
 }
 
-async function getFromINSDC(){
+async function getFromINSDC() {
+  if(!crudObj.value)return
   try {
     const { data } = await crudObj.value.checkINSDC(input.value)
     switch (crudObj.value.value) {
@@ -138,7 +130,8 @@ async function getFromINSDC(){
     init({ message: `${crudObj.value.value} not found in INSDC`, color: 'danger' })
   }
 }
-async function getFromDB(){
+async function getFromDB() {
+  if(!crudObj.value)return
   try {
     const { status } = await crudObj.value.checkDB(input.value)
     if (status === 200) {
@@ -152,17 +145,18 @@ async function getFromDB(){
     if (!error.response || !error.response.status || error.response.status !== 404) {
       errorMessage.value = `Something happened`
       init({ message: errorMessage.value, color: 'danger' })
-    } 
+    }
   }
 }
 async function submit() {
+  if(!crudObj.value)return
   isLoading.value = true
-  try{
+  try {
     await crudObj.value.postDB(input.value)
     isLoading.value = false
     const message = `${crudObj.value.value} with id ${input.value} saved!`
     init({ message: message, color: 'success' })
-  } catch (error){
+  } catch (error) {
     init({ message: error.response, color: 'danger' })
   }
   isLoading.value = false
