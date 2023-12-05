@@ -226,6 +226,10 @@
       "sortColumn": "Ordena columna",
       "sortOrder": "Ordena ordre",
       "ranks":"Rangs"
+    },
+    "tabs":{
+      "table":"Taula",
+      "search":"Cerca"
     }
   },
   "taxonomyTabs":{

@@ -225,6 +225,10 @@
       "sortColumn":"Sort Column",
       "sortOrder":"Sort Order",
       "ranks":"Ranks"
+    },
+    "tabs":{
+      "table":"Table",
+      "search":"Search"
     }
   },
   "taxonomyTabs":{

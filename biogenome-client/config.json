@@ -1,18 +1,20 @@
 {
   "navBar": {
-    "logoName": "",
-    "bgColor": "",
-    "url": ""
+    "logoName": "CBPLogo.png",
+    "url": "https://biogenoma.cat"
   },
   "appInfo": {
     "title": "BioGenome Portal Community Edition",
     "gb": {
+      "title":"BioGenome Portal Community Edition",
       "description": "This portal tracks the progress of the Earth Biogenome Project (EBP) and its affiliated projects, giving the biodiversity community the opportunity to share photos, vernacular names, and gene annotations of sequenced species"
     },
     "es-ct": {
+      "title":"BioGenome Portal Community Edition",
       "description": "Aquest portal segueix el progrés del projecte del biogenoma de la Terra (EBP) i els seus projectes afiliats, donant a la comunitat de biodiversitat l'oportunitat de compartir fotos, noms vernacles i anotacions genètiques d'espècies seqüenciades"
     }
   },
+  "tracker":"cbp-tracking.js",
   "showCountries":true,
   "languages": [
     {

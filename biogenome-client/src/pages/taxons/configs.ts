@@ -2,13 +2,12 @@ import { Filter } from "../../data/types"
 
 export const tabs = [
     {
-        icon: 'table_chart'
+        icon: 'table_chart',
+        label: 'taxonList.tabs.table'
     },
     {
-        icon: 'search'
-    },
-    {
-        icon: 'fa-sitemap'
+        icon: 'search',
+        label: 'taxonList.tabs.search'
     }
 ]
 
