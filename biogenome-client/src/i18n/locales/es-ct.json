@@ -275,7 +275,8 @@
     "annotationForm": "Formulari d'anotació",
     "dashboard": "Panell de control",
     "forms": "Formularis",
-    "3Dmaps": "Mapes 3D"
+    "3Dmaps": "Mapes 3D",
+    "goatUpload":"Pujar GoaT report"
   },
   "user": {
     "logout": "Tanca la sessió"

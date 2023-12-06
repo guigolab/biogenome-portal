@@ -274,7 +274,9 @@
     "annotationForm": "Annotation Form",
     "dashboard": "Dashboard",
     "forms": "Forms",
-    "3Dmaps": "3D Maps"
+    "3Dmaps": "3D Maps",
+    "goatUpload":"Upload GoaT report"
+
   },
   "user": {
     "logout": "Logout"
