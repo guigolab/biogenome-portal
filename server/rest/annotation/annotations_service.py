@@ -1,6 +1,7 @@
 from mongoengine.queryset.visitor import Q
 from db.models import GenomeAnnotation, Organism, Assembly
 from datetime import datetime
+from errors import NotFound
 
 ANNOTATIONS_DATA_PATH = "/server/annotations_data"
 
@@ -39,10 +40,15 @@ def get_filter(filter, option):
     else:
         return (Q(name__iexact=filter) | Q(name__icontains=filter))
 
-def delete_annotation(annotation):
-    organism_to_update = Organism.objects(taxid=annotation.taxid)
-    organism_to_update.modify(pull__annotations=annotation.name)
-    organism_to_update.save()
+def delete_annotation(name):
+    ann_obj = GenomeAnnotation.objects(name=name).first()
+    if not ann_obj:
+        raise NotFound
+    deleted_name = ann_obj.name
+    ann_obj.delete()
+    organism_to_update = Organism.objects(taxid=ann_obj.taxid)
+    organism_to_update.modify(pull__annotations=ann_obj.name)
+    return deleted_name
 
 
 def create_annotation(request):

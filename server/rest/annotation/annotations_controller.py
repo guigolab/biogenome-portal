@@ -40,18 +40,13 @@ class AnnotationApi(Resource):
             raise NotFound
         ann_obj.save()
         data = request.json
-        print(data)
         ann_obj.update(**data)
         ann_obj.save()
         return Response(ann_obj.to_json(), mimetype="application/json", status=201)
 
     @jwt_required()
     def delete(self,name):
-        ann_obj = GenomeAnnotation.objects(name=name).first()
-        if not ann_obj:
-            raise NotFound
-        deleted_name = ann_obj.name
-        ann_obj.delete()
+        deleted_name = annotations_service.delete_annotation(name)
         return Response(json.dumps(f'{deleted_name} deleted!'), mimetype="application/json", status=201)
     
 

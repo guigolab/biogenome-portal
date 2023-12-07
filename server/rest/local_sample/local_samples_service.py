@@ -1,4 +1,4 @@
-from db.models import LocalSample,SampleCoordinates
+from db.models import LocalSample,SampleCoordinates,Organism
 from errors import NotFound
 from ..organism import organisms_service
 from datetime import datetime
@@ -42,6 +42,8 @@ def delete_local_sample(id):
     if not sample_to_delete:
         raise NotFound
     SampleCoordinates.objects(sample_accession=id).delete()
+    organism = Organism.objects(taxid=sample_to_delete.taxid)
+    organism.modify(pull__local_samples=sample_to_delete.local_id)
     sample_to_delete.delete()
     return id
 
@@ -69,11 +71,10 @@ def update_local_sample(local_id, data):
     local_sample_obj = LocalSample.objects(local_id = local_id).first()
     if not local_sample_obj:
         raise NotFound
-    organism = organisms_service.get_or_create_organism(local_sample_obj.taxid)
-    updated_sample = parse_local_sample_metadata(local_sample_obj, organism, data)
+    updated_sample = parse_local_sample_metadata(local_sample_obj, data)
     return dict(message=f"{updated_sample.local_id} correctly updated"), 201
 
-def parse_local_sample_metadata(sample, organism, metadata):
+def parse_local_sample_metadata(sample, metadata):
     sample.metadata = dict(**metadata)
     sample.save()
     return sample
