@@ -87,7 +87,7 @@ const commonNames = ref<Record<string, string>[]>([])
 const publications = ref<Record<string, string>[]>([])
 const images = ref<string[]>([])
 const coordinates = ref<SampleLocations[]>([])
-const cardClasses = 'flex lg12 md12 sm12 xs12'
+const cardClasses = 'flex lg6 md6 sm12 xs12'
 
 onMounted(async () => {
   try {

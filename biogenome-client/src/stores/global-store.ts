@@ -35,15 +35,11 @@ export const useGlobalStore = defineStore('global', {
     },
     async logout() {
       // try {
-      //     const response = await SubmissionService.logout()
-      //     localStorage.clear()
-      //     this.user.name = ''
-      //     this.user.password = ''
-      //     this.user.role = ''
-      //     this.isAuthenticated = ''
-      //     this.setLocalStorage()
-      //     this.message.text = response.data.msg
-      //     this.message.color = 'success'
+          await AuthService.logout()
+          this.userName= ''
+          this.userPassword= ''
+          this.userRole= ''
+          this.isAuthenticated = false
       // }
       // catch (error) {
       //     this.message.text = error.response.data.message

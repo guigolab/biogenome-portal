@@ -22,7 +22,9 @@
   import { useI18n } from 'vue-i18n'
   import { useColors } from 'vuestic-ui'
   import { useGlobalStore } from '../../../../stores/global-store'
+  import { useToast } from 'vuestic-ui'
 
+  const { init } = useToast()
   const globalStore = useGlobalStore()
   const { t } = useI18n()
   const { colors } = useColors()
@@ -52,7 +54,8 @@
     return
   }
   function logout() {
-    console.log('')
+    globalStore.logout()
+    init({ message: 'User logged out', color: 'warning' })
   }
 </script>
 
