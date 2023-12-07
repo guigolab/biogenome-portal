@@ -104,7 +104,7 @@
       "sortColumn":"Sort Column",
       "sortOrder":"Sort Order",
       "date": "Date",
-      "blobtoolkit": "Show assemblies with BlobToolKit"
+      "blobtoolkit": "BlobToolKit"
     },
     "charts":{
       "pieChart":{

@@ -105,7 +105,7 @@
       "sortColumn": "Columna d'ordenació",
       "sortOrder": "Ordre de classificació",
       "date": "Data",
-      "blobtoolkit": "Mostra les assemblatges amb BlobToolKit"
+      "blobtoolkit": "BlobToolKit"
 
     },
     "charts": {
