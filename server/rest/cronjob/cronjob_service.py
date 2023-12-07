@@ -220,8 +220,13 @@ def get_samples_collection_date():
 # def remove_orphan_links():
 #     organisms = Organism.objects()
 #     for organism in organisms:
-
-
+def remove_orphan_local_samples():
+    organisms = Organism.objects(local_samples__not__size=0)
+    for organism in organisms:
+        local_samples = LocalSample.objects(local_id__in=organism.local_samples).scalar('local_id')
+        for id in organism.local_samples:
+            if id not in local_samples:
+                organism.modify(pull__local_samples=id)
 
 
 def add_blob_link():
