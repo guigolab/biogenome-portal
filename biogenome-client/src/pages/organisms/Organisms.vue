@@ -6,8 +6,7 @@
   <InfoBlockVue v-if="charts.length" :charts="charts" />
   <div class="row row-equal">
     <div class="flex lg12 md12 sm12 xs12">
-      <FilterForm :filters="filters" @on-submit="handleSubmit" @on-reset="reset" />
-      <va-divider />
+      <FilterForm :searchForm="organismStore.searchForm" :filters="filters" @on-submit="handleSubmit" @on-reset="reset" />
       <va-card-content>
         <div class="row align-center justify-end">
           <div class="flex">{{ t('table.total') }} {{ total }}</div>
@@ -23,7 +22,7 @@
         {{ errorMessage }}
       </va-card-content>
       <va-card-content v-else>
-        <va-list spaced>
+        <va-list>
           <va-list-item v-for="(organism, index) in organisms" :key="index" class="list__item"
             :to="{ name: 'organism', params: { taxid: organism.taxid } }">
             <va-list-item-section avatar>
@@ -67,7 +66,7 @@ import { showCountries } from '../../../config.json'
 import { onMounted, ref } from 'vue'
 import InfoBlockVue from '../../components/InfoBlock.vue'
 import { tableFilters, relatedData } from './configs'
-import { Filter, InfoBlock, OrganismSearchForm } from '../../data/types'
+import { Filter, InfoBlock } from '../../data/types'
 import OrganismService from '../../services/clients/OrganismService'
 import am5geodata_worldLow from '@amcharts/amcharts5-geodata/worldLow'
 import { useOrganismStore } from '../../stores/organism-store'
@@ -93,9 +92,7 @@ onMounted(async () => {
   await getOrganisms({ ...organismStore.searchForm, ...organismStore.pagination })
 })
 
-function handleSubmit(payload: OrganismSearchForm) {
-  organismStore.searchForm = { ...payload }
-  if(payload.country && payload.country.value) organismStore.searchForm.country = payload.country.value
+function handleSubmit() {
   organismStore.resetPagination()
   offset.value = 1
   getOrganisms({ ...organismStore.searchForm, ...organismStore.pagination })
@@ -159,10 +156,6 @@ async function setCountries() {
 
 <style scoped lang="scss">
 @import 'flag-icons/css/flag-icons.css';
-
-.list__item:hover {
-  box-shadow: rgba(0, 0, 0, 0.12) 11px 17px 10px 0px;
-}
 
 .chart {
   height: 400px;

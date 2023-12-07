@@ -24,7 +24,7 @@ export const useBioSampleStore = defineStore('biosample', {
   },
 
   actions: {
-    resetForm() {
+    resetSeachForm() {
       this.searchForm = { ...initSearchForm }
     },
     resetPagination() {

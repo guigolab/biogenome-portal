@@ -1,6 +1,6 @@
 <template>
   <va-card :stripe="Boolean(errorMessage)" stripe-color="danger">
-    <FilterForm :filters="filters" @on-submit="handleSubmit" @on-reset="reset" />
+    <FilterForm :search-form="TaxonomyStore.searchForm" :filters="filters" @on-submit="handleSubmit" @on-reset="reset" />
     <va-card-content> {{ t('table.total') }} {{ total }} </va-card-content>
     <va-skeleton v-if="isLoading" height="400px" />
     <va-card-content v-else-if="errorMessage">
@@ -20,7 +20,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import DataTable from '../../../components/ui/DataTable.vue'
-import { Filter, SearchForm } from '../../../data/types'
+import { Filter } from '../../../data/types'
 import { useTaxonomyStore } from '../../../stores/taxonomy-store'
 import TaxonService from '../../../services/clients/TaxonService'
 import StatisticsService from '../../../services/clients/StatisticsService'
@@ -46,8 +46,7 @@ onMounted(async () => {
 
 })
 
-function handleSubmit(payload: SearchForm) {
-  TaxonomyStore.searchForm = { ...payload }
+function handleSubmit() {
   TaxonomyStore.resetPagination()
   offset.value = 1
   getTaxons({ ...TaxonomyStore.searchForm, ...TaxonomyStore.pagination })
@@ -58,7 +57,7 @@ function handlePagination(value: number) {
 }
 function reset() {
   offset.value = 1
-  TaxonomyStore.resetForm()
+  TaxonomyStore.resetSeachForm()
   TaxonomyStore.resetPagination()
   getTaxons({ ...TaxonomyStore.searchForm, ...TaxonomyStore.pagination })
 }

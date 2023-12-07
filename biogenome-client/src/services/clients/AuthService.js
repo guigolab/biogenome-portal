@@ -47,6 +47,9 @@ class AuthService {
   importSpreadsheet(formData) {
     return auth.post('/spreadsheet_upload', formData)
   }
+  importGoatReport(formData){
+    return auth.post('/goat_report',formData)
+  }
   createAnnotation(formData) {
     return auth.post('/annotations', formData)
   }

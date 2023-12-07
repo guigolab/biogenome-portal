@@ -27,7 +27,7 @@ export const useLocalSampleStore = defineStore('local-sample', {
     }
   },
   actions: {
-    resetForm() {
+    resetSeachForm() {
       this.searchForm = { ...initSearchForm }
     },
     resetPagination() {

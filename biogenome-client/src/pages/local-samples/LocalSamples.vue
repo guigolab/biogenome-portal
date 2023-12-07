@@ -8,7 +8,7 @@
     <div class="row row-equal">
       <div class="flex lg12 md12 sm12 xs12">
         <va-card :stripe="Boolean(errorMessage)" stripe-color="danger">
-          <FilterForm :filters="filters" @on-submit="handleSubmit" @on-reset="reset" />
+          <FilterForm :search-form="localSampleStore.searchForm" :filters="filters" @on-submit="handleSubmit" @on-reset="reset" />
           <va-card-content> {{ t('table.total') }} {{ total }} </va-card-content>
           <va-skeleton v-if="isLoading" height="400px" />
           <va-card-content v-else-if="errorMessage">
@@ -71,7 +71,7 @@ async function handlePagination(value: number) {
 
 async function reset() {
   offset.value = 1
-  localSampleStore.resetForm()
+  localSampleStore.resetSeachForm()
   localSampleStore.resetPagination()
   getLocalSamples({ ...localSampleStore.pagination })
 }

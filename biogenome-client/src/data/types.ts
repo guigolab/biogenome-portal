@@ -25,7 +25,7 @@ interface Node {
 export type Filter = {
   label: string
   placeholder?: string
-  type: 'input' | 'select' | 'date'
+  type: 'input' | 'select' | 'date' | 'checkbox'
   options?: Array<string | Record<string,any>>
   key: string
 }
@@ -45,7 +45,7 @@ export interface OrganismSearchForm extends SearchForm {
   goat_status: string
   parent_taxid: string
   target_list_status: string
-  country: string
+  country?: string
 }
 
 export type StatusSearchForm = {
@@ -63,6 +63,7 @@ export interface ReadSearchForm extends SearchForm {
 export interface AssemblySearchForm extends SearchForm {
   assembly_level: string
   submitter: string
+  blobtoolkit: boolean
 }
 
 export type LocalSampleSearchForm = SearchForm

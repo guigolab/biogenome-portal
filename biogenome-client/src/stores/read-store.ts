@@ -25,7 +25,7 @@ export const useReadStore = defineStore('read', {
   },
 
   actions: {
-    resetForm() {
+    resetSeachForm() {
       this.searchForm = { ...initSearchForm }
     },
     resetPagination() {

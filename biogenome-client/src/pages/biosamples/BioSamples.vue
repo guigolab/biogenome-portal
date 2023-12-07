@@ -9,7 +9,7 @@
     <div class="row row-equal">
       <div class="flex lg12 md12 sm12 xs12">
         <va-card :stripe="Boolean(errorMessage)" stripe-color="danger">
-          <FilterForm :filters="filters" @on-submit="handleSubmit" @on-reset="reset" />
+          <FilterForm :search-form="biosampleStore.searchForm" :filters="filters" @on-submit="handleSubmit" @on-reset="reset" />
           <va-card-content> {{ t('table.total') }} {{ total }} </va-card-content>
           <va-skeleton v-if="isLoading" height="400px" />
           <va-card-content v-else-if="errorMessage">
@@ -37,7 +37,7 @@ import FilterForm from '../../components/ui/FilterForm.vue'
 import { useI18n } from 'vue-i18n'
 import { tableFilters, tableColumns } from './configs'
 import { useBioSampleStore } from '../../stores/biosample-store'
-import { BioSampleSearchForm, Filter, InfoBlock } from '../../data/types'
+import { Filter, InfoBlock } from '../../data/types'
 import { onMounted, ref } from 'vue'
 import BioSampleService from '../../services/clients/BioSampleService'
 import DataTable from '../../components/ui/DataTable.vue'
@@ -55,8 +55,7 @@ onMounted(() => {
   getBioSamples({ ...biosampleStore.searchForm, ...biosampleStore.pagination })
 })
 
-function handleSubmit(payload: BioSampleSearchForm) {
-  biosampleStore.searchForm = { ...payload }
+function handleSubmit() {
   biosampleStore.resetPagination()
   offset.value = 1
   getBioSamples({ ...biosampleStore.searchForm, ...biosampleStore.pagination })
@@ -69,7 +68,7 @@ function handlePagination(value: number) {
 
 function reset() {
   offset.value = 1
-  biosampleStore.resetForm()
+  biosampleStore.resetSeachForm()
   biosampleStore.resetPagination()
   getBioSamples({ ...biosampleStore.pagination })
 }

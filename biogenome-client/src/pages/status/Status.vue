@@ -12,7 +12,7 @@
   <div class="row row-equal">
     <div class="flex lg12 md12 sm12">
       <va-card :stripe="Boolean(errorMessage)" stripe-color="danger">
-        <FilterForm :filters="filters" @on-submit="handleSubmit" @on-reset="reset" />
+        <FilterForm :search-form="statusStore.searchForm" :filters="filters" @on-submit="handleSubmit" @on-reset="reset" />
         <va-card-content> {{ t('table.total') }} {{ total }} </va-card-content>
         <va-skeleton v-if="isLoading" height="400px" />
         <va-card-content v-else-if="errorMessage">
@@ -64,8 +64,7 @@ onMounted(() => {
   getOrganisms({ ...statusStore.searchForm, ...statusStore.pagination })
 })
 
-function handleSubmit(payload:StatusSearchForm) {
-  statusStore.searchForm = { ...payload }
+function handleSubmit() {
   offset.value = 1
   statusStore.resetPagination()
   getOrganisms({ ...statusStore.searchForm, ...statusStore.pagination })

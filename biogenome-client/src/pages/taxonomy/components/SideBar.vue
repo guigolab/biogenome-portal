@@ -1,5 +1,5 @@
 <template>
-    <va-card>
+    <div>
         <va-tabs grow v-model="explorerStore.selectedTab">
             <template #tabs>
                 <va-tab v-for="tab in tabs" :key="tab.title" :name="tab.title">
@@ -24,7 +24,6 @@
                     <div class="iframe-wrapper">
                         <iframe :src="src" :key="src"></iframe>
                     </div>
-
                 </div>
             </KeepAlive>
             <KeepAlive>
@@ -38,7 +37,7 @@
                 </div>
             </KeepAlive>
         </div>
-    </va-card>
+    </div>
 </template>
 <script setup lang="ts">
 import MapCard from '../../../components/ui/MapCard.vue'
@@ -52,7 +51,7 @@ import {useExplorerStore} from '../../../stores/explorer-store'
 const explorerStore = useExplorerStore()
 
 const wikiMapper = wiki as Record<string, any>
-const { t, locale } = useI18n()
+const { locale } = useI18n()
 const wikiURL = ref<string>(wikiMapper[locale.value])
 
 const src = ref<string>('')

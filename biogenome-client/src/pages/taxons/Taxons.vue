@@ -4,27 +4,19 @@
       <va-breadcrumbs-item active :to="{ name: 'taxons' }" :label="t('taxonDetails.breadcrumb')" />
     </va-breadcrumbs>
     <va-divider />
-    <div class="row justify-end">
-      <div class="flex">
-        <va-button-toggle style="float: right;" icon-color="primary" v-model="tabValue" preset="secondary"
-          border-color="primary" :options="tabs" value-by="icon" />
-      </div>
-    </div>
+    <va-tabs grow v-model="tabValue">
+      <template #tabs>
+        <va-tab v-for="tab in tabs" :icon="tab.icon" :key="tab.icon" :name="tab.icon" :label="t(tab.label)">
+        </va-tab>
+      </template>
+    </va-tabs>
     <div class="row row-equal justify-center">
       <Transition name="slide-fade">
         <div v-if="tabValue === 'table_chart'" class="flex lg12 md12 sm12 xs12">
           <TaxonListBlock />
         </div>
-        <div v-else-if="tabValue === 'search'" class="flex lg12 md12 sm12 xs12">
+        <div v-else class="flex lg12 md12 sm12 xs12">
           <RelatedTaxon />
-        </div>
-        <div class="flex lg12 md12 sm12 xs12" v-else>
-          <Suspense>
-            <TaxonsTreeView />
-            <template #fallback>
-              <va-skeleton height="100vh"></va-skeleton>
-            </template>
-          </Suspense>
         </div>
       </Transition>
     </div>
@@ -36,18 +28,13 @@ import RelatedTaxon from './components/RelatedTaxon.vue'
 import { useI18n } from 'vue-i18n'
 import { ref } from 'vue'
 import { tabs } from './configs'
-import TaxonsTreeView from './components/TaxonsTreeView.vue'
 const { t } = useI18n()
 
 const tabValue = ref(tabs[0].icon)
 
-
-
 </script>
 
 <style lang="scss">
-@import '../../styles/d3-hypertree-light.css';
-
 .row-equal .flex {
   .va-card {
     height: 100%;

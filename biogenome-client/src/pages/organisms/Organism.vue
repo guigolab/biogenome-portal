@@ -16,10 +16,8 @@
     <DetailsHeader :details="details" />
     <KeyValueCard v-if="organismSelectedMetadata.length && metadata" :metadata="metadata"
       :selected-metadata="organismSelectedMetadata" />
-    <!-- TODO add ideogram -->
-    <!-- <Ideogram v-if="assembly && assembly.taxid && hasChromosomes" :taxid="assembly.taxid" :accession="accession" /> -->
     <div class="row row-equal">
-      <div class="flex lg6 md6 sm12 xs12">
+      <div :class="cardClasses">
         <Suspense>
           <TaxonLineage :taxid="taxid"></TaxonLineage>
           <template #fallback>
@@ -27,11 +25,11 @@
           </template>
         </Suspense>
       </div>
-      <div v-if="images.length" class="flex lg6 md6 sm12 xs12">
-        <Images :images="images"/>
+      <div v-if="images.length" :class="cardClasses">
+        <Images :images="images" />
         <!-- <va-carousel height="400px" :items="images" stateful /> -->
       </div>
-      <div v-for="(dt, index) in validData" class="flex lg6 md6 sm12 xs12">
+      <div v-for="(dt, index) in validData" :class="cardClasses">
         <Suspense>
           <template #default>
             <RelatedDataCard :object-id="taxid" :related-data="dt" :callback="'organism'" :key="index" />
@@ -41,16 +39,16 @@
           </template>
         </Suspense>
       </div>
-      <div v-if="metadata && Object.keys(metadata).length" class="flex lg6 md6 sm12 xs12">
+      <div v-if="metadata && Object.keys(metadata).length" :class="cardClasses">
         <MetadataTreeCard :metadata="metadata" />
       </div>
-      <div v-if="coordinates.length" class="flex lg6 md6 sm12 xs12 chart">
+      <div v-if="coordinates.length" :class="`${cardClasses} chart`">
         <LeafletMap :coordinates="coordinates" />
       </div>
-      <div v-if="publications.length" class="flex lg6 md6 sm12 xs12">
+      <div v-if="publications.length" :class="cardClasses">
         <Publications :publications="publications" />
       </div>
-      <div v-if="commonNames.length" class="flex lg6 md6 sm12 xs12">
+      <div v-if="commonNames.length" :class="cardClasses">
         <VernacularNames :names="commonNames" />
       </div>
 
@@ -89,6 +87,7 @@ const commonNames = ref<Record<string, string>[]>([])
 const publications = ref<Record<string, string>[]>([])
 const images = ref<string[]>([])
 const coordinates = ref<SampleLocations[]>([])
+const cardClasses = 'flex lg12 md12 sm12 xs12'
 
 onMounted(async () => {
   try {

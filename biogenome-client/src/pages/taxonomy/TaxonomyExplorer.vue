@@ -17,7 +17,7 @@
                         style="color: inherit;"
                             :to="currentTaxon.leaves ? { name: 'taxon', params: { taxid: currentTaxon.taxid } } : { name: 'organism', params: { taxid: currentTaxon.taxid } }">{{
                                 currentTaxon.name }}</router-link></h2>
-                    <p class="mb-4">{{ currentTaxon.rank }}</p>
+                    <p class="mb-2">{{ currentTaxon.rank }}</p>
                 </div>
             </div>
             <SideBar :name="currentTaxon?.name" :taxid="currentTaxon?.taxid" />

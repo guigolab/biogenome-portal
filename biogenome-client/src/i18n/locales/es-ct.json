@@ -103,7 +103,9 @@
       "assemblyLevel": "Nivell d'assemblatge",
       "sortColumn": "Columna d'ordenació",
       "sortOrder": "Ordre de classificació",
-      "date": "Data"
+      "date": "Data",
+      "blobtoolkit": "Mostra les assemblatges amb BlobToolKit"
+
     },
     "charts": {
       "pieChart": {

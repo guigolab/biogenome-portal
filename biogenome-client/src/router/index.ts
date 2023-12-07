@@ -160,8 +160,8 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import('../pages/forms/SpreadsheetUpload.vue'),
       },
       {
-        name: 'goat_upload',
-        path: 'goat_upload',
+        name: 'goat-upload',
+        path: 'goat-upload',
         component: () => import('../pages/forms/GoaTUpload.vue'),
       },
       {

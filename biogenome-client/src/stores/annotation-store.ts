@@ -32,7 +32,7 @@ export const useAnnotationStore = defineStore('annotation', {
   },
 
   actions: {
-    resetForm() {
+    resetSeachForm() {
       this.searchForm = { ...initSearchForm }
     },
     resetPagination() {

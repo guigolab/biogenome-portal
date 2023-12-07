@@ -8,7 +8,7 @@
     <div class="row row-equal">
       <div class="flex lg12 md12 sm12 xs12">
         <va-card :stripe="Boolean(errorMessage)" stripe-color="danger">
-          <FilterForm :filters="filters" @on-submit="handleSubmit" @on-reset="reset" />
+          <FilterForm :search-form="readStore.searchForm" :filters="filters" @on-submit="handleSubmit" @on-reset="reset" />
           <va-card-content> {{ t('table.total') }} {{ total }} </va-card-content>
           <va-skeleton v-if="isLoading" height="400px" />
           <va-card-content v-else-if="errorMessage">
@@ -34,10 +34,10 @@ import { experimentInfoBlocks } from '../../../config.json'
 import { useI18n } from 'vue-i18n'
 import InfoBlockVue from '../../components/InfoBlock.vue'
 import ReadService from '../../services/clients/ReadService'
-import { onMounted, ref, watch } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useReadStore } from '../../stores/read-store'
 import DataTable from '../../components/ui/DataTable.vue'
-import { Filter, InfoBlock, ReadSearchForm } from '../../data/types'
+import { Filter, InfoBlock } from '../../data/types'
 import FilterForm from '../../components/ui/FilterForm.vue'
 import { tableFilters, tableColumns } from './configs'
 
@@ -57,8 +57,7 @@ onMounted(async () => {
   getReads({ ...readStore.searchForm, ...readStore.pagination })
 })
 
-async function handleSubmit(payload: ReadSearchForm) {
-  readStore.searchForm = { ...payload }
+async function handleSubmit() {
   readStore.resetPagination()
   offset.value = 1
   getReads({ ...readStore.searchForm, ...readStore.pagination })
@@ -70,7 +69,7 @@ async function handlePagination(value: number) {
 
 async function reset() {
   offset.value = 1
-  readStore.resetForm()
+  readStore.resetSeachForm()
   readStore.resetPagination()
   getReads({ ...readStore.pagination })
 }

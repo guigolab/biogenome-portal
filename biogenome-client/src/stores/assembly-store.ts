@@ -10,6 +10,7 @@ const initSearchForm: AssemblySearchForm = {
   sort_order: '',
   assembly_level: '',
   submitter: '',
+  blobtoolkit:false
 }
 
 const initPagination = {
@@ -26,7 +27,7 @@ export const useAssemblyStore = defineStore('assembly', {
   },
 
   actions: {
-    resetForm() {
+    resetSeachForm() {
       this.searchForm = { ...initSearchForm }
     },
     resetPagination() {
