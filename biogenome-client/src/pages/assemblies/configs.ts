@@ -35,6 +35,11 @@ export const tableFilters: Filter[] = [
         key: 'date',
         type: 'date',
     },
+    {
+        label: 'assemblyList.filters.blobtoolkit',
+        key: 'blobtoolkit',
+        type: 'checkbox',
+    },
 ]
 export const tableColumns = [
     'assembly_name',

@@ -7,7 +7,7 @@
   <div class="row row-equal">
     <div class="flex lg12 md12 sm12 xs12">
       <va-card :stripe="Boolean(errorMessage)" stripe-color="danger">
-        <FilterForm :filters="filters" @on-submit="handleSubmit" @on-reset="reset" />
+        <FilterForm :search-form="assemblyStore.searchForm" :filters="filters" @on-submit="handleSubmit" @on-reset="reset" />
         <va-card-content> {{ t('table.total') }} {{ total }} </va-card-content>
         <va-skeleton v-if="isLoading" height="400px" />
         <va-card-content v-else-if="errorMessage">
@@ -36,7 +36,7 @@ import { useAssemblyStore } from '../../stores/assembly-store'
 import AssemblyService from '../../services/clients/AssemblyService'
 import { onMounted, ref } from 'vue'
 import DataTable from '../../components/ui/DataTable.vue'
-import { AssemblySearchForm, Filter } from '../../data/types'
+import { Filter } from '../../data/types'
 import FilterForm from '../../components/ui/FilterForm.vue'
 import { tableFilters, tableColumns } from './configs'
 
@@ -57,8 +57,7 @@ onMounted(() => {
   getAssemblies({ ...assemblyStore.searchForm, ...assemblyStore.pagination })
 })
 
-function handleSubmit(payload: AssemblySearchForm) {
-  assemblyStore.searchForm = { ...payload }
+function handleSubmit() {
   assemblyStore.resetPagination()
   offset.value = 1
   getAssemblies({ ...assemblyStore.searchForm, ...assemblyStore.pagination })
@@ -69,7 +68,7 @@ function handlePagination(value: number) {
 }
 function reset() {
   offset.value = 1
-  assemblyStore.resetForm()
+  assemblyStore.resetSeachForm()
   assemblyStore.resetPagination()
   getAssemblies({ ...assemblyStore.pagination })
 }

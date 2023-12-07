@@ -18,7 +18,7 @@ def get_assemblies(filter=None, filter_option='assembly_name',
                     offset=0, submitter=None,
                     limit=20, start_date=None, 
                     end_date=datetime.today().strftime('%Y-%m-%d'), assembly_level=None,
-                    sort_order=None, sort_column=None):  
+                    sort_order=None, sort_column=None, blobtoolkit=None):  
     query=dict()
     ## filter match for accession, assembly name or species name
     filter_query = None   
@@ -29,6 +29,8 @@ def get_assemblies(filter=None, filter_option='assembly_name',
         query['metadata__assembly_level'] = assembly_level
     if submitter:
         query['metadata__submitter'] = submitter
+    if blobtoolkit and blobtoolkit == 'true':
+        query['blobtoolkit_id__exists'] = True
     if start_date:
         date_query = (Q(metadata__submission_date__gte=start_date) & Q(metadata__submission_date__lte=end_date))
     if filter_query and date_query:
