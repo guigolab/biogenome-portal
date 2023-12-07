@@ -166,45 +166,6 @@ paths:
                 $ref: "#/components/schemas/TreeNode"
         "404":
           description: "Taxon not found"
-  # /spreadsheet_upload:
-  #   post:
-  #     tags:
-  #       - "spreadsheet upload"
-  #     summary: "Endpoint for local sample creation from spexperimentsheet file"
-  #     requestBody:
-  #       content:
-  #         multipart/form-data:
-  #           schema:
-  #             type: "object"
-  #             properties:
-  #               excel:
-  #                 type: "string"
-  #                 format: "binary"
-  #                 nullable: true
-  #               id:
-  #                 type: "string"
-  #                 description: "Unique identifier of the local sample"
-  #               taxid:
-  #                 type: "string"
-  #               scientific_name:
-  #                 type: "string"
-  #               source:
-  #                 type: "string"
-  #               option:
-  #                 type: "string"
-  #                 default: "SKIP"
-  #                 enum:
-  #                   - "SKIP"
-  #                   - "UPDATE"
-  #                 description: "Skip or update existing sample"
-  #               header:
-  #                 type: "number"
-  #                 description: "row number 1-based of the header"
-  #     responses:
-  #       "200":
-  #         description: "samples correctly uploaded"
-  #       "400":
-  #         description: "Invalid fields"
 
   /organisms:
     get:
@@ -513,6 +474,11 @@ paths:
             - "contig_n50"
             - "size"
             - "submission_date"
+        - in: 'query'
+          name: 'offset'
+          schema:
+            type: 'boolean'
+            default: 'false'
         - in: 'query'
           name: 'offset'
           schema:
