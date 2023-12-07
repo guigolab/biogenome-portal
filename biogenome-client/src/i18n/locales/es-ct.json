@@ -22,7 +22,8 @@
       "annotations": "Anotacions"
     },
     "metadata": "Metadades",
-    "wikipedia": "Viquipèdia"
+    "wikipedia": "Viquipèdia",
+    "taxonomyCard":"Fes clic a un node per veure els detalls taxonòmics."
   },
   "modelStats": {
     "organisms": "Organismes",

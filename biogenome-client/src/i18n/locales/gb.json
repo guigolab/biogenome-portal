@@ -22,7 +22,8 @@
       "annotations":"Annotations"
     },
     "metadata": "Metadata",
-    "wikipedia": "Wikipedia"
+    "wikipedia": "Wikipedia",
+    "taxonomyCard":"Click on a node to see the taxonomic details"
   },
   "modelStats":{
     "organisms":"Organisms",

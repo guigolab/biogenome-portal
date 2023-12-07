@@ -4,7 +4,7 @@
             {{ t('dashboard.tree') }}
         </va-card-title>
         <va-card-content>
-            Click on a node to see the taxonomic details
+            {{t('uiComponents.taxonomyCard')}}
         </va-card-content>
         <va-card-content class="chart" style="overflow: scroll;">
             <IndentedTree :data="data"/>
