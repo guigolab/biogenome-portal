@@ -24,7 +24,7 @@ class SampleLocationsByBioSample(Resource):
         #check if organism exists
         if not BioSample.objects(accession=accession).first():
             raise NotFound
-        sample_coordinates = SampleCoordinates.objects(sample_accession=accession)
+        sample_coordinates = SampleCoordinates.objects(sample_accession=accession).first()
         return Response(sample_coordinates.to_json(),mimetype="application/json", status=200)
 
 class SampleLocationsByLocalSample(Resource):
@@ -32,6 +32,6 @@ class SampleLocationsByLocalSample(Resource):
         #check if organism exists
         if not LocalSample.objects(local_id=local_id).first():
             raise NotFound
-        sample_coordinates = SampleCoordinates.objects(sample_accession=local_id)
+        sample_coordinates = SampleCoordinates.objects(sample_accession=local_id).first()
         return Response(sample_coordinates.to_json(),mimetype="application/json", status=200)
 

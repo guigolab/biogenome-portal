@@ -68,7 +68,6 @@ watch(
    async (value) => {
    await getBioSample(value)
     await getCoordinates(value)
-
   }
 )
 
@@ -92,7 +91,6 @@ async function getBioSample(accession: string) {
     } else {
       validData.value = []
     }
-    getCoordinates(accession)
   } catch (e) {
     errorMessage.value = e
   } finally {
@@ -102,7 +100,7 @@ async function getBioSample(accession: string) {
 }
 async function getCoordinates(accession: string) {
     const { data } = await GeoLocationService.getLocationsByBioSample(accession)
-    coordinates.value = [...data]
+    coordinates.value = [data]
 }
 
 function parseDetails(biosample: BioSample) {

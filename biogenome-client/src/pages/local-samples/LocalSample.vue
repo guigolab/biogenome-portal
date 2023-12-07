@@ -67,7 +67,7 @@ async function getCoordinates(accession: string) {
   try {
     isLoading.value = true
     const { data } = await GeoLocationService.getLocationsByLocalSample(accession)
-    coordinates.value = [...data]
+    coordinates.value = [data]
   } catch (e) {
     console.log(e)
   } finally {

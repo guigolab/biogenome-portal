@@ -76,7 +76,6 @@ function buildTree(data: Record<string, any>, parentKey: string | undefined): Tr
 
         }
     }
-    console.log(treeNodes)
     return treeNodes;
 }
 </script>
