@@ -1,7 +1,6 @@
 from flask import Response,request
 from flask_restful import Resource
 from . import uploads_service
-from flask import current_app as app
 import json
 from flask_jwt_extended import jwt_required
 

@@ -36,8 +36,12 @@ class CronJobApi(Resource):
         cronjob = CronJob(cronjob_type=model, status= CronJobStatus.PENDING).save()
         resp = cronjob.to_json()
         print(f'Triggering job {model}')
-        JOB_MAP[model]()
-        cronjob.delete()
+        try:
+            JOB_MAP[model]()
+        except:
+            print(f'Error executing job {model}')
+        finally:
+            cronjob.delete()
         return Response(resp, mimetype="application/json", status=201)
 
     @jwt_required()

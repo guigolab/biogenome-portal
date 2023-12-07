@@ -1,4 +1,3 @@
-# from . import db
 import datetime
 import os
 from .enums import INSDCStatus, GoaTStatus, TargetListStatus, PublicationSource, BrokerSource, CronJobStatus, Roles
@@ -155,8 +154,6 @@ def delete_related_data( sender, document ):
     Experiment.objects(taxid=taxid).delete()
     LocalSample.objects(taxid=taxid).delete()
     BioSample.objects(taxid=taxid).delete()
-    OrganismPublication.objects(taxid=taxid).delete()
-    Publication.objects(taxid=taxid).delete()
     SampleCoordinates.objects(taxid=taxid).delete()
     taxons = TaxonNode.objects(taxid__in=document.taxon_lineage)
     for node in taxons:

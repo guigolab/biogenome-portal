@@ -217,12 +217,15 @@ def get_samples_collection_date():
         biosample.modify(collection_date=collection_date)
 
 
-# def remove_orphan_data():
+# def remove_orphan_links():
+#     organisms = Organism.objects()
+#     for organism in organisms:
+
 
 
 
 def add_blob_link():
-    assemblies = Assembly.objects()
+    assemblies = Assembly.objects(blobtoolkit_id=None)
     for ass in assemblies:
         response = genomehubs_client.get_blobtoolkit_id(ass.accession)
         if len(response) and 'names' in response[0].keys() and len(response[0]['names']):
