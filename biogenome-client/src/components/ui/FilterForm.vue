@@ -48,6 +48,7 @@ function onSubmit() {
     props.searchForm.start_date = new Date(start).toISOString().split('T')[0]
     props.searchForm.end_date = new Date(end).toISOString().split('T')[0]
   }
+  if(props.searchForm.country && props.searchForm.country.value) props.searchForm.country = props.searchForm.country.value
   emits('onSubmit')
 }
 
