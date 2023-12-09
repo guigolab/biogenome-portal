@@ -3,16 +3,17 @@
     <va-breadcrumbs-item active :to="{ name: 'status' }" :label="t('statusList.breadcrumb')" />
   </va-breadcrumbs>
   <va-divider />
+  <InfoBlockVue v-if="charts.length" :charts="charts" />
   <div class="row justify-end">
     <div class="flex">
-      <va-button @click="downloadReport" preset="secondary" icon="fa-download">Download GoaT Report</va-button>
+      <va-button @click="downloadReport" :round="false" icon="fa-download">GoaT Report</va-button>
     </div>
   </div>
-  <InfoBlockVue v-if="charts.length" :charts="charts" />
   <div class="row row-equal">
     <div class="flex lg12 md12 sm12">
       <va-card :stripe="Boolean(errorMessage)" stripe-color="danger">
-        <FilterForm :search-form="statusStore.searchForm" :filters="filters" @on-submit="handleSubmit" @on-reset="reset" />
+        <FilterForm :search-form="statusStore.searchForm" :filters="filters" @on-submit="handleSubmit"
+          @on-reset="reset" />
         <va-card-content> {{ t('table.total') }} {{ total }} </va-card-content>
         <va-skeleton v-if="isLoading" height="400px" />
         <va-card-content v-else-if="errorMessage">
@@ -34,7 +35,7 @@
 <script setup lang="ts">
 import DataTable from '../../components/ui/DataTable.vue'
 import { onMounted, ref } from 'vue'
-import { Filter, InfoBlock, StatusSearchForm } from '../../data/types'
+import { Filter, InfoBlock } from '../../data/types'
 import { useStatusStore } from '../../stores/status-store'
 import OrganismService from '../../services/clients/OrganismService'
 import GoaTService from '../../services/clients/GoaTService'
