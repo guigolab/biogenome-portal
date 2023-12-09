@@ -95,7 +95,6 @@ def create_annotation(request):
                 filename = f'{assembly.accession}.{annotation_name}.gff.{extension}'
                 files[k].save(f"{ANNOTATIONS_DATA_PATH}/{filename}")
                 valid_data['external'] = False
-                print(request.host_url)
                 host_url = f"{request.host_url}api/download/{filename}"
                 key = 'gff_gz_location' if extension == 'gz' else 'tab_index_location'
                 valid_data[key] = host_url

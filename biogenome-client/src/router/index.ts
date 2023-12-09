@@ -171,16 +171,28 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import('../pages/forms/OrganismForm.vue'),
       },
       {
-        name: 'annotation-form',
+        name: 'annotation-form-update',
         path: 'annotation-form/:assemblyAccession/:id?',
         props: true,
-        component: () => import('../pages/forms/AnnotationForm.vue'),
+        component: () => import('../pages/forms/UpdateAnnotation.vue'),
+      },
+      {
+        name: 'annotation-form-create',
+        path: 'annotation-form/:assemblyAccession',
+        props: true,
+        component: () => import('../pages/forms/CreateAnnotation.vue'),
       },
       {
         name: 'local-sample-form',
         path: 'local-sample-form/:id?',
         props: true,
         component: () => import('../pages/forms/LocalSampleForm.vue'),
+      },
+      {
+        name: 'chr-aliases',
+        path: 'chr-aliases/:accession',
+        props: true,
+        component: () => import('../pages/forms/ChromosomeNameAliasesForm.vue'),
       },
     ],
   }

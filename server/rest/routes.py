@@ -42,7 +42,7 @@ def initialize_routes(api):
 	api.add_resource(assemblies_controller.AssembliesApi, '/api/assemblies')
 	api.add_resource(assemblies_controller.AssemblyApi,  '/api/assemblies/<accession>')
 	api.add_resource(assemblies_controller.AssemblyRelatedAnnotationsApi, '/api/assemblies/<accession>/annotations')
-
+	api.add_resource(assemblies_controller.AssemblyChrAliasesApi, '/api/assemblies/<accession>/chr_aliases')
 	##BIOSAMPLES
 	api.add_resource(biosamples_controller.BioSamplesApi, '/api/biosamples')
 	api.add_resource(biosamples_controller.BioSampleApi, '/api/biosamples/<accession>')

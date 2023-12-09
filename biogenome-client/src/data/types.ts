@@ -122,9 +122,11 @@ type Sequence = {
   adapter: Adapter
 }
 
+
 export type AssemblyAdapter = {
   name: string
   sequence: Sequence
+  refNameAliases?:Record<string,any>
 }
 
 export type InfoBlock = {
@@ -145,7 +147,8 @@ export interface Assembly {
   sample_accession: string,
   blobtoolkit_id?:string
   chromosomes: Record<string,any>[],
-  metadata: Record<string, any>
+  metadata: Record<string, any>,
+  has_chromosomes_aliases:boolean
 }
 export interface TrackData {
   name: string;

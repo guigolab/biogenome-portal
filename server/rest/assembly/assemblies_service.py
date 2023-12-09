@@ -1,6 +1,6 @@
 from db.models import Assembly, Chromosome, BioSample, Organism
 from errors import NotFound
-from ..utils import ncbi_client
+from ..utils import ncbi_client,genomehubs_client
 from ..organism import organisms_service
 from ..biosample import biosamples_service
 from mongoengine.queryset.visitor import Q
@@ -35,13 +35,13 @@ def get_assemblies(filter=None, filter_option='assembly_name',
         date_query = (Q(metadata__submission_date__gte=start_date) & Q(metadata__submission_date__lte=end_date))
     if filter_query and date_query:
         visitor_query = filter_query & date_query
-        assemblies = Assembly.objects(visitor_query, **query).exclude('id','created')
+        assemblies = Assembly.objects(visitor_query, **query).exclude('id','created','chromosomes_aliases')
     elif filter_query:
-        assemblies = Assembly.objects(filter_query, **query).exclude('id','created')
+        assemblies = Assembly.objects(filter_query, **query).exclude('id','created','chromosomes_aliases')
     elif date_query:
-        assemblies = Assembly.objects(date_query, **query).exclude('id','created')
+        assemblies = Assembly.objects(date_query, **query).exclude('id','created','chromosomes_aliases')
     else:
-        assemblies = Assembly.objects(**query).exclude('id','created')
+        assemblies = Assembly.objects(**query).exclude('id','created','chromosomes_aliases')
     if sort_column:
         if sort_column == 'submission_date':
             sort_column = 'metadata.submission_date'
@@ -82,6 +82,9 @@ def create_assembly_from_ncbi_data(assembly):
             saved_biosample = biosamples_service.create_related_biosample(ass_data['sample_accession'])
         if not saved_biosample:
             return
+        blobtoolkit_resp = genomehubs_client.get_blobtoolkit_id(ass_data['accession'])
+        if len(blobtoolkit_resp) and 'names' in blobtoolkit_resp[0].keys() and len(blobtoolkit_resp[0]['names']):
+            ass_data['blobtoolkit_id'] = blobtoolkit_resp[0]['names'][0]
         ass_obj = Assembly(metadata=ass_metadata, **ass_data).save()
         saved_biosample.modify(add_to_set__assemblies=ass_obj.accession)
         organism.modify(add_to_set__assemblies=ass_obj.accession)
@@ -145,3 +148,7 @@ def delete_assembly(accession):
     assembly_obj.delete()
     return accession
 
+def store_chromosome_aliases(assembly, aliases_file):
+    assembly.chromosomes_aliases = aliases_file.read()
+    assembly.has_chromosomes_aliases = True
+    assembly.save()

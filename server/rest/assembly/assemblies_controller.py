@@ -1,5 +1,6 @@
+import io
 from flask_restful import Resource
-from flask import Response, request
+from flask import Response, request, send_file
 import json
 from db.models import Assembly,GenomeAnnotation
 from . import assemblies_service
@@ -19,7 +20,7 @@ class AssembliesApi(Resource):
 class AssemblyApi(Resource):
 
     def get(self,accession):
-        assembly_obj = Assembly.objects(accession=accession).first()
+        assembly_obj = Assembly.objects(accession=accession).exclude('id','created','chromosomes_aliases').first()
         if not assembly_obj:
             raise NotFound
         if assembly_obj.chromosomes:
@@ -44,3 +45,22 @@ class AssemblyRelatedAnnotationsApi(Resource):
             raise NotFound
         annotations = GenomeAnnotation.objects(assembly_accession=accession)
         return Response(annotations.to_json(), mimetype="application/json", status=200)
+
+class AssemblyChrAliasesApi(Resource):
+
+    def get(self,accession):
+        assembly_obj = Assembly.objects(accession=accession).first()
+        if not assembly_obj or not assembly_obj.chromosomes_aliases:
+            raise NotFound
+        return send_file(
+        io.BytesIO(assembly_obj.chromosomes_aliases),
+        mimetype='text/plain',
+        as_attachment=True,
+        download_name=f'{assembly_obj.accession}_chr_aliases.txt')
+
+    def post(self,accession):
+        assembly_obj = Assembly.objects(accession=accession).first()
+        if not assembly_obj:
+            raise NotFound
+        aliases_file = request.files.get('chr_aliases')
+        assemblies_service.store_chromosome_aliases(assembly_obj, aliases_file)

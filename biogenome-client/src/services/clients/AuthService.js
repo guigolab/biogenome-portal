@@ -62,6 +62,9 @@ class AuthService {
   importAssembly(accession) {
     return auth.post(`/assemblies/${accession}`)
   }
+  uploadRefNameAliases(accession, formData) {
+    return auth.post(`/assemblies/${accession}/chr_aliases`,formData)
+  }
   deleteAssembly(accession) {
     return auth.delete(`/assemblies/${accession}`)
   }

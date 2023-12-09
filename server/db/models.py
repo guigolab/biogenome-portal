@@ -66,6 +66,8 @@ class Assembly(db.Document):
     created = db.DateTimeField(default=datetime.datetime.utcnow)
     metadata=db.DictField()
     chromosomes=db.ListField(db.StringField())
+    chromosomes_aliases=db.BinaryField()
+    has_chromosomes_aliases=db.BooleanField(default=False)
     meta = {
         'indexes': ['accession']
     }

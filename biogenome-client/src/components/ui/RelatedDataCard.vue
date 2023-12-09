@@ -17,7 +17,7 @@
       </template>
       <template #cell(name)="{ rowData }">
         <va-chip v-if="relatedData.key === 'annotations'"
-          :to="{ name: relatedData.route, params: { id: rowData.local_id } }" size="small" outline>{{ rowData.name
+          :to="{ name: relatedData.route, params: { name: rowData.name } }" size="small" outline>{{ rowData.name
           }}</va-chip>
         <va-chip v-else="relatedData.key === 'annotations'" size="small" outline>{{ rowData.name }}</va-chip>
       </template>

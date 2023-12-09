@@ -1,8 +1,8 @@
 <template>
-  <p class="va-title">{{ `Annotation ${name ? 'Update' : 'Creation'}` }}</p>
+  <p class="va-title">Annotation Creation</p>
   <va-divider />
   <va-inner-loading :loading="isLoading">
-    <div v-if="!name" class="row">
+    <div class="row">
       <div class="flex lg6 md6 sm12 xs12">
         <va-input v-model="input" style="padding-bottom: 10px" label="Annotation name"
           placeholder="Insert a valid annotation name">
@@ -22,15 +22,6 @@
           </va-card-content>
           <va-divider />
           <va-card-content>
-            {{ isLocalAssembly }}
-          </va-card-content>
-          <va-card-content v-if="isLocalAssembly">
-            <p>
-              Update of files is not supported. If you need to change the file, it is necessary to delete this assembly
-              and create a new one
-            </p>
-          </va-card-content>
-          <va-card-content v-else>
             <va-button-toggle v-model="uploadMode" preset="secondary" border-color="primary" :options="uploadModes" />
             <div class="mt-4" v-if="uploadMode === 'links'">
               <va-input :disabled="annotationStore.annotationForm.gzipAnnotation"
@@ -49,7 +40,6 @@
                 drop-zone-text="Upload your GFF evidences" file-types=".tbi" />
             </div>
           </va-card-content>
-
           <va-divider>Attributes</va-divider>
           <va-card-content>
             <div v-for="(mt, index) in metadataList" :key="index" class="row align-center justify-between">
@@ -95,9 +85,7 @@ const uploadModes = [
   { label: 'Insert links', value: 'links' },
 
 ]
-
 const props = defineProps<{
-  name?: string,
   assemblyAccession: string
 }>()
 
@@ -113,11 +101,7 @@ const input = ref('')
 const message = ref('')
 
 onMounted(async () => {
-  if (props.name) {
-    await retrieveAnnotation(props.name)
-  } else {
-    await getAssembly(props.assemblyAccession)
-  }
+  await getAssembly(props.assemblyAccession)
 })
 
 async function getAssembly(accession: string) {
@@ -158,33 +142,7 @@ async function checkAnnotationExists() {
     isLoading.value = false
   }
 }
-async function retrieveAnnotation(name: string) {
-  try {
-    isLoading.value = true
-    const { data } = await AnnotationService.getAnnotation(name)
-    isLocalAssembly.value = Boolean(data.external)
-    Object.keys(data)
-      .filter((k: string) => Object.keys(annotationStore.annotationForm).includes(k))
-      .forEach((k) => {
-        annotationStore.annotationForm[k] = data[k]
-      })
-    //parse metadata
-    const parsedMetadata = Object.keys(data.metadata).map((k) => {
-      return {
-        key: k,
-        value: data[k],
-      }
-    })
-    if (parsedMetadata.length) {
-      metadataList.push(...parsedMetadata)
-    }
-  } catch {
-    message.value = `Something happened`
-    init({ message: message.value, color: 'danger' })
-  } finally {
-    isLoading.value = false
-  }
-}
+
 async function handleSubmit() {
   if (!globalStore.isAuthenticated) {
     init({ message: 'You must authenticate first', color: 'danger' })
@@ -194,7 +152,7 @@ async function handleSubmit() {
   const requestData = parseRequestData()
   try {
     isLoading.value = true
-    const { data } = props.name ? await AuthService.updateAnnotation(props.name, requestData) : await AuthService.createAnnotation(requestData)
+    const { data } = await AuthService.createAnnotation(requestData)
     init({ message: data, color: 'success' })
   } catch {
     message.value = `Something happened`
@@ -218,23 +176,14 @@ function parseRequestData() {
   const metadata = Object.fromEntries(metadataList.filter((m) => m.key && m.value)
     .map(m => [m.key, m.value]))
   console.log(metadata)
-  const request: Record<string, any> = props.name ?
-    Object.fromEntries(
-      Object.entries(annotationStore.annotationForm).filter(([_, value]) => value)
-    ) : new FormData()
-
-  if (props.name) {
-    request.metadata = { ...metadata }
-  }
-  else {
-    for (const [key, value] of Object.entries(annotationStore.annotationForm)) {
-      if (value) {
-        request.append(key, value);
-      }
-      for (const [k, v] of Object.entries(metadata)) {
-        const keyName = `metadata.${k}`
-        request.append(keyName, v)
-      }
+  const request = new FormData()
+  for (const [key, value] of Object.entries(annotationStore.annotationForm)) {
+    if (value) {
+      request.append(key, value);
+    }
+    for (const [k, v] of Object.entries(metadata)) {
+      const keyName = `metadata.${k}`
+      request.append(keyName, v)
     }
   }
   return request

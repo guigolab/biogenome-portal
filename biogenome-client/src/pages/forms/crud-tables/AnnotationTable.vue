@@ -6,7 +6,7 @@
   <va-data-table :items="annotations" :columns="['name', 'scientific_name','assembly_name' , 'actions']">
     <template #cell(actions)="{ rowData }">
       <va-chip
-        :to="{ name: 'annotation-form', params: { assemblyAccession: rowData.assembly_accession, name: rowData.name } }"
+        :to="{ name: 'annotation-form-update', params: { assemblyAccession: rowData.assembly_accession, name: rowData.name } }"
         icon="edit"
         >Edit Annotation</va-chip
       >
@@ -88,7 +88,7 @@ import AuthService from '../../../services/clients/AuthService';
     pagination.value = { ...initPagination }
   }
 
-  function deleteConfirmation(rowData) {
+  function deleteConfirmation(rowData:Record<string,any>) {
     annotationTodelete.value.name = rowData.name
     showModal.value = true
   }
