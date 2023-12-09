@@ -182,12 +182,12 @@ const routes: Array<RouteRecordRaw> = [
         props: true,
         component: () => import('../pages/forms/CreateAnnotation.vue'),
       },
-      {
-        name: 'local-sample-form',
-        path: 'local-sample-form/:id?',
-        props: true,
-        component: () => import('../pages/forms/LocalSampleForm.vue'),
-      },
+      // {
+      //   name: 'local-sample-form',
+      //   path: 'local-sample-form/:id?',
+      //   props: true,
+      //   component: () => import('../pages/forms/LocalSampleForm.vue'),
+      // },
       {
         name: 'chr-aliases',
         path: 'chr-aliases/:accession',
