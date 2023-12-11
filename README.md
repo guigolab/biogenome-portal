@@ -1,5 +1,4 @@
 
-
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.8314306.svg)](https://doi.org/10.5281/zenodo.8314306)
 
 
@@ -8,6 +7,10 @@
 ## About The Project
 
 This project aims to provide a user-friendly interface to show and manage biodiversity genomic metadata.
+
+### API page
+
+[API](https://guigolab.github.io/biogenome-portal/)
 
 ### Built With
 
