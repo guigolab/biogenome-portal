@@ -14,7 +14,7 @@ build-containers:
   - docker
   - monstre       
   stage: build
-  image: docker:docker@sha256:f28ffd78641197871fea8fd679f2bf8a1cdafa4dc3f1ce3e700ad964aac2879a
+  image: docker:latest
   only:
     - main
   before_script:
