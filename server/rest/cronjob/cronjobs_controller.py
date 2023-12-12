@@ -35,19 +35,27 @@ class CronJobApi(Resource):
         if cronjob:
             raise RecordAlreadyExistError
         cronjob = CronJob(cronjob_type=model, status= CronJobStatus.PENDING).save()
-        resp = cronjob.to_json()
         print(f'Triggering job {model}')
+        is_error = False
+        message = ''
         try:
             JOB_MAP[model]()
+            message = f'job {model} successfully executed'
         except:
-            print(f'Error executing job {model}')
+            message = f'Error executing job {model}'
+            is_error = True
+            print(message)
         finally:
             cronjob.delete()
-        return Response(resp, mimetype="application/json", status=201)
+            if is_error:
+                code = 400
+            else:
+                code = 201
+        return Response(message, mimetype="application/json", status=code)
 
     @jwt_required()
     def delete(self, model):
-        cron = CronJob.onjects(cronjob_type=model)
+        cron = CronJob.objects(cronjob_type=model)
         if not cron:
             raise NotFound
         cron.delete()
