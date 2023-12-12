@@ -236,3 +236,19 @@ def add_blob_link():
         if len(response) and 'names' in response[0].keys() and len(response[0]['names']):
             ass.blobtoolkit_id = response[0]['names'][0]
             ass.save()
+
+def create_biosample_coordinates():
+    biosamples = BioSample.objects()
+    existing_coordinates = SampleCoordinates.objects().scalar('sample_accession')
+    for biosample in biosamples:
+        if biosample.accession in existing_coordinates:
+            continue
+        sample_locations_service.save_coordinates(biosample)
+
+def create_local_sample_coordinates():
+    local_samples = LocalSample.objects()
+    existing_coordinates = SampleCoordinates.objects().scalar('sample_accession')
+    for local_sample in local_samples:
+        if local_sample.local_id in existing_coordinates:
+            continue
+        sample_locations_service.save_coordinates(local_sample,id_field='local_id')

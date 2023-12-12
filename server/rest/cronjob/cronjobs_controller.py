@@ -17,7 +17,9 @@ JOB_MAP = {
     'update_sample_locations': cronjob_service.update_sample_locations,
     'get_samples_collection_date':cronjob_service.get_samples_collection_date,
     'add_blob_link':cronjob_service.add_blob_link,
-    'remove_orphan_local_samples':cronjob_service.remove_orphan_local_samples
+    'remove_orphan_local_samples':cronjob_service.remove_orphan_local_samples,
+    'create_biosample_coordinates':cronjob_service.create_biosample_coordinates,
+    'create_local_sample_coordinates':cronjob_service.create_local_sample_coordinates
 }
 ## persist cronjob status
 class CronJobApi(Resource):
