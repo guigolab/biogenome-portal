@@ -9,7 +9,7 @@ info:
 servers:
   - url: https://ebp.biogenoma.cat/api
     description: server containing all the data submitted to INSDC under the EBP umbrella
-  - url: https://data.biogenoma.cat/api
+  - url: https://dades.biogenoma.cat/api
     description: server containing all the data generated under the CBP umbrella 
 
 tags:
@@ -475,7 +475,7 @@ paths:
             - "size"
             - "submission_date"
         - in: 'query'
-          name: 'offset'
+          name: 'blobtoolkit'
           schema:
             type: 'boolean'
             default: 'false'
