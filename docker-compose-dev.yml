@@ -4,7 +4,7 @@ services:
 
   bioG_mongo:
     image: mongo:5.0.3
-    container_name: "${DB_DEV_HOST}"
+    container_name: "${DB_HOST}"
     env_file:
       - .env
     volumes:

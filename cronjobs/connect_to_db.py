@@ -7,7 +7,7 @@ API_URL = f"http://{PROXY_HOST}/api"
 
 username = os.getenv('DB_USER')
 password = os.getenv('DB_PASS')
-DB_HOST = os.environ.get('DB_PROD_HOST', os.environ['DB_HOST'])
+DB_HOST = os.getenv('DB_HOST')
 DB_NAME = os.getenv('DB_NAME')
 DB_PORT = int(os.getenv('DB_PORT'))
 MONGO_INITDB_ROOT_USERNAME = os.getenv('MONGO_INITDB_ROOT_USERNAME')
