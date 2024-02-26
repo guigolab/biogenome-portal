@@ -91,7 +91,7 @@ def import_assemblies():
 
 #TRACK EXPERIMENTS
 def get_experiments():
-    query = {'assemblies': [], 'experiments':[]}
+    query = dict(experiments=[])
     biosamples = BioSample.objects(**query)
     print(f'Biosamples to retrieve experiments from {len(biosamples)}')
     for biosample in biosamples:
