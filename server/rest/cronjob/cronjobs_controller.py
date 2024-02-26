@@ -43,10 +43,10 @@ class CronJobApi(Resource):
         try:
             JOB_MAP[model]()
             message = f'job {model} successfully executed'
-        except:
+        except Exception as e:
             message = f'Error executing job {model}'
             is_error = True
-            print(message)
+            print(e)
         finally:
             cronjob.delete()
             if is_error:
