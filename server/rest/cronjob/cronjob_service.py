@@ -159,6 +159,14 @@ def import_assemblies():
         organism.save()
         #update organism status
 
+def fix_experiments_biosample_attribute():
+    experiments = Experiment.objects()
+    for experiment in experiments:
+        if experiment.sample_accession:
+            continue
+        experiment.sample_accession = experiment.metadata.get('sample_accession')
+        experiment.save()
+        
 #TRACK EXPERIMENTS
 def get_experiments():
     biosamples = BioSample.objects()
