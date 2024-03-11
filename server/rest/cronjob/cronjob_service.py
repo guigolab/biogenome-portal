@@ -169,7 +169,7 @@ def get_experiments():
 
 
     for biosample in biosamples:
-
+        print(f"Retrieving reads from biosample {biosample.accession}")
         accession = biosample.accession
 
         reads_to_save=[]
@@ -200,6 +200,9 @@ def get_experiments():
             if mapped_exp.experiment_accession in existing_experiments:
                 continue
             experiments_to_save.append(mapped_exp)
+
+        if not experiments_to_save:
+            continue
 
         Experiment.objects.insert(experiments_to_save)
         
