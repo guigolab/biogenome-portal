@@ -38,5 +38,8 @@ export const useAnnotationStore = defineStore('annotation', {
     resetPagination() {
       this.pagination = { ...initPagination }
     },
+    resetForm(){
+      this.annotationForm = {...initAnnotationForm}
+    }
   },
 })

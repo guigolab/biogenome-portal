@@ -382,36 +382,6 @@
           "displayName": "menu.organismsMap"
         }
       ]
-    },
-    {
-      "name": "forms",
-      "displayName": "menu.forms",
-      "meta": {
-        "icon": "vuestic-iconset-forms"
-      },
-      "disabled": true,
-      "children": [
-        {
-          "name": "crud-table",
-          "displayName": "menu.adminArea"
-        },
-        {
-          "name": "insdc-forms",
-          "displayName": "menu.insdcForms"
-        },
-        {
-          "name": "organism-form",
-          "displayName": "menu.organismForm"
-        },
-        {
-          "name": "spreadsheet-upload",
-          "displayName": "menu.importLocalSamples"
-        },
-        {
-          "name": "goat-upload",
-          "displayName": "menu.goatUpload"
-        }
-      ]
     }
   ]
 }

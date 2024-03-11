@@ -10,7 +10,7 @@
       <va-dropdown-content class="profile-dropdown__content">
         <va-list-item class="pa-2">
           <va-chip v-if="globalStore.isAuthenticated" flat @click="logout()"> Logout </va-chip>
-          <va-chip v-else flat @click="showLoginModal()"> Login </va-chip>
+          <va-chip v-else flat @click="$router.push('/login')"> Login </va-chip>
         </va-list-item>
       </va-dropdown-content>
     </va-dropdown>
@@ -23,6 +23,7 @@
   import { useColors } from 'vuestic-ui'
   import { useGlobalStore } from '../../../../stores/global-store'
   import { useToast } from 'vuestic-ui'
+import router from '../../../../router'
 
   const { init } = useToast()
   const globalStore = useGlobalStore()
@@ -49,13 +50,10 @@
 
   const isShown = ref(false)
 
-  function showLoginModal() {
-    globalStore.showLoginModal = true
-    return
-  }
   function logout() {
     globalStore.logout()
     init({ message: 'User logged out', color: 'warning' })
+    router.push('/')
   }
 </script>
 

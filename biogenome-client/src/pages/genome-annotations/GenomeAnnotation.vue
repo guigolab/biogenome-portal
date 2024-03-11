@@ -18,9 +18,9 @@
       <KeyValueCard v-if="annotationSelectedMetadata.length" :metadata="metadata"
         :selected-metadata="annotationSelectedMetadata" />
       <div class="row row-equal">
-        <div class="flex lg12 md12 sm12 xs12">
+        <!-- <div class="flex lg12 md12 sm12 xs12">
           <Jbrowse2 :assembly="assembly" :annotations="annotations" />
-        </div>
+        </div> -->
         <div v-if="metadata && Object.keys(metadata).length" class="flex lg12 md12 sm12 xs12">
         <MetadataTreeCard :metadata="metadata" />
       </div>

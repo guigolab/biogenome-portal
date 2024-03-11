@@ -33,7 +33,7 @@
 import { experimentInfoBlocks } from '../../../config.json'
 import { useI18n } from 'vue-i18n'
 import InfoBlockVue from '../../components/InfoBlock.vue'
-import ReadService from '../../services/clients/ReadService'
+import ExperimentService from '../../services/clients/ExperimentService'
 import { onMounted, ref } from 'vue'
 import { useReadStore } from '../../stores/read-store'
 import DataTable from '../../components/ui/DataTable.vue'
@@ -54,29 +54,29 @@ const experiments = ref([])
 const total = ref(0)
 
 onMounted(async () => {
-  getReads({ ...readStore.searchForm, ...readStore.pagination })
+  getExperiments({ ...readStore.searchForm, ...readStore.pagination })
 })
 
 async function handleSubmit() {
   readStore.resetPagination()
   offset.value = 1
-  getReads({ ...readStore.searchForm, ...readStore.pagination })
+  getExperiments({ ...readStore.searchForm, ...readStore.pagination })
 }
 async function handlePagination(value: number) {
   readStore.pagination.offset = value - 1
-  getReads({ ...readStore.searchForm, ...readStore.pagination })
+  getExperiments({ ...readStore.searchForm, ...readStore.pagination })
 }
 
 async function reset() {
   offset.value = 1
   readStore.resetSeachForm()
   readStore.resetPagination()
-  getReads({ ...readStore.pagination })
+  getExperiments({ ...readStore.pagination })
 }
 
-async function getReads(query: Record<string, any>) {
+async function getExperiments(query: Record<string, any>) {
   try {
-    const { data } = await ReadService.getReads(query)
+    const { data } = await ExperimentService.getExperiments(query)
     experiments.value = data.data
     total.value = data.total
   } catch (e) {

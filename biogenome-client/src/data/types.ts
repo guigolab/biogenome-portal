@@ -12,6 +12,12 @@ export type TPieChartData = ChartData<'pie'>
 
 export type TChartData = TLineChartData | TBarChartData | TBubbleChartData | TDoughnutChartData | TPieChartData
 
+export type Model = 'biosamples' | 'experiments' | 'organisms' | 'annotations' | 'assemblies' | 'users' | 'local_samples'
+export type Metatada = {
+  key: string
+  value: string
+}
+
 interface Node {
   children: Array<string>
   leaves: number
@@ -26,7 +32,7 @@ export type Filter = {
   label: string
   placeholder?: string
   type: 'input' | 'select' | 'date' | 'checkbox'
-  options?: Array<string | Record<string,any>>
+  options?: Array<string | Record<string, any>>
   key: string
 }
 
@@ -37,7 +43,7 @@ export interface SearchForm {
   sort_order: string
   start_date?: string
   end_date?: string
-  rank?:string
+  rank?: string
 }
 
 export interface OrganismSearchForm extends SearchForm {
@@ -49,10 +55,10 @@ export interface OrganismSearchForm extends SearchForm {
 }
 
 export type StatusSearchForm = {
-  goat_status:string
-  target_list_status:string
-  filter:string
-  filter_option:string
+  goat_status: string
+  target_list_status: string
+  filter: string
+  filter_option: string
 }
 
 export type BioSampleSearchForm = SearchForm
@@ -126,7 +132,7 @@ type Sequence = {
 export type AssemblyAdapter = {
   name: string
   sequence: Sequence
-  refNameAliases?:Record<string,any>
+  refNameAliases?: Record<string, any>
 }
 
 export type InfoBlock = {
@@ -145,10 +151,10 @@ export interface Assembly {
   scientific_name: string,
   taxid: string,
   sample_accession: string,
-  blobtoolkit_id?:string
-  chromosomes: Record<string,any>[],
+  blobtoolkit_id?: string
+  chromosomes: Record<string, any>[],
   metadata: Record<string, any>,
-  has_chromosomes_aliases:boolean
+  has_chromosomes_aliases: boolean
 }
 export interface TrackData {
   name: string;
@@ -158,19 +164,19 @@ export interface TrackData {
 export interface BioSample {
   accession: string
   scientific_name: string
-  taxid:string
-  assemblies:string[]
-  experiments:string[]
-  metadata:Record<string,any>
+  taxid: string
+  assemblies: string[]
+  experiments: string[]
+  metadata: Record<string, any>
 }
 
 export interface ChromosomeInterface {
-  accession_version:string
-  metadata:Record<string,any>
+  accession_version: string
+  metadata: Record<string, any>
 }
 export interface Details {
   title: string,
-  description?:string
+  description?: string
   button1?: {
     route: Record<string, any>
     label: string
@@ -185,28 +191,40 @@ export interface Details {
 }
 
 export interface OrganismLocations {
-  taxid:string
-  scientific_name:string
-  coordinates:Record<number,number>[]
-  image?:string
+  taxid: string
+  scientific_name: string
+  coordinates: Record<number, number>[]
+  image?: string
 }
 
 
 export interface SampleLocations {
-  taxid:string
-  scientific_name:string
-  sample_accession:string
-  coordinates:{
-    coordinates:[number, number]
+  taxid: string
+  scientific_name: string
+  sample_accession: string
+  coordinates: {
+    coordinates: [number, number]
   }
-  is_local_sample:boolean
-  image?:string
+  is_local_sample: boolean
+  image?: string
 }
 
 export interface OrganismCoordinates {
-  latitude:number
-  longitude:number
-  id:string,
-  taxid:string
-  image?:string
+  latitude: number
+  longitude: number
+  id: string,
+  taxid: string
+  image?: string
+}
+
+export type OrganismForm = {
+    taxid: string | null,
+    scientific_name: string | null,
+    common_names: CommonName[],
+    image:string,
+    image_urls: string[],
+    metadata: Record<string, string>,
+    publications: Publication[],
+    goat_status: string,
+    target_list_status: string,
 }

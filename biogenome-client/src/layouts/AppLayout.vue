@@ -20,7 +20,6 @@
         </div>
       </div>
     </div>
-    <Login />
   </div>
 </template>
 
@@ -29,7 +28,6 @@
   import { storeToRefs } from 'pinia'
   import { onBeforeRouteUpdate } from 'vue-router'
   import { useGlobalStore } from '../stores/global-store'
-  import Login from '../components/modals/Login.vue'
   import Navbar from '../components/navbar/Navbar.vue'
   import Sidebar from '../components/sidebar/Sidebar.vue'
   
