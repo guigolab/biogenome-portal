@@ -49,6 +49,7 @@ def initialize_routes(api):
 	api.add_resource(biosamples_controller.BioSampleApi, '/api/biosamples/<accession>')
 	api.add_resource(biosamples_controller.ExperimentsByBiosample, '/api/biosamples/<accession>/experiments')
 	api.add_resource(biosamples_controller.AssembliesByBiosample, '/api/biosamples/<accession>/assemblies')
+	api.add_resource(biosamples_controller.SubSamplesApi, '/api/biosamples/<accession>/sub_samples')
 
 	##LOCAL_SAMPLES
 	api.add_resource(local_samples_controller.LocalSamplesApi, '/api/local_samples')
