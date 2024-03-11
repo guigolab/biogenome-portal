@@ -7180,9 +7180,9 @@
     "@vue/shared" "3.2.37"
 
 "vuestic-ui@^1.8.5":
-  "integrity" "sha512-G+eQoQs+fGh+9elb7fjdU3eOIPw2rxW8/k4oq/tUM3S+RlJ0IjtOsJWt15DPMW+Slfjjc3JjX5HjZVQ+bUhA3g=="
-  "resolved" "https://registry.npmjs.org/vuestic-ui/-/vuestic-ui-1.8.5.tgz"
-  "version" "1.8.5"
+  "integrity" "sha512-Im6rCgowMTFYCx4/cM7Gq57TAKwzNp3+VJJQqwZNgUUVkW6u58vYBuH3gIuLVHbi8JicPARgkyX6HQ4V4VPBpQ=="
+  "resolved" "https://registry.npmjs.org/vuestic-ui/-/vuestic-ui-1.9.3.tgz"
+  "version" "1.9.3"
   dependencies:
     "@floating-ui/vue" "^1.0.1"
     "@types/lodash" "^4.14.161"
