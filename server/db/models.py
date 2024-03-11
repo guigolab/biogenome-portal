@@ -2,6 +2,7 @@ import datetime
 import os
 from .enums import INSDCStatus, GoaTStatus, TargetListStatus, PublicationSource, BrokerSource, CronJobStatus, Roles
 import mongoengine as db
+import os
 
 def handler(event):
     """Signal decorator to allow use of callback functions as class decorators."""
@@ -12,6 +13,103 @@ def handler(event):
         fn.apply = apply
         return fn
     return decorator
+
+@handler(db.pre_save)
+def update_organism_status(sender, document, **kwargs):
+    if not os.getenv('PROJECT_ACCESSION'):
+        return
+    taxid = document.taxid
+    document.assemblies =  Assembly.objects(taxid=taxid).scalar('accession')
+    document.experiments = Experiment.objects(taxid=taxid).scalar('experiment_accession')
+    document.local_samples = LocalSample.objects(taxid=taxid).scalar('local_id')
+    document.biosamples = BioSample.objects(taxid=taxid).scalar('accession')
+    document.annotations = GenomeAnnotation.objects(taxid=taxid).scalar('name')
+    if document.assemblies:
+        document.insdc_status= INSDCStatus.ASSEMBLIES
+        document.goat_status=GoaTStatus.INSDC_SUBMITTED
+    elif document.experiments:
+        document.insdc_status= INSDCStatus.READS
+        document.goat_status=GoaTStatus.IN_ASSEMBLY
+    elif document.biosamples:
+        document.insdc_status=INSDCStatus.SAMPLE
+        document.goat_status = GoaTStatus.SAMPLE_ACQUIRED
+    elif document.local_samples:
+        document.insdc_status=None
+        document.goat_status = GoaTStatus.SAMPLE_COLLECTED
+    if document.publications:
+        document.goat_status = GoaTStatus.PUBLICATION_AVAILABLE
+    update_date = GoaTUpdateDate.objects().first()
+    if not update_date:
+        GoaTUpdateDate(updated=datetime.datetime.utcnow,taxid=document.taxid).save()
+    else:
+        update_date.save(updated=datetime.datetime.utcnow,taxid=document.taxid)
+
+
+@handler(db.pre_save)
+def update_biosample_links(sender, document, **kwargs):
+    document.assemblies = Assembly.objects(sample_accession=document.accession).scalar('accession')
+    document.experiments = Experiment.objects(sample_accession=document.accession).scalar('experiment_accession')
+    query={"metadata__sample derived from":document.accession}
+    document.sub_samples = BioSample.objects(__raw__ = {'metadata.sample derived from' : {"$exists": True}}).filter(**query).scalar('accession')
+
+
+def trigger_organism_update(taxid):
+    organism = Organism.objects(taxid=taxid).first()
+    if organism:
+        organism.save()
+
+def update_taxons(lineage):
+    for node in lineage:
+        leaves = Organism.objects(taxon_lineage=node.taxid, taxid__ne=node.taxid).count()
+        if leaves == 0:
+            TaxonNode.objects(children=node.taxid).update(pull__children=node.taxid)
+            node.delete()
+        else:
+            node.modify(leaves=leaves)
+
+@handler(db.post_delete)
+def delete_organism_related_data( sender, document ):
+    taxid = document.taxid
+    Assembly.objects(taxid=taxid).delete()
+    GenomeAnnotation.objects(taxid=taxid).delete()
+    Experiment.objects(taxid=taxid).delete()
+    LocalSample.objects(taxid=taxid).delete()
+    BioSample.objects(taxid=taxid).delete()
+    BioGenomeUser.objects(species=taxid).update(pull__species=taxid)
+    taxons = TaxonNode.objects(taxid__in=document.taxon_lineage)
+    update_taxons(taxons)
+
+
+@handler(db.post_delete)
+def delete_biosample_related_data(sender, document):
+    accession = document.accession
+    Assembly.objects(sample_accession=accession).delete()
+    experiments = Experiment.objects(sample_accession=accession)
+    experiment_accessions = [exp.experiment_accession for exp in experiments]
+    experiments.delete()
+    SampleCoordinates.objects(sample_accession=accession).delete()
+    Read.objects(experiment_accession__in=experiment_accessions).delete()
+    BioSample.objects(accession__in=document.sub_samples).delete()
+    trigger_organism_update(document.taxid)
+
+@handler(db.post_delete)
+def delete_local_sample_related_data(sender, document):
+    local_id = document.local_id
+    SampleCoordinates.objects(sample_accession=local_id).delete()
+    trigger_organism_update(document.taxid)
+
+@handler(db.post_delete)
+def delete_assembly_related_data(sender, document):
+    accession = document.accession
+    if document.chromosomes:
+        Chromosome.objects(accession_version__in=document.chromosomes).delete()
+    GenomeAnnotation.objects(assembly_accession=accession).delete()
+    trigger_organism_update(document.taxid)
+
+@handler(db.post_delete)
+def delete_experiment_related_data(sender, document):
+    Read.objects(experiment_accession=document.experiment_accession).delete()
+    trigger_organism_update(document.taxid)
 
 class TaxonNode(db.Document):
     children = db.ListField(db.StringField()) #stores taxids
@@ -25,24 +123,7 @@ class TaxonNode(db.Document):
         ]
     }
 
-@handler(db.pre_save)
-def update_organism_status(sender, document, **kwargs):
-    if os.getenv('PROJECT_ACCESSION'):
-        if document.assemblies:
-            document.insdc_status= INSDCStatus.ASSEMBLIES
-            document.goat_status=GoaTStatus.INSDC_SUBMITTED
-        elif document.experiments:
-            document.insdc_status= INSDCStatus.READS
-            document.goat_status=GoaTStatus.IN_ASSEMBLY
-        elif document.biosamples:
-            document.insdc_status=INSDCStatus.SAMPLE
-            document.goat_status = GoaTStatus.SAMPLE_ACQUIRED
-        elif document.local_samples:
-            document.insdc_status=None
-            document.goat_status = GoaTStatus.SAMPLE_COLLECTED
-        if document.publications:
-            document.goat_status = GoaTStatus.PUBLICATION_AVAILABLE
-
+@delete_experiment_related_data.apply
 class Experiment(db.Document):
     sample_accession= db.StringField()
     experiment_accession= db.StringField(unique=True)
@@ -56,6 +137,12 @@ class Experiment(db.Document):
         'indexes': ['experiment_accession']
     }
 
+class Read(db.Document):
+    run_accession = db.StringField(required=True, unique=True)
+    experiment_accession = db.StringField(required=True)
+    metadata = db.DictField()
+
+@delete_assembly_related_data.apply
 class Assembly(db.Document):
     accession = db.StringField(unique=True)
     assembly_name=db.StringField()
@@ -96,6 +183,7 @@ class SampleCoordinates(db.Document):
         'indexes': ['sample_accession','taxid']
     }
 
+@delete_local_sample_related_data.apply
 class LocalSample(db.Document):
     created = db.DateTimeField(default=datetime.datetime.utcnow)
     local_id = db.StringField(required=True,unique=True)
@@ -115,6 +203,8 @@ class LocalSample(db.Document):
         'strict': False
     }
 
+@update_biosample_links.apply
+@delete_biosample_related_data.apply
 class BioSample(db.Document):
     assemblies = db.ListField(db.StringField())
     experiments = db.ListField(db.StringField())
@@ -148,23 +238,6 @@ class GenomeAnnotation(db.Document):
     user=db.StringField()
     external=db.BooleanField(default=True)
    
-@handler(db.post_delete)
-def delete_related_data( sender, document ):
-    taxid = document.taxid
-    Assembly.objects(taxid=taxid).delete()
-    GenomeAnnotation.objects(taxid=taxid).delete()
-    Experiment.objects(taxid=taxid).delete()
-    LocalSample.objects(taxid=taxid).delete()
-    BioSample.objects(taxid=taxid).delete()
-    SampleCoordinates.objects(taxid=taxid).delete()
-    taxons = TaxonNode.objects(taxid__in=document.taxon_lineage)
-    for node in taxons:
-        node.leaves=node.leaves - 1
-        if node.leaves <= 0:
-            TaxonNode.objects(children=node.taxid).update_one(pull__children=node.taxid)
-            node.delete()
-        else:
-            node.save()
 
 class CommonName(db.EmbeddedDocument):
     value=db.StringField()
@@ -183,7 +256,7 @@ class OrganismPublication(db.Document):
     description = db.StringField()
     metadata = db.DictField()
 
-@delete_related_data.apply
+@delete_organism_related_data.apply
 @update_organism_status.apply
 class Organism(db.Document):
     assemblies = db.ListField(db.StringField())
@@ -219,6 +292,10 @@ class Organism(db.Document):
         'strict': False
     }
 
+class GoaTUpdateDate(db.Document):
+    updated = db.DateTimeField(default=datetime.datetime.utcnow)
+    taxid = db.StringField(required=True)
+
 class CronJob(db.Document):
     status = db.EnumField(CronJobStatus, required=True)
     cronjob_type = db.StringField(required=True,unique=True)
@@ -227,3 +304,4 @@ class BioGenomeUser(db.Document):
     name=db.StringField(unique=True,required=True)
     password=db.StringField(required=True)
     role=db.EnumField(Roles, required=True)
+    species=db.ListField(db.StringField())

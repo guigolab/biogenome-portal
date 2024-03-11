@@ -42,4 +42,7 @@
   text {
     font-size: .8rem;
   }
+  .c-h {
+    min-height: 400px;
+  }
 </style>

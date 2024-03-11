@@ -24,7 +24,7 @@ const { t } = useI18n()
 
 const accessToken = import.meta.env.VITE_CESIUM_TOKEN
 
-const cesium = ref(null)
+const cesium = ref()
 const infobox = ref(null)
 const showDetails = ref(false)
 let viewer = null

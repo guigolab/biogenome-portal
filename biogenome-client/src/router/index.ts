@@ -1,4 +1,19 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
+import { useGlobalStore } from '../stores/global-store'
+import OrganismsVue from '../pages/cms/organism/Organisms.vue'
+import DashboardPageVue from '../pages/dashboard/DashboardPage.vue'
+
+function isAdmin() {
+  const { userRole } = useGlobalStore()
+  if (userRole !== 'Admin') {
+    return { name: 'unauthorized' }
+  }
+}
+
+function isAuthenticated() {
+  const { isAuthenticated } = useGlobalStore()
+  if (!isAuthenticated) return { name: 'login' }
+}
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -8,17 +23,22 @@ const routes: Array<RouteRecordRaw> = [
   {
     name: 'dashboard',
     path: '/',
-    component: () => import('../pages/dashboard/DashboardPage.vue'),
+    component: DashboardPageVue,
   },
   {
     name: 'taxonomy-explorer',
-    path:'/taxonomy-explorer',
+    path: '/taxonomy-explorer',
     component: () => import('../pages/taxonomy/TaxonomyExplorer.vue')
   },
   {
     name: 'login',
     path: '/login',
     component: () => import('../pages/auth/login/Login.vue'),
+  },
+  {
+    name: 'unauthorized',
+    path: '/unauthorized',
+    component: () => import('../pages/auth/unauthorized/Unauthorized.vue'),
   },
   {
     name: 'taxons',
@@ -29,7 +49,7 @@ const routes: Array<RouteRecordRaw> = [
     name: 'taxon',
     path: '/taxons/:taxid',
     component: () => import('../pages/taxons/Taxon.vue'),
-    props:true
+    props: true
   },
   {
     path: '/assemblies',
@@ -140,61 +160,105 @@ const routes: Array<RouteRecordRaw> = [
     ],
   },
   {
-    name: 'forms',
-    path: '/forms',
-    component: () => import('../layouts/RouterBypass.vue'),
+    name: 'cms-dashboard',
+    path: '/cms-dashboard',
+    component: () => import('../pages/cms/CMSDashboard.vue'),
+    beforeEnter: [isAuthenticated],
     children: [
       {
-        name: 'crud-table',
-        path: 'admin',
-        component: () => import('../pages/forms/AdminPage.vue'),
-      },
-      {
-        name: 'insdc-forms',
-        path: 'insdc-form',
-        component: () => import('../pages/forms/INSDCForm.vue'),
+        path: '',
+        name: 'cms-organisms',
+        component: OrganismsVue
       },
       {
         name: 'spreadsheet-upload',
         path: 'spreadsheet-upload',
-        component: () => import('../pages/forms/SpreadsheetUpload.vue'),
+        component: () => import('../pages/cms/uploads/SpreadsheetUpload.vue'),
       },
       {
         name: 'goat-upload',
         path: 'goat-upload',
-        component: () => import('../pages/forms/GoaTUpload.vue'),
+        component: () => import('../pages/cms/uploads/GoaTUpload.vue'),
       },
       {
-        name: 'organism-form',
-        path: 'organism-form/:taxid?',
-        props: true,
-        component: () => import('../pages/forms/OrganismForm.vue'),
+        name: 'create-organism',
+        path: 'create-organism',
+        component: () => import('../pages/cms/organism/OrganismForm.vue')
       },
       {
-        name: 'annotation-form-update',
-        path: 'annotation-form/:assemblyAccession/:id?',
+        name: 'update-organism',
+        path: 'update-organism/:taxid',
         props: true,
-        component: () => import('../pages/forms/UpdateAnnotation.vue'),
+        component: () => import('../pages/cms/organism/OrganismForm.vue')
       },
       {
-        name: 'annotation-form-create',
-        path: 'annotation-form/:assemblyAccession',
-        props: true,
-        component: () => import('../pages/forms/CreateAnnotation.vue'),
+        name: 'create-user',
+        path: 'create-user',
+        component: () => import('../pages/cms/user/UserForm.vue')
       },
-      // {
-      //   name: 'local-sample-form',
-      //   path: 'local-sample-form/:id?',
-      //   props: true,
-      //   component: () => import('../pages/forms/LocalSampleForm.vue'),
-      // },
+      {
+        name: 'update-user',
+        path: 'update-user/:name',
+        props: true,
+        component: () => import('../pages/cms/user/UserForm.vue')
+      },
+      {
+        name: 'create-annotation',
+        path: 'create-annotation',
+        beforeEnter: [isAdmin],
+        component: () => import('../pages/cms/annotation/AnnotationForm.vue'),
+      },
+      {
+        name: 'update-annotation',
+        path: 'update-annotation/:name',
+        props: true,
+        beforeEnter: [isAdmin],
+        component: () => import('../pages/cms/annotation/AnnotationForm.vue'),
+      },
       {
         name: 'chr-aliases',
         path: 'chr-aliases/:accession',
         props: true,
-        component: () => import('../pages/forms/ChromosomeNameAliasesForm.vue'),
+        beforeEnter: [isAdmin],
+        component: () => import('../pages/cms/uploads/ChrAliasesForm.vue')
       },
-    ],
+      {
+        name: 'insdc-form',
+        path: 'insdc-form',
+        beforeEnter: [isAdmin],
+        component: () => import('../pages/cms/uploads/INSDCForm.vue'),
+      },
+      {
+        name: 'cms-assemblies',
+        path: 'assemblies',
+        component: () => import('../pages/cms/assembly/Assemblies.vue')
+      },
+      {
+        name: 'cms-biosamples',
+        path: 'biosamples',
+        component: () => import('../pages/cms/biosample/BioSamples.vue')
+      },
+      {
+        name: 'cms-local_samples',
+        path: 'local_samples',
+        component: () => import('../pages/cms/localsample/LocalSamples.vue')
+      },
+      {
+        name: 'cms-experiments',
+        path: 'experiments',
+        component: () => import('../pages/cms/experiment/Experiments.vue')
+      },
+      {
+        name: 'cms-annotations',
+        path: 'annotations',
+        component: () => import('../pages/cms/annotation/Annotations.vue')
+      },
+      {
+        name: 'cms-users',
+        path: 'users',
+        component: () => import('../pages/cms/user/Users.vue')
+      }
+    ]
   }
 ]
 

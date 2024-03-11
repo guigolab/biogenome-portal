@@ -28,9 +28,19 @@ class INSDCStatus(Enum):
     ASSEMBLIES = 'Assemblies Submitted'
 
 class Roles(Enum):
-    SAMPLE_MANAGER = 'SampleManager' # samples local (through excel) and public (biosamples)
-    DATA_MANAGER = 'DataManager' # crud data
-    DATA_ADMIN = 'Admin' # all actions
+    ##CRUD LOCAL_SAMPLES
+    SAMPLE_MANAGER = 'SampleManager'
+
+    ## CREATE NEW ORGANISM
+    ## UPLOAD GOAT
+    ## IMPORT FROM INSDC
+    ## UPLOAD SPREADSHEET
+    ## CREATE ANNOTATION
+    ## CRUD RELATED DATA
+    DATA_MANAGER = 'DataManager'
+
+    ## ALL ACTIONS
+    DATA_ADMIN = 'Admin'
 
 class CronJobStatus(Enum):
     PENDING = 'PENDING'

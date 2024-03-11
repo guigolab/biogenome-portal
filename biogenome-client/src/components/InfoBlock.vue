@@ -7,6 +7,8 @@
                         :label="chart.label" />
                     <DateLineChart v-else-if="chart.type === 'dateline'" :label="chart.label" :field="chart.field"
                         :title="chart.title" :model="chart.model" :color="chart.color" />
+                    <BarChart v-else-if="chart.type === 'bar'" :label="chart.label" :field="chart.field"
+                        :title="chart.title" :model="chart.model" :color="chart.color" />
                     <ContributorList v-else-if="chart.type === 'contribution'" :field="chart.field" :model="chart.model"
                         :title="chart.title" />
                     <CustomList v-else-if="chart.type === 'list'" :title="chart.title" :field="chart.field"
@@ -27,7 +29,7 @@ import ContributorList from './stats/ContributorList.vue'
 import PieChart from './charts/PieChart.vue'
 import { InfoBlock } from '../data/types'
 import CustomList from './stats/CustomList.vue'
-
+import BarChart from './charts/BarChart.vue'
 const props = defineProps<{
     charts: InfoBlock[]
 }>()
@@ -35,4 +37,3 @@ const props = defineProps<{
 
 
 </script>
-  

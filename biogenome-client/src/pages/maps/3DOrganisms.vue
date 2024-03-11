@@ -33,7 +33,6 @@ let viewer = null
 const selectedOrganism = ref(null)
 
 onMounted(async () => {
-  console.log('CESIUM')
   cesium.value.focus()
   if (accessToken) Cesium.Ion.defaultAccessToken = accessToken
   viewer = new Cesium.Viewer(cesium.value, { timeline: false, animation: false, infoBox: false })

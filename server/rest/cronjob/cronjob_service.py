@@ -1,4 +1,4 @@
-from db.models import Organism, Assembly, BioSample, SampleCoordinates, LocalSample, Experiment
+from db.models import Organism, Assembly, BioSample, SampleCoordinates, LocalSample, Read,Experiment,Chromosome
 from ..utils import ena_client,genomehubs_client
 from ..biosample import biosamples_service
 from ..organism import organisms_service
@@ -15,47 +15,73 @@ PROJECTS = os.getenv('PROJECTS')
 COUNTRIES_PATH = './countries.json'
 
 def get_biosamples_derived_from():
+
     possible_parent_samples = BioSample.objects(__raw__ = {'metadata.sample derived from' : {"$exists": False}, 'sub_samples':None})
+    
     for possible_parent in possible_parent_samples:
+        
         ebi_biosample_response = ena_client.get_samples_derived_from(possible_parent.accession)
+        
         if not ebi_biosample_response:
             continue
-        time.sleep(3)
+        
         for sample_to_save in ebi_biosample_response:
-            biosample_child = biosamples_service.create_biosample_from_ebi_data(sample_to_save)
-            time.sleep(3)
-            possible_parent.modify(add_to_set__sub_samples=biosample_child.accession)
+            biosample_child = biosamples_service.parse_biosample_from_ebi_data(sample_to_save)
+            biosample_child.save()
+            sample_locations_service.save_coordinates(biosample_child)
+            sample_locations_service.update_countries_from_biosample(biosample_child)
+            possible_parent.save()
 
 def get_biosample_parents():
+    
     biosample_siblings = BioSample.objects(__raw__ = {'metadata.sample derived from' : {"$exists": True}})
+
     print(f'Found a total of: {len(biosample_siblings)} biosample siblings')
-    if not biosample_sibling:
+    
+    if not biosample_siblings:
         print('No sibling to map')
         return
-    parent_accessions = set([biosample_sibling.metadata['sample derived from'] for biosample_sibling in biosample_siblings])
+   
+    parent_accessions = set([sib.metadata['sample derived from'] for sib in biosample_siblings])
+    
     existing_parents = BioSample.objects(accession__in=parent_accessions).scalar('accession')
+
     for biosample_sibling in biosample_siblings:
+        
         derived_from = biosample_sibling.metadata['sample derived from']
+        
         if derived_from in existing_parents:
             continue
+        
         biosample_response = ena_client.get_sample_from_biosamples(derived_from)
+        
         if not biosample_response:
             print(f'Unable to retrieve parent biosample {derived_from} from EBI BioSamples API')
-        biosample_obj = biosamples_service.create_biosample_from_ebi_data(biosample_response)
-        biosample_obj.modify(add_to_set__sub_samples=biosample_sibling.accession)
+        
+        biosample_obj = biosamples_service.parse_biosample_from_ebi_data(biosample_response)
+        biosample_obj.save()
+
+        sample_locations_service.save_coordinates(biosample_obj)
+        sample_locations_service.update_countries_from_biosample(biosample_obj)
+        
 
 #the NCBI API WILL CHANGE SOON, BETTER SWITCH TO DATASETS CLI
 def import_assemblies():
     project_accession = os.getenv('PROJECT_ACCESSION')
+    biosamples = list(BioSample.objects().scalar('accession'))
     if not project_accession:
         return
+    
+    print(f"IMPORTING ASSEMBLIES FOR: {project_accession}")
     fetched_assemblies = []
+    
     page_token = None
 
     while True:
         params = {
             "filters.reference_only": False,
-            "filters.assembly_source": "all",
+            "filters.assembly_source": "genbank",
+            "filters.assembly_version": "current",
             "page_size": 100,
             "page_token": page_token,
         }
@@ -80,46 +106,138 @@ def import_assemblies():
     if not fetched_assemblies:
         print('no assemblies found')
         return
+    else:
+        print(f"A total of {len(fetched_assemblies)} found under {project_accession}")
     existing_assemblies = Assembly.objects(accession__in=[assembly["assembly_accession"] for assembly in fetched_assemblies]).scalar('accession')
+    existing_chromosomes = list(Chromosome.objects().scalar('accession_version')) ## avoid duplicate chromosomes
+    assemblies_to_save = []
     for assembly in fetched_assemblies:
+
         assembly_accession = assembly["assembly_accession"]
+        
         if assembly_accession in existing_assemblies:
             continue
 
         print(f"Importing Assembly: {assembly_accession}")
-        assemblies_service.create_assembly_from_ncbi_data(assembly)
+        
+        assembly_obj, chromosomes = assemblies_service.parse_assembly_from_ncbi_data(assembly)
+                
+        organism = organisms_service.get_or_create_organism(assembly_obj.taxid)
+        
+        #skip assembly if the taxid is not found
+        if not organism:
+            print( f"Organism {assembly_obj.taxid} of assembly {assembly_accession} not found in INSDC")
+            continue
+
+        if chromosomes:
+            Chromosome.objects.insert([chr for chr in chromosomes if chr.accession_version not in existing_chromosomes])
+            new_accessions = [chr.accession_version for chr in chromosomes]
+            assembly_obj.chromosomes = new_accessions
+            existing_chromosomes.extend(new_accessions)
+
+        assemblies_to_save.append(assembly)
+        assembly_obj.save()
+
+        biosample_accession = assembly.get('biosample_accession')
+        
+        if biosample_accession:
+
+            if not biosample_accession in biosamples:
+
+                if assembly.get('biosample') and assembly.get('biosample').get('attributes'):
+                    biosample_object = biosamples_service.parse_biosample_from_ncbi_data(assembly)
+                    biosample_object.save()
+                    biosamples.append(biosample_object.accession)
+                    sample_locations_service.save_coordinates(biosample_object)
+                    sample_locations_service.update_countries_from_biosample(biosample_object)
+                else:
+                    biosamples_service.create_biosample_from_accession(assembly.get('biosample_accession'))
+
+            #update biosample status
+            BioSample.objects(accession=biosample_accession).first().save()
+
+        organism.save()
+        #update organism status
 
 #TRACK EXPERIMENTS
 def get_experiments():
-    query = dict(experiments=[])
-    biosamples = BioSample.objects(**query)
+    biosamples = BioSample.objects()
+
     print(f'Biosamples to retrieve experiments from {len(biosamples)}')
+
+    existing_reads = Read.objects().scalar('run_accession')
+
+
     for biosample in biosamples:
-        accessions = reads_service.create_reads_from_biosample_accession(biosample.accession)
-        organism = organisms_service.get_or_create_organism(biosample.taxid)
-        if not accessions:
+
+        accession = biosample.accession
+
+        reads_to_save=[]
+
+        ebi_reads = ena_client.get_reads_link_from_sample_accession(accession)
+
+        for ebi_read in ebi_reads:
+            run_acc = ebi_read.get('run_accession')
+            #check if read is not present
+            if run_acc not in existing_reads:
+                reads_to_save.append(run_acc)
+
+        parsed_reads = []
+        for read_accession in reads_to_save:
+            parsed_reads.extend(reads_service.parse_ena_reads(read_accession))
+
+        if not parsed_reads:
             continue
-        for acc in accessions:
-            biosample.modify(add_to_set__experiments=acc)
-            organism.modify(add_to_set__experiments=acc)
+        # print(parsed_reads)
+        Read.objects.insert(parsed_reads)
+
+        mapped_experiments = reads_service.map_experiments_from_reads(parsed_reads)
+
+        existing_experiments = Experiment.objects(experiment_accession__in=[exp.experiment_accession for exp in mapped_experiments]).scalar('experiment_accession')
+        
+        experiments_to_save = []
+        for mapped_exp in mapped_experiments:
+            if mapped_exp.experiment_accession in existing_experiments:
+                continue
+            experiments_to_save.append(mapped_exp)
+
+        Experiment.objects.insert(experiments_to_save)
+        
         biosample.save()
+        #update organism status
+        organism = organisms_service.get_or_create_organism(biosample.taxid)
         organism.save()
+
 
 def import_biosamples():
     if not PROJECTS:
+        print("No Projects defined")
         return
+    
     for project_accession in PROJECTS.split(','):
+        print(f"IMPORTING BIOSAMPLES FOR PROJECT {project_accession}")
         biosamples = ena_client.retrieve_biosamples_from_ebi_by_project(project_accession)
         if not biosamples:
-            print('no biosamples found')
+            print(f'any biosample found for project {project_accession}')
             continue
         accessions = [biosample['accession'] for biosample in biosamples]
         existing_biosamples = BioSample.objects(accession__in=accessions).scalar('accession')
-        for biosample_to_save in biosamples:
-            if biosample_to_save['accession'] in existing_biosamples:
+        for biosample_to_parse in biosamples:
+            if biosample_to_parse['accession'] in existing_biosamples:
                 continue
-            biosamples_service.create_biosample_from_ebi_data(biosample_to_save)
+            biosample_obj = biosamples_service.parse_biosample_from_ebi_data(biosample_to_parse)
 
+            organism = organisms_service.get_or_create_organism(biosample_obj.taxid)
+            if not organism:
+                print(f"Organism {biosample_obj.taxid} not found in INSDC")
+                print(f"Skipping biosample {biosample_to_parse.accession}")
+                continue
+            biosample_obj.save()
+            sample_locations_service.save_coordinates(biosample_obj)
+            sample_locations_service.update_countries_from_biosample(biosample_obj)
+
+            #update organism status
+            organism.save()
 
 def update_sample_locations():
     biosamples = BioSample.objects(location__ne=None)

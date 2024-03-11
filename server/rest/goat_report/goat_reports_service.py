@@ -1,10 +1,12 @@
 import csv
 from db.enums import GoaTStatus,PublicationSource
-from db.models import Organism,Publication
+from db.models import Organism,Publication,BioGenomeUser, GoaTUpdateDate
 from io import StringIO
-from mongoengine.queryset.visitor import Q
 from itertools import islice
 from ..organism import organisms_service
+from ..utils import data_helper
+from flask_jwt_extended import get_jwt
+import os
 
 GOAT_STATUS_EXPORT_MAPPER={
     GoaTStatus.SAMPLE_COLLECTED.value: "sample_collected",
@@ -27,20 +29,36 @@ COLUMN_MAPPER = {
     'ncbi_taxon_id': "taxid",
     'species': 'scientific_name',
 }
+GOAT_REPORT_COLUMNS = ['ncbi_taxon_id','species','subspecies','family','target_list_status','sequencing_status','synonym','publication_id']
+GOAT_MANDATORY_FIELDS = ['ncbi_taxon_id','target_list_status']
 
+ROWS_TO_SKIP = 7
+
+
+GOAT_HEADER_ROWS = [
+    ["# project_name", os.getenv('GOAT_PROJECT_NAME')],
+    ["# subproject_name", os.getenv('GOAT_SUBPROJECT_NAME')],
+    ["# primary_contact", os.getenv('GOAT_PRIMARY_CONTACT')],
+    ["# primary_contact_institution", os.getenv('GOAT_PRIMARY_CONTACT_INSTITUTION')],
+    ["# primary_contact_email", os.getenv('GOAT_PRIMARY_CONTACT_EMAIL')],
+    ["# date_of_update", "23-03-02"],
+    ["# schema_version", os.getenv('GOAT_SCHEMA_VERSION')],
+]
 
 def download_goat_report():
-    report = open('./goat_report.tsv', 'r',newline='')
-    tsv_template = csv.reader(report, delimiter='\t')
     writer_file = StringIO()
     tsv = csv.writer(writer_file, delimiter='\t')
-    for row in tsv_template:
-        tsv.writerow(row)
-    goat_columns = ['ncbi_taxon_id','species','subspecies','family','target_list_status','sequencing_status','synonym','publication_id']
+    date = GoaTUpdateDate.objects().first().updated
+    formatted_date = date.strftime("%Y-%m-%d")
+    headers = GOAT_HEADER_ROWS
+    if formatted_date:
+        headers[5][1] = formatted_date
+    tsv.writerows(headers)
+    tsv.writerow(GOAT_REPORT_COLUMNS)
     organisms = Organism.objects().as_pymongo()
     for organism in organisms:
-        new_row = list()
-        for column in goat_columns:
+        new_row = []
+        for column in GOAT_REPORT_COLUMNS:
             if column in COLUMN_MAPPER.keys() and organism[COLUMN_MAPPER[column]]:
                     new_row.append(organism[COLUMN_MAPPER[column]])
             elif column == 'target_list_status' and 'target_list_status' in organism.keys() and organism['target_list_status']:
@@ -55,55 +73,92 @@ def download_goat_report():
         tsv.writerow(new_row)
     return writer_file.getvalue()
 
-
-def get_filter(filter, option):
-    if option == 'taxid':
-        return (Q(taxid__iexact=filter) | Q(taxid__icontains=filter))
-    elif option == 'common_name':
-        return (Q(insdc_common_name__iexact=filter) | Q(insdc_common_name__icontains=filter))
-    elif option == 'tolid':
-        return (Q(tolid_prefix__iexact=filter) | Q(tolid_prefix__icontains=filter))
-    else:
-        return (Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter))
-
-
-GOAT_MANDATORY_FIELDS = ['ncbi_taxon_id','target_list_status']
+def generate_tsv_reader(report):
+    goat_data = StringIO(report.read().decode('utf-8'))
+    goat_data = islice(goat_data, ROWS_TO_SKIP, None)
+    return csv.DictReader(goat_data, delimiter='\t')
 
 def upload_goat_report(report):
-    goat_data = StringIO(report.read().decode('utf-8'))
-    rows_to_skip = 7
-    goat_data = islice(goat_data, rows_to_skip, None)
-    tsvreader = csv.DictReader(goat_data, delimiter='\t')
+    tsvreader = generate_tsv_reader(report)
+    rows = []
+    for row in tsvreader:
+        rows.append(row)
+
+    errors = validate_fields(rows)
+    if errors:
+        return errors, 400
+    
+    user = get_user()
+    if not user:
+        return [{"user": "User not found"}], 400
+    
+    taxids = [str(row.get('ncbi_taxon_id')) for row in rows]
+    
+    existing_organisms = Organism.objects(taxid__in=taxids)
+    
+    errors, new_taxons_to_parse = data_helper.validate_taxonomy(user, existing_organisms,taxids)
+    
+    if errors:
+        return errors, 400
+    
+    if new_taxons_to_parse:
+        create_organisms(new_taxons_to_parse, user)
+
+    saved_organisms = update_organisms(rows, taxids)
+
+    return saved_organisms, 200
+
+def update_organisms(tsv_reader, taxids):
+    saved_organisms = []
+    organisms = Organism.objects(taxid__in=taxids)
+    for index, row in enumerate(tsv_reader):
+        taxid = str(row['ncbi_taxon_id'])
+        for org in organisms:
+            if taxid != org.taxid:
+                continue
+            if row['sequencing_status']:
+                for status in GOAT_STATUS_IMPORT_MAPPER.keys():
+                    if status == row['sequencing_status']:
+                        org.goat_status = GOAT_STATUS_IMPORT_MAPPER[status]
+            org.target_list_status = row['target_list_status']
+            if row['publication_id'] and not any(pub.id == row['publication_id'] for pub in org.publications):
+                pub_to_save = map_publication(row.get('publication_id'))
+                org.publications.append(pub_to_save)
+            saved_organisms.append({taxid: f"Organism {org.scientific_name} correctly saved"})
+            org.save()
+    return saved_organisms
+    
+def get_user():
+    claims = get_jwt()
+    username = claims.get('username')
+    return BioGenomeUser.objects(name=username).first()
+
+
+def validate_fields(tsv_reader):
     errors = []
-    saved_species=[]
-    for index, row in enumerate(tsvreader):
-        row_index = index+rows_to_skip
+    for index, row in enumerate(tsv_reader):
+        row_index = index+ROWS_TO_SKIP
         for m_field in GOAT_MANDATORY_FIELDS:
             if not row[m_field]:
                 errors.append(dict(index=row_index, message=f'{m_field} is mandatory'))
-        if errors:
-            continue #skip row if mandatory fields are no
-        taxid = str(row['ncbi_taxon_id'])
-        organism = organisms_service.get_or_create_organism(taxid)
-        if not organism:
-            errors.append(dict(index=row_index,message=f'taxid not found'))
-            continue
-        if row['sequencing_status']:
-            for status in GOAT_STATUS_IMPORT_MAPPER.keys():
-                if status == row['sequencing_status']:
-                    organism.goat_status = GOAT_STATUS_IMPORT_MAPPER[status]
-        organism.target_list_status = row['target_list_status']
-        if row['publication_id'] and not any(pub.id == row['publication_id'] for pub in organism.publications):
-            pub = row['publication_id']
-            publication_to_save = Publication()
-            if '/' in pub:
-                publication_to_save.source = PublicationSource.DOI
-            if 'PMC' in pub:
-                publication_to_save.source = PublicationSource.PMCID
-            else:
-                publication_to_save.source = PublicationSource.PMID
-            publication_to_save.id = pub
-            organism.publications.append(publication_to_save)
-        organism.save()
-        saved_species.append(organism.taxid)
-    return saved_species, errors
+    return errors
+
+def create_organisms(new_taxons_to_parse, user):
+    taxonomic_infos = organisms_service.parse_organisms_from_ncbi_data(new_taxons_to_parse)
+    for taxonomic_info in taxonomic_infos:
+        taxid, scientific_name, insdc_common_name, lineage =  taxonomic_info
+        organisms_service.create_organism_from_taxonomic_info(taxid, scientific_name, insdc_common_name, lineage)
+        if user.role.value == 'DataManager':
+            user.modify(add_to_set__species=taxid)
+
+
+def map_publication(pub):
+    publication_to_save = Publication()
+    if '/' in pub:
+        publication_to_save.source = PublicationSource.DOI
+    if 'PMC' in pub:
+        publication_to_save.source = PublicationSource.PMCID
+    else:
+        publication_to_save.source = PublicationSource.PMID
+    publication_to_save.id = pub
+    return publication_to_save

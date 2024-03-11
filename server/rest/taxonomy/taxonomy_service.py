@@ -7,7 +7,8 @@ from collections import deque
 def create_tree(taxid):
     # Fetch the initial taxon node
     node = TaxonNode.objects(taxid=taxid).exclude('id').first()
-    tree = dfs(node)
+    taxons = TaxonNode.objects().exclude('id')
+    tree = dfs(node, taxons)
     return tree
 
 def bfs(root, nodes, max_leaves):
@@ -29,7 +30,7 @@ def bfs(root, nodes, max_leaves):
         if nodes[level] > max_leaves:
             return level - 1
 
-def dfs(node):
+def dfs(node, taxons):
     tree = {
         "name": node.name,
         "taxid": node.taxid,
@@ -38,9 +39,9 @@ def dfs(node):
         "children": []
     }
     if node.children:
-        children = TaxonNode.objects(taxid__in=node.children)
+        children = taxons.filter(taxid__in=node.children)
         for child in children:
-            child_dict = dfs(child)
+            child_dict = dfs(child, taxons)
             tree["children"].append(child_dict)
     return tree
 

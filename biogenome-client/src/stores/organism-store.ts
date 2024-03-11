@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import {  Publication, CommonName } from '../data/types'
+import {  Publication, CommonName,Metatada,OrganismForm } from '../data/types'
 import { OrganismSearchForm } from '../data/types'
 
 const initSearchForm: OrganismSearchForm = {
@@ -13,7 +13,7 @@ const initSearchForm: OrganismSearchForm = {
   sort_order: '',
   country: '',
 }
-const initOrganismForm = {
+const initOrganismForm:OrganismForm = {
   taxid: null,
   scientific_name: null,
   common_names: [] as CommonName[],
@@ -21,8 +21,8 @@ const initOrganismForm = {
   image_urls: [] as string[],
   metadata: {} as Record<string, string>,
   publications: [] as Publication[],
-  goat_status: null,
-  target_list_status: null,
+  goat_status: '',
+  target_list_status: '',
 }
 
 const initPagination = {
@@ -36,6 +36,10 @@ export const useOrganismStore = defineStore('organism', {
       searchForm: { ...initSearchForm },
       organismForm: { ...initOrganismForm },
       pagination: { ...initPagination },
+      metadataList: [] as Metatada[],
+      publications: [] as Publication[],
+      vernacularNames: [] as CommonName[],
+      images: [] as Record<'value',string>[]
     }
   },
 

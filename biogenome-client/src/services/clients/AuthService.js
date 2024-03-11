@@ -36,11 +36,18 @@ class AuthService {
   createOrganism(formData) {
     return auth.post('/organisms', formData)
   }
-
   updateOrganism(taxid, formData) {
     return auth.put(`/organisms/${taxid}`, formData)
   }
-
+  getCronjobs(){
+    return auth.get('/cronjobs')
+  }
+  createCronjob(model){
+    return auth.post(`/cronjobs/${model}`)
+  }
+  deleteCronjob(model){
+    return auth.delete(`/cronjobs/${model}`)
+  }
   deleteOrganism(taxid) {
     return auth.delete(`/organisms/${taxid}`)
   }
@@ -86,11 +93,17 @@ class AuthService {
   createUser(data) {
     return auth.post('/users', data)
   }
+  getUsers(){
+    return auth.get('/users')
+  }
   deleteUser(name) {
     return auth.delete(`/users/${name}`)
   }
+  getUser(name) {
+    return auth.get(`/users/${name}`)
+  }
   updateUser(name, data) {
-    return auth.post(`/users/${name}`, data)
+    return auth.put(`/users/${name}`, data)
   }
 }
 
