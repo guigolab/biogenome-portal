@@ -77,7 +77,6 @@ def create_biosample_from_accession(accession):
     if not organism:
         return f"Organism {biosample_obj.taxid} not found in INSDC"
     
-    biosample_obj.save()
     sample_locations_service.save_coordinates(biosample_obj)
     sample_locations_service.update_countries_from_biosample(biosample_obj)
 
@@ -90,6 +89,8 @@ def create_biosample_from_accession(accession):
 
     for sibling in biosample_siblings:
         if not sibling.accession in existing_siblings:
+            sample_locations_service.save_coordinates(sibling)
+            sample_locations_service.update_countries_from_biosample(sibling)
             sibling.save()
     biosample_obj.save()
 
@@ -97,7 +98,6 @@ def create_biosample_from_accession(accession):
     return f"Biosample {accession} correctly saved", 201
 
 def parse_biosample_from_ebi_data(sample):
-    print(sample.get('characteristics'))
     taxid = str(sample.get('taxId'))
     accession = sample.get('accession')
     scientific_name = sample.get('characteristics').get('scientific_name')[0].get('text')
@@ -123,7 +123,6 @@ def delete_biosample(accession):
     if not biosample_to_delete:
         raise NotFound
     #delete siblings
-    BioSample.objects(accession__in=biosample_to_delete.sub_samples).delete()
     biosample_to_delete.delete()
     return accession
 

@@ -45,9 +45,12 @@
 </template>
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import AssemblyService from '../../../services/clients/AssemblyService'
 import ExperimentService from '../../../services/clients/ExperimentService'
 import AuthService from '../../../services/clients/AuthService';
+import { useToast } from 'vuestic-ui/web-components';
+
+const { init } = useToast()
+
 const initPagination = {
     offset: 0,
     limit: 10,
@@ -87,15 +90,21 @@ async function handleSubmit() {
     pagination.value = { ...initPagination }
 }
 
-function deleteConfirmation(rowData:Record<string,any>) {
+function deleteConfirmation(rowData: Record<string, any>) {
     readToDelete.value.accession = rowData.experiment_accession
     showModal.value = true
 }
 
 async function deleteRead() {
     showModal.value = false
-    await AuthService.deleteRead(readToDelete.value.accession)
-    handleSubmit()
+    try {
+        await AuthService.deleteRead(readToDelete.value.accession)
+        init({ message: `${readToDelete.value.accession} succesfully deleted`, color: 'success' })
+        handleSubmit()
+    } catch (error) {
+        init({ message: "Something happened", color: 'danger' })
+        console.log(error)
+    }
 }
 
 function reset() {

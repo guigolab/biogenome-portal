@@ -5,25 +5,25 @@
         <div class="row align-end">
             <va-input class="flex lg4 md6 sm12 xs12" v-model="filter.filter" label="search user">
                 <template #append>
-                    <va-button type="submit" :disabled="filter.filter.length < 2" icon="search" >
+                    <va-button type="submit" :disabled="filter.filter.length < 2" icon="search">
                     </va-button>
                     <va-button type="reset" :disabled="filter.filter.length < 2" icon="cancel" @click="reset">
                     </va-button>
                 </template>
             </va-input>
             <div class="flex">
-                <va-button color="success" :to="{name:'create-user'}">New User</va-button>
+                <va-button color="success" :to="{ name: 'create-user' }">New User</va-button>
             </div>
         </div>
     </va-form>
     <va-data-table :items="users" :columns="['name', 'role', 'edit', 'delete']">
         <template #cell(edit)="{ rowData }">
             <va-icon v-if="GlobalStore.userName !== rowData.name" :disabled="!isAdmin" color="primary" name="edit"
-                @click="$router.push({name: 'update-user', params: {name: rowData.name}})"/>
+                @click="$router.push({ name: 'update-user', params: { name: rowData.name } })" />
         </template>
         <template #cell(delete)="{ rowData }">
             <va-icon v-if="GlobalStore.userName !== rowData.name" :disabled="!isAdmin" color="danger" name="delete"
-                @click="deleteConfirmation(rowData)"/>
+                @click="deleteConfirmation(rowData)" />
         </template>
     </va-data-table>
     <div class="row justify-center">
@@ -50,7 +50,10 @@ import { ref, onMounted, computed } from 'vue'
 import UserService from '../../../services/clients/UserService'
 import { useGlobalStore } from '../../../stores/global-store';
 import AuthService from '../../../services/clients/AuthService';
+import { useToast } from 'vuestic-ui/web-components';
 
+
+const { init } = useToast()
 const GlobalStore = useGlobalStore()
 const initPagination = {
     offset: 0,
@@ -92,20 +95,27 @@ async function handleSubmit() {
     total.value = data.total
     pagination.value = { ...initPagination }
 }
-function reset(){
-    filter.value = {...initFilter}
-    pagination.value = {...initPagination}
+function reset() {
+    filter.value = { ...initFilter }
+    pagination.value = { ...initPagination }
     handleSubmit()
 }
-function deleteConfirmation(rowData:Record<string,any>) {
+function deleteConfirmation(rowData: Record<string, any>) {
     userToDelete.value.name = rowData.name
     showModal.value = true
 }
 
 async function deleteUser() {
     showModal.value = false
-    const { data } = await AuthService.deleteUser(userToDelete.value.name)
-    handleSubmit()
+    try {
+        const { data } = await AuthService.deleteUser(userToDelete.value.name)
+        init({ message: `${userToDelete.value.name} successfully deleted!` })
+        handleSubmit()
+
+    } catch (e) {
+
+        init({ message: "Something happened" })
+    }
 }
 
 </script>

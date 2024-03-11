@@ -16,7 +16,7 @@
     </va-form>
     <va-data-table :items="localSamples" :columns="['local_id', 'scientific_name', 'delete']">
         <template #cell(delete)="{ rowData }">
-            <va-icon color="danger" name="delete" @click="deleteConfirmation(rowData)"/>
+            <va-icon color="danger" name="delete" @click="deleteConfirmation(rowData)" />
         </template>
     </va-data-table>
     <div class="row justify-center">
@@ -102,9 +102,14 @@ function deleteConfirmation(rowData: Record<string, any>) {
 
 async function deleteLocalSample() {
     showModal.value = false
-    await AuthService.deleteLocalSample(sampleToDelete.value.id)
-    init({message: `Sample ${sampleToDelete.value.id} successfully deleted!`, color: 'success'})
-    handleSubmit()
+    try {
+        await AuthService.deleteLocalSample(sampleToDelete.value.id)
+        init({ message: `${sampleToDelete.value.id} succesfully deleted`, color: 'success' })
+        handleSubmit()
+    } catch (error) {
+        init({ message: "Something happened", color: 'danger' })
+        console.log(error)
+    }
 }
 
 function reset() {

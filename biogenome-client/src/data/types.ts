@@ -140,7 +140,7 @@ export type InfoBlock = {
   model: string,
   title: string,
   label: string,
-  type: 'pie' | 'dateline' | 'contribution' | 'list' | 'habitat'
+  type: 'pie' | 'dateline' | 'bar' | 'contribution' | 'list' | 'habitat'
   color: string
   class: string
 }
@@ -218,13 +218,13 @@ export interface OrganismCoordinates {
 }
 
 export type OrganismForm = {
-    taxid: string | null,
-    scientific_name: string | null,
-    common_names: CommonName[],
-    image:string,
-    image_urls: string[],
-    metadata: Record<string, string>,
-    publications: Publication[],
-    goat_status: string,
-    target_list_status: string,
+  taxid: string | null,
+  scientific_name: string | null,
+  common_names: CommonName[],
+  image: string,
+  image_urls: string[],
+  metadata: Record<string, string>,
+  publications: Publication[],
+  goat_status: string,
+  target_list_status: string,
 }

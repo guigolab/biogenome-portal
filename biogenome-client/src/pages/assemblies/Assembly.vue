@@ -19,13 +19,13 @@
     <!-- TODO add ideogram -->
     <!-- <Ideogram v-if="assembly && assembly.taxid && hasChromosomes" :taxid="assembly.taxid" :accession="accession" /> -->
     <div class="row row-equal">
-      <!-- <div v-if="hasChromosomes" class="flex lg12 md12 sm12 xs12">
+      <div v-if="hasChromosomes" class="flex lg12 md12 sm12 xs12">
         <va-collapse v-model="showJBrowse" flat header="Genome Browser" color="#721e63">
           <KeepAlive>
             <Jbrowse2 :assembly="assembly" :annotations="annotations" />
           </KeepAlive>
         </va-collapse>
-      </div> -->
+      </div>
       <div v-if="metadata && Object.keys(metadata).length" class="flex lg12 md12 sm12 xs12">
         <va-collapse v-model="showMetadata" header="Metadata" flat color="secondary">
           <MetadataTreeCard :metadata="metadata" />

@@ -17,7 +17,7 @@
             {{ rowData.metadata.tissue || rowData.metadata.organism_part || rowData.metadata['organism part'] }}
         </template>
         <template #cell(delete)="{ rowData }">
-            <va-icon color="danger" name="delete" @click="deleteConfirmation(rowData)"/>
+            <va-icon color="danger" name="delete" @click="deleteConfirmation(rowData)" />
         </template>
     </va-data-table>
     <div class="row justify-center">
@@ -84,20 +84,26 @@ async function handleSubmit() {
     pagination.value = { ...initPagination }
 }
 
-function deleteConfirmation(rowData:Record<string,any>) {
+function deleteConfirmation(rowData: Record<string, any>) {
     sampleToDelete.value.accession = rowData.accession
     showModal.value = true
 }
 
 async function deleteBioSample() {
     showModal.value = false
-    await AuthService.deleteBioSample(sampleToDelete.value.accession)
-    handleSubmit()
+    try {
+        await AuthService.deleteBioSample(sampleToDelete.value.accession)
+        init({ message: `${sampleToDelete.value.accession} succesfully deleted`, color: 'success' })
+        handleSubmit()
+    } catch (error) {
+        init({ message: "Something happened", color: 'danger' })
+        console.log(error)
+    }
 }
 
-function reset(){
-    filter.value = {...initFilter}
-    pagination.value = {...initPagination}
+function reset() {
+    filter.value = { ...initFilter }
+    pagination.value = { ...initPagination }
     handleSubmit()
 }
 </script>

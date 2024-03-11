@@ -111,7 +111,6 @@ async function deleteAssembly() {
     } catch (error) {
         init({ message: "Something happened", color: 'danger' })
         console.log(error)
-
     }
 }
 

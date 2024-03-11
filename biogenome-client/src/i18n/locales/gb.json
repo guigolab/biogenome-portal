@@ -222,6 +222,9 @@
     "header":"Find a taxon by its Taxonomic identifier, or return the closest phylogenetic match if not found."
   },
   "taxonList":{
+    "charts":{
+      "firstBarChart": "Taxons by rank"
+    },
     "filters":{
       "searchInput":"Search Taxon",
       "sortColumn":"Sort Column",

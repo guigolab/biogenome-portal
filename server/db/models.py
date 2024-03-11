@@ -49,7 +49,8 @@ def update_organism_status(sender, document, **kwargs):
 def update_biosample_links(sender, document, **kwargs):
     document.assemblies = Assembly.objects(sample_accession=document.accession).scalar('accession')
     document.experiments = Experiment.objects(sample_accession=document.accession).scalar('experiment_accession')
-    document.sub_samples = BioSample.objects(__raw__ = {'metadata.sample derived from' : {"$exists": True}}).scalar('accession')
+    query={"metadata__sample derived from":document.accession}
+    document.sub_samples = BioSample.objects(__raw__ = {'metadata.sample derived from' : {"$exists": True}}).filter(**query).scalar('accession')
 
 
 def trigger_organism_update(taxid):
@@ -88,6 +89,7 @@ def delete_biosample_related_data(sender, document):
     experiments.delete()
     SampleCoordinates.objects(sample_accession=accession).delete()
     Read.objects(experiment_accession__in=experiment_accessions).delete()
+    BioSample.objects(accession__in=document.sub_samples).delete()
     trigger_organism_update(document.taxid)
 
 @handler(db.post_delete)

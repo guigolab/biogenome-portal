@@ -224,6 +224,9 @@
     "header":"Cerca un taxó pel seu identificador taxonòmic, o retorna la coincidència filogenètica més propera si no es troba."
   },
   "taxonList": {
+    "charts":{
+      "firstBarChart": "Taxons per rang"
+    },
     "filters": {
       "searchInput": "Cerca taxon",
       "sortColumn": "Ordena columna",

@@ -52,3 +52,11 @@ class AssembliesByBiosample(Resource):
             raise NotFound
         assemblies = Assembly.objects(sample_accession=accession).exclude('id', 'created')
         return Response(assemblies.to_json(), mimetype="application/json", status=200)
+
+class SubSamplesApi(Resource):
+    def get(self,accession):
+        biosample = BioSample.objects(accession=accession).first()
+        if not biosample:
+            raise NotFound
+        sub_samples = BioSample.objects(accession__in=biosample.sub_samples).exclude('id','created')
+        return Response(sub_samples.to_json(), mimetype="application/json", status=200)

@@ -12,12 +12,11 @@
     </va-form>
     <va-data-table :items="annotations" :columns="['name', 'scientific_name', 'assembly_name', 'edit', 'delete']">
         <template #cell(edit)="{ rowData }">
-            <va-icon
-                @click="$router.push({ name: 'annotation-form-update', params: { name: rowData.name } })"
-                name="edit"/>
+            <va-icon @click="$router.push({ name: 'annotation-form-update', params: { name: rowData.name } })"
+                name="edit" />
         </template>
         <template #cell(delete)="{ rowData }">
-            <va-icon color="danger" name="delete" @click="deleteConfirmation(rowData)"/>
+            <va-icon color="danger" name="delete" @click="deleteConfirmation(rowData)" />
         </template>
     </va-data-table>
     <div class="row justify-center">
@@ -43,7 +42,8 @@
 import { ref, onMounted } from 'vue'
 import AnnotationService from '../../../services/clients/AnnotationService'
 import AuthService from '../../../services/clients/AuthService';
-
+import { useToast } from 'vuestic-ui/web-components';
+const { init } = useToast()
 const initPagination = {
     offset: 0,
     limit: 10,
@@ -89,12 +89,18 @@ function deleteConfirmation(rowData: Record<string, any>) {
 
 async function deleteAnnotation() {
     showModal.value = false
-    await AuthService.deleteAnnotation(annotationTodelete.value.name)
-    handleSubmit()
+    try {
+        await AuthService.deleteAnnotation(annotationTodelete.value.name)
+        init({ message: `${annotationTodelete.value.name} succesfully deleted`, color: 'success' })
+        handleSubmit()
+    } catch (error) {
+        init({ message: "Something happened", color: 'danger' })
+        console.log(error)
+    }
 }
 
-function reset(){
-    filter.value = {...initFilter}
-    pagination.value = {...initPagination}
+function reset() {
+    filter.value = { ...initFilter }
+    pagination.value = { ...initPagination }
 }
 </script>
