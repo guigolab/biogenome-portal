@@ -15,6 +15,7 @@ def get_sample_from_biosamples(accession):
         return response['_embedded']['samples'][0]
 
 def get_samples_derived_from(accession):
+    time.sleep(1)
     biosamples=[]
     href=f"https://www.ebi.ac.uk/biosamples/samples?size=200&filter=attr%3Asample%20derived%20from%3A{accession}"
     resp = requests.get(href).json()
@@ -32,6 +33,12 @@ def get_tolid(taxid):
     else:
         return response[0]['prefix']
 
+def get_reads_link_from_sample_accession(accession):
+    time.sleep(1)
+    experiments_data = requests.get(f"https://www.ebi.ac.uk/ena/portal/api/links/sample?accession={accession}&result=read_run&limit=1000&format=json")
+    if experiments_data.status_code != 200:
+        return list()
+    return experiments_data.json()
 
 def get_reads(accession):
     time.sleep(1)

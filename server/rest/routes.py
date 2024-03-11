@@ -43,23 +43,27 @@ def initialize_routes(api):
 	api.add_resource(assemblies_controller.AssemblyApi,  '/api/assemblies/<accession>')
 	api.add_resource(assemblies_controller.AssemblyRelatedAnnotationsApi, '/api/assemblies/<accession>/annotations')
 	api.add_resource(assemblies_controller.AssemblyChrAliasesApi, '/api/assemblies/<accession>/chr_aliases')
+
 	##BIOSAMPLES
 	api.add_resource(biosamples_controller.BioSamplesApi, '/api/biosamples')
 	api.add_resource(biosamples_controller.BioSampleApi, '/api/biosamples/<accession>')
-	api.add_resource(biosamples_controller.BioSampleRelatedDataApi, '/api/biosamples/<accession>/<model>') 
-
+	api.add_resource(biosamples_controller.ExperimentsByBiosample, '/api/biosamples/<accession>/experiments')
+	api.add_resource(biosamples_controller.AssembliesByBiosample, '/api/biosamples/<accession>/assemblies')
 
 	##LOCAL_SAMPLES
 	api.add_resource(local_samples_controller.LocalSamplesApi, '/api/local_samples')
 	api.add_resource(local_samples_controller.LocalSampleApi, '/api/local_samples/<local_id>')
 	
 	##READS (Experiment Document in DB)
+	api.add_resource(reads_controller.ReadsByExperiment, '/api/experiments/<accession>/reads')
 	api.add_resource(reads_controller.ExperimentApi, '/api/experiments/<accession>')
 	api.add_resource(reads_controller.ExperimentsApi, '/api/experiments')
 	
 	##ORGANISMS
 	api.add_resource(organisms_controller.OrganismsApi, '/api/organisms')
 	api.add_resource(organisms_controller.OrganismApi, '/api/organisms/<taxid>')
+	##CRUDS
+
 	api.add_resource(organisms_controller.OrganismLineageApi, '/api/organisms/<taxid>/lineage')
 	api.add_resource(organisms_controller.OrganismRelatedDataApi, '/api/organisms/<taxid>/<model>') 
 
@@ -72,6 +76,8 @@ def initialize_routes(api):
 	##USERS
 	api.add_resource(users_controller.UsersApi, '/api/users')
 	api.add_resource(users_controller.UserApi,'/api/users/<name>')
+
+
 
 	##STATS TODO: IMPROVE IT.. 
 	api.add_resource(stats_controller.StatsApi,'/api/stats')

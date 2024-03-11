@@ -9,6 +9,11 @@ def get_assembly(assembly_accession):
         return 
     return result['assemblies'][0]['assembly'] ##return first match
 
+def get_taxons(taxids):
+    query = ','.join(taxids)
+    result = requests.get(f"https://api.ncbi.nlm.nih.gov/datasets/v1/taxonomy/taxon/{query}").json()
+    return result.get('taxonomy_nodes')
+
 def get_assemblies(project_accession):
     assemblies=list()
     result = requests.get(f"https://api.ncbi.nlm.nih.gov/datasets/v1/genome/bioproject/{project_accession}?filters.reference_only=false&filters.assembly_source=all&page_size=100").json()
@@ -27,3 +32,10 @@ def get_assemblies(project_accession):
             assemblies.extend([ass['assembly'] for ass in result['assemblies']])
     return assemblies
 
+def get_taxon(taxid):
+    response = requests.get(f"https://api.ncbi.nlm.nih.gov/datasets/v1/taxonomy/taxon/{taxid}")
+    return response.json().get('taxonomy_nodes')
+
+def get_lineage(lineage):
+    response = requests.get(f"https://api.ncbi.nlm.nih.gov/datasets/v1/taxonomy/taxon/{','.join(lineage)}")
+    return response.json().get('taxonomy_nodes')

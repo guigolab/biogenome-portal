@@ -1,11 +1,11 @@
 from flask_restful import Resource
 from flask import Response, request
 import json
-from db.models import BioSample,Experiment,Assembly,BioProject
+from db.models import BioSample,Experiment,Assembly
 from . import biosamples_service
 from errors import NotFound
 from flask_jwt_extended import jwt_required
-
+from ..utils import wrappers
 
 FIELDS_TO_EXCLUDE = ['id','created','last_check']
 
@@ -18,11 +18,13 @@ class BioSampleApi(Resource):
         return Response(biosample_obj.to_json(),mimetype="application/json", status=200)
 
     @jwt_required()
+    @wrappers.admin_required()
     def post(self,accession):
-        response = biosamples_service.create_biosample_from_accession(accession)
-        return Response(json.dumps(response['message']), mimetype="application/json", status=response['status'])
-
+        message, status = biosamples_service.create_biosample_from_accession(accession)
+        return Response(json.dumps(message), mimetype="application/json", status=status)
+    
     @jwt_required()
+    @wrappers.admin_required()
     def delete(self,accession):
         deleted_accession = biosamples_service.delete_biosample(accession)
         if deleted_accession:
@@ -35,16 +37,18 @@ class BioSamplesApi(Resource):
         json_resp = dict(total=total,data=list(data.as_pymongo()))
         return Response(json.dumps(json_resp), mimetype="application/json", status=200)
 
-class BioSampleRelatedDataApi(Resource):
-
-    def get(self, accession, model):
-        biosample_obj=BioSample.objects(accession=accession).exclude('id').first()
-        if not biosample_obj or not model in ['sub_samples','experiments','assemblies']:
+class ExperimentsByBiosample(Resource):
+    def get(self, accession):
+        biosample = BioSample.objects(accession=accession).first()
+        if not biosample:
             raise NotFound
-        if model == 'sub_samples':
-            items = BioSample.objects(accession__in=biosample_obj.sub_samples)
-        elif model == 'experiments':
-            items = Experiment.objects(metadata__sample_accession=biosample_obj.accession)
-        else:
-            items = Assembly.objects(sample_accession=biosample_obj.accession)
-        return Response(items.to_json(),mimetype="application/json", status=200)
+        experiments = Experiment.objects(sample_accession=accession).exclude('id', 'created')
+        return Response(experiments.to_json(), mimetype="application/json", status=200)
+
+class AssembliesByBiosample(Resource):
+    def get(self, accession):
+        biosample = BioSample.objects(accession=accession).first()
+        if not biosample:
+            raise NotFound
+        assemblies = Assembly.objects(sample_accession=accession).exclude('id', 'created')
+        return Response(assemblies.to_json(), mimetype="application/json", status=200)

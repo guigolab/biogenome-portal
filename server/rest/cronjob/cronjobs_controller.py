@@ -5,7 +5,7 @@ from db.enums import CronJobStatus
 from flask_jwt_extended import jwt_required
 from errors import NotFound, RecordAlreadyExistError
 from . import cronjob_service
-
+from ..utils import wrappers
 
 JOB_MAP = {
     'get_biosamples_derived_from': cronjob_service.get_biosamples_derived_from,
@@ -28,8 +28,8 @@ class CronJobApi(Resource):
         cronjob = CronJob.objects().to_json()
         return Response(cronjob, mimetype="application/json", status=200)
 
-    #create cronjob
     @jwt_required()
+    @wrappers.admin_required()
     def post(self, model):
         if not model in JOB_MAP.keys():
             raise NotFound
@@ -38,24 +38,23 @@ class CronJobApi(Resource):
             raise RecordAlreadyExistError
         cronjob = CronJob(cronjob_type=model, status= CronJobStatus.PENDING).save()
         print(f'Triggering job {model}')
-        is_error = False
+        code = 200
         message = ''
         try:
             JOB_MAP[model]()
             message = f'job {model} successfully executed'
-        except:
-            message = f'Error executing job {model}'
-            is_error = True
+        except Exception as e:
+            message = f'Error executing job {model}: {e}'
+            code = 400
+            print("ERROR: ")
             print(message)
         finally:
             cronjob.delete()
-            if is_error:
-                code = 400
-            else:
-                code = 201
+
         return Response(message, mimetype="application/json", status=code)
 
     @jwt_required()
+    @wrappers.admin_required()
     def delete(self, model):
         cron = CronJob.objects(cronjob_type=model)
         if not cron:

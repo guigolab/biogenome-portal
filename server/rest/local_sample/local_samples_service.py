@@ -1,30 +1,31 @@
-from db.models import LocalSample,SampleCoordinates,Organism
+from db.models import LocalSample,SampleCoordinates,Organism,BioGenomeUser
 from errors import NotFound
 from ..organism import organisms_service
 from datetime import datetime
 from mongoengine.queryset.visitor import Q
+from flask_jwt_extended import get_jwt
 
 
 def get_local_samples(offset=0,limit=20,
                         filter=None, filter_option="scientific_name",
                         sort_column=None,sort_order=None,
-                        start_date=None, end_date=datetime.utcnow):
-    if filter:
-        filter_query= get_filter(filter,filter_option)
-    else:
-        filter_query = None
+                        start_date=None, end_date=datetime.utcnow, user=None):
+    
+    local_samples = LocalSample.objects().exclude('id')
+
+    filter_query= get_filter(filter,filter_option) if filter else None
+
+    if filter_query:
+        local_samples = local_samples.filter(filter_query)
+
     if start_date:
         date_query = (Q(created__gte=start_date) & Q(created__lte=end_date))
-    else:
-        date_query = None
-    if filter_query and date_query:
-        local_samples = LocalSample.objects(filter_query,date_query).exclude('id')
-    elif filter_query:
-        local_samples = LocalSample.objects(filter_query).exclude('id')
-    elif date_query:
-        local_samples = LocalSample.objects(date_query).exclude('id')
-    else:
-        local_samples = LocalSample.objects().exclude('id')
+        local_samples = local_samples.filter(date_query)
+
+    if user:
+        user_object = BioGenomeUser.objects(name=user).first()
+        local_samples = local_samples.filter(taxid__in=user_object.species)
+
     if sort_column:
         sort = '-'+sort_column if sort_order == 'desc' else sort_column
         local_samples = local_samples.order_by(sort)
@@ -33,18 +34,29 @@ def get_local_samples(offset=0,limit=20,
 def get_filter(filter, option):
     if option == 'taxid':
         return (Q(taxid__iexact=filter) | Q(taxid__icontains=filter))
+    elif option == 'local_id':
+        return (Q(local_id__iexact=filter) | Q(local_id__icontains=filter))
     else:
         return (Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter))
 
 
 def delete_local_sample(id):
+    claims = get_jwt()
+    name = claims.get('username')
+    user = BioGenomeUser.objects(name=name).first()
+    if not user:
+        raise NotFound
+    
     sample_to_delete = LocalSample.objects(local_id=id).first()
     if not sample_to_delete:
         raise NotFound
-    SampleCoordinates.objects(sample_accession=id).delete()
-    organism = Organism.objects(taxid=sample_to_delete.taxid)
-    organism.modify(pull__local_samples=sample_to_delete.local_id)
+    
+    if user.role.value == 'DataManager' and not sample_to_delete.taxid in user.species:
+        raise NotFound
+    
     sample_to_delete.delete()
+    organism = Organism.objects(taxid=sample_to_delete.taxid).first()
+    organism.save()
     return id
 
 def create_local_sample(data):

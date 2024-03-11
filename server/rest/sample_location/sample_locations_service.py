@@ -1,4 +1,4 @@
-from db.models import SampleCoordinates,Organism
+from db.models import Organism,SampleCoordinates
 import json
 from shapely.geometry import shape, Point
 
@@ -46,7 +46,7 @@ def save_coordinates(saved_sample, id_field='accession'):
 
                 existing_coordinates = SampleCoordinates.objects(sample_accession=saved_sample[id_field]).first()
                 if existing_coordinates:
-                    existing_coordinates.coordinates = [longitude,latitude]
+                    existing_coordinates.coordinates = [long,lat]
                     existing_coordinates.save()
                 else:
                     sample_coordinates_to_save = {
@@ -116,4 +116,6 @@ def update_countries_from_biosample(saved_biosample):
 
 
 def add_image(taxid, image):
-    SampleCoordinates.objects(taxid=taxid).update(image=image)
+    coordinates = SampleCoordinates.objects(taxid=taxid)
+    if len(coordinates) > 0:
+        SampleCoordinates.objects(taxid=taxid).update(image=image)

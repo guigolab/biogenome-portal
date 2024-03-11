@@ -1,139 +1,189 @@
 import openpyxl
-from db.models import BrokerSource, LocalSample
+from db.models import BrokerSource, LocalSample,Organism,BioGenomeUser
 from ..organism import organisms_service
 from ..sample_location import sample_locations_service
+from flask_jwt_extended import get_jwt
+from ..utils import data_helper
+import itertools
+
 OPTIONS = ['SKIP','UPDATE']
 
-def parse_excel(excel=None, id=None, taxid=None, scientific_name=None, latitude=None, longitude= None,header=1, option="SKIP", source=None):
+def parse_excel(excel=None, id=None, taxid=None, scientific_name=None, header=1, option="SKIP", source=None):
+    
+    #VALIDATE PARAMS
+    param_errors = validate_params(excel, header, source)
+    if param_errors:
+        return param_errors, 400
 
-##PARAMS VALIDATION
-    param_errors=list()
+
+    
+    wb_obj = openpyxl.load_workbook(excel, data_only=True)
+    sheet_obj = wb_obj.active
+
+    #GET HEADER ROW
+    header_row = get_header_row(sheet_obj, header)
+
+    mandatory_fields = {'Local Id': id, 'taxid': taxid, 'Scientific name': scientific_name}
+
+    #VALIDATE HEADER 
+    param_errors.extend(validate_header(header_row, mandatory_fields))
+
+    #VALIDATE OPTION
+    param_errors.extend(validate_option(option))
+
+    if param_errors:
+        return param_errors, 400
+    
+    header = int(header)
+    rows_to_process = itertools.islice(sheet_obj.rows, header, None)
+    #PROCESS ROWS
+    errors, samples = process_rows(rows_to_process, header_row, header, mandatory_fields)
+
+    if errors:
+        return errors, 400
+
+    ##MAP SAMPLES INTO DB MODEL
+    mapped_samples = map_samples(samples, id, source, scientific_name, taxid)
+
+    taxids = set([s.taxid for s in mapped_samples])
+    existing_organisms = Organism.objects(taxid__in=list(taxids))
+
+    user = get_user()
+
+    #VALIDATE TAXONOMY: USER HAS PERMISSION OR TAXON EXISTS IN INSDC
+    errors, new_taxons_to_parse = data_helper.validate_taxonomy(user,existing_organisms,taxids)
+
+    if errors:
+        return errors, 400
+
+    saved_or_updated_samples = save_or_update_local_samples(mapped_samples, option, source)
+
+    create_or_update_organisms(new_taxons_to_parse, existing_organisms, user)
+
+    return saved_or_updated_samples, 200
+
+
+def create_or_update_organisms(new_taxons_to_parse, existing_organisms, user):
+    if new_taxons_to_parse:
+        taxonomic_infos = organisms_service.parse_organisms_from_ncbi_data(new_taxons_to_parse)
+
+        for taxonomic_info in taxonomic_infos:
+            taxid, scientific_name, insdc_common_name, lineage =  taxonomic_info
+            organisms_service.create_organism_from_taxonomic_info(taxid, scientific_name, insdc_common_name, lineage)
+            if user.role.value == 'DataManager':
+                user.modify(add_to_set__species=taxid)
+
+    for ex_org in existing_organisms:
+        ex_org.save()
+
+def save_or_update_local_samples(mapped_samples, option, source):
+
+    existing_local_samples = LocalSample.objects()
+    saved_or_updated_samples = []
+    for s in mapped_samples:
+        existing_sample = existing_local_samples.filter(local_id=s.local_id).first()
+        if existing_sample:
+            if option == 'UPDATE':
+                existing_sample.update(taxid=s.taxid,broker=source,metadata=s.metadata)
+                existing_sample.reload()
+                sample_locations_service.save_coordinates(existing_sample,'local_id')
+                saved_or_updated_samples.append({existing_sample.local_id:f"Sample {existing_sample.local_id} updated!"})
+            else:
+                saved_or_updated_samples.append({existing_sample.local_id:f"Sample {existing_sample.local_id} skipped!"})
+                continue
+        else:
+            s.save()
+            sample_locations_service.save_coordinates(s, 'local_id')
+            saved_or_updated_samples.append({s.local_id:f"Sample {s.local_id} saved!"})
+    return saved_or_updated_samples
+
+def map_samples(samples, id, source, scientific_name, taxid):
+    mapped_samples = []
+    for s in samples:
+        str_taxid = str(s.get(taxid))
+        s_to_save = LocalSample(taxid=str_taxid,local_id=s[id],broker=source,metadata=s['metadata'],scientific_name=s[scientific_name])
+        mapped_samples.append(s_to_save)
+    return mapped_samples
+
+
+
+def get_user():
+    claims = get_jwt()
+    username = claims.get('username')
+    return BioGenomeUser.objects(name=username).first()
+
+def process_rows(rows, header_row, header, mandatory_fields):
+    all_errors = []
+    parsed_samples = []
+    for index, row in enumerate(rows):
+        values = len([cell.value for cell in row if cell.value])
+        if values < 2:
+            continue
+
+        sample_error_obj, new_sample = process_row(header_row, header, mandatory_fields, row, index)
+
+        if sample_error_obj:
+            all_errors.append(sample_error_obj)
+            continue
+        parsed_samples.append(new_sample)
+
+    return all_errors, parsed_samples
+
+def process_row(header_row, header, mandatory_fields, row, index):
+    sample_error_obj = {index + header + 1: []}
+    new_sample = {'metadata': {}}
+    for key, cell in zip(header_row, row):
+        if 'orcid' in key.lower():
+            continue
+        if key in [f for f in mandatory_fields.values()]:
+            if not cell.value:
+                msg = f"{key} field is mandatory"
+                sample_error_obj[index + header + 1].append(msg)
+            else:
+                new_sample[key] = str(cell.value).strip()
+        if cell.value:
+            new_sample['metadata'][key] = str(cell.value)
+
+    if sample_error_obj[index + header + 1]:
+        return sample_error_obj, new_sample
+    
+    return None, new_sample
+
+
+def validate_params(excel, header, source):
+    param_errors = []
+
     if not excel:
-        e=dict()
-        e['excel'] = ['excel field missing']
-        param_errors.append(e)
+        param_errors.append({'excel': ['excel field missing']})
 
     if not source:
         source = BrokerSource.LOCAL
-
     elif source not in [source.value for source in BrokerSource]:
-        e=dict()
-        e['source'] = [f'{source} is not present in sources']
-        param_errors.append(e)
+        param_errors.append({'source': [f'{source} is not present in sources']})
 
-    if not isinstance(header,int):
-        if not header.isnumeric():
-            e=dict()
-            e['header'] = [f"header must be a number. header: {header}"]
-            param_errors.append(e)
-        else:
-            header = int(header)
+    try:
+        header = int(header)
+        if header < 1:
+            raise ValueError("header must be greater than 1")
+    except ValueError:
+        param_errors.append({'header': [f"header must be a number. header: {header}"]})
 
-    if header < 1:
-        e = dict()
-        e['header'] = ["header must be greater than 1"]
-        param_errors.append(e)
+    return param_errors
 
-    #can't continue if file is None
-    if param_errors:
-        return param_errors,400
+def get_header_row(sheet_obj, header):
+    return [cell.value for cell in sheet_obj[header] if cell.value]
 
-    wb_obj = openpyxl.load_workbook(excel,data_only=True)
-    sheet_obj = wb_obj.active
+def validate_header(header_row, mandatory_fields):
+    errors = []
+    for field, value in mandatory_fields.items():
+        if not value:
+            errors.append({field: [f"{field} field missing"]})
+        elif value not in header_row:
+            errors.append({field: [f"{value} not found in {', '.join(header_row)}"]})
 
-    #check if headers are correct
-    header_row = [cell.value for cell in sheet_obj[header] if cell.value]
-    if not header_row:
-        e = dict()
-        e['header'] = [f"header can't be greater than the total rows of the excel. header: {header}"]
-        param_errors.append(e)
+    return errors
 
-    mandatory_fields = [dict(key='Local Id', value=id), dict(key="taxid",value=taxid), dict(key="Scientific name",value=scientific_name)]
-
-    for field in mandatory_fields:
-        if not field['value']:
-            e = dict()
-            e[field['key']] = [f"{field['key']} field missing"]
-            param_errors.append(e)
-        elif not field['value'] in header_row:
-            e = dict()
-            e[field['key']] = [f"{field['value']} not found in {','.join(header_row)}"]
-            param_errors.append(e)
-
-    if not option in OPTIONS:
-        e = dict()
-        e['import options'] = [f"option must be SKIP or UPDATE, current is: {option}"]
-        param_errors.append(e)
-
-    if param_errors:
-        return param_errors,400
-
-
-##EXCEL PARSING
-    all_errors = None
-    saved_samples = None
-    for index, row in enumerate(list(sheet_obj.rows)[header:]):
-        
-        ##check if the row contains something, at least three cells
-        values = len([cell.value for cell in row if cell.value])
-        if values < 3:
-            continue
-
-        sample_error_obj=dict()
-        sample_error_obj[index+header+1] = []
-        new_sample = dict(metadata=dict())
-        for key, cell in zip(header_row,row):
-            if 'orcid' in key.lower():
-                continue ## skip orcid related fields maybe private
-            if key in [f['value'] for f in mandatory_fields]:
-                if not cell.value:
-                    msg = f"{key} field is mandatory"
-                    sample_error_obj[index+header+1].append(msg)
-                else:
-                    new_sample[key] = str(cell.value).strip()
-            if cell.value:
-                new_sample['metadata'][key] = str(cell.value)
-
-        if sample_error_obj[index+header+1]:
-            if not all_errors:
-                all_errors = list()
-            all_errors.append(sample_error_obj)
-            continue
-
-        if all_errors:
-            continue
-
-        saved_sample=dict()
-        sample_obj = LocalSample.objects(local_id = new_sample[id]).first()
-        str_taxid = str(new_sample[taxid])
-        if sample_obj:
-            if option == 'SKIP':
-                continue
-            elif option == 'UPDATE':
-                sample_obj.update(taxid=str_taxid,local_id=new_sample[id],broker=source,metadata=new_sample['metadata'],scientific_name=new_sample[scientific_name])
-                sample_obj.reload()
-                sample_locations_service.save_coordinates(sample_obj,'local_id')
-                organism = organisms_service.get_or_create_organism(str_taxid)
-                organism.modify(add_to_set__local_samples=sample_obj.local_id)
-                saved_sample[index+1+header] = [f"{sample_obj.local_id} correctly updated"]
-        else:
-            organism = organisms_service.get_or_create_organism(str_taxid)
-            if not organism:
-                msg = 'TAXID not found in NCBI'
-                sample_error_obj[index+header+1].append(msg)
-                if not all_errors:
-                    all_errors = list()
-                all_errors.append(sample_error_obj)
-                continue
-            sample_obj = LocalSample(taxid=str_taxid,local_id=new_sample[id],broker=source,metadata=new_sample['metadata'],scientific_name=new_sample[scientific_name]).save() 
-            sample_locations_service.save_coordinates(sample_obj,'local_id')
-            organism.modify(add_to_set__local_samples=sample_obj.local_id)
-            saved_sample[index+1+header] = [f"{sample_obj.local_id} correctly saved"]
-        
-        if not saved_samples:
-            saved_samples = list()
-        saved_samples.append(saved_sample)
-
-    if all_errors:
-        return all_errors,400
-    return saved_samples,201
+def validate_option(option):
+    if option not in OPTIONS:
+        return [{'import options': [f"option must be SKIP or UPDATE, current is: {option}"]}]
+    return []

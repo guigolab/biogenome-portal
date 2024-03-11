@@ -7,17 +7,14 @@ from errors import NotFound
 
 def get_taxons(offset=0, limit=20,
                 filter=None, rank=None, sort_column='', sort_order=''):
-    query=dict()
+    taxons = TaxonNode.objects().exclude('id')
     if filter:
         filter_query = (Q(name__iexact=filter) | Q(name__icontains=filter) | Q(taxid__iexact=filter) | Q(taxid__icontains=filter))
-    else:
-        filter_query = None
+        taxons = taxons.filter(filter_query)
+
     if rank:
-        query['rank'] = rank
-    if filter_query:
-        taxons = TaxonNode.objects(filter_query, **query).exclude('id')
-    else:
-        taxons = TaxonNode.objects(**query).exclude('id')
+        taxons = taxons.filter(rank=rank)
+
     if sort_column:
         sort = '-'+sort_column if sort_order == 'desc' else sort_column
         taxons = taxons.order_by(sort)
@@ -49,8 +46,8 @@ def create_relationship(lineage):
 
 def leaves_counter(lineage_list):
     for node in lineage_list:
-        node.leaves=Organism.objects(taxon_lineage=node.taxid, taxid__ne=node.taxid).count()
-        node.save()
+        leaves = Organism.objects(taxon_lineage=node.taxid, taxid__ne=node.taxid).count()
+        node.modify(leaves=leaves)
 
 def get_children(taxid):
     taxon = TaxonNode.objects(taxid=taxid).exclude('id').first()

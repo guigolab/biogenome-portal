@@ -1,22 +1,11 @@
 from . import organisms_service
 from flask import Response, request
-from db.models import Organism,TaxonNode,BioProject,Assembly,BioSample,Experiment,LocalSample,GenomeAnnotation
+from db.models import Organism
 from flask_restful import Resource
 from errors import NotFound
 import json
 from flask_jwt_extended import jwt_required
-from flask import current_app as app
-import itertools
-
-
-MODEL_LIST = {
-    'assemblies':Assembly,
-    'annotations':GenomeAnnotation,
-    'biosamples':BioSample,
-    'local_samples':LocalSample,
-    'experiments':Experiment,
-    'organisms':Organism,
-    }
+from ..utils import wrappers
 
 class OrganismsApi(Resource):
 
@@ -26,10 +15,11 @@ class OrganismsApi(Resource):
 		return Response(json.dumps(json_resp), mimetype="application/json", status=200)
     
 	@jwt_required()
+	@wrappers.data_manager_required()
 	def post(self):
 		data = request.json if request.is_json else request.form
-		new_organism = organisms_service.parse_organism_data(data)
-		return Response(new_organism.to_json(),mimetype="application/json", status=201)
+		message, status = organisms_service.create_organism(data)
+		return Response(json.dumps(message),mimetype="application/json", status=status)
 
 class OrganismApi(Resource):
 	def get(self, taxid):
@@ -38,28 +28,22 @@ class OrganismApi(Resource):
 			raise NotFound
 		return Response(organism_obj.to_json(),mimetype="application/json", status=200)
 
-	##update organism
 	@jwt_required()
+	@wrappers.organism_access_required()
 	def put(self,taxid):
 		data = request.json if request.is_json else request.form
-		updated_organism = organisms_service.parse_organism_data(data,taxid)
-		return Response(updated_organism.to_json(),mimetype="application/json", status=201)
+		message, status = organisms_service.update_organism(data,taxid)
+		return Response(json.dumps(message),mimetype="application/json", status=status)
 	
 	@jwt_required()
+	@wrappers.organism_access_required()
 	def delete(self,taxid):
-		organism = Organism.objects(taxid=taxid).first()
-		name = organism.scientific_name
-		if not organism:
-			raise NotFound
-		organism.delete()
-		return Response(json.dumps(f'{name} and its related data have been deleted'),mimetype="application/json", status=201)
+		message, status = organisms_service.delete_organism(taxid)
+		return Response(json.dumps(message),mimetype="application/json", status=status)
 
 class OrganismRelatedDataApi(Resource):
 	def get(self, taxid, model):
-		organism_obj = Organism.objects(taxid=taxid).first()
-		if not organism_obj or not model in MODEL_LIST.keys():
-			raise NotFound
-		items = organisms_service.get_organism_related_data(taxid, MODEL_LIST[model])
+		items = organisms_service.get_organism_related_data(taxid, model)
 		return Response(items.to_json(),mimetype="application/json", status=200)
 
 
@@ -70,3 +54,4 @@ class OrganismLineageApi(Resource):
 			raise NotFound
 		tree = organisms_service.map_organism_lineage(organism_obj.taxon_lineage)
 		return Response(json.dumps(tree),mimetype="application/json", status=200)
+	

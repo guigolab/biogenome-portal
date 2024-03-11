@@ -1,57 +1,56 @@
-from db.models import Assembly, Chromosome, BioSample, Organism
+from db.models import Assembly, Chromosome,BioSample
+from mongoengine.errors import ValidationError
 from errors import NotFound
 from ..utils import ncbi_client,genomehubs_client
 from ..organism import organisms_service
 from ..biosample import biosamples_service
 from mongoengine.queryset.visitor import Q
-from datetime import datetime
-from subprocess import check_output
-import json
 
 ASSEMBLY_FIELDS = ['display_name','chromosomes','assembly_accession','biosample','bioproject_lineages','biosample_accession','org']
 
 ASSEMBLY_LEVELS = ['Chromosome', 'Scaffold', 'Complete Genome', 'Contig']
 
-DATASETS = '/ncbi/datasets'
+FIELDS_TO_EXCLUDE = ['id', 'created', 'chromosomes_aliases']
 
 def get_assemblies(filter=None, filter_option='assembly_name', 
                     offset=0, submitter=None,
                     limit=20, start_date=None, 
-                    end_date=datetime.today().strftime('%Y-%m-%d'), assembly_level=None,
+                    end_date=None, assembly_level=None,
                     sort_order=None, sort_column=None, blobtoolkit=None):  
-    query=dict()
-    ## filter match for accession, assembly name or species name
-    filter_query = None   
-    date_query = None
+    
+    assemblies = Assembly.objects().exclude(*FIELDS_TO_EXCLUDE)
     if filter:
         filter_query = get_filter(filter, filter_option)        
+        assemblies = assemblies.filter(filter_query)
+
+    query = {}
     if assembly_level and assembly_level in ASSEMBLY_LEVELS:
         query['metadata__assembly_level'] = assembly_level
+
     if submitter:
         query['metadata__submitter'] = submitter
-    if blobtoolkit and blobtoolkit == 'true':
+
+    if blobtoolkit and blobtoolkit.lower() == 'true':
         query['blobtoolkit_id__exists'] = True
-    if start_date:
-        date_query = (Q(metadata__submission_date__gte=start_date) & Q(metadata__submission_date__lte=end_date))
-    if filter_query and date_query:
-        visitor_query = filter_query & date_query
-        assemblies = Assembly.objects(visitor_query, **query).exclude('id','created','chromosomes_aliases')
-    elif filter_query:
-        assemblies = Assembly.objects(filter_query, **query).exclude('id','created','chromosomes_aliases')
-    elif date_query:
-        assemblies = Assembly.objects(date_query, **query).exclude('id','created','chromosomes_aliases')
-    else:
-        assemblies = Assembly.objects(**query).exclude('id','created','chromosomes_aliases')
+
+    if start_date and end_date:
+        assemblies = assemblies.filter((Q(metadata__submission_date__gte=start_date) & Q(metadata__submission_date__lte=end_date)))
+
+    if query.keys():
+        assemblies = assemblies.filter(**query)
+
     if sort_column:
-        if sort_column == 'submission_date':
-            sort_column = 'metadata.submission_date'
-        elif sort_column == 'size':
-            sort_column = 'metadata.estimated_size'
-        elif sort_column == 'contig_n50':
-            sort_column = 'metadata.contig_n50'
-        sort = '-'+sort_column if sort_order == 'desc' else sort_column
+        sort_column_map = {
+            'submission_date': 'metadata.submission_date',
+            'size': 'metadata.estimated_size',
+            'contig_n50': 'metadata.contig_n50'
+        }
+        sort_column = sort_column_map.get(sort_column, sort_column)
+        sort = '-' + sort_column if sort_order == 'desc' else sort_column
         assemblies = assemblies.order_by(sort)
-    return assemblies.count(), assemblies[int(offset):int(offset)+int(limit)]
+
+    return assemblies.count(), assemblies[int(offset):int(offset) + int(limit)]
+
 
 def get_filter(filter, option):
     if option == 'taxid':
@@ -60,39 +59,68 @@ def get_filter(filter, option):
         return (Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter))
     else:
         return (Q(assembly_name__iexact=filter) | Q(assembly_name__icontains=filter))
-
-
-def create_assembly_from_ncbi_data(assembly):
-    print('CREATING ASSEMBLY FROM NCBI DATA')
-    ass_data = dict(accession = assembly['assembly_accession'],assembly_name= assembly['display_name'],scientific_name=assembly['org']['sci_name'],taxid=assembly['org']['tax_id'])
-    taxid = ass_data['taxid']
-    organism = organisms_service.get_or_create_organism(ass_data['taxid'])
+    
+def create_assembly_from_accession(accession):
+    assembly_obj = Assembly.objects(accession=accession).first()
+    if assembly_obj:
+        return  f"Assembly {accession} already exists",400
+    
+    ncbi_response = ncbi_client.get_assembly(accession)
+    if not ncbi_response:
+        return f"Assembly {accession} not found in INSDC", 400
+    
+    assembly_obj, chromosomes = parse_assembly_from_ncbi_data(ncbi_response)
+    
+    organism = organisms_service.get_or_create_organism(assembly_obj.taxid)
     if not organism:
-        print(f"organism with taxid: {taxid} not found!")
-        return
+        return f"Organism {assembly_obj.taxid} not found in INSDC", 400
+    
+    biosample_accession = ncbi_response.get('biosample_accession')
+    if biosample_accession and not BioSample.objects(accession=biosample_accession).first():
+        if ncbi_response.get('biosample') and ncbi_response.get('biosample').get('attributes'):
+            biosample_object = biosamples_service.parse_biosample_from_ncbi_data(ncbi_response)
+            biosample_object.save()
+        else:
+            biosample_object = biosamples_service.get_or_create_biosample(ncbi_response.get('biosample_accession'))
+    
+    if chromosomes:
+        ##avoid duplicated chromosomes
+        existing_chromosomes = Chromosome.objects(accession_version__in=[ch.accession_version for ch in chromosomes]).scalar('accession_version')
+        filtered_chromosomes = [chr for chr in chromosomes if not chr.accession_version in existing_chromosomes]
+        Chromosome.objects.insert(filtered_chromosomes)
+        assembly_obj.chromosomes = [chr.accession_version for chr in chromosomes]
+
+    assembly_obj.save()
+
+    organism.save() #update organism status
+    return f"Assembly {accession} correctly saved", 201
+
+    #import related biosample
+def parse_assembly_from_ncbi_data(assembly):
+    ass_data = dict(accession = assembly['assembly_accession'],assembly_name= assembly['display_name'],scientific_name=assembly['org']['sci_name'],taxid=assembly['org']['tax_id'])
+    if assembly.get('biosample_accession'):
+        ass_data['sample_accession'] = assembly.get('biosample_accession')
     ass_metadata=dict()
     for key in assembly.keys():
         if key not in ASSEMBLY_FIELDS:
             ass_metadata[key] = assembly[key]
-    if 'biosample_accession' in assembly.keys() and assembly['biosample_accession']:
-        ass_data['sample_accession'] = assembly['biosample_accession']
-        if 'biosample' in assembly.keys() and 'attributes' in assembly['biosample'].keys():
-            saved_biosample = biosamples_service.create_biosample_from_ncbi_data( ass_data['sample_accession'],assembly,organism)
-        else:
-            saved_biosample = biosamples_service.create_related_biosample(ass_data['sample_accession'])
-        if not saved_biosample:
-            return
-        blobtoolkit_resp = genomehubs_client.get_blobtoolkit_id(ass_data['accession'])
-        if len(blobtoolkit_resp) and 'names' in blobtoolkit_resp[0].keys() and len(blobtoolkit_resp[0]['names']):
-            ass_data['blobtoolkit_id'] = blobtoolkit_resp[0]['names'][0]
-        ass_obj = Assembly(metadata=ass_metadata, **ass_data).save()
-        saved_biosample.modify(add_to_set__assemblies=ass_obj.accession)
-        organism.modify(add_to_set__assemblies=ass_obj.accession)
-        organism.save()
-        if 'chromosomes' in assembly.keys():
-            create_chromosomes(ass_obj, assembly['chromosomes'])
-        return ass_obj
+    blobtoolkit_resp = genomehubs_client.get_blobtoolkit_id(ass_data['accession'])
+    if len(blobtoolkit_resp) and 'names' in blobtoolkit_resp[0].keys() and len(blobtoolkit_resp[0]['names']):
+        ass_data['blobtoolkit_id'] = blobtoolkit_resp[0]['names'][0]
+    ass_obj = Assembly(metadata=ass_metadata, **ass_data)
+    chromosomes = parse_chromosomes(assembly.get('chromosomes'))
+    return ass_obj, chromosomes
 
+def parse_chromosomes(chromosomes):
+    chr_list = []
+    for chr in chromosomes:
+        if 'accession_version' in chr:
+            metadata=dict()
+            for k in chr.keys():
+                if k != 'accession_version':
+                    metadata[k] = chr[k]
+            chr_list.append(Chromosome(accession_version=chr.get('accession_version'),metadata=metadata))
+    return chr_list
 
 def create_chromosomes(assembly,chromosomes):
     for chr in chromosomes:
@@ -110,45 +138,23 @@ def create_chromosomes(assembly,chromosomes):
 def get_chromosomes(accession):
     assembly = Assembly.objects(accession=accession).first()
     if not assembly or not assembly.chromosomes:
-        return
+        return []
     return Chromosome.objects(accession_version__in=assembly.chromosomes).as_pymongo()
 
-##return response obj
-def create_assembly_from_accession(accession):
-    resp_obj=dict()
-    assembly_obj = Assembly.objects(accession=accession).first()
-    if assembly_obj:
-        resp_obj['message'] = f"{accession} already exists"
-        resp_obj['status'] = 400
-        return resp_obj
-    ncbi_response = ncbi_client.get_assembly(accession)
-    if not ncbi_response:
-        resp_obj['message'] = f"{accession} not found in INSDC"
-        resp_obj['status'] = 400
-        return resp_obj
-    assembly_obj = create_assembly_from_ncbi_data(ncbi_response)
-    if assembly_obj:
-        resp_obj['message'] = f'{assembly_obj.accession} correctly saved' 
-        resp_obj['status'] = 201
-        return resp_obj
-    resp_obj['message'] = 'Unhandled error'
-    resp_obj['status'] = 500
-    return resp_obj
-    
 def delete_assembly(accession):
     assembly_obj = Assembly.objects(accession=accession).first()
     if not assembly_obj:
         raise NotFound 
-    organism = Organism.objects(taxid=assembly_obj.taxid).first()
-    organism.modify(pull__assemblies=assembly_obj.accession)
-    organism.save()
-    sample_accession = assembly_obj.sample_accession if assembly_obj.sample_accession else assembly_obj.metadata['sample_accession']
-    biosamples = BioSample.objects(accession=sample_accession).first()
-    biosamples.modify(pull__assemblies=assembly_obj.accession)
+    organism = organisms_service.get_or_create_organism(assembly_obj.taxid)
     assembly_obj.delete()
+    organism.save()
     return accession
 
 def store_chromosome_aliases(assembly, aliases_file):
-    assembly.chromosomes_aliases = aliases_file.read()
-    assembly.has_chromosomes_aliases = True
-    assembly.save()
+    try:
+        assembly.chromosomes_aliases = aliases_file.read()
+        assembly.has_chromosomes_aliases = True
+        assembly.save()
+        return "Chromosome aliases successfully updated", 201
+    except ValidationError as e:
+        return e.to_dict(), 400

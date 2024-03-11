@@ -1,23 +1,37 @@
-from ..utils import ena_client
+from ..utils import ena_client,ncbi_client
 from ..taxon import taxons_service
 from ..taxonomy import taxonomy_service
 from ..sample_location import sample_locations_service
 from mongoengine.queryset.visitor import Q
-from db.models import CommonName,TaxonNode, Organism, Publication
+from db.models import CommonName,TaxonNode, Organism, Publication,Assembly,GenomeAnnotation,BioSample,LocalSample,Experiment,BioGenomeUser
 import os 
 from lxml import etree
+from errors import NotFound
+from flask_jwt_extended import get_jwt
+
 
 ROOT_NODE=os.getenv('ROOT_NODE')
 PROJECT_ACCESSION=os.getenv('PROJECT_ACCESSION')
 
+MODEL_LIST = {
+    'assemblies':{'model':Assembly, 'id':'accession'},
+    'annotations':{'model':GenomeAnnotation, 'id':'name'},
+    'biosamples':{'model':BioSample, 'id':'accession'},
+    'local_samples':{'model':LocalSample, 'id':'local_id'},
+    'experiments':{'model':Experiment, 'id':'experiment_accession'},
+    }
 
 def get_organisms(offset=0, limit=20, 
                 sort_order=None, sort_column=None,
                 filter=None, parent_taxid=None,
                 filter_option='scientific_name', country=None,
-                goat_status=None, insdc_status=None, target_list_status=None):
+                goat_status=None, insdc_status=None, target_list_status=None,
+                user=None):
     query=dict()
-    filter_query = get_filter(filter, filter_option) if filter else None
+    organisms = Organism.objects().exclude('id')
+    if filter:
+        filter_query = get_filter(filter, filter_option)
+        organisms = organisms.filter(filter_query)
     if parent_taxid:
         query['taxon_lineage'] = parent_taxid
     if goat_status:
@@ -28,7 +42,12 @@ def get_organisms(offset=0, limit=20,
         query['insdc_status'] = insdc_status
     if target_list_status:
         query['target_list_status'] = target_list_status
-    organisms = Organism.objects(filter_query, **query).exclude('id') if filter_query else Organism.objects.filter(**query).exclude('id')
+    if user:
+        user_object = BioGenomeUser.objects(name=user).first()
+        query['taxid__in'] = user_object.species
+
+    organisms = organisms.filter(**query)
+
     if sort_column:
         sort = '-'+sort_column if sort_order == 'desc' else sort_column
         organisms = organisms.order_by(sort)
@@ -36,7 +55,26 @@ def get_organisms(offset=0, limit=20,
 
 
 def get_organism_related_data(taxid, model):
-    return model.objects(taxid=taxid)
+    organism_obj = Organism.objects(taxid=taxid).first()
+    if not organism_obj or not model in MODEL_LIST.keys():
+        raise NotFound
+    mapped_model = MODEL_LIST.get(model)
+    return mapped_model.get('model').objects(taxid=taxid)
+
+def get_organism_related_datum(taxid,model,id):
+    organism_obj = Organism.objects(taxid=taxid).first()
+    if not organism_obj or not model in MODEL_LIST.keys():
+        raise NotFound
+    
+    mapped_model = MODEL_LIST.get(model)
+    query = {
+        f"{mapped_model.get('id')}":id,
+        "taxid":taxid
+    }
+    datum = mapped_model.get("model").objects(**query).first()
+    if not datum:
+        raise NotFound
+    return datum
 
 def get_stats(organisms):
     stats = dict()
@@ -67,74 +105,98 @@ def get_filter(filter, option):
     else:
         return (Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter))
 
+def retrieve_taxonomic_info(taxid):
+    taxon_xml = ena_client.get_taxon_from_ena(taxid)
+    if taxon_xml:
+        lineage = parse_taxon_from_ena(taxon_xml)
+        insdc_common_name = lineage[0].get('commonName')
+        scientific_name = lineage[0].get('scientificName')
+
+    else:
+        taxon_nodes = ncbi_client.get_taxon(taxid)
+        if not taxon_nodes or not len(taxon_nodes) or not taxon_nodes[0].get('taxonomy'):
+            print('TAXID NOT FOUND', taxid)
+            return
+        taxid, scientific_name, insdc_common_name, lineage = parse_organisms_from_ncbi_data(taxon_nodes)[0]
+    return scientific_name, insdc_common_name, lineage
 
 def get_or_create_organism(taxid):
     organism = Organism.objects(taxid=taxid).first()
     if not organism:
-        taxon_xml = ena_client.get_taxon_from_ena(taxid)
-        if not taxon_xml:
-            ##TODO add call to NCBI
-
-            print('TAXID NOT FOUND')
-            print(taxid)
+        tax_info_tuple = retrieve_taxonomic_info(taxid)
+        if not tax_info_tuple:
             return
-        lineage = parse_taxon_from_ena(taxon_xml)
-        tax_organism = lineage[0]
-        tolid = ena_client.get_tolid(taxid)
+        scientific_name, insdc_common_name, lineage = tax_info_tuple
         taxon_lineage = taxons_service.create_taxons_from_lineage(lineage)
+        tolid = ena_client.get_tolid(taxid)
         taxon_list = [tax.taxid for tax in taxon_lineage]
-        insdc_common_name = tax_organism['commonName'] if 'commonName' in tax_organism.keys() else ''
-        organism = Organism(taxid = taxid, insdc_common_name=insdc_common_name, scientific_name= tax_organism['scientificName'], taxon_lineage = taxon_list, tolid_prefix=tolid).save()
+        organism = Organism(taxid = taxid, insdc_common_name=insdc_common_name, scientific_name= scientific_name, taxon_lineage = taxon_list, tolid_prefix=tolid).save()
         taxons_service.leaves_counter(taxon_lineage)
     return organism
 
-def parse_organism_data(data,taxid=None):
-    #organism creation
-    if not taxid:
-        if not 'taxid' in data.keys():
-            return
-        if Organism.objects(taxid=data['taxid']).first():
-            return
-        taxid = data['taxid']
-    else:
-        #organism update
-        if not Organism.objects(taxid=taxid).first():
-            return
-    organism = get_or_create_organism(taxid)
-    filtered_data = dict()
-    for key in data.keys():
-        if data[key]:
-            filtered_data[key] = data[key]
-    string_attrs = dict()
-    for key in filtered_data.keys():
-        if isinstance(filtered_data[key],str):
-            string_attrs[key] = filtered_data[key]
-    if organism.image and not 'image' in filtered_data.keys():
-        organism.image = None
-        sample_locations_service.add_image(organism.taxid, None) ## remove images
-    for key in string_attrs.keys():
-        organism[key] = string_attrs[key]
-    if 'metadata' in filtered_data.keys():
-        organism.metadata = filtered_data['metadata']
-    if 'common_names' in filtered_data.keys():
-        c_name_list=list()
-        for c_name in filtered_data['common_names']:
-            if 'value' in c_name.keys():
-                c_name_list.append(CommonName(**c_name))
-        organism.common_names = c_name_list
-    if 'image_urls' in filtered_data.keys():
-        organism.image_urls = filtered_data['image_urls']
-    if 'image' in filtered_data.keys():
-        sample_locations_service.add_image(organism.taxid, filtered_data['image'])
-    if 'publications' in filtered_data.keys():
-        pub_list = list()
-        for pub in filtered_data['publications']:
-            if 'id' in pub.keys():
-                pub_list.append(Publication(**pub))
-        organism.publications=pub_list
-    organism.save()
+def create_organism_from_taxonomic_info(taxid, scientific_name, insdc_common_name, lineage):
+    taxon_lineage = taxons_service.create_taxons_from_lineage(lineage)
+    tolid = ena_client.get_tolid(taxid)
+    taxon_list = [tax.taxid for tax in taxon_lineage]
+    organism = Organism(taxid = taxid, insdc_common_name=insdc_common_name, scientific_name= scientific_name, taxon_lineage = taxon_list, tolid_prefix=tolid).save()
+    taxons_service.leaves_counter(taxon_lineage)
     return organism
 
+def update_organism(data, taxid):
+    organism = Organism.objects(taxid=taxid).first()
+    if not organism:
+        raise NotFound
+    map_organism_data(data,organism)
+    organism.save()
+
+    return f"Organism {organism.scientific_name} correctly updated", 201
+
+def create_organism(data):
+    taxid = data.get('taxid')
+    if not taxid:
+        return "Taxid is mandatory", 400
+    
+    if Organism.objects(taxid=taxid).count():
+        return f"An organism with taxid {taxid} already exists"
+        ## add organism to user 
+    claims = get_jwt()
+    role = claims.get('role')
+    name = claims.get('username')
+    user = BioGenomeUser.objects(name=name).first()
+            
+    organism = get_or_create_organism(taxid)
+    if not organism:
+        return f"Organisms with taxid {taxid} not found in INSDC", 400
+    map_organism_data(data, organism)
+    organism.save()
+    
+    if role and role == 'DataManager':
+        user.modify(add_to_set__species=taxid)
+
+
+
+    return f"Organism {organism.scientific_name} correctly saved", 201
+
+def map_organism_data(data, organism):
+    filtered_data = {k: v for k, v in data.items() if v}
+
+    string_attrs = {k: v for k, v in filtered_data.items() if isinstance(v, str)}
+
+    image = filtered_data.get('image')
+    organism.image = image
+    sample_locations_service.add_image(organism.taxid, None) ## remove images
+
+    for key, value in string_attrs.items():
+        organism[key] = value
+
+    organism.metadata = filtered_data.get('metadata')
+    if filtered_data.get('common_names'):
+        organism.common_names = [CommonName(**c_name) for c_name in filtered_data['common_names'] if 'value' in c_name]
+
+    organism.image_urls = filtered_data.get('image_urls')
+
+    if filtered_data.get('publications'):
+        organism.publications = [Publication(**pub) for pub in filtered_data.get('publications', []) if 'id' in pub]
 
 def parse_taxon_from_ena(xml):
     root = etree.fromstring(xml)
@@ -154,15 +216,35 @@ def map_organism_lineage(lineage):
     root = TaxonNode.objects(taxid=root_to_organism[0]).first()
     taxonomy_service.dfs_generator([(root,0)],tree, root_to_organism)
     return tree
-# def delete_organism(taxid):
-#     organism = Organism.objects(taxid=taxid).first()
-#     if not organism:
-#         raise NotFound
-#     related_taxons = TaxonNode.objects(taxid__in=organism.taxon_lineage)
-#     SampleCoordinates.objects(taxid=taxid).delete()
-#     Assembly.objects(taxid=taxid).delete()
-#     LocalSample.objects(taxid=taxid).delete()
-#     Experiment.objects(taxid=taxid).delete()
-#     GenomeAnnotation.objects(taxid=taxid).delete()
-#     BioSample.objects(taxid=taxid).delete()
 
+
+def parse_organisms_from_ncbi_data(taxonomy_nodes):
+    parsed_tuples = []
+    for taxonomy_node in taxonomy_nodes:
+        tax_node = taxonomy_node.get('taxonomy')
+        taxid = str(tax_node.get('tax_id'))
+        insdc_common_name = tax_node.get('common_name')
+        scientific_name = tax_node.get('organism_name')
+        lineage_taxids = [str(n) for n in  tax_node.get('lineage')]
+        unordered_lineage = ncbi_client.get_lineage(lineage_taxids)
+        lineage = [
+            {
+                'scientificName': taxon_node.get('taxonomy').get('organism_name'),
+                'taxId': taxon_node.get('taxonomy').get('tax_id'),
+                'rank': taxon_node.get('taxonomy').get('rank').lower()
+            }
+            for taxon_id in reversed(lineage_taxids)
+            for taxon_node in unordered_lineage
+            if taxon_id == taxon_node.get('taxonomy').get('tax_id')
+        ]
+        parsed_tuples.append((taxid, scientific_name, insdc_common_name, lineage))
+    
+    return parsed_tuples
+
+def delete_organism(taxid):
+    organism_to_delete = Organism.objects(taxid=taxid).first()
+    if not organism_to_delete:
+        raise NotFound
+    organism_to_delete.delete()
+    return f"Organisms {taxid} succesfully deleted", 200
+    

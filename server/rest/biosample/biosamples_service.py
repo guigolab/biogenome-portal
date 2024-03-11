@@ -9,27 +9,26 @@ import os
 
 PROJECTS = [p.strip() for p in os.getenv('PROJECTS').split(',') if p] if os.getenv('PROJECTS') else None
 
+MODEL_LIST = {
+    'assemblies':{'model':Assembly, 'id':'accession'},
+    'sub_samples':{'model':BioSample, 'id':'accession'},
+    'experiments':{'model':Experiment, 'id':'experiment_accession'},
+    }
 
 def get_biosamples(offset=0,limit=20,
                     filter=None, filter_option="scientific_name",
                     start_date=None, end_date=datetime.utcnow,
                     sort_column=None, sort_order=None):
+    
+    biosamples = BioSample.objects().exclude('id', 'created')
+
     if filter:
         filter_query = get_filter(filter,filter_option)
-    else:
-        filter_query = None
-    if start_date:
-        date_query = (Q(metadata__collection_date__gte=start_date) & Q(metadata__collection_date__lte=end_date))
-    else:
-        date_query = None
-    if filter_query and date_query:
-        biosamples = BioSample.objects(filter_query & date_query).exclude('id','created')
-    elif filter_query:
-        biosamples = BioSample.objects(filter_query).exclude('id','created')
-    elif date_query:
-        biosamples = BioSample.objects(date_query).exclude('id','created')
-    else:
-        biosamples = BioSample.objects().exclude('id','created')
+        biosamples = biosamples.filter(filter_query)
+
+    if start_date and end_date:
+        biosamples = biosamples.filter((Q(metadata__collection_date__gte=start_date) & Q(metadata__collection_date__lte=end_date)))
+    
     if sort_column:
         if sort_column == 'collection_date':
             sort_column = 'metadata.collection_date'
@@ -49,94 +48,82 @@ def get_filter(filter, option):
     else:
         return (Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter))
 
-def create_related_biosample(accession):
-    biosample_obj = BioSample.objects(accession=accession).first()
-    if biosample_obj:
-        return biosample_obj
-    biosample_response = ena_client.get_sample_from_biosamples(accession)
-    if not biosample_response:
-        return
-    biosample_obj = create_biosample_from_ebi_data(biosample_response)
-    return biosample_obj
+def get_or_create_biosample(accession):
+    biosample = BioSample.objects(accession=accession).first()
+    if not biosample:
+        biosample_response = ena_client.get_sample_from_biosamples(accession)
+        if not biosample_response:
+            print(f'Biosample with accession {accession} not found')
+            return
+        biosample = parse_biosample_from_ebi_data(biosample_response)
+    biosample.save()
+    sample_locations_service.save_coordinates(biosample)
+    sample_locations_service.update_countries_from_biosample(biosample)
+    return biosample
 
 def create_biosample_from_accession(accession):
-    resp_obj = dict()
     biosample_obj = BioSample.objects(accession=accession).first()
     if biosample_obj:
-        resp_obj['message'] = f"{accession} already exists"
-        resp_obj['status'] = 400
-        return resp_obj
+        return f"{accession} already exists" , 400
+    
     biosample_response = ena_client.get_sample_from_biosamples(accession)
-    if not biosample_response:
-        resp_obj['message'] = f"{accession} not found in INSDC"
-        resp_obj['status'] = 400
-        return resp_obj
-    biosample_obj = create_biosample_from_ebi_data(biosample_response)
-    if biosample_obj:
-        resp_obj['message'] = f'{biosample_obj.accession} correctly saved'
-        resp_obj['status'] = 201
-        return resp_obj
-    resp_obj['message'] = 'Unhandled error'
-    resp_obj['status'] = 500
-    return resp_obj
 
-def create_biosample_from_ncbi_data(accession, ncbi_response, organism):
-    biosample_obj = BioSample.objects(accession=accession).first()
-    if biosample_obj:
-        return biosample_obj
-    required_metadata = dict(accession=accession,taxid=organism.taxid,scientific_name=organism.scientific_name)
+    if not biosample_response:
+        return f"BioSample {accession} not found in INSDC", 400
+    
+    biosample_obj = parse_biosample_from_ebi_data(biosample_response)
+
+    organism = organisms_service.get_or_create_organism(biosample_obj.taxid)
+    if not organism:
+        return f"Organism {biosample_obj.taxid} not found in INSDC"
+    
+    biosample_obj.save()
+    sample_locations_service.save_coordinates(biosample_obj)
+    sample_locations_service.update_countries_from_biosample(biosample_obj)
+
+    #check if it has children
+    ebi_biosample_response = ena_client.get_samples_derived_from(biosample_obj.accession)
+
+    biosample_siblings = [parse_biosample_from_ebi_data(sample_to_save) for sample_to_save in ebi_biosample_response]
+    
+    existing_siblings = BioSample.objects(accession__in=[b.accession for b in biosample_siblings]).scalar('accession')
+
+    for sibling in biosample_siblings:
+        if not sibling.accession in existing_siblings:
+            sibling.save()
+    biosample_obj.save()
+
+    organism.save()
+    return f"Biosample {accession} correctly saved", 201
+
+def parse_biosample_from_ebi_data(sample):
+    print(sample.get('characteristics'))
+    taxid = str(sample.get('taxId'))
+    accession = sample.get('accession')
+    scientific_name = sample.get('characteristics').get('scientific_name')[0].get('text')
+    required_metadata=dict(accession=accession,taxid=taxid,scientific_name=scientific_name)
+    extra_metadata = parse_sample_metadata({k:sample['characteristics'][k] for k in sample['characteristics'].keys() if k not in ['taxId','scientificName','accession','organism']})
+    return BioSample(metadata=extra_metadata,**required_metadata)
+
+def parse_biosample_from_ncbi_data(ncbi_response):
+    taxid = ncbi_response.get('org').get('tax_id')
+    scientific_name = ncbi_response.get('org').get('sci_name')
+    accession = ncbi_response.get('biosample').get('accession')
+    required_metadata=dict(accession=accession,taxid=taxid,scientific_name=scientific_name)
     biosample_metadata = dict()
     ##format to biosample response model
     for attr in ncbi_response['biosample']['attributes']:
         biosample_metadata[attr['name']] = [dict(text=attr['value'])] 
     extra_metadata = parse_sample_metadata(biosample_metadata)
-    new_biosample = BioSample(metadata=extra_metadata,**required_metadata).save()
-    sample_locations_service.save_coordinates(new_biosample)
-    sample_locations_service.update_countries_from_biosample(new_biosample)
-    organism.modify(add_to_set__biosamples=new_biosample.accession)
-    organism.save()
-    return new_biosample
-
-def create_biosample_from_ebi_data(sample):
-    existing_biosample = BioSample.objects(accession=sample['accession']).first()
-    if existing_biosample:
-        return existing_biosample
-    required_metadata=dict(accession=sample['accession'],taxid=str(sample['taxId']))
-    organism = organisms_service.get_or_create_organism(required_metadata['taxid'])
-    if organism:
-        required_metadata['scientific_name'] = organism.scientific_name
-    else:
-        print(f'Unable to save sample, taxid not found in {sample}')
-        return
-    extra_metadata = parse_sample_metadata({k:sample['characteristics'][k] for k in sample['characteristics'].keys() if k not in ['taxId','scientificName','accession','organism']})
-    new_biosample = BioSample(metadata=extra_metadata,**required_metadata).save()
-    sample_locations_service.save_coordinates(new_biosample)
-    sample_locations_service.update_countries_from_biosample(new_biosample)
-    sample_derived_from = extra_metadata.get('sample derived from', None)
-    if sample_derived_from:
-        print(f'creating father sample {sample_derived_from}')
-        father_biosample = create_related_biosample(sample_derived_from)
-        if father_biosample:
-            print(f'father sample {father_biosample.accession} created')
-            father_biosample.modify(add_to_set__sub_samples=new_biosample.accession)
-            organism.modify(add_to_set__biosamples=sample_derived_from)
-    else:
-        print(f'appending sample {new_biosample.accession} to {organism.scientific_name}')
-        organism.modify(add_to_set__biosamples=new_biosample.accession)
-        organism.save()
-    return new_biosample
-    
+    return BioSample(metadata=extra_metadata,**required_metadata)
 
 def delete_biosample(accession):
     biosample_to_delete = BioSample.objects(accession=accession).first()
+
     if not biosample_to_delete:
         raise NotFound
-    Assembly.objects((Q(sample_accession=biosample_to_delete.accession) | Q(metadata__sample_accession=biosample_to_delete.accession))).delete()
-    Experiment.objects(metadata__sample_accession=biosample_to_delete.accession).delete()
-    SampleCoordinates.objects(sample_accession=accession).delete()
-    organism = Organism.objects(taxid=biosample_to_delete.taxid).first()
-    organism.modify(pull__biosamples=biosample_to_delete.accession)
-    organism.save()
+    #delete siblings
+    BioSample.objects(accession__in=biosample_to_delete.sub_samples).delete()
     biosample_to_delete.delete()
     return accession
 
@@ -146,12 +133,12 @@ def parse_sample_metadata(metadata):
         sample_metadata[k] = metadata[k][0]['text']
     return sample_metadata
 
-def map_samples_by_relationship(biosamples):
-    samples_derived_from = {}
-    for biosample in biosamples:
-        if biosample.metadata and 'sample derived from' in biosample.metadata.keys():
-            parent_accession = biosample.metadata['sample derived from']
-            if not parent_accession in samples_derived_from.keys():
-                samples_derived_from[parent_accession]=[]
-            samples_derived_from[parent_accession].append(biosample)
-    return samples_derived_from
+def get_sample_related_data(accession, model):
+    biosample = BioSample.objects(accession=accession).first()
+    if not biosample or not model in MODEL_LIST.keys():
+        raise NotFound
+    mapped_model = MODEL_LIST.get(model)
+    if model == 'sub_samples':
+        return BioSample.objects(accession__in=biosample.sub_samples)
+    return mapped_model.get('model').objects(sample_accession=accession)
+

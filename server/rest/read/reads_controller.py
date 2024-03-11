@@ -5,7 +5,7 @@ from db.models import Experiment
 from . import reads_service
 from errors import NotFound
 from flask_jwt_extended import jwt_required
-
+from ..utils import wrappers
 
 FIELDS_TO_EXCLUDE = ['id','created']
 
@@ -27,11 +27,20 @@ class ExperimentApi(Resource):
         return Response(experiment_obj.to_json(), mimetype="application/json", status=200)
 
     @jwt_required()
+    @wrappers.admin_required()
     def post(self,accession):
-        response = reads_service.create_read_from_experiment_accession(accession)
-        return Response(json.dumps(response['message']), mimetype="application/json", status=response['status'])
+        message, status = reads_service.create_experiment_from_accession(accession)
+        return Response(json.dumps(message), mimetype="application/json", status=status)
+   
 
     @jwt_required()
+    @wrappers.admin_required()
     def delete(self,accession):
         deleted_accession = reads_service.delete_experiment(accession)
         return Response(json.dumps(deleted_accession), mimetype="application/json", status=201)
+
+class ReadsByExperiment(Resource):
+
+    def get(self, accession):
+        reads = reads_service.get_reads_by_experiment(accession)
+        return Response(reads.to_json(), mimetype="application/json", status=200)
