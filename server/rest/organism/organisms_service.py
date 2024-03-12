@@ -157,7 +157,7 @@ def create_organism(data):
         return "Taxid is mandatory", 400
     
     if Organism.objects(taxid=taxid).count():
-        return f"An organism with taxid {taxid} already exists"
+        return f"An organism with taxid {taxid} already exists", 400
         ## add organism to user 
     claims = get_jwt()
     role = claims.get('role')
@@ -172,7 +172,6 @@ def create_organism(data):
     
     if role and role == 'DataManager':
         user.modify(add_to_set__species=taxid)
-
 
 
     return f"Organism {organism.scientific_name} correctly saved", 201

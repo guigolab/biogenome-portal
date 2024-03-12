@@ -66,7 +66,7 @@ def map_experiments_from_reads(reads):
         for f in ['sample_accession', 'instrument_model', 'instrument_platform']:
             experiment_to_save[f] = read.metadata.get(f)
         experiment_to_save['taxid'] = read.metadata.get('tax_id')
-        metadata = {k:v for k,v in read.metadata.items() if k in ['scientific_name', 'experiment_title','study_title']}
+        metadata = {k:v for k,v in read.metadata.items() if k in ['scientific_name', 'experiment_title','study_title', 'center_name','first_created']}
         experiment_to_save['metadata'] = metadata
         seen_experiments.add(experiment_accession)
         experiments.append(Experiment(**experiment_to_save))
