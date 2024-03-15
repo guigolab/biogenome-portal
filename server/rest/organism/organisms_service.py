@@ -146,9 +146,11 @@ def update_organism(data, taxid):
     organism = Organism.objects(taxid=taxid).first()
     if not organism:
         raise NotFound
-    map_organism_data(data,organism)
-    organism.save()
+    organism_data = map_organism_data(data,taxid)
 
+    organism.update(**organism_data)
+
+    
     return f"Organism {organism.scientific_name} correctly updated", 201
 
 def create_organism(data):
@@ -167,35 +169,40 @@ def create_organism(data):
     organism = get_or_create_organism(taxid)
     if not organism:
         return f"Organisms with taxid {taxid} not found in INSDC", 400
-    map_organism_data(data, organism)
+    organism_data = map_organism_data(data, taxid)
+    organism.update(**organism_data)
     organism.save()
-    
     if role and role == 'DataManager':
         user.modify(add_to_set__species=taxid)
 
 
     return f"Organism {organism.scientific_name} correctly saved", 201
 
-def map_organism_data(data, organism):
+def map_organism_data(data,taxid):
+    organism = dict()
     filtered_data = {k: v for k, v in data.items() if v}
 
     string_attrs = {k: v for k, v in filtered_data.items() if isinstance(v, str)}
 
     image = filtered_data.get('image')
-    organism.image = image
-    sample_locations_service.add_image(organism.taxid, None) ## remove images
+
+    organism['image'] = image
+    sample_locations_service.add_image(taxid, image)
 
     for key, value in string_attrs.items():
         organism[key] = value
 
-    organism.metadata = filtered_data.get('metadata')
+    organism['metadata'] = filtered_data.get('metadata')
+
+    organism['common_names'] = None
     if filtered_data.get('common_names'):
-        organism.common_names = [CommonName(**c_name) for c_name in filtered_data['common_names'] if 'value' in c_name]
+        organism['common_names'] = [CommonName(**c_name) for c_name in filtered_data['common_names'] if 'value' in c_name]
+    organism['image_urls'] = filtered_data.get('image_urls')
 
-    organism.image_urls = filtered_data.get('image_urls')
-
+    organism['publications'] = None
     if filtered_data.get('publications'):
-        organism.publications = [Publication(**pub) for pub in filtered_data.get('publications', []) if 'id' in pub]
+        organism['publications'] = [Publication(**pub) for pub in filtered_data.get('publications', []) if 'id' in pub]
+    return organism
 
 def parse_taxon_from_ena(xml):
     root = etree.fromstring(xml)

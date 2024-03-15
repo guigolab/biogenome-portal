@@ -93,15 +93,23 @@ async function handleSubmit() {
     const { metadataList, images, publications, vernacularNames } = organismStore
     if (metadataList.length > 0) {
       metadataList.filter(({ key, value }) => key).forEach(({ key, value }) => organismStore.organismForm.metadata[key] = value)
+    }else{
+      organismStore.organismForm.metadata = {}
     }
     if (images.length > 0) {
       organismStore.organismForm.image_urls = [...images.filter(({ value }) => value).map(({ value }) => value)]
+    }else{
+      organismStore.organismForm.image_urls = []
     }
     if (publications.length) {
       organismStore.organismForm.publications = [...publications.filter(({ id }) => id)]
+    }else{
+      organismStore.organismForm.publications = []
     }
     if (vernacularNames.length > 0) {
       organismStore.organismForm.common_names = [...vernacularNames.filter(({ value }) => value)]
+    }else{
+      organismStore.organismForm.common_names = []
     }
     if (props.taxid) {
       const { data } = await AuthService.updateOrganism(props.taxid, organismStore.organismForm)
@@ -112,18 +120,14 @@ async function handleSubmit() {
       const { data } = await AuthService.createOrganism(organismStore.organismForm)
       init({ message: 'Organism created!', color: 'success' })
       resetForm()
-
     }
-
   } catch (error) {
     console.log(error)
     const axiosError = error as AxiosError
     const message = axiosError.response && axiosError.response.data ? axiosError.response.data as string : 'Impossible to create organism'
     init({ message: message, color: 'danger' })
-
   } finally {
     isLoading.value = false
-
   }
 
 }
