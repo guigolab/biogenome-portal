@@ -40,6 +40,7 @@ import AuthService from '../../../services/clients/AuthService'
 import OrganismService from '../../../services/clients/OrganismService'
 import { OrganismForm } from '../../../data/types'
 import { useRouter } from 'vue-router'
+import { AxiosError } from 'axios'
 
 const isLoading = ref(false)
 const props = defineProps<{
@@ -116,7 +117,9 @@ async function handleSubmit() {
 
   } catch (error) {
     console.log(error)
-    init({ message: 'Impossible to create organism', color: 'danger' })
+    const axiosError = error as AxiosError
+    const message = axiosError.response && axiosError.response.data ? axiosError.response.data as string : 'Impossible to create organism'
+    init({ message: message, color: 'danger' })
 
   } finally {
     isLoading.value = false
