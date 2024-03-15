@@ -166,7 +166,28 @@ def fix_experiments_biosample_attribute():
             continue
         experiment.sample_accession = experiment.metadata.get('sample_accession')
         experiment.save()
+
+def fix_experiments_metadata():
+    reads = Read.objects()
+    seen_experiments=set()
+    for read in reads:
+        experiment_accession = read.experiment_accession
+        if experiment_accession in seen_experiments:
+            continue
+        existing_experiment = Experiment.objects(experiment_accession=experiment_accession).first()
+        experiment_to_save = dict(experiment_accession=experiment_accession)
+        for f in ['sample_accession', 'instrument_model', 'instrument_platform']:
+            experiment_to_save[f] = read.metadata.get(f)
+        experiment_to_save['taxid'] = read.metadata.get('tax_id')
+        metadata = {k:v for k,v in read.metadata.items() if k in ['scientific_name', 'experiment_title','study_title', 'center_name','first_created']}
+        experiment_to_save['metadata'] = metadata
+        seen_experiments.add(experiment_accession)
         
+        if existing_experiment:
+            existing_experiment.update(**experiment_to_save)
+        else:
+            Experiment(**experiment_to_save).save()
+
 #TRACK EXPERIMENTS
 def get_experiments():
     biosamples = BioSample.objects()
