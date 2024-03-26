@@ -33,6 +33,7 @@ def initialize_routes(api):
 	##TAXONOMY
 	api.add_resource(taxonomy_controller.TreeApi,'/api/tree', '/api/tree/<taxid>')
 	api.add_resource(taxonomy_controller.RelativeTaxonomyTreeApi, '/api/tree/<taxid>/relative') 
+	api.add_resource(taxonomy_controller.ComputedTreeApi, '/api/computed_tree')
 
 	##ANNOTATIONS
 	api.add_resource(annotations_controller.AnnotationsApi, '/api/annotations')

@@ -21,6 +21,9 @@ class TaxonService {
   getPhylogeneticallyCloseTree(taxid, params){
     return base.get(`/tree/${taxid}/relative`, { params: params })
   }
+  getComputedTree(){
+    return base.get('/computed_tree')
+  }
 }
 
 export default new TaxonService()

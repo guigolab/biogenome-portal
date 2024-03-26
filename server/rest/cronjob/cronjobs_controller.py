@@ -21,7 +21,8 @@ JOB_MAP = {
     'create_biosample_coordinates':cronjob_service.create_biosample_coordinates,
     'create_local_sample_coordinates':cronjob_service.create_local_sample_coordinates,
     'fix_experiments_biosample_attribute':cronjob_service.fix_experiments_biosample_attribute,
-    'fix_experiments_metadata':cronjob_service.fix_experiments_metadata
+    'fix_experiments_metadata':cronjob_service.fix_experiments_metadata,
+    'compute_tree':cronjob_service.compute_tree
 }
 ## persist cronjob status
 class CronJobApi(Resource):

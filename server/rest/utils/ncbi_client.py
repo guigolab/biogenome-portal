@@ -9,11 +9,34 @@ def get_assembly(assembly_accession):
         return 
     return result['assemblies'][0]['assembly'] ##return first match
 
-def get_taxons(taxids):
-    query = ','.join(taxids)
-    result = requests.get(f"https://api.ncbi.nlm.nih.gov/datasets/v1/taxonomy/taxon/{query}").json()
-    return result.get('taxonomy_nodes')
+# def get_taxons(taxids):
+#     query = ','.join(taxids)
+#     print(query)
+#     result = requests.get(f"https://api.ncbi.nlm.nih.gov/datasets/v1/taxonomy/taxon/{query}").json()
+#     return result.get('taxonomy_nodes')
 
+def get_taxons(taxids):
+    # Check if the number of taxids exceeds 1000
+    if len(taxids) > 1000:
+        # Split the taxids into chunks of 1000 or less
+        chunks = [taxids[i:i+1000] for i in range(0, len(taxids), 1000)]
+        
+        # Initialize an empty list to store results
+        all_results = []
+        
+        # Iterate over each chunk and make separate requests
+        for chunk in chunks:
+            query = ','.join(chunk)
+            result = requests.get(f"https://api.ncbi.nlm.nih.gov/datasets/v1/taxonomy/taxon/{query}").json()
+            all_results.extend(result.get('taxonomy_nodes', []))
+        
+        return all_results
+    else:
+        # If the number of taxids is 1000 or less, make a single request
+        query = ','.join(taxids)
+        result = requests.get(f"https://api.ncbi.nlm.nih.gov/datasets/v1/taxonomy/taxon/{query}").json()
+        return result.get('taxonomy_nodes', [])
+    
 def get_assemblies(project_accession):
     assemblies=list()
     result = requests.get(f"https://api.ncbi.nlm.nih.gov/datasets/v1/genome/bioproject/{project_accession}?filters.reference_only=false&filters.assembly_source=all&page_size=100").json()

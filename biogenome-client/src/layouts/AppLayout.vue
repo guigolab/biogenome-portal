@@ -33,8 +33,8 @@
   
   const GlobalStore = useGlobalStore()
 
-  const mobileBreakPointPX = 350
-  const tabletBreakPointPX = 640
+  const mobileBreakPointPX = 410
+  const tabletBreakPointPX = 810
 
   const sidebarWidth = ref('100wv')
   const sidebarMinimizedWidth = ref(undefined)
@@ -75,8 +75,8 @@
 </script>
 
 <style lang="scss">
-  $mobileBreakPointPX: 350px;
-  $tabletBreakPointPX: 640px;
+  $mobileBreakPointPX: 450px;
+  $tabletBreakPointPX: 810px;
 
   .app-layout {
     height: 100vh;
