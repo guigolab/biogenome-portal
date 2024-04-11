@@ -1,6 +1,6 @@
 <template>
   <va-card style="height: 100%;">
-    <div ref="mapRef" style="padding: 0;margin: 0;" class="leaflet-map fill-height">
+    <div ref="mapRef" style="padding: 0;margin: 0;height: 100%;" class="leaflet-map fill-height">
     </div>
     <div v-show="false">
       <div class="organism-card" ref="organismCard">

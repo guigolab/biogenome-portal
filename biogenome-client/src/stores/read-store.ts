@@ -5,7 +5,6 @@ const initSearchForm: ReadSearchForm = {
   start_date: '',
   end_date: '',
   filter: '',
-  filter_option: '',
   sort_column: '',
   sort_order: '',
   center: '',
@@ -25,7 +24,7 @@ export const useReadStore = defineStore('read', {
   },
 
   actions: {
-    resetSeachForm() {
+    resetSearchForm() {
       this.searchForm = { ...initSearchForm }
     },
     resetPagination() {

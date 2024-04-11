@@ -1,85 +1,60 @@
 <template>
-    <div class="row">
-        <div class="flex lg10 md10 sm12 xs12">
-            <div class="row align-center">
-                <div class="flex lg10 md10" style="padding: 0;">
-                    <h1 class="va-h1">Hyperbolic Tree of Life</h1>
-                    <p class="mb-2">A Hyperbolic browser is an interactive "tree" visualization, similar to a map
-                        application. The "tree" can be explored by panning. Pinch gestures and mouse wheel can be used
-                        to focus in and out.
-
-                        Unfortunately the entire dataset can not be rendered yet, hence it is split in branches, each
-                        containing up to 50 000 species. Click on a branch of the "tree" on the right, to open such a
-                        branch and browse its species</p>
-                </div>
-            </div>
+    <div class="row align-end">
+        <div class="flex">
+            <h1 class="va-h1">{{ t('taxonSearch.header') }}</h1>
+        </div>
+        <div class="flex">
+            <va-button color="info" preset="secondary" icon="info"
+                href="https://github.com/glouwa/d3-hypertree" target="_blank">
+            </va-button>
+        </div>
+        <div class="flex">
+            <va-button color="secondary" preset="secondary" icon="github"
+                href="https://github.com/glouwa/d3-hypertree" target="_blank">
+            </va-button>
         </div>
     </div>
     <div class="row align-end">
-        <va-select preset="bordered" :loading="isLoading" dropdownIcon="search" searchable highlight-matched-text
-            :textBy="(v: TreeNode) => `${v.name} (${v.rank})`" trackBy="taxid" :label="t('Current taxon')"
-            @update:model-value="setQuery" @update:search="handleSearch" class="flex lg6 md6 sm12 xs12"
-            v-model="taxonomyStore.currentTaxon" :searchPlaceholderText="t('Type a taxon name or a taxon identifier')"
-            :noOptionsText="t('No taxons found')" :options="taxons">
-            <template #content="{ value }">
-                <b v-if="value">{{ value.name }} ({{ value.rank }})</b>
-            </template>
-            <!-- <template #append>
-                <div class="row">
-                    <div class="flex">
-                        <VaBadge color="info" overlap :text="taxonomyStore.currentTaxon.leaves">
-                            <VaButton @click="showOrganisms = !showOrganisms" color="secondary" icon="fa-paw">
-                                Organisms
-                            </VaButton>
-                        </VaBadge>
-                    </div>
-                    <div v-if="coordinates.length" class="flex">
-                        <va-button @click="showMap = !showMap" color="success" icon="fa-map">Samples Map</va-button>
-                    </div>
-                </div>
-            </template> -->
+        <va-select hideSelected :loading="isLoading" dropdownIcon="search" searchable
+            highlight-matched-text :textBy="(v: TreeNode) => `${v.name} (${v.rank})`" trackBy="taxid"
+            :label="t('taxonSearch.label')" @update:model-value="setQuery" @update:search="handleSearch"
+            class="flex lg6 md6 sm12 xs12" v-model="taxonomyStore.currentTaxon"
+            :searchPlaceholderText="t('taxonSearch.placeholder')" :noOptionsText="t('taxonSearch.noOptions')"
+            :options="taxons">
         </va-select>
-        <div v-if="taxonomyStore.currentTaxon" class="flex">
-            <VaMenu>
-                <template #anchor>
-                    <VaButton color="info" :round="false">Related Data</VaButton>
-                </template>
-                <VaMenuItem @selected="showOrganisms = !showOrganisms">
-                    <template #left-icon>
-                        <VaIcon name="fa-paw" />
-                    </template>
-                    Related Organisms ({{ taxonomyStore.currentTaxon.leaves }})
-                </VaMenuItem>
-                <VaMenuItem @selected="showMap = !showMap" v-if="coordinates">
-                    <template #left-icon>
-                        <VaIcon name="fa-map" />
-                    </template>
-                    Related Samples Coordinates
-                </VaMenuItem>
-            </VaMenu>
+        <div class="flex">
+            <va-button @click="showRelatedTaxonModal = !showRelatedTaxonModal" color="warning" :round="false">
+                {{ t("relatedTaxon.button") }}
+            </va-button>
         </div>
-
-        <!-- <div v-if="taxonomyStore.currentTaxon" class="flex">
-            <div class="row">
-                <div class="flex">
-                    <VaBadge color="info" overlap :text="taxonomyStore.currentTaxon.leaves">
-                        <VaButton @click="showOrganisms = !showOrganisms" color="secondary" icon="fa-paw">
-                            Organisms
-                        </VaButton>
-                    </VaBadge>
-                </div>
-                <div v-if="coordinates.length" class="flex">
-                    <va-button @click="showMap = !showMap" color="success" icon="fa-map">Samples Map</va-button>
-                </div>
-            </div>
-        </div> -->
     </div>
-    <va-divider></va-divider>
     <VaSplit class="split-demo" :limits="[10, 10]">
         <template #start>
+            <div v-if="taxonomyStore.currentTaxon" class="row align-center">
+                <div class="flex">
+                    <h4 class="va-h4">> {{ taxonomyStore.currentTaxon.name }} ({{ taxonomyStore.currentTaxon.rank }})
+                    </h4>
+                </div>
+                <div class="flex">
+                    <VaMenu :options="relatedDataTabs" :textBy="(v: Record<string, any>) => t(v.title)"
+                        @selected="(v: Record<string, any>) => relatedDataTab = v.key">
+                        <template #anchor>
+                            <VaButton preset="primary" :round="false">{{ t('taxonSearch.viewOptions') }}
+                            </VaButton>
+                        </template>
+                    </VaMenu>
+                    <!-- <div class="row">
+                        <div v-for="tab in relatedDataTabs" class="flex">
+                            <va-button size="small" :icon="tab.icon" :key="tab.key" :color="tab.color"
+                                :preset="relatedDataTab === tab.key ? 'secondary' : 'primary'"
+                                @click="relatedDataTab = tab.key"></va-button>
+                        </div>
+                    </div> -->
+                </div>
+            </div>
             <Suspense>
                 <template #fallback>
-                    <va-skeleton height="100vh" />
+                    <va-skeleton height="100%" />
                 </template>
                 <D3HyperTree @node-change="setCurrentTaxon" :filter="taxonomyStore.taxidQuery" />
             </Suspense>
@@ -90,37 +65,59 @@
             </div>
         </template>
         <template #end>
-            <VaCard v-if="taxonomyStore.currentTaxon">
-                <div class="iframe-wrapper">
-                    <iframe :src="src" :key="src"></iframe>
-                </div>
-            </VaCard>
+            <div style="height:100%" v-if="taxonomyStore.currentTaxon">
+                <Transition name="slide-bottom">
+                    <VaCard v-if="relatedDataTab === 'wiki'">
+                        <div class="iframe-wrapper">
+                            <iframe :src="src" :key="src"></iframe>
+                        </div>
+                    </VaCard>
+                    <div v-else-if="relatedDataTab === 'map'" style="height:100%;padding: 5px;">
+                        <LeafletMap :coordinates="coordinates" />
+                    </div>
+                    <div v-else-if="relatedDataTab === 'biosamples'">
+
+                    </div>
+                    <div v-else-if="relatedDataTab === 'annotations'">
+
+                    </div>
+                    <div v-else-if="relatedDataTab === 'assemblies'">
+
+                    </div>
+                    <div v-else-if="relatedDataTab === 'experiments'">
+
+                    </div>
+                    <div v-else-if="relatedDataTab === 'local_samples'">
+
+                    </div>
+                </Transition>
+            </div>
         </template>
     </VaSplit>
-    <VaModal v-model="showMap">
-        <div>
-            <p> Coordinates of {{ taxonomyStore.currentTaxon?.name }}'s related samples</p>
-            <va-divider>
-            </va-divider>
-            <div style="height: 450px">
-                <LeafletMap :coordinates="coordinates"></LeafletMap>
-
-            </div>
-
-        </div>
+    <VaModal hide-default-actions overlay-opacity="0.2" v-model="showRelatedTaxonModal">
+        <template #header>
+            <h4 class="va-h4">{{ t('relatedTaxon.header') }}</h4>
+            <p>{{ t('relatedTaxon.description') }}</p>
+            <va-divider />
+        </template>
+        <va-inner-loading :loading="lookupLoading">
+            <va-card-content style="padding-left: 0;">
+                <va-form tag="form" @submit.prevent="searchRelatedTaxon">
+                    <div class="row align-center justify-start">
+                        <va-input v-model="taxidLookUp" class="flex lg12 md12 sm12 xs12"
+                            :placeholder="t('relatedTaxon.placeholder')" />
+                    </div>
+                    <va-card-actions align="left">
+                        <va-button :disabled="taxidLookUp.length < 0" type="submit">{{ t('buttons.submit')
+                            }}</va-button>
+                        <va-button color="danger" @click="taxidLookUp = ''">
+                            {{ t('buttons.reset') }}
+                        </va-button>
+                    </va-card-actions>
+                </va-form>
+            </va-card-content>
+        </va-inner-loading>
     </VaModal>
-    <VaModal v-model="showOrganisms">
-        <div style="height: 450px">
-            <p> {{ taxonomyStore.currentTaxon?.name }}'s related organisms</p>
-            <va-divider>
-            </va-divider>
-            <div v-if="taxonomyStore.currentTaxon" style="height: 450px">
-                <TaxonDetailsListBlock :taxid="taxonomyStore.currentTaxon.taxid" />
-
-            </div>
-        </div>
-    </VaModal>
-
 </template>
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
@@ -128,33 +125,42 @@ import { useI18n } from 'vue-i18n'
 import { wiki } from '../../../config.json'
 import D3HyperTree from '../../components/tree/D3HyperTree.vue'
 import { SampleLocations, TreeNode } from '../../data/types'
-import SideBar from './components/SideBar.vue'
 import TaxonService from '../../services/clients/TaxonService'
 import { useTaxonomyStore } from '../../stores/taxonomy-store'
 import GeoLocationService from '../../services/clients/GeoLocationService'
 import LeafletMap from '../../components/maps/LeafletMap.vue'
 import TaxonDetailsListBlock from '../taxons/TaxonDetailsListBlock.vue'
-
+import { relatedData } from './configs'
 
 const taxonomyStore = useTaxonomyStore()
+
 
 const coordinates = ref<SampleLocations[]>([])
 const { t, locale } = useI18n()
 const wikiMapper = wiki as Record<string, any>
 const wikiURL = ref<string>(wikiMapper[locale.value])
-// const src = ref('')
-const showMap = ref(false)
-const showOrganisms = ref(false)
+
 const taxons = ref<TreeNode[]>([])
 const isLoading = ref(false)
+const currentTaxonStats = ref<Record<string, number>>({})
+const coordinatesLoading = ref(false)
+const statsLoading = ref(false)
+const showRelatedTaxonModal = ref(false)
+
+const taxidLookUp = ref('')
+const showDetails = ref(false)
+const lookupLoading = ref(false)
+const relatedDataTab = ref('wiki')
+
 watch(locale, () => {
     wikiURL.value = wikiMapper[locale.value]
 })
 
 watch(() => taxonomyStore.currentTaxon, async (v) => {
     if (v && v.taxid) {
-        const { data } = await GeoLocationService.getLocationsByTaxon(v.taxid)
-        coordinates.value = [...data]
+        relatedDataTab.value = 'wiki'
+        getCoordinates(v.taxid)
+        getStats(v.taxid)
     }
 })
 
@@ -162,7 +168,14 @@ const src = computed(() => {
     if (taxonomyStore.currentTaxon) return `${wikiURL.value}/${taxonomyStore.currentTaxon.name}`
 })
 
+const relatedDataTabs = computed(() => {
+    const filteredData = [{ icon: 'wiki', color: 'info', key: 'wiki', title: 'taxonSearch.wiki' }, ...relatedData.filter(d => Object.entries(currentTaxonStats.value).find(([k, v]) => k === d.key && v > 0))]
+
+    if (coordinates.value.length) filteredData.push({ icon: 'fa-map', key: 'map', color: 'success', title: 'taxonSearch.map' })
+    return filteredData
+})
 function setCurrentTaxon(taxon: TreeNode) {
+    taxons.value = []
     taxonomyStore.currentTaxon = { ...taxon }
 }
 
@@ -181,13 +194,54 @@ async function handleSearch(v: string) {
     } finally {
         isLoading.value = false
     }
-
 }
 
+async function getCoordinates(taxid: string) {
+    try {
+        coordinatesLoading.value = !coordinatesLoading.value
+        const { data } = await GeoLocationService.getLocationsByTaxon(taxid)
+        coordinates.value = [...data]
+    } catch (error) {
+        console.log(error)
+        coordinates.value = []
+    } finally {
+        coordinatesLoading.value = !coordinatesLoading.value
+    }
+}
+
+async function getStats(taxid: string) {
+    try {
+        statsLoading.value = !statsLoading.value
+        const { data } = await TaxonService.getTaxonStats(taxid)
+        currentTaxonStats.value = { ...data }
+    } catch (error) {
+        console.log('error')
+        currentTaxonStats.value = {}
+    } finally {
+        statsLoading.value = !statsLoading.value
+    }
+}
+
+async function searchRelatedTaxon() {
+    try {
+        lookupLoading.value = !lookupLoading.value
+        const { data } = await TaxonService.getPhylogeneticallyCloseTree(taxidLookUp.value)
+        setCurrentTaxon(data)
+        setQuery(data)
+    } catch (error) {
+        console.log(error)
+    } finally {
+        showRelatedTaxonModal.value = !showRelatedTaxonModal.value
+        lookupLoading.value = !lookupLoading.value
+    }
+}
 
 </script>
+
 <style lang="scss">
 .split-demo {
+    height: 100vh;
+
     & .custom-grabber {
         height: 100%;
         width: 100%;
@@ -205,8 +259,17 @@ async function handleSearch(v: string) {
 }
 
 .iframe-wrapper iframe {
-
     width: 100%;
     height: 100%;
+}
+
+.slide-bottom-enter-active .inner,
+.slide-bottom-leave-active .inner {
+    transition: transform .5s ease-out;
+}
+
+.slide-bottom-enter-from .inner,
+.slide-bottom-leave-to .inner {
+    transform: translateY(100%);
 }
 </style>

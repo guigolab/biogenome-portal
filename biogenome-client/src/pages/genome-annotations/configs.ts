@@ -7,12 +7,6 @@ export const tableFilters: Filter[] = [
         type: 'input',
     },
     {
-        label: 'annotationList.filters.filterBy',
-        key: 'filter_option',
-        type: 'select',
-        options: ['name', 'assembly_name', 'scientific_name'],
-    },
-    {
         label: 'annotationList.filters.sortColumn',
         key: 'sort_column',
         type: 'select',

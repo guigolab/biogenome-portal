@@ -5,7 +5,6 @@ const initSearchForm: BioSampleSearchForm = {
   start_date: '',
   end_date: '',
   filter: '',
-  filter_option: '',
   sort_column: '',
   sort_order: '',
 }
@@ -24,7 +23,7 @@ export const useBioSampleStore = defineStore('biosample', {
   },
 
   actions: {
-    resetSeachForm() {
+    resetSearchForm() {
       this.searchForm = { ...initSearchForm }
     },
     resetPagination() {

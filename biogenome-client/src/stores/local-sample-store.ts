@@ -14,7 +14,6 @@ const initSearchForm: LocalSampleSearchForm = {
   start_date: '',
   end_date: '',
   filter: '',
-  filter_option: '',
   sort_column: '',
   sort_order: '',
 }
@@ -27,7 +26,7 @@ export const useLocalSampleStore = defineStore('local-sample', {
     }
   },
   actions: {
-    resetSeachForm() {
+    resetSearchForm() {
       this.searchForm = { ...initSearchForm }
     },
     resetPagination() {

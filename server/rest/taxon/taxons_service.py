@@ -1,24 +1,41 @@
-from db.models import Organism, TaxonNode
+from db.models import Organism, TaxonNode, Assembly, Experiment, BioSample, LocalSample, GenomeAnnotation
 from mongoengine.queryset.visitor import Q
 import json
 from flask import current_app as app
 from errors import NotFound
 
+FIELDS_TO_EXCLUDE=['id']
+
+
+MODEL_MAPPER = {
+    'assemblies':Assembly,
+    'experiments':Experiment,
+    'annotations':GenomeAnnotation,
+    'biosamples':BioSample,
+    'local_samples':LocalSample
+}
 
 def get_taxons(offset=0, limit=20,
                 filter=None, rank=None, sort_column='', sort_order=''):
-    taxons = TaxonNode.objects().exclude('id')
+    
+    q_query=None
+    b_query={}
+
     if filter:
-        filter_query = (Q(name__iexact=filter) | Q(name__icontains=filter) | Q(taxid__iexact=filter) | Q(taxid__icontains=filter))
-        taxons = taxons.filter(filter_query)
+        q_query = (Q(name__iexact=filter) | Q(name__icontains=filter) | Q(taxid__iexact=filter) | Q(taxid__icontains=filter))
 
     if rank:
-        taxons = taxons.filter(rank=rank)
+        b_query['rank'] = rank
+
+    if q_query:
+        taxons = TaxonNode.objects(q_query,**b_query).exclude(*FIELDS_TO_EXCLUDE).skip(int(offset)).limit(int(limit))
+    else:
+        taxons = TaxonNode.objects(**b_query).exclude(*FIELDS_TO_EXCLUDE).skip(int(offset)).limit(int(limit))
 
     if sort_column:
         sort = '-'+sort_column if sort_order == 'desc' else sort_column
         taxons = taxons.order_by(sort)
-    return taxons.count(), taxons[int(offset):int(offset)+int(limit)]
+    return taxons.count(), taxons
 
 def get_taxon_coordinates(taxon):
     query = ( Q(locations__exists=True) & Q(locations__not__size=0) & Q(taxon_lineage=taxon.taxid))
@@ -68,3 +85,13 @@ def search_taxons(name=None,rank=None):
         taxons = TaxonNode.objects(rank=rank)
     return taxons.to_json()
 
+
+def get_taxon_related_data_stats(taxid):
+    if not TaxonNode.objects(taxid=taxid):
+        raise NotFound
+    
+    response = {}
+    taxids = Organism.objects(taxon_lineage=taxid).scalar('taxid')
+    for key,value in MODEL_MAPPER.items():
+        response[key] = value.objects(taxid__in=taxids).count()
+    return response

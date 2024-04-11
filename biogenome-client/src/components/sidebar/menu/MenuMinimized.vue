@@ -8,7 +8,7 @@
     :offset="[1, 0]"
   >
     <template #anchor>
-      <va-sidebar-item :active="isItemChildsActive(route)" :to="route.children ? undefined : { name: route.name }">
+      <va-sidebar-item :active="isRouteActive(route)" :to="{ name: route.name }">
         <va-sidebar-item-content>
           <va-icon :name="route.meta.icon" class="va-sidebar-item__icon" />
           <va-icon
@@ -19,17 +19,6 @@
         </va-sidebar-item-content>
       </va-sidebar-item>
     </template>
-    <div class="sidebar-item__children">
-      <template v-for="(child, index) in route.children" :key="index">
-        <va-sidebar-item :active="isRouteActive(child)" :to="{ name: child.name }">
-          <va-sidebar-item-content>
-            <va-sidebar-item-title>
-              {{ t(child.displayName) }}
-            </va-sidebar-item-title>
-          </va-sidebar-item-content>
-        </va-sidebar-item>
-      </template>
-    </div>
   </va-dropdown>
 </template>
 
@@ -37,8 +26,6 @@
   import { INavigationRoute } from '../NavigationRoutes'
   import { ref } from 'vue'
   import { useRoute } from 'vue-router'
-  import { useI18n } from 'vue-i18n'
-  const { t } = useI18n()
 
   withDefaults(
     defineProps<{
@@ -59,19 +46,6 @@
     return item.name === useRoute().name || useRoute().fullPath.includes(item.name)
   }
 
-  function isItemChildsActive(item: INavigationRoute): boolean {
-
-    const isCurrentItemActive = isRouteActive(item)
-
-    let isChildActive = false
-    if (item.children) {
-      isChildActive = !!item.children.find((child) =>
-        child.children ? isItemChildsActive(child) : isRouteActive(child),
-      )
-    }
-
-    return isCurrentItemActive || isChildActive
-  }
 </script>
 
 <style lang="scss">

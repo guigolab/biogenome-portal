@@ -1,387 +1,472 @@
 {
-  "navBar": {
-    "logoName": "CBPLogo.png",
-    "url": "https://biogenoma.cat"
-  },
-  "appInfo": {
     "title": "BioGenome Portal Community Edition",
-    "gb": {
-      "title": "BioGenome Portal Community Edition",
-      "description": "This portal tracks the progress of the Earth Biogenome Project (EBP) and its affiliated projects, giving the biodiversity community the opportunity to share photos, vernacular names, and gene annotations of sequenced species"
+    "nav": {
+        "logo": "CBPLogo.png",
+        "url": "https://biogenoma.cat"
     },
-    "es-ct": {
-      "title": "BioGenome Portal Community Edition",
-      "description": "Aquest portal segueix el progrés del projecte del biogenoma de la Terra (EBP) i els seus projectes afiliats, donant a la comunitat de biodiversitat l'oportunitat de compartir fotos, noms vernacles i anotacions genètiques d'espècies seqüenciades"
-    }
-  },
-  "tracker": "",
-  "showCountries": true,
-  "languages": [
-    {
-      "code": "gb",
-      "name": "english"
-    },
-    {
-      "code": "es-ct",
-      "name": "catalan"
-    }
-  ],
-  "wiki": {
-    "gb": "https://en.m.wikipedia.org/wiki",
-    "es-ct": "https://ca.m.wikipedia.org/wiki"
-  },
-  "dashboardModelStats": [
-    {
-      "label": "modelStats.organisms",
-      "key": "organisms"
-    },
-    {
-      "label": "modelStats.biosamples",
-      "key": "biosamples"
-    },
-    {
-      "label": "modelStats.localSamples",
-      "key": "local_samples"
-    },
-    {
-      "label": "modelStats.assemblies",
-      "key": "assemblies"
-    },
-    {
-      "label": "modelStats.experiments",
-      "key": "experiments"
-    },
-    {
-      "label": "modelStats.annotations",
-      "key": "annotations"
-    }
-  ],
-  "dashboardInfoBlocks": [
-    {
-      "model": "experiments",
-      "field": "instrument_platform",
-      "title": "dashboard.charts.firstPiechart.title",
-      "label": "dashboard.charts.firstPiechart.label",
-      "class": "flex lg3 md3 sm12 xs12",
-      "type": "pie"
-    },
-    {
-      "model": "assemblies",
-      "field": "metadata.submission_date",
-      "title": "dashboard.charts.dateLineChart.title",
-      "label": "dashboard.charts.dateLineChart.label",
-      "color": "#2c82e0",
-      "type": "dateline",
-      "class": "flex lg6 md6 sm12 xs12"
-    },
-    {
-      "model": "organisms",
-      "field": "insdc_status",
-      "title": "dashboard.charts.secondPiechart.title",
-      "label": "dashboard.charts.secondPiechart.label",
-      "class": "flex lg3 md3 sm12 xs12",
-      "type": "pie"
-    }
-  ],
-  "statusInfoBlocks": [
-    {
-      "model": "organisms",
-      "field": "goat_status",
-      "title": "statusList.charts.firstPiechart",
-      "label": "statusList.charts.firstPiechart",
-      "class": "flex lg6 md6 sm12 xs12",
-      "type": "pie"
-    },
-    {
-      "model": "organisms",
-      "field": "target_list_status",
-      "title": "statusList.charts.secondPiechart",
-      "label": "statusList.charts.secondPiechart",
-      "class": "flex lg6 md6 sm12 xs12",
-      "type": "pie"
-    }
-  ],
-  "bioSampleInfoBlocks": [
-    {
-      "type": "contribution",
-      "title": "biosampleList.charts.contributorList",
-      "field": "metadata.GAL",
-      "model": "biosamples",
-      "label": "",
-      "color": "#2c82e0",
-      "class": "flex lg3 md3 sm12 xs12"
-    },
-    {
-      "type": "dateline",
-      "title": "biosampleList.charts.dateLineChart.title",
-      "field": "metadata.collection_date",
-      "model": "biosamples",
-      "label": "biosampleList.charts.dateLineChart.label",
-      "color": "#2c82e0",
-      "class": "flex lg6 md6 sm12 xs12"
-    },
-    {
-      "type": "habitat",
-      "title": "biosampleList.charts.habitatList",
-      "field": "metadata.habitat",
-      "model": "biosamples",
-      "label": "",
-      "color": "#2c82e0",
-      "class": "flex lg3 md3 sm12 xs12"
-    }
-  ],
-  "bioSampleSelectedMetadata": [
-    {
-      "key": "GAL",
-      "color": "danger"
-    },
-    {
-      "key": "organism part",
-      "color": "info"
-    },
-    {
-      "key": "tissue",
-      "color": "secondary"
-    },
-    {
-      "key": "collection date",
-      "color": "warning"
-    },
-    {
-      "key": "collection_date",
-      "color": "warning"
-    },
-    {
-      "key": "geo_loc_name",
-      "color": "success"
-    },
-    {
-      "key": "geographic location (country and/or sea)",
-      "color": "success"
-    }
-  ],
-  "experimentInfoBlocks": [
-    {
-      "model": "experiments",
-      "field": "instrument_platform",
-      "title": "dashboard.charts.firstPiechart.title",
-      "label": "dashboard.charts.firstPiechart.label",
-      "class": "flex lg3 md3 sm12 xs12",
-      "color": "#2c82e0",
-      "type": "pie"
-    },
-    {
-      "type": "dateline",
-      "field": "metadata.first_created",
-      "label": "experimentList.charts.dateLineChart.label",
-      "title": "experimentList.charts.dateLineChart.title",
-      "color": "#2c82e0",
-      "model": "experiments",
-      "class": "flex lg6 md6 sm12 xs12"
-    },
-    {
-      "type": "contribution",
-      "title": "experimentList.charts.contributorList",
-      "label": "",
-      "model": "experiments",
-      "field": "metadata.center_name",
-      "class": "flex lg3 md3 sm12 xs12",
-      "color": "#2c82e0"
-    }
-  ],
-  "experimentSelectedMetadata": [
-    {
-      "key": "instrument_model",
-      "color": "danger"
-    },
-    {
-      "key": "base count",
-      "color": "info"
-    },
-    {
-      "key": "center_name",
-      "color": "secondary"
-    },
-    {
-      "key": "first created",
-      "color": "warning"
-    }
-  ],
-  "assemblyInfoBlock": [
-    {
-      "type": "pie",
-      "model": "assemblies",
-      "field": "metadata.assembly_level",
-      "title": "assemblyList.charts.pieChart.title",
-      "label": "assemblyList.charts.pieChart.title",
-      "color": "#2c82e0",
-      "class": "flex lg3 md3 sm12 xs12"
-    },
-    {
-      "type": "dateline",
-      "model": "assemblies",
-      "field": "metadata.submission_date",
-      "title": "assemblyList.charts.dateLineChart.title",
-      "label": "assemblyList.charts.dateLineChart.label",
-      "color": "#2c82e0",
-      "class": "flex lg6 md6 sm12 xs12"
-    },
-    {
-      "type": "contribution",
-      "model": "assemblies",
-      "field": "metadata.submitter",
-      "title": "assemblyList.charts.contributorList.title",
-      "label": "assemblyList.charts.contributorList.title",
-      "color": "#2c82e0",
-      "class": "flex lg3 md3 sm12 xs12"
-    }
-  ],
-  "assemblySelectedMetadata": [
-    {
-      "key": "contig_n50",
-      "label": "assemblyDetails.contigN50",
-      "color": "danger"
-    },
-    {
-      "key": "estimated_size",
-      "label": "assemblyDetails.genomeSize",
-      "color": "info"
-    },
-    {
-      "key": "assembly_level",
-      "label": "assemblyDetails.assemblyLevel",
-      "color": "secondary"
-    },
-    {
-      "key": "submitter",
-      "label": "assemblyDetails.submitter",
-      "color": "warning"
-    },
-    {
-      "key": "submission_date",
-      "label": "assemblyDetails.submissionDate",
-      "color": "success"
-    }
-  ],
-  "organismInfoBlock": [],
-  "organismSelectedMetadata": [],
-  "annotationInfoBlock": [],
-  "annotationSelectedMetadata": [],
-  "taxonInfoBlock": [],
-  "localSampleInfoBlock": [],
-  "localSampleSelectedMetadata": [],
-  "annotations": {},
-  "local_samples": {},
-  "navigationRoutes": [
-    {
-      "name": "dashboard",
-      "displayName": "menu.dashboard",
-      "meta": {
-        "icon": "vuestic-iconset-dashboard"
-      }
-    },
-    {
-      "name": "taxons",
-      "displayName": "menu.taxons",
-      "meta": {
-        "icon": "fa-circle-nodes"
-      }
-    },
-    {
-      "name": "organisms",
-      "displayName": "menu.organisms",
-      "meta": {
-        "icon": "fa-paw",
-        "name": "organisms"
-      }
-    },
-    {
-      "name": "assemblies",
-      "displayName": "menu.assemblies",
-      "meta": {
-        "icon": "fa-dna",
-        "name": "assemblies"
-      }
-    },
-    {
-      "name": "annotations",
-      "displayName": "menu.annotations",
-      "meta": {
-        "icon": "fa-bars-progress",
-        "name": "annotations"
-      }
-    },
-    {
-      "name": "experiments",
-      "displayName": "menu.experiments",
-      "meta": {
-        "icon": "fa-file-lines",
-        "name": "experiments"
-      }
-    },
-    {
-      "name": "samples",
-      "displayName": "menu.samples",
-      "meta": {
-        "icon": "fa-vial"
-      },
-      "children": [
+    "tracker": "",
+    "showCountries": true,
+    "languages": [
         {
-          "name": "biosamples",
-          "displayName": "menu.biosamples",
-          "meta": {
-            "name": "biosamples"
-          }
+            "code": "gb",
+            "name": "english"
         },
         {
-          "name": "local_samples",
-          "displayName": "menu.localSamples",
-          "meta": {
-            "name": "local_samples"
-          }
+            "code": "es-ct",
+            "name": "catalan"
         }
-      ]
+    ],
+    "wiki": {
+        "gb": "https://en.m.wikipedia.org/wiki",
+        "es-ct": "https://ca.m.wikipedia.org/wiki"
     },
-    {
-      "name": "taxonomy-explorer",
-      "displayName": "menu.taxonExplorer",
-      "meta": {
-        "icon": "travel_explore",
-        "name": "taxonomy-explorer"
-      }
+    "dashboard": {
+        "title": {
+            "gb": "BioGenome Portal Community Edition",
+            "es-ct": "BioGenome Portal Community Edition"
+        },
+        "description": {
+            "gb": "This portal tracks the progress of the Earth Biogenome Project (EBP) and its affiliated projects, giving the biodiversity community the opportunity to share photos, vernacular names, and gene annotations of sequenced species",
+            "es-ct": "Aquest portal segueix el progrés del projecte del biogenoma de la Terra (EBP) i els seus projectes afiliats, donant a la comunitat de biodiversitat loportunitat de compartir fotos, noms vernacles i anotacions genètiques despècies seqüenciades"
+        },
+        "charts": [
+            {
+                "model": "organisms",
+                "field": "insdc_status",
+                "title": {
+                    "gb": "",
+                    "es-ct": ""
+                },
+                "label": {
+                    "gb": "",
+                    "es-ct": ""
+                },
+                "class": "flex lg3 md3 sm12 xs12",
+                "type": "pie",
+                "color": ""
+            }
+        ]
     },
-    {
-      "name": "status",
-      "displayName": "menu.sequencingStatus",
-      "meta": {
-        "icon": "fa-list-check",
-        "name": "status"
-      }
+    "status": {
+        "charts": [
+            {
+                "model": "organisms",
+                "field": "goat_status",
+                "title": {
+                    "gb": "",
+                    "es-ct": ""
+                },
+                "label": {
+                    "gb": "",
+                    "es-ct": ""
+                },
+                "class": "flex lg3 md3 sm12 xs12",
+                "type": "pie"
+            }
+        ],
+        "filters": [
+            {
+                "label": {
+                    "gb": "",
+                    "es-ct": ""
+                },
+                "key": "filter",
+                "type": "input"
+            },
+            {
+                "label": {
+                    "gb": "",
+                    "es-ct": ""
+                },
+                "key": "goat_status",
+                "type": "select",
+                "options": [
+                    "Sample Collected",
+                    "Sample Acquired",
+                    "Data Generation",
+                    "In Assembly",
+                    "INSDC Submitted",
+                    "Publication Available"
+                ]
+            },
+            {
+                "label": {
+                    "gb": "",
+                    "es-ct": ""
+                },
+                "key": "target_list_status",
+                "type": "select",
+                "options": [
+                    "long_list",
+                    "family_representative",
+                    "other_priority"
+                ]
+            }
+        ],
+        "columns": [
+            "scientific_name",
+            "insdc_common_name",
+            "tolid_prefix",
+            "goat_status",
+            "target_list_status"
+        ]
     },
-    {
-      "name": "2d-map",
-      "displayName": "menu.organismsMap",
-      "meta": {
-        "icon": "fa-map"
-      }
+    "biosamples": {
+        "charts": [
+            {
+                "model": "organisms",
+                "field": "goat_status",
+                "title": {
+                    "gb": "",
+                    "es-ct": ""
+                },
+                "label": {
+                    "gb": "",
+                    "es-ct": ""
+                },
+                "class": "flex lg3 md3 sm12 xs12",
+                "type": "pie"
+            }
+        ],
+        "filters": [
+            {
+                "key": "filter",
+                "label": {
+                    "gb": "",
+                    "es-ct": ""
+                },
+                "type": "input"
+            },
+            {
+                "key": "date",
+                "label": {
+                    "gb": "",
+                    "es-ct": ""
+                },
+                "type": "date"
+            },
+            {
+                "key": "sort_column",
+                "label": {
+                    "gb": "",
+                    "es-ct": ""
+                },
+                "type": "select",
+                "options": [
+                    "collection_date"
+                ]
+            },
+            {
+                "key": "sort_order",
+                "label": {
+                    "gb": "",
+                    "es-ct": ""
+                },
+                "type": "select",
+                "options": [
+                    "asc",
+                    "desc"
+                ]
+            }
+        ],
+        "columns": [
+            "accession",
+            "scientific_name",
+            "collection_date",
+            "gal",
+            "habitat",
+            "organism_part"
+        ],
+        "metadata": [
+            {
+                "key": "GAL",
+                "color": "danger"
+            },
+            {
+                "key": "organism part",
+                "color": "info"
+            },
+            {
+                "key": "tissue",
+                "color": "secondary"
+            },
+            {
+                "key": "collection date",
+                "color": "warning"
+            },
+            {
+                "key": "collection_date",
+                "color": "warning"
+            },
+            {
+                "key": "geo_loc_name",
+                "color": "success"
+            },
+            {
+                "key": "geographic location (country and/or sea)",
+                "color": "success"
+            }
+        ]
     },
-    {
-      "name": "3d-map",
-      "displayName": "menu.3Dmaps",
-      "meta": {
-        "icon": "public"
-      },
-      "disabled": true,
-      "children": [
+    "experiments": {
+        "charts": [
+            {
+                "model": "organisms",
+                "field": "goat_status",
+                "title": {
+                    "gb": "",
+                    "es-ct": ""
+                },
+                "label": {
+                    "gb": "",
+                    "es-ct": ""
+                },
+                "class": "flex lg3 md3 sm12 xs12",
+                "type": "pie"
+            }
+        ],
+        "filters": [],
+        "columns": [],
+        "metadata": [
+            {
+                "key": "instrument_model",
+                "color": "danger"
+            },
+            {
+                "key": "base count",
+                "color": "info"
+            },
+            {
+                "key": "center_name",
+                "color": "secondary"
+            },
+            {
+                "key": "first created",
+                "color": "warning"
+            }
+        ]
+    },
+    "assemblies": {
+        "filters": [
+            {
+                "label": {
+                    "gb": "Search Assembly",
+                    "es-ct": ""
+                },
+                "key": "filter",
+                "type": "input"
+            },
+            {
+                "label": {
+                    "gb": "BlobToolKit",
+                    "es-ct": "BlobToolKit"
+                },
+                "key": "blobtoolkit",
+                "type": "checkbox"
+            },
+            {
+                "label": {
+                    "gb": "Submission Date",
+                    "es-ct": ""
+                },
+                "key": "submission_date",
+                "type": "date"
+            },
+            {
+                "label": {
+                    "gb": "Sort column",
+                    "es-ct": ""
+                },
+                "key": "sort_column",
+                "type": "select",
+                "options": [
+                    "contig_n50",
+                    "size",
+                    "submission_date"
+                ]
+            },
+            {
+                "label": {
+                    "gb": "Assembly Level",
+                    "es-ct": ""
+                },
+                "key": "assembly_level",
+                "type": "select",
+                "options": [
+                    "Chromosome",
+                    "Complete Genome",
+                    "Contig",
+                    "Scaffold"
+                ]
+            }
+        ],
+        "charts": [
+            {
+                "model": "organisms",
+                "field": "goat_status",
+                "title": {
+                    "gb": "ciao",
+                    "es-ct": "cia"
+                },
+                "label": {
+                    "gb": "bau",
+                    "es-ct": "miao"
+                },
+                "class": "flex lg6 md6 sm12 xs12",
+                "type": "pie"
+            }
+        ],
+        "metadata": [
+            {
+                "key": "contig_n50",
+                "label": "assemblyDetails.contigN50",
+                "color": "danger"
+            },
+            {
+                "key": "estimated_size",
+                "label": "assemblyDetails.genomeSize",
+                "color": "info"
+            },
+            {
+                "key": "assembly_level",
+                "label": "assemblyDetails.assemblyLevel",
+                "color": "secondary"
+            },
+            {
+                "key": "submitter",
+                "label": "assemblyDetails.submitter",
+                "color": "warning"
+            },
+            {
+                "key": "submission_date",
+                "label": "assemblyDetails.submissionDate",
+                "color": "success"
+            }
+        ],
+        "columns": [
+            "assembly_name",
+            "scientific_name",
+            "metadata.assembly_level",
+            "metadata.contig_n50",
+            "metadata.submitter",
+            "metadata.submission_date"
+        ]
+    },
+    "organisms": {
+        "charts": [],
+        "metadata": [],
+        "filters": [],
+        "columns": []
+    },
+    "annotations": {
+        "filters": [],
+        "columns": [],
+        "metadata": [],
+        "charts": []
+    },
+    "local_samples": {
+        "filters": [],
+        "metadata": [],
+        "charts": [],
+        "columns": []
+    },
+    "navigationRoutes": [
         {
-          "name": "countries-map",
-          "displayName": "menu.countriesMap"
+            "name": "dashboard",
+            "displayName": "menu.dashboard",
+            "meta": {
+                "icon": "vuestic-iconset-dashboard"
+            }
         },
         {
-          "name": "organisms-map",
-          "displayName": "menu.organismsMap"
+            "name": "taxons",
+            "displayName": "menu.taxons",
+            "meta": {
+                "icon": "fa-circle-nodes"
+            }
+        },
+        {
+            "name": "organisms",
+            "displayName": "menu.organisms",
+            "meta": {
+                "icon": "fa-paw",
+                "name": "organisms"
+            }
+        },
+        {
+            "name": "assemblies",
+            "displayName": "menu.assemblies",
+            "meta": {
+                "icon": "fa-dna",
+                "name": "assemblies"
+            }
+        },
+        {
+            "name": "annotations",
+            "displayName": "menu.annotations",
+            "meta": {
+                "icon": "fa-bars-progress",
+                "name": "annotations"
+            }
+        },
+        {
+            "name": "experiments",
+            "displayName": "menu.experiments",
+            "meta": {
+                "icon": "fa-file-lines",
+                "name": "experiments"
+            }
+        },
+        {
+            "name": "biosamples",
+            "displayName": "menu.biosamples",
+            "meta": {
+                "name": "biosamples"
+            }
+        },
+        {
+            "name": "local_samples",
+            "displayName": "menu.localSamples",
+            "meta": {
+                "name": "local_samples"
+            }
+        },
+        {
+            "name": "taxonomy",
+            "displayName": "menu.taxonExplorer",
+            "meta": {
+                "icon": "travel_explore",
+                "name": "taxonomy"
+            }
+        },
+        {
+            "name": "status",
+            "displayName": "menu.sequencingStatus",
+            "meta": {
+                "icon": "fa-list-check",
+                "name": "status"
+            }
+        },
+        {
+            "name": "2d-map",
+            "displayName": "menu.organismsMap",
+            "meta": {
+                "icon": "fa-map"
+            }
+        },
+        {
+            "name": "3d-map",
+            "displayName": "menu.3Dmaps",
+            "meta": {
+                "icon": "public"
+            }
+        },
+        {
+            "name": "countries-map",
+            "displayName": "menu.countriesMap",
+            "meta": {
+                "icon": "public"
+            }
         }
-      ]
-    }
-  ]
+    ]
 }

@@ -7,12 +7,6 @@ export const tableFilters: Filter[] = [
       type: 'input',
     },
     {
-      label: 'localSampleList.filters.filterBy',
-      key: 'filter_option',
-      type: 'select',
-      options: ['taxid', 'scientific_name'],
-    },
-    {
       label: 'localSampleList.filters.sortColumn',
       key: 'sort_column',
       type: 'select',

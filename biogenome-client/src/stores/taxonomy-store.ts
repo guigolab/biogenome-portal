@@ -25,7 +25,7 @@ export const useTaxonomyStore = defineStore('taxonomy', {
   },
 
   actions: {
-    resetSeachForm() {
+    resetSearchForm() {
       this.searchForm = { ...initSearchForm }
     },
     resetPagination() {

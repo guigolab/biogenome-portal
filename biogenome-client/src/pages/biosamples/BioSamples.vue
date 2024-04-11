@@ -1,10 +1,5 @@
 <template>
   <div>
-    <va-breadcrumbs class="va-title" color="primary">
-      <va-breadcrumbs-item :to="{ name: 'biosamples', params: { savePosition: true } }"
-        :label="t('biosampleList.breadcrumb')" />
-    </va-breadcrumbs>
-    <va-divider />
     <InfoBlockVue v-if="charts.length" :charts="charts" />
     <div class="row row-equal">
       <div class="flex lg12 md12 sm12 xs12">
@@ -16,7 +11,7 @@
             {{ errorMessage }}
           </va-card-content>
           <va-card-content v-else>
-            <DataTable :items="biosamples" :columns="tableColumns" />
+            <DataTable :items="items" :columns="biosamples.columns" />
             <div class="row align-center justify-center">
               <div class="flex">
                 <va-pagination v-model="offset" :page-size="biosampleStore.pagination.limit" :total="total"
@@ -32,10 +27,9 @@
 </template>
 <script setup lang="ts">
 import InfoBlockVue from '../../components/InfoBlock.vue'
-import { bioSampleInfoBlocks } from '../../../config.json'
+import { biosamples } from '../../../config.json'
 import FilterForm from '../../components/ui/FilterForm.vue'
 import { useI18n } from 'vue-i18n'
-import { tableFilters, tableColumns } from './configs'
 import { useBioSampleStore } from '../../stores/biosample-store'
 import { Filter, InfoBlock } from '../../data/types'
 import { onMounted, ref } from 'vue'
@@ -43,10 +37,10 @@ import BioSampleService from '../../services/clients/BioSampleService'
 import DataTable from '../../components/ui/DataTable.vue'
 
 const biosampleStore = useBioSampleStore()
-const filters = ref<Filter[]>(tableFilters)
-const charts = <InfoBlock[]>bioSampleInfoBlocks
+const filters = ref(biosamples.filters as Filter[])
+const charts = biosamples.charts as InfoBlock[]
 const { t } = useI18n()
-const biosamples = ref([])
+const items = ref([])
 const total = ref(0)
 const offset = ref(1 + biosampleStore.pagination.offset)
 const isLoading = ref(true)
@@ -68,7 +62,7 @@ function handlePagination(value: number) {
 
 function reset() {
   offset.value = 1
-  biosampleStore.resetSeachForm()
+  biosampleStore.resetSearchForm()
   biosampleStore.resetPagination()
   getBioSamples({ ...biosampleStore.pagination })
 }
@@ -76,7 +70,7 @@ function reset() {
 async function getBioSamples(query: Record<string, any>) {
   try {
     const { data } = await BioSampleService.getBioSamples(query)
-    biosamples.value = data.data
+    items.value = data.data
     total.value = data.total
   } catch (e) {
     errorMessage.value = 'Something happened'

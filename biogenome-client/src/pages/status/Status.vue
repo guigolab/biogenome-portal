@@ -20,7 +20,7 @@
           {{ errorMessage }}
         </va-card-content>
         <va-card-content v-else>
-          <DataTable :items="organisms" :columns="tableColumns" />
+          <DataTable :items="organisms" :columns="status.columns" />
           <div class="row align-center justify-center">
             <div class="flex">
               <va-pagination v-model="offset" :page-size="statusStore.pagination.limit" :total="total" :visible-pages="3"
@@ -40,15 +40,14 @@ import { useStatusStore } from '../../stores/status-store'
 import OrganismService from '../../services/clients/OrganismService'
 import GoaTService from '../../services/clients/GoaTService'
 import { useI18n } from 'vue-i18n'
-import { tableFilters, tableColumns } from './configs'
-import { statusInfoBlocks } from '../../../config.json'
+import { status } from '../../../config.json'
 import InfoBlockVue from '../../components/InfoBlock.vue'
 import FilterForm from '../../components/ui/FilterForm.vue'
 
-const charts = <InfoBlock[]>statusInfoBlocks
+const charts = <InfoBlock[]>status.info
 
 const { t } = useI18n()
-const filters = ref<Filter[]>(tableFilters)
+const filters = ref(status.filters as Filter[])
 
 const statusStore = useStatusStore()
 const isLoading = ref(true)

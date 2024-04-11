@@ -1,4 +1,4 @@
-from db.models import Assembly, Chromosome,BioSample
+from db.models import Assembly, Chromosome,BioSample,Organism
 from mongoengine.errors import ValidationError
 from errors import NotFound
 from ..utils import ncbi_client,genomehubs_client
@@ -8,57 +8,56 @@ from mongoengine.queryset.visitor import Q
 
 ASSEMBLY_FIELDS = ['display_name','chromosomes','assembly_accession','biosample','bioproject_lineages','biosample_accession','org']
 
-ASSEMBLY_LEVELS = ['Chromosome', 'Scaffold', 'Complete Genome', 'Contig']
-
 FIELDS_TO_EXCLUDE = ['id', 'created', 'chromosomes_aliases']
 
-def get_assemblies(filter=None, filter_option='assembly_name', 
-                    offset=0, submitter=None,
-                    limit=20, start_date=None, 
-                    end_date=None, assembly_level=None,
-                    sort_order=None, sort_column=None, blobtoolkit=None):  
+def get_assemblies(args):  
+
+    filter = args.get('filter')
+    q_query = get_filter(filter) if filter else None        
+    limit = int(args.get('limit', 10))
+    offset = int(args.get('offset', 0))
+    sort_column = args.get('sort_column')
+    sort_order = args.get('sort_order', 'desc')
+    query={}
     
-    assemblies = Assembly.objects().exclude(*FIELDS_TO_EXCLUDE)
-    if filter:
-        filter_query = get_filter(filter, filter_option)        
-        assemblies = assemblies.filter(filter_query)
+    for k, v in args.items():
 
-    query = {}
-    if assembly_level and assembly_level in ASSEMBLY_LEVELS:
-        query['metadata__assembly_level'] = assembly_level
+        if not v:
+            continue
 
-    if submitter:
-        query['metadata__submitter'] = submitter
+        if k == "parent_taxon":
+            taxids = Organism.objects(taxon_lineage=v).scalar('taxid')
+            query['taxid__in'] = taxids
 
-    if blobtoolkit and blobtoolkit.lower() == 'true':
-        query['blobtoolkit_id__exists'] = True
+        elif k == "filter":
+            continue
+        elif k == "blobtoolkit":
+            
+            if v.lower() == 'true':
+                query['blobtoolkit_id__exists'] = True
 
-    if start_date and end_date:
-        assemblies = assemblies.filter((Q(metadata__submission_date__gte=start_date) & Q(metadata__submission_date__lte=end_date)))
+        elif "__gte" in k or "__lte" in k:
+            query_visitor = {f"metadata__{k}":v}
+            q_query = Q(**query_visitor) & q_query if q_query else Q(**query_visitor)
 
-    if query.keys():
-        assemblies = assemblies.filter(**query)
+        elif k in ("limit", "offset", "sort_order", "sort_column"):
+            continue
+        else:
+            query[f"metadata__{k}"] = v
+
+    assemblies = Assembly.objects(**query).exclude(*FIELDS_TO_EXCLUDE)
+    if q_query:
+        assemblies = assemblies.filter(q_query)
 
     if sort_column:
-        sort_column_map = {
-            'submission_date': 'metadata.submission_date',
-            'size': 'metadata.estimated_size',
-            'contig_n50': 'metadata.contig_n50'
-        }
-        sort_column = sort_column_map.get(sort_column, sort_column)
         sort = '-' + sort_column if sort_order == 'desc' else sort_column
         assemblies = assemblies.order_by(sort)
 
-    return assemblies.count(), assemblies[int(offset):int(offset) + int(limit)]
+    return assemblies.count(), assemblies.skip(int(offset)).limit(int(limit))
 
 
-def get_filter(filter, option):
-    if option == 'taxid':
-        return (Q(taxid__iexact=filter) | Q(taxid__icontains=filter))
-    elif option == 'scientific_name':
-        return (Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter))
-    else:
-        return (Q(assembly_name__iexact=filter) | Q(assembly_name__icontains=filter))
+def get_filter(filter):
+    return (Q(taxid__iexact=filter) | Q(taxid__icontains=filter)) |  (Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter)) | (Q(assembly_name__iexact=filter) | Q(assembly_name__icontains=filter))
     
 def create_assembly_from_accession(accession):
     assembly_obj = Assembly.objects(accession=accession).first()

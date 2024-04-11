@@ -24,7 +24,7 @@ onMounted(() => {
 })
 
 async function handleSearch(v: string) {
-    const { data } = await AssemblyService.getAssemblies({ filter: v, filter_option: 'scientific_name' })
+    const { data } = await AssemblyService.getAssemblies({ filter: v})
     if (data.data) assemblies.value = [...data.data]
 }
 

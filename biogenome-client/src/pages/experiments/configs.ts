@@ -17,12 +17,6 @@ export const tableColumns = [
       type: 'input',
     },
     {
-      label: 'experimentList.filters.filterBy',
-      key: 'filter_option',
-      type: 'select',
-      options: ['taxid', 'experiment_title', 'instrument_platform', 'scientific_name'],
-    },
-    {
       label: 'experimentList.filters.sortColumn',
       key: 'sort_column',
       type: 'select',

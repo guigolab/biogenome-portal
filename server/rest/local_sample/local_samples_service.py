@@ -1,37 +1,44 @@
-from db.models import LocalSample,SampleCoordinates,Organism,BioGenomeUser
+from db.models import LocalSample,Organism,BioGenomeUser
 from errors import NotFound
 from ..organism import organisms_service
 from datetime import datetime
 from mongoengine.queryset.visitor import Q
 from flask_jwt_extended import get_jwt
 
+FIELDS_TO_EXCLUDE = ['id']
 
 def get_local_samples(offset=0,limit=20,
-                        filter=None, filter_option="scientific_name",
+                        filter=None,
                         sort_column=None,sort_order=None,
-                        start_date=None, end_date=datetime.utcnow, user=None):
+                        start_date=None, end_date=datetime.now(), user=None, parent_taxon=None):
     
-    local_samples = LocalSample.objects().exclude('id')
-
-    filter_query= get_filter(filter,filter_option) if filter else None
-
-    if filter_query:
-        local_samples = local_samples.filter(filter_query)
-
+    q_query= get_filter(filter) if filter else None
+    b_query = {}
+    
     if start_date:
         date_query = (Q(created__gte=start_date) & Q(created__lte=end_date))
-        local_samples = local_samples.filter(date_query)
+        q_query = q_query & date_query if q_query else date_query
+
+
+    if parent_taxon:
+        b_query['taxid__in'] = Organism.objects(taxon_lineage=parent_taxon).scalar('taxid')
 
     if user:
         user_object = BioGenomeUser.objects(name=user).first()
-        local_samples = local_samples.filter(taxid__in=user_object.species)
+        b_query['taxid__in'] = user_object.species
+
+    if q_query:
+        local_samples = LocalSample.objects(q_query, **b_query).exclude(*FIELDS_TO_EXCLUDE).skip(int(offset)).limit(int(limit))
+    else:
+        local_samples = LocalSample.objects(**b_query).exclude(*FIELDS_TO_EXCLUDE).skip(int(offset)).limit(int(limit))
 
     if sort_column:
         sort = '-'+sort_column if sort_order == 'desc' else sort_column
         local_samples = local_samples.order_by(sort)
-    return local_samples.count(), local_samples[int(offset):int(offset)+int(limit)]
 
-def get_filter(filter, option):
+    return local_samples.count(), local_samples
+
+def get_filter(filter):
     if option == 'taxid':
         return (Q(taxid__iexact=filter) | Q(taxid__icontains=filter))
     elif option == 'local_id':

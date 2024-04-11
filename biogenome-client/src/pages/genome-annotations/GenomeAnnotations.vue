@@ -65,7 +65,7 @@ async function handlePagination(value: number) {
 
 async function reset() {
   offset.value = 1
-  annotationStore.resetSeachForm()
+  annotationStore.resetSearchForm()
   annotationStore.resetPagination()
   getAnnotations({ ...annotationStore.pagination })
 }

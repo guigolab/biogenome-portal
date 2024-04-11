@@ -28,8 +28,12 @@ interface Node {
   annotations?: number
 }
 
+export type DateRange = {
+  start: Date | null
+  end: Date | null
+}
 export type Filter = {
-  label: string
+  label: Record<string,any>
   placeholder?: string
   type: 'input' | 'select' | 'date' | 'checkbox'
   options?: Array<string | Record<string, any>>
@@ -38,7 +42,6 @@ export type Filter = {
 
 export interface SearchForm {
   filter: string
-  filter_option?: string
   sort_column: string
   sort_order: string
   start_date?: string
@@ -58,7 +61,6 @@ export type StatusSearchForm = {
   goat_status: string
   target_list_status: string
   filter: string
-  filter_option: string
 }
 
 export type BioSampleSearchForm = SearchForm
@@ -138,10 +140,9 @@ export type AssemblyAdapter = {
 export type InfoBlock = {
   field: string,
   model: string,
-  title: string,
-  label: string,
+  title: Record<string,string>,
+  label: Record<string,string>,
   type: 'pie' | 'dateline' | 'bar' | 'contribution' | 'list' | 'habitat'
-  color: string
   class: string
 }
 

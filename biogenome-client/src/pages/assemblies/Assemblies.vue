@@ -1,8 +1,4 @@
 <template>
-  <va-breadcrumbs class="va-title" color="primary">
-    <va-breadcrumbs-item active :to="{ name: 'assemblies' }" :label="t('assemblyDetails.breadcrumb')" />
-  </va-breadcrumbs>
-  <va-divider />
   <InfoBlockVue v-if="charts.length" :charts="charts" />
   <div class="row row-equal">
     <div class="flex lg12 md12 sm12 xs12">
@@ -14,7 +10,7 @@
           {{ errorMessage }}
         </va-card-content>
         <va-card-content v-else>
-          <DataTable :items="assemblies" :columns="tableColumns" />
+          <DataTable :items="items" :columns="assemblies.columns" />
           <div class="row align-center justify-center">
             <div class="flex">
               <va-pagination v-model="offset" :page-size="assemblyStore.pagination.limit" :total="total"
@@ -29,7 +25,7 @@
 </template>
 <script setup lang="ts">
 import InfoBlockVue from '../../components/InfoBlock.vue'
-import { assemblyInfoBlock } from '../../../config.json'
+import { assemblies } from '../../../config.json'
 import { useI18n } from 'vue-i18n'
 import { InfoBlock } from '../../data/types'
 import { useAssemblyStore } from '../../stores/assembly-store'
@@ -38,28 +34,28 @@ import { onMounted, ref } from 'vue'
 import DataTable from '../../components/ui/DataTable.vue'
 import { Filter } from '../../data/types'
 import FilterForm from '../../components/ui/FilterForm.vue'
-import { tableFilters, tableColumns } from './configs'
 
 const { t } = useI18n()
 
-const charts = <InfoBlock[]>assemblyInfoBlock
+const charts = assemblies.charts as InfoBlock[]
 
 const assemblyStore = useAssemblyStore()
 const isLoading = ref(true)
 const errorMessage = ref<string | null>(null)
 
-const filters = ref<Filter[]>(tableFilters)
+const filters = ref(assemblies.filters as Filter[])
 const offset = ref(1 + assemblyStore.pagination.offset)
-const assemblies = ref([])
+const items = ref([])
 const total = ref(0)
 
 onMounted(() => {
   getAssemblies({ ...assemblyStore.searchForm, ...assemblyStore.pagination })
 })
 
-function handleSubmit() {
+function handleSubmit(payload:Record<string,string>) {
   assemblyStore.resetPagination()
   offset.value = 1
+  assemblyStore.searchForm = {...assemblyStore.searchForm, ...payload}
   getAssemblies({ ...assemblyStore.searchForm, ...assemblyStore.pagination })
 }
 function handlePagination(value: number) {
@@ -68,7 +64,7 @@ function handlePagination(value: number) {
 }
 function reset() {
   offset.value = 1
-  assemblyStore.resetSeachForm()
+  assemblyStore.resetSearchForm()
   assemblyStore.resetPagination()
   getAssemblies({ ...assemblyStore.pagination })
 }
@@ -76,7 +72,7 @@ function reset() {
 async function getAssemblies(query: Record<string, any>) {
   try {
     const { data } = await AssemblyService.getAssemblies(query)
-    assemblies.value = data.data
+    items.value = data.data
     total.value = data.total
   } catch (e) {
     errorMessage.value = 'Something happened'

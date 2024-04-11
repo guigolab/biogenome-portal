@@ -32,7 +32,6 @@ def initialize_routes(api):
 
 	##TAXONOMY
 	api.add_resource(taxonomy_controller.TreeApi,'/api/tree', '/api/tree/<taxid>')
-	api.add_resource(taxonomy_controller.RelativeTaxonomyTreeApi, '/api/tree/<taxid>/relative') 
 	api.add_resource(taxonomy_controller.ComputedTreeApi, '/api/computed_tree')
 
 	##ANNOTATIONS
@@ -72,7 +71,9 @@ def initialize_routes(api):
 	##TAXONS
 	api.add_resource(taxons_controller.TaxonsApi, '/api/taxons')
 	api.add_resource(taxons_controller.TaxonApi, '/api/taxons/<taxid>')
+	api.add_resource(taxons_controller.TaxonRelatedDataStats, '/api/taxons/<taxid>/stats')
 	api.add_resource(taxons_controller.TaxonChildrenApi, '/api/taxons/<taxid>/children')
+	api.add_resource(taxonomy_controller.RelativeTaxonomyTreeApi, '/api/taxons/<taxid>/lookup') 
 
 
 	##USERS
@@ -83,7 +84,7 @@ def initialize_routes(api):
 
 	##STATS TODO: IMPROVE IT.. 
 	api.add_resource(stats_controller.StatsApi,'/api/stats')
-	api.add_resource(stats_controller.FieldStatsApi, '/api/stats/<model>')
+	api.add_resource(stats_controller.FieldStatsApi, '/api/stats/<model>/<field>')
 
 
 

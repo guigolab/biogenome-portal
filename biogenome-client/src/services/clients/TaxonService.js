@@ -6,6 +6,9 @@ class TaxonService {
   getTaxon(taxid) {
     return base.get(`/taxons/${taxid}`)
   }
+  getTaxonStats(taxid) {
+    return base.get(`/taxons/${taxid}/stats`)
+  }
   getTaxonCoordinates(taxid) {
     return base.get(`/taxons/${taxid}/coordinates`)
   }
@@ -18,8 +21,8 @@ class TaxonService {
   getTaxonChildren(taxid) {
     return base.get(`/taxons/${taxid}/children`)
   }
-  getPhylogeneticallyCloseTree(taxid, params){
-    return base.get(`/tree/${taxid}/relative`, { params: params })
+  getPhylogeneticallyCloseTree(taxid){
+    return base.get(`/taxons/${taxid}/lookup`)
   }
   getComputedTree(){
     return base.get('/computed_tree')

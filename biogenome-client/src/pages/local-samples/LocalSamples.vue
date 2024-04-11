@@ -71,7 +71,7 @@ async function handlePagination(value: number) {
 
 async function reset() {
   offset.value = 1
-  localSampleStore.resetSeachForm()
+  localSampleStore.resetSearchForm()
   localSampleStore.resetPagination()
   getLocalSamples({ ...localSampleStore.pagination })
 }

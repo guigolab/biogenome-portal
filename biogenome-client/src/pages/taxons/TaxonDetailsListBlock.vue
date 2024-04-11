@@ -64,7 +64,6 @@ const initSearchForm = {
   insdc_status: '',
   parent_taxid: props.taxid,
   filter: '',
-  filter_option: '',
 }
 const offset = ref(1)
 const total = ref(0)
@@ -81,12 +80,6 @@ const filters: Filter[] = [
     label: 'organismList.filters.searchInput',
     key: 'filter',
     type: 'input',
-  },
-  {
-    label: 'organismList.filters.searchSelect',
-    key: 'filter_option',
-    type: 'select',
-    options: ['taxid', 'common_name', 'scientific_name', 'tolid'],
   },
   {
     label: 'organismList.filters.insdcStatus',

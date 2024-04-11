@@ -31,7 +31,7 @@
   import StatisticsService from '../../services/clients/StatisticsService';
   import { useColors } from 'vuestic-ui';
   import { useI18n } from 'vue-i18n'
-  import { dashboardModelStats } from '../../../config.json'
+  import { dashboard } from '../../../config.json'
   
   const { t } = useI18n()
   
@@ -40,7 +40,7 @@
   const stats = ref<Record<string, any>[]>([])
   const errorMessage = ref('')
   const isLoading = ref(false)
-  const models = dashboardModelStats as Record<string, string>[]
+  const models = dashboard.stats as Record<string, string>[]
   
   onMounted(async () => {
     try {

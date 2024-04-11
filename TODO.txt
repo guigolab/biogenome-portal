@@ -1,3 +1,6 @@
+Common this for all cases is organisms
+
+
 CLIENT:
     -CHANGE FLAGS TO TEXT
     -IMPROVE UX TAXONOMY PAGE
@@ -5,8 +8,31 @@ CLIENT:
     -ADD LINK IF METADATA FIELD IS A URL
     -IMPROVE DESCRIPTION OF TAXONOMY EXPORER
     -SEPARATE BETWEEN INSDC DATA AND LOCAL DATA
-    - ADD TSV EXPORT (API)?
-    - R
+    -ADD TSV EXPORT (API)?
+    -ADD GENOME BROWSER PAGE, MORE EXPLICIT
+
+    NEW UI:
+        - DASHBOARD:
+            SEARCH BAR -> 
+            STATISTICS
+            CHARTS
+            IMAGES?
+        - INSDC DATA
+            ASSEMBLIES
+                ASSEMBLY
+            SAMPLES 
+                SAMPLE
+            EXPERIMENTS
+                EXPERIMENT
+        - LOCAL DATA
+            SAMPLES
+            ANNOTATIONS
+        - TAXONOMY
+            - HYPER-TREE | WIKI, ASSEMBLIES, EXPERIMENTS, ANNOTATIONS, SAMPLES, DETAILS
+        - ORGANISM:
+            - DETAILS
+        - GOAT STATUS
+
 
 SERVER:
 

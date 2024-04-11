@@ -21,37 +21,55 @@ MODEL_LIST = {
     'experiments':{'model':Experiment, 'id':'experiment_accession'},
     }
 
+FIELDS_TO_EXCLUDE = ['id']
+
 def get_organisms(offset=0, limit=20, 
                 sort_order=None, sort_column=None,
-                filter=None, parent_taxid=None,
-                filter_option='scientific_name', country=None,
+                filter=None, parent_taxid=None, country=None,
                 goat_status=None, insdc_status=None, target_list_status=None,
                 user=None):
-    query=dict()
-    organisms = Organism.objects().exclude('id')
+    base_query = {}
+
+    filter_query = None
+    # Apply filter conditions if provided
     if filter:
-        filter_query = get_filter(filter, filter_option)
-        organisms = organisms.filter(filter_query)
+        filter_query = get_filter(filter)
+
+    # Apply additional query conditions
     if parent_taxid:
-        query['taxon_lineage'] = parent_taxid
+        base_query['taxon_lineage'] = parent_taxid
     if goat_status:
-        query['goat_status'] = goat_status
+        base_query['goat_status'] = goat_status
     if country:
-        query['countries'] = country
+        base_query['countries'] = country
     if insdc_status:
-        query['insdc_status'] = insdc_status
+        base_query['insdc_status'] = insdc_status
     if target_list_status:
-        query['target_list_status'] = target_list_status
+        base_query['target_list_status'] = target_list_status
     if user:
         user_object = BioGenomeUser.objects(name=user).first()
-        query['taxid__in'] = user_object.species
+        base_query['taxid__in'] = user_object.species
 
-    organisms = organisms.filter(**query)
+    if filter_query:
+    # Retrieve organisms based on the combined query
+        organisms = Organism.objects(filter_query, **base_query).exclude(*FIELDS_TO_EXCLUDE)
+    else:
+        organisms = Organism.objects(filter_query, **base_query).exclude(*FIELDS_TO_EXCLUDE)
 
+    # Apply sorting if specified
     if sort_column:
-        sort = '-'+sort_column if sort_order == 'desc' else sort_column
+        sort = '-' + sort_column if sort_order == 'desc' else sort_column
         organisms = organisms.order_by(sort)
-    return organisms.count(), organisms[int(offset):int(offset)+int(limit)]
+
+    # Count the total number of matching organisms
+    total_count = organisms.count()
+
+    # Apply pagination and return the result
+    organisms = organisms.skip(int(offset)).limit(int(limit))
+    return total_count, organisms
+
+def get_filter(filter):
+    return (Q(taxid__iexact=filter) | Q(taxid__icontains=filter)) | (Q(insdc_common_name__iexact=filter) | Q(insdc_common_name__icontains=filter)) | (Q(tolid_prefix__iexact=filter) | Q(tolid_prefix__icontains=filter)) |(Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter))
 
 
 def get_organism_related_data(taxid, model):
@@ -95,15 +113,6 @@ def get_stats(organisms):
         stats['annotations'] = annotations_count
     return stats
 
-def get_filter(filter, option):
-    if option == 'taxid':
-        return (Q(taxid__iexact=filter) | Q(taxid__icontains=filter))
-    elif option == 'common_name':
-        return (Q(insdc_common_name__iexact=filter) | Q(insdc_common_name__icontains=filter))
-    elif option == 'tolid':
-        return (Q(tolid_prefix__iexact=filter) | Q(tolid_prefix__icontains=filter))
-    else:
-        return (Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter))
 
 def retrieve_taxonomic_info(taxid):
     taxon_xml = ena_client.get_taxon_from_ena(taxid)

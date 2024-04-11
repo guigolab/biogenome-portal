@@ -69,7 +69,7 @@ async function handlePagination(value: number) {
 
 async function reset() {
   offset.value = 1
-  readStore.resetSeachForm()
+  readStore.resetSearchForm()
   readStore.resetPagination()
   getExperiments({ ...readStore.pagination })
 }

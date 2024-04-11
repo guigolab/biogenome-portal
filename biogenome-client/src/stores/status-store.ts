@@ -4,7 +4,6 @@ const initSearchForm = {
   goat_status: '',
   target_list_status: '',
   filter: '',
-  filter_option: '',
 }
 
 const initPagination = {

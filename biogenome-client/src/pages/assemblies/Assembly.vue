@@ -14,8 +14,8 @@
   </div>
   <div v-else>
     <DetailsHeader :details="details" />
-    <KeyValueCard v-if="assemblySelectedMetadata.length && metadata" :metadata="metadata"
-      :selected-metadata="assemblySelectedMetadata" />
+    <KeyValueCard v-if="assemblies.metadata.length && metadata" :metadata="metadata"
+      :selected-metadata="assemblies.metadata" />
     <!-- TODO add ideogram -->
     <!-- <Ideogram v-if="assembly && assembly.taxid && hasChromosomes" :taxid="assembly.taxid" :accession="accession" /> -->
     <div class="row row-equal">
@@ -42,9 +42,10 @@ import { Assembly, Details, TrackData } from '../../data/types'
 import { useI18n } from 'vue-i18n'
 import DetailsHeader from '../../components/ui/DetailsHeader.vue'
 import KeyValueCard from '../../components/ui/KeyValueCard.vue'
-import { assemblySelectedMetadata } from "../../../config.json";
+import { assemblies } from "../../../config.json";
 import MetadataTreeCard from '../../components/ui/MetadataTreeCard.vue'
 // import Ideogram from '../../components/ui/Ideogram.vue'
+
 
 const showJBrowse = ref(true)
 const showMetadata = ref(false)

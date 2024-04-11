@@ -8,7 +8,7 @@ import json
 
 
 def get_users(offset=0,limit=20,
-                filter=None, filter_option=None):
+                filter=None):
     if filter:
         users = BioGenomeUser.objects(Q(name__iexact=filter) | Q(name__icontains=filter)).exclude('password','id')
     else:

@@ -14,8 +14,8 @@
   </div>
   <div v-else>
     <DetailsHeader :details="details" />
-    <KeyValueCard v-if="bioSampleSelectedMetadata.length && metadata" :metadata="metadata"
-      :selected-metadata="bioSampleSelectedMetadata" />
+    <KeyValueCard v-if="biosamples.metadata.length && metadata" :metadata="metadata"
+      :selected-metadata="biosamples.metadata" />
     <div class="row row-equal">
       <div v-for="(dt, index) in validData" class="flex lg6 md6 sm12 xs12">
         <Suspense>
@@ -43,7 +43,7 @@ import RelatedDataCard from '../../components/ui/RelatedDataCard.vue'
 import { useI18n } from 'vue-i18n'
 import { BioSample, Details, SampleLocations } from '../../data/types'
 import { relatedData } from './configs'
-import { bioSampleSelectedMetadata } from '../../../config.json'
+import { biosamples } from '../../../config.json'
 import DetailsHeader from '../../components/ui/DetailsHeader.vue'
 import KeyValueCard from '../../components/ui/KeyValueCard.vue'
 import MetadataTreeCard from '../../components/ui/MetadataTreeCard.vue'

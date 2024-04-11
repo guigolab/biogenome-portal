@@ -57,7 +57,7 @@ function handlePagination(value: number) {
 }
 function reset() {
   offset.value = 1
-  TaxonomyStore.resetSeachForm()
+  TaxonomyStore.resetSearchForm()
   TaxonomyStore.resetPagination()
   getTaxons({ ...TaxonomyStore.searchForm, ...TaxonomyStore.pagination })
 }

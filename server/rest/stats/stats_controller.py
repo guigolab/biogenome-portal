@@ -15,22 +15,20 @@ MODEL_LIST = {
     }
 
 class FieldStatsApi(Resource):
-    def get(self, model):
-        if model not in MODEL_LIST.keys() or 'field' not in request.args.keys():
+    def get(self, model, field):
+        if model not in MODEL_LIST.keys():
             return 404
         db_model = MODEL_LIST[model]
-        field = request.args['field']
-        query = request.args['query'] if 'query' in request.args.keys() else None
         try:
-            query_obj = json.loads(query) if query else None
-            if query_obj and query_obj.keys():
-                resp = db_model.objects(**query_obj).item_frequencies(field)
-            else:
-                resp = db_model.objects.item_frequencies(field)
+            resp = db_model.objects.item_frequencies(field)
+            print(resp)
             status = 200
         except:
             resp = {'message': 'field not found'}
             status = 400
+        if None in resp:
+            resp["No Value"] = resp[None]
+            del resp[None]
         return Response(json.dumps(resp, default=str),mimetype="application/json", status=status)
 
 class StatsApi(Resource):

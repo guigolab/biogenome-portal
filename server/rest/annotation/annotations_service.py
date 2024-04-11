@@ -1,22 +1,31 @@
 from mongoengine.queryset.visitor import Q
-from db.models import GenomeAnnotation, Assembly
+from db.models import GenomeAnnotation, Assembly,Organism
 from errors import NotFound
 from ..organism import organisms_service
 from mongoengine.errors import ValidationError
 
 ANNOTATIONS_DATA_PATH = "/server/annotations_data"
+FIELDS_TO_EXCLUDE = ['id']
 
 def get_annotations(offset=0, limit=20,
-                    filter=None, filter_option="name",
+                    filter=None,
                     sort_column=None, sort_order=None,
-                    start_date=None, end_date=None):
-    annotations = GenomeAnnotation.objects().exclude('id')
-    if filter:
-        filter_query = get_filter(filter, filter_option)
-        annotations = annotations.filter(filter_query)
-
+                    start_date=None, end_date=None, parent_taxon=None):
+    
+    q_query = get_filter(filter) if filter else None
+    b_query = {}
     if start_date and end_date:
-        annotations = annotations.filter(Q(created__gte=start_date) & Q(created__lte=end_date))
+        date_query = Q(created__gte=start_date) & Q(created__lte=end_date)
+        q_query = q_query & date_query if q_query else date_query
+
+    if parent_taxon:
+        taxids = Organism.objects(taxon_lineage=parent_taxon).scalar('taxid')
+        b_query['taxid__in'] = taxids
+
+    if q_query:
+        annotations = GenomeAnnotation.objects(q_query, **b_query).exclude(*FIELDS_TO_EXCLUDE).skip(int(offset)).limit(int(limit))
+    else:
+        annotations = GenomeAnnotation.objects(**b_query).exclude(*FIELDS_TO_EXCLUDE).skip(int(offset)).limit(int(limit))
     # Sorting
     if sort_column:
         sort_prefix = '-' if sort_order == 'desc' else ''
@@ -26,20 +35,12 @@ def get_annotations(offset=0, limit=20,
 
     # Pagination
     total_count = annotations.count()
-    annotations = annotations[int(offset):int(offset) + int(limit)]
 
     return total_count, annotations
 
 
-def get_filter(filter, option):
-    if option == 'scientific_name':
-        return (Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter))
-    elif option == 'assembly_name':
-        return (Q(assembly_name__iexact=filter) | Q(assembly_name__icontains=filter))
-    elif option == 'taxid':
-        return (Q(taxid__iexact=filter) | Q(taxid__icontains=filter))
-    else:
-        return (Q(name__iexact=filter) | Q(name__icontains=filter))
+def get_filter(filter):
+    return (Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter)) | (Q(assembly_name__iexact=filter) | Q(assembly_name__icontains=filter)) |  (Q(taxid__iexact=filter) | Q(taxid__icontains=filter)) | (Q(name__iexact=filter) | Q(name__icontains=filter))
 
 
 def delete_annotation(name):

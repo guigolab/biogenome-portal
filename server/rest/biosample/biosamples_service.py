@@ -8,7 +8,7 @@ from mongoengine.queryset.visitor import Q
 import os
 
 PROJECTS = [p.strip() for p in os.getenv('PROJECTS').split(',') if p] if os.getenv('PROJECTS') else None
-
+FIELDS_TO_EXCLUDE = ['id','created']
 MODEL_LIST = {
     'assemblies':{'model':Assembly, 'id':'accession'},
     'sub_samples':{'model':BioSample, 'id':'accession'},
@@ -16,37 +16,34 @@ MODEL_LIST = {
     }
 
 def get_biosamples(offset=0,limit=20,
-                    filter=None, filter_option="scientific_name",
-                    start_date=None, end_date=datetime.utcnow,
-                    sort_column=None, sort_order=None):
-    
-    biosamples = BioSample.objects().exclude('id', 'created')
-
-    if filter:
-        filter_query = get_filter(filter,filter_option)
-        biosamples = biosamples.filter(filter_query)
+                    filter=None,
+                    start_date=None, end_date=datetime.now,
+                    sort_column=None, sort_order=None, parent_taxon=None):
+        
+    q_query = get_filter(filter) if filter else None
+    b_query = {}
 
     if start_date and end_date:
-        biosamples = biosamples.filter((Q(metadata__collection_date__gte=start_date) & Q(metadata__collection_date__lte=end_date)))
-    
+        date_query = (Q(metadata__collection_date__gte=start_date) & Q(metadata__collection_date__lte=end_date))
+        q_query = q_query & date_query if q_query else date_query
+
+    if parent_taxon:
+        b_query['taxid__in'] = Organism.objects(taxon_lineage=parent_taxon).scalar('taxid')
+
+    if q_query:
+        biosamples = BioSample.objects(q_query, **b_query).exclude(*FIELDS_TO_EXCLUDE).skip(int(offset)).limit(int(limit))
+    else:
+        biosamples = BioSample.objects(**b_query).exclude(*FIELDS_TO_EXCLUDE).skip(int(offset)).limit(int(limit))
+
     if sort_column:
         if sort_column == 'collection_date':
             sort_column = 'metadata.collection_date'
         sort = '-'+sort_column if sort_order == 'desc' else sort_column
         biosamples = biosamples.order_by(sort)
-    return biosamples.count(), biosamples[int(offset):int(offset)+int(limit)]
+    return biosamples.count(), biosamples
 
-def get_filter(filter, option):
-    if option == 'taxid':
-        return (Q(taxid__iexact=filter) | Q(taxid__icontains=filter))
-    elif option == 'habitat':
-        return (Q(metadata__habitat__iexact=filter) | Q(metadata__habitat__icontains=filter))
-    elif option == 'gal':
-        return (Q(metadata__GAL__iexact=filter) | Q(metadata__GAL__icontains=filter))
-    elif option == 'accession':
-        return (Q(accession__iexact=filter) | Q(accession__icontains=filter))
-    else:
-        return (Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter))
+def get_filter(filter):
+    return (Q(taxid__iexact=filter) | Q(taxid__icontains=filter)) | (Q(metadata__habitat__iexact=filter) | Q(metadata__habitat__icontains=filter)) | (Q(metadata__GAL__iexact=filter) | Q(metadata__GAL__icontains=filter)) |(Q(accession__iexact=filter) | Q(accession__icontains=filter)) | (Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter))
 
 def get_or_create_biosample(accession):
     biosample = BioSample.objects(accession=accession).first()

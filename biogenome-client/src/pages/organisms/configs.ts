@@ -49,11 +49,5 @@ export const tableFilters: Filter[] = [
     label: 'organismList.filters.searchInput',
     key: 'filter',
     type: 'input',
-  },
-  {
-    label: 'organismList.filters.searchSelect',
-    key: 'filter_option',
-    type: 'select',
-    options: ['taxid', 'common_name', 'scientific_name', 'tolid'],
   }
 ]

@@ -13,7 +13,6 @@ const initAnnotationForm:Record<string,any> = {
 
 const initSearchForm = {
   filter: '',
-  filter_option: '',
   sort_column: '',
   sort_order: '',}
 
@@ -32,7 +31,7 @@ export const useAnnotationStore = defineStore('annotation', {
   },
 
   actions: {
-    resetSeachForm() {
+    resetSearchForm() {
       this.searchForm = { ...initSearchForm }
     },
     resetPagination() {

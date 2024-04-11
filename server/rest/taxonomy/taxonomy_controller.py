@@ -19,11 +19,8 @@ class TreeApi(Resource):
 
 class RelativeTaxonomyTreeApi(Resource):
     def get(self,taxid):
-        response = taxonomy_service.create_tree_from_relative_species(taxid, **request.args)
-        if not response:
-            raise NotFound
-        return Response(json.dumps(response), mimetype="application/json", status=200)
-
+        taxon, status = taxonomy_service.get_closest_taxon(taxid)
+        return Response(taxon.to_json(), mimetype="application/json", status=status)
 
 class ComputedTreeApi(Resource):
     def get(self):

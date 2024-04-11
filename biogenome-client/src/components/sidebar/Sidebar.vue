@@ -1,7 +1,7 @@
 <template>
   <va-sidebar :width="width" :minimized="minimized" :minimized-width="minimizedWidth" :animated="animated">
-    <div v-if="navBar.logoName" class="logo">
-      <a :href="navBar.url" target="_blank"><va-icon color="success" :size="minimized ? '2rem' : '4rem'"
+    <div v-if="nav.logo" class="logo">
+      <a :href="nav.url" target="_blank"><va-icon color="success" :size="minimized ? '2rem' : '4rem'"
           name=app-logo></va-icon></a>
     </div>
     <va-divider />
@@ -11,13 +11,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref } from 'vue'
 import NavigationRoutes from './NavigationRoutes'
 import MenuAccordion from './menu/MenuAccordion.vue'
 import MenuMinimized from './menu/MenuMinimized.vue'
-import { useGlobalStore } from '../../stores/global-store'
-import { navBar } from '../../../config.json'
-const GlobalStore = useGlobalStore()
+import { nav } from '../../../config.json'
+
 
 withDefaults(
   defineProps<{
@@ -36,11 +35,9 @@ withDefaults(
   },
 )
 
-const items = computed(() => {
-  return GlobalStore.isAuthenticated
-    ? NavigationRoutes.routes
-    : NavigationRoutes.routes.filter((r) => r.name !== 'forms')
-})
+const items = ref(NavigationRoutes.routes)
+
+
 </script>
 
 <style lang="scss">

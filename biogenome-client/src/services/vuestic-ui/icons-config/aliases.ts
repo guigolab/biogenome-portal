@@ -1,5 +1,8 @@
 import NavBarLogo from '../../../components/navbar/components/NavBarLogo.vue'
 import Wiki from '../../../components/icons/Wiki.vue'
+import GitHub from '../../../components/icons/GitHub.vue'
+
+
 
 export default [
   {
@@ -10,6 +13,11 @@ export default [
   {
     name: 'wiki',
     component: Wiki,
+    color: 'primary'
+  },
+  {
+    name: 'github',
+    component: GitHub,
     color: 'primary'
   },
   {

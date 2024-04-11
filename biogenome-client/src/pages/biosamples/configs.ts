@@ -7,12 +7,6 @@ export const tableFilters: Filter[] = [
         type: 'input',
     },
     {
-        label: 'biosampleList.filters.searchSelect',
-        key: 'filter_option',
-        type: 'select',
-        options: ['taxid', 'gal', 'scientific_name', 'habitat'],
-    },
-    {
         label: 'biosampleList.filters.sortColumn',
         key: 'sort_column',
         type: 'select',

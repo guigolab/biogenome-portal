@@ -3,8 +3,6 @@
     <p class="mb-4">Edit or delete your organisms</p>
     <va-form @submit.prevent="handleSubmit">
         <div class="row align-end">
-            <va-select v-model="filter.filter_option" class="flex lg4 md4 sm12 xs12"
-                :options="['taxid', 'common_name', 'scientific_name', 'tolid']" label="filter by"></va-select>
             <va-input v-model="filter.filter" label="search organism" class="flex lg4 md4 sm12 xs12"></va-input>
             <div class="flex">
                 <va-button type="submit" :disabled="!isValidInput" icon="search" />
@@ -59,7 +57,6 @@ const initPagination = {
 const { userRole, userName } = useGlobalStore()
 const initFilter = {
     filter: '',
-    filter_option: '',
     user: ''
 }
 

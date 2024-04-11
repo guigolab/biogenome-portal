@@ -1,12 +1,12 @@
 <template>
-    <div style="position: relative;height: 100vh;" ref="hypertree"></div>
+    <div style="position: relative;height: 100%;" ref="hypertree"></div>
 </template>
 
 <script setup lang="ts">
 import * as hyt from 'd3-hypertree'
 import TaxonService from '../../services/clients/TaxonService'
 import { useTreeData } from './setTreeData'
-import { onMounted, reactive, ref, watch} from 'vue'
+import { onMounted, reactive, ref, watch } from 'vue'
 import { TreeNode } from '../../data/types'
 
 

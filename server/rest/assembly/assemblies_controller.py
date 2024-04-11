@@ -14,7 +14,7 @@ FIELDS_TO_EXCLUDE = ['id','created', 'chromosomes_aliases']
 class AssembliesApi(Resource):
 
     def get(self):
-        total, data = assemblies_service.get_assemblies(**request.args)
+        total, data = assemblies_service.get_assemblies(request.args)
         json_resp = dict(total=total, data=list(data.as_pymongo()))
         return Response(json.dumps(json_resp), mimetype="application/json", status=200)
 

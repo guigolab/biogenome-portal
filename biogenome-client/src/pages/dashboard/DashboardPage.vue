@@ -23,7 +23,7 @@
 <script setup lang="ts">
 import IndentedTreeCard from '../../components/ui/IndentedTreeCard.vue';
 import InfoBlockVue from '../../components/InfoBlock.vue'
-import { dashboardInfoBlocks } from '../../../config.json'
+import { dashboard } from '../../../config.json'
 import DashBoardTitle from './components/DashBoardTitle.vue';
 import { InfoBlock, SampleLocations } from '../../data/types';
 import GeoLocationService from '../../services/clients/GeoLocationService';
@@ -33,7 +33,7 @@ import ModelStats from '../../components/ui/ModelStats.vue';
 const root = import.meta.env.VITE_ROOT_NODE || '131567'
 
 const coordinates = ref<SampleLocations[]>([])
-const charts = <InfoBlock[]>dashboardInfoBlocks
+const charts = <InfoBlock[]>dashboard.charts
 
 onMounted(async () => {
   const { data } = await GeoLocationService.getLocationsByTaxon(root)
