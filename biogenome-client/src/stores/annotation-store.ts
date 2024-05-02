@@ -1,6 +1,28 @@
 import { defineStore } from 'pinia'
+import { models } from '../../config.json'
 
-const initAnnotationForm:Record<string,any> = {
+const parsedFilters = models.annotations.filters as Record<string, any>[]
+
+const formEntries = parsedFilters.map(f => {
+  if (f.type === "date") {
+    return [[`${f.key}__gte`, ""], [`${f.key}__lte`, ""]]
+  }
+  return [[f.key, f.type === 'checkbox' ? false : ""]]
+}).flat()
+
+const initSearchForm = {
+  filter: "",
+  sort_order: "",
+  sort_column: "",
+  ...Object.fromEntries(formEntries)
+}
+
+const initPagination = {
+  offset: 0,
+  limit: 10,
+}
+
+const initAnnotationForm: Record<string, any> = {
   name: '',
   assembly_accession: '',
   assembly_name: '',
@@ -9,16 +31,6 @@ const initAnnotationForm:Record<string,any> = {
   tab_index_location: '',
   gzipAnnotation: undefined,
   tabixAnnotation: undefined,
-}
-
-const initSearchForm = {
-  filter: '',
-  sort_column: '',
-  sort_order: '',}
-
-const initPagination = {
-  offset: 0,
-  limit: 10,
 }
 
 export const useAnnotationStore = defineStore('annotation', {
@@ -37,8 +49,8 @@ export const useAnnotationStore = defineStore('annotation', {
     resetPagination() {
       this.pagination = { ...initPagination }
     },
-    resetForm(){
-      this.annotationForm = {...initAnnotationForm}
+    resetForm() {
+      this.annotationForm = { ...initAnnotationForm }
     }
   },
 })

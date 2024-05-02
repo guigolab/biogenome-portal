@@ -1,7 +1,7 @@
 <template>
     <div class="row">
         <div class="flex">
-            <VaInput v-model="searchForm.filter" clearable
+            <VaInput iconColor="primary" v-model="searchForm.filter" clearable
                 @update:modelValue="(v: string) => emits('onFormChange', [['filter', v.length > 2 ? v : '']])"
                 :placeholder="t('buttons.search')">
                 <template #appendInner>
@@ -9,9 +9,9 @@
                 </template>
             </VaInput>
         </div>
-        <div class="flex">
-            <VaButtonDropdown stickToEdges :closeOnContentClick="false" icon="hide_source" preset="primary"
-                :label="t('buttons.fields')">
+        <div v-if="showFields.length" class="flex">
+            <VaButtonDropdown preset="secondary" border-color="primary" stickToEdges :closeOnContentClick="false"
+                icon="hide_source" :label="t('buttons.fields')">
                 <div class="w-200">
                     <div v-for="( field, index ) in  showFields ">
                         <VaSwitch class="mt-2" :key="index" v-model="showFields[index].show" :label="field.value"
@@ -20,10 +20,10 @@
                 </div>
             </VaButtonDropdown>
         </div>
-        <div class="flex">
-            <VaBadge overlap color="warning" :text="activeFilters">
-                <VaButtonDropdown stickToEdges :closeOnContentClick="false" icon="filter_list"
-                    :label="t('buttons.filters')" preset="primary">
+        <div v-if="filters.length" class="flex">
+            <VaBadge style="z-index: 1;" overlap color="warning" :text="activeFilters">
+                <VaButtonDropdown preset="secondary" border-color="primary" stickToEdges :closeOnContentClick="false"
+                    icon="filter_list" :label="t('buttons.filters')">
                     <div class="w-200">
                         <div v-for="( field, index ) in filters" :key="index">
                             <VaInput class="mt-2" clearable :label="field.key" v-if="isInputField(field.type)"
@@ -44,7 +44,8 @@
                                 :label="t(field.label[locale])" style="width: 100%" mode="range" type="month"
                                 prevent-overflow :allowed-years="(date: Date) => date <= new Date()">
                                 <template #append>
-                                    <VaIcon name="va-clear" color="secondary" @click="clearDate(field.key)"></VaIcon>
+                                    <VaIcon name="va-clear" preset="secondary" border-color="primary"
+                                        @click="clearDate(field.key)"></VaIcon>
                                 </template>
                             </VaDateInput>
                         </div>
@@ -53,24 +54,28 @@
             </VaBadge>
         </div>
         <div class="flex">
-            <VaButtonDropdown stickToEdges preset="primary" :closeOnContentClick="false" :label="t('buttons.sort')"
-                icon="sort">
-                <div class="w-200">
-                    <div>
-                        <VaSelect clearable class="mt-2" :label="t('search.sortColumn')"
-                            v-model="searchForm.sort_column" :options="columns" />
+            <VaBadge style="z-index: 1;" overlap color="info" :text="searchForm.sort_column">
+                <VaButtonDropdown preset="secondary" border-color="primary" stickToEdges :closeOnContentClick="false"
+                    :label="t('buttons.sort')" icon="sort">
+                    <div class="w-200">
+                        <div>
+                            <VaSelect @update:modelValue="(v: string) => emits('onFormChange', [['sort_column', v]])"
+                                clearable class="mt-2" :label="t('search.sortColumn')" v-model="searchForm.sort_column"
+                                :options="columns" />
+                        </div>
+                        <div>
+                            <VaSelect @update:modelValue="(v: string) => emits('onFormChange', [['sort_order', v]])"
+                                clearable class="mt-2" :label="t('search.sortOrder')" v-model="searchForm.sort_order"
+                                :options="['asc', 'desc']" />
+                        </div>
                     </div>
-                    <div>
-                        <VaSelect clearable class="mt-2" :label="t('search.sortOrder')" v-model="searchForm.sort_order"
-                            :options="['asc', 'desc']" />
-                    </div>
-                </div>
-            </VaButtonDropdown>
+                </VaButtonDropdown>
+            </VaBadge>
         </div>
     </div>
 </template>
 <script setup lang="ts">
-import { computed, onMounted, ref, watch, watchEffect } from 'vue';
+import { computed, ref, watchEffect } from 'vue';
 import { DateRange, Filter } from '../../data/types'
 import { useI18n } from 'vue-i18n';
 
@@ -116,10 +121,10 @@ function mapDates(storeFormSearch: Record<string, any>) {
             const keyValue = k.substring(0, index);
             // Assign values to the dateModels and dateLabels
             if (indexGte !== -1) {
-                const startDate = v ? new Date(v) : null;
+                const startDate = v ? new Date(v).toISOString().split('T')[0] : null;
                 dates[keyValue] = { start: startDate, end: dates[keyValue]?.end };
             } else {
-                const endDate = v ? new Date(v) : null;
+                const endDate = v ? new Date(v).toISOString().split('T')[0] : null;
                 dates[keyValue] = { start: dates[keyValue]?.start, end: endDate };
             }
         })
@@ -127,11 +132,12 @@ function mapDates(storeFormSearch: Record<string, any>) {
 }
 
 function updateDateRange(v: DateRange, key: string) {
-    // console.log(v)
     const { start, end } = v
-    searchForm.value[`${key}__gte`] = start
-    searchForm.value[`${key}__lte`] = end
-    emits('onFormChange', [[`${key}__gte`, start], [`${key}__lte`, end]])
+    const parsedStart = start ? start.toISOString().split('T')[0] : start
+    const parsedEnd = end ? end.toISOString().split('T')[0] : end
+    searchForm.value[`${key}__gte`] = parsedStart
+    searchForm.value[`${key}__lte`] = parsedEnd
+    emits('onFormChange', [[`${key}__gte`, parsedStart], [`${key}__lte`, parsedEnd]])
 }
 
 function clearDate(key: string) {

@@ -1,25 +1,19 @@
 <template>
-  <va-breadcrumbs class="va-title" color="primary">
-    <va-breadcrumbs-item :to="{ name: 'local_samples' }" :label="t('localSampleDetails.breadcrumb')" />
-    <va-breadcrumbs-item active :label="id" />
-  </va-breadcrumbs>
-  <va-divider />
-  <va-skeleton v-if="isLoading" height="90vh" />
-  <div v-else-if="errorMessage">
-    <va-card stripe stripe-color="danger">
-      <va-card-content>
-        {{ errorMessage }}
-      </va-card-content>
-    </va-card>
-  </div>
-  <div v-else>
+  <div :key="props.id">
     <DetailsHeader :details="details" />
-    <KeyValueCard v-if="localSampleSelectedMetadata.length && metadata" :metadata="metadata"
-      :selected-metadata="localSampleSelectedMetadata" />
-    <div class="row row-equal">
-      <div v-if="coordinates.length" class="flex lg6 md6 sm12 xs12 chart">
-        <LeafletMap :coordinates="coordinates" />
+    <VaTabs>
+      <template #tabs>
+        <VaTab label="Metadata" name="metadata"></VaTab>
+        <VaTab v-if="coordinates.length" label="Map" name="map"></VaTab>
+      </template>
+    </VaTabs>
+    <VaDivider></VaDivider>
+    <div class="row" v-if="tab === 'map'">
+      <div class="flex lg12 md12 sm12 xs12">
+        <LeafletMap :coordinates="coordinates"/>
       </div>
+    </div>
+    <div class="row" v-else>
       <div v-if="metadata && Object.keys(metadata).length" class="flex lg12 md12 sm12 xs12">
         <MetadataTreeCard :metadata="metadata" />
       </div>
@@ -31,12 +25,13 @@ import { onMounted, ref } from 'vue'
 import LocalSampleService from '../../services/clients/LocalSampleService'
 import { useI18n } from 'vue-i18n'
 import { Details, SampleLocations } from '../../data/types'
-import { localSampleSelectedMetadata } from '../../../config.json'
-import KeyValueCard from '../../components/ui/KeyValueCard.vue'
 import DetailsHeader from '../../components/ui/DetailsHeader.vue'
 import MetadataTreeCard from '../../components/ui/MetadataTreeCard.vue'
 import GeoLocationService from '../../services/clients/GeoLocationService'
 import LeafletMap from '../../components/maps/LeafletMap.vue'
+
+const tab=ref('metadata')
+
 const isLoading = ref(true)
 const errorMessage = ref<string | any>(null)
 const details = ref<

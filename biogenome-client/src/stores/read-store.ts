@@ -1,13 +1,21 @@
 import { defineStore } from 'pinia'
-import { ReadSearchForm } from '../data/types'
+import { models } from '../../config.json'
 
-const initSearchForm: ReadSearchForm = {
-  start_date: '',
-  end_date: '',
-  filter: '',
-  sort_column: '',
-  sort_order: '',
-  center: '',
+
+const parsedFilters = models.experiments.filters as Record<string, any>[]
+
+const formEntries = parsedFilters.map(f => {
+  if (f.type === "date") {
+    return [[`${f.key}__gte`, ""], [`${f.key}__lte`, ""]]
+  }
+  return [[f.key, f.type === 'checkbox' ? false : ""]]
+}).flat()
+
+const initSearchForm = {
+  filter: "",
+  sort_order: "",
+  sort_column: "",
+  ...Object.fromEntries(formEntries)
 }
 
 const initPagination = {

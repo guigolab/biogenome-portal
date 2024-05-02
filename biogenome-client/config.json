@@ -4,8 +4,9 @@
         "logo": "CBPLogo.png",
         "url": "https://biogenoma.cat"
     },
+    "cms": false,
+    "goat": true,
     "tracker": "",
-    "showCountries": true,
     "languages": [
         {
             "code": "gb",
@@ -14,11 +15,21 @@
         {
             "code": "es-ct",
             "name": "catalan"
+        },
+        {
+            "code": "fr",
+            "name": "french"
+        },
+        {
+            "code": "sp",
+            "name": "spanish"
         }
     ],
     "wiki": {
         "gb": "https://en.m.wikipedia.org/wiki",
-        "es-ct": "https://ca.m.wikipedia.org/wiki"
+        "es-ct": "https://ca.m.wikipedia.org/wiki",
+        "fr": "https://fr.m.wikipedia.org/wiki",
+        "sp": "https://sp.m.wikipedia.org/wiki"
     },
     "dashboard": {
         "title": {
@@ -47,426 +58,433 @@
             }
         ]
     },
-    "status": {
-        "charts": [
-            {
-                "model": "organisms",
-                "field": "goat_status",
-                "title": {
-                    "gb": "",
-                    "es-ct": ""
+    "models": {
+        "status": {
+            "title": {
+                "gb": "GoaT Sequencing Status",
+                "es-ct": "GoaT Sequencing Status"
+            },
+            "icon": "fa-list-check",
+            "description": {
+                "gb": "GoaT sequencing status of project ",
+                "es-ct": "GoaT sequencing status of project"
+            },
+            "charts": [
+                {
+                    "model": "organisms",
+                    "field": "goat_status",
+                    "title": {
+                        "gb": "",
+                        "es-ct": ""
+                    },
+                    "label": {
+                        "gb": "",
+                        "es-ct": ""
+                    },
+                    "class": "flex lg3 md3 sm12 xs12",
+                    "type": "pie"
+                }
+            ],
+            "filters": [
+                {
+                    "label": {
+                        "gb": "Sequencing Status",
+                        "es-ct": ""
+                    },
+                    "key": "goat_status",
+                    "type": "select",
+                    "options": [
+                        "Sample Collected",
+                        "Sample Acquired",
+                        "Data Generation",
+                        "In Assembly",
+                        "INSDC Submitted",
+                        "Publication Available"
+                    ]
                 },
-                "label": {
-                    "gb": "",
-                    "es-ct": ""
-                },
-                "class": "flex lg3 md3 sm12 xs12",
-                "type": "pie"
-            }
-        ],
-        "filters": [
-            {
-                "label": {
-                    "gb": "",
-                    "es-ct": ""
-                },
-                "key": "filter",
-                "type": "input"
-            },
-            {
-                "label": {
-                    "gb": "",
-                    "es-ct": ""
-                },
-                "key": "goat_status",
-                "type": "select",
-                "options": [
-                    "Sample Collected",
-                    "Sample Acquired",
-                    "Data Generation",
-                    "In Assembly",
-                    "INSDC Submitted",
-                    "Publication Available"
-                ]
-            },
-            {
-                "label": {
-                    "gb": "",
-                    "es-ct": ""
-                },
-                "key": "target_list_status",
-                "type": "select",
-                "options": [
-                    "long_list",
-                    "family_representative",
-                    "other_priority"
-                ]
-            }
-        ],
-        "columns": [
-            "scientific_name",
-            "insdc_common_name",
-            "tolid_prefix",
-            "goat_status",
-            "target_list_status"
-        ]
-    },
-    "biosamples": {
-        "charts": [
-            {
-                "model": "organisms",
-                "field": "goat_status",
-                "title": {
-                    "gb": "",
-                    "es-ct": ""
-                },
-                "label": {
-                    "gb": "",
-                    "es-ct": ""
-                },
-                "class": "flex lg3 md3 sm12 xs12",
-                "type": "pie"
-            }
-        ],
-        "filters": [
-            {
-                "key": "filter",
-                "label": {
-                    "gb": "",
-                    "es-ct": ""
-                },
-                "type": "input"
-            },
-            {
-                "key": "date",
-                "label": {
-                    "gb": "",
-                    "es-ct": ""
-                },
-                "type": "date"
-            },
-            {
-                "key": "sort_column",
-                "label": {
-                    "gb": "",
-                    "es-ct": ""
-                },
-                "type": "select",
-                "options": [
-                    "collection_date"
-                ]
-            },
-            {
-                "key": "sort_order",
-                "label": {
-                    "gb": "",
-                    "es-ct": ""
-                },
-                "type": "select",
-                "options": [
-                    "asc",
-                    "desc"
-                ]
-            }
-        ],
-        "columns": [
-            "accession",
-            "scientific_name",
-            "collection_date",
-            "gal",
-            "habitat",
-            "organism_part"
-        ],
-        "metadata": [
-            {
-                "key": "GAL",
-                "color": "danger"
-            },
-            {
-                "key": "organism part",
-                "color": "info"
-            },
-            {
-                "key": "tissue",
-                "color": "secondary"
-            },
-            {
-                "key": "collection date",
-                "color": "warning"
-            },
-            {
-                "key": "collection_date",
-                "color": "warning"
-            },
-            {
-                "key": "geo_loc_name",
-                "color": "success"
-            },
-            {
-                "key": "geographic location (country and/or sea)",
-                "color": "success"
-            }
-        ]
-    },
-    "experiments": {
-        "charts": [
-            {
-                "model": "organisms",
-                "field": "goat_status",
-                "title": {
-                    "gb": "",
-                    "es-ct": ""
-                },
-                "label": {
-                    "gb": "",
-                    "es-ct": ""
-                },
-                "class": "flex lg3 md3 sm12 xs12",
-                "type": "pie"
-            }
-        ],
-        "filters": [],
-        "columns": [],
-        "metadata": [
-            {
-                "key": "instrument_model",
-                "color": "danger"
-            },
-            {
-                "key": "base count",
-                "color": "info"
-            },
-            {
-                "key": "center_name",
-                "color": "secondary"
-            },
-            {
-                "key": "first created",
-                "color": "warning"
-            }
-        ]
-    },
-    "assemblies": {
-        "filters": [
-            {
-                "label": {
-                    "gb": "Search Assembly",
-                    "es-ct": ""
-                },
-                "key": "filter",
-                "type": "input"
-            },
-            {
-                "label": {
-                    "gb": "BlobToolKit",
-                    "es-ct": "BlobToolKit"
-                },
-                "key": "blobtoolkit",
-                "type": "checkbox"
-            },
-            {
-                "label": {
-                    "gb": "Submission Date",
-                    "es-ct": ""
-                },
-                "key": "submission_date",
-                "type": "date"
-            },
-            {
-                "label": {
-                    "gb": "Sort column",
-                    "es-ct": ""
-                },
-                "key": "sort_column",
-                "type": "select",
-                "options": [
-                    "contig_n50",
-                    "size",
-                    "submission_date"
-                ]
-            },
-            {
-                "label": {
-                    "gb": "Assembly Level",
-                    "es-ct": ""
-                },
-                "key": "assembly_level",
-                "type": "select",
-                "options": [
-                    "Chromosome",
-                    "Complete Genome",
-                    "Contig",
-                    "Scaffold"
-                ]
-            }
-        ],
-        "charts": [
-            {
-                "model": "organisms",
-                "field": "goat_status",
-                "title": {
-                    "gb": "ciao",
-                    "es-ct": "cia"
-                },
-                "label": {
-                    "gb": "bau",
-                    "es-ct": "miao"
-                },
-                "class": "flex lg6 md6 sm12 xs12",
-                "type": "pie"
-            }
-        ],
-        "metadata": [
-            {
-                "key": "contig_n50",
-                "label": "assemblyDetails.contigN50",
-                "color": "danger"
-            },
-            {
-                "key": "estimated_size",
-                "label": "assemblyDetails.genomeSize",
-                "color": "info"
-            },
-            {
-                "key": "assembly_level",
-                "label": "assemblyDetails.assemblyLevel",
-                "color": "secondary"
-            },
-            {
-                "key": "submitter",
-                "label": "assemblyDetails.submitter",
-                "color": "warning"
-            },
-            {
-                "key": "submission_date",
-                "label": "assemblyDetails.submissionDate",
-                "color": "success"
-            }
-        ],
-        "columns": [
-            "assembly_name",
-            "scientific_name",
-            "metadata.assembly_level",
-            "metadata.contig_n50",
-            "metadata.submitter",
-            "metadata.submission_date"
-        ]
-    },
-    "organisms": {
-        "charts": [],
-        "metadata": [],
-        "filters": [],
-        "columns": []
-    },
-    "annotations": {
-        "filters": [],
-        "columns": [],
-        "metadata": [],
-        "charts": []
-    },
-    "local_samples": {
-        "filters": [],
-        "metadata": [],
-        "charts": [],
-        "columns": []
-    },
-    "navigationRoutes": [
-        {
-            "name": "dashboard",
-            "displayName": "menu.dashboard",
-            "meta": {
-                "icon": "vuestic-iconset-dashboard"
-            }
+                {
+                    "label": {
+                        "gb": "Target List",
+                        "es-ct": ""
+                    },
+                    "key": "target_list_status",
+                    "type": "select",
+                    "options": [
+                        "long_list",
+                        "family_representative",
+                        "other_priority"
+                    ]
+                }
+            ],
+            "columns": [
+                "scientific_name",
+                "insdc_common_name",
+                "tolid_prefix",
+                "goat_status",
+                "target_list_status",
+                "publications"
+            ]
         },
-        {
-            "name": "taxons",
-            "displayName": "menu.taxons",
-            "meta": {
-                "icon": "fa-circle-nodes"
-            }
+        "biosamples": {
+            "title": {
+                "gb": "BioSamples collected under the CBP",
+                "es-ct": "BioSamples collected under the CBP"
+            },
+            "icon": "fa-vial",
+            "description": {
+                "gb": "BioSamples collected under the CBP",
+                "es-ct": "BioSamples collected under the CBP"
+            },
+            "charts": [
+                {
+                    "model": "biosamples",
+                    "field": "metadata.habitat",
+                    "title": {
+                        "gb": "Habitats where sample have been collected",
+                        "es-ct": "Habitats where sample have been collected"
+                    },
+                    "label": {
+                        "gb": "Habitats where sample have been collected",
+                        "es-ct": "Habitats where sample have been collected"
+                    },
+                    "class": "flex lg12 md12 sm12 xs12",
+                    "type": "bar"
+                },
+                {
+                    "model": "biosamples",
+                    "field": "metadata.tissue",
+                    "title": {
+                        "gb": "Organism tissue",
+                        "es-ct": "Organism tissue"
+                    },
+                    "label": {
+                        "gb": "Organism tissue",
+                        "es-ct": "Organism tissue"
+                    },
+                    "class": "flex lg3 md3 sm12 xs12",
+                    "type": "pie"
+                },
+                {
+                    "model": "biosamples",
+                    "field": "metadata.collection_date",
+                    "title": {
+                        "gb": "Sample collection date",
+                        "es-ct": "Sample collection date"
+                    },
+                    "label": {
+                        "gb": "Sample collection date",
+                        "es-ct": "Sample collection date"
+                    },
+                    "class": "flex lg6 md6 sm12 xs12",
+                    "type": "dateline"
+                },
+                {
+                    "model": "biosamples",
+                    "field": "metadata.GAL",
+                    "title": {
+                        "gb": "Genome Aquisition Lab",
+                        "es-ct": "Genome Aquisition Lab"
+                    },
+                    "label": {
+                        "gb": "Genome Aquisition Lab",
+                        "es-ct": "Genome Aquisition Lab"
+                    },
+                    "class": "flex lg3 md3 sm12 xs12",
+                    "type": "pie"
+                }
+            ],
+            "filters": [
+                {
+                    "key": "collection_date",
+                    "label": {
+                        "gb": "Collection date",
+                        "es-ct": "Collection date"
+                    },
+                    "type": "date"
+                },
+                {
+                    "key": "habitat",
+                    "label": {
+                        "gb": "Habitat",
+                        "es-ct": "Habitat"
+                    },
+                    "type": "input"
+                },
+                {
+                    "key": "submitter",
+                    "label": {
+                        "gb": "Submitter",
+                        "es-ct": "Submitter"
+                    },
+                    "type": "input"
+                },
+                {
+                    "key": "organism part",
+                    "label": {
+                        "gb": "Organism part",
+                        "es-ct": "Organism part"
+                    },
+                    "type": "input"
+                },
+                {
+                    "key": "sort_column",
+                    "label": {
+                        "gb": "",
+                        "es-ct": ""
+                    },
+                    "type": "select",
+                    "options": [
+                        "collection_date"
+                    ]
+                },
+                {
+                    "key": "sort_order",
+                    "label": {
+                        "gb": "",
+                        "es-ct": ""
+                    },
+                    "type": "select",
+                    "options": [
+                        "asc",
+                        "desc"
+                    ]
+                }
+            ],
+            "columns": [
+                "accession",
+                "scientific_name",
+                "metadata.collection_date",
+                "metadata.submitter",
+                "metadata.habitat",
+                "metadata.organism_part"
+            ],
+            "metadata": [
+                {
+                    "key": "GAL",
+                    "color": "danger"
+                },
+                {
+                    "key": "organism part",
+                    "color": "info"
+                },
+                {
+                    "key": "tissue",
+                    "color": "secondary"
+                },
+                {
+                    "key": "collection date",
+                    "color": "warning"
+                },
+                {
+                    "key": "collection_date",
+                    "color": "warning"
+                },
+                {
+                    "key": "geo_loc_name",
+                    "color": "success"
+                },
+                {
+                    "key": "geographic location (country and/or sea)",
+                    "color": "success"
+                }
+            ]
         },
-        {
-            "name": "organisms",
-            "displayName": "menu.organisms",
-            "meta": {
-                "icon": "fa-paw",
-                "name": "organisms"
-            }
+        "experiments": {
+            "title": {
+                "gb": "GoaT Sequencing Status",
+                "es-ct": "GoaT Sequencing Status"
+            },
+            "icon": "fa-file-lines",
+            "description": {
+                "gb": "GoaT sequencing status of project ",
+                "es-ct": "GoaT sequencing status of project"
+            },
+            "charts": [
+                {
+                    "model": "organisms",
+                    "field": "goat_status",
+                    "title": {
+                        "gb": "",
+                        "es-ct": ""
+                    },
+                    "label": {
+                        "gb": "",
+                        "es-ct": ""
+                    },
+                    "class": "flex lg3 md3 sm12 xs12",
+                    "type": "pie"
+                }
+            ],
+            "filters": [],
+            "columns": [],
+            "metadata": [
+                {
+                    "key": "instrument_model",
+                    "color": "danger"
+                },
+                {
+                    "key": "base count",
+                    "color": "info"
+                },
+                {
+                    "key": "center_name",
+                    "color": "secondary"
+                },
+                {
+                    "key": "first created",
+                    "color": "warning"
+                }
+            ]
         },
-        {
-            "name": "assemblies",
-            "displayName": "menu.assemblies",
-            "meta": {
-                "icon": "fa-dna",
-                "name": "assemblies"
-            }
+        "assemblies": {
+            "title": {
+                "gb": "Genome Assemblies",
+                "es-ct": "Assemblies"
+            },
+            "icon": "fa-dna",
+            "description": {
+                "gb": "Assemblies retrieved from NCBI under bioproject",
+                "es-ct": "Assemblies retrieved from NCBI under bioproject"
+            },
+            "filters": [],
+            "charts": [
+                {
+                    "model": "assemblies",
+                    "field": "metadata.assembly_level",
+                    "title": {
+                        "gb": "ciao",
+                        "es-ct": "cia"
+                    },
+                    "label": {
+                        "gb": "bau",
+                        "es-ct": "miao"
+                    },
+                    "class": "flex lg6 md6 sm12 xs12",
+                    "type": "bar"
+                }
+            ],
+            "metadata": [
+                {
+                    "key": "contig_n50",
+                    "label": "assemblyDetails.contigN50",
+                    "color": "danger"
+                },
+                {
+                    "key": "estimated_size",
+                    "label": "assemblyDetails.genomeSize",
+                    "color": "info"
+                },
+                {
+                    "key": "assembly_level",
+                    "label": "assemblyDetails.assemblyLevel",
+                    "color": "secondary"
+                },
+                {
+                    "key": "submitter",
+                    "label": "assemblyDetails.submitter",
+                    "color": "warning"
+                },
+                {
+                    "key": "submission_date",
+                    "label": "assemblyDetails.submissionDate",
+                    "color": "success"
+                }
+            ],
+            "columns": [
+                "assembly_name",
+                "scientific_name",
+                "metadata.assembly_level",
+                "metadata.contig_n50",
+                "metadata.submitter",
+                "metadata.submission_date"
+            ]
         },
-        {
-            "name": "annotations",
-            "displayName": "menu.annotations",
-            "meta": {
-                "icon": "fa-bars-progress",
-                "name": "annotations"
-            }
+        "organisms": {
+            "title": {
+                "gb": "Species sequenced ",
+                "es-ct": "Species sequenced under the CBP"
+            },
+            "icon": "fa-paw",
+            "description": {
+                "gb": "Species sequenced under the CBP",
+                "es-ct": "Species sequenced under the CBP"
+            },
+            "charts": [
+                {
+                    "model": "organisms",
+                    "field": "goat_status",
+                    "title": {
+                        "gb": "Organism INSDC submission status",
+                        "es-ct": "Organism INSDC submission status"
+                    },
+                    "label": {
+                        "gb": "Organism INSDC submission status",
+                        "es-ct": "Organism INSDC submission status"
+                    },
+                    "class": "flex lg6 md6 sm12 xs12",
+                    "type": "pie"
+                },
+                {
+                    "model": "organisms",
+                    "field": "target_list_status",
+                    "title": {
+                        "gb": "Organism INSDC submission status",
+                        "es-ct": "Organism INSDC submission status"
+                    },
+                    "label": {
+                        "gb": "Organism INSDC submission status",
+                        "es-ct": "Organism INSDC submission status"
+                    },
+                    "class": "flex lg6 md6 sm12 xs12",
+                    "type": "bar"
+                }
+            ],
+            "metadata": [],
+            "filters": [
+                {}
+            ],
+            "columns": [
+                "image",
+                "scientific_name",
+                "taxid",
+                "insdc_common_name",
+                "insdc_status"
+            ]
         },
-        {
-            "name": "experiments",
-            "displayName": "menu.experiments",
-            "meta": {
-                "icon": "fa-file-lines",
-                "name": "experiments"
-            }
+        "annotations": {
+            "title": {
+                "gb": "GoaT Sequencing Status",
+                "es-ct": "GoaT Sequencing Status"
+            },
+            "icon": "fa-bars-progress",
+            "description": {
+                "gb": "GoaT sequencing status of project ",
+                "es-ct": "GoaT sequencing status of project"
+            },
+            "filters": [],
+            "columns": [],
+            "metadata": [],
+            "charts": []
         },
-        {
-            "name": "biosamples",
-            "displayName": "menu.biosamples",
-            "meta": {
-                "name": "biosamples"
-            }
-        },
-        {
-            "name": "local_samples",
-            "displayName": "menu.localSamples",
-            "meta": {
-                "name": "local_samples"
-            }
-        },
-        {
-            "name": "taxonomy",
-            "displayName": "menu.taxonExplorer",
-            "meta": {
-                "icon": "travel_explore",
-                "name": "taxonomy"
-            }
-        },
-        {
-            "name": "status",
-            "displayName": "menu.sequencingStatus",
-            "meta": {
-                "icon": "fa-list-check",
-                "name": "status"
-            }
-        },
-        {
-            "name": "2d-map",
-            "displayName": "menu.organismsMap",
-            "meta": {
-                "icon": "fa-map"
-            }
-        },
-        {
-            "name": "3d-map",
-            "displayName": "menu.3Dmaps",
-            "meta": {
-                "icon": "public"
-            }
-        },
-        {
-            "name": "countries-map",
-            "displayName": "menu.countriesMap",
-            "meta": {
-                "icon": "public"
-            }
+        "local_samples": {
+            "title": {
+                "gb": "GoaT Sequencing Status",
+                "es-ct": "GoaT Sequencing Status"
+            },
+            "icon": "fa-vial",
+            "description": {
+                "gb": "GoaT sequencing status of project ",
+                "es-ct": "GoaT sequencing status of project"
+            },
+            "filters": [],
+            "metadata": [],
+            "charts": [],
+            "columns": []
         }
+    },
+    "maps": [
+        "2d-map",
+        "countries-map",
+        "3d-map"
     ]
 }

@@ -1,39 +1,26 @@
 <template>
-  <va-breadcrumbs class="va-title" color="primary">
-    <va-breadcrumbs-item :to="{ name: 'assemblies' }" :label="t('assemblyDetails.breadcrumb')" />
-    <va-breadcrumbs-item active :label="accession" />
-  </va-breadcrumbs>
-  <va-divider />
-  <va-skeleton v-if="isLoading" height="90vh" />
-  <div v-else-if="errorMessage">
-    <va-card stripe stripe-color="danger">
-      <va-card-content>
-        {{ errorMessage }}
-      </va-card-content>
-    </va-card>
-  </div>
-  <div v-else>
+  <div :key="props.accession">
     <DetailsHeader :details="details" />
-    <KeyValueCard v-if="assemblies.metadata.length && metadata" :metadata="metadata"
-      :selected-metadata="assemblies.metadata" />
-    <!-- TODO add ideogram -->
-    <!-- <Ideogram v-if="assembly && assembly.taxid && hasChromosomes" :taxid="assembly.taxid" :accession="accession" /> -->
-    <div class="row row-equal">
-      <div v-if="hasChromosomes" class="flex lg12 md12 sm12 xs12">
-        <va-collapse v-model="showJBrowse" flat header="Genome Browser" color="#721e63">
-          <KeepAlive>
-            <Jbrowse2 :assembly="assembly" :annotations="annotations" />
-          </KeepAlive>
-        </va-collapse>
-      </div>
+    <VaTabs v-model="tab">
+      <template #tabs>
+        <VaTab label="Metadata" name="metadata"></VaTab>
+        <VaTab v-if="hasChromosomes" label="Genome Browser" name="jbrowse"></VaTab>
+      </template>
+    </VaTabs>
+    <VaDivider></VaDivider>
+    <div class="row" v-if="tab === 'metadata'">
       <div v-if="metadata && Object.keys(metadata).length" class="flex lg12 md12 sm12 xs12">
-        <va-collapse v-model="showMetadata" header="Metadata" flat color="secondary">
-          <MetadataTreeCard :metadata="metadata" />
-        </va-collapse>
+        <MetadataTreeCard :metadata="metadata" />
+      </div>
+    </div>
+    <div v-else class="row">
+      <div class="flex lg12 md12 sm12 xs12">
+        <Jbrowse2 :assembly="assembly" :annotations="annotations" />
       </div>
     </div>
   </div>
 </template>
+
 <script setup lang="ts">
 import AssemblyService from '../../services/clients/AssemblyService'
 import { onMounted, ref } from 'vue'
@@ -41,14 +28,9 @@ import Jbrowse2 from '../../components/genome-browser/Jbrowse2.vue'
 import { Assembly, Details, TrackData } from '../../data/types'
 import { useI18n } from 'vue-i18n'
 import DetailsHeader from '../../components/ui/DetailsHeader.vue'
-import KeyValueCard from '../../components/ui/KeyValueCard.vue'
-import { assemblies } from "../../../config.json";
 import MetadataTreeCard from '../../components/ui/MetadataTreeCard.vue'
 // import Ideogram from '../../components/ui/Ideogram.vue'
 
-
-const showJBrowse = ref(true)
-const showMetadata = ref(false)
 const { t } = useI18n()
 const metadata = ref<Record<string, any> | null>(null)
 const props = defineProps<{
@@ -59,6 +41,8 @@ const errorMessage = ref<string | any>(null)
 const details = ref<
   Details | any
 >()
+
+const tab = ref('metadata')
 const assembly = ref<Assembly>()
 const annotations = ref<TrackData[]>([])
 const hasChromosomes = ref(false)

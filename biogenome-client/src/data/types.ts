@@ -130,11 +130,24 @@ type Sequence = {
   adapter: Adapter
 }
 
-
 export type AssemblyAdapter = {
   name: string
   sequence: Sequence
   refNameAliases?: Record<string, any>
+}
+
+export type HighLightedMetatada = {
+  key:string
+  color:string
+}
+
+export type ModelConfig = {
+  title?: Record<string,string>
+  description?: Record<string,string>
+  charts?: InfoBlock[]
+  filters: Filter[]
+  columns: string[]
+  metadata?: HighLightedMetatada[]
 }
 
 export type InfoBlock = {

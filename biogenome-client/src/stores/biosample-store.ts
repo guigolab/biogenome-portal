@@ -1,12 +1,23 @@
 import { defineStore } from 'pinia'
-import { BioSampleSearchForm } from '../data/types'
+import { models } from '../../config.json'
 
-const initSearchForm: BioSampleSearchForm = {
-  start_date: '',
-  end_date: '',
-  filter: '',
-  sort_column: '',
-  sort_order: '',
+
+const parsedFilters = models.biosamples.filters as Record<string,any>[]
+
+const formEntries = parsedFilters.map(f => {
+  if (f.type === "date") {
+    return [[`${f.key}__gte`, ""], [`${f.key}__lte`, ""]]
+  }
+  return [[f.key, f.type === 'checkbox' ? false : ""]]
+}).flat()
+
+
+
+const initSearchForm = {
+  filter: "",
+  sort_order: "",
+  sort_column: "",
+  ...Object.fromEntries(formEntries)
 }
 
 const initPagination = {

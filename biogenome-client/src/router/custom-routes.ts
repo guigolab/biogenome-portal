@@ -1,153 +1,100 @@
-import RouterBypass from '../layouts/RouterBypass.vue'
 
-export const customRoutes = [
-    {
-        name: 'taxonomy',
-        path: '/taxonomy',
-        component: () => import('../pages/taxonomy/TaxonomyExplorer.vue'),
-        children: [
-            { path: 'wiki' },
-            { path: 'map' },
-            { path: 'assemblies' },
-            { path: 'local_samples' }
-        ],
-        meta: { name: 'taxonomy' }
-    },
-    {
-        path: '/taxons',
-        component: RouterBypass,
-        children: [
-            {
-                path: '',
-                name: 'taxons',
-                component: () => import('../pages/taxons/Taxon.vue'),
-            },
-            {
-                name: 'taxon',
-                path: ':taxid',
-                component: () => import('../pages/taxons/Taxon.vue'),
-                props: true
-            }
-        ],
-        meta: { name: 'taxons' }
-    },
+const ROOTNODE = import.meta.env.VITE_ROOT_NODE ? import.meta.env.VITE_ROOT_NODE : '131567'
+
+
+export const modelRoutes = [
     {
         path: '/assemblies',
-        component: RouterBypass,
-        children: [
-            {
-                path: '',
-                name: 'assemblies',
-                component: () => import('../pages/common/CommonItemsPage.vue'),
-            },
-            {
-                path: ':accession',
-                name: 'assembly',
-                props: true,
-                component: () => import('../pages/assemblies/Assembly.vue'),
-                meta: {
-                    name: 'assemblies',
-                },
-            },
-        ],
+        component: () => import('../pages/common/Items.vue'),
+        name: 'assemblies',
         meta: { name: 'assemblies' }
     },
-    // {
-    //     path: '/annotations',
-    //     component: RouterBypass,
-    //     children: [
-    //         {
-    //             path: '',
-    //             name: 'annotations',
-    //             component: () => import('../pages/genome-annotations/GenomeAnnotations.vue'),
-    //         },
-    //         {
-    //             path: ':name',
-    //             name: 'annotation',
-    //             props: true,
-    //             component: () => import('../pages/genome-annotations/GenomeAnnotation.vue'),
-    //         },
-    //     ],
-    //     meta: { name: 'annotations' }
-    // },
-    // {
-    //     path: '/experiments',
-    //     component: RouterBypass,
-    //     children: [
-    //         {
-    //             path: '',
-    //             name: 'experiments',
-    //             component: () => import('../pages/experiments/Experiments.vue'),
-    //         },
-    //         {
-    //             path: ':accession',
-    //             name: 'experiment',
-    //             props: true,
-    //             component: () => import('../pages/experiments/Experiment.vue'),
-    //         },
-    //     ],
-    //     meta: { name: 'experiments' }
-    // },
-    // {
-    //     path: '/biosamples',
-    //     component: RouterBypass,
-    //     children: [
-    //         {
-    //             path: '',
-    //             name: 'biosamples',
-    //             component: () => import('../pages/biosamples/BioSamples.vue'),
-    //         },
-    //         {
-    //             path: ':accession',
-    //             name: 'biosample',
-    //             props: true,
-    //             component: () => import('../pages/biosamples/BioSample.vue')
-    //         },
-    //     ],
-    //     meta: { name: 'experiments' }
-    // },
-    // {
-    //     path: '/organisms',
-    //     component: RouterBypass,
-    //     children: [
-    //         {
-    //             path: '',
-    //             name: 'organisms',
-    //             component: () => import('../pages/organisms/Organisms.vue'),
-    //         },
-    //         {
-    //             path: ':taxid',
-    //             name: 'organism',
-    //             props: true,
-    //             component: () => import('../pages/organisms/Organism.vue'),
-    //         },
-    //     ],
-    //     meta: { name: 'organisms' }
-    // },
-    // {
-    //     path: '/local_samples',
-    //     component: RouterBypass,
-    //     children: [
-    //         {
-    //             path: '',
-    //             name: 'local_samples',
-    //             component: () => import('../pages/local-samples/LocalSamples.vue'),
-    //         },
-    //         {
-    //             path: ':id',
-    //             name: 'local_sample',
-    //             props: true,
-    //             component: () => import('../pages/local-samples/LocalSample.vue'),
-    //         },
-    //     ],
-    //     meta: { name: 'local_samples' }
-    // },
     {
-        name: 'status',
+        path: '/assemblies/:accession',
+        name: 'assembly',
+        props: true,
+        component: () => import('../pages/assemblies/Assembly.vue'),
+        meta: {
+            name: 'assemblies',
+        },
+    },
+    {
+        path: '/annotations',
+        name: 'annotations',
+        component: () => import('../pages/common/Items.vue'),
+        meta: { name: 'annotations' }
+    },
+    {
+        path: '/annotations/:name',
+        name: 'annotation',
+        props: true,
+        component: () => import('../pages/genome-annotations/GenomeAnnotation.vue'),
+        meta: { name: 'annotations' }
+
+    },
+    {
+        path: '/experiments',
+        name: 'experiments',
+        component: () => import('../pages/common/Items.vue'),
+        meta: { name: 'experiments' }
+    },
+    {
+        path: '/experiments/:accession',
+        name: 'experiment',
+        props: true,
+        component: () => import('../pages/experiments/Experiment.vue'),
+        meta: { name: 'experiments' }
+
+    },
+    {
+        path: '/biosamples',
+        name: 'biosamples',
+        component: () => import('../pages/common/Items.vue'),
+        meta: { name: 'biosamples' }
+    },
+    {
+        path: '/biosamples/:accession',
+        name: 'biosample',
+        props: true,
+        component: () => import('../pages/biosamples/BioSample.vue'),
+        meta: { name: 'biosamples' }
+
+    },
+    {
         path: '/status',
-        component: () => import('../pages/status/Status.vue'),
+        name: 'status',
+        component: () => import('../pages/common/Items.vue'),
         meta: { name: 'status' }
     },
+    {
+        path: '/organisms',
+        component: () => import('../pages/common/Items.vue'),
+        name: 'organisms',
+        meta: { name: 'organisms' }
+    },
+    {
+        path: '/organisms/:taxid',
+        name: 'organism',
+        props: true,
+        meta: { name: 'organisms' },
+        component: () => import('../pages/organisms/Organism.vue'),
+    },
+    {
+        path: '/local_samples',
+        name: 'local_samples',
+        component: () => import('../pages/common/Items.vue'),
+        meta: { name: 'local_samples' }
+    },
+    {
+        path: '/local_samples/:id',
+        name: 'local_sample',
+        props: true,
+        component: () => import('../pages/local-samples/LocalSample.vue'),
+        meta: { name: 'local_samples' }
+    },
+]
+
+export const mapRoutes = [
     {
         name: '2d-map',
         path: '/2d-map',
@@ -165,22 +112,5 @@ export const customRoutes = [
         path: 'countries',
         component: () => import('../pages/maps/3DCountries.vue'),
         meta: { name: 'countries' }
-    },
-    // {
-    //     name: '3d-map',
-    //     path: '/3d-map',
-    //     component: () => import('../layouts/RouterBypass.vue'),
-    //     children: [
-    //         {
-    //             name: 'countries-map',
-    //             path: 'countries-map',
-    //             component: () => import('../pages/maps/3DCountries.vue'),
-    //         },
-    //         {
-    //             name: 'organisms-map',
-    //             path: 'organisms-map',
-    //             component: () => import('../pages/maps/3DOrganisms.vue'),
-    //         },
-    //     ],
-    // }
+    }
 ]

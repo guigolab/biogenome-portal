@@ -1,7 +1,10 @@
 import { defineStore } from 'pinia'
-import { assemblies } from '../../config.json'
+import { models } from '../../config.json'
 
-const formEntries = assemblies.filters.map(f => {
+
+const parsedFilters = models.assemblies.filters as Record<string,any>[]
+
+const formEntries = parsedFilters.map(f => {
   if (f.type === "date") {
     return [[`${f.key}__gte`, ""], [`${f.key}__lte`, ""]]
   }

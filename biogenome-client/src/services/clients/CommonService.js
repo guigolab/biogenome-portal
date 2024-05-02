@@ -1,6 +1,6 @@
 import http from '../../http-axios'
 
-const base = http.base
+const {base, download} = http
 
 class CommonService {
   getItems(path, params) {
@@ -8,6 +8,9 @@ class CommonService {
   }
   getItem(path) {
     return base.get(path)
+  }
+  getTsv(path, params) {
+    return download.get(path, { params: params })
   }
 }
 

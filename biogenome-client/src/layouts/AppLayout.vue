@@ -8,9 +8,10 @@
       </div>
       <div class="app-layout__page">
         <div id="scroll-container" class="layout fluid va-gutter-5">
+          {{ breadcrumbs }}
           <va-breadcrumbs class="va-title" color="primary">
-            <va-breadcrumbs-item :to="{ name: 'biosamples' }" :label="t('biosampleList.breadcrumb')" />
-            <va-breadcrumbs-item active :label="accession" />
+            <!-- <va-breadcrumbs-item :to="{ name: 'biosamples' }" :label="t('biosampleList.breadcrumb')" /> -->
+            <va-breadcrumbs-item v-for="bc in breadcrumbs" :label="bc" />
           </va-breadcrumbs>
           <va-divider />
           <router-view v-slot="{ Component }">
@@ -25,12 +26,18 @@
 </template>
 
 <script setup>
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { onBeforeRouteUpdate } from 'vue-router'
 import { useGlobalStore } from '../stores/global-store'
 import Navbar from '../components/navbar/Navbar.vue'
 import Sidebar from '../components/sidebar/Sidebar.vue'
+import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
+
+const route = useRoute()
+
+const { t } = useI18n()
 
 const GlobalStore = useGlobalStore()
 
@@ -61,6 +68,11 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', onResize)
+})
+
+const breadcrumbs = computed(() => {
+
+  return route.matched.map(r => r.name)
 })
 
 onBeforeRouteUpdate(() => {

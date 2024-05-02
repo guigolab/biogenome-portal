@@ -4,7 +4,7 @@
       <template #header>
         <va-sidebar-item :active="isRouteActive(route)" @click="toRoute(route.name)">
           <va-sidebar-item-content>
-            <va-icon :name="route.meta.icon" class="va-sidebar-item__icon" />
+            <va-icon :name="route.icon" class="va-sidebar-item__icon" />
 
             <va-sidebar-item-title>
               {{ t(route.displayName) }}
@@ -38,13 +38,12 @@ const props = withDefaults(
 const accordionValue = ref<boolean[]>([])
 
 function isRouteActive(item: INavigationRoute) {
-  return item.name === useRoute().name || useRoute().fullPath.includes(item.name)
+  return item.name === useRoute().name || useRoute().meta.name === item.name
 }
 
 function toRoute(routeName: string) {
   if (!routeName) return
-  router.push({ path: routeName })
-
+  router.push({ name: routeName })
 }
 
 </script>

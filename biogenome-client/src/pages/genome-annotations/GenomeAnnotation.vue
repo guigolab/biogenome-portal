@@ -1,29 +1,21 @@
 <template>
-  <div>
-    <va-breadcrumbs class="va-title" color="primary">
-      <va-breadcrumbs-item :to="{ name: 'annotations' }" :label="t('annotationDetails.breadcrumb')" />
-      <va-breadcrumbs-item active :label="name" />
-    </va-breadcrumbs>
-    <va-divider />
-    <va-skeleton v-if="isLoading" height="90vh" />
-    <div v-else-if="errorMessage">
-      <va-card stripe stripe-color="danger">
-        <va-card-content>
-          {{ errorMessage }}
-        </va-card-content>
-      </va-card>
-    </div>
-    <div v-else>
-      <DetailsHeader :details="details" />
-      <KeyValueCard v-if="annotationSelectedMetadata.length" :metadata="metadata"
-        :selected-metadata="annotationSelectedMetadata" />
-      <div class="row row-equal">
-        <div class="flex lg12 md12 sm12 xs12">
-          <Jbrowse2 :assembly="assembly" :annotations="annotations" />
-        </div>
-        <div v-if="metadata && Object.keys(metadata).length" class="flex lg12 md12 sm12 xs12">
+  <div :key="props.name">
+    <DetailsHeader :details="details" />
+    <VaTabs v-model="tab">
+      <template #tabs>
+        <VaTab label="Metadata" name="metadata"></VaTab>
+        <VaTab v-if="annotations.length" label="Genome Browser" name="jbrowse"></VaTab>
+      </template>
+    </VaTabs>
+    <VaDivider></VaDivider>
+    <div class="row" v-if="tab === 'metadata'">
+      <div v-if="metadata && Object.keys(metadata).length" class="flex lg12 md12 sm12 xs12">
         <MetadataTreeCard :metadata="metadata" />
       </div>
+    </div>
+    <div class="row" v-else>
+      <div class="flex lg12 md12 sm12 xs12">
+        <Jbrowse2 :assembly="assembly" :annotations="annotations" />
       </div>
     </div>
   </div>
@@ -36,11 +28,10 @@ import { Assembly, Details, TrackData } from '../../data/types'
 import AnnotationService from '../../services/clients/AnnotationService'
 import { useI18n } from 'vue-i18n'
 import DetailsHeader from '../../components/ui/DetailsHeader.vue'
-import KeyValueCard from '../../components/ui/KeyValueCard.vue'
 import MetadataTreeCard from '../../components/ui/MetadataTreeCard.vue'
-import { annotationSelectedMetadata } from '../../../config.json'
 const { t } = useI18n()
 
+const tab = ref('metadata')
 const props = defineProps({
   name: String,
 })
@@ -54,7 +45,6 @@ const details = ref<
 const assembly = ref<Assembly>()
 const annotations = ref<TrackData[]>([])
 
-const showJBrowse = ref(false)
 
 onMounted(async () => {
   try {
@@ -87,7 +77,7 @@ function parseDetails(annotation: Record<string, any>) {
   return details
 }
 </script>
-  
+
 <style lang="scss">
 .chart {
   height: 400px;
@@ -112,4 +102,3 @@ function parseDetails(annotation: Record<string, any>) {
   margin-top: 10px;
 }
 </style>
-  

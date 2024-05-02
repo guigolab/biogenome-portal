@@ -1,25 +1,21 @@
 <template>
-  <va-breadcrumbs class="va-title" color="primary">
-    <va-breadcrumbs-item :to="{ name: 'experiments' }" label="experiments" />
-    <va-breadcrumbs-item active :label="accession" />
-  </va-breadcrumbs>
-  <va-divider />
-  <va-skeleton v-if="isLoading" height="90vh" />
-  <div v-else-if="errorMessage">
-    <va-card stripe stripe-color="danger">
-      <va-card-content>
-        {{ errorMessage }}
-      </va-card-content>
-    </va-card>
-  </div>
-  <div v-else>
+  <div :key="props.accession">
     <DetailsHeader :details="details" />
-    <KeyValueCard v-if="experimentSelectedMetadata.length && metadata" :metadata="metadata"
-      :selected-metadata="experimentSelectedMetadata" />
-    <div class="row row-equal">
+    <VaTabs v-model="tab">
+      <template #tabs>
+        <VaTab label="Metadata" name="metadata"></VaTab>
+        <VaTab v-if="reads.length" label="Related Reads" name="reads"></VaTab>
+      </template>
+    </VaTabs>
+    <VaDivider></VaDivider>
+    <div class="row" v-if="tab === 'metadata'">
       <div v-if="metadata && Object.keys(metadata).length" class="flex lg12 md12 sm12 xs12">
-        <VaDataTable :items="reads"
-          :columns="['run_accession', 'metadata.submitted_bytes', 'actions']">
+        <MetadataTreeCard :metadata="metadata" />
+      </div>
+    </div>
+    <div class="row" v-else>
+      <div class="flex lg12 md12 sm12 xs12">
+        <VaDataTable :items="reads" :columns="['run_accession', 'metadata.submitted_bytes', 'actions']">
           <template #cell(metadata.submitted_bytes)="{ rowData }">
             {{ convertBytesToMBOrGB(rowData.metadata.submitted_bytes) }}
           </template>
@@ -46,11 +42,11 @@ import { Details } from '../../data/types'
 import DetailsHeader from '../../components/ui/DetailsHeader.vue'
 import KeyValueCard from '../../components/ui/KeyValueCard.vue'
 import MetadataTreeCard from '../../components/ui/MetadataTreeCard.vue'
-import { experimentSelectedMetadata } from '../../../config.json'
 const props = defineProps<{
   accession: string
 }>()
 
+const tab = ref('metadata')
 const isLoading = ref(true)
 const errorMessage = ref<string | any>(null)
 const details = ref<
