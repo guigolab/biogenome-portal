@@ -1,8 +1,9 @@
 import { defineStore } from 'pinia'
 import { models } from '../../config.json'
+import { Filter } from '../data/types'
 
 
-const parsedFilters = models.status.filters as Record<string, any>[]
+const parsedFilters = models.status ? models.status.filters as Filter[] : []
 
 const formEntries = parsedFilters.map(f => {
   if (f.type === "date") {
