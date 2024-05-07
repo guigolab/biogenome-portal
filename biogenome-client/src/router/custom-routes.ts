@@ -1,7 +1,3 @@
-
-const ROOTNODE = import.meta.env.VITE_ROOT_NODE ? import.meta.env.VITE_ROOT_NODE : '131567'
-
-
 export const modelRoutes = [
     {
         path: '/assemblies',
@@ -96,20 +92,14 @@ export const modelRoutes = [
 
 export const mapRoutes = [
     {
-        name: '2d-map',
-        path: '/2d-map',
+        name: 'samples-map',
+        path: '/samples-map',
         component: () => import('../pages/maps/2DOrganisms.vue'),
-        meta: { name: '2d-map' }
-    },
-    {
-        name: '3d-map',
-        path: '/3d-map',
-        component: () => import('../pages/maps/3DOrganisms.vue'),
-        meta: { name: '3d-map' }
+        meta: { name: 'samples-map' }
     },
     {
         name: 'countries',
-        path: 'countries',
+        path: '/countries',
         component: () => import('../pages/maps/3DCountries.vue'),
         meta: { name: 'countries' }
     }

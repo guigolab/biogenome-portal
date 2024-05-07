@@ -1,5 +1,5 @@
 <template>
-  <va-dropdown class="language-dropdown" fixed position="bottom" :offset="[13, 0]">
+  <va-dropdown :stickToEdges="true" class="language-dropdown" fixed position="bottom" :offset="[13, 0]">
     <template #anchor>
       {{ t(`language.${getLangName(locale)}`) }}
     </template>

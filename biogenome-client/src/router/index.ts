@@ -4,6 +4,10 @@ import { models, maps, cms } from '../../config.json'
 import { cmsRoutes } from './cms-routes'
 import { modelRoutes, mapRoutes } from './custom-routes'
 
+const rootNode = import.meta.env.VITE_ROOT_NODE ?
+  import.meta.env.VITE_ROOT_NODE : '131567'
+
+
 const defaultRoutes: Array<RouteRecordRaw> = [
   {
     path: '/:catchAll(.*)',
@@ -23,7 +27,23 @@ const defaultRoutes: Array<RouteRecordRaw> = [
     name: 'unauthorized',
     path: '/unauthorized',
     component: () => import('../pages/auth/unauthorized/Unauthorized.vue'),
-  }
+  },
+  {
+    name: 'taxonomy',
+    path: '/taxonomy',
+    component: () => import('../pages/taxonomy/Taxonomy.vue'),
+    children: [
+      {
+        name: 'taxon',
+        path: ':taxid',
+        props: true,
+        component: () => import('../pages/taxonomy/Taxon.vue'),
+        meta: { name: 'taxonomy' }
+      }
+    ],
+    meta: { name: 'taxonomy' }
+  },
+
 ]
 
 function createRoutes() {
@@ -50,32 +70,11 @@ function createRoutes() {
 
   routes.push(...customRoutes)
 
-  // const taxonomyRoute = {
-  //   name: 'taxonomy',
-  //   path: '/taxonomy',
-  //   component: () => import('../pages/taxonomy/TaxonomyExplorer.vue'),
-  //   children: [
-  //     {
-  //       path: 'wiki',
-  //       component: () => import("../pages/taxonomy/components/Wikipedia.vue"),
-  //       name: 'wiki'
-  //     },
-  //     mapRoutes.find(r => r.name === '2d-map'),
-  //     ...customRoutes.filter(r => validNames.includes(r.name as string))
-  //   ],
-  //   meta: { name: 'taxonomy' }
-  // } as RouteRecordRaw
-
-  // routes.push(taxonomyRoute)
-
   return routes
 }
 
 const routes = [...createRoutes()]
 
-console.log(routes)
-
-// routes.push(...customRoutes.map(r => parseRoute(r)))
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes,

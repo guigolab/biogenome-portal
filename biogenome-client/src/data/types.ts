@@ -12,7 +12,16 @@ export type TPieChartData = ChartData<'pie'>
 
 export type TChartData = TLineChartData | TBarChartData | TBubbleChartData | TDoughnutChartData | TPieChartData
 
+export type LangOption = Record<'es-ct'|'gb', string>
+
+export interface PageHeaderConfig {
+  title: LangOption,
+  description: LangOption
+}
+export type DataModel = 'biosamples' | 'experiments' | 'organisms' | 'annotations' | 'assemblies' | 'local_samples' | 'status'
+
 export type Model = 'biosamples' | 'experiments' | 'organisms' | 'annotations' | 'assemblies' | 'users' | 'local_samples'
+
 export type Metatada = {
   key: string
   value: string
@@ -33,7 +42,7 @@ export type DateRange = {
   end: Date | null
 }
 export type Filter = {
-  label: Record<string,any>
+  label: Record<string, any>
   placeholder?: string
   type: 'input' | 'select' | 'date' | 'checkbox'
   options?: Array<string | Record<string, any>>
@@ -137,13 +146,13 @@ export type AssemblyAdapter = {
 }
 
 export type HighLightedMetatada = {
-  key:string
-  color:string
+  key: string
+  color: string
 }
 
 export type ModelConfig = {
-  title?: Record<string,string>
-  description?: Record<string,string>
+  title?: Record<string, string>
+  description?: Record<string, string>
   charts?: InfoBlock[]
   filters: Filter[]
   columns: string[]
@@ -153,10 +162,11 @@ export type ModelConfig = {
 export type InfoBlock = {
   field: string,
   model: string,
-  title: Record<string,string>,
-  label: Record<string,string>,
+  title: Record<string, string>,
+  label: Record<string, string>,
   type: 'pie' | 'dateline' | 'bar' | 'contribution' | 'list' | 'habitat'
   class: string
+  color?:string
 }
 
 export interface Assembly {
@@ -174,6 +184,8 @@ export interface TrackData {
   name: string;
   gff_gz_location: string;
   tab_index_location: string;
+  metadata: Record<string, any>
+
 }
 export interface BioSample {
   accession: string

@@ -4,31 +4,32 @@
             <va-input v-model="filter" placeholder="Filter..." clearable />
         </div>
     </div>
-    <va-tree-view :nodes="currenNodes" :filter="filter" :filter-method="customFilterMethod">
-        <template #content="node">
-            <div class="flex items-center">
-                <div class="mr-2">
-                    <b v-if="node.label" class="display-6">{{ node.label }}</b>
-                    <div v-if="node.description">
-                        <a class="va-text-secondary mb-0" target="_blank"
-                            v-if="node.description && typeof node.description === 'string' && node.description.includes('http')"
-                            :href="node.description">{{ node.description }}</a>
-                        <p v-else class="va-text-secondary mb-0">
+    <va-divider />
+    <div style="max-height: 400px;overflow: scroll;">
+        <va-tree-view :nodes="nodes" :filter="filter" :filter-method="customFilterMethod">
+            <template #content="node">
+                <div class="flex items-center">
+                    <div class="mr-2">
+                        <b v-if="node.label" class="display-6">{{ node.label }}</b>
+                        <p v-if="node.description" class="va-text-secondary mb-0">
                             {{ node.description }}
                         </p>
                     </div>
                 </div>
-            </div>
-        </template>
-    </va-tree-view>
+            </template>
+        </va-tree-view>
+    </div>
+
 </template>
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { TreeNode } from 'vuestic-ui/web-components';
-type ObjectEntry = [string, any];
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
+
 const filter = ref('')
 const props = defineProps<{
-    metadata: ObjectEntry[]
+    metadata: Record<string, any>
 }>()
 const customFilterMethod = computed(() => {
     return (node: TreeNode, filterText: string, key: any) => {
@@ -37,17 +38,14 @@ const customFilterMethod = computed(() => {
     }
 })
 
-const nodes = ref([...buildTree(props.metadata, undefined)])
+const nodes = buildTree(props.metadata, undefined)
 
-const currenNodes = computed(() => {
-    if(nodes.value.length) return nodes
-    return [{ id: 'noMetadata', label: "No Metadata Found!", description: "No Metadata are linked to this item!" }]
-})
-
-function buildTree(data: ObjectEntry[], parentKey: string | undefined): TreeNode[] {
+function buildTree(data: Record<string, any>, parentKey: string | undefined): TreeNode[] {
+    const keys = Object.keys(data);
     const treeNodes: TreeNode[] = [];
     //
-    for (const [key, value] of data) {
+    for (const key of keys) {
+        const value = data[key];
         const id = parentKey ? `${parentKey}-${key}` : key
         if (!Boolean(value)) continue
         if (Array.isArray(value)) {
@@ -56,14 +54,14 @@ function buildTree(data: ObjectEntry[], parentKey: string | undefined): TreeNode
                 if (typeof item === 'string') {
                     return { id: `${value}-${item}`, label: key, description: item };
                 } else {
-                    return buildTree(Object.entries(item), id);
+                    return buildTree(item, id);
                 }
             });
             treeNodes.push({ id: id, label: key, children: childNodes });
         }
         else if (typeof value === 'object') {
             // If the value is an object, recursively build child nodes
-            const childNodes = buildTree(Object.entries(value), id);
+            const childNodes = buildTree(value, id);
             treeNodes.push({ id: id, label: key, children: childNodes });
         } else if (typeof value == 'string' && value.split(';').length > 1) {
             const childNodes = value.split(';').map((v: string, i: number) => {

@@ -8,10 +8,9 @@
       </div>
       <div class="app-layout__page">
         <div id="scroll-container" class="layout fluid va-gutter-5">
-          {{ breadcrumbs }}
           <va-breadcrumbs class="va-title" color="primary">
             <!-- <va-breadcrumbs-item :to="{ name: 'biosamples' }" :label="t('biosampleList.breadcrumb')" /> -->
-            <va-breadcrumbs-item v-for="bc in breadcrumbs" :label="bc" />
+            <va-breadcrumbs-item :to="bc.to" v-for="bc in breadcrumbs" :label="bc.label" />
           </va-breadcrumbs>
           <va-divider />
           <router-view v-slot="{ Component }">
@@ -33,9 +32,9 @@ import { useGlobalStore } from '../stores/global-store'
 import Navbar from '../components/navbar/Navbar.vue'
 import Sidebar from '../components/sidebar/Sidebar.vue'
 import { useI18n } from 'vue-i18n'
-import { useRoute } from 'vue-router'
+import { useRouter } from 'vue-router'
 
-const route = useRoute()
+const router = useRouter()
 
 const { t } = useI18n()
 
@@ -71,8 +70,33 @@ onBeforeUnmount(() => {
 })
 
 const breadcrumbs = computed(() => {
+  const splittedRoute = router.currentRoute.value.path.split('/').filter(p => p)
+  if (splittedRoute.length > 1 && router.currentRoute.value.name !== 'taxon') {
+    return [
+      {
+        label: router.currentRoute.value.meta.name,
+        to: { name: router.currentRoute.value.meta.name }
+      },
+      {
+        label: splittedRoute[1],
+      }
+    ]
 
-  return route.matched.map(r => r.name)
+  } else if (router.currentRoute.value.name === "taxon") {
+    return [{
+      label: "taxonomy",
+      to: { name: "taxonomy" }
+    },
+    {
+      label: splittedRoute[1],
+      to: { name: 'taxon', params: { taxid: splittedRoute[1] } }
+    }]
+  } else {
+    return [{
+      label: router.currentRoute.value.name,
+      to: { name: router.currentRoute.value.name }
+    }]
+  }
 })
 
 onBeforeRouteUpdate(() => {

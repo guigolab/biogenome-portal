@@ -1,30 +1,24 @@
 <template>
-    <div class="row align-end">
+    <h1 class="va-h1">{{ t('taxon.title') }}</h1>
+    <p class="va-text-secondary">{{ t('taxon.description') }}</p>
+    <div class="row">
         <div class="flex">
-            <h1 class="va-h1">{{ t('taxonSearch.header') }}</h1>
-        </div>
-        <div class="flex">
-            <va-button color="info" preset="secondary" icon="info"
-                href="https://github.com/glouwa/d3-hypertree" target="_blank">
-            </va-button>
-        </div>
-        <div class="flex">
-            <va-button color="secondary" preset="secondary" icon="github"
-                href="https://github.com/glouwa/d3-hypertree" target="_blank">
+            <va-button color="info" preset="secondary" icon="info" href="https://github.com/glouwa/d3-hypertree"
+                target="_blank">
+                GitHub
             </va-button>
         </div>
     </div>
     <div class="row align-end">
-        <va-select hideSelected :loading="isLoading" dropdownIcon="search" searchable
-            highlight-matched-text :textBy="(v: TreeNode) => `${v.name} (${v.rank})`" trackBy="taxid"
-            :label="t('taxonSearch.label')" @update:model-value="setQuery" @update:search="handleSearch"
-            class="flex lg6 md6 sm12 xs12" v-model="taxonomyStore.currentTaxon"
-            :searchPlaceholderText="t('taxonSearch.placeholder')" :noOptionsText="t('taxonSearch.noOptions')"
-            :options="taxons">
+        <va-select hideSelected :loading="isLoading" dropdownIcon="search" searchable highlight-matched-text
+            :textBy="(v: TreeNode) => `${v.name} (${v.rank})`" trackBy="taxid" :label="t('taxon.search.label')"
+            @update:model-value="setQuery" @update:search="handleSearch" class="flex lg6 md6 sm12 xs12"
+            v-model="taxonomyStore.currentTaxon" :searchPlaceholderText="t('taxon.search.placeholder')"
+            :noOptionsText="t('taxon.search.noOptions')" :options="taxons">
         </va-select>
         <div class="flex">
             <va-button @click="showRelatedTaxonModal = !showRelatedTaxonModal" color="warning" :round="false">
-                {{ t("relatedTaxon.button") }}
+                {{ t("taxon.related.button") }}
             </va-button>
         </div>
     </div>
@@ -39,7 +33,7 @@
                     <VaMenu :options="relatedDataTabs" :textBy="(v: Record<string, any>) => t(v.title)"
                         @selected="(v: Record<string, any>) => relatedDataTab = v.key">
                         <template #anchor>
-                            <VaButton preset="primary" :round="false">{{ t('taxonSearch.viewOptions') }}
+                            <VaButton preset="primary" :round="false">{{ t('taxon.search.viewOptions') }}
                             </VaButton>
                         </template>
                     </VaMenu>
@@ -96,8 +90,8 @@
     </VaSplit>
     <VaModal hide-default-actions overlay-opacity="0.2" v-model="showRelatedTaxonModal">
         <template #header>
-            <h4 class="va-h4">{{ t('relatedTaxon.header') }}</h4>
-            <p>{{ t('relatedTaxon.description') }}</p>
+            <h4 class="va-h4">{{ t('taxon.related.header') }}</h4>
+            <p>{{ t('taxon.related.description') }}</p>
             <va-divider />
         </template>
         <va-inner-loading :loading="lookupLoading">
@@ -105,7 +99,7 @@
                 <va-form tag="form" @submit.prevent="searchRelatedTaxon">
                     <div class="row align-center justify-start">
                         <va-input v-model="taxidLookUp" class="flex lg12 md12 sm12 xs12"
-                            :placeholder="t('relatedTaxon.placeholder')" />
+                            :placeholder="t('taxon.related.placeholder')" />
                     </div>
                     <va-card-actions align="left">
                         <va-button :disabled="taxidLookUp.length < 0" type="submit">{{ t('buttons.submit')

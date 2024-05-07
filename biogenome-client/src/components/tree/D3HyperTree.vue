@@ -1,12 +1,12 @@
 <template>
-    <div style="position: relative;height: 100%;" ref="hypertree"></div>
+    <div style="height: 100vh;" ref="hypertree"></div>
 </template>
 
 <script setup lang="ts">
 import * as hyt from 'd3-hypertree'
 import TaxonService from '../../services/clients/TaxonService'
 import { useTreeData } from './setTreeData'
-import { onMounted, reactive, ref, watch } from 'vue'
+import {  onMounted, reactive, ref, watch } from 'vue'
 import { TreeNode } from '../../data/types'
 
 
@@ -22,11 +22,21 @@ const { data } = await TaxonService.getComputedTree()
 
 const { root } = useTreeData(data.tree)
 
+const isInitializing = ref(true)
 
 const emits = defineEmits(['nodeChange'])
 
 watch(() => props.filter, (v) => {
-    if (v) setPath(v)
+    console.log(v)
+    console.log("FIlter..")
+    if (isInitializing.value || !v) return
+    setPath(v)
+})
+
+watch(() => isInitializing.value, (v) => {
+    console.log(v)
+    console.log("Init..")
+    if (props.filter && !v) setPath(props.filter)
 })
 
 function setPath(taxid: string) {
@@ -42,11 +52,17 @@ function setPath(taxid: string) {
 
 onMounted(() => {
     hTree.tree = createTree(root)
-    emits('nodeChange', hTree.tree.data.data.data)
     hTree.tree.initPromise
         .then(() => new Promise((ok, err) => hTree.tree.animateUp(ok, err)))
         .then(() => hTree.tree.drawDetailFrame())
+        .catch((err) => console.log(err))
+        .finally(() => isInitializing.value = !isInitializing.value)
 
+    // .then(() => {
+    //     if (props.filter) {
+    //         setPath(props.filter)
+    //     }
+    // })
 })
 
 function createTree(data) {
@@ -84,12 +100,12 @@ function createTree(data) {
             interaction: {
                 λbounds: [.25, .65],
                 onNodeClick: (n, m, l) => {
+
                     mytree.api.setPathHead(mytree.data.pathes, n)
                     mytree.api.goto({ re: -n.layout.z.re, im: -n.layout.z.im }, null)
                         .then(() => l.view.hypertree.drawDetailFrame())
                     emits('nodeChange', n.data.data as TreeNode)
-                    // taxonomyStore.currentTaxon = { ...n.data.data }
-                    // taxonomyStore.ancestors = [...mytree.data.pathes.partof[0].ancestors].reverse()
+
 
                 }
             }

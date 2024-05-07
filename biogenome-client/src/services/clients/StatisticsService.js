@@ -9,6 +9,7 @@ class StatsService {
   getStats(){
     return base.get('/stats')
   }
+  
 }
 
 export default new StatsService()

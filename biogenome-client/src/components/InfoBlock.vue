@@ -3,18 +3,12 @@
         <div v-for="chart, index in charts" :key="index" :class="chart.class">
             <Suspense>
                 <template #default>
-                    <PieChart v-if="chart.type === 'pie'" :field="chart.field" :model="chart.model" :title="chart.title"
-                        :label="chart.label" />
-                    <DateLineChart v-else-if="chart.type === 'dateline'" :label="chart.label" :field="chart.field"
-                        :title="chart.title" :model="chart.model" :color="chart.color" />
-                    <BarChart v-else-if="chart.type === 'bar'" :label="chart.label" :field="chart.field"
-                        :title="chart.title" :model="chart.model" :color="chart.color" />
-                    <ContributorList v-else-if="chart.type === 'contribution'" :field="chart.field" :model="chart.model"
-                        :title="chart.title" />
-                    <CustomList v-else-if="chart.type === 'list'" :title="chart.title" :field="chart.field"
-                        :model="chart.model" :is-habitat="false" />
-                    <CustomList v-else-if="chart.type === 'habitat'" :title="chart.title" :field="chart.field"
-                        :model="chart.model" :is-habitat="true" />
+                    <PieChart v-if="chart.type === 'pie'" :chart="chart" />
+                    <DateLineChart v-else-if="chart.type === 'dateline'" :chart="chart" />
+                    <BarChart v-else-if="chart.type === 'bar'" :chart="chart" />
+                    <ContributorList v-else-if="chart.type === 'contribution'" :chart="chart" />
+                    <CustomList v-else-if="chart.type === 'list'" :chart="chart" :is-habitat="false" />
+                    <CustomList v-else-if="chart.type === 'habitat'" :chart="chart" :is-habitat="true" />
                 </template>
                 <template #fallback>
                     <va-skeleton height="400px" />

@@ -1,18 +1,16 @@
 <template>
-  <va-card style="height: 100%;">
-    <div ref="mapRef" style="padding: 0;margin: 0;height: 100%;" class="leaflet-map fill-height">
+  <div ref="mapRef" style="padding: 0;margin: 0;height: 100%;" class="leaflet-map fill-height">
+  </div>
+  <div v-show="false">
+    <div class="organism-card" ref="organismCard">
+      <Suspense v-if="selectedSample?.sample_accession">
+        <template #fallback>
+          <va-skeleton height="150px" />
+        </template>
+        <SampleCard :selectedSample="selectedSample" :key="selectedSample.sample_accession" />
+      </Suspense>
     </div>
-    <div v-show="false">
-      <div class="organism-card" ref="organismCard">
-        <Suspense v-if="selectedSample?.sample_accession">
-          <template #fallback>
-            <va-skeleton height="150px" />
-          </template>
-          <SampleCard :selectedSample="selectedSample" :key="selectedSample.sample_accession" />
-        </Suspense>
-      </div>
-    </div>
-  </va-card>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -50,7 +48,7 @@ const selectedSample = ref<{
 onMounted(() => {
   const map = Leaflet.map(mapRef.value).fitWorld()
   const markerCluster = new MarkerClusterGroup()
-  if(!props.coordinates.length) return
+  if (!props.coordinates.length) return
   const bounds = new Leaflet.LatLngBounds(props.coordinates?.map(({ coordinates }) => [coordinates.coordinates[1], coordinates.coordinates[0]]))
   Leaflet.tileLayer('https://{s}.tile.osm.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors',
@@ -106,6 +104,7 @@ function setIcon(image: string) {
 .organism-avatar {
   border-radius: 25%;
 }
+
 .leaflet-popup-content {
   margin: 0 !important;
 }

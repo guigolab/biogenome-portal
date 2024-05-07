@@ -10,7 +10,7 @@
             </VaInput>
         </div>
         <div v-if="showFields.length" class="flex">
-            <VaButtonDropdown preset="secondary" border-color="primary" stickToEdges :closeOnContentClick="false"
+            <VaButtonDropdown preset="primary" :round="true" stickToEdges :closeOnContentClick="false"
                 icon="hide_source" :label="t('buttons.fields')">
                 <div class="w-200">
                     <div v-for="( field, index ) in  showFields ">
@@ -22,7 +22,7 @@
         </div>
         <div v-if="filters.length" class="flex">
             <VaBadge style="z-index: 1;" overlap color="warning" :text="activeFilters">
-                <VaButtonDropdown preset="secondary" border-color="primary" stickToEdges :closeOnContentClick="false"
+                <VaButtonDropdown preset="primary" :round="true" stickToEdges :closeOnContentClick="false"
                     icon="filter_list" :label="t('buttons.filters')">
                     <div class="w-200">
                         <div v-for="( field, index ) in filters" :key="index">
@@ -55,7 +55,7 @@
         </div>
         <div class="flex">
             <VaBadge style="z-index: 1;" overlap color="info" :text="searchForm.sort_column">
-                <VaButtonDropdown preset="secondary" border-color="primary" stickToEdges :closeOnContentClick="false"
+                <VaButtonDropdown preset="primary" :round="true" stickToEdges :closeOnContentClick="false"
                     :label="t('buttons.sort')" icon="sort">
                     <div class="w-200">
                         <div>
@@ -94,7 +94,7 @@ const searchForm = ref({ ...props.storeForm })
 
 const activeFilters = computed(() => {
     return Object.entries(searchForm.value)
-        .filter(([k, v]) => !['filter', 'sort_column', 'sort_order'].includes(k))
+        .filter(([k, v]) => !['filter', 'sort_column', 'sort_order', 'parent_taxon', 'countries'].includes(k))
         .filter(([k, v]) => v).length
 })
 // watchEffect(() => {

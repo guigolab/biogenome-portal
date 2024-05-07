@@ -21,9 +21,9 @@
 <script setup lang="ts">
 import ChartsBlock from '../../components/common/ChartsBlock.vue'
 import { useI18n } from 'vue-i18n'
-import { computed, ref, watch, watchEffect } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { InfoBlock, ModelConfig } from '../../data/types'
+import { DataModel, InfoBlock, ModelConfig } from '../../data/types'
 import ItemsBlock from './components/ItemsBlock.vue'
 import { goat } from '../../../config.json'
 import GoaTService from '../../services/clients/GoaTService'
@@ -34,7 +34,7 @@ const tab = ref('table')
 const router = useRouter()
 
 const currentModel = computed(() => {
-    return router.currentRoute.value.name as string
+    return router.currentRoute.value.name as DataModel
 })
 
 watch(() => props.config, () => {

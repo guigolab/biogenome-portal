@@ -1,90 +1,104 @@
 <template>
-  <div :key="props.accession">
-    <DetailsHeader :details="details" />
-    <VaTabs v-model="tab">
-      <template #tabs>
-        <VaTab label="Metadata" name="metadata"></VaTab>
-        <VaTab v-if="reads.length" label="Related Reads" name="reads"></VaTab>
-      </template>
-    </VaTabs>
-    <VaDivider></VaDivider>
-    <div class="row" v-if="tab === 'metadata'">
-      <div v-if="metadata && Object.keys(metadata).length" class="flex lg12 md12 sm12 xs12">
-        <MetadataTreeCard :metadata="metadata" />
+  <DetailsSkeleton v-if="isLoading" />
+  <div v-else>
+    <div v-if="experiment">
+      <DetailsHeader :details="details" />
+      <VaTabs v-model="tab">
+        <template #tabs>
+          <VaTab :label="t('tabs.metadata')" name="metadata"></VaTab>
+          <VaTab v-if="reads.length" :label="t('tabs.reads')" name="reads"></VaTab>
+        </template>
+      </VaTabs>
+      <VaDivider style="margin-top: 0;" />
+      <div class="row" v-if="tab === 'metadata'">
+        <div class="flex lg12 md12 sm12 xs12">
+          <MetadataTreeCard :metadata="Object.entries(experiment.metadata)" />
+        </div>
+      </div>
+      <div class="row" v-else>
+        <div class="flex lg12 md12 sm12 xs12">
+          <VaDataTable :items="reads" :columns="['run_accession', 'metadata.submitted_bytes', 'actions']">
+            <template #cell(metadata.submitted_bytes)="{ rowData }">
+              {{ convertBytesToMBOrGB(rowData.metadata.submitted_bytes) }}
+            </template>
+            <template #cell(actions)="{ row, isExpanded }">
+              <VaButton :icon="isExpanded ? 'va-arrow-up' : 'va-arrow-down'" preset="secondary" class="w-full"
+                @click="row.toggleRowDetails()">{{ t('buttons.view') }}
+              </VaButton>
+            </template>
+            <template #expandableRow="{ rowData }">
+              <div class="">
+                <MetadataTreeCard :metadata="Object.entries(rowData.metadata)" />
+              </div>
+            </template>
+          </VaDataTable>
+        </div>
       </div>
     </div>
-    <div class="row" v-else>
-      <div class="flex lg12 md12 sm12 xs12">
-        <VaDataTable :items="reads" :columns="['run_accession', 'metadata.submitted_bytes', 'actions']">
-          <template #cell(metadata.submitted_bytes)="{ rowData }">
-            {{ convertBytesToMBOrGB(rowData.metadata.submitted_bytes) }}
-          </template>
-          <template #cell(actions)="{ row, isExpanded }">
-            <VaButton :icon="isExpanded ? 'va-arrow-up' : 'va-arrow-down'" preset="secondary" class="w-full"
-              @click="row.toggleRowDetails()">
-            </VaButton>
-          </template>
-
-          <template #expandableRow="{ rowData }">
-            <div class="">
-              <MetadataTreeCard :metadata="rowData.metadata" />
-            </div>
-          </template>
-        </VaDataTable>
-      </div>
+    <div v-else>
+      <VaAlert color="danger" class="mb-6">
+        {{ errorMessage || "Something happened" }}
+      </VaAlert>
     </div>
   </div>
 </template>
 <script setup lang="ts">
 import ExperimentService from '../../services/clients/ExperimentService'
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watchEffect } from 'vue'
 import { Details } from '../../data/types'
-import DetailsHeader from '../../components/ui/DetailsHeader.vue'
-import KeyValueCard from '../../components/ui/KeyValueCard.vue'
+import DetailsHeader from '../../components/common/DetailsHeader.vue'
+import { useI18n } from 'vue-i18n'
 import MetadataTreeCard from '../../components/ui/MetadataTreeCard.vue'
+import { AxiosError } from 'axios'
+import DetailsSkeleton from '../common/components/DetailsSkeleton.vue'
+const { t } = useI18n()
+
 const props = defineProps<{
   accession: string
 }>()
-
+const experiment = ref<Record<string, any>>()
 const tab = ref('metadata')
 const isLoading = ref(true)
 const errorMessage = ref<string | any>(null)
 const details = ref<
   Details | any
 >()
-const metadata = ref<Record<string, any> | null>(null)
 
-onMounted(async () => {
-  await getExperiment(props.accession)
-  await getReads(props.accession)
-})
 const reads = ref<Record<string, any>[]>([])
 
-async function getExperiment(accession: string) {
+
+
+
+watchEffect(async () => {
+  await getData(props.accession)
+})
+
+
+async function getData(accession: string) {
   try {
     isLoading.value = true
+    errorMessage.value = null
     const { data } = await ExperimentService.getExperiment(accession)
+    experiment.value = { ...data }
     details.value = { ...parseDetails(data) }
-    if (data.metadata) metadata.value = { ...data.metadata }
-  } catch (e) {
-    errorMessage.value = e
+    await getReads(accession)
+  } catch (error) {
+    const axiosError = error as AxiosError
+    if (axiosError.code === "404") {
+      errorMessage.value = accession + " Not Found"
+    } else {
+      errorMessage.value = axiosError.message
+    }
   } finally {
     isLoading.value = false
   }
 }
-
 
 async function getReads(accession: string) {
-  try {
-    isLoading.value = true
-    const { data } = await ExperimentService.getReadsByExperiment(accession)
-    reads.value = [...data]
-  } catch (e) {
-    errorMessage.value = e
-  } finally {
-    isLoading.value = false
-  }
+  const { data } = await ExperimentService.getReadsByExperiment(accession)
+  reads.value = [...data]
 }
+
 function parseDetails(experiment: Record<string, any>) {
   const accession = experiment.experiment_accession
   const details: Details = {
@@ -122,6 +136,7 @@ function convertBytesToMBOrGB(submittedBytes: string): string {
 
   return result;
 }
+
 </script>
 
 <style lang="scss">

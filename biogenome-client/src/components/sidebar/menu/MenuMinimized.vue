@@ -21,8 +21,6 @@ withDefaults(
   },
 )
 
-const dropdownsValue = ref([])
-
 function isRouteActive(item: INavigationRoute) {
   return item.name === useRoute().name || useRoute().meta.name === item.name
 }

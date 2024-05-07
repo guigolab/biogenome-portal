@@ -23,12 +23,13 @@ class OrganismService {
   }
 
 
-  getOrganismRelatedData(taxid, model) {
-    return base.get(`/organisms/${taxid}/${model}`)
+  lookupData(taxid){
+    return base.get(`/organisms/${taxid}/lookup`)
+
   }
 
-  getINSDCSankeyData(taxid) {
-    return base.get(`/organisms/${taxid}/sankey`)
+  getOrganismRelatedData(taxid, model) {
+    return base.get(`/organisms/${taxid}/${model}`)
   }
 
 }

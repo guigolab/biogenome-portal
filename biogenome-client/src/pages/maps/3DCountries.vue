@@ -1,14 +1,32 @@
 <template>
   <div>
-    <p class="va-title">{{ t('menu.countriesMap') }}</p>
+    <h1 class="va-h1">{{ t('maps.countries.title') }}</h1>
+    <p class="va-text-secondary">{{ t('maps.countries.description') }}</p>
     <va-divider />
-    <div ref="cesium" class="cesium-container">
+    <VaSplit class="split-demo" :limits="[10, 10]">
+      <template #start>
+        <div style="position: relative;height: 100%;">
+          <div style="position: absolute;z-index: 1;width: 100%;height: 100%;">
+            <div ref="cesium" class="cesium-container">
+            </div>
+          </div>
+        </div>
+      </template>
+      <template #end>
+        <div style="position: relative;height: 100%;">
+          <div style="position: absolute;width: 100%;height: 100%;">
+            <OrganismsCountryCard :country="selectedCountry" v-if="showDetails" />
+          </div>
+        </div>
+      </template>
+    </VaSplit>
+    <!-- <div ref="cesium" class="cesium-container">
       <div id="infobox" ref="infobox">
         <Transition name="slide-fade">
           <OrganismsCountryCard :country="selectedCountry" v-if="showDetails" />
         </Transition>
       </div>
-    </div>
+    </div> -->
   </div>
 </template>
 
@@ -17,18 +35,20 @@ import { onMounted, reactive, ref } from 'vue'
 import * as Cesium from 'cesium'
 import StatisticsService from '../../services/clients/StatisticsService'
 import am5geodata_worldLow from '@amcharts/amcharts5-geodata/worldLow'
-import OrganismService from '../../services/clients/OrganismService'
 import { useI18n } from 'vue-i18n'
 import OrganismsCountryCard from '../../components/ui/OrganismsCountryCard.vue'
-const { t } = useI18n()
 
+const { t } = useI18n()
 const accessToken = import.meta.env.VITE_CESIUM_TOKEN
 
 const cesium = ref()
-const infobox = ref(null)
+const infobox = ref()
+
 const showDetails = ref(false)
+
 let viewer = null
-var source = new Cesium.GeoJsonDataSource()
+let source = new Cesium.GeoJsonDataSource()
+
 const initSelectedCountry = {
   id: '',
   color: '',
@@ -36,12 +56,6 @@ const initSelectedCountry = {
   organisms: [],
   total: 0,
 }
-const initPagination = {
-  limit: 20,
-  offset: 0,
-}
-const pagination = ref({ ...initPagination })
-
 const selectedCountry = ref({ ...initSelectedCountry })
 const colorHash = reactive({})
 
@@ -54,9 +68,9 @@ onMounted(async () => {
 
 
 async function getCountries(viewer: Cesium.Viewer) {
-  const { data } = await StatisticsService.getModelFieldStats('organisms', { field: 'countries' })
+  const { data } = await StatisticsService.getModelFieldStats('organisms', 'countries')
+
   viewer.selectedEntityChanged.addEventListener((selectedEntity: Cesium.Entity) => {
-    pagination.value = { ...initPagination }
     if (Cesium.defined(selectedEntity)) {
       const color = colorHash[selectedEntity.name]
       selectedCountry.value.name = selectedEntity.name
@@ -76,8 +90,9 @@ async function getCountries(viewer: Cesium.Viewer) {
   worldCountries.features = worldCountries.features.filter((ft) => Object.keys(data).includes(ft.id))
 
   worldCountries.features.forEach((ft) => {
-    ft.properties.oganisms = data[ft.id]
+    ft.properties.organisms = data[ft.id]
   })
+
   source.load(worldCountries).then((dataSource) => {
     viewer.dataSources.add(dataSource)
     const entities = dataSource.entities.values
@@ -89,11 +104,12 @@ async function getCountries(viewer: Cesium.Viewer) {
         colorHash[name] = color
       }
       entity.polygon.material = color
-      entity.polygon.outline = false
-      entity.polygon.extrudedHeight = entity.properties.oganisms * 1000
+      // entity.polygon.outline = false
+      // entity.polygon.extrudedHeight = entity.properties.oganisms * 1000
     })
   })
 }
+
 </script>
 <style lang="scss" scoped>
 #infobox {
@@ -105,6 +121,7 @@ async function getCountries(viewer: Cesium.Viewer) {
   right: 0;
   overflow: scroll;
 }
+
 .slide-fade-enter-active {
   transition: all 0.3s ease-out;
 }
@@ -118,24 +135,28 @@ async function getCountries(viewer: Cesium.Viewer) {
   transform: translateX(20px);
   opacity: 0;
 }
+
 .cesium-container {
-  height: 80vh;
+  height: 100%;
   width: inherit;
   position: relative;
 }
 
-.list__item + .list__item {
+.list__item+.list__item {
   margin-top: 20px;
 }
+
 .list-enter-active,
 .list-leave-active {
   transition: all 0.5s ease;
 }
+
 .list-enter-from,
 .list-leave-to {
   opacity: 0;
   transform: translateX(30px);
 }
+
 .row-equal .flex {
   .va-card {
     height: 100%;
@@ -175,5 +196,9 @@ async function getCountries(viewer: Cesium.Viewer) {
   #infobox {
     width: 30%;
   }
+}
+
+.split-demo {
+  height: 100vh;
 }
 </style>

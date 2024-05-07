@@ -22,7 +22,10 @@ import { ref } from 'vue'
 import { INavigationRoute } from '../NavigationRoutes'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { useGlobalStore } from '../../../stores/global-store'
 
+
+const globalStore = useGlobalStore()
 
 const router = useRouter()
 const { t } = useI18n()
@@ -43,6 +46,7 @@ function isRouteActive(item: INavigationRoute) {
 
 function toRoute(routeName: string) {
   if (!routeName) return
+  globalStore.toggleSidebar()
   router.push({ name: routeName })
 }
 

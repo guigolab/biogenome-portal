@@ -15,7 +15,7 @@ const routes = Object.entries(models).map(([k, v]) => {
 })
 
 const mapRoutes = maps.map(m => {
-  const icon = m === '2d-map' ? 'fa-map' : 'public'
+  const icon = m === 'samples-map' ? 'fa-map' : 'public'
   return {
     name: m,
     icon: icon,
@@ -32,5 +32,11 @@ export default {
     name: 'dashboard',
     displayName: 'routes.dashboard',
     icon: "vuestic-iconset-dashboard"
-  }, ...routes, ...mapRoutes],
+  }, 
+  {
+    name: 'taxonomy',
+    displayName: 'routes.taxonomy',
+    icon: 'travel_explore'
+  },
+  ...routes, ...mapRoutes],
 }
