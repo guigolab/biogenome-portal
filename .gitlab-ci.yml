@@ -16,9 +16,7 @@ build-containers:
   stage: build
   image: docker:latest
   only:
-    variables:
-    - $CI_PIPELINE_SOURCE == "web"
-    - $CI_COMMIT_REF_NAME == "main"
+  - main
   before_script:
     - echo $CI_REGISTRY_PASSWORD | docker login $CI_REGISTRY -u $CI_REGISTRY_USER --password-stdin
     - cat $FRONT_CONFIGS > ./biogenome-client/config.json
