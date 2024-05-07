@@ -127,7 +127,7 @@ function setCurrentTaxon(taxon: TreeNode) {
 }
 
 watchEffect(() => {
-    if (router.currentRoute.value.name === 'taxonomy') {
+    if (router.currentRoute.value.name === 'taxonomy' && taxonomyStore.taxidQuery) {
         router.push({ name: 'taxon', params: { taxid: taxonomyStore.taxidQuery } })
     }
 })

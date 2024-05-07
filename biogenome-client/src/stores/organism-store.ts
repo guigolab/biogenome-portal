@@ -1,18 +1,24 @@
 import { defineStore } from 'pinia'
-import {  Publication, CommonName,Metatada,OrganismForm } from '../data/types'
-import { OrganismSearchForm } from '../data/types'
+import { Publication, CommonName, Metatada, OrganismForm, Filter } from '../data/types'
+import { models } from '../../config.json'
+const parsedFilters = models.organisms ? models.organisms.filters as Filter[] : []
 
-const initSearchForm: OrganismSearchForm = {
-  insdc_status: '',
-  goat_status: '',
-  parent_taxid: '',
-  target_list_status: '',
-  filter: '',
-  sort_column: '',
-  sort_order: '',
-  country: '',
+const formEntries = parsedFilters.map(f => {
+  if (f.type === "date") {
+    return [[`${f.key}__gte`, ""], [`${f.key}__lte`, ""]]
+  }
+  return [[f.key, f.type === 'checkbox' ? false : ""]]
+}).flat()
+
+const initSearchForm = {
+  filter: "",
+  sort_order: "",
+  sort_column: "",
+  ...Object.fromEntries(formEntries)
 }
-const initOrganismForm:OrganismForm = {
+
+
+const initOrganismForm: OrganismForm = {
   taxid: null,
   scientific_name: null,
   common_names: [] as CommonName[],
@@ -38,7 +44,7 @@ export const useOrganismStore = defineStore('organism', {
       metadataList: [] as Metatada[],
       publications: [] as Publication[],
       vernacularNames: [] as CommonName[],
-      images: [] as Record<'value',string>[]
+      images: [] as Record<'value', string>[]
     }
   },
 
