@@ -16,7 +16,7 @@ build-containers:
   stage: build
   image: docker:latest
   only:
-    - manual
+    - web
     - main
   before_script:
     - echo $CI_REGISTRY_PASSWORD | docker login $CI_REGISTRY -u $CI_REGISTRY_USER --password-stdin
