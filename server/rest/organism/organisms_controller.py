@@ -10,9 +10,8 @@ from ..utils import wrappers
 class OrganismsApi(Resource):
 
 	def get(self):
-		total, data = organisms_service.get_organisms(**request.args)
-		json_resp = dict(total=total,data=list(data.as_pymongo()))
-		return Response(json.dumps(json_resp), mimetype="application/json", status=200)
+		response, mimetype, status = organisms_service.get_organisms(request.args)
+		return Response(response, mimetype=mimetype, status=status)
     
 	@jwt_required()
 	@wrappers.data_manager_required()

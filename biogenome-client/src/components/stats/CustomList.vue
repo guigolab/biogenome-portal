@@ -1,6 +1,6 @@
 <template>
     <va-card class="px-3">
-        <va-card-title> {{ t(title) }} </va-card-title>
+        <va-card-title> {{ t(chart.title[locale]) }} </va-card-title>
         <va-card-content style="max-height: 350px; overflow: scroll">
             <va-list class="py-4">
                 <template v-for="([key, value], index) in Object.entries(sortedData(data))" :key="index">
@@ -27,15 +27,14 @@
 import { defineProps } from 'vue';
 import StatisticsService from '../../services/clients/StatisticsService'
 import { useI18n } from 'vue-i18n'
-const { t } = useI18n()
+import { InfoBlock } from '../../data/types';
+const { t,locale } = useI18n()
 const props = defineProps<{
-    model: string,
-    field: string,
-    title: string,
+    chart:InfoBlock,
     isHabitat?: boolean
 }>()
 
-const { data } = await StatisticsService.getModelFieldStats(props.model, { field: props.field })
+const { data } = await StatisticsService.getModelFieldStats(props.chart.model, props.chart.field )
 
 function sortedData(data: Record<string, number>): Record<string, number> {
 

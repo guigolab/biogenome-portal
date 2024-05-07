@@ -1,11 +1,10 @@
 import http from '../../http-axios'
 
-const base = http.base
 const download = http.download
 
 class GoaTService {
-  getGoatReport(params) {
-    return download.get('/goat_report',{params:params})
+  getGoatReport() {
+    return download.get('/goat_report')
   }
 }
 

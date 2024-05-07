@@ -1,16 +1,23 @@
 import { defineStore } from 'pinia'
-import { AssemblySearchForm } from '../data/types'
+import { models } from '../../config.json'
 
-const initSearchForm: AssemblySearchForm = {
-  start_date: '',
-  end_date: '',
-  filter: '',
-  filter_option: '',
-  sort_column: '',
-  sort_order: '',
-  assembly_level: '',
-  submitter: '',
-  blobtoolkit:false
+
+const parsedFilters = models.assemblies.filters as Record<string,any>[]
+
+const formEntries = parsedFilters.map(f => {
+  if (f.type === "date") {
+    return [[`${f.key}__gte`, ""], [`${f.key}__lte`, ""]]
+  }
+  return [[f.key, f.type === 'checkbox' ? false : ""]]
+}).flat()
+
+
+
+const initSearchForm = {
+  filter: "",
+  sort_order: "",
+  sort_column: "",
+  ...Object.fromEntries(formEntries)
 }
 
 const initPagination = {
@@ -27,7 +34,7 @@ export const useAssemblyStore = defineStore('assembly', {
   },
 
   actions: {
-    resetSeachForm() {
+    resetSearchForm() {
       this.searchForm = { ...initSearchForm }
     },
     resetPagination() {

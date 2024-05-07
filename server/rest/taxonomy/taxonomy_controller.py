@@ -2,7 +2,8 @@ from . import taxonomy_service
 from flask import Response,request
 from flask_restful import Resource
 import json
-from errors import NotFound
+
+from . import taxonomy_service
 
 class TreeApi(Resource):
     def get(self, taxid):
@@ -17,7 +18,10 @@ class TreeApi(Resource):
 
 class RelativeTaxonomyTreeApi(Resource):
     def get(self,taxid):
-        response = taxonomy_service.create_tree_from_relative_species(taxid, **request.args)
-        if not response:
-            raise NotFound
-        return Response(json.dumps(response), mimetype="application/json", status=200)
+        taxon, status = taxonomy_service.get_closest_taxon(taxid)
+        return Response(taxon.to_json(), mimetype="application/json", status=status)
+
+class ComputedTreeApi(Resource):
+    def get(self):
+        tree = taxonomy_service.get_computed_tree()
+        return Response(tree.to_json(),mimetype="application/json", status=200)

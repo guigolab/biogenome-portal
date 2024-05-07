@@ -1,52 +1,48 @@
-from db.models import BioSample,Assembly,Experiment,Organism,SampleCoordinates
+from db.models import BioSample,Assembly,Experiment
 from errors import NotFound
-from ..utils import ena_client
+from ..utils import ena_client, data_helper
 from ..organism import organisms_service
 from ..sample_location import sample_locations_service
-from datetime import datetime
 from mongoengine.queryset.visitor import Q
 import os
 
-PROJECTS = [p.strip() for p in os.getenv('PROJECTS').split(',') if p] if os.getenv('PROJECTS') else None
 
+PROJECTS = [p.strip() for p in os.getenv('PROJECTS').split(',') if p] if os.getenv('PROJECTS') else None
+FIELDS_TO_EXCLUDE = ['id','created']
 MODEL_LIST = {
     'assemblies':{'model':Assembly, 'id':'accession'},
-    'sub_samples':{'model':BioSample, 'id':'accession'},
     'experiments':{'model':Experiment, 'id':'experiment_accession'},
+    'sub_samples':{'model':BioSample, 'id':'experiment_accession'}
     }
 
-def get_biosamples(offset=0,limit=20,
-                    filter=None, filter_option="scientific_name",
-                    start_date=None, end_date=datetime.utcnow,
-                    sort_column=None, sort_order=None):
-    
-    biosamples = BioSample.objects().exclude('id', 'created')
+def lookup_data(accession):
+    biosample = BioSample.objects(accession=accession).first()
+    if not biosample:
+        raise NotFound
+    sub_samples =  BioSample.objects(__raw__ = {'metadata.sample derived from' : accession}).count()
+    assemblies = Assembly.objects(sample_accession=accession).count()
+    experiments = Experiment.objects(sample_accession=accession).count()
+    return dict(sub_samples=sub_samples,assemblies=assemblies,experiments=experiments)
 
+
+
+
+def get_biosamples(args):
+    filter = get_filter(args.get('filter'))
+    selected_fields = [v for k, v in args.items(multi=True) if k.startswith('fields[]')]
+    if not selected_fields:
+        selected_fields = ['accession', 'scientific_name', 'taxid']
+    return data_helper.get_items(args, 
+                                 BioSample, 
+                                 FIELDS_TO_EXCLUDE, 
+                                 filter,
+                                 selected_fields)
+
+def get_filter(filter):
     if filter:
-        filter_query = get_filter(filter,filter_option)
-        biosamples = biosamples.filter(filter_query)
-
-    if start_date and end_date:
-        biosamples = biosamples.filter((Q(metadata__collection_date__gte=start_date) & Q(metadata__collection_date__lte=end_date)))
-    
-    if sort_column:
-        if sort_column == 'collection_date':
-            sort_column = 'metadata.collection_date'
-        sort = '-'+sort_column if sort_order == 'desc' else sort_column
-        biosamples = biosamples.order_by(sort)
-    return biosamples.count(), biosamples[int(offset):int(offset)+int(limit)]
-
-def get_filter(filter, option):
-    if option == 'taxid':
-        return (Q(taxid__iexact=filter) | Q(taxid__icontains=filter))
-    elif option == 'habitat':
-        return (Q(metadata__habitat__iexact=filter) | Q(metadata__habitat__icontains=filter))
-    elif option == 'gal':
-        return (Q(metadata__GAL__iexact=filter) | Q(metadata__GAL__icontains=filter))
-    elif option == 'accession':
-        return (Q(accession__iexact=filter) | Q(accession__icontains=filter))
+        return (Q(taxid__iexact=filter) | Q(taxid__icontains=filter)) |  (Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter))
     else:
-        return (Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter))
+        return None
 
 def get_or_create_biosample(accession):
     biosample = BioSample.objects(accession=accession).first()

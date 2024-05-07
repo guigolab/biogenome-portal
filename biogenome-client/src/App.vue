@@ -4,10 +4,10 @@
 <script setup>
   import { onMounted } from 'vue'
   import AppLayout from './layouts/AppLayout.vue'
-  import {appInfo,tracker} from '../config.json'
+  import {title,tracker} from '../config.json'
 
     onMounted(()=>{
-      document.title = appInfo.title
+      document.title = title
       if(tracker){
         const trackerScript = document.createElement('script')
         trackerScript.setAttribute("type", "text/javascript")

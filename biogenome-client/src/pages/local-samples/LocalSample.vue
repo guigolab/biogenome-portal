@@ -1,42 +1,46 @@
 <template>
-  <va-breadcrumbs class="va-title" color="primary">
-    <va-breadcrumbs-item :to="{ name: 'local_samples' }" :label="t('localSampleDetails.breadcrumb')" />
-    <va-breadcrumbs-item active :label="id" />
-  </va-breadcrumbs>
-  <va-divider />
-  <va-skeleton v-if="isLoading" height="90vh" />
-  <div v-else-if="errorMessage">
-    <va-card stripe stripe-color="danger">
-      <va-card-content>
-        {{ errorMessage }}
-      </va-card-content>
-    </va-card>
-  </div>
+  <DetailsSkeleton v-if="isLoading" />
   <div v-else>
-    <DetailsHeader :details="details" />
-    <KeyValueCard v-if="localSampleSelectedMetadata.length && metadata" :metadata="metadata"
-      :selected-metadata="localSampleSelectedMetadata" />
-    <div class="row row-equal">
-      <div v-if="coordinates.length" class="flex lg6 md6 sm12 xs12 chart">
-        <LeafletMap :coordinates="coordinates" />
+    <div v-if="sample">
+      <DetailsHeader v-if="details" :details="details" />
+      <VaTabs v-model="tab">
+        <template #tabs>
+          <VaTab :label="t('tabs.metadata')" name="metadata"></VaTab>
+          <VaTab v-if="coordinates.length" :label="t('tabs.map')" name="map"></VaTab>
+        </template>
+      </VaTabs>
+      <div class="row" v-if="tab === 'map'">
+        <div style="height: 450px;" class="flex lg12 md12 sm12 xs12">
+          <LeafletMap :coordinates="coordinates" />
+        </div>
       </div>
-      <div v-if="metadata && Object.keys(metadata).length" class="flex lg12 md12 sm12 xs12">
-        <MetadataTreeCard :metadata="metadata" />
+      <div class="row" v-else>
+        <div class="flex lg12 md12 sm12 xs12">
+          <MetadataTreeCard :metadata="Object.entries(sample.metadata)" />
+        </div>
       </div>
+    </div>
+    <div v-else>
+      <VaAlert color="danger" class="mb-6">
+        {{ errorMessage || "Something happened" }}
+      </VaAlert>
     </div>
   </div>
 </template>
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watchEffect } from 'vue'
 import LocalSampleService from '../../services/clients/LocalSampleService'
 import { useI18n } from 'vue-i18n'
 import { Details, SampleLocations } from '../../data/types'
-import { localSampleSelectedMetadata } from '../../../config.json'
-import KeyValueCard from '../../components/ui/KeyValueCard.vue'
-import DetailsHeader from '../../components/ui/DetailsHeader.vue'
+import DetailsHeader from '../../components/common/DetailsHeader.vue'
 import MetadataTreeCard from '../../components/ui/MetadataTreeCard.vue'
 import GeoLocationService from '../../services/clients/GeoLocationService'
 import LeafletMap from '../../components/maps/LeafletMap.vue'
+import DetailsSkeleton from '../common/components/DetailsSkeleton.vue'
+import { AxiosError } from 'axios'
+
+const tab = ref('metadata')
+
 const isLoading = ref(true)
 const errorMessage = ref<string | any>(null)
 const details = ref<
@@ -46,23 +50,35 @@ const { t } = useI18n()
 const props = defineProps<{
   id: string
 }>()
-const metadata = ref<Record<string, any> | null>(null)
+
+const sample = ref<Record<string, any>>()
 const coordinates = ref<SampleLocations[]>([])
 
-onMounted(async () => {
+watchEffect(async () => {
+  await getData(props.id)
+})
+
+
+async function getData(id: string) {
   try {
     isLoading.value = true
-    const { data } = await LocalSampleService.getLocalSample(props.id)
-    // localSample.value = {...data}
-    if (data.metadata) metadata.value = data.metadata
-    details.value = parseDetails(data)
-    await getCoordinates(props.id)
-  } catch (e) {
-    errorMessage.value = e
+    errorMessage.value = null
+    const { data } = await LocalSampleService.getLocalSample(id)
+    details.value = { ...parseDetails(data) }
+    sample.value = { ...data }
+
+    await getCoordinates(id)
+  } catch (error) {
+    const axiosError = error as AxiosError
+    if (axiosError.code === "404") {
+      errorMessage.value = id + " Not Found"
+    } else {
+      errorMessage.value = axiosError.message
+    }
   } finally {
     isLoading.value = false
   }
-})
+}
 async function getCoordinates(accession: string) {
   try {
     isLoading.value = true
@@ -86,7 +102,7 @@ function parseDetails(localSample: Record<string, any>) {
   return details
 }
 </script>
-  
+
 <style lang="scss">
 .chart {
   height: 400px;
@@ -111,4 +127,3 @@ function parseDetails(localSample: Record<string, any>) {
   margin-top: 10px;
 }
 </style>
-  

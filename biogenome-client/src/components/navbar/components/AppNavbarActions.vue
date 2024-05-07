@@ -1,7 +1,7 @@
 <template>
   <div class="app-navbar-actions">
     <LanguageDropdown class="app-navbar-actions__item" />
-    <ProfileDropdown class="app-navbar-actions__item app-navbar-actions__item--profile">
+    <ProfileDropdown v-if="cms" class="app-navbar-actions__item app-navbar-actions__item--profile">
       <va-chip icon="settings" flat color="primary" v-if="globalStore.isAuthenticated"
         :to="{ name: 'cms-organisms' }">{{ userName }}</va-chip>
     </ProfileDropdown>
@@ -12,6 +12,7 @@
 import LanguageDropdown from './dropdowns/LanguageDropdown.vue'
 import ProfileDropdown from './dropdowns/ProfileDropdown.vue'
 import { useGlobalStore } from '../../../stores/global-store'
+import { cms } from "../../../../config.json";
 
 const globalStore = useGlobalStore()
 

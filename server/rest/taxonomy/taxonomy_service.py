@@ -1,8 +1,30 @@
-from db.models import Organism, TaxonNode
+from db.models import Organism, TaxonNode,ComputedTree
 from ..utils import ena_client
 from ..organism import organisms_service
 from db.enums import INSDCStatus
 from collections import deque
+from ..cronjob import cronjob_service
+from datetime import datetime
+
+def get_computed_tree():
+    computed_tree = ComputedTree.objects().exclude('id').first()
+    if not computed_tree or is_older_than_one_day(computed_tree.last_update):
+        cronjob_service.compute_tree()
+        computed_tree = ComputedTree.objects().exclude('id').first()
+    return computed_tree
+
+def is_older_than_one_day(date):
+    # Get current date and time
+    current_date = datetime.now()
+    
+    # Calculate the difference between the current date and the given date
+    difference = current_date - date
+    
+    # Check if the difference is greater than 1 day
+    if difference.days > 1:
+        return True
+    else:
+        return False
 
 def create_tree(taxid):
     # Fetch the initial taxon node
@@ -74,11 +96,34 @@ def dfs_generator(stack,tree,taxids):
             tree["children"].append(child_dict)
     return tree
 
+
+## get the closest taxon to the one queried and return its taxonomic identifier
+
+def get_closest_taxon(taxid):
+    taxon = TaxonNode.objects(taxid=taxid).exclude('id').first()
+    if taxon:
+        return taxon, 200
+    
+    response_tuple = organisms_service.retrieve_taxonomic_info(taxid)
+    if not response_tuple:
+        return f"Taxon with taxid {taxid} not found in INSDC", 400
+    scientific_name, common_name, lineage = response_tuple
+    existing_taxons = TaxonNode.objects(taxid__in=[node.get('taxId') for node in lineage]).exclude('id')
+    for node in lineage:
+        taxid = node.get('taxId')
+        for ex_taxon in existing_taxons:
+            if taxid == ex_taxon.taxid:
+                return ex_taxon, 200
+
+
+    #intersect lineage with the taxons present in the DB
+        
+
 def create_tree_from_relative_species(taxid, insdc_status=INSDCStatus.ASSEMBLIES):
     organism = Organism.objects(taxid=taxid).first()
     response=dict(tree=dict(), taxon='')
     if not organism:
-        taxon_xml = ena_client.get_taxon_from_ena(taxid)
+        taxon_xml = ena_client.get_taxon_from_ena_browser(taxid)
         if not taxon_xml:
             return
         ena_lineage= organisms_service.parse_taxon_from_ena(taxon_xml)

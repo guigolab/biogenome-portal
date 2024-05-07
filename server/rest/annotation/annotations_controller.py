@@ -5,7 +5,6 @@ from . import annotations_service
 from errors import NotFound
 import json
 from flask_jwt_extended import jwt_required
-from bson.json_util import dumps, JSONOptions, DatetimeRepresentation
 from ..utils import wrappers
 
 
@@ -15,11 +14,8 @@ FIELDS_TO_EXCLUDE = ['id','created']
 
 class AnnotationsApi(Resource):
     def get(self):
-        json_options = JSONOptions()
-        json_options.datetime_representation = DatetimeRepresentation.ISO8601
-        total, data = annotations_service.get_annotations(**request.args)
-        json_resp = dict(total=total,data=list(data.as_pymongo()))
-        return Response(dumps(json_resp, indent=4, sort_keys=True, json_options=json_options), mimetype="application/json", status=200)
+        response, mimetype, status = annotations_service.get_annotations(request.args)
+        return Response(response, mimetype=mimetype, status=status)
 
     @wrappers.admin_required()
     @jwt_required()

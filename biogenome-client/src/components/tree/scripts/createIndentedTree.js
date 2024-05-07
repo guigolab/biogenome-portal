@@ -2,15 +2,15 @@ import * as d3 from 'd3'
 const width = 768
 
 
-export function createIndentedTree(ref, root, router){
+export function createIndentedTree(ref, root, router) {
     const nodeSize = 17
     const nodes = root.descendants()
     const svg = d3
-    .select(ref.value)
-    .attr('viewBox', [-nodeSize / 2, (-nodeSize * 3) / 2, width, (nodes.length + 1) * nodeSize])
-    .attr('font-family', 'sans-serif')
-    .attr('font-size', 10)
-    .style('overflow', 'visible')
+        .select(ref.value)
+        .attr('viewBox', [-nodeSize / 2, (-nodeSize * 3) / 2, width, (nodes.length + 1) * nodeSize])
+        .attr('font-family', 'sans-serif')
+        .attr('font-size', 10)
+        .style('overflow', 'visible')
 
     const link = svg
         .append('g')
@@ -27,11 +27,11 @@ export function createIndentedTree(ref, root, router){
         )
 
     const node = svg
-    .append('g')
-    .selectAll('g')
-    .data(nodes)
-    .join('g')
-    .attr('transform', (d) => `translate(0,${d.index * nodeSize})`)
+        .append('g')
+        .selectAll('g')
+        .data(nodes)
+        .join('g')
+        .attr('transform', (d) => `translate(0,${d.index * nodeSize})`)
 
     node
         .append('circle')
@@ -44,17 +44,18 @@ export function createIndentedTree(ref, root, router){
         .attr('dy', '0.32em')
         .attr('x', (d) => d.depth * nodeSize + 6)
         .text((d) => `${d.data.name} (${d.data.rank})`)
+        .style('cursor', 'pointer')
         .on('click', (event, d) => {
-            const path = d.data.leaves === 0? 
-            {name:'organism', params:{taxid:d.data.taxid}}:{name:'taxon', params:{taxid:d.data.taxid}}
+            const path = d.data.leaves === 0 ?
+                { name: 'organism', params: { taxid: d.data.taxid } } : { name: 'taxon', params: { taxid: d.data.taxid } }
             router.push(path)
         })
 
     node.append('title').text((d) =>
         d
-          .ancestors()
-          .reverse()
-          .map((d) => `${d.data.name} (${d.data.rank})`)
-          .join(' > '),
-      )
+            .ancestors()
+            .reverse()
+            .map((d) => `${d.data.name} (${d.data.rank})`)
+            .join(' > '),
+    )
 }

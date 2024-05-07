@@ -4,6 +4,8 @@ from .enums import INSDCStatus, GoaTStatus, TargetListStatus, PublicationSource,
 import mongoengine as db
 import os
 
+GOAT_PROJECT_NAME = os.getenv('GOAT_PROJECT_NAME')
+
 def handler(event):
     """Signal decorator to allow use of callback functions as class decorators."""
     def decorator(fn):
@@ -16,33 +18,38 @@ def handler(event):
 
 @handler(db.pre_save)
 def update_organism_status(sender, document, **kwargs):
-    if not os.getenv('PROJECT_ACCESSION'):
-        return
     taxid = document.taxid
+
+    #update organism links
     document.assemblies =  Assembly.objects(taxid=taxid).scalar('accession')
     document.experiments = Experiment.objects(taxid=taxid).scalar('experiment_accession')
     document.local_samples = LocalSample.objects(taxid=taxid).scalar('local_id')
     document.biosamples = BioSample.objects(taxid=taxid).scalar('accession')
     document.annotations = GenomeAnnotation.objects(taxid=taxid).scalar('name')
+
+    #update insdc_status
     if document.assemblies:
         document.insdc_status= INSDCStatus.ASSEMBLIES
-        document.goat_status=GoaTStatus.INSDC_SUBMITTED
     elif document.experiments:
         document.insdc_status= INSDCStatus.READS
-        document.goat_status=GoaTStatus.IN_ASSEMBLY
     elif document.biosamples:
         document.insdc_status=INSDCStatus.SAMPLE
-        document.goat_status = GoaTStatus.SAMPLE_ACQUIRED
     elif document.local_samples:
         document.insdc_status=None
-        document.goat_status = GoaTStatus.SAMPLE_COLLECTED
-    if document.publications:
-        document.goat_status = GoaTStatus.PUBLICATION_AVAILABLE
-    update_date = GoaTUpdateDate.objects().first()
-    if not update_date:
-        GoaTUpdateDate(updated=datetime.datetime.utcnow,taxid=document.taxid).save()
-    else:
-        update_date.save(updated=datetime.datetime.utcnow,taxid=document.taxid)
+
+    #update goat status
+    if GOAT_PROJECT_NAME:
+        current_goat_status=document.goat_status
+        if document.assemblies:
+            document.goat_status=GoaTStatus.INSDC_SUBMITTED
+        elif document.publications:
+            document.goat_status = GoaTStatus.PUBLICATION_AVAILABLE
+        if current_goat_status != document.goat_status:
+            update_date = GoaTUpdateDate.objects().first()
+            if not update_date:
+                GoaTUpdateDate(updated=datetime.datetime.now(),taxid=document.taxid).save()
+            else:
+                update_date.save(updated=datetime.datetime.now(),taxid=document.taxid)
 
 
 @handler(db.pre_save)
@@ -248,14 +255,6 @@ class Publication(db.EmbeddedDocument):
     source = db.EnumField(PublicationSource)
     id = db.StringField()
 
-class OrganismPublication(db.Document):
-    source = db.EnumField(PublicationSource)
-    publication_id = db.StringField(required=True, unique=True)
-    taxid = db.StringField(required=True, unique=True)
-    title = db.StringField()
-    description = db.StringField()
-    metadata = db.DictField()
-
 @delete_organism_related_data.apply
 @update_organism_status.apply
 class Organism(db.Document):
@@ -305,3 +304,78 @@ class BioGenomeUser(db.Document):
     password=db.StringField(required=True)
     role=db.EnumField(Roles, required=True)
     species=db.ListField(db.StringField())
+
+class GoaTStatus(db.Document):
+    goat_status = db.EnumField(GoaTStatus)
+    target_list_status = db.EnumField(TargetListStatus)
+    scientific_name = db.StringField(required=True,unique=True)
+    taxid = db.StringField(required= True,unique=True)
+    meta = {
+        'indexes': [
+            'scientific_name',
+            'taxid'
+        ],
+        'strict': False
+    }
+
+class INSDCStatus(db.Document):
+    scientific_name = db.StringField(required=True,unique=True)
+    taxid = db.StringField(required= True,unique=True)
+    insdc_status = db.EnumField(INSDCStatus)
+    meta = {
+        'indexes': [
+            'scientific_name',
+            'taxid'
+        ],
+        'strict': False
+    }
+
+class OrganismPublication(db.Document):
+    source = db.EnumField(PublicationSource)
+    id = db.StringField()
+    taxid = db.StringField(required=True)
+
+class OrganismNames(db.Document):
+    value=db.StringField()
+    lang=db.StringField()
+    locality=db.StringField()
+    taxid=db.StringField(required=True)
+
+class ComputedTree(db.Document):
+    last_update = db.DateTimeField(default=datetime.datetime.now())
+    tree = db.DictField()
+
+# class OrganismMetadata(db.Document):
+#     publications = db.ListField(db.EmbeddedDocumentField(Publication))
+#     metadata = db.DictField()
+#     tolid_prefix = db.StringField()
+#     links = db.ListField(db.URLField())
+#     common_names= db.ListField(db.EmbeddedDocumentField(CommonName))
+#     countries = db.ListField(db.StringField())
+#     scientific_name = db.StringField(required=True,unique=True)
+#     taxid = db.StringField(required= True,unique=True)
+#     image = db.URLField()
+#     image_urls = db.ListField(db.URLField())
+#     meta = {
+#         'indexes': [
+#             'scientific_name',
+#             'taxid'
+#         ],
+#         'strict': False
+#     }
+
+# class OrganismPublication(db.Document):
+#     source = db.EnumField(PublicationSource)
+#     publication_id = db.StringField(required=True, unique=True)
+#     taxid = db.StringField(required=True)
+#     scientific_name = db.StringField(required=True)
+#     title = db.StringField()
+#     description = db.StringField()
+#     metadata = db.DictField()
+#     meta = {
+#         'indexes': [
+#             'scientific_name',
+#             'taxid'
+#         ],
+#         'strict': False
+#     }

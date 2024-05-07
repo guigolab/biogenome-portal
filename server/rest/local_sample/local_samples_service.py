@@ -1,44 +1,31 @@
-from db.models import LocalSample,SampleCoordinates,Organism,BioGenomeUser
+from db.models import LocalSample,Organism,BioGenomeUser
 from errors import NotFound
 from ..organism import organisms_service
 from datetime import datetime
 from mongoengine.queryset.visitor import Q
 from flask_jwt_extended import get_jwt
+from ..utils import data_helper
 
+FIELDS_TO_EXCLUDE = ['id']
 
-def get_local_samples(offset=0,limit=20,
-                        filter=None, filter_option="scientific_name",
-                        sort_column=None,sort_order=None,
-                        start_date=None, end_date=datetime.utcnow, user=None):
+def get_local_samples(args):
     
-    local_samples = LocalSample.objects().exclude('id')
+    filter = get_filter(args.get('filter'))
+    selected_fields = [v for k, v in args.items(multi=True) if k.startswith('fields[]')]
+    if not selected_fields:
+        selected_fields = ['local_id', 'scientific_name', 'taxid']
+    return data_helper.get_items(args, 
+                                 LocalSample, 
+                                 FIELDS_TO_EXCLUDE, 
+                                 filter,
+                                 selected_fields)
 
-    filter_query= get_filter(filter,filter_option) if filter else None
 
-    if filter_query:
-        local_samples = local_samples.filter(filter_query)
-
-    if start_date:
-        date_query = (Q(created__gte=start_date) & Q(created__lte=end_date))
-        local_samples = local_samples.filter(date_query)
-
-    if user:
-        user_object = BioGenomeUser.objects(name=user).first()
-        local_samples = local_samples.filter(taxid__in=user_object.species)
-
-    if sort_column:
-        sort = '-'+sort_column if sort_order == 'desc' else sort_column
-        local_samples = local_samples.order_by(sort)
-    return local_samples.count(), local_samples[int(offset):int(offset)+int(limit)]
-
-def get_filter(filter, option):
-    if option == 'taxid':
-        return (Q(taxid__iexact=filter) | Q(taxid__icontains=filter))
-    elif option == 'local_id':
-        return (Q(local_id__iexact=filter) | Q(local_id__icontains=filter))
+def get_filter(filter):
+    if filter:
+        return (Q(taxid__iexact=filter) | Q(taxid__icontains=filter)) | (Q(local_id__iexact=filter) | Q(local_id__icontains=filter)) |  (Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter))
     else:
-        return (Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter))
-
+        return None
 
 def delete_local_sample(id):
     claims = get_jwt()

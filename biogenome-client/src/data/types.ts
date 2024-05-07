@@ -12,7 +12,16 @@ export type TPieChartData = ChartData<'pie'>
 
 export type TChartData = TLineChartData | TBarChartData | TBubbleChartData | TDoughnutChartData | TPieChartData
 
+export type LangOption = Record<'es-ct'|'gb', string>
+
+export interface PageHeaderConfig {
+  title: LangOption,
+  description: LangOption
+}
+export type DataModel = 'biosamples' | 'experiments' | 'organisms' | 'annotations' | 'assemblies' | 'local_samples' | 'status'
+
 export type Model = 'biosamples' | 'experiments' | 'organisms' | 'annotations' | 'assemblies' | 'users' | 'local_samples'
+
 export type Metatada = {
   key: string
   value: string
@@ -28,8 +37,12 @@ interface Node {
   annotations?: number
 }
 
+export type DateRange = {
+  start: Date | null
+  end: Date | null
+}
 export type Filter = {
-  label: string
+  label: Record<string, any>
   placeholder?: string
   type: 'input' | 'select' | 'date' | 'checkbox'
   options?: Array<string | Record<string, any>>
@@ -38,7 +51,6 @@ export type Filter = {
 
 export interface SearchForm {
   filter: string
-  filter_option?: string
   sort_column: string
   sort_order: string
   start_date?: string
@@ -58,7 +70,6 @@ export type StatusSearchForm = {
   goat_status: string
   target_list_status: string
   filter: string
-  filter_option: string
 }
 
 export type BioSampleSearchForm = SearchForm
@@ -128,21 +139,34 @@ type Sequence = {
   adapter: Adapter
 }
 
-
 export type AssemblyAdapter = {
   name: string
   sequence: Sequence
   refNameAliases?: Record<string, any>
 }
 
+export type HighLightedMetatada = {
+  key: string
+  color: string
+}
+
+export type ModelConfig = {
+  title?: Record<string, string>
+  description?: Record<string, string>
+  charts?: InfoBlock[]
+  filters: Filter[]
+  columns: string[]
+  metadata?: HighLightedMetatada[]
+}
+
 export type InfoBlock = {
   field: string,
   model: string,
-  title: string,
-  label: string,
+  title: Record<string, string>,
+  label: Record<string, string>,
   type: 'pie' | 'dateline' | 'bar' | 'contribution' | 'list' | 'habitat'
-  color: string
   class: string
+  color?:string
 }
 
 export interface Assembly {
@@ -160,6 +184,8 @@ export interface TrackData {
   name: string;
   gff_gz_location: string;
   tab_index_location: string;
+  metadata: Record<string, any>
+
 }
 export interface BioSample {
   accession: string

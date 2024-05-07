@@ -1,19 +1,21 @@
 <template>
-    <va-card class="row justify-space-between align-center">
-        <div class="flex">
-            <h6 class="va-h6">
-                <router-link style="color: inherit;"
-                    :to="selectedSample.is_local_sample ?
-                        { name: 'local_sample', params: { id: selectedSample.sample_accession } } : { name: 'biosample', params: { accession: selectedSample.sample_accession } }">
-                    {{ selectedSample.sample_accession }}
-                </router-link>
-            </h6>
-            <p class="va-text-secondary">{{ data.scientific_name }}</p>
-        </div>
-        <div class="flex">
-            <va-button preset="plain" size="small" v-if="data.assemblies && data.assemblies.length" icon="fa-dna" color="background-tertiary" />
-            <va-button class="ml-2" preset="plain" size="small" v-if="data.experiments && data.experiments.length" icon="fa-file-lines" color="background-tertiary" />
-        </div>
+    <va-card class="row justify-space-between align-center" style="padding: 5px;">
+            <div class="flex">
+                <h6 class="va-h6">
+                    <router-link style="color: inherit;"
+                        :to="selectedSample.is_local_sample ?
+                            { name: 'local_sample', params: { id: selectedSample.sample_accession } } : { name: 'biosample', params: { accession: selectedSample.sample_accession } }">
+                        {{ selectedSample.sample_accession }}
+                    </router-link>
+                </h6>
+                <p class="va-text-secondary">{{ data.scientific_name }}</p>
+            </div>
+            <div class="flex">
+                <va-button preset="plain" size="small" v-if="data.assemblies && data.assemblies.length" icon="fa-dna"
+                    color="background-tertiary" />
+                <va-button class="ml-2" preset="plain" size="small" v-if="data.experiments && data.experiments.length"
+                    icon="fa-file-lines" color="background-tertiary" />
+            </div>
     </va-card>
 </template>
 <script setup lang="ts">

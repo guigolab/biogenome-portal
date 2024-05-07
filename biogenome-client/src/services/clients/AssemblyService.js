@@ -12,6 +12,12 @@ class AssemblyService {
   getRelatedAnnotations(accession){
     return base.get(`/assemblies/${accession}/annotations`)
   }
+  getAssemblyLookup(accession){
+    return base.get(`/assemblies/${accession}/lookup`)
+  }
+  getRelatedChromosomes(accession){
+    return base.get(`/assemblies/${accession}/chromosomes`)
+  }
 }
 
 export default new AssemblyService()

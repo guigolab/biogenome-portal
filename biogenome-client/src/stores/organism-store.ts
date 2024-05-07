@@ -8,7 +8,6 @@ const initSearchForm: OrganismSearchForm = {
   parent_taxid: '',
   target_list_status: '',
   filter: '',
-  filter_option: '',
   sort_column: '',
   sort_order: '',
   country: '',

@@ -1,289 +1,125 @@
 {
-  "auth": {
-    "login": "Login",
-    "password": "Password"
-  },
-  "buttons":{
-    "submit":"Submit",
-    "reset":"Reset",
-    "search":"Search",
-    "download":"Download",
-    "view":"View"
-  },
-  "table":{
-    "total":"Total:"
-  },
-  "uiComponents":{
-    "relatedDataCard":{
-      "biosamples":"BioSamples",
-      "local_samples":"LocalSamples",
-      "assemblies":"Assemblies",
-      "experiments":"Experiments",
-      "annotations":"Annotations"
+    "auth": {
+        "login": "Login",
+        "password": "Password",
+        "logout": "Logout"
     },
-    "metadata": "Metadata",
-    "wikipedia": "Wikipedia",
-    "taxonomyCard":"Click on a node to see the taxonomic details"
-  },
-  "modelStats":{
-    "organisms":"Organisms",
-    "experiments":"Experiments",
-    "assemblies":"Assemblies",
-    "biosamples":"BioSamples",
-    "localSamples":"Local Samples",
-    "annotations":"Annotations"
-  },
-  "dashboard": {
-    "statistics":{
-      "organisms":"Organisms",
-      "biosamples":"BioSamples",
-      "experiments":"Experiments",
-      "assemblies":"Assemblies",
-      "annotations":"Annotations",
-      "local_samples":"Local Samples"
+    "buttons": {
+        "submit": "Submit",
+        "reset": "Reset",
+        "search": "Search",
+        "download": "Download",
+        "downloadTSV": "Download TSV Report",
+        "sort": "Sort",
+        "view": "View Details",
+        "fields": "Fields",
+        "filters": "Filters",
+        "goat_report": "Download Goat Report",
+        "NCBI": "View in NCBI",
+        "ENA": "View in ENA"
     },
-    "toExplorer": "Explore Taxonomy",
-    "info":{
-      "exploreGallery":"Explore gallery"
+    "tabs": {
+        "table": "Table",
+        "charts": "Statistics",
+        "metadata": "Metadata",
+        "images": "Images",
+        "assemblies": "Related Assemblies",
+        "biosamples": "Related BioSamples",
+        "reads": "Related Reads",
+        "annotations": "Related Annotations",
+        "local_samples": "Related Local samples",
+        "experiments": "Related Experiments",
+        "names": "Vernacular Names",
+        "map": "Map",
+        "publications": "Publications",
+        "jbrowse": "Genome Browser",
+        "chromosomes": "Related Chromosomes",
+        "wiki": "Wikipedia",
+        "organisms": "Related Organisms"
     },
-    "charts": {
-      "firstPiechart":{
-        "title":"Platform Used",
-        "label":"Experiments by instrument platform"
-      },
-      "secondPiechart":{
-        "title":"Organism INSDC submission status",
-        "label":"Organism INSDC submission status"
-      },
-      "dateLineChart":{
-        "title":"Assemblies submitted by month",
-        "label":"Assemblies"
-      }
+    "download": {
+        "fieldsLabel": "Fields selection",
+        "fieldsPlaceholder": "Select multiple fields",
+        "fieldsSearchPlaceholder": "Type here...",
+        "fieldsMessage": "Select multiple fields or type a new field, if the field is contained in metadata type: 'metadata.fieldYouWantToSelect'",
+        "applyFilters": "Apply current filters"
     },
-    "tree":"Phylogenetic Tree"
-  },
-  "organismList":{
-    "breadcrumb":"Organisms",
-    "filters":{
-      "searchInput":"Search Organism",
-      "searchSelect":"Search By",
-      "searchCountry":"Search by country",
-      "insdcStatus":"INSDC Status"
+    "search": {
+        "total": "Total:",
+        "filterBy": "Filter By",
+        "sortColumn": "Sort Column",
+        "sortOrder": "Sort Order",
+        "date": "Select Date"
+    },
+    "routes": {
+        "dashboard": "Dashboard",
+        "assemblies": "Assemblies",
+        "experiments": "Experiments",
+        "biosamples": "BioSamples",
+        "local_samples": "Local Samples",
+        "annotations": "Annotations",
+        "status": "Sequencing Status",
+        "samples-map": "2D Organisms Map",
+        "countries": "Countries Map",
+        "taxonomy": "Taxonomy Explorer",
+        "organisms": "Organisms"
+    },
+    "commons": {
+        "wikipedia": "Wikipedia"
+    },
+    "maps": {
+        "samples-map": {
+            "title": "Samples Map",
+            "description": "Samples geographic locations"
+        },
+        "countries": {
+            "title": "Countries Map",
+            "description": "Organisms collected in each country"
+        }
+    },
+    "taxon": {
+        "title": "Taxonomy Explorer",
+        "description": "D3 Hyperbolic Tree: drag and click over a taxon to see its taxonomic details",
+        "search": {
+            "placeholder": "Search a taxon",
+            "noOptions": "No taxons found!",
+            "rootLoad": "Load root taxon"
+        },
+        "related": {
+            "button": "Can't Find It?",
+            "header": "Taxon Lookup",
+            "description": "Provide a NCBI Taxonomic identifier (taxid) to find the closest taxon present in the database.\n If the exact taxon is present, it will be returned instead",
+            "placeholder": "Type a taxid"
+        }
+    },
+    "sidebar": {
+        "dashboard": "Dashboard",
+        "organisms": "Organisms",
+        "experiments": "Experiments",
+        "assemblies": "Assemblies",
+        "biosamples": "BioSamples",
+        "local_samples": "Local Samples",
+        "annotations": "Annotations",
+        "goat_status": "Goat Status"
+    },
+    "lookup": {
+        "name": "Taxonomy Look up",
+        "description": "Return the closest phylogenetic Taxon",
+        "placeholder": "Search by NCBI TaxID"
+    },
+    "language": {
+        "english": "English",
+        "catalan": "Catalan",
+        "french": "French",
+        "spanish": "Spanish",
+        "german": "German"
+    },
+    "tree": {
+        "indented": {
+            "title": "Taxonomic tree",
+            "description": "Click on a name"
+        },
+        "message": "Due to performance reasons this taxonomic tree is precomputed and may not represent the current status of the database",
+        "last_update": "Last update"
     }
-  },
-  "organismDetails":{
-    "images":"Images",
-    "publications":"Publications",
-    "vernacularNames":"Vernacular Names",
-    "breadcrumb":"Organisms",
-    "lineage":"Taxon lineage"
-  },
-  "annotationDetails":{
-    "breadcrumb":"Annotations",
-    "genomeBrowser":"Genome Browser"
-  },
-  "annotationList":{
-    "filters":{
-      "textInput":"Search Annotation",
-      "filterBy":"Filter By",
-      "sortColumn":"Sort Column",
-      "sortOrder":"Sort Order",
-      "date":"Date"
-    }
-  },
-  "assemblyList":{
-    "filters":{
-      "submitterSelect":"label",
-      "dateRangeSelect":{
-        "label":"Date",
-        "placeholder":"Select a date"
-      },
-      "searchInput":"Search Assembly",
-      "searchSelect":"Filter By",
-      "assemblyLevel":"Assembly level",
-      "sortColumn":"Sort Column",
-      "sortOrder":"Sort Order",
-      "date": "Date",
-      "blobtoolkit": "BlobToolKit"
-    },
-    "charts":{
-      "pieChart":{
-        "title":"Assembly Levels",
-        "label":"Assemblies by assembly level"
-      },
-      "dateLineChart":{
-        "title":"Assemblies submitted by month",
-        "label":"Assemblies"
-      },
-      "contributorList":{
-        "title":"Submitters"
-      }
-    }
-  },
-  "experimentDetails":{
-    "instrumentPlatform":"Instrument Platform",
-    "instrumentModel":"Instrument Model",
-    "baseCount":"Base Count",
-    "centerName":"Center Name",
-    "firstCreated":"First Created"
-  },
-  "experimentList":{
-    "breadcrumb":"Experiments",
-    "charts":{
-      "pieChart":{
-        "title":"Platform Used",
-        "label":"Experiments by instrument platform"
-      },
-      "dateLineChart":{
-        "label":"Experiments",
-        "title":"Experiments submitted by month"
-      },
-      "contributorList":"Sequencing Centers"
-    },
-    "filters":{
-      "textInput":"Search Experiment",
-      "filterBy":"Filter By",
-      "sequencingCenters":"Sequencing Centers",
-      "sortColumn":"Sort Column",
-      "sortOrder":"Sort Order",
-      "date":"Date"
-    }
-  },
-  "assemblyDetails":{
-    "breadcrumb":"Assemblies",
-    "contigN50":"Contig n50",
-    "genomeSize":"Genome Size",
-    "assemblyLevel":"Assembly Level",
-    "chromosomes": "Chromosomes",
-    "submitter":"Submitter",
-    "submissionDate":"Submission Date",
-    "genomeBrowser":"Genome Browser"
-  },
-  "biosampleList":{
-    "breadcrumb":"BioSamples",
-    "filters":{
-      "searchInput":"Search BioSample",
-      "searchSelect":"Filter By",
-      "sortColumn":"Sort Column",
-      "sortOrder":"Sort Order",
-      "date":"Date",
-      "sequencingCenters":"Sequencing Centers"
-    },
-    "charts":{
-      "contributorList":"Genome Aquisition Labs (GAL)",
-      "dateLineChart":{
-        "title":"BioSample collected by month",
-        "label":"BioSamples"
-      },
-      "habitatList":"Habitats"
-    }
-  },
-  "biosampleDetails":{
-    "genomeAquisitionLab":"Genome Aquisition Lab",
-    "organismPart":"Organism Part",
-    "tissue":"Tissue",
-    "habitat":"Habitat",
-    "collectionDate":"Collection Date",
-    "geoLocation":"Geolocation",
-    "country":"Country",
-    "region":"Region"
-  },
-  "statusList":{
-    "breadcrumb":"Sequencing Status",
-    "charts":{
-      "firstPiechart":"GoaT Status",
-      "secondPiechart":"Target List Status"
-    },
-    "filters":{
-      "searchInput":"Search Organism",
-      "filterBy":"Filter By",
-      "goatStatus":"Goat Status",
-      "targetListStatus":"Target List Status"
-    }
-  },
-  "localSampleDetails":{
-    "breadcrumb":"Local Samples"
-  },
-  "localSampleList":{
-    "filters":{
-      "searchInput":"Search Local Sample",
-      "filterBy":"Filter By",
-      "sortColumn":"Sort Column",
-      "sortOrder":"Sort Order",
-      "date":"Date"
-    }
-  },
-  "relatedTaxon":{
-    "searchInput":{
-      "label":"Search Taxon",
-      "placeholder":"Search by NCBI TaxID"
-    },
-    "selectInput":"INSDC status",
-    "header":"Find a taxon by its Taxonomic identifier, or return the closest phylogenetic match if not found."
-  },
-  "taxonList":{
-    "charts":{
-      "firstBarChart": "Taxons by rank"
-    },
-    "filters":{
-      "searchInput":"Search Taxon",
-      "sortColumn":"Sort Column",
-      "sortOrder":"Sort Order",
-      "ranks":"Ranks"
-    },
-    "tabs":{
-      "table":"Table",
-      "search":"Search"
-    }
-  },
-  "taxonomyTabs":{
-    "explorer":"Explorer",
-    "table":"Table",
-    "search":"Search"
-  },
-  "taxonDetails":{
-    "breadcrumb":"Taxonomy",
-    "pieChart":"INSDC Status",
-    "radial":"Radial Tree",
-    "indented":"Indented Tree"
-  },
-  "organismMap":"Organism geographic locations",
-  "countrisMap":"Organism collected in each country",
-  "language": {
-    "english": "English",
-    "catalan": "Catalan"
-  },
-  "menu": {
-    "auth": "Auth",
-    "samples": "Samples",
-    "sequencingStatus": "Sequencing Status",
-    "localSamples": "Local Samples",
-    "importLocalSamples": "Local Samples Import",
-    "annotations": "Annotations",
-    "organismsMap": "Organisms Map",
-    "countriesMap": "Countries Map",
-    "adminArea": "Admin Area",
-    "taxonExplorer":"Explorer",
-    "taxonTable":"Table",
-    "taxonLookup":"Finder",
-    "taxons": "Taxonomy",
-    "assemblies": "Assemblies",
-    "biosamples": "BioSamples",
-    "local_samples": "Local Samples",
-    "organismStatistics": "Organisms Stats",
-    "experiments": "Experiments",
-    "organisms": "Organisms",
-    "insdcForms": "Import from INSDC",
-    "organismForm": "Create Organism",
-    "localSamplesForm": "Upload Spreadsheet",
-    "annotationForm": "Annotation Form",
-    "dashboard": "Dashboard",
-    "forms": "Forms",
-    "3Dmaps": "3D Maps",
-    "goatUpload":"Upload GoaT report"
-
-  },
-  "user": {
-    "logout": "Logout"
-  }
 }

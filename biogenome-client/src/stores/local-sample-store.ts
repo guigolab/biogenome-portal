@@ -1,23 +1,33 @@
 import { defineStore } from 'pinia'
-import { LocalSampleSearchForm } from '../data/types'
+import { models } from '../../config.json'
+
+const parsedFilters = models.local_samples.filters as Record<string, any>[]
+
+const formEntries = parsedFilters.map(f => {
+  if (f.type === "date") {
+    return [[`${f.key}__gte`, ""], [`${f.key}__lte`, ""]]
+  }
+  return [[f.key, f.type === 'checkbox' ? false : ""]]
+}).flat()
+
+const initSearchForm = {
+  filter: "",
+  sort_order: "",
+  sort_column: "",
+  ...Object.fromEntries(formEntries)
+}
+
+const initPagination = {
+  offset: 0,
+  limit: 10,
+}
 const initLocalSampleForm = {
   local_id: '',
   taxid: '',
   scientific_name: '',
   metadata: {} as Record<string, string>,
 }
-const initPagination = {
-  offset: 0,
-  limit: 10,
-}
-const initSearchForm: LocalSampleSearchForm = {
-  start_date: '',
-  end_date: '',
-  filter: '',
-  filter_option: '',
-  sort_column: '',
-  sort_order: '',
-}
+
 export const useLocalSampleStore = defineStore('local-sample', {
   state: () => {
     return {
@@ -27,7 +37,7 @@ export const useLocalSampleStore = defineStore('local-sample', {
     }
   },
   actions: {
-    resetSeachForm() {
+    resetSearchForm() {
       this.searchForm = { ...initSearchForm }
     },
     resetPagination() {

@@ -1,290 +1,125 @@
 {
   "auth": {
-    "login": "Inici de sessió",
-    "password": "Contrasenya"
+      "login": "Inicia sessió",
+      "password": "Contrasenya",
+      "logout": "Tanca sessió"
   },
   "buttons": {
-    "submit": "Enviar",
-    "reset": "Restablir",
-    "search": "Cercar",
-    "download": "Descarregar",
-    "view": "Veure"
+      "submit": "Envia",
+      "reset": "Restableix",
+      "search": "Cerca",
+      "download": "Descarrega",
+      "downloadTSV": "Descarrega informe TSV",
+      "sort": "Ordena",
+      "view": "Mostra detalls",
+      "fields": "Camps",
+      "filters": "Filtres",
+      "goat_report": "Descarrega informe de cabra",
+      "NCBI": "Visualitza a NCBI",
+      "ENA": "Visualitza a ENA"
   },
-  "table": {
-    "total": "Total:"
+  "tabs": {
+      "table": "Taula",
+      "charts": "Estadístiques",
+      "metadata": "Metadades",
+      "images": "Imatges",
+      "assemblies": "Assemblatges relacionats",
+      "biosamples": "Biosamples relacionats",
+      "reads": "Lectures relacionades",
+      "annotations": "Anotacions relacionades",
+      "local_samples": "Mostres locals relacionades",
+      "experiments": "Experiments relacionats",
+      "names": "Noms vernacles",
+      "map": "Mapa",
+      "publications": "Publicacions",
+      "jbrowse": "Navegador de genoma",
+      "chromosomes": "Cromosomes relacionats",
+      "wiki": "Wikipedia",
+      "organisms": "Organismes relacionats"
   },
-  "uiComponents": {
-    "relatedDataCard": {
-      "biosamples": "Bio-mostres",
+  "download": {
+      "fieldsLabel": "Selecció de camps",
+      "fieldsPlaceholder": "Selecciona múltiples camps",
+      "fieldsSearchPlaceholder": "Escriu aquí...",
+      "fieldsMessage": "Selecciona múltiples camps o escriu un camp nou, si el camp està contingut en les metadades, escriu: 'metadata.campQueVolsSeleccionar'",
+      "applyFilters": "Aplica els filtres actuals"
+  },
+  "search": {
+      "total": "Total:",
+      "filterBy": "Filtra per",
+      "sortColumn": "Ordena per columna",
+      "sortOrder": "Ordre de l'ordenació",
+      "date": "Selecciona data"
+  },
+  "routes": {
+      "dashboard": "Tauler de control",
+      "assemblies": "Assemblatges",
+      "experiments": "Experiments",
+      "biosamples": "Biosamples",
       "local_samples": "Mostres locals",
-      "assemblies": "Assemblatges",
-      "experiments": "Experiments",
-      "annotations": "Anotacions"
-    },
-    "metadata": "Metadades",
-    "wikipedia": "Viquipèdia",
-    "taxonomyCard":"Fes clic a un node per veure els detalls taxonòmics."
-  },
-  "modelStats": {
-    "organisms": "Organismes",
-    "experiments": "Experiments",
-    "assemblies": "Assemblatges",
-    "biosamples": "Bio-mostres",
-    "localSamples": "Mostres locals",
-    "annotations": "Anotacions"
-  },
-  "dashboard": {
-    "statistics": {
-      "organisms": "Organismes",
-      "biosamples": "Bio-mostres",
-      "experiments": "Experiments",
-      "assemblies": "Assemblatges",
       "annotations": "Anotacions",
-      "local_samples": "Mostres locals"
-    },
-    "toExplorer": "Explora La Taxonomia",
-    "info":{
-      "exploreGallery":"Explora la galeria"
-    },
-    "charts": {
-      "firstPiechart": {
-        "title": "Plataforma utilitzada",
-        "label": "Experiments per plataforma d'instruments"
+      "status": "Estat del sequenciatge",
+      "samples-map": "Mapa 2D d'organismes",
+      "countries": "Mapa de països",
+      "taxonomy": "Explorador de taxonomia",
+      "organisms": "Organismes"
+  },
+  "commons": {
+      "wikipedia": "Wikipedia"
+  },
+  "maps": {
+      "samples-map": {
+          "title": "Mapa de mostres",
+          "description": "Ubicacions geogràfiques de les mostres"
       },
-      "secondPiechart": {
-        "title": "Estat de presentació a INSDC de l'organisme",
-        "label": "Estat de presentació a INSDC de l'organisme"
-      },
-      "dateLineChart": {
-        "title": "Assemblatges enviats per mes",
-        "label": "Assemblatges"
+      "countries": {
+          "title": "Mapa de països",
+          "description": "Organismes recollits en cada país"
       }
-    },
-    "tree": "Arbre filogenètic"
   },
-  "organismList": {
-    "breadcrumb": "Organismes",
-    "filters": {
-      "searchInput": "Cercar organismes",
-      "searchSelect": "Cercar per",
-      "searchCountry": "Cercar per país",
-      "insdcStatus": "Estat INSDC"
-    }
-  },
-  "organismDetails": {
-    "images": "Imatges",
-    "publications": "Publicacions",
-    "vernacularNames": "Noms vernacles",
-    "breadcrumb":"Organismes",
-    "lineage":"Línia Taxonòmica"
-
-  },
-  "annotationDetails": {
-    "breadcrumb": "Anotacions",
-    "genomeBrowser": "Navegador del genoma"
-  },
-  "annotationList": {
-    "filters": {
-      "textInput": "Cercar anotacions",
-      "filterBy": "Filtrar per",
-      "sortColumn": "Columna de classificació",
-      "sortOrder": "Ordre de classificació",
-      "date": "Data"
-    }
-  },
-  "assemblyList": {
-    "filters": {
-      "submitterSelect": "etiqueta",
-      "dateRangeSelect": {
-        "label": "Data",
-        "placeholder": "Seleccioneu una data"
+  "taxon": {
+      "title": "Explorador de taxonomia",
+      "description": "Arbre hiperbòlic D3: arrossega i fes clic sobre un taxon per veure els seus detalls taxonòmics",
+      "search": {
+          "placeholder": "Cerca un taxon",
+          "noOptions": "¡No s'han trobat taxons!",
+          "rootLoad": "Carrega el taxon arrel"
       },
-      "searchInput": "Cerca d'assemblatges",
-      "searchSelect": "Filtrar per",
-      "assemblyLevel": "Nivell d'assemblatge",
-      "sortColumn": "Columna d'ordenació",
-      "sortOrder": "Ordre de classificació",
-      "date": "Data",
-      "blobtoolkit": "BlobToolKit"
-
-    },
-    "charts": {
-      "pieChart": {
-        "title": "Nivells d'assemblatge",
-        "label": "Assemblatges per nivell d'assemblatge"
-      },
-      "dateLineChart": {
-        "title": "Assemblatges enviats per mes",
-        "label": "Assemblatges"
-      },
-      "contributorList": {
-        "title": "Submitters"
+      "related": {
+          "button": "No el trobes?",
+          "header": "Cerca de taxons",
+          "description": "Proporciona un identificador taxonòmic NCBI (taxid) per trobar el taxon més proper present a la base de dades.\n Si el taxon exacte està present, es retornarà enlloc",
+          "placeholder": "Escriu un taxid"
       }
-    }
   },
-  "experimentDetails": {
-    "instrumentPlatform": "Plataforma d'instrument",
-    "instrumentModel": "Model d'instrument",
-    "baseCount": "Compte de bases",
-    "centerName": "Nom del centre",
-    "firstCreated": "Primer creat"
+  "sidebar": {
+      "dashboard": "Tauler de control",
+      "organisms": "Organismes",
+      "experiments": "Experiments",
+      "assemblies": "Assemblatges",
+      "biosamples": "Biosamples",
+      "local_samples": "Mostres locals",
+      "annotations": "Anotacions",
+      "goat_status": "Estat de la cabra"
   },
-  "experimentList": {
-    "breadcrumb": "Experiments",
-    "charts": {
-      "pieChart": {
-        "title": "Plataforma utilitzada",
-        "label": "Experiments per plataforma d'instrument"
-      },
-      "dateLineChart": {
-        "label": "Experiments",
-        "title": "Experiments enviats per mes"
-      },
-      "contributorList": "Centres de seqüenciació"
-    },
-    "filters": {
-      "textInput": "Cerca d'experiments",
-      "filterBy": "Filtrar per",
-      "sequencingCenters":"Centres de seqüenciació",
-      "sortColumn": "Columna d'ordenació",
-      "sortOrder": "Ordre de classificació",
-      "date": "Data"
-    }
-  },
-  "assemblyDetails": {
-    "breadcrumb": "Assemblatges",
-    "contigN50": "Contig n50",
-    "genomeSize": "Mida del genoma",
-    "assemblyLevel": "Nivell d'assemblatge",
-    "chromosomes": "Cromosomes",
-    "submitter": "Submès per",
-    "submissionDate": "Data de submissió",
-    "genomeBrowser": "Navegador de genomes"
-  },
-  "biosampleList": {
-    "breadcrumb": "BioMuestras",
-    "filters": {
-      "searchInput": "Cerca de BioSample",
-      "searchSelect": "Filtrar per",
-      "sortColumn": "Columna d'ordenació",
-      "sortOrder": "Ordre de classificació",
-      "date": "Data",
-      "sequencingCenters": "Centres de seqüenciació"
-    },
-    "charts": {
-      "contributorList": "Laboratoris d'adquisició de genomes (GAL)",
-      "dateLineChart": {
-        "title": "Mostres de bio recollides per mes",
-        "label": "BioMuestras"
-      },
-      "habitatList": "Habitats"
-    }
-  },
-  "biosampleDetails": {
-    "genomeAquisitionLab": "Laboratori d'adquisició del genoma",
-    "organismPart": "Part de l'organisme",
-    "tissue": "Teixit",
-    "habitat": "Hàbitat",
-    "collectionDate": "Data de col·lecció",
-    "geoLocation": "Geolocalització",
-    "country": "País",
-    "region": "Regió"
-  },
-  "statusList": {
-    "breadcrumb": "Estat de Sequenciació",
-    "charts": {
-      "firstPiechart": "Estat de GoaT",
-      "secondPiechart": "Estat de la llista de destinacions"
-    },
-    "filters": {
-      "searchInput": "Cerca organismes",
-      "filterBy": "Filtrar per",
-      "goatStatus": "Estat de GoaT",
-      "targetListStatus": "Estat de la llista de destinacions"
-    }
-  },
-  "localSampleDetails": {
-    "breadcrumb": "Mostres locals"
-  },
-  "localSampleList": {
-    "filters": {
-      "searchInput": "Cerca mostres locals",
-      "filterBy": "Filtrar per",
-      "sortColumn": "Ordena columna",
-      "sortOrder": "Ordena ordre",
-      "date": "Data"
-    }
-  },
-  "relatedTaxon": {
-    "searchInput": {
-      "label": "Cerca taxon",
+  "lookup": {
+      "name": "Cerca de taxonomia",
+      "description": "Retorna el taxon filogenètic més proper",
       "placeholder": "Cerca per NCBI TaxID"
-    },
-    "selectInput": "Estat INSDC",
-    "header":"Cerca un taxó pel seu identificador taxonòmic, o retorna la coincidència filogenètica més propera si no es troba."
   },
-  "taxonList": {
-    "charts":{
-      "firstBarChart": "Taxons per rang"
-    },
-    "filters": {
-      "searchInput": "Cerca taxon",
-      "sortColumn": "Ordena columna",
-      "sortOrder": "Ordena ordre",
-      "ranks":"Rangs"
-    },
-    "tabs":{
-      "table":"Taula",
-      "search":"Cerca"
-    }
-  },
-  "taxonomyTabs":{
-    "explorer":"Explorador",
-    "table":"Taula",
-    "search":"Cerca"
-  },
-  "taxonDetails": {
-    "breadcrumb": "Taxonomia",
-    "pieChart": "Estat INSDC",
-    "radial": "Arbre radial",
-    "indented": "Arbre indentat"
-  },
-  "organismMap": "Localitzacions geogràfiques dels organismes",
-  "countriesMap": "Organismes recollits a cada país",
   "language": {
-    "english": "Anglès",
-    "catalan": "Català"
+      "english": "Anglès",
+      "catalan": "Català",
+      "french": "Francès",
+      "spanish": "Espanyol",
+      "german": "Alemany"
   },
-  "menu": {
-    "auth": "Autenticació",
-    "samples": "Mostres",
-    "sequencingStatus": "Estat de seqüenciació",
-    "localSamples": "Mostres locals",
-    "importLocalSamples": "Importació de mostres locals",
-    "annotations": "Anotacions",
-    "organismsMap": "Mapa d'organismes",
-    "countriesMap": "Mapa de països",
-    "adminArea": "Àrea d'administració",
-    "taxonExplorer":"Explorador",
-    "taxonTable":"Taula",
-    "taxonFinder":"Cercador",
-    "taxons": "Taxonomia",
-    "assemblies": "Assemblatges",
-    "biosamples": "BioMostres",
-    "local_samples": "Mostres locals",
-    "organismStatistics": "Estadístiques d'organismes",
-    "experiments": "Experiments",
-    "organisms": "Organismes",
-    "insdcForms": "Importa des de l'INSDC",
-    "organismForm": "Crea organismes",
-    "localSamplesForm": "Pujar full de càlcul",
-    "annotationForm": "Formulari d'anotació",
-    "dashboard": "Panell de control",
-    "forms": "Formularis",
-    "3Dmaps": "Mapes 3D",
-    "goatUpload":"Pujar GoaT report"
-  },
-  "user": {
-    "logout": "Tanca la sessió"
+  "tree": {
+      "indented": {
+          "title": "Arbre taxonòmic",
+          "description": "Fes clic sobre un nom"
+      },
+      "message": "Per raons de rendiment, aquest arbre taxonòmic està precalculat i pot no representar l'estat actual de la base de dades",
+      "last_update": "Última actualització"
   }
 }

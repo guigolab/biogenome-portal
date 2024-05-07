@@ -1,15 +1,26 @@
 import { defineStore } from 'pinia'
+import { models } from '../../config.json'
+
+
+const parsedFilters = models.status.filters as Record<string, any>[]
+
+const formEntries = parsedFilters.map(f => {
+  if (f.type === "date") {
+    return [[`${f.key}__gte`, ""], [`${f.key}__lte`, ""]]
+  }
+  return [[f.key, f.type === 'checkbox' ? false : ""]]
+}).flat()
 
 const initSearchForm = {
-  goat_status: '',
-  target_list_status: '',
-  filter: '',
-  filter_option: '',
+  filter: "",
+  sort_order: "",
+  sort_column: "",
+  ...Object.fromEntries(formEntries)
 }
 
 const initPagination = {
   offset: 0,
-  limit: 15,
+  limit: 10,
 }
 
 export const useStatusStore = defineStore('status', {

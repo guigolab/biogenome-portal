@@ -1,0 +1,125 @@
+{
+    "auth": {
+        "login": "Anmelden",
+        "password": "Passwort",
+        "logout": "Abmelden"
+    },
+    "buttons": {
+        "submit": "Absenden",
+        "reset": "Zurücksetzen",
+        "search": "Suche",
+        "download": "Herunterladen",
+        "downloadTSV": "TSV-Bericht herunterladen",
+        "sort": "Sortieren",
+        "view": "Details anzeigen",
+        "fields": "Felder",
+        "filters": "Filter",
+        "goat_report": "Ziegenbericht herunterladen",
+        "NCBI": "In NCBI anzeigen",
+        "ENA": "In ENA anzeigen"
+    },
+    "tabs": {
+        "table": "Tabelle",
+        "charts": "Statistiken",
+        "metadata": "Metadaten",
+        "images": "Bilder",
+        "assemblies": "Verwandte Montagen",
+        "biosamples": "Verwandte BioProben",
+        "reads": "Verwandte Reads",
+        "annotations": "Verwandte Annotationen",
+        "local_samples": "Verwandte lokale Proben",
+        "experiments": "Verwandte Experimente",
+        "names": "Volkstümliche Namen",
+        "map": "Karte",
+        "publications": "Veröffentlichungen",
+        "jbrowse": "Genom-Browser",
+        "chromosomes": "Verwandte Chromosomen",
+        "wiki": "Wikipedia",
+        "organisms": "Verwandte Organismen"
+    },
+    "download": {
+        "fieldsLabel": "Feldauswahl",
+        "fieldsPlaceholder": "Mehrere Felder auswählen",
+        "fieldsSearchPlaceholder": "Hier eingeben...",
+        "fieldsMessage": "Mehrere Felder auswählen oder ein neues Feld eingeben. Wenn das Feld in den Metadaten enthalten ist, eingeben: 'metadata.feldDenSieAuswählenMöchten'",
+        "applyFilters": "Aktuelle Filter anwenden"
+    },
+    "search": {
+        "total": "Gesamt:",
+        "filterBy": "Filtern nach",
+        "sortColumn": "Spalte sortieren",
+        "sortOrder": "Sortierreihenfolge",
+        "date": "Datum auswählen"
+    },
+    "routes": {
+        "dashboard": "Dashboard",
+        "assemblies": "Montagen",
+        "experiments": "Experimente",
+        "biosamples": "BioProben",
+        "local_samples": "Lokale Proben",
+        "annotations": "Annotationen",
+        "status": "Sequenzierungsstatus",
+        "samples-map": "2D-Organismuskarte",
+        "countries": "Länderkarte",
+        "taxonomy": "Taxonomie-Explorer",
+        "organisms": "Organismen"
+    },
+    "commons": {
+        "wikipedia": "Wikipedia"
+    },
+    "maps": {
+        "samples-map": {
+            "title": "Probenkarte",
+            "description": "Geografische Standorte der Proben"
+        },
+        "countries": {
+            "title": "Länderkarte",
+            "description": "In jedem Land gesammelte Organismen"
+        }
+    },
+    "taxon": {
+        "title": "Taxonomie-Explorer",
+        "description": "D3 Hyperbolischer Baum: Ziehen und Klicken Sie auf einen Taxon, um seine taxonomischen Details anzuzeigen",
+        "search": {
+            "placeholder": "Taxon suchen",
+            "noOptions": "Keine Taxa gefunden!",
+            "rootLoad": "Wurzel-Taxon laden"
+        },
+        "related": {
+            "button": "Nicht gefunden?",
+            "header": "Taxon-Suche",
+            "description": "Geben Sie einen NCBI-Taxonomie-Identifier (taxid) ein, um das nächstgelegene Taxon in der Datenbank zu finden.\n Wenn das genaue Taxon vorhanden ist, wird es stattdessen zurückgegeben",
+            "placeholder": "Taxid eingeben"
+        }
+    },
+    "sidebar": {
+        "dashboard": "Dashboard",
+        "organisms": "Organismen",
+        "experiments": "Experimente",
+        "assemblies": "Montagen",
+        "biosamples": "BioProben",
+        "local_samples": "Lokale Proben",
+        "annotations": "Annotationen",
+        "goat_status": "Ziegenstatus"
+    },
+    "lookup": {
+        "name": "Taxonomie-Suche",
+        "description": "Gibt das nächstgelegene phylogenetische Taxon zurück",
+        "placeholder": "Nach NCBI TaxID suchen"
+    },
+    "language": {
+        "english": "Englisch",
+        "catalan": "Katalanisch",
+        "french": "Französisch",
+        "spanish": "Spanisch",
+        "german": "Deutsch"
+    },
+    "tree": {
+        "indented": {
+            "title": "Taxonomischer Baum",
+            "description": "Klicken Sie auf einen Namen"
+        },
+        "message": "Aus Leistungsgründen ist dieser taxonomische Baum vorberechnet und entspricht möglicherweise nicht dem aktuellen Stand der Datenbank",
+        "last_update": "Letztes Update"
+    }
+}

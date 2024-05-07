@@ -8,7 +8,7 @@ import os
 from lxml import etree
 from errors import NotFound
 from flask_jwt_extended import get_jwt
-
+from ..utils import data_helper
 
 ROOT_NODE=os.getenv('ROOT_NODE')
 PROJECT_ACCESSION=os.getenv('PROJECT_ACCESSION')
@@ -21,38 +21,34 @@ MODEL_LIST = {
     'experiments':{'model':Experiment, 'id':'experiment_accession'},
     }
 
-def get_organisms(offset=0, limit=20, 
-                sort_order=None, sort_column=None,
-                filter=None, parent_taxid=None,
-                filter_option='scientific_name', country=None,
-                goat_status=None, insdc_status=None, target_list_status=None,
-                user=None):
-    query=dict()
-    organisms = Organism.objects().exclude('id')
+FIELDS_TO_EXCLUDE = ['id']
+
+
+def lookup_data(taxid):
+    organism = Organism.objects(taxid=taxid).first()
+    if not organism:
+        raise NotFound
+    response = {}
+    for key in MODEL_LIST:
+        response[key] = MODEL_LIST[key]['model'].objects(taxid=taxid).count()
+    return response
+
+def get_organisms(args):
+    filter = get_filter(args.get('filter'))
+    selected_fields = [v for k, v in args.items(multi=True) if k.startswith('fields[]')]
+    if not selected_fields:
+        selected_fields = ['scientific_name', 'taxid', "insdc_common_name"]
+    return data_helper.get_items(args, 
+                                 Organism, 
+                                 FIELDS_TO_EXCLUDE, 
+                                 filter,
+                                 selected_fields)
+
+
+def get_filter(filter):
     if filter:
-        filter_query = get_filter(filter, filter_option)
-        organisms = organisms.filter(filter_query)
-    if parent_taxid:
-        query['taxon_lineage'] = parent_taxid
-    if goat_status:
-        query['goat_status'] = goat_status
-    if country:
-        query['countries'] = country
-    if insdc_status:
-        query['insdc_status'] = insdc_status
-    if target_list_status:
-        query['target_list_status'] = target_list_status
-    if user:
-        user_object = BioGenomeUser.objects(name=user).first()
-        query['taxid__in'] = user_object.species
-
-    organisms = organisms.filter(**query)
-
-    if sort_column:
-        sort = '-'+sort_column if sort_order == 'desc' else sort_column
-        organisms = organisms.order_by(sort)
-    return organisms.count(), organisms[int(offset):int(offset)+int(limit)]
-
+        return (Q(taxid__iexact=filter) | Q(taxid__icontains=filter)) | (Q(insdc_common_name__iexact=filter) | Q(insdc_common_name__icontains=filter)) | (Q(tolid_prefix__iexact=filter) | Q(tolid_prefix__icontains=filter)) |(Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter))
+    return None
 
 def get_organism_related_data(taxid, model):
     organism_obj = Organism.objects(taxid=taxid).first()
@@ -95,18 +91,9 @@ def get_stats(organisms):
         stats['annotations'] = annotations_count
     return stats
 
-def get_filter(filter, option):
-    if option == 'taxid':
-        return (Q(taxid__iexact=filter) | Q(taxid__icontains=filter))
-    elif option == 'common_name':
-        return (Q(insdc_common_name__iexact=filter) | Q(insdc_common_name__icontains=filter))
-    elif option == 'tolid':
-        return (Q(tolid_prefix__iexact=filter) | Q(tolid_prefix__icontains=filter))
-    else:
-        return (Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter))
 
 def retrieve_taxonomic_info(taxid):
-    taxon_xml = ena_client.get_taxon_from_ena(taxid)
+    taxon_xml = ena_client.get_taxon_from_ena_browser(taxid)
     if taxon_xml:
         lineage = parse_taxon_from_ena(taxon_xml)
         insdc_common_name = lineage[0].get('commonName')
@@ -115,6 +102,7 @@ def retrieve_taxonomic_info(taxid):
     else:
         taxon_nodes = ncbi_client.get_taxon(taxid)
         if not taxon_nodes or not len(taxon_nodes) or not taxon_nodes[0].get('taxonomy'):
+
             print('TAXID NOT FOUND', taxid)
             return
         taxid, scientific_name, insdc_common_name, lineage = parse_organisms_from_ncbi_data(taxon_nodes)[0]

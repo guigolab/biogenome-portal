@@ -1,21 +1,14 @@
 <template>
-  <div>
-    <p class="va-title">{{ t('menu.organismsMap') }}</p>
-    <va-divider />
-    <div class="row row-equal">
-      <div class="flex lg12 md12 sm12 xs12">
-        <va-card-content>
-          <div style="height: 100vh" class="row row-equal">
-            <div class="flex lg12 md12 sm12 xs12">
-              <va-skeleton height="90vh" v-if="isLoading"></va-skeleton>
-              <div v-else-if="isError">
-                <p>{{ errorMessage }}</p>
-              </div>
-              <LeafletMap v-else :coordinates="coordinates" />
-            </div>
-          </div>
-        </va-card-content>
+  <h1 class="va-h1">{{ t('maps.samples-map.title') }}</h1>
+  <p class="va-text-secondary">{{ t('maps.samples-map.description') }}</p>
+  <va-divider />
+  <div style="height: 90vh;" class="row row-equal">
+    <div class="flex lg12 md12 sm12 xs12">
+      <va-skeleton height="90vh" v-if="isLoading"></va-skeleton>
+      <div v-else-if="isError">
+        <p>{{ errorMessage }}</p>
       </div>
+      <LeafletMap v-else :coordinates="coordinates" />
     </div>
   </div>
 </template>
@@ -28,16 +21,18 @@ import { SampleLocations } from '../../data/types'
 
 const { t } = useI18n()
 const rootNode = import.meta.env.VITE_ROOT_NODE ? import.meta.env.VITE_ROOT_NODE : '131567'
+
 const coordinates = ref<SampleLocations[]>([])
 const isLoading = ref(false)
 const isError = ref(false)
 const errorMessage = ref('')
+
 onMounted(async () => {
   try {
     isLoading.value = true
     const { data } = await GeoLocationService.getLocationsByTaxon(rootNode)
     coordinates.value = [...data]
-  } catch(e) {
+  } catch (e) {
     isError.value = true
     errorMessage.value = 'Error fetching data'
   } finally {

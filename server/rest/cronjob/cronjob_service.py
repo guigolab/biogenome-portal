@@ -1,8 +1,9 @@
-from db.models import Organism, Assembly, BioSample, SampleCoordinates, LocalSample, Read,Experiment,Chromosome
+from db.models import Organism, Assembly, BioSample, SampleCoordinates, LocalSample, Read,Experiment,Chromosome,ComputedTree
 from ..utils import ena_client,genomehubs_client
 from ..biosample import biosamples_service
 from ..organism import organisms_service
 from ..read import reads_service
+from ..taxonomy import taxonomy_service
 from ..assembly import assemblies_service
 from ..sample_location import sample_locations_service
 from shapely.geometry import shape, Point
@@ -10,9 +11,22 @@ import time
 import os
 import requests
 import json
+import datetime
 
 PROJECTS = os.getenv('PROJECTS')
 COUNTRIES_PATH = './countries.json'
+ROOT_NODE = os.getenv('ROOT_NODE')
+
+def compute_tree():
+    tree = taxonomy_service.create_tree(ROOT_NODE)
+    computed_tree = ComputedTree.objects().first()
+    if not computed_tree:
+        computed_tree = ComputedTree()
+    computed_tree.tree = tree
+    computed_tree.last_update = datetime.datetime.now()
+    computed_tree.save()
+
+
 
 def get_biosamples_derived_from():
 

@@ -1,91 +1,143 @@
 <template>
-  <va-breadcrumbs class="va-title" color="primary">
-    <va-breadcrumbs-item :to="{ name: 'assemblies' }" :label="t('assemblyDetails.breadcrumb')" />
-    <va-breadcrumbs-item active :label="accession" />
-  </va-breadcrumbs>
-  <va-divider />
-  <va-skeleton v-if="isLoading" height="90vh" />
-  <div v-else-if="errorMessage">
-    <va-card stripe stripe-color="danger">
-      <va-card-content>
-        {{ errorMessage }}
-      </va-card-content>
-    </va-card>
-  </div>
+  <DetailsSkeleton v-if="isLoading" />
   <div v-else>
-    <DetailsHeader :details="details" />
-    <KeyValueCard v-if="assemblySelectedMetadata.length && metadata" :metadata="metadata"
-      :selected-metadata="assemblySelectedMetadata" />
-    <!-- TODO add ideogram -->
-    <!-- <Ideogram v-if="assembly && assembly.taxid && hasChromosomes" :taxid="assembly.taxid" :accession="accession" /> -->
-    <div class="row row-equal">
-      <div v-if="hasChromosomes" class="flex lg12 md12 sm12 xs12">
-        <va-collapse v-model="showJBrowse" flat header="Genome Browser" color="#721e63">
-          <KeepAlive>
-            <Jbrowse2 :assembly="assembly" :annotations="annotations" />
-          </KeepAlive>
-        </va-collapse>
+    <div v-if="assembly">
+      <DetailsHeader v-if="details" :details="details" />
+      <VaTabs v-model="tab">
+        <template #tabs>
+          <VaTab :label="t('tabs.metadata')" name="metadata"></VaTab>
+          <VaTab :label="t('tabs.chromosomes')" v-if="chromosomes.length" name="chromosomes"></VaTab>
+          <VaTab :label="t('tabs.annotations')" v-if="annotations.length" name="annotations"></VaTab>
+          <VaTab :label="t('tabs.jbrowse')" v-if="annotations.length || chromosomes.length" name="jbrowse">
+          </VaTab>
+        </template>
+      </VaTabs>
+      <VaDivider style="margin-top: 0;" />
+      <div class="row" v-if="tab === 'chromosomes'">
+        <div class="flex lg12 md12 sm12 xs12">
+          <VaDataTable :items="chromosomes"
+            :columns="['accession_version', 'metadata.name', 'metadata.length', 'actions']">
+            <template #cell(actions)="{ row, isExpanded }">
+              <VaButton :icon="isExpanded ? 'va-arrow-up' : 'va-arrow-down'" preset="secondary" class="w-full"
+                @click="row.toggleRowDetails()">{{ t('buttons.view') }}
+              </VaButton>
+            </template>
+            <template #expandableRow="{ rowData }">
+              <div class="">
+                <MetadataTreeCard :metadata="Object.entries(rowData.metadata).length ? Object.entries(rowData.metadata) : []" />
+              </div>
+            </template>
+          </VaDataTable>
+        </div>
       </div>
-      <div v-if="metadata && Object.keys(metadata).length" class="flex lg12 md12 sm12 xs12">
-        <va-collapse v-model="showMetadata" header="Metadata" flat color="secondary">
-          <MetadataTreeCard :metadata="metadata" />
-        </va-collapse>
+      <div class="row" v-else-if="tab === 'annotations'">
+        <div class="flex lg12 md12 sm12 xs12">
+          <VaDataTable :items="annotations" :columns="['name', 'gff_gz_location', 'tab_index_location', 'actions']">
+            <template #cell(actions)="{ rowData }">
+              <va-chip :to="{ name: 'annotation', params: { name: rowData.name } }" size="small">{{ t('buttons.view')
+                }}</va-chip>
+            </template>
+            <template #cell(gff_gz_location)="{ rowData }">
+              <va-chip :href="rowData.gff_gz_location">{{ t('buttons.download') }}</va-chip>
+            </template>
+            <template #cell(tab_index_location)="{ rowData }">
+              <va-chip :href="rowData.tab_index_location" size="small">{{ t('buttons.download') }}</va-chip>
+            </template>
+          </VaDataTable>
+        </div>
       </div>
+      <div v-else-if="tab === 'jbrowse'" class="row">
+        <div class="flex lg12 md12 sm12 xs12">
+          <Jbrowse2 :assembly="assembly" :annotations="annotations" />
+        </div>
+      </div>
+      <div v-else class="row">
+        <div class="flex lg12 md12 sm12 xs12">
+          <MetadataTreeCard :metadata="Object.entries(assembly.metadata)" />
+        </div>
+      </div>
+    </div>
+    <div v-else-if="errorMessage">
+      <VaAlert color="danger" class="mb-6">
+        {{ errorMessage || "Something happened!" }}
+      </VaAlert>
     </div>
   </div>
 </template>
+
 <script setup lang="ts">
 import AssemblyService from '../../services/clients/AssemblyService'
-import { onMounted, ref } from 'vue'
+import { ref, watchEffect } from 'vue'
 import Jbrowse2 from '../../components/genome-browser/Jbrowse2.vue'
 import { Assembly, Details, TrackData } from '../../data/types'
 import { useI18n } from 'vue-i18n'
-import DetailsHeader from '../../components/ui/DetailsHeader.vue'
-import KeyValueCard from '../../components/ui/KeyValueCard.vue'
-import { assemblySelectedMetadata } from "../../../config.json";
+import DetailsHeader from '../../components/common/DetailsHeader.vue'
 import MetadataTreeCard from '../../components/ui/MetadataTreeCard.vue'
-// import Ideogram from '../../components/ui/Ideogram.vue'
-
-const showJBrowse = ref(true)
-const showMetadata = ref(false)
+import DetailsSkeleton from '../common/components/DetailsSkeleton.vue'
+import { AxiosError } from 'axios'
 const { t } = useI18n()
-const metadata = ref<Record<string, any> | null>(null)
+
 const props = defineProps<{
   accession: string
 }>()
 const isLoading = ref(true)
+
 const errorMessage = ref<string | any>(null)
+
 const details = ref<
   Details | any
 >()
+
+const tab = ref('metadata')
 const assembly = ref<Assembly>()
 const annotations = ref<TrackData[]>([])
-const hasChromosomes = ref(false)
-onMounted(async () => {
-  try {
+const chromosomes = ref<Record<string, any>[]>([])
 
+watchEffect(async () => {
+  await getData(props.accession)
+})
+
+async function getData(accession: string) {
+  try {
     isLoading.value = true
-    const { data } = await AssemblyService.getAssembly(props.accession)
+    const { data } = await AssemblyService.getAssembly(accession)
     assembly.value = { ...data }
-    details.value = parseDetails(data)
-    if (data.metadata) metadata.value = data.metadata
-    hasChromosomes.value = data && data.chromosomes.length
-    if (hasChromosomes.value) {
-      const { data } = await AssemblyService.getRelatedAnnotations(props.accession)
-      annotations.value = data
+    details.value = { ...parseDetails(data) }
+    const { annotations, chromosomes } = await lookupData(accession)
+    if (annotations) await getRelatedAnnotations(accession)
+    if (chromosomes) await getRelatedChromosomes(accession)
+  } catch (error) {
+    const axiosError = error as AxiosError
+    if (axiosError.code === "404") {
+      errorMessage.value = accession + " Not Found"
+    } else {
+      errorMessage.value = axiosError.message
     }
-  } catch (e) {
-    errorMessage.value = e
   } finally {
     isLoading.value = false
   }
-})
+}
 
+async function lookupData(accession: string) {
+  const { data } = await AssemblyService.getAssemblyLookup(accession)
+  return data
+}
+
+async function getRelatedAnnotations(accession: string) {
+  const { data } = await AssemblyService.getRelatedAnnotations(accession)
+  annotations.value = [...data]
+}
+
+async function getRelatedChromosomes(accession: string) {
+  const { data } = await AssemblyService.getRelatedChromosomes(accession)
+  chromosomes.value = [...data]
+}
 
 function parseDetails(assembly: Assembly) {
   const accession = assembly.accession
   const details: Details = {
     title: assembly.assembly_name,
+    description: accession,
     button1: {
       route: { name: 'organism', params: { taxid: assembly.taxid } },
       label: assembly.scientific_name
@@ -100,8 +152,6 @@ function parseDetails(assembly: Assembly) {
   if (assembly.blobtoolkit_id) details.blobtoolkit = assembly.blobtoolkit_id
   return details
 }
-
-
 
 
 

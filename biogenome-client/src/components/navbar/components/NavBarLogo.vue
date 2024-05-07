@@ -1,9 +1,10 @@
 <template>
-    <img :src="imgUrl"/>
+    <img :src="imgUrl" />
 </template>
 <script setup lang="ts">
 
-import {navBar} from '../../../../config.json'
-const imgUrl = new URL(`/src/assets/${navBar.logoName}`, import.meta.url).href
+import { nav } from '../../../../config.json'
+
+const imgUrl = new URL(`/src/assets/${nav.logo}`, import.meta.url).href
 
 </script>

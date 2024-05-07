@@ -25,3 +25,8 @@ class TaxonChildrenApi(Resource):
             raise NotFound
         items = TaxonNode.objects(taxid__in=taxon.children)
         return Response(items.to_json(), mimetype="application/json", status=200)
+
+class TaxonRelatedDataStats(Resource):
+    def get(self,taxid):
+        response = taxons_service.get_taxon_related_data_stats(taxid)
+        return Response(json.dumps(response),mimetype="application/json", status=200)

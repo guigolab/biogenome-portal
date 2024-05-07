@@ -13,9 +13,8 @@ FIELDS_TO_EXCLUDE = ['id','created','last_check']
 class LocalSamplesApi(Resource):
 
     def get(self):
-        total, data = local_samples_service.get_local_samples(**request.args)
-        json_resp = dict(total=total,data=list(data.as_pymongo()))
-        return Response(json.dumps(json_resp, default=json_util.default), mimetype="application/json", status=200)
+        response, mimetype, status = local_samples_service.get_local_samples(request.args)
+        return Response(response, mimetype=mimetype, status=status)
 
 class LocalSampleApi(Resource):
 

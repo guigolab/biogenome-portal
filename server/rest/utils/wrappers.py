@@ -4,7 +4,7 @@ from flask_jwt_extended import verify_jwt_in_request
 from functools import wraps
 from flask import Response
 import json
-from db.models import BioGenomeUser,Assembly,GenomeAnnotation,LocalSample,BioSample,Experiment
+from db.models import BioGenomeUser
 
 def admin_required():
     def wrapper(fn):

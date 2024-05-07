@@ -2,44 +2,30 @@ from db.models import BioSample, Experiment, Organism, Read
 from errors import NotFound
 from ..biosample import biosamples_service
 from ..organism import organisms_service
-from ..utils import ena_client
+from ..utils import ena_client, data_helper
 from mongoengine.queryset.visitor import Q
 from datetime import datetime
 from collections import defaultdict
 
-def get_reads(offset=0,limit=20,
-                filter=None, filter_option="scientific_name",
-                start_date=None, end_date=datetime.utcnow,
-                sort_column=None,sort_order=None, center=None):
-    experiments = Experiment.objects().exclude('id','created')
 
-    if filter:
-        filter_query = get_filter(filter,filter_option)
-        experiments = experiments.filter(filter_query)
+FIELDS_TO_EXCLUDE = ['id', 'created']
 
-    if start_date and end_date:
-        experiments = (experiments.filterQ(metadata__first_created__gte=start_date) & Q(metadata__first_created__lte=end_date))
+def get_reads(args):
     
-    if center:
-        experiments = experiments.filter(metadata__center_name=center)
+    filter = get_filter(args.get('filter'))
+    selected_fields = [v for k, v in args.items(multi=True) if k.startswith('fields[]')]
+    if not selected_fields:
+        selected_fields = ['experiment_accession', 'taxid', "scientific_name", "sample_accession"]
+    return data_helper.get_items(args, 
+                                 Experiment, 
+                                 FIELDS_TO_EXCLUDE, 
+                                 filter,
+                                 selected_fields)
 
-    if sort_column and sort_column == "first_created":
-        sort_column = 'metadata.first_created'
-        sort = '-'+sort_column if sort_order == 'desc' else sort_column
-        experiments = experiments.order_by(sort)
-    return experiments.count(), experiments[int(offset):int(offset)+int(limit)]
-
-def get_filter(filter, option):
-    if option == 'taxid':
-        return (Q(taxid__iexact=filter) | Q(taxid__icontains=filter))
-    elif option == 'instrument_platform':
-        return (Q(instrument_platform__iexact=filter) | Q(instrument_platform__icontains=filter))
-    elif option == 'experiment_title':
-        return (Q(metadata__experiment_title__icontains=filter))
-    elif option == 'experiment_accession':
-        return (Q(experiment_accession__iexact=filter))
-    else:
-        return (Q(metadata__scientific_name__iexact=filter) | Q(metadata__scientific_name__icontains=filter))
+def get_filter(filter):
+    if filter:
+        return (Q(taxid__iexact=filter) | Q(taxid__icontains=filter)) | (Q(metadata__experiment_title__icontains=filter)) | (Q(experiment_accession__iexact=filter)) | (Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter))
+    return None
 
 def parse_ena_reads(accession):
     reads = ena_client.get_reads(accession)

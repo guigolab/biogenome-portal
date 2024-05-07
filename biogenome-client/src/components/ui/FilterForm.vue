@@ -33,7 +33,7 @@ import { Filter } from '../../data/types'
 
 const { t } = useI18n()
 
-const props = defineProps<{ filters: Array<Filter>, searchForm: Record<string, any> }>()
+const props = defineProps<{ filters: Filter[], searchForm: Record<string, any> }>()
 
 const dateRange = ref<{ start: Date | null, end: Date | null }>({
   start: props.searchForm.start_date ? new Date(props.searchForm.start_date) : null,

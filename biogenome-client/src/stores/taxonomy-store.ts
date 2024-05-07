@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { SearchForm } from '../data/types'
+import { SearchForm, TreeNode } from '../data/types'
 
 const initSearchForm:SearchForm = {
   filter: '',
@@ -18,11 +18,14 @@ export const useTaxonomyStore = defineStore('taxonomy', {
     return {
       searchForm: { ...initSearchForm },
       pagination: { ...initPagination },
+      ancestors: [],
+      currentTaxon: null as TreeNode | null,
+      taxidQuery:null as string | null,
     }
   },
 
   actions: {
-    resetSeachForm() {
+    resetSearchForm() {
       this.searchForm = { ...initSearchForm }
     },
     resetPagination() {
