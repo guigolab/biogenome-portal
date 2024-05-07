@@ -1,8 +1,30 @@
-from db.models import Organism, TaxonNode
+from db.models import Organism, TaxonNode,ComputedTree
 from ..utils import ena_client
 from ..organism import organisms_service
 from db.enums import INSDCStatus
 from collections import deque
+from ..cronjob import cronjob_service
+from datetime import datetime
+
+def get_computed_tree():
+    computed_tree = ComputedTree.objects().exclude('id').first()
+    if not computed_tree or is_older_than_one_day(computed_tree.last_update):
+        cronjob_service.compute_tree()
+        computed_tree = ComputedTree.objects().exclude('id').first()
+    return computed_tree
+
+def is_older_than_one_day(date):
+    # Get current date and time
+    current_date = datetime.now()
+    
+    # Calculate the difference between the current date and the given date
+    difference = current_date - date
+    
+    # Check if the difference is greater than 1 day
+    if difference.days > 1:
+        return True
+    else:
+        return False
 
 def create_tree(taxid):
     # Fetch the initial taxon node
@@ -101,7 +123,7 @@ def create_tree_from_relative_species(taxid, insdc_status=INSDCStatus.ASSEMBLIES
     organism = Organism.objects(taxid=taxid).first()
     response=dict(tree=dict(), taxon='')
     if not organism:
-        taxon_xml = ena_client.get_taxon_from_ena(taxid)
+        taxon_xml = ena_client.get_taxon_from_ena_browser(taxid)
         if not taxon_xml:
             return
         ena_lineage= organisms_service.parse_taxon_from_ena(taxon_xml)

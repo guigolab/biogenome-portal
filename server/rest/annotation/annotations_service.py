@@ -1,47 +1,31 @@
 from mongoengine.queryset.visitor import Q
-from db.models import GenomeAnnotation, Assembly,Organism
+from db.models import GenomeAnnotation, Assembly
 from errors import NotFound
 from ..organism import organisms_service
+from ..utils import data_helper
 from mongoengine.errors import ValidationError
+
 
 ANNOTATIONS_DATA_PATH = "/server/annotations_data"
 FIELDS_TO_EXCLUDE = ['id']
 
-def get_annotations(offset=0, limit=20,
-                    filter=None,
-                    sort_column=None, sort_order=None,
-                    start_date=None, end_date=None, parent_taxon=None):
-    
-    q_query = get_filter(filter) if filter else None
-    b_query = {}
-    if start_date and end_date:
-        date_query = Q(created__gte=start_date) & Q(created__lte=end_date)
-        q_query = q_query & date_query if q_query else date_query
 
-    if parent_taxon:
-        taxids = Organism.objects(taxon_lineage=parent_taxon).scalar('taxid')
-        b_query['taxid__in'] = taxids
-
-    if q_query:
-        annotations = GenomeAnnotation.objects(q_query, **b_query).exclude(*FIELDS_TO_EXCLUDE).skip(int(offset)).limit(int(limit))
-    else:
-        annotations = GenomeAnnotation.objects(**b_query).exclude(*FIELDS_TO_EXCLUDE).skip(int(offset)).limit(int(limit))
-    # Sorting
-    if sort_column:
-        sort_prefix = '-' if sort_order == 'desc' else ''
-        sort_field = sort_column
-        sort = f"{sort_prefix}{sort_field}"
-        annotations = annotations.order_by(sort)
-
-    # Pagination
-    total_count = annotations.count()
-
-    return total_count, annotations
+def get_annotations(args):
+    filter = get_filter(args.get('filter'))
+    selected_fields = [v for k, v in args.items(multi=True) if k.startswith('fields[]')]
+    if not selected_fields:
+        selected_fields = ['name', 'scientific_name', 'taxid', 'assembly_accession']
+    return data_helper.get_items(args, 
+                                 GenomeAnnotation, 
+                                 FIELDS_TO_EXCLUDE, 
+                                 filter,
+                                 selected_fields)
 
 
 def get_filter(filter):
-    return (Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter)) | (Q(assembly_name__iexact=filter) | Q(assembly_name__icontains=filter)) |  (Q(taxid__iexact=filter) | Q(taxid__icontains=filter)) | (Q(name__iexact=filter) | Q(name__icontains=filter))
-
+    if filter:
+        return (Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter)) | (Q(assembly_name__iexact=filter) | Q(assembly_name__icontains=filter)) |  (Q(taxid__iexact=filter) | Q(taxid__icontains=filter)) | (Q(name__iexact=filter) | Q(name__icontains=filter))
+    return None
 
 def delete_annotation(name):
     ann_obj = GenomeAnnotation.objects(name=name).first()

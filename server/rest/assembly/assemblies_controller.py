@@ -14,9 +14,8 @@ FIELDS_TO_EXCLUDE = ['id','created', 'chromosomes_aliases']
 class AssembliesApi(Resource):
 
     def get(self):
-        total, data = assemblies_service.get_assemblies(request.args)
-        json_resp = dict(total=total, data=list(data.as_pymongo()))
-        return Response(json.dumps(json_resp), mimetype="application/json", status=200)
+        resp, mimetype, status = assemblies_service.get_assemblies(request.args)
+        return Response(resp, mimetype=mimetype, status=status)
 
 class AssemblyApi(Resource):
 
@@ -71,3 +70,8 @@ class AssemblyChrAliasesApi(Resource):
         aliases_file = request.files.get('chr_aliases')
         msg, status = assemblies_service.store_chromosome_aliases(assembly_obj, aliases_file)
         return Response(json.dumps(msg), mimetype="application/json", status=status)
+
+class AssembliesRelatedChromosomesApi(Resource):
+    def get(self,accession):
+        chromosomes = assemblies_service.get_assembly_related_chromosomes(accession)
+        return Response(chromosomes.to_json(), mimetype="application/json", status=200)

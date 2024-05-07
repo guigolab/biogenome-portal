@@ -6,12 +6,14 @@ from . import biosamples_service
 from errors import NotFound
 from flask_jwt_extended import jwt_required
 from ..utils import wrappers
+# from ..cronjob import cronjob_service
 
 FIELDS_TO_EXCLUDE = ['id','created','last_check']
 
 
 class BioSampleApi(Resource):
     def get(self, accession):
+
         biosample_obj=BioSample.objects(accession=accession).exclude('id').first()
         if not biosample_obj:
             raise NotFound
@@ -33,10 +35,9 @@ class BioSampleApi(Resource):
 class BioSamplesApi(Resource):
 
     def get(self):
-        total, data = biosamples_service.get_biosamples(**request.args)
-        json_resp = dict(total=total,data=list(data.as_pymongo()))
-        return Response(json.dumps(json_resp), mimetype="application/json", status=200)
-
+        response, mimetype, status = biosamples_service.get_biosamples(request.args)
+        return Response(response,mimetype=mimetype, status=status)
+    
 class ExperimentsByBiosample(Resource):
     def get(self, accession):
         biosample = BioSample.objects(accession=accession).first()
@@ -58,5 +59,5 @@ class SubSamplesApi(Resource):
         biosample = BioSample.objects(accession=accession).first()
         if not biosample:
             raise NotFound
-        sub_samples = BioSample.objects(accession__in=biosample.sub_samples).exclude('id','created')
+        sub_samples = BioSample.objects(__raw__ = {'metadata.sample derived from' : accession}).exclude('id','created')
         return Response(sub_samples.to_json(), mimetype="application/json", status=200)

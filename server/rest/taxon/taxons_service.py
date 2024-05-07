@@ -12,7 +12,7 @@ MODEL_MAPPER = {
     'experiments':Experiment,
     'annotations':GenomeAnnotation,
     'biosamples':BioSample,
-    'local_samples':LocalSample
+    'local_samples':LocalSample,
 }
 
 def get_taxons(offset=0, limit=20,

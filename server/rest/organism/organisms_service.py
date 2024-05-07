@@ -8,7 +8,7 @@ import os
 from lxml import etree
 from errors import NotFound
 from flask_jwt_extended import get_jwt
-
+from ..utils import data_helper
 
 ROOT_NODE=os.getenv('ROOT_NODE')
 PROJECT_ACCESSION=os.getenv('PROJECT_ACCESSION')
@@ -23,54 +23,32 @@ MODEL_LIST = {
 
 FIELDS_TO_EXCLUDE = ['id']
 
-def get_organisms(offset=0, limit=20, 
-                sort_order=None, sort_column=None,
-                filter=None, parent_taxid=None, country=None,
-                goat_status=None, insdc_status=None, target_list_status=None,
-                user=None):
-    base_query = {}
 
-    filter_query = None
-    # Apply filter conditions if provided
-    if filter:
-        filter_query = get_filter(filter)
+def lookup_data(taxid):
+    organism = Organism.objects(taxid=taxid).first()
+    if not organism:
+        raise NotFound
+    response = {}
+    for key in MODEL_LIST:
+        response[key] = MODEL_LIST[key]['model'].objects(taxid=taxid).count()
+    return response
 
-    # Apply additional query conditions
-    if parent_taxid:
-        base_query['taxon_lineage'] = parent_taxid
-    if goat_status:
-        base_query['goat_status'] = goat_status
-    if country:
-        base_query['countries'] = country
-    if insdc_status:
-        base_query['insdc_status'] = insdc_status
-    if target_list_status:
-        base_query['target_list_status'] = target_list_status
-    if user:
-        user_object = BioGenomeUser.objects(name=user).first()
-        base_query['taxid__in'] = user_object.species
+def get_organisms(args):
+    filter = get_filter(args.get('filter'))
+    selected_fields = [v for k, v in args.items(multi=True) if k.startswith('fields[]')]
+    if not selected_fields:
+        selected_fields = ['scientific_name', 'taxid', "insdc_common_name"]
+    return data_helper.get_items(args, 
+                                 Organism, 
+                                 FIELDS_TO_EXCLUDE, 
+                                 filter,
+                                 selected_fields)
 
-    if filter_query:
-    # Retrieve organisms based on the combined query
-        organisms = Organism.objects(filter_query, **base_query).exclude(*FIELDS_TO_EXCLUDE)
-    else:
-        organisms = Organism.objects(filter_query, **base_query).exclude(*FIELDS_TO_EXCLUDE)
-
-    # Apply sorting if specified
-    if sort_column:
-        sort = '-' + sort_column if sort_order == 'desc' else sort_column
-        organisms = organisms.order_by(sort)
-
-    # Count the total number of matching organisms
-    total_count = organisms.count()
-
-    # Apply pagination and return the result
-    organisms = organisms.skip(int(offset)).limit(int(limit))
-    return total_count, organisms
 
 def get_filter(filter):
-    return (Q(taxid__iexact=filter) | Q(taxid__icontains=filter)) | (Q(insdc_common_name__iexact=filter) | Q(insdc_common_name__icontains=filter)) | (Q(tolid_prefix__iexact=filter) | Q(tolid_prefix__icontains=filter)) |(Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter))
-
+    if filter:
+        return (Q(taxid__iexact=filter) | Q(taxid__icontains=filter)) | (Q(insdc_common_name__iexact=filter) | Q(insdc_common_name__icontains=filter)) | (Q(tolid_prefix__iexact=filter) | Q(tolid_prefix__icontains=filter)) |(Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter))
+    return None
 
 def get_organism_related_data(taxid, model):
     organism_obj = Organism.objects(taxid=taxid).first()
@@ -115,7 +93,7 @@ def get_stats(organisms):
 
 
 def retrieve_taxonomic_info(taxid):
-    taxon_xml = ena_client.get_taxon_from_ena(taxid)
+    taxon_xml = ena_client.get_taxon_from_ena_browser(taxid)
     if taxon_xml:
         lineage = parse_taxon_from_ena(taxon_xml)
         insdc_common_name = lineage[0].get('commonName')
@@ -124,6 +102,7 @@ def retrieve_taxonomic_info(taxid):
     else:
         taxon_nodes = ncbi_client.get_taxon(taxid)
         if not taxon_nodes or not len(taxon_nodes) or not taxon_nodes[0].get('taxonomy'):
+
             print('TAXID NOT FOUND', taxid)
             return
         taxid, scientific_name, insdc_common_name, lineage = parse_organisms_from_ncbi_data(taxon_nodes)[0]

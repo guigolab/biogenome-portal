@@ -1,7 +1,7 @@
-from db.models import Assembly, Chromosome,BioSample,Organism
+from db.models import Assembly, Chromosome,BioSample,GenomeAnnotation
 from mongoengine.errors import ValidationError
 from errors import NotFound
-from ..utils import ncbi_client,genomehubs_client
+from ..utils import ncbi_client,genomehubs_client,data_helper
 from ..organism import organisms_service
 from ..biosample import biosamples_service
 from mongoengine.queryset.visitor import Q
@@ -10,54 +10,38 @@ ASSEMBLY_FIELDS = ['display_name','chromosomes','assembly_accession','biosample'
 
 FIELDS_TO_EXCLUDE = ['id', 'created', 'chromosomes_aliases']
 
-def get_assemblies(args):  
+def lookup_data(accession):
+    assembly = Assembly.objects(accession=accession).first()
+    if not assembly:
+        raise NotFound
+    annotations = GenomeAnnotation.objects(assembly_accession=accession).count()
+    chromosomes = Chromosome.objects(accession_version__in=assembly.chromosomes).count()
+    return dict(annotations=annotations,chromosomes=chromosomes)
 
-    filter = args.get('filter')
-    q_query = get_filter(filter) if filter else None        
-    limit = int(args.get('limit', 10))
-    offset = int(args.get('offset', 0))
-    sort_column = args.get('sort_column')
-    sort_order = args.get('sort_order', 'desc')
-    query={}
-    
-    for k, v in args.items():
 
-        if not v:
-            continue
+def get_assembly_related_chromosomes(accession):
+    assembly = Assembly.objects(accession=accession).first()
+    if not assembly:
+        raise NotFound
+    return Chromosome.objects(accession_version__in=assembly.chromosomes).exclude('id')
 
-        if k == "parent_taxon":
-            taxids = Organism.objects(taxon_lineage=v).scalar('taxid')
-            query['taxid__in'] = taxids
 
-        elif k == "filter":
-            continue
-        elif k == "blobtoolkit":
-            
-            if v.lower() == 'true':
-                query['blobtoolkit_id__exists'] = True
-
-        elif "__gte" in k or "__lte" in k:
-            query_visitor = {f"metadata__{k}":v}
-            q_query = Q(**query_visitor) & q_query if q_query else Q(**query_visitor)
-
-        elif k in ("limit", "offset", "sort_order", "sort_column"):
-            continue
-        else:
-            query[f"metadata__{k}"] = v
-
-    assemblies = Assembly.objects(**query).exclude(*FIELDS_TO_EXCLUDE)
-    if q_query:
-        assemblies = assemblies.filter(q_query)
-
-    if sort_column:
-        sort = '-' + sort_column if sort_order == 'desc' else sort_column
-        assemblies = assemblies.order_by(sort)
-
-    return assemblies.count(), assemblies.skip(int(offset)).limit(int(limit))
+def get_assemblies(args):
+    filter = get_filter(args.get('filter'))
+    selected_fields = [v for k, v in args.items(multi=True) if k.startswith('fields[]')]
+    if not selected_fields:
+        selected_fields = ['accession', 'scientific_name', 'taxid']
+    return data_helper.get_items(args, 
+                                 Assembly, 
+                                 FIELDS_TO_EXCLUDE, 
+                                 filter,
+                                 selected_fields)
 
 
 def get_filter(filter):
-    return (Q(taxid__iexact=filter) | Q(taxid__icontains=filter)) |  (Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter)) | (Q(assembly_name__iexact=filter) | Q(assembly_name__icontains=filter))
+    if filter:
+        return (Q(taxid__iexact=filter) | Q(taxid__icontains=filter)) |  (Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter)) | (Q(assembly_name__iexact=filter) | Q(assembly_name__icontains=filter))
+    return None
     
 def create_assembly_from_accession(accession):
     assembly_obj = Assembly.objects(accession=accession).first()

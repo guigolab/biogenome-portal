@@ -2,9 +2,8 @@ from . import taxonomy_service
 from flask import Response,request
 from flask_restful import Resource
 import json
-from errors import NotFound
-from ..cronjob import cronjob_service
-from db.models import ComputedTree
+
+from . import taxonomy_service
 
 class TreeApi(Resource):
     def get(self, taxid):
@@ -24,5 +23,5 @@ class RelativeTaxonomyTreeApi(Resource):
 
 class ComputedTreeApi(Resource):
     def get(self):
-        cronjob_service.compute_tree()
-        return Response(ComputedTree.objects().exclude('id').first().to_json(),mimetype="application/json", status=200)
+        tree = taxonomy_service.get_computed_tree()
+        return Response(tree.to_json(),mimetype="application/json", status=200)

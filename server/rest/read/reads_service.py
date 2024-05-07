@@ -2,47 +2,30 @@ from db.models import BioSample, Experiment, Organism, Read
 from errors import NotFound
 from ..biosample import biosamples_service
 from ..organism import organisms_service
-from ..utils import ena_client
+from ..utils import ena_client, data_helper
 from mongoengine.queryset.visitor import Q
 from datetime import datetime
 from collections import defaultdict
 
+
 FIELDS_TO_EXCLUDE = ['id', 'created']
 
-def get_reads(offset=0,limit=20,
-                filter=None,
-                start_date=None, end_date=datetime.now(),
-                parent_taxon=None,
-                sort_column=None,sort_order=None, center=None):
+def get_reads(args):
     
-
-    q_query = get_filter(filter) if filter else None
-    b_query ={}
-
-    if start_date:
-        date_query = Q(metadata__first_created__gte=start_date) & Q(metadata__first_created__lte=end_date)
-        q_query = q_query & date_query if q_query else date_query
-    
-    if center:
-        b_query['metadata__center_name'] = center
-    
-    if parent_taxon:
-        b_query['taxid__in'] = Organism.objects(taxon_lineage=parent_taxon).scalar('taxid')
-
-    if q_query:
-        experiments = Experiment.objects(q_query, **b_query).exclude(*FIELDS_TO_EXCLUDE).skip(int(offset)).limit(int(limit))
-    else:
-        experiments = Experiment.objects(**b_query).exclude(*FIELDS_TO_EXCLUDE).skip(int(offset)).limit(int(limit))
-
-
-    if sort_column and sort_column == "first_created":
-        sort_column = 'metadata.first_created'
-        sort = '-'+sort_column if sort_order == 'desc' else sort_column
-        experiments = experiments.order_by(sort)
-    return experiments.count(), experiments
+    filter = get_filter(args.get('filter'))
+    selected_fields = [v for k, v in args.items(multi=True) if k.startswith('fields[]')]
+    if not selected_fields:
+        selected_fields = ['experiment_accession', 'taxid', "scientific_name", "sample_accession"]
+    return data_helper.get_items(args, 
+                                 Experiment, 
+                                 FIELDS_TO_EXCLUDE, 
+                                 filter,
+                                 selected_fields)
 
 def get_filter(filter):
-    return (Q(taxid__iexact=filter) | Q(taxid__icontains=filter)) | (Q(instrument_platform__iexact=filter) | Q(instrument_platform__icontains=filter)) | (Q(metadata__experiment_title__icontains=filter)) | (Q(experiment_accession__iexact=filter)) | (Q(metadata__scientific_name__iexact=filter) | Q(metadata__scientific_name__icontains=filter))
+    if filter:
+        return (Q(taxid__iexact=filter) | Q(taxid__icontains=filter)) | (Q(metadata__experiment_title__icontains=filter)) | (Q(experiment_accession__iexact=filter)) | (Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter))
+    return None
 
 def parse_ena_reads(accession):
     reads = ena_client.get_reads(accession)

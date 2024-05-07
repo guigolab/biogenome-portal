@@ -13,9 +13,8 @@ FIELDS_TO_EXCLUDE = ['id','created']
 class ExperimentsApi(Resource):
 
     def get(self):
-        total,data = reads_service.get_reads(**request.args)
-        json_resp = dict(total=total,data=list(data.as_pymongo()))
-        return Response(json.dumps(json_resp), mimetype="application/json", status=200)
+        response, mimetype, status = reads_service.get_reads(request.args)
+        return Response(response, mimetype=mimetype, status=status)
 
 ##post request to handle large list of assemblies/experiments/local_samples/biosamples/annotations ids
 class ExperimentApi(Resource):

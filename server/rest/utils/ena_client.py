@@ -1,12 +1,19 @@
 import requests
 import time
 
-def get_taxon_from_ena(taxon_id):
+def get_taxon_from_ena_browser(taxon_id):
     time.sleep(1)
     response = requests.get(f"https://www.ebi.ac.uk/ena/browser/api/xml/{taxon_id}?download=false") ## 
     if response.status_code != 200:
         return
     return response.content
+
+def get_taxon_from_ena_portal(taxon_id):
+    time.sleep(1)
+    response = requests.get(f"https://www.ebi.ac.uk/ena/portal/api/filereport?result=taxon&accession={taxon_id}&fields=tax_lineage,scientific_name,common_name,genbank_common_name,rank&limit=10&format=json")
+    if response.status_code != 200:
+        return
+    return response.json()
 
 def get_sample_from_biosamples(accession):
     time.sleep(1)

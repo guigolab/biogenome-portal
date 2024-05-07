@@ -305,31 +305,45 @@ class BioGenomeUser(db.Document):
     role=db.EnumField(Roles, required=True)
     species=db.ListField(db.StringField())
 
+class GoaTStatus(db.Document):
+    goat_status = db.EnumField(GoaTStatus)
+    target_list_status = db.EnumField(TargetListStatus)
+    scientific_name = db.StringField(required=True,unique=True)
+    taxid = db.StringField(required= True,unique=True)
+    meta = {
+        'indexes': [
+            'scientific_name',
+            'taxid'
+        ],
+        'strict': False
+    }
 
-# class GoaTStatus(db.Document):
-#     goat_status = db.EnumField(GoaTStatus)
-#     target_list_status = db.EnumField(TargetListStatus)
-#     scientific_name = db.StringField(required=True,unique=True)
-#     taxid = db.StringField(required= True,unique=True)
-#     meta = {
-#         'indexes': [
-#             'scientific_name',
-#             'taxid'
-#         ],
-#         'strict': False
-#     }
+class INSDCStatus(db.Document):
+    scientific_name = db.StringField(required=True,unique=True)
+    taxid = db.StringField(required= True,unique=True)
+    insdc_status = db.EnumField(INSDCStatus)
+    meta = {
+        'indexes': [
+            'scientific_name',
+            'taxid'
+        ],
+        'strict': False
+    }
 
-# class INSDCStatus(db.Document):
-#     scientific_name = db.StringField(required=True,unique=True)
-#     taxid = db.StringField(required= True,unique=True)
-#     insdc_status = db.EnumField(INSDCStatus)
-#     meta = {
-#         'indexes': [
-#             'scientific_name',
-#             'taxid'
-#         ],
-#         'strict': False
-#     }
+class OrganismPublication(db.Document):
+    source = db.EnumField(PublicationSource)
+    id = db.StringField()
+    taxid = db.StringField(required=True)
+
+class OrganismNames(db.Document):
+    value=db.StringField()
+    lang=db.StringField()
+    locality=db.StringField()
+    taxid=db.StringField(required=True)
+
+class ComputedTree(db.Document):
+    last_update = db.DateTimeField(default=datetime.datetime.now())
+    tree = db.DictField()
 
 # class OrganismMetadata(db.Document):
 #     publications = db.ListField(db.EmbeddedDocumentField(Publication))
@@ -365,7 +379,3 @@ class BioGenomeUser(db.Document):
 #         ],
 #         'strict': False
 #     }
-
-class ComputedTree(db.Document):
-    last_update = db.DateTimeField(default=datetime.datetime.now())
-    tree = db.DictField()
