@@ -79,13 +79,6 @@ function createTree(data) {
             },
             geometry: {
                 layerOptions: {
-                    'stem-arc': { invisible: true, hideOnDrag: true },
-                    symbols: { invisible: true, hideOnDrag: true },
-                    cells: { invisible: true, hideOnDrag: true },
-                    λ: { invisible: true, hideOnDrag: true },
-                    labels: { invisible: true, hideOnDrag: false, background: n => true },
-                    'labels-force': { invisible: false, hideOnDrag: true, background: n => true },
-                    images: { width: .05, height: .05 },
                     nodes: {
                         strokeWidth: n => n.parent ? .1 : .001,
                         stroke: n => {
@@ -98,7 +91,6 @@ function createTree(data) {
                 nodeRadius: (ud, n) => n.parent ? .025 : .05,
             },
             interaction: {
-                λbounds: [.25, .65],
                 onNodeClick: (n, m, l) => {
 
                     mytree.api.setPathHead(mytree.data.pathes, n)

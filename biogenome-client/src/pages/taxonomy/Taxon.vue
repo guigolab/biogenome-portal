@@ -89,7 +89,7 @@ const { t } = useI18n()
 
 const validTabs = computed(() => {
     if (!currentTaxonStats.value) return []
-    return Object.entries(currentTaxonStats.value).filter(([k, v]) => v)
+    return Object.entries(currentTaxonStats.value).filter(([k, v]) => v && (!isDataModel(k) || Object.keys(models).includes(k)))
         .map(([k, v]) => k)
 })
 
