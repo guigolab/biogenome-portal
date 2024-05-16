@@ -9,11 +9,11 @@ from flask_mongoengine import MongoEngine
 from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
-
 import os
-
+from rest.utils import extensions
 
 app = Flask(__name__)
+
 
 
 app.config.from_object(BaseConfig)
@@ -22,17 +22,19 @@ app.config["JWT_TOKEN_LOCATION"] = ["cookies"]
 
 app.config["JWT_COOKIE_SAMESITE"] = "None"
 app.config["JWT_COOKIE_SECURE"] = True
-app.config['CORS_SUPPORTS_CREDENTIALS'] = True
+app.config["CORS_SUPPORTS_CREDENTIALS"] = True
 
 db = MongoEngine()
 app.logger.info("Initializing MongoDB")
 db.init_app(app)
 
+extensions.cache.init_app(app, config={"CACHE_TYPE": "SimpleCache", "CACHE_DEFAULT_TIMEOUT": 300}) 
 initialize_api(app)
 
 CORS(app)
 
 jwt = JWTManager(app)
+
 
 @app.after_request
 def refresh_expiring_jwts(response):

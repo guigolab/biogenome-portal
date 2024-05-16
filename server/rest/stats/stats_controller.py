@@ -21,7 +21,6 @@ class FieldStatsApi(Resource):
         db_model = MODEL_LIST[model]
         try:
             resp = db_model.objects.item_frequencies(field)
-            print(resp)
             status = 200
         except:
             resp = {'message': 'field not found'}

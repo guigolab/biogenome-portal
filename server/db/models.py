@@ -141,7 +141,7 @@ class Experiment(db.Document):
     created = db.DateTimeField(default=datetime.datetime.utcnow)
     metadata=db.DictField()
     meta = {
-        'indexes': ['experiment_accession']
+        'indexes': ['experiment_accession','taxid']
     }
 
 class Read(db.Document):
@@ -163,7 +163,7 @@ class Assembly(db.Document):
     chromosomes_aliases=db.BinaryField()
     has_chromosomes_aliases=db.BooleanField(default=False)
     meta = {
-        'indexes': ['accession']
+        'indexes': ['accession','taxid']
     }
 
 class Chromosome(db.Document):
@@ -205,7 +205,7 @@ class LocalSample(db.Document):
     metadata=db.DictField()
     meta = {
         'indexes': [
-            'local_id'
+            'local_id','taxid'
         ],
         'strict': False
     }
@@ -227,7 +227,7 @@ class BioSample(db.Document):
     scientific_name = db.StringField(required=True)
     meta = {
         'indexes': [
-            'accession'
+            'accession','taxid'
         ],
         'strict': False
     }
@@ -244,7 +244,12 @@ class GenomeAnnotation(db.Document):
     metadata=db.DictField()
     user=db.StringField()
     external=db.BooleanField(default=True)
-   
+    meta = {
+        'indexes': [
+            'name','taxid'
+        ],
+        'strict': False
+    }
 
 class CommonName(db.EmbeddedDocument):
     value=db.StringField()
@@ -345,37 +350,3 @@ class ComputedTree(db.Document):
     last_update = db.DateTimeField(default=datetime.datetime.now())
     tree = db.DictField()
 
-# class OrganismMetadata(db.Document):
-#     publications = db.ListField(db.EmbeddedDocumentField(Publication))
-#     metadata = db.DictField()
-#     tolid_prefix = db.StringField()
-#     links = db.ListField(db.URLField())
-#     common_names= db.ListField(db.EmbeddedDocumentField(CommonName))
-#     countries = db.ListField(db.StringField())
-#     scientific_name = db.StringField(required=True,unique=True)
-#     taxid = db.StringField(required= True,unique=True)
-#     image = db.URLField()
-#     image_urls = db.ListField(db.URLField())
-#     meta = {
-#         'indexes': [
-#             'scientific_name',
-#             'taxid'
-#         ],
-#         'strict': False
-#     }
-
-# class OrganismPublication(db.Document):
-#     source = db.EnumField(PublicationSource)
-#     publication_id = db.StringField(required=True, unique=True)
-#     taxid = db.StringField(required=True)
-#     scientific_name = db.StringField(required=True)
-#     title = db.StringField()
-#     description = db.StringField()
-#     metadata = db.DictField()
-#     meta = {
-#         'indexes': [
-#             'scientific_name',
-#             'taxid'
-#         ],
-#         'strict': False
-#     }

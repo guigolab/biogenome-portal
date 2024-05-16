@@ -1,7 +1,5 @@
 from lxml import etree
-import requests
 from . import ncbi_client
-from mongoengine.errors import ValidationError
 import csv
 from io import StringIO
 from bson.json_util import dumps, JSONOptions, DatetimeRepresentation
@@ -9,20 +7,6 @@ from ..organism import organisms_utils
 from ..user import user_utils
 from mongoengine.queryset.visitor import Q
 
-
-def save_document(document):
-    try:
-        document.save()
-        return document, 200
-    except ValidationError as e:
-        return e.to_dict(), 400
-
-
-def get_annotations(org_name):
-    response = requests.get(f'https://genome.crg.cat/geneid-predictions/api/organisms/{org_name}')
-    if response.status_code != 200:
-        return
-    return response.json()    
 
 def parse_taxon_from_ena(xml):
     root = etree.fromstring(xml)
@@ -86,13 +70,6 @@ def check_species_permission(user, existing_taxids):
         if ex_taxid not in user.species:
             taxonomy_errors.append({'taxonomy':f"The organism {ex_taxid} already exists in the db and you don't have the rights to modify it!"})
     return taxonomy_errors
-
-# def create_assembly_related_data(ncbi_response):
-#     ##get or create organism
-#     ##get or create biosample
-
-# def create_biosample_related_data():
-#     ##get or create organism
 
 def dump_json(response_dict):
     json_options = JSONOptions()

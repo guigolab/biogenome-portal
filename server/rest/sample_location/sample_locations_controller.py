@@ -2,8 +2,11 @@ from flask import Response
 from db.models import Organism,SampleCoordinates,BioSample,LocalSample
 from flask_restful import Resource
 from errors import NotFound
+from ..utils.extensions import cache
+
 
 class SampleLocationsByTaxon(Resource):
+    @cache.memoize(timeout=300)
     def get(self,taxid):
         related_organisms_by_taxid = Organism.objects(taxon_lineage=taxid).scalar('taxid')
         if not related_organisms_by_taxid:

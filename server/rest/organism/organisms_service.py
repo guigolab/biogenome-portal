@@ -72,26 +72,6 @@ def get_organism_related_datum(taxid,model,id):
         raise NotFound
     return datum
 
-def get_stats(organisms):
-    stats = dict()
-    biosamples_count = organisms.filter(biosamples__not__size=0).count()
-    if biosamples_count > 0:
-        stats['biosamples'] = biosamples_count
-    local_samples_count = organisms.filter(local_samples__not__size=0).count()
-    if local_samples_count > 0:
-        stats['local_samples'] = local_samples_count
-    assemblies_count = organisms.filter(assemblies__not__size=0).count()
-    if assemblies_count > 0:
-        stats['assemblies'] = assemblies_count
-    experiments_count = organisms.filter(experiments__not__size=0).count()
-    if experiments_count > 0:
-        stats['experiments'] = experiments_count
-    annotations_count = organisms.filter(annotations__not__size=0).count()
-    if annotations_count > 0:
-        stats['annotations'] = annotations_count
-    return stats
-
-
 def retrieve_taxonomic_info(taxid):
     taxon_xml = ena_client.get_taxon_from_ena_browser(taxid)
     if taxon_xml:

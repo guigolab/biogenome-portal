@@ -7,6 +7,7 @@ import os
 from lxml import etree
 from errors import NotFound
 from flask_jwt_extended import get_jwt
+from ..utils.extensions import cache
 
 
 ROOT_NODE=os.getenv('ROOT_NODE')
@@ -15,6 +16,7 @@ PROJECT_ACCESSION=os.getenv('PROJECT_ACCESSION')
 
 FIELDS_TO_EXCLUDE = ['id']
 
+@cache.memoize(timeout=300)
 def get_organisms_taxid_from_parent_taxid(taxid):
     return Organism.objects(taxon_lineage=taxid).scalar('taxid')
 

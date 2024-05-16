@@ -5,7 +5,9 @@ from db.enums import INSDCStatus
 from collections import deque
 from ..cronjob import cronjob_service
 from datetime import datetime
+from ..utils.extensions import cache
 
+@cache.cached(timeout=300)
 def get_computed_tree():
     computed_tree = ComputedTree.objects().exclude('id').first()
     if not computed_tree or is_older_than_one_day(computed_tree.last_update):
