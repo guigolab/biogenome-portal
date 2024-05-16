@@ -90,9 +90,12 @@ def lookup_organism_data(taxid):
 @cache.memoize(timeout=300)
 def lookup_taxon_data(taxid):
     result = Organism.objects.aggregate(lookup_models_by_taxon(taxid))
-    result = next(result)
-    result["organisms"] = Organism.objects(taxon_lineage=taxid).count()
-    return result
+    try:
+        response = next(result)
+        response["organisms"] = Organism.objects(taxon_lineage=taxid).count()
+        return response
+    except StopIteration:
+        return {}
 
 def lookup_assembly_data(accession):
     assembly = Assembly.objects(accession=accession).first()

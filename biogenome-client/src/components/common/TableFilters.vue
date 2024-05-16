@@ -107,9 +107,6 @@ const activeFilters = computed(() => {
     return Object.entries(searchForm.value)
         .filter(([k, v]) => v).length
 })
-// watchEffect(() => {
-//     emits('onFormChange', searchForm.value)
-// })
 
 watchEffect(() => {
     emits('onShowFieldChange', showFields.value.filter(f => f.show).map(f => f.value))

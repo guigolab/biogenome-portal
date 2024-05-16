@@ -10,7 +10,7 @@
     </div>
 </template>
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { ref, watchEffect } from 'vue';
 import { useI18n } from 'vue-i18n'
 import { TreeNode } from '../../../data/types';
 import TaxonService from '../../../services/clients/TaxonService';
@@ -27,15 +27,10 @@ const { init } = useToast()
 const taxonomyStore = useTaxonomyStore()
 const taxon = ref<TreeNode>()
 
-onMounted(async () => {
-    if (taxonomyStore.currentTaxon) {
-        taxon.value = { ...taxonomyStore.currentTaxon }
-    } else {
-        await getTaxon(props.taxid)
-    }
+watchEffect(async() => {
+    await getTaxon(props.taxid)
+
 })
-
-
 async function getTaxon(taxid: string) {
     try {
         isLoading.value = true

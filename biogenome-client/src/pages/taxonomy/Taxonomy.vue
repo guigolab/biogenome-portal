@@ -79,16 +79,17 @@
 </template>
 <script setup lang="ts">
 import D3HyperTree from '../../components/tree/D3HyperTree.vue'
-import router from '../../router'
-import { ref } from 'vue';
+import { ref} from 'vue';
 import TaxonService from '../../services/clients/TaxonService';
 import { useI18n } from 'vue-i18n'
 import { useTaxonomyStore } from '../../stores/taxonomy-store'
 import { TreeNode } from '../../data/types';
 import { AxiosError } from 'axios';
 import { useToast } from 'vuestic-ui'
+import { useRouter } from 'vue-router';
 
 
+const router = useRouter()
 const rootNode = import.meta.env.VITE_ROOT_NODE ? import.meta.env.VITE_ROOT_NODE : '131567'
 
 const showModal = ref(false)
@@ -109,6 +110,7 @@ async function searchRelatedTaxon() {
         showModal.value = !showModal.value
     }
 }
+
 const taxonomyStore = useTaxonomyStore()
 
 

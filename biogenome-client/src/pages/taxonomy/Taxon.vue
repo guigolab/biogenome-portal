@@ -1,11 +1,11 @@
 <template>
     <div class="row">
         <div class="flex lg12 md12 sm12 xs12">
-            <TaxonHeader :key="taxid" :taxid="taxid" />
+            <TaxonHeader :taxid="taxid" />
             <VaTabs :key="taxid" v-model="tab">
                 <template #tabs>
-                    <VaTab name="wiki" :label="t('tabs.wiki')"></VaTab>
-                    <VaTab :key="tab" v-for="tab in validTabs" :label="t(`tabs.${tab}`)" :name="tab">
+                    <VaTab  name="wiki" :label="t('tabs.wiki')"></VaTab>
+                    <VaTab :key="validTab" v-for="validTab in validTabs" :label="t(`tabs.${validTab}`)" :name="validTab">
                     </VaTab>
                     <VaTab v-if="coordinates.length" :label="t('tabs.map')" name="map"></VaTab>
                 </template>
@@ -13,7 +13,7 @@
             <VaDivider style="margin-top: 0;" />
             <div v-if="isDataModel(tab)" class="row">
                 <div class="flex lg12 md12 sm12 xs12">
-                    <ItemsBlock :parent_taxon="taxid" :key="tab" :columns="models[tab as DataModel].columns"
+                    <ItemsBlock :parent_taxon="taxid" :columns="models[tab as DataModel].columns"
                         :filters="(models[tab as DataModel].filters as Filter[])" :model="(tab as DataModel)" />
                 </div>
             </div>
@@ -31,7 +31,7 @@
     </div>
 </template>
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch, watchEffect } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { SampleLocations, Filter } from '../../data/types'
 import TaxonService from '../../services/clients/TaxonService'
@@ -54,15 +54,16 @@ const currentTaxonStats = ref<Record<string, number>>()
 
 const tab = ref('wiki')
 
-watch(() => props.taxid, async (v) => {
-    if (v) {
-        tab.value = 'wiki'
-        await getStats(v)
-        await getCoordinates(v)
-    }
-})
+// watch(() => props.taxid, async (v) => {
+//     if (v) {
+//         tab.value = 'wiki'
+//         await getStats(v)
+//         await getCoordinates(v)
+//     }
+// })
 
-onMounted(async () => {
+watchEffect(async () => {
+    tab.value = 'wiki'
     await getStats(props.taxid)
     await getCoordinates(props.taxid)
 })
@@ -83,6 +84,7 @@ function isDataModel(str: string): boolean {
 }
 
 async function getStats(taxid: string) {
+    currentTaxonStats.value = undefined
     const { data } = await TaxonService.getTaxonStats(taxid)
     currentTaxonStats.value = { ...data }
 }
