@@ -1,17 +1,13 @@
 <template>
-    <div class="row justify-space-between align-end">
+    <div class="row justify-space-between">
         <div class="flex">
             <TableFilters :key="model" @on-form-change="handleSubmit" @on-show-field-change="updateColumns"
                 :store-form="searchForm" :columns="columns" :filters="filters" />
         </div>
         <div class="flex">
-            <div class="flex">
-                <VaPagination v-model="offset" :page-size="limit" :total="total" :visible-pages="3" rounded
-                    buttons-preset="primary" gapped @update:model-value="handlePagination" />
-            </div>
+            <VaPagination v-model="offset" :page-size="limit" :total="total" :visible-pages="3" rounded
+                buttons-preset="primary" gapped @update:model-value="handlePagination" />
         </div>
-    </div>
-    <div class="row justify-end">
         <div class="flex">
             <b>{{ t('search.total') }}</b> {{ total }}
         </div>
@@ -39,19 +35,21 @@
     </va-data-table>
     <va-divider />
     <va-modal v-model="showModal" hide-default-actions :title="t('buttons.downloadTSV')">
-        <div class="row">
-            <VaSelect class="flex lg12 md12 sm12 xs12" v-model="downloadFields"
-                :searchPlaceholderText="t('download.fieldsSearchPlaceholder')" :label="t('download.fieldsLabel')"
-                :options="fieldsToDownload" :placeholder="t('download.fieldsPlaceholder')" allow-create="unique"
-                multiple @create-new="(v: string) => fieldsToDownload.push(v)"
-                :messages="[t('download.fieldsMessage')]" />
-        </div>
-        <div class="row">
-            <div class="flex lg12 md12 sm12 xs12">
-                <VaCheckbox style="margin-top: 6px;" v-model="applyFilters" :label="t('download.applyFilters')">
-                </VaCheckbox>
+        <va-inner-loading :loading="isTSVLoading">
+            <div class="row">
+                <VaSelect class="flex lg12 md12 sm12 xs12" v-model="downloadFields"
+                    :searchPlaceholderText="t('download.fieldsSearchPlaceholder')" :label="t('download.fieldsLabel')"
+                    :options="fieldsToDownload" :placeholder="t('download.fieldsPlaceholder')" allow-create="unique"
+                    multiple @create-new="(v: string) => fieldsToDownload.push(v)"
+                    :messages="[t('download.fieldsMessage')]" />
             </div>
-        </div>
+            <div class="row">
+                <div class="flex lg12 md12 sm12 xs12">
+                    <VaCheckbox style="margin-top: 6px;" v-model="applyFilters" :label="t('download.applyFilters')">
+                    </VaCheckbox>
+                </div>
+            </div>
+        </va-inner-loading>
         <template #footer>
             <va-button @click="downloadData()"> {{ t('buttons.submit') }} </va-button>
         </template>
@@ -59,8 +57,7 @@
 </template>
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { computed, onMounted, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, onMounted, ref } from 'vue'
 import CommonService from '../../../services/clients/CommonService'
 import { useStore } from '../../../composables/use-model'
 import { DataModel, Filter, } from '../../../data/types'
@@ -74,18 +71,20 @@ const { t } = useI18n()
 const props = defineProps<{
     columns: string[],
     filters: Filter[],
-    model: DataModel
+    model: string,
+    countries?: string,
+    parent_taxon?: string
 }>()
 
 const fieldsToDownload = ref([...props.columns])
 const items = ref<Record<string, any>[]>([])
 const showModal = ref(false)
 const isLoading = ref(false)
-const router = useRouter()
+const isTSVLoading = ref(false)
 const applyFilters = ref(true)
 
 const searchForm = computed(() => {
-    const { store } = useStore(props.model)
+    const { store } = useStore(props.model as DataModel)
     return store.searchForm
 })
 
@@ -93,7 +92,7 @@ const total = ref(0)
 const offset = ref(1)
 
 const limit = computed(() => {
-    const { store } = useStore(props.model)
+    const { store } = useStore(props.model as DataModel)
     return store.pagination.limit
 })
 const columnsToShow = ref<string[]>([])
@@ -102,10 +101,10 @@ const tableColumns = computed(() => {
     return [...columnsToShow.value, 'actions']
 })
 
-
 async function downloadData() {
     const downloadRequest = { format: "tsv", fields: [...downloadFields.value] }
     try {
+        isTSVLoading.value = true
         const requestData = applyFilters.value ? { ...searchForm.value, ...downloadRequest } : { ...downloadRequest }
         const response = await CommonService.getTsv(`/${props.model}`, requestData)
         const data = response.data
@@ -118,7 +117,6 @@ async function downloadData() {
         link.setAttribute('download', filename); //or any other extension
         document.body.appendChild(link);
         link.click();
-
         // clean up "a" element & remove ObjectURL
         document.body.removeChild(link);
         URL.revokeObjectURL(href);
@@ -127,23 +125,11 @@ async function downloadData() {
         const axiosError = e as AxiosError
         init({ message: axiosError.message, color: 'danger' })
     } finally {
+        isTSVLoading.value = false
         showModal.value = !showModal.value
     }
 
 }
-
-
-watch(router.currentRoute, () => {
-    const { store } = useStore(props.model)
-
-    if (router.currentRoute.value.name !== 'taxon' && store.searchForm.parent_taxon) {
-        store.searchForm.parent_taxon = undefined
-
-    } if (router.currentRoute.value.name === 'organisms' && store.searchForm.countries) {
-        store.searchForm.countries = undefined
-    }
-})
-
 
 onMounted(async () => {
     await handleSubmit([])
@@ -164,16 +150,18 @@ async function fetchItems(query: Record<string, any>) {
 }
 
 async function handleSubmit(payload: Iterable<[string, any]>) {
-    const { store } = useStore(props.model)
+    const { store } = useStore(props.model as DataModel)
     store.resetPagination()
     offset.value = 1 + store.pagination.offset
-    const entries = Object.fromEntries(payload)
-    store.searchForm = { ...store.searchForm, ...entries }
-    await fetchItems({ ...store.searchForm, ...store.pagination })
+    const query = { ...store.searchForm, ...Object.fromEntries(payload) }
+    store.searchForm = { ...query }
+    if (props.countries) query.countries = props.countries
+    if (props.parent_taxon) query.parent_taxon = props.parent_taxon
+    await fetchItems({ ...query, ...store.pagination })
 }
 
 function handlePagination(value: number) {
-    const { store } = useStore(props.model)
+    const { store } = useStore(props.model as DataModel)
     store.pagination.offset = value - 1
     fetchItems({ ...store.searchForm, ...store.pagination })
 }

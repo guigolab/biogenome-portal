@@ -1,62 +1,53 @@
 <template>
-    <h2 class="va-h2"> {{ taxon.name }}
-    </h2>
-    <p style="margin-bottom: 10px;" class="va-text-secondary">{{ taxon.rank }}</p>
-    <!-- <div class="row">
-        <div class="flex">
-            <va-inner-loading :loading="loadIndentedTree">
-                <va-button @click="loadTree('indented')">{{ t('taxonDetails.indented')
-                    }}</va-button>
-            </va-inner-loading>
-        </div>
-        <div class="flex">
-            <va-inner-loading :loading="loadRadialTree">
-                <va-button @click="loadTree('radial')" :disabled="Number(taxon.leaves) >= 250">{{
-        t('taxonDetails.radial') }}</va-button>
-            </va-inner-loading>
-        </div>
-    </div> -->
-    <va-modal fullscreen v-model="showModal">
-        <TreeOfLife v-if="treeType === 'radial'" :data="treeData" />
-        <IndentedTree v-else :data="treeData" />
-    </va-modal>
-
+    <div v-if="isLoading">
+        <VaSkeleton tag="h1" variant="text" class="va-h1" />
+        <VaSkeleton variant="text" :lines="1" />
+    </div>
+    <div v-else-if="taxon">
+        <h2 class="va-h2"> {{ taxon.name }}
+        </h2>
+        <p style="margin-bottom: 10px;" class="va-text-secondary">{{ taxon.rank }}</p>
+    </div>
 </template>
 <script setup lang="ts">
-import { reactive, ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n'
-import { TaxonNode, TreeNode } from '../../../data/types';
+import { TreeNode } from '../../../data/types';
 import TaxonService from '../../../services/clients/TaxonService';
-import TreeOfLife from '../../../components/tree/TreeOfLife.vue'
-import IndentedTree from '../../../components/tree/IndentedTree.vue'
-
+import { useTaxonomyStore } from '../../../stores/taxonomy-store'
+import { AxiosError } from 'axios';
+import { useToast } from 'vuestic-ui/web-components';
 const { t } = useI18n()
-const treeType = ref('')
-const loadIndentedTree = ref(false)
-const loadRadialTree = ref(false)
-const showModal = ref(false)
-let treeData: TaxonNode
+
 const props = defineProps<{
-    taxon: TreeNode
+    taxid: string
 }>()
+const isLoading = ref(false)
+const { init } = useToast()
+const taxonomyStore = useTaxonomyStore()
+const taxon = ref<TreeNode>()
+
+onMounted(async () => {
+    if (taxonomyStore.currentTaxon) {
+        taxon.value = { ...taxonomyStore.currentTaxon }
+    } else {
+        await getTaxon(props.taxid)
+    }
+})
 
 
-async function loadTree(type: 'indented' | 'radial') {
-    treeType.value = type
+async function getTaxon(taxid: string) {
     try {
-        if (type === 'indented') {
-            loadIndentedTree.value = true
-        } else {
-            loadRadialTree.value = true
-        }
-        const { data } = await TaxonService.getTree(props.taxon.taxid)
-        treeData = {...data}
-    } catch (e) {
-        console.log(e)
+        isLoading.value = true
+        const { data } = await TaxonService.getTaxon(taxid)
+        taxon.value = { ...data }
+        taxonomyStore.currentTaxon = { ...data }
+        taxonomyStore.taxidQuery = taxid
+    } catch (error) {
+        const axiosError = error as AxiosError
+        init({ message: axiosError.message, color: 'danger' })
     } finally {
-        loadIndentedTree.value = false
-        loadRadialTree.value = false
-        showModal.value = true
+        isLoading.value = false
     }
 }
 
