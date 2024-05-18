@@ -27,11 +27,11 @@ services:
     depends_on:
       - redis
 
-  # biogenome_cron:
-  #   build: ./cronjobs
-  #   container_name: biogenome_cron
-  #   env_file:
-  #     - .env
+  biogenome_cron:
+    build: ./cronjobs
+    container_name: biogenome_cron
+    env_file:
+      - .env
 
   biogenome_nginx:
     build:

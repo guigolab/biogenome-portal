@@ -1,10 +1,6 @@
 import os
 from jobs import assemblies, biosamples, experiments, geolocation, taxonomy
 from errors import NotFound
-# from extensions.celery import make_celery
-# import app
-# from extensions.celery import celery
-# celery = make_celery(app)
 from celery.result import AsyncResult
 
 PROJECTS = os.getenv('PROJECTS')
@@ -29,7 +25,6 @@ def create_cronjob(model):
     if not model in JOB_MAP.keys():
         raise NotFound
 
-    print(f'Triggering job {model}')
     try:
         task = JOB_MAP[model]
         active_tasks = task.app.control.inspect().active()
@@ -39,8 +34,10 @@ def create_cronjob(model):
                 if t.get('name') == model:
                     return f"A job for {model} is already running", 400
 
+        print(f'Triggering job {model}')
+
         result = task.delay()
-        message = f'job {result.id} of model {model} successfully executed'
+        message = f'job {result.id} of model {model} successfully launched'
         return message, 200
     
     except Exception as e:

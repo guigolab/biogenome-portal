@@ -7,12 +7,6 @@ from helpers.assembly import save_chromosomes
 from db.models import Assembly
 import os
 from celery import shared_task
-# from extensions.celery import celery
-
-"""
-IMPORT ASSEMBLIES BY BIOPROJECT
-
-"""
 
 PROJECT_ACCESSION = os.getenv('PROJECT_ACCESSION')
 
