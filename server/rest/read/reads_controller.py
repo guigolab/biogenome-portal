@@ -3,7 +3,7 @@ from flask import Response, request
 import json
 from . import reads_service
 from flask_jwt_extended import jwt_required
-from utils.wrappers.admin import admin_required
+from wrappers.admin import admin_required
 
 class ExperimentsApi(Resource):
 

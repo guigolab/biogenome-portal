@@ -1,7 +1,7 @@
 from . import lookup_service
 from flask import Response
 from flask_restful import Resource
-from utils.helpers import data
+from helpers import data
 ##stats about the BGP instance
 class LookupApi(Resource):
 	def get(self):

@@ -1,7 +1,7 @@
 from mongoengine.queryset.visitor import Q
 from db.models import GenomeAnnotation, Assembly
 from errors import NotFound
-from utils.helpers import data
+from helpers import data
 from mongoengine.errors import ValidationError
 
 

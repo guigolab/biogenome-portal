@@ -1,14 +1,26 @@
 from db.models import BioSample,Assembly,Experiment
 from errors import NotFound
-from utils.clients import ebi_client
-from utils.parsers import biosample
-from utils.helpers import geolocation
+from clients import ebi_client
+from parsers import biosample
+from helpers import geolocation
 
 def handle_biosample(accession):
     biosample_obj = BioSample.objects(accession=accession).first()
     if not biosample_obj:
         biosample_obj = create_biosample_from_accession(accession)
     return biosample_obj
+
+
+def handle_biosample_from_ncbi_dataset(assembly_obj):
+    if not BioSample.objects(accession=assembly_obj.sample_accession).first():
+        biosample_obj = biosample.parse_biosample_from_ncbi_datasets(
+            assembly_obj.metadata.get('assembly_info').get('biosample'), assembly_obj.taxid, assembly_obj.scientific_name
+        )
+        biosample_obj.save()
+        geolocation.save_coordinates(biosample_obj)
+        geolocation.update_countries_from_biosample(biosample_obj, biosample_obj.accession)
+
+
 
 def create_biosample_from_accession(accession):
     biosample_response = fetch_biosample_data(accession)

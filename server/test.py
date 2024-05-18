@@ -4,7 +4,7 @@ def get_reads(accession):
     experiments_data = requests.get(f'https://www.ebi.ac.uk/ena/portal/'
                                         f'api/filereport?result=read_run'
                                         f'&accession={accession}'
-                                        f'&offset=0&limit=1000&format=json'
+                                        f'&limit=0&format=json'
                                         f'&fields=study_accession,'
                                         f'secondary_study_accession,'
                                         f'sample_accession,'
@@ -30,5 +30,11 @@ def get_reads(accession):
                                         f'sample_title,nominal_sdev,first_created')
     return experiments_data.json()
     
-reads = get_reads('SAMEA12383576')
-print([read.get('sample_accession') for read in reads])
+
+def get_reads_link_from_sample_accession(accession):
+    experiments_data = requests.get(f"https://www.ebi.ac.uk/ena/portal/api/links/sample?accession={accession}&result=read_run&limit=1000&format=json")
+    if experiments_data.status_code != 200:
+        return list()
+    return experiments_data.json()
+reads = get_reads('PRJEB40665')
+print(len(reads))

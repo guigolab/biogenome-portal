@@ -1,7 +1,7 @@
 import openpyxl
 from db.models import BrokerSource, LocalSample,Organism
 import itertools
-from utils.helpers import organism as organism_helper, taxonomy as taxonomy_helper, user as user_helper, geolocation as geoloc_helper
+from helpers import organism as organism_helper, taxonomy as taxonomy_helper, user as user_helper, geolocation as geoloc_helper
 
 
 OPTIONS = ['SKIP','UPDATE']

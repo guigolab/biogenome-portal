@@ -3,7 +3,7 @@ from mongoengine.queryset.visitor import Q
 from db.models import CommonName,TaxonNode, Organism, Publication,Assembly,GenomeAnnotation,BioSample,LocalSample,Experiment
 import os 
 from errors import NotFound
-from utils.helpers import taxonomy as taxonomy_helper, user as user_helper, organism as organism_helper, geolocation as geoloc_helper, data as data_helper
+from helpers import taxonomy as taxonomy_helper, user as user_helper, organism as organism_helper, geolocation as geoloc_helper, data as data_helper
 
 ROOT_NODE=os.getenv('ROOT_NODE')
 PROJECT_ACCESSION=os.getenv('PROJECT_ACCESSION')

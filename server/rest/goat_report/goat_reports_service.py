@@ -3,7 +3,7 @@ from db.enums import GoaTStatus,PublicationSource
 from db.models import Organism,Publication, GoaTUpdateDate
 from io import StringIO
 from itertools import islice
-from utils.helpers import user as user_helper, taxonomy as taxonomy_helper, organism as organism_helper
+from helpers import user as user_helper, taxonomy as taxonomy_helper, organism as organism_helper
 import os
 
 GOAT_STATUS_EXPORT_MAPPER={

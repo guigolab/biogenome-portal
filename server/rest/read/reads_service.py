@@ -1,10 +1,9 @@
 from db.models import Experiment, Read
 from errors import NotFound
-from ..utils import ena_client
 from mongoengine.queryset.visitor import Q
-from utils.helpers import data as data_helper, organism as organism_helper, biosample as biosample_helper
-from utils.parsers import experiment as exp_parser
-from utils.clients import ebi_client
+from helpers import data as data_helper, organism as organism_helper, biosample as biosample_helper
+from parsers import experiment as exp_parser
+from clients import ebi_client
 
 
 FIELDS_TO_EXCLUDE = ['id', 'created']
@@ -32,36 +31,6 @@ def get_experiment(accession):
         raise NotFound
     return experiment
 
-def parse_ena_reads(accession):
-    reads = ena_client.get_reads(accession)
-    seen_accessions = set()
-    parsed_reads = []
-    for read in reads:
-        run_accession = read.get('run_accession')
-        if run_accession in seen_accessions:
-            continue
-        seen_accessions.add(run_accession)
-        experiment_accession = read.get('experiment_accession')
-        run_metadata = {k: v for k, v in read.items() if k != 'run_accession'}
-        parsed_reads.append(Read(run_accession=run_accession, experiment_accession=experiment_accession,metadata=run_metadata))
-    return parsed_reads
-
-def map_experiments_from_reads(reads):
-    seen_experiments = set()
-    experiments = list()
-    for read in reads:
-        experiment_accession = read.experiment_accession
-        if experiment_accession in seen_experiments:
-            continue
-        experiment_to_save = dict(experiment_accession=experiment_accession)
-        for f in ['sample_accession', 'instrument_model', 'instrument_platform']:
-            experiment_to_save[f] = read.metadata.get(f)
-        experiment_to_save['taxid'] = read.metadata.get('tax_id')
-        metadata = {k:v for k,v in read.metadata.items() if k in ['scientific_name', 'experiment_title','study_title', 'center_name','first_created']}
-        experiment_to_save['metadata'] = metadata
-        seen_experiments.add(experiment_accession)
-        experiments.append(Experiment(**experiment_to_save))
-    return experiments
 
 def create_experiment_from_accession(accession):
     existing_experiment = Experiment.objects(experiment_accession=accession).first()

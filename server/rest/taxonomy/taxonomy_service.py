@@ -1,8 +1,8 @@
 from db.models import Organism, TaxonNode,ComputedTree
 from ..cronjob import cronjob_service
 from datetime import datetime
-from utils.extensions.cache import cache
-from utils.helpers import organism as organism_helper, taxonomy as taxonomy_helper
+from extensions.cache import cache
+from helpers import organism as organism_helper, taxonomy as taxonomy_helper
 from errors import NotFound
 
 @cache.cached(timeout=300)

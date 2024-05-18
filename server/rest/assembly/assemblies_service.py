@@ -1,12 +1,10 @@
-from db.models import Assembly, Chromosome,BioSample, Organism
+from db.models import Assembly, Chromosome, Organism
 from mongoengine.errors import ValidationError
 from errors import NotFound
 from mongoengine.queryset.visitor import Q
-from utils.clients import ncbi_client, genomehubs_client
-from utils.parsers import assembly, biosample,chromosome
-from utils.helpers import data, organism, geolocation
-
-ASSEMBLY_FIELDS = ['display_name','chromosomes','assembly_accession','biosample','bioproject_lineages','biosample_accession','org']
+from clients import ncbi_client, genomehubs_client
+from parsers import assembly, chromosome
+from helpers import data, organism, biosample as biosample_helper
 
 FIELDS_TO_EXCLUDE = ['id', 'created', 'chromosomes_aliases']
 
@@ -52,7 +50,7 @@ def create_assembly_from_accession(accession):
     if not organism_obj:
         return f"Organism {assembly_obj.taxid} not found in INSDC", 400
 
-    handle_biosample(assembly_obj)
+    biosample_helper.handle_biosample_from_ncbi_dataset(assembly_obj)
 
     print(assembly_obj.to_json())
 
@@ -93,17 +91,6 @@ def save_chromosomes(accession, assembly_obj):
             Chromosome.objects.insert([chr for chr in chromosomes_to_save if chr.accession_version not in existing_chromosomes])
             assembly_obj.chromosomes = [chr.accession_version for chr in chromosomes_to_save]
 
-
-def handle_biosample(assembly_obj):
-    if not BioSample.objects(accession=assembly_obj.sample_accession).first():
-        biosample_obj = biosample.parse_biosample_from_ncbi_datasets(
-            assembly_obj.assembly_info.get('biosample'), assembly_obj.taxid, assembly_obj.scientific_name
-        )
-        biosample_obj.save()
-        geolocation.save_coordinates(biosample_obj)
-        geolocation.update_countries_from_biosample(biosample_obj, biosample_obj.accession)
-
-
 def get_assembly(accession):
     assembly_obj = assembly_exists(accession)
     if not assembly_obj:
@@ -111,79 +98,6 @@ def get_assembly(accession):
     if assembly_obj.chromosomes:
         assembly_obj.chromosomes = Chromosome.objects(accession_version__in=assembly_obj.chromosomes).as_pymongo()
     return assembly_obj
-
-# def create_assembly_from_accession(accession):
-
-#     assembly_obj = Assembly.objects(accession=accession).first()
-#     if assembly_obj:
-#         return  f"Assembly {accession} already exists",400
-    
-#     args = ['genome', 'accession', accession]
-#     report = ncbi_client.get_data_from_ncbi(args)
-#     if not report and not report.get('reports'):
-#         return f"Assembly {accession} not found in INSDC", 400
-    
-#     assembly_to_parse = report.get('reports')[0]
-#     assembly_obj = assembly.parse_assembly_from_ncbi_datasets(assembly_to_parse)
-
-#     sequences_args = ['genome', 'accession', accession, '--report', 'sequence', '--assembly-level', 'chromosome,complete']
-#     sequence_report = ncbi_client.get_data_from_ncbi(sequences_args)
-#     if sequence_report and sequence_report.get('reports'):
-#         chrosomes_to_save = chromosome.parse_chromosomes_from_ncbi_datasets(sequence_report.get('reports'))
-#         if chrosomes_to_save:
-#             existing_chromosomes = Chromosome.objects(accession_version__in=[chr.accession_version for chr in chrosomes_to_save]).scalar('accession_version')
-#             Chromosome.objects.insert([chr for chr in chrosomes_to_save if chr.accession_version not in existing_chromosomes])
-#             assembly_obj.chromosomes = [chr.accession_version for chr in chrosomes_to_save]
-    
-#     taxid = assembly_obj.taxid
-
-#     organism_obj = Organism.objects(taxid=taxid).first()
-#     if not organism_obj:
-#         organism_obj = organisms_utils.create_organism_and_related_taxons(taxid)
-#         if not organism_obj:
-#             return f"Organism {assembly_obj.taxid} not found in INSDC", 400
-    
-#     #existing biosample
-#     if not BioSample.objects(accession=assembly_obj.sample_accession).first():
-#         biosample_obj = biosample.parse_biosample_from_ncbi_datasets(assembly_to_parse.get('assembly_info',{}).get('biosample'),assembly_obj.taxid, assembly_obj.scientific_name)
-#         biosample_obj.save()
-#         sample_locations_service.save_coordinates(biosample_obj)
-#         sample_locations_service.update_countries_from_biosample(biosample_obj)
-
-#     assembly_obj.save()
-
-#     organism_obj.save() #update organism status
-
-
-#     return f"Assembly {accession} correctly saved", 201
-
-#     #import related biosample
-
-# def parse_assembly_from_ncbi_data(assembly):
-#     ass_data = dict(accession = assembly['assembly_accession'],assembly_name= assembly['display_name'],scientific_name=assembly['org']['sci_name'],taxid=assembly['org']['tax_id'])
-#     if assembly.get('biosample_accession'):
-#         ass_data['sample_accession'] = assembly.get('biosample_accession')
-#     ass_metadata=dict()
-#     for key in assembly.keys():
-#         if key not in ASSEMBLY_FIELDS:
-#             ass_metadata[key] = assembly[key]
-#     blobtoolkit_resp = genomehubs_client.get_blobtoolkit_id(ass_data['accession'])
-#     if len(blobtoolkit_resp) and 'names' in blobtoolkit_resp[0].keys() and len(blobtoolkit_resp[0]['names']):
-#         ass_data['blobtoolkit_id'] = blobtoolkit_resp[0]['names'][0]
-#     ass_obj = Assembly(metadata=ass_metadata, **ass_data)
-#     chromosomes = parse_chromosomes(assembly.get('chromosomes'))
-#     return ass_obj, chromosomes
-
-# def parse_chromosomes(chromosomes):
-#     chr_list = []
-#     for chr in chromosomes:
-#         if 'accession_version' in chr:
-#             metadata=dict()
-#             for k in chr.keys():
-#                 if k != 'accession_version':
-#                     metadata[k] = chr[k]
-#             chr_list.append(Chromosome(accession_version=chr.get('accession_version'),metadata=metadata))
-#     return chr_list
 
 def delete_assembly(accession):
     assembly_obj = Assembly.objects(accession=accession).first()

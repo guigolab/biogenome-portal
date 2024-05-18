@@ -1,6 +1,6 @@
 from db.models import Organism
 from mongoengine.queryset.visitor import Q
-from utils.helpers import data as data_helper
+from helpers import data as data_helper
 
 FIELDS_TO_EXCLUDE = ['id']
 

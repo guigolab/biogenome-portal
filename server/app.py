@@ -10,7 +10,7 @@ from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
 import os
-from utils.extensions import cache
+from extensions import cache
 
 app = Flask(__name__)
 

@@ -2,9 +2,9 @@ from db.models import BioSample,Assembly,Experiment
 from errors import NotFound
 from mongoengine.queryset.visitor import Q
 import os
-from utils.clients import ebi_client
-from utils.parsers import biosample as biosample_parser
-from utils.helpers import data, organism as organism_helper, geolocation, biosample as biosample_helper
+from clients import ebi_client
+from parsers import biosample as biosample_parser
+from helpers import data, organism as organism_helper, geolocation, biosample as biosample_helper
 
 PROJECTS = [p.strip() for p in os.getenv('PROJECTS').split(',') if p] if os.getenv('PROJECTS') else None
 FIELDS_TO_EXCLUDE = ['id','created','last_check']
@@ -77,43 +77,6 @@ def handle_derived_samples(accession):
         if sibling.accession not in existing_siblings:
             handle_biosample_location_data(sibling)
             sibling.save()
-
-# def create_biosample_from_accession(accession):
-
-#     biosample_obj = BioSample.objects(accession=accession).first()
-#     if biosample_obj:
-#         return f"{accession} already exists" , 400
-    
-#     biosample_response = ebi_client.get_sample_from_biosamples(accession)
-#     if not biosample_response:
-#         return f"BioSample {accession} not found in INSDC", 400
-    
-#     biosample_obj = biosample.parse_biosample_from_ebi_data(biosample_response)
-
-#     organism_obj = organisms_utils.create_organism_and_related_taxons(biosample_obj.taxid)
-#     if not organism_obj:
-#         return f"Organism {biosample_obj.taxid} not found in INSDC"
-    
-#     biosample_obj.save()
-#     organism_obj.save()
-
-#     sample_locations_service.save_coordinates(biosample_obj)
-#     sample_locations_service.update_countries_from_biosample(biosample_obj)
-
-#     #check if it has children
-#     ebi_biosample_response = ebi_client.get_samples_derived_from(biosample_obj.accession)
-
-#     biosample_siblings = [biosample.parse_biosample_from_ebi_data(sample_to_save) for sample_to_save in ebi_biosample_response]
-    
-#     existing_siblings = BioSample.objects(accession__in=[b.accession for b in biosample_siblings]).scalar('accession')
-
-#     for sibling in biosample_siblings:
-#         if not sibling.accession in existing_siblings:
-#             sample_locations_service.save_coordinates(sibling)
-#             sample_locations_service.update_countries_from_biosample(sibling)
-#             sibling.save()
-    
-#     return f"Biosample {accession} correctly saved", 201
 
 def delete_biosample(accession):
     biosample_to_delete = BioSample.objects(accession=accession).first()

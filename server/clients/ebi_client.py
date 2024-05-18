@@ -52,7 +52,7 @@ def get_reads(accession):
     experiments_data = requests.get(f'https://www.ebi.ac.uk/ena/portal/'
                                         f'api/filereport?result=read_run'
                                         f'&accession={accession}'
-                                        f'&offset=0&limit=1000&format=json'
+                                        f'&limit=0&format=json'
                                         f'&fields=study_accession,'
                                         f'secondary_study_accession,'
                                         f'sample_accession,'

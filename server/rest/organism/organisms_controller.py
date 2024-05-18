@@ -5,12 +5,11 @@ from flask_restful import Resource
 from errors import NotFound
 import json
 from flask_jwt_extended import jwt_required
-from utils.wrappers import data_manager, organism_access
+from wrappers import data_manager, organism_access
 
 class OrganismsApi(Resource):
 
 	def get(self):
-		# organisms_utils.create_organism_and_related_taxons("415032")
 		response, mimetype, status = organisms_service.get_organisms(request.args)
 		return Response(response, mimetype=mimetype, status=status)
     

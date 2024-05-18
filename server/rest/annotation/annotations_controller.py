@@ -3,7 +3,7 @@ from flask import Response, request, send_from_directory
 from . import annotations_service
 import json
 from flask_jwt_extended import jwt_required
-from utils.wrappers.admin import admin_required
+from wrappers.admin import admin_required
 
 
 ANNOTATION_FOLDER = 'annotations_data'

@@ -4,7 +4,7 @@ from . import goat_reports_service
 import os
 from flask_jwt_extended import jwt_required
 import json
-from utils.wrappers.data_manager import data_manager_required
+from wrappers.data_manager import data_manager_required
 
 GOAT_PROJECT_NAME = os.getenv('GOAT_PROJECT_NAME')
 

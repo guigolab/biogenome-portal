@@ -1,7 +1,7 @@
 from db.models import LocalSample
 from errors import NotFound
 from mongoengine.queryset.visitor import Q
-from utils.helpers import user as user_helper, organism as organism_helper, data as data_helper
+from helpers import user as user_helper, organism as organism_helper, data as data_helper
 
 FIELDS_TO_EXCLUDE = ['id']
 

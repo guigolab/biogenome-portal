@@ -2,7 +2,7 @@ from db.models import Organism
 from extensions.cache import cache
 from clients import ebi_client, ncbi_client
 from parsers import taxonomy as taxonomy_parser, organism as organism_parser
-from . import taxonomy as taxonomy_helper, user as user_helper
+from . import taxonomy as taxonomy_helper
 
 @cache.memoize(timeout=300)
 def get_organisms_taxid_from_parent_taxid(taxid):

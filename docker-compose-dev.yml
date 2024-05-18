@@ -50,6 +50,19 @@ services:
     ports:
         - "91:${API_PORT}"
 
+
+  celery:
+    build: .
+    command: celery -A app.tasks worker --loglevel=info
+    volumes:
+      - .:/usr/src/app
+    depends_on:
+      - redis
+      - mongo
+
+  redis:
+    image: "redis:alpine"
+
 volumes:
   app:
   mongodb-data:

@@ -3,7 +3,7 @@ from . import users_service
 from flask_restful import Resource
 from flask import Response, request
 from flask_jwt_extended import jwt_required, unset_jwt_cookies
-from utils.wrappers.admin import admin_required
+from wrappers.admin import admin_required
 
 class LoginApi(Resource):
     def post(self):

@@ -6,8 +6,8 @@ from db.models import Assembly,GenomeAnnotation
 from . import assemblies_service
 from errors import NotFound
 from flask_jwt_extended import jwt_required
-from utils.wrappers.data_manager import data_manager_required
-from utils.wrappers.admin import admin_required
+from wrappers.data_manager import data_manager_required
+from wrappers.admin import admin_required
 
 FIELDS_TO_EXCLUDE = ['id','created', 'chromosomes_aliases']
 
