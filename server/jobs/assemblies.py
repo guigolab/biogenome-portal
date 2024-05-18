@@ -3,6 +3,7 @@ from clients.genomehubs_client import get_blobtoolkit_id
 from parsers.assembly import parse_assembly_from_ncbi_datasets
 from helpers.organism import handle_organism
 from helpers.biosample import handle_biosample_from_ncbi_dataset
+from helpers.assembly import save_chromosomes
 from db.models import Assembly
 import os
 from celery import shared_task
@@ -38,9 +39,10 @@ def import_assemblies_by_bioproject(project_accession=None):
         organism = handle_organism(new_parsed_assembly.taxid)
         if not organism:
             print(f'Skipping assembly {new_parsed_assembly.accession} because organism with taxid:{new_parsed_assembly.taxid} was not found in INSDC')
-
+        save_chromosomes(new_parsed_assembly)
         handle_biosample_from_ncbi_dataset(new_parsed_assembly)
 
+        
         print(f"Saving assembly {new_parsed_assembly.accession} for species {organism.scientific_name}")
         
         new_parsed_assembly.save()

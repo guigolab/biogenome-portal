@@ -1,13 +1,10 @@
 import os
 from jobs import assemblies, biosamples, experiments, geolocation, taxonomy
-from db.models import CronJob
-from errors import NotFound, RecordAlreadyExistError
+from errors import NotFound
 # from extensions.celery import make_celery
 # import app
 # from extensions.celery import celery
-import celery.states as states
 # celery = make_celery(app)
-from celery.app.control import Control
 from celery.result import AsyncResult
 
 PROJECTS = os.getenv('PROJECTS')
@@ -27,49 +24,65 @@ JOB_MAP = {
     'compute_tree':taxonomy.compute_tree
 }
 
-
-# @celery.task(name=)
-# def create_task(task_type):
-#     time.sleep(int(task_type) * 10)
-#     return True
-
 def create_cronjob(model):
     
     if not model in JOB_MAP.keys():
         raise NotFound
-    
-    # control = celery.control
-
-    # print(control.inspect().active())
-
-    # result = celery.AsyncResult(task_name=model)
-
-    # if result.state == states.PENDING:
-    #     raise RecordAlreadyExistError
 
     print(f'Triggering job {model}')
-    code = 200
     try:
-        task = JOB_MAP[model].delay()
-        message = f'job {task.id} of model {model} successfully executed'
-        print(message)
-        return message, code
+        task = JOB_MAP[model]
+        active_tasks = task.app.control.inspect().active()
+        
+        for v in active_tasks.values():
+            for t in v:
+                if t.get('name') == model:
+                    return f"A job for {model} is already running", 400
+
+        result = task.delay()
+        message = f'job {result.id} of model {model} successfully executed'
+        return message, 200
+    
     except Exception as e:
         message = f'Error executing job {model}: {e}'
-        code = 400
-        print("ERROR: ")
-        print(message)
-        return message, code
+        print("ERROR: ", message)
+        return message, 400
 
 def get_cronjobs():
-    cronjobs = CronJob.objects()
-    return cronjobs
+    active_tasks = get_current_active_tasks()
+    response = []
+    for v in active_tasks.values():
+        for t in v:
+            response.append(t)
+    return response
 
 def get_cronjob(model):
-    # res = CELERY.AsyncResult(task_name=model)
-    return 'bla'# str(res.result)
+        
+    if not model in JOB_MAP.keys():
+        raise NotFound
+    
+    active_tasks = get_current_active_tasks()
+    for v in active_tasks.values():
+        for t in v:
+            if t.get('name') == model:
+                res = AsyncResult(t.get('id'))
+                return str(res.result)
+
+def get_current_active_tasks():
+    task = JOB_MAP['import_assemblies']
+    active_tasks = task.app.control.inspect().active()
+    return active_tasks
+
 
 def delete_cronjob(model):
-    # control = Control(CELERY)
-    # control.revoke(name=model, terminate=True)
+    task = JOB_MAP[model]
+    active_tasks = get_current_active_tasks()
+
+    control = task.app.control
+    for v in active_tasks.values():
+        for t in v:
+            if t.get('name') == model:
+                id = t.get('id')
+                control.revoke(id)
+
     return f"Cron {model} succesfully deleted", 201

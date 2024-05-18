@@ -10,7 +10,7 @@ class CronJobApi(Resource):
 
     def get(self):
         cronjobs = cronjob_service.get_cronjobs()
-        return Response(cronjobs.to_json(), mimetype="application/json", status=200)
+        return Response(json.dumps(cronjobs), mimetype="application/json", status=200)
 
     @jwt_required()
     @admin_required()

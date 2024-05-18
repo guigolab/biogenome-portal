@@ -39,7 +39,6 @@ celery_app = celery_init_app(app)
 
 cache.cache.init_app(app, config={"CACHE_TYPE": "SimpleCache", "CACHE_DEFAULT_TIMEOUT": 300}) 
 initialize_api(app)
-# celery.celery.conf.update(app.config)
 
 CORS(app)
 
@@ -84,7 +83,7 @@ password = os.getenv('DB_PASS')
 
 try:
     FIRST_START = SingleInstance()
-    # drop_all()
+    drop_all()
 
     ##create root user if does not exist
     user = BioGenomeUser.objects(name = username).first()

@@ -6,7 +6,7 @@ RUN sed -i 's/stretch/buster/g' /etc/apt/sources.list
 # Install curl
 RUN apt-get update && apt-get install -y curl
 # Download and make scripts executable
-RUN curl -o datasets 'https://ftp.ncbi.nlm.nih.gov/pub/datasets/command-line/v2/linux-amd64/datasets'
+RUN curl -o datasets 'https://ftp.ncbi.nlm.nih.gov/pub/datasets/command-line/LATEST/linux-amd64/datasets'
 
 RUN chmod +x datasets 
 

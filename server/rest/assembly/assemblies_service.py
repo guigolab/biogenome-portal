@@ -4,7 +4,7 @@ from errors import NotFound
 from mongoengine.queryset.visitor import Q
 from clients import ncbi_client, genomehubs_client
 from parsers import assembly, chromosome
-from helpers import data, organism, biosample as biosample_helper
+from helpers import data, organism, biosample as biosample_helper, assembly as assembly_helper
 
 FIELDS_TO_EXCLUDE = ['id', 'created', 'chromosomes_aliases']
 
@@ -39,7 +39,7 @@ def create_assembly_from_accession(accession):
         return f"Assembly {accession} not found in INSDC", 400
 
     assembly_obj = parse_assembly(report)
-    save_chromosomes(accession, assembly_obj)
+    assembly_helper.save_chromosomes(assembly_obj)
 
     blobtoolkit_id = get_blobtoolkit_id(accession)
 
