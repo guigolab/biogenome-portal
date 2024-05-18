@@ -21,7 +21,7 @@ services:
     restart: always
     volumes:
       - ./server:/server
-      - ${ANNOTATIONS_PATH}:/server/annotations_data
+      - ${ANNOTATIONS_PATH}:/annotations_data
     env_file:
       - .env
 

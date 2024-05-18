@@ -1,10 +1,8 @@
 import openpyxl
-from db.models import BrokerSource, LocalSample,Organism,BioGenomeUser
-from ..organism import organisms_service
-from ..sample_location import sample_locations_service
-from flask_jwt_extended import get_jwt
-from ..utils import data_helper
+from db.models import BrokerSource, LocalSample,Organism
 import itertools
+from utils.helpers import organism as organism_helper, taxonomy as taxonomy_helper, user as user_helper, geolocation as geoloc_helper
+
 
 OPTIONS = ['SKIP','UPDATE']
 
@@ -46,55 +44,62 @@ def parse_excel(excel=None, id=None, taxid=None, scientific_name=None, header=1,
     mapped_samples = map_samples(samples, id, source, scientific_name, taxid)
 
     taxids = set([s.taxid for s in mapped_samples])
-    existing_organisms = Organism.objects(taxid__in=list(taxids))
 
-    user = get_user()
+    user = user_helper.get_current_user()
 
     #VALIDATE TAXONOMY: USER HAS PERMISSION OR TAXON EXISTS IN INSDC
-    errors, new_taxons_to_parse = data_helper.validate_taxonomy(user,existing_organisms,taxids)
+    errors, new_taxons_to_parse = taxonomy_helper.validate_taxonomy(user,taxids)
 
     if errors:
         return errors, 400
 
     saved_or_updated_samples = save_or_update_local_samples(mapped_samples, option, source)
 
-    create_or_update_organisms(new_taxons_to_parse, existing_organisms, user)
+    if new_taxons_to_parse:
+
+        organism_helper.create_organisms_and_related_taxons_from_ncbi_datasets(new_taxons_to_parse)
+        user_helper.add_species_to_datamanager([t.taxid for t in new_taxons_to_parse], user)
+
+
+    update_organisms(taxids, user)
+    # create_or_update_organisms(new_taxons_to_parse, existing_organisms, user)
 
     return saved_or_updated_samples, 200
 
 
-def create_or_update_organisms(new_taxons_to_parse, existing_organisms, user):
-    if new_taxons_to_parse:
-        taxonomic_infos = organisms_service.parse_organisms_from_ncbi_data(new_taxons_to_parse)
 
-        for taxonomic_info in taxonomic_infos:
-            taxid, scientific_name, insdc_common_name, lineage =  taxonomic_info
-            organisms_service.create_organism_from_taxonomic_info(taxid, scientific_name, insdc_common_name, lineage)
-            if user.role.value == 'DataManager':
-                user.modify(add_to_set__species=taxid)
-
-    for ex_org in existing_organisms:
-        ex_org.save()
+def update_organisms(taxids, user):
+    organisms = Organism.objects(taxid__in=taxids)
+    organisms.save()
+    user_helper.add_species_to_datamanager(taxids, user)
 
 def save_or_update_local_samples(mapped_samples, option, source):
 
-    existing_local_samples = LocalSample.objects()
+    existing_local_samples = LocalSample.objects(local_id__in=[s.local_id for s in mapped_samples])
     saved_or_updated_samples = []
     for s in mapped_samples:
+        message = None
         existing_sample = existing_local_samples.filter(local_id=s.local_id).first()
+        
         if existing_sample:
             if option == 'UPDATE':
                 existing_sample.update(taxid=s.taxid,broker=source,metadata=s.metadata)
                 existing_sample.reload()
-                sample_locations_service.save_coordinates(existing_sample,'local_id')
-                saved_or_updated_samples.append({existing_sample.local_id:f"Sample {existing_sample.local_id} updated!"})
+                geoloc_helper.save_coordinates(existing_sample,'local_id')
+                geoloc_helper.update_countries_from_biosample(existing_sample, existing_sample.local_id)
+                message = f"Sample {existing_sample.local_id} updated!"
+            
             else:
-                saved_or_updated_samples.append({existing_sample.local_id:f"Sample {existing_sample.local_id} skipped!"})
+
+                message = f"Sample {existing_sample.local_id} skipped!"
                 continue
         else:
             s.save()
-            sample_locations_service.save_coordinates(s, 'local_id')
-            saved_or_updated_samples.append({s.local_id:f"Sample {s.local_id} saved!"})
+            geoloc_helper.save_coordinates(s, 'local_id')
+            geoloc_helper.update_countries_from_biosample(s, s.local_id)
+            message=f"Sample {s.local_id} saved!"
+
+        saved_or_updated_samples.append({s.local_id:message})
     return saved_or_updated_samples
 
 def map_samples(samples, id, source, scientific_name, taxid):
@@ -104,13 +109,6 @@ def map_samples(samples, id, source, scientific_name, taxid):
         s_to_save = LocalSample(taxid=str_taxid,local_id=s[id],broker=source,metadata=s['metadata'],scientific_name=s[scientific_name])
         mapped_samples.append(s_to_save)
     return mapped_samples
-
-
-
-def get_user():
-    claims = get_jwt()
-    username = claims.get('username')
-    return BioGenomeUser.objects(name=username).first()
 
 def process_rows(rows, header_row, header, mandatory_fields):
     all_errors = []

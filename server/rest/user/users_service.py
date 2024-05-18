@@ -3,7 +3,7 @@ from datetime import timedelta
 from mongoengine.queryset.visitor import Q
 from errors import NotFound
 from flask import Response
-from flask_jwt_extended import create_access_token,  set_access_cookies
+from flask_jwt_extended import create_access_token,  set_access_cookies, get_jwt
 import json
 
 
@@ -76,3 +76,8 @@ def login_user(payload):
     set_access_cookies(response, access_token)
     return response  
        
+def get_current_user():
+    claims = get_jwt()
+    username = claims.get('username')
+    return BioGenomeUser.objects(name=username).first()
+

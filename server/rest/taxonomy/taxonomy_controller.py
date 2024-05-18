@@ -3,8 +3,6 @@ from flask import Response,request
 from flask_restful import Resource
 import json
 
-from . import taxonomy_service
-
 class TreeApi(Resource):
     def get(self, taxid):
         #TODO ADD LEVEL CONTROL ON TREE

@@ -169,6 +169,9 @@ class Assembly(db.Document):
 class Chromosome(db.Document):
     accession_version = db.StringField(required=True,unique=True)
     metadata=db.DictField()
+    meta = {
+        'indexes': ['accession_version']
+    }
 
 class BioProject(db.Document):
     accession = db.StringField(required=True, unique=True)

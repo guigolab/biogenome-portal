@@ -1,11 +1,9 @@
 import csv
 from db.enums import GoaTStatus,PublicationSource
-from db.models import Organism,Publication,BioGenomeUser, GoaTUpdateDate
+from db.models import Organism,Publication, GoaTUpdateDate
 from io import StringIO
 from itertools import islice
-from ..organism import organisms_service
-from ..utils import data_helper
-from flask_jwt_extended import get_jwt
+from utils.helpers import user as user_helper, taxonomy as taxonomy_helper, organism as organism_helper
 import os
 
 GOAT_STATUS_EXPORT_MAPPER={
@@ -88,21 +86,22 @@ def upload_goat_report(report):
     if errors:
         return errors, 400
     
-    user = get_user()
-    if not user:
+    user_obj = user_helper.get_current_user()
+
+    if not user_obj:
         return [{"user": "User not found"}], 400
     
     taxids = [str(row.get('ncbi_taxon_id')) for row in rows]
-    
-    existing_organisms = Organism.objects(taxid__in=taxids)
-    
-    errors, new_taxons_to_parse = data_helper.validate_taxonomy(user, existing_organisms,taxids)
+        
+    errors, new_taxons_to_parse = taxonomy_helper.validate_taxonomy(user_obj, taxids)
     
     if errors:
         return errors, 400
     
     if new_taxons_to_parse:
-        create_organisms(new_taxons_to_parse, user)
+
+        organism_helper.create_organisms_and_related_taxons_from_ncbi_datasets(new_taxons_to_parse)
+        user_helper.add_species_to_datamanager([t.taxid for t in new_taxons_to_parse], user_obj)
 
     saved_organisms = update_organisms(rows, taxids)
 
@@ -128,11 +127,6 @@ def update_organisms(tsv_reader, taxids):
             org.save()
     return saved_organisms
     
-def get_user():
-    claims = get_jwt()
-    username = claims.get('username')
-    return BioGenomeUser.objects(name=username).first()
-
 
 def validate_fields(tsv_reader):
     errors = []
@@ -142,15 +136,6 @@ def validate_fields(tsv_reader):
             if not row[m_field]:
                 errors.append(dict(index=row_index, message=f'{m_field} is mandatory'))
     return errors
-
-def create_organisms(new_taxons_to_parse, user):
-    taxonomic_infos = organisms_service.parse_organisms_from_ncbi_data(new_taxons_to_parse)
-    for taxonomic_info in taxonomic_infos:
-        taxid, scientific_name, insdc_common_name, lineage =  taxonomic_info
-        organisms_service.create_organism_from_taxonomic_info(taxid, scientific_name, insdc_common_name, lineage)
-        if user.role.value == 'DataManager':
-            user.modify(add_to_set__species=taxid)
-
 
 def map_publication(pub):
     publication_to_save = Publication()

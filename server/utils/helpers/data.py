@@ -1,81 +1,14 @@
-from lxml import etree
-from . import ncbi_client
 import csv
 from io import StringIO
 from bson.json_util import dumps, JSONOptions, DatetimeRepresentation
-from ..organism import organisms_utils
-from ..user import user_utils
+from helpers import organism, user
 from mongoengine.queryset.visitor import Q
 
-
-def parse_taxon_from_ena(xml):
-    root = etree.fromstring(xml)
-    organism = root[0].attrib
-    lineage = []
-    for taxon in root[0]:
-        if taxon.tag == 'lineage':
-            for node in taxon:
-                lineage.append(node.attrib)
-    lineage.insert(0,organism)
-    return lineage
-
-## expect biosample model from ebi biosamples
-def parse_sample_metadata(metadata):
-    sample_metadata = dict()
-    for k in metadata.keys():
-        sample_metadata[k] = metadata[k][0]['text']
-    return sample_metadata
-
-
-def validate_taxonomy(user, existing_organisms, taxids):
-
-    existing_taxids = [org.taxid for org in existing_organisms]
-    #CHECK USER PERMISSION
-    if not user:
-        return [{'user':'User not found'}], None
-    
-    taxonomy_errors = check_species_permission(user, existing_taxids)
-
-    if taxonomy_errors:
-        return taxonomy_errors, None
-    
-    new_taxids = [taxid for taxid in taxids if taxid not in existing_taxids]
-
-    new_taxons_to_parse = []
-
-    if new_taxids:
-    
-        new_taxons_to_parse.extend( ncbi_client.get_taxons(new_taxids))
-
-        if not new_taxons_to_parse:
-            taxonomy_errors.append({'taxonomy': f"No taxid has been found for {','.join(new_taxids)}"})
-            return taxonomy_errors, None
-        
-        insdc_new_taxids = [str(t_to_parse.get('taxonomy').get('tax_id')) for t_to_parse in new_taxons_to_parse]
-
-        for n_taxid in new_taxids:
-            if not new_taxons_to_parse:
-                taxonomy_errors.append({n_taxid: f"{n_taxid} not found in INSDC"})
-            if not n_taxid in insdc_new_taxids:
-                taxonomy_errors.append({n_taxid: f"{n_taxid} not found in INSDC"})
-        
-    return taxonomy_errors, new_taxons_to_parse
-
-
-def check_species_permission(user, existing_taxids):
-    taxonomy_errors = []
-    if user.role.value == 'Admin':
-        return taxonomy_errors
-    for ex_taxid in existing_taxids:
-        if ex_taxid not in user.species:
-            taxonomy_errors.append({'taxonomy':f"The organism {ex_taxid} already exists in the db and you don't have the rights to modify it!"})
-    return taxonomy_errors
 
 def dump_json(response_dict):
     json_options = JSONOptions()
     json_options.datetime_representation = DatetimeRepresentation.ISO8601
     return dumps(response_dict, indent=4, sort_keys=True, json_options=json_options)
-
 
 def create_tsv(items, fields):
     writer_file = StringIO()
@@ -137,7 +70,7 @@ def create_query(args, q_query):
             continue
 
         if k == "parent_taxon":
-            taxids = organisms_utils.get_organisms_taxid_from_parent_taxid(v)
+            taxids = organism.get_organisms_taxid_from_parent_taxid(v)
             if query.get('taxid__in'):
                 query['taxid__in'].extend(taxids)
             else:
@@ -150,7 +83,7 @@ def create_query(args, q_query):
         elif k in ["goat_status", "countries", "insdc_status", "target_list_status"]:
            query[k] = v
         elif k == "user":
-            taxids = user_utils.get_species_by_user_name(v)
+            taxids = user.get_species_by_user_name(v)
             if query.get('taxid__in'):
                 query['taxid__in'].extend(taxids)
             else:

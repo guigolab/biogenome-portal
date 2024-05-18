@@ -1,6 +1,6 @@
 from db.models import Assembly, GenomeAnnotation, BioSample, LocalSample, Organism, Experiment,Chromosome
 from errors import NotFound
-from ..utils.extensions import cache
+from utils.extensions.cache import cache
 
 
 MODEL_LIST = {

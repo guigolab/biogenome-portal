@@ -1,0 +1,2166 @@
+{
+    "reports": [
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "1",
+            "gc_count": "37993301",
+            "gc_percent": 41.5,
+            "genbank_accession": "CM051532.1",
+            "length": 91544569,
+            "role": "assembled-molecule"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "2",
+            "gc_count": "36266694",
+            "gc_percent": 42.5,
+            "genbank_accession": "CM051533.1",
+            "length": 84952781,
+            "role": "assembled-molecule"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "3",
+            "gc_count": "32763137",
+            "gc_percent": 41,
+            "genbank_accession": "CM051534.1",
+            "length": 80035700,
+            "role": "assembled-molecule"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "4",
+            "gc_count": "30181280",
+            "gc_percent": 40.5,
+            "genbank_accession": "CM051535.1",
+            "length": 74497315,
+            "role": "assembled-molecule"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "5",
+            "gc_count": "28895441",
+            "gc_percent": 42.5,
+            "genbank_accession": "CM051536.1",
+            "length": 67953523,
+            "role": "assembled-molecule"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "6",
+            "gc_count": "29813352",
+            "gc_percent": 44,
+            "genbank_accession": "CM051537.1",
+            "length": 67596396,
+            "role": "assembled-molecule"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "7",
+            "gc_count": "26011353",
+            "gc_percent": 43.5,
+            "genbank_accession": "CM051538.1",
+            "length": 59836620,
+            "role": "assembled-molecule"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "8",
+            "gc_count": "22524678",
+            "gc_percent": 42.5,
+            "genbank_accession": "CM051539.1",
+            "length": 53105323,
+            "role": "assembled-molecule"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "9",
+            "gc_count": "23854702",
+            "gc_percent": 45.5,
+            "genbank_accession": "CM051540.1",
+            "length": 52189775,
+            "role": "assembled-molecule"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "10",
+            "gc_count": "21408977",
+            "gc_percent": 42,
+            "genbank_accession": "CM051541.1",
+            "length": 51070072,
+            "role": "assembled-molecule"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "11",
+            "gc_count": "21094142",
+            "gc_percent": 44,
+            "genbank_accession": "CM051542.1",
+            "length": 48074648,
+            "role": "assembled-molecule"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "12",
+            "gc_count": "22316005",
+            "gc_percent": 45,
+            "genbank_accession": "CM051543.1",
+            "length": 49881720,
+            "role": "assembled-molecule"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "13",
+            "gc_count": "21920770",
+            "gc_percent": 44.5,
+            "genbank_accession": "CM051544.1",
+            "length": 49140348,
+            "role": "assembled-molecule"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "14",
+            "gc_count": "21049722",
+            "gc_percent": 44,
+            "genbank_accession": "CM051545.1",
+            "length": 47981774,
+            "role": "assembled-molecule"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "15",
+            "gc_count": "19004222",
+            "gc_percent": 42.5,
+            "genbank_accession": "CM051546.1",
+            "length": 44857579,
+            "role": "assembled-molecule"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "16",
+            "gc_count": "17060324",
+            "gc_percent": 45.5,
+            "genbank_accession": "CM051547.1",
+            "length": 37807875,
+            "role": "assembled-molecule"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "17",
+            "gc_count": "15020197",
+            "gc_percent": 44.5,
+            "genbank_accession": "CM051548.1",
+            "length": 33922163,
+            "role": "assembled-molecule"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "18",
+            "gc_count": "15169174",
+            "gc_percent": 45,
+            "genbank_accession": "CM051549.1",
+            "length": 33761440,
+            "role": "assembled-molecule"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "19",
+            "gc_count": "13781689",
+            "gc_percent": 42.5,
+            "genbank_accession": "CM051550.1",
+            "length": 32512628,
+            "role": "assembled-molecule"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "20",
+            "gc_count": "13265474",
+            "gc_percent": 44.5,
+            "genbank_accession": "CM051551.1",
+            "length": 29717768,
+            "role": "assembled-molecule"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "21",
+            "gc_count": "12966303",
+            "gc_percent": 50,
+            "genbank_accession": "CM051552.1",
+            "length": 26024370,
+            "role": "assembled-molecule"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "22",
+            "gc_count": "11211881",
+            "gc_percent": 45.5,
+            "genbank_accession": "CM051553.1",
+            "length": 24657445,
+            "role": "assembled-molecule"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "23",
+            "gc_count": "9465733",
+            "gc_percent": 42,
+            "genbank_accession": "CM051554.1",
+            "length": 22569309,
+            "role": "assembled-molecule"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "24",
+            "gc_count": "9941164",
+            "gc_percent": 44,
+            "genbank_accession": "CM051555.1",
+            "length": 22518879,
+            "role": "assembled-molecule"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "25",
+            "gc_count": "9553037",
+            "gc_percent": 44.5,
+            "genbank_accession": "CM051556.1",
+            "length": 21407499,
+            "role": "assembled-molecule"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "26",
+            "gc_count": "391827",
+            "gc_percent": 57.5,
+            "genbank_accession": "CM051557.1",
+            "length": 680421,
+            "role": "assembled-molecule"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "27",
+            "gc_count": "227040",
+            "gc_percent": 65,
+            "genbank_accession": "CM051558.1",
+            "length": 351082,
+            "role": "assembled-molecule",
+            "unlocalized_count": 2
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "28",
+            "gc_count": "125050",
+            "gc_percent": 63,
+            "genbank_accession": "CM051559.1",
+            "length": 199105,
+            "role": "assembled-molecule",
+            "unlocalized_count": 7
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "29",
+            "gc_count": "204650",
+            "gc_percent": 45,
+            "genbank_accession": "CM051560.1",
+            "length": 452543,
+            "role": "assembled-molecule"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "W",
+            "gc_count": "17209892",
+            "gc_percent": 46,
+            "genbank_accession": "CM051561.1",
+            "length": 38547156,
+            "role": "assembled-molecule"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Z",
+            "gc_count": "37630446",
+            "gc_percent": 41.5,
+            "genbank_accession": "CM051562.1",
+            "length": 91448605,
+            "role": "assembled-molecule"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "27",
+            "genbank_accession": "JAQMCM010000036.1",
+            "length": 234131,
+            "role": "unlocalized-scaffold",
+            "unlocalized_count": 2
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "27",
+            "genbank_accession": "JAQMCM010000037.1",
+            "length": 68096,
+            "role": "unlocalized-scaffold",
+            "unlocalized_count": 2
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "28",
+            "genbank_accession": "JAQMCM010000041.1",
+            "length": 107709,
+            "role": "unlocalized-scaffold",
+            "unlocalized_count": 7
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "28",
+            "genbank_accession": "JAQMCM010000042.1",
+            "length": 99372,
+            "role": "unlocalized-scaffold",
+            "unlocalized_count": 7
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "28",
+            "genbank_accession": "JAQMCM010000043.1",
+            "length": 98237,
+            "role": "unlocalized-scaffold",
+            "unlocalized_count": 7
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "28",
+            "genbank_accession": "JAQMCM010000044.1",
+            "length": 78724,
+            "role": "unlocalized-scaffold",
+            "unlocalized_count": 7
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "28",
+            "genbank_accession": "JAQMCM010000045.1",
+            "length": 39657,
+            "role": "unlocalized-scaffold",
+            "unlocalized_count": 7
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "28",
+            "genbank_accession": "JAQMCM010000046.1",
+            "length": 35133,
+            "role": "unlocalized-scaffold",
+            "unlocalized_count": 7
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "28",
+            "genbank_accession": "JAQMCM010000047.1",
+            "length": 19635,
+            "role": "unlocalized-scaffold",
+            "unlocalized_count": 7
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000014.1",
+            "length": 828958,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000015.1",
+            "length": 766441,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000016.1",
+            "length": 340800,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000032.1",
+            "length": 223315,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000033.1",
+            "length": 197994,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000034.1",
+            "length": 132441,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000038.1",
+            "length": 22477,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000039.1",
+            "length": 21718,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000053.1",
+            "length": 900535,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000049.1",
+            "length": 3548935,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000050.1",
+            "length": 241553,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000051.1",
+            "length": 188099,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000052.1",
+            "length": 89374,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000211.1",
+            "length": 434516,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000073.1",
+            "length": 394380,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000074.1",
+            "length": 388612,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000212.1",
+            "length": 327921,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000213.1",
+            "length": 265575,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000071.1",
+            "length": 245070,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000064.1",
+            "length": 232844,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000086.1",
+            "length": 216492,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000054.1",
+            "length": 186487,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000087.1",
+            "length": 162852,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000075.1",
+            "length": 156786,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000088.1",
+            "length": 151317,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000069.1",
+            "length": 136175,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000076.1",
+            "length": 125775,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000077.1",
+            "length": 125353,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000070.1",
+            "length": 123356,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000072.1",
+            "length": 120806,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000089.1",
+            "length": 119285,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000090.1",
+            "length": 118118,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000078.1",
+            "length": 116676,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000091.1",
+            "length": 113184,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000080.1",
+            "length": 103071,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000081.1",
+            "length": 102512,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000092.1",
+            "length": 102749,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000093.1",
+            "length": 101159,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000094.1",
+            "length": 99838,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000095.1",
+            "length": 96433,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000096.1",
+            "length": 91546,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000097.1",
+            "length": 86643,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000079.1",
+            "length": 83654,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000098.1",
+            "length": 82359,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000099.1",
+            "length": 77776,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000100.1",
+            "length": 76916,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000101.1",
+            "length": 74192,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000102.1",
+            "length": 72933,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000103.1",
+            "length": 72840,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000104.1",
+            "length": 72527,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000082.1",
+            "length": 69618,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000083.1",
+            "length": 69062,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000084.1",
+            "length": 68263,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000085.1",
+            "length": 67466,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000105.1",
+            "length": 67219,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000106.1",
+            "length": 63132,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000107.1",
+            "length": 62619,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000108.1",
+            "length": 62074,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000109.1",
+            "length": 60530,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000110.1",
+            "length": 60150,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000111.1",
+            "length": 59988,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000112.1",
+            "length": 59371,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000113.1",
+            "length": 57885,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000114.1",
+            "length": 57824,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000115.1",
+            "length": 56942,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000116.1",
+            "length": 56779,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000117.1",
+            "length": 56308,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000118.1",
+            "length": 56136,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000119.1",
+            "length": 55236,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000120.1",
+            "length": 54862,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000121.1",
+            "length": 54076,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000122.1",
+            "length": 52859,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000123.1",
+            "length": 52462,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000124.1",
+            "length": 50369,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000125.1",
+            "length": 50063,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000126.1",
+            "length": 50001,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000127.1",
+            "length": 49591,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000128.1",
+            "length": 49508,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000129.1",
+            "length": 49354,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000130.1",
+            "length": 49125,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000131.1",
+            "length": 49114,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000132.1",
+            "length": 48983,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000133.1",
+            "length": 48762,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000134.1",
+            "length": 48530,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000135.1",
+            "length": 48347,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000136.1",
+            "length": 48158,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000137.1",
+            "length": 48085,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000138.1",
+            "length": 47392,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000139.1",
+            "length": 47085,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000140.1",
+            "length": 46990,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000141.1",
+            "length": 45799,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000142.1",
+            "length": 45657,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000143.1",
+            "length": 45497,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000144.1",
+            "length": 44707,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000145.1",
+            "length": 44471,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000146.1",
+            "length": 44368,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000147.1",
+            "length": 44053,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000148.1",
+            "length": 43798,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000149.1",
+            "length": 43696,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000150.1",
+            "length": 43670,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000151.1",
+            "length": 43101,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000152.1",
+            "length": 42834,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000153.1",
+            "length": 42816,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000154.1",
+            "length": 42787,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000155.1",
+            "length": 42780,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000156.1",
+            "length": 42593,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000157.1",
+            "length": 42579,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000158.1",
+            "length": 42550,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000159.1",
+            "length": 42342,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000160.1",
+            "length": 42253,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000161.1",
+            "length": 42015,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000162.1",
+            "length": 41873,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000163.1",
+            "length": 41867,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000164.1",
+            "length": 41109,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000165.1",
+            "length": 41088,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000166.1",
+            "length": 41068,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000215.1",
+            "length": 40866,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000167.1",
+            "length": 40805,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000168.1",
+            "length": 40609,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000169.1",
+            "length": 40176,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000170.1",
+            "length": 39142,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000171.1",
+            "length": 39115,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000172.1",
+            "length": 39051,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000173.1",
+            "length": 38364,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000174.1",
+            "length": 37680,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000175.1",
+            "length": 37524,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000176.1",
+            "length": 37299,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000177.1",
+            "length": 37081,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000178.1",
+            "length": 36798,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000216.1",
+            "length": 36608,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000179.1",
+            "length": 36607,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000180.1",
+            "length": 36555,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000181.1",
+            "length": 36424,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000182.1",
+            "length": 35670,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000183.1",
+            "length": 35478,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000184.1",
+            "length": 35430,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000217.1",
+            "length": 35199,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000185.1",
+            "length": 35086,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000186.1",
+            "length": 34936,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000187.1",
+            "length": 34854,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000188.1",
+            "length": 34554,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000218.1",
+            "length": 34052,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000189.1",
+            "length": 33784,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000190.1",
+            "length": 33505,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000191.1",
+            "length": 33263,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000192.1",
+            "length": 32696,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000219.1",
+            "length": 32503,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000193.1",
+            "length": 32270,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000194.1",
+            "length": 32235,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000195.1",
+            "length": 31964,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000196.1",
+            "length": 31909,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000220.1",
+            "length": 31901,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000197.1",
+            "length": 31475,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000198.1",
+            "length": 31317,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000221.1",
+            "length": 31181,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000199.1",
+            "length": 30656,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000200.1",
+            "length": 30357,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000201.1",
+            "length": 30256,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000222.1",
+            "length": 29640,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000202.1",
+            "length": 29615,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000203.1",
+            "length": 29414,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000223.1",
+            "length": 29303,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000204.1",
+            "length": 28981,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000205.1",
+            "length": 28363,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000224.1",
+            "length": 28238,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000206.1",
+            "length": 28121,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000055.1",
+            "length": 28110,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000225.1",
+            "length": 27692,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000056.1",
+            "length": 27438,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000057.1",
+            "length": 27205,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000226.1",
+            "length": 27167,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000058.1",
+            "length": 26729,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000059.1",
+            "length": 25942,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000227.1",
+            "length": 25735,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000060.1",
+            "length": 25650,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000228.1",
+            "length": 25555,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000061.1",
+            "length": 25330,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000062.1",
+            "length": 24685,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000229.1",
+            "length": 24368,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000063.1",
+            "length": 23742,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000230.1",
+            "length": 23344,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000231.1",
+            "length": 22100,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000214.1",
+            "length": 21537,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000232.1",
+            "length": 21505,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000068.1",
+            "length": 1140712,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000065.1",
+            "length": 1252515,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000207.1",
+            "length": 954743,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000067.1",
+            "length": 762872,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000066.1",
+            "length": 730767,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000208.1",
+            "length": 626264,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000209.1",
+            "length": 572210,
+            "role": "unplaced-scaffold"
+        },
+        {
+            "assembly_accession": "GCA_028022735.1",
+            "assembly_unit": "Primary Assembly",
+            "assigned_molecule_location_type": "Chromosome",
+            "chr_name": "Un",
+            "genbank_accession": "JAQMCM010000210.1",
+            "length": 526834,
+            "role": "unplaced-scaffold"
+        }
+    ],
+    "total_count": 232
+}

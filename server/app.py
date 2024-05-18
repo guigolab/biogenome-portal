@@ -3,14 +3,14 @@ from flask_cors import CORS
 from config import BaseConfig
 from rest import initialize_api
 from flask_jwt_extended import JWTManager,get_jwt, create_access_token, get_jwt_identity, set_access_cookies
-from db.models import BioGenomeUser, CronJob,Roles
+from db.models import BioGenomeUser, CronJob,Roles, Organism, GenomeAnnotation, Assembly, Experiment, BioSample, LocalSample, Read, TaxonNode, ComputedTree, Chromosome
 from tendo.singleton import SingleInstance
 from flask_mongoengine import MongoEngine
 from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
 import os
-from rest.utils import extensions
+from utils.extensions import cache
 
 app = Flask(__name__)
 
@@ -28,13 +28,26 @@ db = MongoEngine()
 app.logger.info("Initializing MongoDB")
 db.init_app(app)
 
-extensions.cache.init_app(app, config={"CACHE_TYPE": "SimpleCache", "CACHE_DEFAULT_TIMEOUT": 300}) 
+cache.cache.init_app(app, config={"CACHE_TYPE": "SimpleCache", "CACHE_DEFAULT_TIMEOUT": 300}) 
 initialize_api(app)
 
 CORS(app)
 
 jwt = JWTManager(app)
 
+
+def drop_all():
+    Organism.drop_collection()
+    LocalSample.drop_collection()
+    TaxonNode.drop_collection()
+    Assembly.drop_collection()
+    LocalSample.drop_collection()
+    BioSample.drop_collection()
+    Experiment.drop_collection()
+    Read.drop_collection()
+    Chromosome.drop_collection()
+    ComputedTree.drop_collection()
+    GenomeAnnotation.drop_collection()
 
 @app.after_request
 def refresh_expiring_jwts(response):
@@ -56,8 +69,11 @@ def refresh_expiring_jwts(response):
 username = os.getenv('DB_USER')
 password = os.getenv('DB_PASS')
 
+
+
 try:
     FIRST_START = SingleInstance()
+    # drop_all()
 
     ##create root user if does not exist
     user = BioGenomeUser.objects(name = username).first()
