@@ -24,6 +24,8 @@ services:
       - ${ANNOTATIONS_PATH}:/annotations_data
     env_file:
       - .env
+    depends_on:
+      - redis
 
   # biogenome_cron:
   #   build: ./cronjobs
@@ -52,13 +54,17 @@ services:
 
 
   celery:
-    build: .
-    command: celery -A app.tasks worker --loglevel=info
+    build: ./server
+    command: celery --app app.celery_app worker --loglevel=info  
+    restart: always
     volumes:
-      - .:/usr/src/app
+      - ./server:/server
+    env_file:
+      - .env
     depends_on:
+      - biogenome_server
+      - bioG_mongo
       - redis
-      - mongo
 
   redis:
     image: "redis:alpine"

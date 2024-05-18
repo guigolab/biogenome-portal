@@ -11,6 +11,7 @@ from datetime import timedelta
 from datetime import timezone
 import os
 from extensions import cache
+from jobs import celery_init_app
 
 app = Flask(__name__)
 
@@ -19,7 +20,13 @@ app = Flask(__name__)
 app.config.from_object(BaseConfig)
 app.config["JWT_TOKEN_LOCATION"] = ["cookies"]
 
-
+app.config.from_mapping(
+    CELERY=dict(
+        broker_url=BaseConfig.CELERY_BROKER_URL,
+        result_backend=BaseConfig.CELERY_RESULT_BACKEND,
+        task_ignore_result=True,
+    ),
+)
 app.config["JWT_COOKIE_SAMESITE"] = "None"
 app.config["JWT_COOKIE_SECURE"] = True
 app.config["CORS_SUPPORTS_CREDENTIALS"] = True
@@ -28,12 +35,16 @@ db = MongoEngine()
 app.logger.info("Initializing MongoDB")
 db.init_app(app)
 
+celery_app = celery_init_app(app)
+
 cache.cache.init_app(app, config={"CACHE_TYPE": "SimpleCache", "CACHE_DEFAULT_TIMEOUT": 300}) 
 initialize_api(app)
+# celery.celery.conf.update(app.config)
 
 CORS(app)
 
 jwt = JWTManager(app)
+
 
 
 def drop_all():

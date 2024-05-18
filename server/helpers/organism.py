@@ -75,7 +75,7 @@ def get_info_from_ena_browser(taxid):
     taxon_xml = ebi_client.get_taxon_from_ena_browser(taxid)
     if taxon_xml:
         organism_to_parse, parsed_taxons = taxonomy_parser.parse_taxons_from_ena_browser(taxon_xml)
-        organism_to_save = organism_parser.parse_organism_from_ena_browser(organism_to_parse)
+        organism_to_save = organism_parser.parse_organism_from_ena_browser(organism_to_parse, parsed_taxons)
         return organism_to_save, parsed_taxons
     return None, None
 

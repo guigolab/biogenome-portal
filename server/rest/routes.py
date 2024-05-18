@@ -1,4 +1,4 @@
-# from .cronjob import cronjobs_controller
+from .cronjob import cronjobs_controller
 from .user import users_controller
 from .local_sample import local_samples_controller 
 from .biosample import biosamples_controller
@@ -34,7 +34,7 @@ def initialize_routes(api):
 	api.add_resource(goat_reports_controller.GoaTReportApi,'/api/goat_report')
 
 	##CRONJOBS
-	# api.add_resource(cronjobs_controller.CronJobApi, '/api/cronjob', '/api/cronjob/<model>')
+	api.add_resource(cronjobs_controller.CronJobApi, '/api/cronjob', '/api/cronjob/<model>')
 
 	##GEOGRAPHIC LOCATIONS
 	api.add_resource(sample_locations_controller.SampleLocationsByTaxon, '/api/taxons/<taxid>/coordinates')

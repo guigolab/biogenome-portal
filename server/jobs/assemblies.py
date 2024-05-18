@@ -5,6 +5,8 @@ from helpers.organism import handle_organism
 from helpers.biosample import handle_biosample_from_ncbi_dataset
 from db.models import Assembly
 import os
+from celery import shared_task
+# from extensions.celery import celery
 
 """
 IMPORT ASSEMBLIES BY BIOPROJECT
@@ -13,12 +15,13 @@ IMPORT ASSEMBLIES BY BIOPROJECT
 
 PROJECT_ACCESSION = os.getenv('PROJECT_ACCESSION')
 
+@shared_task(name='import_assemblies',ignore_result=False)
 def import_assemblies_by_bioproject(project_accession=None):
 
     if not project_accession:
         project_accession = PROJECT_ACCESSION
 
-    CMD = ["accession", project_accession, "--assembly-source", "GenBank", "--assembly-version", "latest"]
+    CMD = ["genome","accession", project_accession]
 
     result = get_data_from_ncbi(CMD)
 
@@ -36,7 +39,7 @@ def import_assemblies_by_bioproject(project_accession=None):
         if not organism:
             print(f'Skipping assembly {new_parsed_assembly.accession} because organism with taxid:{new_parsed_assembly.taxid} was not found in INSDC')
 
-        handle_biosample_from_ncbi_dataset(new_parsed_assemblies)
+        handle_biosample_from_ncbi_dataset(new_parsed_assembly)
 
         print(f"Saving assembly {new_parsed_assembly.accession} for species {organism.scientific_name}")
         
@@ -45,7 +48,7 @@ def import_assemblies_by_bioproject(project_accession=None):
 
 
 
-
+# @celery.task(name="add_blob_link")
 def add_blob_link():
     assemblies = Assembly.objects(blobtoolkit_id=None)
     for ass in assemblies:
