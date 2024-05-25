@@ -23,7 +23,7 @@ def initialize_routes(api):
 	# api.add_resource(dumps_controller.DumpApi, '/api/dumps/<model>')
  
 	##LOCAL SAMPLES UPLODA
-	api.add_resource(uploads_controller.ExcelParserApi, '/api/spreadsheet_upload')
+	api.add_resource(uploads_controller.ExcelParserApi, '/api/spreadsheet_upload',  '/api/spreadsheet_upload/<task_id>')
 
 
 	##LOOKUP
@@ -32,6 +32,7 @@ def initialize_routes(api):
  
 	##UPLOAD/DOWNLOAD GOAT COMPLIANT REPORTS
 	api.add_resource(goat_reports_controller.GoaTReportApi,'/api/goat_report')
+	api.add_resource(goat_reports_controller.GoaTReportUploadApi,'/api/goat_report/<task_id>')
 
 	##CRONJOBS
 	api.add_resource(cronjobs_controller.CronJobApi, '/api/cronjob', '/api/cronjob/<model>')

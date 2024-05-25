@@ -1,12 +1,15 @@
-from db.models import  BioSample
+from db.models import BioSample
 from clients import ebi_client
 import os
 from parsers import biosample as biosample_parser
-from helpers.organism import handle_organism
+from helpers.organism import update_organisms,handle_taxonomic_ids
 from helpers.biosample import handle_biosample_location_data, parse_and_save_biosample, handle_derived_samples
+from celery import shared_task
+
 
 PROJECTS = os.getenv('PROJECTS')
 
+@shared_task(name='import_biosamples',ignore_result=False)
 def import_biosamples_from_project_names():
     if not PROJECTS:
         print("No Projects defined")
@@ -22,28 +25,33 @@ def import_biosamples_from_project_names():
             print(f'biosamples for project {project_accession} not found')
             continue
         
-        accessions = [biosample['accession'] for biosample in biosamples]
+        accession_list = list(set(biosample['accession'] for biosample in biosamples))
         
-        existing_biosamples = BioSample.objects(accession__in=accessions).scalar('accession')
+        existing_accession_list = BioSample.objects(accession__in=accession_list).scalar('accession')
         
-        new_parsed_biosamples = [biosample_parser.parse_biosample_from_ebi_data(biosample) for biosample in biosamples if biosample.get('accession') not in existing_biosamples]
+        parsed_biosamples = [biosample_parser.parse_biosample_from_ebi_data(biosample) for biosample in biosamples]
 
-        print(f"New biosamples to save for project {project_accession} {len(new_parsed_biosamples)}")
+        new_parsed_biosamples = [b for b in parsed_biosamples if not b.accession in existing_accession_list]
+        if not new_parsed_biosamples:
+            print(f"Any new biosample to save!")
+            return
 
-        for new_parsed_biosample in new_parsed_biosamples:
+        new_parsed_biosamples = handle_taxonomic_ids(new_parsed_biosamples)
             
-            organism = handle_organism(new_parsed_biosample.taxid)
-            if not organism:
-                print(f"Organism with taxid {new_parsed_biosample.taxid} not found for sample {new_parsed_biosample.accession}")
-                continue
+        print(f"New biosamples to save for project {project_accession} {len(new_parsed_biosamples)}")
+        
+        saved_biosamples = BioSample.objects.insert(new_parsed_biosamples)
 
-            new_parsed_biosample.save()
-            organism.save()
+        taxid_list_to_update = list(set(s.taxid for s in saved_biosamples))
 
-            handle_biosample_location_data(new_parsed_biosample)
+        update_organisms(taxid_list_to_update)
+        
+        for saved_biosample in saved_biosamples:
+            handle_biosample_location_data(saved_biosample)
+            
 
     #Bulk insert biosamples
-
+@shared_task(name='get_biosamples_derived_from',ignore_result=False)
 def get_biosamples_derived_from_parent():
 
     possible_parent_samples = BioSample.objects(__raw__ = {'metadata.sample derived from' : {"$exists": False}})
@@ -66,7 +74,7 @@ def get_biosamples_derived_from_parent():
             handle_biosample_location_data(new_parsed_sample)
 
 
-
+@shared_task(name='get_biosamples_parents',ignore_result=False)
 def get_biosample_parents():
     
     biosample_siblings = BioSample.objects(__raw__ = {'metadata.sample derived from' : {"$exists": True}})

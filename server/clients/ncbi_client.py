@@ -1,8 +1,10 @@
 import subprocess
 import json
+import os
+import tempfile
 import time
 
-TAXID_LIST_LIMIT=50
+TAXID_LIST_LIMIT=40
 
 def get_data_from_ncbi(command):
 
@@ -26,27 +28,43 @@ def get_data_from_ncbi(command):
         return None
     
 def get_taxons_from_ncbi_datasets(taxids):
-    # Check if the number of taxids exceeds 1000
-    if len(taxids) > TAXID_LIST_LIMIT:
-        # Split the taxids into chunks of 1000 or less
-        chunks = [taxids[i:i+TAXID_LIST_LIMIT] for i in range(0, len(taxids), TAXID_LIST_LIMIT)]
-        
-        # Initialize an empty list to store results
-        all_results = []
-        
-        # Iterate over each chunk and make separate requests
-        for chunk in chunks:
-            query = ['taxonomy', 'taxon', *chunk]
+    if len(taxids) <= TAXID_LIST_LIMIT:
+
+        with tempfile.NamedTemporaryFile(delete=False, mode='w') as temp_file:
+            temp_file_path = temp_file.name
+            # Write each taxonomic ID to the file
+            for tax_id in taxids:
+                temp_file.write(f"{tax_id}\n")
+
+            query = ['taxonomy', 'taxon', '--inputfile', str(temp_file_path)]
             report = get_data_from_ncbi(query)
-            if report:
-                all_results.extend(report.get('reports'), [])
-            time.sleep(1)
-        return all_results
-    else:
-        query = ['taxonomy', 'taxon', *taxids]
-        report = get_data_from_ncbi(query)
+
+        os.remove(temp_file_path)
         if report:
             return report.get('reports', [])
-        # If the number of taxids is 1000 or less, make a single request
         return []
+    else:
+        chunks = [taxids[i:i+TAXID_LIST_LIMIT] for i in range(0, len(taxids), TAXID_LIST_LIMIT)]
+        
+        print(f"Created a total of {len(chunks)} chunks of length <= {TAXID_LIST_LIMIT} to retrieve")
+
+        all_results=[]
+        path = "taxid-list.txt"
+        for chunk in chunks:
+            with open(path, mode="w") as file:
+                file.seek(0)
+                file.writelines([f"{taxid}\n" for taxid in chunk])
+                file.seek(0)
+
+            query = ['taxonomy', 'taxon','--inputfile', path]
+            
+            report = get_data_from_ncbi(query)
+                
+            if report:
+                all_results.extend(report.get('reports',[]))
+
+            print("RESULTS LENGTH IS: ", len(all_results))
+
+            time.sleep(1.5)
+        return all_results  
     

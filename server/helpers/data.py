@@ -52,7 +52,6 @@ def get_items(args, model, fieldToExclude, q_query, tsvFields):
         items = items.order_by(sort)
 
     total = items.count()
-
     if format == 'tsv':
         assemblies = create_tsv(items.as_pymongo(), tsvFields).encode('utf-8')
         mimetype="text/tab-separated-values"

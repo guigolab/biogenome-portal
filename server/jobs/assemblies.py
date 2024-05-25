@@ -1,12 +1,13 @@
 from clients.ncbi_client import get_data_from_ncbi
 from clients.genomehubs_client import get_blobtoolkit_id
 from parsers.assembly import parse_assembly_from_ncbi_datasets
-from helpers.organism import handle_organism
-from helpers.biosample import handle_biosample_from_ncbi_dataset
+from helpers.organism import update_organisms, handle_taxonomic_ids
+from helpers.biosample import  handle_sample_accessions
 from helpers.assembly import save_chromosomes
 from db.models import Assembly
 import os
 from celery import shared_task
+import time
 
 PROJECT_ACCESSION = os.getenv('PROJECT_ACCESSION')
 
@@ -22,29 +23,40 @@ def import_assemblies_by_bioproject(project_accession=None):
 
     if not result or not result.get("reports"):
         raise f"Nothing found for bioproject {project_accession}"
-    
+
     reports = result.get("reports")
-    existing_assemblies = Assembly.objects().scalar('accession')
-    new_parsed_assemblies = [parse_assembly_from_ncbi_datasets(ass) for ass in reports if ass.get('accession') not in existing_assemblies]
+    print(f"Assemblies for bioproject {project_accession}: {len(reports)}")
+
+    parsed_assemblies = [parse_assembly_from_ncbi_datasets(ass) for ass in reports]
+    accession_list = [ass.accession for ass in parsed_assemblies]
+    existing_accession_list = Assembly.objects(accession__in=accession_list).scalar('accession')
+    new_parsed_assemblies = [ass for ass in parsed_assemblies if ass.accession not in existing_accession_list]
+    if not new_parsed_assemblies:
+        print(f"Any new assemblt to save!")
+        return
     
     print(f"New assemblies to save for bioproject {project_accession}: {len(new_parsed_assemblies)}")
 
+    new_parsed_assemblies = handle_sample_accessions(handle_taxonomic_ids(new_parsed_assemblies))
+    saved_assemblies = []
     for new_parsed_assembly in new_parsed_assemblies:
-        organism = handle_organism(new_parsed_assembly.taxid)
-        if not organism:
-            print(f'Skipping assembly {new_parsed_assembly.accession} because organism with taxid:{new_parsed_assembly.taxid} was not found in INSDC')
-        save_chromosomes(new_parsed_assembly)
-        handle_biosample_from_ncbi_dataset(new_parsed_assembly)
+        try:
+            save_chromosomes(new_parsed_assembly)
+            print(f"Saving assembly {new_parsed_assembly.accession}")
+            saved_assembly = new_parsed_assembly.save()
+            saved_assemblies.append(saved_assembly)
+            time.sleep(1.5)
+        except Exception as e:
+            print(f"Error with assembly {new_parsed_assembly.accession}")
+            print(e)
+            continue
 
-        
-        print(f"Saving assembly {new_parsed_assembly.accession} for species {organism.scientific_name}")
-        
-        new_parsed_assembly.save()
-        organism.save()
+    if saved_assemblies:
+        update_organisms([ass.taxid for ass in saved_assemblies])
 
 
 
-# @celery.task(name="add_blob_link")
+@shared_task(name='add_blob_link',ignore_result=False)
 def add_blob_link():
     assemblies = Assembly.objects(blobtoolkit_id=None)
     for ass in assemblies:

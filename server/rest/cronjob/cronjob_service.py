@@ -29,10 +29,11 @@ def create_cronjob(model):
         task = JOB_MAP[model]
         active_tasks = task.app.control.inspect().active()
         
-        for v in active_tasks.values():
-            for t in v:
-                if t.get('name') == model:
-                    return f"A job for {model} is already running", 400
+        if active_tasks:
+            for v in active_tasks.values():
+                for t in v:
+                    if t.get('name') == model:
+                        return f"A job for {model} is already running", 400
 
         print(f'Triggering job {model}')
 

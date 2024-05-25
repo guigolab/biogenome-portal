@@ -1,11 +1,24 @@
 import requests
 import time
 
+
+
 def get_taxon_from_ena_browser(taxon_id):
     time.sleep(1)
-    response = requests.get(f"https://www.ebi.ac.uk/ena/browser/api/xml/{taxon_id}?download=false") ## 
+    response = requests.get(f"https://www.ebi.ac.uk/ena/browser/api/xml/{taxon_id}") ## 
     if response.status_code != 200:
-        return
+        return None
+    return response.content
+
+def get_objects_from_ena_browser(accessions):
+    payload = {
+        "accessions": accessions,
+    }
+    response = requests.post("https://www.ebi.ac.uk/ena/browser/api/xml", data=payload)
+    if response.status_code != 200:
+        print(response.content)
+        return None
+    
     return response.content
 
 def get_taxon_from_ena_portal(taxon_id):
@@ -40,12 +53,6 @@ def get_tolid(taxid):
     else:
         return response[0]['prefix']
 
-def get_reads_link_from_sample_accession(accession):
-    time.sleep(1)
-    experiments_data = requests.get(f"https://www.ebi.ac.uk/ena/portal/api/links/sample?accession={accession}&result=read_run&limit=1000&format=json")
-    if experiments_data.status_code != 200:
-        return list()
-    return experiments_data.json()
 
 def get_reads(accession):
     time.sleep(1)

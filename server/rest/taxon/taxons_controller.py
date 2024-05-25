@@ -4,7 +4,7 @@ from flask_restful import Resource
 
 class TaxonsApi(Resource):
     def get(self):
-        response, mimetype, status = taxons_service.get_taxons(**request.args)
+        response, mimetype, status = taxons_service.get_taxons(request.args)
         return Response(response, mimetype=mimetype, status=status)
 
 class TaxonApi(Resource):

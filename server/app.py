@@ -3,7 +3,7 @@ from flask_cors import CORS
 from config import BaseConfig
 from rest import initialize_api
 from flask_jwt_extended import JWTManager,get_jwt, create_access_token, get_jwt_identity, set_access_cookies
-from db.models import BioGenomeUser, CronJob,Roles, Organism, GenomeAnnotation, Assembly, Experiment, BioSample, LocalSample, Read, TaxonNode, ComputedTree, Chromosome
+from db.models import BioGenomeUser, SampleCoordinates,CronJob,Roles, Organism, GenomeAnnotation, Assembly, Experiment, BioSample, LocalSample, Read, TaxonNode, ComputedTree, Chromosome
 from tendo.singleton import SingleInstance
 from flask_mongoengine import MongoEngine
 from datetime import datetime
@@ -51,13 +51,14 @@ def drop_all():
     LocalSample.drop_collection()
     TaxonNode.drop_collection()
     Assembly.drop_collection()
-    LocalSample.drop_collection()
     BioSample.drop_collection()
     Experiment.drop_collection()
     Read.drop_collection()
     Chromosome.drop_collection()
     ComputedTree.drop_collection()
     GenomeAnnotation.drop_collection()
+    SampleCoordinates.drop_collection()
+    
 
 @app.after_request
 def refresh_expiring_jwts(response):

@@ -1,16 +1,15 @@
 from db.models import Organism, TaxonNode,ComputedTree
-from ..cronjob import cronjob_service
 from datetime import datetime
 from extensions.cache import cache
 from helpers import organism as organism_helper, taxonomy as taxonomy_helper
 from errors import NotFound
+from jobs import taxonomy
 
 @cache.cached(timeout=300)
 def get_computed_tree():
     computed_tree = ComputedTree.objects().exclude('id').first()
-    cronjob_service.compute_tree()
-    # if not computed_tree or is_older_than_one_day(computed_tree.last_update):
-    #     cronjob_service.compute_tree()
+    if not computed_tree or is_older_than_one_day(computed_tree.last_update):
+        taxonomy.compute_tree()
     computed_tree = ComputedTree.objects().exclude('id').first()
     return computed_tree
 

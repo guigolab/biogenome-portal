@@ -24,3 +24,11 @@ class GoaTReportApi(Resource):
         goat_report = request.files.get('goat_report')
         messages, status = goat_reports_service.upload_goat_report(goat_report)
         return Response(json.dumps(messages), mimetype="application/json", status=status)
+    
+
+class GoaTReportUploadApi(Resource):
+
+    def get(self, task_id):
+        response = goat_reports_service.get_task_status(task_id)
+        return Response(json.dumps(response), mimetype="application/json", status=200)
+        

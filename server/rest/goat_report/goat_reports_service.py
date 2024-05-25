@@ -5,6 +5,9 @@ from io import StringIO
 from itertools import islice
 from helpers import user as user_helper, taxonomy as taxonomy_helper, organism as organism_helper
 import os
+from jobs import goat_report_upload
+from errors import NotFound
+from celery.result import AsyncResult
 
 GOAT_STATUS_EXPORT_MAPPER={
     GoaTStatus.SAMPLE_COLLECTED.value: "sample_collected",
@@ -92,22 +95,21 @@ def upload_goat_report(report):
         return [{"user": "User not found"}], 400
     
     taxids = [str(row.get('ncbi_taxon_id')) for row in rows]
-        
-    errors, new_taxons_to_parse = taxonomy_helper.validate_taxonomy(user_obj, taxids)
-    
-    if errors:
-        return errors, 400
-    
-    if new_taxons_to_parse:
+            
+    existing_taxids = Organism.objects(taxid__in=taxids).scalar('taxid')
 
-        organism_helper.create_organisms_and_related_taxons_from_ncbi_datasets(new_taxons_to_parse)
-        user_helper.add_species_to_datamanager([t.taxid for t in new_taxons_to_parse], user_obj)
+    if existing_taxids:
+        taxonomy_errors = taxonomy_helper.check_species_permission(user_obj, existing_taxids)
 
-    saved_organisms = update_organisms(rows, taxids)
+        if taxonomy_errors:
+            return taxonomy_errors, 400
 
-    return saved_organisms, 200
+    task = goat_report_upload.upload_goat_report.delay(user_obj.name, rows)
 
-def update_organisms(tsv_reader, taxids):
+    return dict(id=task.id, state=task.state ), 200
+
+
+def update_goat_organisms(tsv_reader, taxids):
     saved_organisms = []
     organisms = Organism.objects(taxid__in=taxids)
     for index, row in enumerate(tsv_reader):
@@ -123,7 +125,8 @@ def update_organisms(tsv_reader, taxids):
             if row['publication_id'] and not any(pub.id == row['publication_id'] for pub in org.publications):
                 pub_to_save = map_publication(row.get('publication_id'))
                 org.publications.append(pub_to_save)
-            saved_organisms.append({taxid: f"Organism {org.scientific_name} correctly saved"})
+            saved_organism = org.save()
+            saved_organisms.append(saved_organism)
             org.save()
     return saved_organisms
     
@@ -147,3 +150,11 @@ def map_publication(pub):
         publication_to_save.source = PublicationSource.PMID
     publication_to_save.id = pub
     return publication_to_save
+
+
+def get_task_status(task_id):
+    task = AsyncResult(task_id)
+    if task.result:
+        print(task.result)
+        return dict(messages=task.result['messages'], state=task.state )
+    raise NotFound

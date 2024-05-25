@@ -1,5 +1,15 @@
 from db.models import Organism
 from clients import tolid_client
+from db.enums import GoaTStatus
+
+GOAT_STATUS_IMPORT_MAPPER={
+    "sample_collected":GoaTStatus.SAMPLE_COLLECTED,
+    "sample_acquired":GoaTStatus.SAMPLE_ACQUIRED,
+    "data_generation":GoaTStatus.DATA_GENERATION,
+    "in_assembly":GoaTStatus.IN_ASSEMBLY,
+    "insdc_submitted":GoaTStatus.INSDC_SUBMITTED,
+    "publication_available":GoaTStatus.PUBLICATION_AVAILABLE
+}
 
 def parse_organism_from_ncbi_dataset(organism_data):
     parsed_organism = {
@@ -29,3 +39,6 @@ def parse_organism_from_ena_portal(organism_data):
         'taxon_lineage': list(reversed([taxon_taxid.strip() for taxon_taxid in organism_data.get('tax_lineage').split(';') if taxon_taxid != '1']))
     }
     return Organism(**parsed_organism)
+
+
+

@@ -9,38 +9,30 @@ def convert_coordinates(lat, lat_value, long, long_value):
     return lat, long
 
 def save_coordinates(saved_sample, id_field='accession'):
-    print(f'SETTING LOCATION OF {saved_sample[id_field]} of {saved_sample.scientific_name}')
     sample_metadata = saved_sample.metadata
     lowered_keys_dict = {key.lower(): value for key, value in sample_metadata.items()}
     
     latitude, longitude = None, None
     
-    if 'lat_lon' in sample_metadata:
-        values = sample_metadata['lat_lon'].split(' ')
-        if len(values) == 4:
-            lat, lat_value, long, long_value = values
-            latitude, longitude = convert_coordinates(lat, lat_value, long, long_value)
-    elif 'lat lon' in sample_metadata:
-        values = sample_metadata['lat lon'].split(' ')
-        if len(values) == 4:
-            lat, lat_value, long, long_value = values
-            latitude, longitude = convert_coordinates(lat, lat_value, long, long_value)
-    elif 'geographic location (latitude)' in sample_metadata and 'geographic location (longitude)' in sample_metadata:
-        latitude = str(sample_metadata['geographic location (latitude)'])
-        longitude = str(sample_metadata['geographic location (longitude)'])
-    elif 'latitude' in lowered_keys_dict and 'longitude' in lowered_keys_dict:
-        latitude = str(lowered_keys_dict['latitude'])
-        longitude = str(lowered_keys_dict['longitude'])
-    elif 'decimal_latitude' in lowered_keys_dict and 'decimal_longitude' in lowered_keys_dict:
-        latitude = str(lowered_keys_dict['decimal_latitude'])
-        longitude = str(lowered_keys_dict['decimal_longitude'])
-    
+    for k,v in lowered_keys_dict.items():
+
+        if k == 'lat_lon' or k == 'lat lon':
+            values = v.split(' ')
+
+            if len(values) == 4:
+                lat, lat_value, long, long_value = values
+                latitude, longitude = convert_coordinates(lat, lat_value, long, long_value)
+
+        elif 'latitude' in k:
+            latitude = v
+        elif 'longitude' in k:
+            longitude = v
     if latitude and longitude:
         try:
             latitude = latitude.replace(',', '.').replace("'", ".")
             longitude = longitude.replace(',', '.').replace("'", ".")            
             lat, long = float(latitude), float(longitude)
-           
+
             if -90.0 <= lat <= 90.0 and -180.0 <= long <= 180.0:
                 # Replace ',' and "'" with '.' for better compatibility
 
@@ -57,7 +49,6 @@ def save_coordinates(saved_sample, id_field='accession'):
                     }
                     if id_field == 'local_id':
                         sample_coordinates_to_save['is_local_sample'] = True
-
                     SampleCoordinates(**sample_coordinates_to_save).save()
         except ValueError:
             print(f'Invalid latitude: {latitude} or longitude: {longitude} for sample: {saved_sample[id_field]}')
@@ -69,7 +60,7 @@ def update_countries_from_biosample(saved_biosample, sample_id):
 
     geo_loc = None
     for attr in saved_biosample.metadata:
-        if attr.lower() == 'geo_loc_name' or 'country' in attr.lower():
+        if attr.lower() == 'geo_loc_name' or 'country' == attr.lower() or 'country' in attr.lower():
             geo_loc = saved_biosample.metadata.get(attr)
 
     if geo_loc:
@@ -89,6 +80,7 @@ def update_countries_from_biosample(saved_biosample, sample_id):
 # Iterate through saved biosamples
     taxid = saved_biosample.taxid
     country_to_add = None
+
 
     # Check if the biosample has a country name
     if sample_id in accession_country_map:

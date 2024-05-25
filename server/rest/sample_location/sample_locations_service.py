@@ -16,14 +16,14 @@ def get_sample_locations_by_organism(taxid):
     return sample_coordinates
 
 def get_sample_locations_by_biosample(accession):
-    if not BioSample.objects(accession=accession).first():
-        raise NotFound
     sample_coordinates = SampleCoordinates.objects(sample_accession=accession).first()
+    if not sample_coordinates:
+         raise NotFound
     return sample_coordinates
 
 def get_sample_locations_by_localsample(local_id):
-    if not LocalSample.objects(local_id=local_id).first():
-        raise NotFound
     sample_coordinates = SampleCoordinates.objects(sample_accession=local_id).first()
+    if not sample_coordinates:
+         raise NotFound
     return sample_coordinates
     

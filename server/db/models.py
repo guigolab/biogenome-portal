@@ -23,7 +23,6 @@ def update_organism_status(sender, document, **kwargs):
     #update organism links
     assemblies =  Assembly.objects(taxid=taxid).scalar('accession').count()
     experiments = Experiment.objects(taxid=taxid).scalar('experiment_accession').count()
-    local_samples = LocalSample.objects(taxid=taxid).scalar('local_id').count()
     biosamples = BioSample.objects(taxid=taxid).scalar('accession').count()
 
     #update insdc_status
@@ -33,7 +32,7 @@ def update_organism_status(sender, document, **kwargs):
         document.insdc_status= INSDCStatus.READS
     elif biosamples:
         document.insdc_status=INSDCStatus.SAMPLE
-    elif local_samples:
+    else:
         document.insdc_status=None
 
     #update goat status

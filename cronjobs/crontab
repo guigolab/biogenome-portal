@@ -1,2 +1,2 @@
-* * * * * python /trigger_cronjob.py import_assemblies
+* * * * * python /trigger_cronjob.py import_biosamples
 

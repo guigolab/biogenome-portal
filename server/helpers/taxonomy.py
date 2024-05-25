@@ -37,23 +37,6 @@ def save_parsed_taxons(parsed_taxons):
     if taxons_to_save:
         TaxonNode.objects.insert(taxons_to_save)
 
-
-def validate_taxonomy(user, taxids):
-    if not user:
-        return [{'user': 'User not found'}], None
-
-    existing_taxids = Organism.objects(taxid__in=[taxids for taxid in taxids])
-    taxonomy_errors = check_species_permission(user, existing_taxids)
-    if taxonomy_errors:
-        return taxonomy_errors, None
-
-    new_taxids = filter_new_taxids(existing_taxids, taxids)
-    new_taxons_to_parse, fetch_errors = fetch_new_taxons(new_taxids)
-    taxonomy_errors.extend(fetch_errors)
-
-    return taxonomy_errors, new_taxons_to_parse
-
-
 def check_species_permission(user, existing_taxids):
     if user.role.value == 'Admin':
         return []
@@ -65,33 +48,6 @@ def check_user_permission_for_taxid(user, taxid):
     if taxid not in user.species:
         return {'taxonomy': f"The organism {taxid} already exists in the db and you don't have the rights to modify it!"}
     return None
-
-
-def filter_new_taxids(existing_taxids, taxids):
-    return [taxid for taxid in taxids if taxid not in existing_taxids]
-
-
-def fetch_new_taxons(new_taxids):
-    if not new_taxids:
-        return [], []
-
-    new_taxons_to_parse = ncbi_client.get_taxons_from_ncbi_datasets(new_taxids)
-    if not new_taxons_to_parse:
-        return [], [{'taxonomy': f"No taxid has been found for {','.join(new_taxids)}"}]
-
-    fetch_errors = validate_fetched_taxons(new_taxids, new_taxons_to_parse)
-    return new_taxons_to_parse, fetch_errors
-
-
-def validate_fetched_taxons(new_taxids, new_taxons_to_parse):
-    fetch_errors = []
-    insdc_new_taxids = [str(taxon.get('taxonomy').get('tax_id')) for taxon in new_taxons_to_parse]
-
-    for taxid in new_taxids:
-        if taxid not in insdc_new_taxids:
-            fetch_errors.append({taxid: f"{taxid} not found in INSDC"})
-
-    return fetch_errors
 
 def get_and_order_saved_taxon_nodes(organism_obj):
     taxon_lineage = organism_obj.taxon_lineage
