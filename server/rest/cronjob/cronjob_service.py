@@ -12,6 +12,7 @@ JOB_MAP = {
     'get_biosamples_parents':biosamples.get_biosample_parents,
     'get_experiments': experiments.get_experiments_from_bioproject_accession,
     'import_assemblies': assemblies.import_assemblies_by_bioproject,
+    'update_assembly_metadata': assemblies.update_assembly_metadata,
     'update_countries': geolocation.update_all_countries,
     'import_biosamples': biosamples.import_biosamples_from_project_names,
     'add_blob_link':assemblies.add_blob_link,
