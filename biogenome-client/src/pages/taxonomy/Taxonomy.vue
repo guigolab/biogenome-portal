@@ -17,7 +17,7 @@
             <div style="position: relative;">
                 <div style="position: absolute;z-index: 1;width: 100%;">
                     <div class="row align-end">
-                        <div class="flex">
+                        <div class="flex lg12 md12 sm12 xs12">
                             <va-select hideSelected :loading="isLoading" dropdownIcon="search" searchable
                                 highlight-matched-text :textBy="(v: TreeNode) => `${v.name} (${v.rank})`"
                                 trackBy="taxid" @update:model-value="setCurrentTaxon" @update:search="handleSearch"
@@ -46,7 +46,7 @@
             </div>
         </template>
         <template #end>
-            <div style="position: relative;">
+            <div style="position: relative;padding-left: 10px;">
                 <div style="position: absolute;width: 100%;">
                     <router-view></router-view>
                 </div>
@@ -58,8 +58,8 @@
             <h2 class="va-h2">{{ t('taxon.related.header') }}</h2>
             <p class="va-text-secondary">{{ t('taxon.related.description') }}</p>
         </template>
-        <va-inner-loading :loading="isLoading">
-            <va-card-content style="padding-left: 0;">
+        <va-card-content style="padding-left: 0;">
+            <va-inner-loading :loading="isLoading">
                 <va-form tag="form" @submit.prevent="searchRelatedTaxon">
                     <div class="row align-center justify-start">
                         <va-input v-model="taxidInput" class="flex lg12 md12 sm12 xs12"
@@ -73,22 +73,23 @@
                         </va-button>
                     </va-card-actions>
                 </va-form>
-            </va-card-content>
-        </va-inner-loading>
+            </va-inner-loading>
+        </va-card-content>
     </VaModal>
 </template>
 <script setup lang="ts">
 import D3HyperTree from '../../components/tree/D3HyperTree.vue'
-import router from '../../router'
-import { watch, ref, watchEffect } from 'vue';
+import { ref} from 'vue';
 import TaxonService from '../../services/clients/TaxonService';
 import { useI18n } from 'vue-i18n'
 import { useTaxonomyStore } from '../../stores/taxonomy-store'
 import { TreeNode } from '../../data/types';
 import { AxiosError } from 'axios';
 import { useToast } from 'vuestic-ui'
+import { useRouter } from 'vue-router';
 
 
+const router = useRouter()
 const rootNode = import.meta.env.VITE_ROOT_NODE ? import.meta.env.VITE_ROOT_NODE : '131567'
 
 const showModal = ref(false)
@@ -109,6 +110,7 @@ async function searchRelatedTaxon() {
         showModal.value = !showModal.value
     }
 }
+
 const taxonomyStore = useTaxonomyStore()
 
 
@@ -121,16 +123,10 @@ const isLoading = ref(false)
 function setCurrentTaxon(taxon: TreeNode) {
     taxons.value = []
     taxonomyStore.currentTaxon = { ...taxon }
-    taxonomyStore.taxidQuery = null
+    // taxonomyStore.taxidQuery = null
     taxonomyStore.taxidQuery = taxon.taxid
     router.push({ name: 'taxon', params: { taxid: taxon.taxid } })
 }
-
-watchEffect(() => {
-    if (router.currentRoute.value.name === 'taxonomy' && taxonomyStore.taxidQuery) {
-        router.push({ name: 'taxon', params: { taxid: taxonomyStore.taxidQuery } })
-    }
-})
 
 async function handleSearch(v: string) {
     if (v.length < 2) return

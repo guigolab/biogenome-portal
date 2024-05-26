@@ -51,11 +51,17 @@ class AuthService {
   deleteOrganism(taxid) {
     return auth.delete(`/organisms/${taxid}`)
   }
+  importSpreadsheetStatus(id){
+    return auth.get(`/spreadsheet_upload/${id}`)
+  }
   importSpreadsheet(formData) {
     return auth.post('/spreadsheet_upload', formData)
   }
   importGoatReport(formData){
     return auth.post('/goat_report',formData)
+  }
+  importGoatReportStatus(id){
+    return auth.get(`/goat_report/${id}`)
   }
   createAnnotation(formData) {
     return auth.post('/annotations', formData)

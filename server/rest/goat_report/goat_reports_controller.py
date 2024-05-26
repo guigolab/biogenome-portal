@@ -4,7 +4,7 @@ from . import goat_reports_service
 import os
 from flask_jwt_extended import jwt_required
 import json
-from ..utils import wrappers
+from wrappers.data_manager import data_manager_required
 
 GOAT_PROJECT_NAME = os.getenv('GOAT_PROJECT_NAME')
 
@@ -19,8 +19,16 @@ class GoaTReportApi(Resource):
         return Response(tsv_goat_report.encode(encode), mimetype=mimetype, headers={"Content-disposition": f"attachment; filename={file_name}"})
 
     @jwt_required()
-    @wrappers.data_manager_required()
+    @data_manager_required()
     def post(self):
         goat_report = request.files.get('goat_report')
         messages, status = goat_reports_service.upload_goat_report(goat_report)
         return Response(json.dumps(messages), mimetype="application/json", status=status)
+    
+
+class GoaTReportUploadApi(Resource):
+
+    def get(self, task_id):
+        response = goat_reports_service.get_task_status(task_id)
+        return Response(json.dumps(response), mimetype="application/json", status=200)
+        

@@ -5,16 +5,18 @@ from flask_restful import Resource
 from errors import NotFound
 import json
 from flask_jwt_extended import jwt_required
-from ..utils import wrappers
+from wrappers import data_manager, organism_access
+from ..cronjob import cronjob_service
 
 class OrganismsApi(Resource):
 
 	def get(self):
+		# cronjob_service.create_cronjob('import_assemblies')
 		response, mimetype, status = organisms_service.get_organisms(request.args)
 		return Response(response, mimetype=mimetype, status=status)
     
 	@jwt_required()
-	@wrappers.data_manager_required()
+	@data_manager.data_manager_required()
 	def post(self):
 		data = request.json if request.is_json else request.form
 		message, status = organisms_service.create_organism(data)
@@ -28,14 +30,14 @@ class OrganismApi(Resource):
 		return Response(organism_obj.to_json(),mimetype="application/json", status=200)
 
 	@jwt_required()
-	@wrappers.organism_access_required()
+	@organism_access.organism_access_required()
 	def put(self,taxid):
 		data = request.json if request.is_json else request.form
 		message, status = organisms_service.update_organism(data,taxid)
 		return Response(json.dumps(message),mimetype="application/json", status=status)
 	
 	@jwt_required()
-	@wrappers.organism_access_required()
+	@organism_access.organism_access_required()
 	def delete(self,taxid):
 		message, status = organisms_service.delete_organism(taxid)
 		return Response(json.dumps(message),mimetype="application/json", status=status)

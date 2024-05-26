@@ -1,12 +1,13 @@
 import csv
 from db.enums import GoaTStatus,PublicationSource
-from db.models import Organism,Publication,BioGenomeUser, GoaTUpdateDate
+from db.models import Organism,Publication, GoaTUpdateDate
 from io import StringIO
 from itertools import islice
-from ..organism import organisms_service
-from ..utils import data_helper
-from flask_jwt_extended import get_jwt
+from helpers import user as user_helper, taxonomy as taxonomy_helper, organism as organism_helper
 import os
+from jobs import goat_report_upload
+from errors import NotFound
+from celery.result import AsyncResult
 
 GOAT_STATUS_EXPORT_MAPPER={
     GoaTStatus.SAMPLE_COLLECTED.value: "sample_collected",
@@ -88,27 +89,27 @@ def upload_goat_report(report):
     if errors:
         return errors, 400
     
-    user = get_user()
-    if not user:
+    user_obj = user_helper.get_current_user()
+
+    if not user_obj:
         return [{"user": "User not found"}], 400
     
     taxids = [str(row.get('ncbi_taxon_id')) for row in rows]
-    
-    existing_organisms = Organism.objects(taxid__in=taxids)
-    
-    errors, new_taxons_to_parse = data_helper.validate_taxonomy(user, existing_organisms,taxids)
-    
-    if errors:
-        return errors, 400
-    
-    if new_taxons_to_parse:
-        create_organisms(new_taxons_to_parse, user)
+            
+    existing_taxids = Organism.objects(taxid__in=taxids).scalar('taxid')
 
-    saved_organisms = update_organisms(rows, taxids)
+    if existing_taxids:
+        taxonomy_errors = taxonomy_helper.check_species_permission(user_obj, existing_taxids)
 
-    return saved_organisms, 200
+        if taxonomy_errors:
+            return taxonomy_errors, 400
 
-def update_organisms(tsv_reader, taxids):
+    task = goat_report_upload.upload_goat_report.delay(user_obj.name, rows)
+
+    return dict(id=task.id, state=task.state ), 200
+
+
+def update_goat_organisms(tsv_reader, taxids):
     saved_organisms = []
     organisms = Organism.objects(taxid__in=taxids)
     for index, row in enumerate(tsv_reader):
@@ -124,15 +125,11 @@ def update_organisms(tsv_reader, taxids):
             if row['publication_id'] and not any(pub.id == row['publication_id'] for pub in org.publications):
                 pub_to_save = map_publication(row.get('publication_id'))
                 org.publications.append(pub_to_save)
-            saved_organisms.append({taxid: f"Organism {org.scientific_name} correctly saved"})
+            saved_organism = org.save()
+            saved_organisms.append(saved_organism)
             org.save()
     return saved_organisms
     
-def get_user():
-    claims = get_jwt()
-    username = claims.get('username')
-    return BioGenomeUser.objects(name=username).first()
-
 
 def validate_fields(tsv_reader):
     errors = []
@@ -142,15 +139,6 @@ def validate_fields(tsv_reader):
             if not row[m_field]:
                 errors.append(dict(index=row_index, message=f'{m_field} is mandatory'))
     return errors
-
-def create_organisms(new_taxons_to_parse, user):
-    taxonomic_infos = organisms_service.parse_organisms_from_ncbi_data(new_taxons_to_parse)
-    for taxonomic_info in taxonomic_infos:
-        taxid, scientific_name, insdc_common_name, lineage =  taxonomic_info
-        organisms_service.create_organism_from_taxonomic_info(taxid, scientific_name, insdc_common_name, lineage)
-        if user.role.value == 'DataManager':
-            user.modify(add_to_set__species=taxid)
-
 
 def map_publication(pub):
     publication_to_save = Publication()
@@ -162,3 +150,11 @@ def map_publication(pub):
         publication_to_save.source = PublicationSource.PMID
     publication_to_save.id = pub
     return publication_to_save
+
+
+def get_task_status(task_id):
+    task = AsyncResult(task_id)
+    if task.result:
+        print(task.result)
+        return dict(messages=task.result['messages'], state=task.state )
+    raise NotFound

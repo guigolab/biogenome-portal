@@ -21,44 +21,36 @@ def update_organism_status(sender, document, **kwargs):
     taxid = document.taxid
 
     #update organism links
-    document.assemblies =  Assembly.objects(taxid=taxid).scalar('accession')
-    document.experiments = Experiment.objects(taxid=taxid).scalar('experiment_accession')
-    document.local_samples = LocalSample.objects(taxid=taxid).scalar('local_id')
-    document.biosamples = BioSample.objects(taxid=taxid).scalar('accession')
-    document.annotations = GenomeAnnotation.objects(taxid=taxid).scalar('name')
+    assemblies =  Assembly.objects(taxid=taxid).scalar('accession').count()
+    experiments = Experiment.objects(taxid=taxid).scalar('experiment_accession').count()
+    biosamples = BioSample.objects(taxid=taxid).scalar('accession').count()
 
     #update insdc_status
-    if document.assemblies:
+    if assemblies:
         document.insdc_status= INSDCStatus.ASSEMBLIES
-    elif document.experiments:
+    elif experiments:
         document.insdc_status= INSDCStatus.READS
-    elif document.biosamples:
+    elif biosamples:
         document.insdc_status=INSDCStatus.SAMPLE
-    elif document.local_samples:
+    else:
         document.insdc_status=None
 
     #update goat status
     if GOAT_PROJECT_NAME:
         current_goat_status=document.goat_status
-        if document.assemblies:
-            document.goat_status=GoaTStatus.INSDC_SUBMITTED
-        elif document.publications:
+        if document.publications:
             document.goat_status = GoaTStatus.PUBLICATION_AVAILABLE
+        elif assemblies:
+            document.goat_status=GoaTStatus.INSDC_SUBMITTED
+        elif experiments:
+            document.goat_status=GoaTStatus.IN_ASSEMBLY
+
         if current_goat_status != document.goat_status:
             update_date = GoaTUpdateDate.objects().first()
             if not update_date:
                 GoaTUpdateDate(updated=datetime.datetime.now(),taxid=document.taxid).save()
             else:
                 update_date.save(updated=datetime.datetime.now(),taxid=document.taxid)
-
-
-@handler(db.pre_save)
-def update_biosample_links(sender, document, **kwargs):
-    document.assemblies = Assembly.objects(sample_accession=document.accession).scalar('accession')
-    document.experiments = Experiment.objects(sample_accession=document.accession).scalar('experiment_accession')
-    query={"metadata__sample derived from":document.accession}
-    document.sub_samples = BioSample.objects(__raw__ = {'metadata.sample derived from' : {"$exists": True}}).filter(**query).scalar('accession')
-
 
 def trigger_organism_update(taxid):
     organism = Organism.objects(taxid=taxid).first()
@@ -141,7 +133,7 @@ class Experiment(db.Document):
     created = db.DateTimeField(default=datetime.datetime.utcnow)
     metadata=db.DictField()
     meta = {
-        'indexes': ['experiment_accession']
+        'indexes': ['experiment_accession','taxid']
     }
 
 class Read(db.Document):
@@ -163,12 +155,15 @@ class Assembly(db.Document):
     chromosomes_aliases=db.BinaryField()
     has_chromosomes_aliases=db.BooleanField(default=False)
     meta = {
-        'indexes': ['accession']
+        'indexes': ['accession','taxid']
     }
 
 class Chromosome(db.Document):
     accession_version = db.StringField(required=True,unique=True)
     metadata=db.DictField()
+    meta = {
+        'indexes': ['accession_version']
+    }
 
 class BioProject(db.Document):
     accession = db.StringField(required=True, unique=True)
@@ -205,12 +200,11 @@ class LocalSample(db.Document):
     metadata=db.DictField()
     meta = {
         'indexes': [
-            'local_id'
+            'local_id','taxid'
         ],
         'strict': False
     }
 
-@update_biosample_links.apply
 @delete_biosample_related_data.apply
 class BioSample(db.Document):
     assemblies = db.ListField(db.StringField())
@@ -227,7 +221,7 @@ class BioSample(db.Document):
     scientific_name = db.StringField(required=True)
     meta = {
         'indexes': [
-            'accession'
+            'accession','taxid'
         ],
         'strict': False
     }
@@ -244,7 +238,12 @@ class GenomeAnnotation(db.Document):
     metadata=db.DictField()
     user=db.StringField()
     external=db.BooleanField(default=True)
-   
+    meta = {
+        'indexes': [
+            'name','taxid'
+        ],
+        'strict': False
+    }
 
 class CommonName(db.EmbeddedDocument):
     value=db.StringField()
@@ -305,30 +304,30 @@ class BioGenomeUser(db.Document):
     role=db.EnumField(Roles, required=True)
     species=db.ListField(db.StringField())
 
-class GoaTStatus(db.Document):
-    goat_status = db.EnumField(GoaTStatus)
-    target_list_status = db.EnumField(TargetListStatus)
-    scientific_name = db.StringField(required=True,unique=True)
-    taxid = db.StringField(required= True,unique=True)
-    meta = {
-        'indexes': [
-            'scientific_name',
-            'taxid'
-        ],
-        'strict': False
-    }
+# class GoaTStatus(db.Document):
+#     goat_status = db.EnumField(GoaTStatus)
+#     target_list_status = db.EnumField(TargetListStatus)
+#     scientific_name = db.StringField(required=True,unique=True)
+#     taxid = db.StringField(required= True,unique=True)
+#     meta = {
+#         'indexes': [
+#             'scientific_name',
+#             'taxid'
+#         ],
+#         'strict': False
+#     }
 
-class INSDCStatus(db.Document):
-    scientific_name = db.StringField(required=True,unique=True)
-    taxid = db.StringField(required= True,unique=True)
-    insdc_status = db.EnumField(INSDCStatus)
-    meta = {
-        'indexes': [
-            'scientific_name',
-            'taxid'
-        ],
-        'strict': False
-    }
+# class INSDCStatus(db.Document):
+#     scientific_name = db.StringField(required=True,unique=True)
+#     taxid = db.StringField(required= True,unique=True)
+#     insdc_status = db.EnumField(INSDCStatus)
+#     meta = {
+#         'indexes': [
+#             'scientific_name',
+#             'taxid'
+#         ],
+#         'strict': False
+#     }
 
 class OrganismPublication(db.Document):
     source = db.EnumField(PublicationSource)
@@ -345,37 +344,3 @@ class ComputedTree(db.Document):
     last_update = db.DateTimeField(default=datetime.datetime.now())
     tree = db.DictField()
 
-# class OrganismMetadata(db.Document):
-#     publications = db.ListField(db.EmbeddedDocumentField(Publication))
-#     metadata = db.DictField()
-#     tolid_prefix = db.StringField()
-#     links = db.ListField(db.URLField())
-#     common_names= db.ListField(db.EmbeddedDocumentField(CommonName))
-#     countries = db.ListField(db.StringField())
-#     scientific_name = db.StringField(required=True,unique=True)
-#     taxid = db.StringField(required= True,unique=True)
-#     image = db.URLField()
-#     image_urls = db.ListField(db.URLField())
-#     meta = {
-#         'indexes': [
-#             'scientific_name',
-#             'taxid'
-#         ],
-#         'strict': False
-#     }
-
-# class OrganismPublication(db.Document):
-#     source = db.EnumField(PublicationSource)
-#     publication_id = db.StringField(required=True, unique=True)
-#     taxid = db.StringField(required=True)
-#     scientific_name = db.StringField(required=True)
-#     title = db.StringField()
-#     description = db.StringField()
-#     metadata = db.DictField()
-#     meta = {
-#         'indexes': [
-#             'scientific_name',
-#             'taxid'
-#         ],
-#         'strict': False
-#     }

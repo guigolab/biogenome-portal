@@ -1,10 +1,7 @@
-from db.models import LocalSample,Organism,BioGenomeUser
+from db.models import LocalSample
 from errors import NotFound
-from ..organism import organisms_service
-from datetime import datetime
 from mongoengine.queryset.visitor import Q
-from flask_jwt_extended import get_jwt
-from ..utils import data_helper
+from helpers import user as user_helper, organism as organism_helper, data as data_helper
 
 FIELDS_TO_EXCLUDE = ['id']
 
@@ -27,54 +24,27 @@ def get_filter(filter):
     else:
         return None
 
+def get_local_sample(id):
+    sample = LocalSample.objects(local_id=id).exclude(*FIELDS_TO_EXCLUDE).first()
+    if not sample:
+        raise NotFound
+    return sample
+
 def delete_local_sample(id):
-    claims = get_jwt()
-    name = claims.get('username')
-    user = BioGenomeUser.objects(name=name).first()
+    user = user_helper.get_current_user()
     if not user:
         raise NotFound
     
-    sample_to_delete = LocalSample.objects(local_id=id).first()
-    if not sample_to_delete:
-        raise NotFound
+    sample_to_delete = get_local_sample(id)
     
     if user.role.value == 'DataManager' and not sample_to_delete.taxid in user.species:
         raise NotFound
     
+    taxid = sample_to_delete.taxid
     sample_to_delete.delete()
-    organism = Organism.objects(taxid=sample_to_delete.taxid).first()
-    organism.save()
+    organism = organism_helper.handle_organism(taxid)
+    if organism:
+        organism.save()
     return id
 
-def create_local_sample(data):
-    #mandatory keys
-    required_fields = ['local_id','taxid','metadata']
-    for f in required_fields:
-        if not f in data.keys():
-            return dict(message=f"{f} is mandatory"), 400
-    local_sample_obj = LocalSample.objects(local_id=data['local_id']).first()
-    if local_sample_obj:
-        return dict(message=f"local sample with id: {data['local_id']} already exists"), 400
-
-    org = organisms_service.get_or_create_organism(data['taxid'])
-    if not org:
-        return dict(message=f"{data['taxid']} not found"), 400
-
-    local_sample_obj = LocalSample(local_id=data['local_id'], taxid=data['taxid'])
-
-    saved_sample = parse_local_sample_metadata(local_sample_obj, org, data['metadata'])
-
-    return dict(message=f"{saved_sample.local_id} correctly saved"), 201
-
-def update_local_sample(local_id, data):
-    local_sample_obj = LocalSample.objects(local_id = local_id).first()
-    if not local_sample_obj:
-        raise NotFound
-    updated_sample = parse_local_sample_metadata(local_sample_obj, data)
-    return dict(message=f"{updated_sample.local_id} correctly updated"), 201
-
-def parse_local_sample_metadata(sample, metadata):
-    sample.metadata = dict(**metadata)
-    sample.save()
-    return sample
 

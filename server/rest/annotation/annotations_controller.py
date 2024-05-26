@@ -1,23 +1,20 @@
 from flask_restful import Resource
 from flask import Response, request, send_from_directory
-from db.models import GenomeAnnotation
 from . import annotations_service
-from errors import NotFound
 import json
 from flask_jwt_extended import jwt_required
-from ..utils import wrappers
+from wrappers.admin import admin_required
 
 
 ANNOTATION_FOLDER = 'annotations_data'
 
-FIELDS_TO_EXCLUDE = ['id','created']
 
 class AnnotationsApi(Resource):
     def get(self):
         response, mimetype, status = annotations_service.get_annotations(request.args)
         return Response(response, mimetype=mimetype, status=status)
 
-    @wrappers.admin_required()
+    @admin_required()
     @jwt_required()
     def post(self):
         message,status = annotations_service.create_annotation(request)
@@ -25,22 +22,17 @@ class AnnotationsApi(Resource):
 
 class AnnotationApi(Resource):
     def get(self, name):
-        ann_obj = GenomeAnnotation.objects(name=name).exclude(*FIELDS_TO_EXCLUDE).first()
-        if not ann_obj:
-            raise NotFound
+        ann_obj = annotations_service.get_annotation(name)
         return Response(ann_obj.to_json(),mimetype="application/json", status=200)
     
-    @wrappers.admin_required()
+    @admin_required()
     @jwt_required()
     def put(self, name):
-        ann_obj = GenomeAnnotation.objects(name=name).first()
-        if not ann_obj:
-            raise NotFound
-        data = request.json
-        ann_obj.save(**data)
-        return Response(ann_obj.to_json(), mimetype="application/json", status=201)
+        data = request.json if request.is_json else request.form
+        message, status = annotations_service.update_annotation(name, data)        
+        return Response(json.dumps(message), mimetype="application/json", status=status)
 
-    @wrappers.admin_required()
+    @admin_required()
     @jwt_required()
     def delete(self,name):
         deleted_name = annotations_service.delete_annotation(name)

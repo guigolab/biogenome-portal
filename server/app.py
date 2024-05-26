@@ -3,36 +3,62 @@ from flask_cors import CORS
 from config import BaseConfig
 from rest import initialize_api
 from flask_jwt_extended import JWTManager,get_jwt, create_access_token, get_jwt_identity, set_access_cookies
-from db.models import BioGenomeUser, CronJob,Roles
+from db.models import BioGenomeUser, SampleCoordinates,CronJob,Roles, Organism, GenomeAnnotation, Assembly, Experiment, BioSample, LocalSample, Read, TaxonNode, ComputedTree, Chromosome
 from tendo.singleton import SingleInstance
 from flask_mongoengine import MongoEngine
 from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
-
 import os
-
+from extensions import cache
+from jobs import celery_init_app
 
 app = Flask(__name__)
+
 
 
 app.config.from_object(BaseConfig)
 app.config["JWT_TOKEN_LOCATION"] = ["cookies"]
 
-
+app.config.from_mapping(
+    CELERY=dict(
+        broker_url=BaseConfig.CELERY_BROKER_URL,
+        result_backend=BaseConfig.CELERY_RESULT_BACKEND,
+        task_ignore_result=True,
+    ),
+)
 app.config["JWT_COOKIE_SAMESITE"] = "None"
 app.config["JWT_COOKIE_SECURE"] = True
-app.config['CORS_SUPPORTS_CREDENTIALS'] = True
+app.config["CORS_SUPPORTS_CREDENTIALS"] = True
 
 db = MongoEngine()
 app.logger.info("Initializing MongoDB")
 db.init_app(app)
 
+celery_app = celery_init_app(app)
+
+cache.cache.init_app(app, config={"CACHE_TYPE": "SimpleCache", "CACHE_DEFAULT_TIMEOUT": 300}) 
 initialize_api(app)
 
 CORS(app)
 
 jwt = JWTManager(app)
+
+
+
+def drop_all():
+    Organism.drop_collection()
+    LocalSample.drop_collection()
+    TaxonNode.drop_collection()
+    Assembly.drop_collection()
+    BioSample.drop_collection()
+    Experiment.drop_collection()
+    Read.drop_collection()
+    Chromosome.drop_collection()
+    ComputedTree.drop_collection()
+    GenomeAnnotation.drop_collection()
+    SampleCoordinates.drop_collection()
+    
 
 @app.after_request
 def refresh_expiring_jwts(response):
@@ -54,8 +80,11 @@ def refresh_expiring_jwts(response):
 username = os.getenv('DB_USER')
 password = os.getenv('DB_PASS')
 
+
+
 try:
     FIRST_START = SingleInstance()
+    # drop_all()
 
     ##create root user if does not exist
     user = BioGenomeUser.objects(name = username).first()

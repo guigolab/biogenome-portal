@@ -21,15 +21,17 @@ services:
     restart: always
     volumes:
       - ./server:/server
-      - ${ANNOTATIONS_PATH}:/server/annotations_data
+      - ${ANNOTATIONS_PATH}:/annotations_data
     env_file:
       - .env
+    depends_on:
+      - redis
 
-  # biogenome_cron:
-  #   build: ./cronjobs
-  #   container_name: biogenome_cron
-  #   env_file:
-  #     - .env
+  biogenome_cron:
+    build: ./cronjobs
+    container_name: biogenome_cron
+    env_file:
+      - .env
 
   biogenome_nginx:
     build:
@@ -49,6 +51,23 @@ services:
       - API_HOST=${API_HOST}
     ports:
         - "91:${API_PORT}"
+
+
+  celery:
+    build: ./server
+    command: celery --app app.celery_app worker --loglevel=info  
+    restart: always
+    volumes:
+      - ./server:/server
+    env_file:
+      - .env
+    depends_on:
+      - biogenome_server
+      - bioG_mongo
+      - redis
+
+  redis:
+    image: "redis:alpine"
 
 volumes:
   app:

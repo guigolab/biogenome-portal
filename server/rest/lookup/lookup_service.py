@@ -1,5 +1,7 @@
 from db.models import Assembly, GenomeAnnotation, BioSample, LocalSample, Organism, Experiment,Chromosome
 from errors import NotFound
+from extensions.cache import cache
+
 
 MODEL_LIST = {
     'assemblies':Assembly,
@@ -9,6 +11,63 @@ MODEL_LIST = {
     'experiments':Experiment,
     'organisms':Organism,
     }
+
+
+def lookup_models_by_taxon(parent_taxon):
+    return [
+            {"$match": {"taxon_lineage": parent_taxon}},
+
+    {"$lookup": {
+        "from": "bio_sample",
+        "localField": "taxid",
+        "foreignField": "taxid",
+        "as": "total_biosamples"
+    }},
+    {"$lookup": {
+        "from": "assembly",
+        "localField": "taxid",
+        "foreignField": "taxid",
+        "as": "total_assemblies"
+    }},
+
+    {"$lookup": {
+        "from": "experiment",
+        "localField": "taxid",
+        "foreignField": "taxid",
+        "as": "total_experiments"
+    }},
+
+    {"$lookup": {
+        "from": "local_sample",
+        "localField": "taxid",
+        "foreignField": "taxid",
+        "as": "total_local_samples"
+    }},
+    {"$lookup": {
+        "from": "genome_annotation",
+        "localField": "taxid",
+        "foreignField": "taxid",
+        "as": "total_annotations"
+    }},
+    {"$group": {
+        "_id": None,
+        "assemblies": {"$sum": {"$size": "$total_assemblies"}},
+        "biosamples": {"$sum": {"$size": "$total_biosamples"}},
+        "experiments": {"$sum": {"$size": "$total_experiments"}},
+        "local_samples": {"$sum": {"$size": "$total_local_samples"}},
+        "annotations": {"$sum": {"$size": "$total_annotations"}},
+    }},
+    # Project to rename the field and exclude the _id field
+    {"$project": {
+        "_id": 0,
+        "assemblies": 1,
+        "biosamples":1,
+        "experiments":1,
+        "annotations":1,
+        "local_samples":1,
+    }}
+]
+
 
 def get_instance_stats():
     response = {}
@@ -28,17 +87,15 @@ def lookup_organism_data(taxid):
         response[key] = MODEL_LIST[key].objects(taxid=taxid).count()
     return response
 
+@cache.memoize(timeout=300)
 def lookup_taxon_data(taxid):
-    organisms = Organism.objects(taxon_lineage=taxid)
-    if not organisms.count():
-        raise NotFound
-    resp = dict(organisms=organisms.count())
-    taxids = organisms.scalar('taxid')
-    for model in MODEL_LIST:
-        if model == 'organisms':
-            continue
-        resp[model] = MODEL_LIST[model].objects(taxid__in=taxids).count()
-    return resp
+    result = Organism.objects.aggregate(lookup_models_by_taxon(taxid))
+    try:
+        response = next(result)
+        response["organisms"] = Organism.objects(taxon_lineage=taxid).count()
+        return response
+    except StopIteration:
+        return {}
 
 def lookup_assembly_data(accession):
     assembly = Assembly.objects(accession=accession).first()

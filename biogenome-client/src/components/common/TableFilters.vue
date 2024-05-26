@@ -20,13 +20,21 @@
                 </div>
             </VaButtonDropdown>
         </div>
-        <div v-if="filters.length" class="flex">
+        <div v-if="filters.length || searchForm.countries || searchForm.parent_taxon" class="flex">
             <VaBadge style="z-index: 1;" overlap color="warning" :text="activeFilters">
                 <VaButtonDropdown preset="primary" :round="true" stickToEdges :closeOnContentClick="false"
                     icon="filter_list" :label="t('buttons.filters')">
                     <div class="w-200">
-                        <div v-for="( field, index ) in filters" :key="index">
-                            <VaInput class="mt-2" clearable :label="field.key" v-if="isInputField(field.type)"
+                        <VaInput v-if="searchForm.parent_taxon !== undefined" class="mt-2" clearable
+                            label="parent taxon id" v-model="searchForm.parent_taxon"
+                            @update:modelValue="(v: string) => emits('onFormChange', [['parent_taxon', v]])">
+                        </VaInput>
+                        <VaInput v-if="searchForm.countries !== undefined" class="mt-2" clearable
+                            label="Country code" v-model="searchForm.countries"
+                            @update:modelValue="(v: string) => emits('onFormChange', [['countries', v]])">
+                        </VaInput>
+                        <div v-for="(  field, index  ) in filters" :key=" index ">
+                            <VaInput class="mt-2" clearable :label="field.key" v-if=" isInputField(field.type)"
                                 v-model="searchForm[field.key]"
                                 @update:modelValue="(v: string) => emits('onFormChange', [[field.key, v]])">
                             </VaInput>
@@ -81,7 +89,7 @@ import { useI18n } from 'vue-i18n';
 
 
 const { t, locale } = useI18n()
-const props = defineProps<{ filters: Array<Filter>, storeForm: Record<string, any>, columns: string[] }>()
+const props = defineProps<{ filters: Filter[], storeForm: Record<string, any>, columns: string[] }>()
 
 const showFields = ref(props.columns.map(c => {
     return {
@@ -89,17 +97,16 @@ const showFields = ref(props.columns.map(c => {
         value: c
     }
 }))
+
+
 const dateModels = ref({ ...mapDates(props.storeForm) })
+
 const searchForm = ref({ ...props.storeForm })
 
 const activeFilters = computed(() => {
     return Object.entries(searchForm.value)
-        .filter(([k, v]) => !['filter', 'sort_column', 'sort_order', 'parent_taxon', 'countries'].includes(k))
         .filter(([k, v]) => v).length
 })
-// watchEffect(() => {
-//     emits('onFormChange', searchForm.value)
-// })
 
 watchEffect(() => {
     emits('onShowFieldChange', showFields.value.filter(f => f.show).map(f => f.value))

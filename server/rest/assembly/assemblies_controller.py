@@ -6,7 +6,8 @@ from db.models import Assembly,GenomeAnnotation
 from . import assemblies_service
 from errors import NotFound
 from flask_jwt_extended import jwt_required
-from ..utils import wrappers
+from wrappers.data_manager import data_manager_required
+from wrappers.admin import admin_required
 
 FIELDS_TO_EXCLUDE = ['id','created', 'chromosomes_aliases']
 
@@ -20,25 +21,20 @@ class AssembliesApi(Resource):
 class AssemblyApi(Resource):
 
     def get(self,accession):
-        assembly_obj = Assembly.objects(accession=accession).exclude(*FIELDS_TO_EXCLUDE).first()
-        if not assembly_obj:
-            raise NotFound
-        if assembly_obj.chromosomes:
-            assembly_obj.chromosomes = assemblies_service.get_chromosomes(accession)
+        assembly_obj = assemblies_service.get_assembly(accession)
         return Response(assembly_obj.to_json(), mimetype="application/json", status=200)
     
-    @wrappers.admin_required()
+    @admin_required()
     @jwt_required()
     def post(self, accession):
         message,status = assemblies_service.create_assembly_from_accession(accession)
         return Response(message, mimetype="application/json", status=status)
     
-    @wrappers.admin_required()
+    @admin_required()
     @jwt_required()
     def delete(self,accession):
         deleted_accession = assemblies_service.delete_assembly(accession)
-        if deleted_accession:
-            return Response(json.dumps(deleted_accession), mimetype="application/json", status=201)
+        return Response(json.dumps(deleted_accession), mimetype="application/json", status=201)
 
 
 class AssemblyRelatedAnnotationsApi(Resource):
@@ -61,7 +57,7 @@ class AssemblyChrAliasesApi(Resource):
         as_attachment=True,
         download_name=f'{assembly_obj.accession}_chr_aliases.txt')
     
-    @wrappers.data_manager_required()
+    @data_manager_required()
     @jwt_required()
     def post(self,accession):
         assembly_obj = Assembly.objects(accession=accession).first()

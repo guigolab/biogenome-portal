@@ -21,7 +21,7 @@
             "name": "french"
         },
         {
-            "code": "sp",
+            "code": "es",
             "name": "spanish"
         }
     ],
@@ -59,72 +59,6 @@
         ]
     },
     "models": {
-        "status": {
-            "title": {
-                "gb": "GoaT Sequencing Status",
-                "es-ct": "GoaT Sequencing Status"
-            },
-            "icon": "fa-list-check",
-            "description": {
-                "gb": "GoaT sequencing status of project ",
-                "es-ct": "GoaT sequencing status of project"
-            },
-            "charts": [
-                {
-                    "model": "organisms",
-                    "field": "goat_status",
-                    "title": {
-                        "gb": "",
-                        "es-ct": ""
-                    },
-                    "label": {
-                        "gb": "",
-                        "es-ct": ""
-                    },
-                    "class": "flex lg3 md3 sm12 xs12",
-                    "type": "pie"
-                }
-            ],
-            "filters": [
-                {
-                    "label": {
-                        "gb": "Sequencing Status",
-                        "es-ct": ""
-                    },
-                    "key": "goat_status",
-                    "type": "select",
-                    "options": [
-                        "Sample Collected",
-                        "Sample Acquired",
-                        "Data Generation",
-                        "In Assembly",
-                        "INSDC Submitted",
-                        "Publication Available"
-                    ]
-                },
-                {
-                    "label": {
-                        "gb": "Target List",
-                        "es-ct": ""
-                    },
-                    "key": "target_list_status",
-                    "type": "select",
-                    "options": [
-                        "long_list",
-                        "family_representative",
-                        "other_priority"
-                    ]
-                }
-            ],
-            "columns": [
-                "scientific_name",
-                "insdc_common_name",
-                "tolid_prefix",
-                "goat_status",
-                "target_list_status",
-                "publications"
-            ]
-        },
         "biosamples": {
             "title": {
                 "gb": "BioSamples collected under the CBP",
@@ -452,27 +386,6 @@
                 "insdc_common_name",
                 "insdc_status"
             ]
-        },
-        "annotations": {
-            "title": {
-                "gb": "GoaT Sequencing Status",
-                "es-ct": "GoaT Sequencing Status"
-            },
-            "icon": "fa-bars-progress",
-            "description": {
-                "gb": "GoaT sequencing status of project ",
-                "es-ct": "GoaT sequencing status of project"
-            },
-            "filters": [],
-            "columns": [
-                "name",
-                "assembly_name",
-                "scientific_name",
-                "gff_gz_location",
-                "tab_index_location"
-            ],
-            "metadata": [],
-            "charts": []
         },
         "local_samples": {
             "title": {
