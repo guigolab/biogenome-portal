@@ -42,6 +42,9 @@ def import_assemblies_by_bioproject(project_accession=None):
         try:
             save_chromosomes(new_parsed_assembly)
             print(f"Saving assembly {new_parsed_assembly.accession}")
+            response = get_blobtoolkit_id(new_parsed_assembly.accession)
+            if len(response) and 'names' in response[0].keys() and len(response[0]['names']):
+                new_parsed_assembly.blobtoolkit_id = response[0]['names'][0]
             saved_assembly = new_parsed_assembly.save()
             saved_assemblies.append(saved_assembly)
             time.sleep(1.5)
