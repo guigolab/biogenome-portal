@@ -8,9 +8,11 @@ info:
 
 servers:
   - url: https://ebp.biogenoma.cat/api
-    description: server containing all the data submitted to INSDC under the EBP umbrella
+    description: server containing all the data submitted to INSDC under the Earth Biogenome Project (PRJNA533106) umbrella
+  - url: https://erga.biogenoma.cat/api
+    description: server containing all the data generated under the European Reference Genome Atlas (PRJEB43510) umbrella 
   - url: https://dades.biogenoma.cat/api
-    description: server containing all the data generated under the CBP umbrella 
+    description: server containing all the data generated under the Catalan Initiative for the Earth Biogenome Project 
 
 tags:
 - name: "organisms"
@@ -23,6 +25,7 @@ tags:
 - name: "goat_report"
 - name: "taxonomy"
 - name: "stats"
+- name: "lookup"
 
 paths:
   /goat_report:
@@ -56,7 +59,7 @@ paths:
                 type: "object"
                 properties:
                   assemblies:
-                    type: "number"
+                    type: number"
                   annotations:
                     type: number
                   biosamples:
@@ -140,33 +143,6 @@ paths:
         "404":
           description: "Taxon not found"
 
-  /tree/{taxid}/relative:
-    get:
-      tags:
-        - "taxonomy"
-      summary: "Get the closest taxons, with a specific insdc submission status, to the taxid provided,"
-      parameters:
-        - in: 'path'
-          name: 'taxid'
-          required: true
-          schema:
-            type: "string"
-        - in: 'query'
-          name: 'insdc_status'
-          schema:
-            allOf:
-              - $ref: '#/components/schemas/INSDCStatus'
-            default: "Assemblies Submitted"
-      responses:
-        "200":
-          description: "successful operation"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/TreeNode"
-        "404":
-          description: "Taxon not found"
-
   /organisms:
     get:
       tags:
@@ -181,16 +157,6 @@ paths:
           name: 'filter'
           schema:
             type: 'string'
-        - in: 'query'
-          name: 'filter_option'
-          schema:
-            type: "string"
-            default: "scientific_name"
-            enum:
-            - "taxid"
-            - "common_name"
-            - "tolid"
-            - "scientific_name"
         - in: "query"
           name: "country"
           schema:
@@ -207,10 +173,6 @@ paths:
           name: 'sort_column'
           schema:
             type: 'string'
-            enum:
-            - "scientific_name"
-            - "taxid"
-            - "tolid"
         - in: 'query'
           name: 'goat_status'
           schema:
@@ -431,14 +393,6 @@ paths:
           schema:
             type: 'string'
         - in: 'query'
-          name: 'filter_option'
-          schema:
-            type: "string"
-            enum:
-            - "taxid"
-            - "scientific_name"
-            - "assembly_name"
-        - in: 'query'
           name: 'assembly_level'
           schema:
             type: "string"
@@ -557,15 +511,6 @@ paths:
           schema:
             type: 'string'
         - in: 'query'
-          name: 'filter_option'
-          schema:
-            type: "string"
-            enum:
-            - "taxid"
-            - "scientific_name"
-            - "instrument_platform"
-            - "experiment_title"
-        - in: 'query'
           name: 'start_date'
           schema:
             type: "string"
@@ -648,16 +593,6 @@ paths:
           name: 'filter'
           schema:
             type: 'string'
-        - in: 'query'
-          name: 'filter_option'
-          schema:
-            type: "string"
-            enum:
-            - "taxid"
-            - "scientific_name"
-            - "gal"
-            - "habitat"
-            - "accession"
         - in: 'query'
           name: 'start_date'
           schema:  
@@ -822,13 +757,6 @@ paths:
           name: 'filter'
           schema:
             type: 'string'
-        - in: 'query'
-          name: 'filter_option'
-          schema:
-            type: "string"
-            enum:
-            - "taxid"
-            - "scientific_name"
         - in: "query"
           name: "sort_column"
           schema:
