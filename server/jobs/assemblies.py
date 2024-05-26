@@ -36,7 +36,6 @@ def import_assemblies_by_bioproject(project_accession=None):
         return
     
     print(f"New assemblies to save for bioproject {project_accession}: {len(new_parsed_assemblies)}")
-    print([n.metadata for n in new_parsed_assemblies])
     new_parsed_assemblies = handle_sample_accessions(handle_taxonomic_ids(new_parsed_assemblies))
     saved_assemblies = []
     for new_parsed_assembly in new_parsed_assemblies:

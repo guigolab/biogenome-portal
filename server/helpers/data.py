@@ -88,11 +88,11 @@ def create_query(args, q_query):
             else:
                 query['taxid__in'] = taxids
         elif "__gte" in k or "__lte" in k:
-            query_visitor = {f"metadata__{k}":v}
+            query_visitor = {f"metadata__{k.replace('.', '__')}":v}
             q_query = Q(**query_visitor) & q_query if q_query else Q(**query_visitor)
 
         elif k in ("limit", "offset", "sort_order", "sort_column", "filter", "format", "fields[]"):
             continue
         else:
-            query[f"metadata__{k}"] = v
+            query[f"metadata__{k.replace('.', '__')}"] = v
     return query, q_query

@@ -16,7 +16,6 @@ def get_objects_from_ena_browser(accessions):
     }
     response = requests.post("https://www.ebi.ac.uk/ena/browser/api/xml", data=payload)
     if response.status_code != 200:
-        print(response.content)
         return None
     
     return response.content
