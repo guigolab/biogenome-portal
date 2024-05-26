@@ -84,7 +84,7 @@ password = os.getenv('DB_PASS')
 
 try:
     FIRST_START = SingleInstance()
-    drop_all()
+    # drop_all()
 
     ##create root user if does not exist
     user = BioGenomeUser.objects(name = username).first()

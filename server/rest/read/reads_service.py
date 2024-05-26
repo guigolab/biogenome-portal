@@ -44,7 +44,7 @@ def create_experiment_from_accession(accession):
     parsed_exps, parsed_reads = exp_parser.parse_experiments_and_reads_from_ena_portal(reads)
 
     for exp in parsed_exps:
-        if exp.accession == accession:
+        if exp.experiment_accession == accession:
             organism_obj = organism_helper.handle_organism(exp.taxid)
             if not organism_obj:
                 return f"Organism with taxid: {exp.taxid} not found in INSDC", 400

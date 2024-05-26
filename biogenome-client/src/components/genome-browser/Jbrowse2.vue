@@ -66,7 +66,7 @@ function parseAssembly(assembly: Assembly) {
   assembly.chromosomes.forEach((chr: Record<string, any>) => {
     const key = 'insdc:' + chr.accession_version
     assemblyAdapter.sequence.adapter.sequenceData[key] = {
-      name: chr.metadata.chr_name,
+      name: chr.metadata.chr_name || chr.metadata.name || chr.accession_version,
       size: Number(chr.metadata.length),
     }
   })

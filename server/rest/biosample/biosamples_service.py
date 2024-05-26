@@ -36,16 +36,15 @@ def create_biosample_from_accession(accession):
     if biosample_exists(accession):
         return f"{accession} already exists", 400
     
+    biosample_obj = biosample_helper.create_biosample_from_accession(accession)
+
+    if not biosample_obj:
+        return f"BioSample {accession} not found in INSDC", 400
     
     organism_obj = organism_helper.handle_organism(biosample_obj.taxid)
     if not organism_obj:
         return f"Organism {biosample_obj.taxid} not found in INSDC", 400
 
-    biosample_obj = biosample_helper.handle_biosample(accession)
-
-    if not biosample_obj:
-        return f"BioSample {accession} not found in INSDC", 400
-    
     organism_obj.save()
     
     return f"Biosample {accession} correctly saved", 201

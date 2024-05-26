@@ -33,7 +33,6 @@ def upload_samples_spreadsheet(self, username, samples, option="SKIP", source=No
 
     if option == 'UPDATE':
         self.update_state(state='PROGRESS', meta={'messages': [f'Found a total of new {len(pre_existing_samples)} samples to save']})
-        samples_updated=len(pre_existing_samples)
 
         for existing_sample in pre_existing_samples:
             for s in mapped_samples:
@@ -42,6 +41,8 @@ def upload_samples_spreadsheet(self, username, samples, option="SKIP", source=No
                     existing_sample.reload()
                     geoloc_helper.save_coordinates(existing_sample,'local_id')
                     geoloc_helper.update_countries_from_biosample(existing_sample, existing_sample.local_id)
+    
+        samples_updated=len(pre_existing_samples)
     else:
         samples_skipped = len(pre_existing_samples)
 
@@ -60,6 +61,8 @@ def upload_samples_spreadsheet(self, username, samples, option="SKIP", source=No
             self.update_state(state='PROGRESS', meta={'messages': [f'A total of {len(saved_samples)} new samples have been saved']})
             
             samples_created = len(saved_samples)
+
+            samples_skipped = len(new_mapped_samples) - samples_created
 
             for s in saved_samples:
                 geoloc_helper.save_coordinates(s, 'local_id')

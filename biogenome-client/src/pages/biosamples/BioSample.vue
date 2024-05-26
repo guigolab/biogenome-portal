@@ -62,7 +62,7 @@ const biosample = ref<BioSample>()
 const validDataTabs = ref<DataModel[]>([])
 
 function isDataModel(str: string): boolean {
-  return Object.keys(models).includes(str);
+  return Object.keys(models).includes(str) || str === 'sub_samples';
 }
 
 

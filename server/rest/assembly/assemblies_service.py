@@ -50,9 +50,10 @@ def create_assembly_from_accession(accession):
     if not organism_obj:
         return f"Organism {assembly_obj.taxid} not found in INSDC", 400
 
-    biosample_helper.handle_biosample_from_ncbi_dataset(assembly_obj)
+    biosample_obj = biosample_helper.handle_biosample(assembly_obj.sample_accession)
 
-    print(assembly_obj.to_json())
+    if not biosample_obj:
+        return f"Biosamples {assembly_obj.sample_accession} not found in INSDC", 400
 
     assembly_obj.save()
     organism_obj.save()
