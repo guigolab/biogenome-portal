@@ -18,7 +18,8 @@ JOB_MAP = {
     'add_blob_link':assemblies.add_blob_link,
     'create_biosample_coordinates':geolocation.create_biosample_coordinates,
     'create_local_sample_coordinates':geolocation.create_local_sample_coordinates,
-    'compute_tree':taxonomy.compute_tree
+    'compute_tree':taxonomy.compute_tree,
+    'handle_orphan_organisms':taxonomy.handle_orphan_organisms
 }
 
 def create_cronjob(model):

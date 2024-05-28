@@ -85,7 +85,7 @@ def update_assembly_metadata():
 
     for parsed_assembly in parsed_assemblies:
         assembly_obj = Assembly.objects(accession=parsed_assembly.accession).first()
-        if not assembly_obj:
+        if not assembly_obj or assembly_obj.metadata.get('assembly_info'):
             continue
         assembly_obj.metadata = parsed_assembly.metadata
         Chromosome.objects(accession_version__in=assembly_obj.chromosomes).delete()
