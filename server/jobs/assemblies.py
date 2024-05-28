@@ -95,6 +95,7 @@ def update_assembly_metadata():
             assembly_obj.save()
             time.sleep(1.5)
         except Exception as e:
+            print(assembly_obj.to_json())
             print(f"Error with assembly {assembly_obj.accession}")
             print(e)
             continue
