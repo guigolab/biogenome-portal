@@ -30,7 +30,7 @@ def create_tree(taxid):
     node = TaxonNode.objects(taxid=taxid).exclude('id').first()
     if not node:
         raise NotFound
-    tree = taxonomy_helper.dfs_generator(node, node.children)
+    tree = taxonomy_helper.dfs_generator(node)
     return tree
 
 def generate_tree(data):

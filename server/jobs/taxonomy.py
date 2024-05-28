@@ -1,4 +1,4 @@
-from db.models import ComputedTree,TaxonNode
+from db.models import ComputedTree,TaxonNode,Organism
 import os
 import datetime
 from helpers.taxonomy import dfs_generator
@@ -19,4 +19,14 @@ def compute_tree():
     computed_tree.tree = tree
     computed_tree.last_update = datetime.datetime.now()
     computed_tree.save()
+
+@shared_task(name='handle_orphan_organisms', ignore_result=False)
+def handle_orphan_organisms():
+    orphans = Organism.objects(insdc_status=None)
+    for orphan in orphans:
+        orphan.save()
+        if not orphan.insdc_status:
+            orphan.delete()
+
+
 
