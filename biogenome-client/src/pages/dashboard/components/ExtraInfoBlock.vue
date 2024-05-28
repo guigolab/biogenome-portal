@@ -1,8 +1,5 @@
 <template>
     <div class="row row-equal">
-        <div v-if="coordinates.length" class="flex lg6 md6 sm12 xs12 c-h">
-            <LeafletMap :coordinates="coordinates" />
-        </div>
         <div class="flex lg6 md6 sm12 xs12">
             <Suspense>
                 <IndentedTreeCard />
@@ -10,6 +7,9 @@
                     <va-skeleton height="400px" />
                 </template>
             </Suspense>
+        </div>
+        <div v-if="coordinates.length" class="flex lg6 md6 sm12 xs12 c-h">
+            <LeafletMap :coordinates="coordinates" />
         </div>
     </div>
 </template>
