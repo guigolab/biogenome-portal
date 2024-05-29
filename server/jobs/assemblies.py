@@ -77,7 +77,7 @@ def update_assembly_metadata():
 
     for assembly_to_update in assemblies_to_update:
         
-        CMD = ["genome","accession", assemblies_to_update.accession]
+        CMD = ["genome","accession", assembly_to_update.accession]
 
         result = get_data_from_ncbi(CMD)
 
