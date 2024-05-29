@@ -88,5 +88,5 @@ def update_assembly_metadata():
         for parsed_assembly in parsed_assemblies:
             if parsed_assembly.accession == assembly_to_update.accession:
                 assembly_to_update.update(metadata=parsed_assembly.metadata)
-
+        time.sleep(1.5)
     print("Update done")

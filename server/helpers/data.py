@@ -17,7 +17,7 @@ def create_tsv(items, fields):
         new_row = []
         for k in fields:
             if 'metadata.' in k:
-                value = get_nested_value(item.get('metadata'), k)
+                value = get_nested_value(item, k)
             else:
                 value = item.get(k)
             new_row.append(value)

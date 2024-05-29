@@ -111,7 +111,6 @@ def initialize_routes(api):
 
 
 	##STATS TODO: IMPROVE IT.. 
-	api.add_resource(stats_controller.StatsApi,'/api/stats')
 	api.add_resource(stats_controller.FieldStatsApi, '/api/stats/<model>/<field>')
 
 
