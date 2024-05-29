@@ -1,6 +1,7 @@
-from flask import Response,request
+from flask import Response
 from db.models import Assembly,GenomeAnnotation,BioSample,LocalSample,Experiment,Organism,TaxonNode
 from flask_restful import Resource
+from extensions.cache import cache
 import json
 
 
@@ -15,6 +16,7 @@ MODEL_LIST = {
     }
 
 class FieldStatsApi(Resource):
+    @cache.cached(timeout=300)
     def get(self, model, field):
         if model not in MODEL_LIST.keys():
             return 404
@@ -30,10 +32,3 @@ class FieldStatsApi(Resource):
             del resp[None]
         return Response(json.dumps(resp, default=str),mimetype="application/json", status=status)
 
-class StatsApi(Resource):
-    def get(self):
-        resp = dict()
-        for key in MODEL_LIST:
-            if MODEL_LIST[key].objects.count() > 0:
-                resp[key] = MODEL_LIST[key].objects.count()
-        return Response(json.dumps(resp, default=str),mimetype="application/json", status=200)

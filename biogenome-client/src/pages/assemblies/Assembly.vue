@@ -17,6 +17,9 @@
   <div class="row" v-if="tab === 'chromosomes'">
     <div class="flex lg12 md12 sm12 xs12">
       <VaDataTable :items="chromosomes" :columns="['accession_version', 'metadata.name', 'metadata.length', 'actions']">
+        <template #cell(metadata.name)="{ rowData }">
+          {{ rowData.metadata.name || rowData.metadata.chr_name }}
+        </template>
         <template #cell(actions)="{ row, isExpanded }">
           <VaButton :icon="isExpanded ? 'va-arrow-up' : 'va-arrow-down'" preset="secondary" class="w-full"
             @click="row.toggleRowDetails()">{{ t('buttons.view') }}

@@ -1,11 +1,9 @@
 from db.models import Organism, TaxonNode,ComputedTree
 from datetime import datetime
-from extensions.cache import cache
 from helpers import organism as organism_helper, taxonomy as taxonomy_helper
 from errors import NotFound
 from jobs import taxonomy
 
-@cache.cached(timeout=300)
 def get_computed_tree():
     computed_tree = ComputedTree.objects().exclude('id').first()
     if not computed_tree or is_older_than_one_day(computed_tree.last_update):
