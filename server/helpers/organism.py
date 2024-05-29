@@ -8,6 +8,7 @@ TAXID_LIST_LIMIT=5000
 
 @cache.memoize(timeout=300)
 def get_organisms_taxid_from_parent_taxid(taxid):
+    print('hellooooooooooooooo')
     return Organism.objects(taxon_lineage=taxid).scalar('taxid')
 
 

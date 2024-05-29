@@ -71,31 +71,22 @@ def add_blob_link():
 @shared_task(name='update_assembly_metadata',ignore_result=False)
 def update_assembly_metadata():
 
-    CMD = ["genome","accession", PROJECT_ACCESSION]
+    assemblies_to_update = Assembly.objects(metadata__assembly_info=None)
 
-    result = get_data_from_ncbi(CMD)
+    print(f"A total of {len(assemblies_to_update)} assemblies have been found")
 
-    if not result or not result.get("reports"):
-        raise f"Nothing found for bioproject {PROJECT_ACCESSION}"
+    for assembly_to_update in assemblies_to_update:
+        
+        CMD = ["genome","accession", assemblies_to_update.accession]
 
-    reports = result.get("reports")
-    print(f"Assemblies for bioproject {PROJECT_ACCESSION}: {len(reports)}")
+        result = get_data_from_ncbi(CMD)
 
-    parsed_assemblies = [parse_assembly_from_ncbi_datasets(ass) for ass in reports]
-
-    for parsed_assembly in parsed_assemblies:
-        assembly_obj = Assembly.objects(accession=parsed_assembly.accession).first()
-        if not assembly_obj or assembly_obj.metadata.get('assembly_info'):
+        if not result or not result.get("reports"):
+            print(f"Nothing found for assembly {assembly_to_update.accession}")
             continue
-        assembly_obj.metadata = parsed_assembly.metadata
-        Chromosome.objects(accession_version__in=assembly_obj.chromosomes).delete()
-        try:
-            save_chromosomes(assembly_obj)
-            print(f"Updating assembly {assembly_obj.accession}")
-            assembly_obj.save()
-            time.sleep(1.5)
-        except Exception as e:
-            print(assembly_obj.to_json())
-            print(f"Error with assembly {assembly_obj.accession}")
-            print(e)
-            continue
+        parsed_assemblies = [parse_assembly_from_ncbi_datasets(ass) for ass in result.get("reports")]
+        for parsed_assembly in parsed_assemblies:
+            if parsed_assembly.accession == assembly_to_update.accession:
+                assembly_to_update.update(metadata=parsed_assembly.metadata)
+        time.sleep(1.5)
+    print("Update done")

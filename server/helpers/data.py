@@ -4,7 +4,6 @@ from bson.json_util import dumps, JSONOptions, DatetimeRepresentation
 from helpers import organism, user
 from mongoengine.queryset.visitor import Q
 
-
 def dump_json(response_dict):
     json_options = JSONOptions()
     json_options.datetime_representation = DatetimeRepresentation.ISO8601
@@ -18,8 +17,7 @@ def create_tsv(items, fields):
         new_row = []
         for k in fields:
             if 'metadata.' in k:
-                field = k.split('.')[1]
-                value = item.get('metadata').get(field)
+                value = get_nested_value(item, k)
             else:
                 value = item.get(k)
             new_row.append(value)
@@ -96,3 +94,13 @@ def create_query(args, q_query):
         else:
             query[f"metadata__{k.replace('.', '__')}"] = v
     return query, q_query
+
+def get_nested_value(dictionary, keys):
+    keys_list = keys.split('.')
+    value = dictionary
+    try:
+        for key in keys_list:
+            value = value[key]
+        return value
+    except (KeyError, TypeError):
+        return None
