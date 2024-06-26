@@ -24,7 +24,7 @@ build-containers:
     - cat $FRONT_CONFIGS > ./biogenome-client/config.json
     - cat $CRON_CONFIGS > ./cronjobs/crontab
     - apk add --no-cache curl jq python3 py3-pip
-    - pip install awscli
+    - pip install awscli --break-system-packages
     - aws ecr get-login-password | docker login --username AWS --password-stdin $DOCKER_REGISTRY
     - aws --version
     - docker info
