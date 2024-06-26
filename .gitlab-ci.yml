@@ -1,4 +1,7 @@
 variables:
+    DOCKER_REGISTRY: 566365074765.dkr.ecr.eu-central-1.amazonaws.com
+    AWS_DEFAULT_REGION: eu-central-1
+    APP_NAME: biogenome_registry
     APP_NAME_FRONT: $APP_NAME_FRONT
     APP_NAME_CRON: biogenome_cronjob
     APP_NAME_BACK: biogenome_back
@@ -18,16 +21,21 @@ build-containers:
   only:
   - main
   before_script:
-    - echo $CI_REGISTRY_PASSWORD | docker login $CI_REGISTRY -u $CI_REGISTRY_USER --password-stdin
     - cat $FRONT_CONFIGS > ./biogenome-client/config.json
     - cat $CRON_CONFIGS > ./cronjobs/crontab
+    - apk add --no-cache curl jq python3 py3-pip
+    - pip install awscli
+    - aws ecr get-login-password | docker login --username AWS --password-stdin $DOCKER_REGISTRY
+    - aws --version
+    - docker info
+    - docker --version
   script:
-    - docker build --build-arg CESIUM_TOKEN="$CESIUM_TOKEN" --build-arg BASE_PATH="$BASE_PATH" --build-arg ROOT_NODE="$ROOT_NODE" --build-arg PROJECT_ACCESSION="$PROJECT_ACCESSION" -t gitlab.linux.crg.es:5005/monstre/biogenome-portal/$APP_NAME_FRONT ./biogenome-client
-    - docker push gitlab.linux.crg.es:5005/monstre/biogenome-portal/$APP_NAME_FRONT
-    - docker build -t gitlab.linux.crg.es:5005/monstre/biogenome-portal/$APP_NAME_BACK ./server
-    - docker push gitlab.linux.crg.es:5005/monstre/biogenome-portal/$APP_NAME_BACK
-    - docker build -t gitlab.linux.crg.es:5005/monstre/biogenome-portal/$APP_NAME_CRON ./cronjobs
-    - docker push gitlab.linux.crg.es:5005/monstre/biogenome-portal/$APP_NAME_CRON
+    - docker build --build-arg CESIUM_TOKEN="$CESIUM_TOKEN" --build-arg BASE_PATH="$BASE_PATH" --build-arg ROOT_NODE="$ROOT_NODE" -t $DOCKER_REGISTRY/$APP_NAME:$APP_NAME_FRONT ./biogenome-client
+    - docker push $DOCKER_REGISTRY/$APP_NAME:$APP_NAME_FRONT
+    - docker build -t $DOCKER_REGISTRY/$APP_NAME:$APP_NAME_BACK ./server
+    - docker push $DOCKER_REGISTRY/$APP_NAME:$APP_NAME_BACK
+    - docker build -t $DOCKER_REGISTRY/$APP_NAME:$APP_NAME_CRON ./cronjobs
+    - docker push $DOCKER_REGISTRY/$APP_NAME:$APP_NAME_CRON
 
 deploy-app:
   stage: deploy
