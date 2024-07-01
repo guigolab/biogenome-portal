@@ -10,7 +10,6 @@ variables:
 
 stages:          # List of stages for jobs, and their order of execution
   - build
-  - deploy
 
 build-containers:
   tags:
@@ -36,7 +35,3 @@ build-containers:
     - docker push $DOCKER_REGISTRY/$APP_NAME:$APP_NAME_BACK
     - docker build -t $DOCKER_REGISTRY/$APP_NAME:$APP_NAME_CRON ./cronjobs
     - docker push $DOCKER_REGISTRY/$APP_NAME:$APP_NAME_CRON
-
-deploy-app:
-  stage: deploy
-  trigger: monstre/rg-web
