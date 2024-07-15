@@ -5,7 +5,6 @@ variables:
     APP_NAME_FRONT: $APP_NAME_FRONT
     APP_NAME_CRON: biogenome_cronjob
     APP_NAME_BACK: biogenome_back
-    APP_TO_DEPLOY: $APP_TO_DEPLOY
 
 
 stages:          # List of stages for jobs, and their order of execution

@@ -57,7 +57,11 @@ def create_organisms_from_ena_browser(new_taxid_list):
             organisms_to_save = []
             
             for org, lineage in zip(organism_list, parsed_taxon_list):
-                organism_to_save = organism_parser.parse_organism_from_ena_browser(org, lineage)   
+                organism_to_save = organism_parser.parse_organism_from_ena_browser(org, lineage)
+
+                if Organism.objects(taxid=organism_to_save.taxid):
+                    continue   
+
                 organisms_to_save.append(organism_to_save)
                 taxonomy_helper.save_parsed_taxons(lineage)
             
@@ -70,17 +74,6 @@ def create_organisms_from_ena_browser(new_taxid_list):
             print(e)
     return saved_organisms
 
-def create_organisms_and_related_taxons_from_ncbi_datasets(organisms_to_parse):
-    #PARSE ORGANISMS
-    organisms_to_save=[
-        organism_parser.parse_organism_from_ncbi_dataset(organism_to_parse) 
-        for organism_to_parse in organisms_to_parse
-    ]
-    #BULK INSERT ORGANISMS
-    Organism.objects.insert(organisms_to_save)
-
-    taxonomy_helper.create_taxons_from_organisms(organisms_to_save)
-    
 
 def create_organism_and_related_taxons(taxid):
     organism_obj, parsed_taxons = retrieve_taxonomic_info(taxid)
