@@ -10,7 +10,6 @@ from wrappers import data_manager, organism_access
 class OrganismsApi(Resource):
 
 	def get(self):
-		# cronjob_service.create_cronjob('import_assemblies')
 		response, mimetype, status = organisms_service.get_organisms(request.args)
 		return Response(response, mimetype=mimetype, status=status)
     

@@ -18,16 +18,6 @@ MODEL_LIST = {
 
 FIELDS_TO_EXCLUDE = ['id']
 
-
-def lookup_data(taxid):
-    organism = Organism.objects(taxid=taxid).first()
-    if not organism:
-        raise NotFound
-    response = {}
-    for key in MODEL_LIST:
-        response[key] = MODEL_LIST[key]['model'].objects(taxid=taxid).count()
-    return response
-
 def get_organisms(args):
     filter = get_filter(args.get('filter'))
     selected_fields = [v for k, v in args.items(multi=True) if k.startswith('fields[]')]
@@ -38,7 +28,6 @@ def get_organisms(args):
                                  FIELDS_TO_EXCLUDE, 
                                  filter,
                                  selected_fields)
-
 
 def get_filter(filter):
     if filter:
@@ -69,7 +58,7 @@ def create_organism(data):
     if not taxid:
         return "Taxid is mandatory", 400
     
-    if Organism.objects(taxid=taxid).count():
+    if Organism.objects(taxid=taxid):
         return f"An organism with taxid {taxid} already exists", 400
         ## add organism to user 
     user = user_helper.get_current_user()

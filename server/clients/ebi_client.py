@@ -1,37 +1,108 @@
 import requests
 import time
+import requests
+import csv
+import io
 
+
+EXPERIMENT_FIELDS = (
+    'study_accession,secondary_study_accession,sample_accession,'
+    'secondary_sample_accession,experiment_accession,run_accession,'
+    'submission_accession,tax_id,scientific_name,instrument_platform,'
+    'instrument_model,library_name,nominal_length,library_layout,'
+    'library_strategy,library_source,library_selection,read_count,'
+    'base_count,center_name,first_public,last_updated,experiment_title,'
+    'study_title,study_alias,experiment_alias,run_alias,fastq_bytes,'
+    'fastq_md5,fastq_ftp,fastq_aspera,fastq_galaxy,submitted_bytes,'
+    'submitted_md5,submitted_ftp,submitted_aspera,submitted_galaxy,'
+    'submitted_format,sra_bytes,sra_md5,sra_ftp,sra_aspera,sra_galaxy,'
+    'sample_alias,broker_name,sample_title,nominal_sdev,first_created'
+)
+
+
+def fetch_experiments_by_bioproject_streaming(project_accession):
+    base_url = "https://www.ebi.ac.uk/ena/portal/api/filereport"
+    params = {
+        "result": "read_run",
+        "accession": project_accession,
+        "fields": EXPERIMENT_FIELDS,
+        "format": "tsv",
+        "download": "false"
+    }
+    experiments=[]
+    try:
+        response = requests.get(base_url, params=params, stream=True)
+        response.raise_for_status()
+
+        tsv_content=""
+
+        for chunk in response.iter_content(chunk_size=None):
+            # Decode chunk to string
+            chunk = chunk.decode('utf-8')
+            tsv_content+=chunk
+
+        reader = csv.DictReader(io.StringIO(tsv_content), delimiter='\t')
+        for row in reader:
+            experiments.append(row)
+    except Exception as e:
+        print(f"Error occured while fetchin experiments for {project_accession}")
+        print(e)
+    finally:
+        return experiments
 
 
 def get_taxon_from_ena_browser(taxon_id):
-    time.sleep(1)
-    response = requests.get(f"https://www.ebi.ac.uk/ena/browser/api/xml/{taxon_id}") ## 
-    if response.status_code != 200:
-        return None
-    return response.content
+    data=None
+    try:
+        response = requests.get(f"https://www.ebi.ac.uk/ena/browser/api/xml/{taxon_id}") ## 
+        response.raise_for_status()
+        data = response.content
+    except Exception as e:
+        print(f"Error occurred while fetchin {taxon_id}")
+        print(e)
+    finally:
+        return data
 
 def get_objects_from_ena_browser(accessions):
-    payload = {
-        "accessions": accessions,
-    }
-    response = requests.post("https://www.ebi.ac.uk/ena/browser/api/xml", data=payload)
-    if response.status_code != 200:
-        return None
-    
-    return response.content
+    data=None
+    try:
+        payload = {
+            "accessions": accessions,
+        }
+        response = requests.post("https://www.ebi.ac.uk/ena/browser/api/xml", data=payload)
+        response.raise_for_status()
+        data = response.content
+    except Exception as e:
+        print(f"Error occurred while fetchin {accessions}")
+        print(e)
+    finally:
+        return data
 
 def get_taxon_from_ena_portal(taxon_id):
-    time.sleep(1)
-    response = requests.get(f"https://www.ebi.ac.uk/ena/portal/api/filereport?result=taxon&accession={taxon_id}&fields=tax_lineage,scientific_name,common_name,genbank_common_name,rank&limit=10&format=json")
-    if response.status_code != 200:
-        return
-    return response.json()
+    data = None
+    try:
+        response = requests.get(f"https://www.ebi.ac.uk/ena/portal/api/filereport?result=taxon&accession={taxon_id}&fields=tax_lineage,scientific_name,common_name,genbank_common_name,rank&limit=10&format=json")
+        response.raise_for_status()
+        data = response.json()
+    except Exception as e:
+        print(f"Error occurred while fetchin {taxon_id}")
+        print(e)
+    finally:
+        return data
 
 def get_sample_from_biosamples(accession):
-    time.sleep(1)
-    response = requests.get(f"https://www.ebi.ac.uk/biosamples/samples?size=10&filter=acc:{accession}").json()
-    if '_embedded' in response.keys() and 'samples' in response['_embedded'] and response['_embedded']['samples']:
-        return response['_embedded']['samples'][0]
+    data = None
+    try:
+
+        response = requests.get(f"https://www.ebi.ac.uk/biosamples/samples?size=10&filter=acc:{accession}")
+        json_response = response.json()
+        if '_embedded' in json_response.keys() and 'samples' in json_response['_embedded'] and json_response['_embedded']['samples']:
+            data =  json_response['_embedded']['samples'][0]
+    except Exception as e:
+        print(f"Error occurred while fetchin {accession}")
+        print(e)
+    finally:
+        return data
 
 def get_samples_derived_from(accession):
     time.sleep(1)
@@ -44,48 +115,41 @@ def get_samples_derived_from(accession):
         resp = requests.get(href).json()
     return biosamples
     
-def get_tolid(taxid):
-    time.sleep(1)
-    response = requests.get(f"https://id.tol.sanger.ac.uk/api/v2/species/{taxid}").json()
-    if not isinstance(response, list):
-        return ''
-    else:
-        return response[0]['prefix']
-
-
 def get_reads(accession):
-    time.sleep(1)
-    experiments_data = requests.get(f'https://www.ebi.ac.uk/ena/portal/'
-                                        f'api/filereport?result=read_run'
-                                        f'&accession={accession}'
-                                        f'&limit=0&format=json'
-                                        f'&fields=study_accession,'
-                                        f'secondary_study_accession,'
-                                        f'sample_accession,'
-                                        f'secondary_sample_accession,'
-                                        f'experiment_accession,run_accession,'
-                                        f'submission_accession,tax_id,'
-                                        f'scientific_name,instrument_platform,'
-                                        f'instrument_model,library_name,'
-                                        f'nominal_length,library_layout,'
-                                        f'library_strategy,library_source,'
-                                        f'library_selection,read_count,'
-                                        f'base_count,center_name,first_public,'
-                                        f'last_updated,experiment_title,'
-                                        f'study_title,study_alias,'
-                                        f'experiment_alias,run_alias,'
-                                        f'fastq_bytes,fastq_md5,fastq_ftp,'
-                                        f'fastq_aspera,fastq_galaxy,'
-                                        f'submitted_bytes,submitted_md5,'
-                                        f'submitted_ftp,submitted_aspera,'
-                                        f'submitted_galaxy,submitted_format,'
-                                        f'sra_bytes,sra_md5,sra_ftp,sra_aspera,'
-                                        f'sra_galaxy,sample_alias,broker_name,'
-                                        f'sample_title,nominal_sdev,first_created')
-    
-    if experiments_data.status_code != 200:
-        return list()
-    return experiments_data.json()
+    try:
+        experiments_data = requests.get(f'https://www.ebi.ac.uk/ena/portal/'
+                                            f'api/filereport?result=read_run'
+                                            f'&accession={accession}'
+                                            f'&limit=0&format=json'
+                                            f'&fields=study_accession,'
+                                            f'secondary_study_accession,'
+                                            f'sample_accession,'
+                                            f'secondary_sample_accession,'
+                                            f'experiment_accession,run_accession,'
+                                            f'submission_accession,tax_id,'
+                                            f'scientific_name,instrument_platform,'
+                                            f'instrument_model,library_name,'
+                                            f'nominal_length,library_layout,'
+                                            f'library_strategy,library_source,'
+                                            f'library_selection,read_count,'
+                                            f'base_count,center_name,first_public,'
+                                            f'last_updated,experiment_title,'
+                                            f'study_title,study_alias,'
+                                            f'experiment_alias,run_alias,'
+                                            f'fastq_bytes,fastq_md5,fastq_ftp,'
+                                            f'fastq_aspera,fastq_galaxy,'
+                                            f'submitted_bytes,submitted_md5,'
+                                            f'submitted_ftp,submitted_aspera,'
+                                            f'submitted_galaxy,submitted_format,'
+                                            f'sra_bytes,sra_md5,sra_ftp,sra_aspera,'
+                                            f'sra_galaxy,sample_alias,broker_name,'
+                                            f'sample_title,nominal_sdev,first_created')
+        experiments_data.raise_for_status()
+        response = experiments_data.json()
+    except:
+        response = None
+    finally:
+        return response
 
 def retrieve_biosamples_from_ebi_by_project(project_name):
     biosamples = []
@@ -114,3 +178,19 @@ def retrieve_biosamples_from_ebi_by_project(project_name):
             print(f"An error occurred while fetching biosample from EBI: {e}")
             break  # Exit the loop on error
     return biosamples
+
+
+def fetch_biosamples_from_ebi(url):
+    biosamples = []
+    try:
+        response = requests.get(url).json()
+        biosamples = response.get('_embedded', {}).get('samples', [])
+        if 'next' in response.get('_links', {}):
+            url = response['_links']['next']['href']
+        else:
+            url = None
+    except Exception as e:
+        print(f"Error fetching samples")
+        print(e)
+    finally:
+        return biosamples, url

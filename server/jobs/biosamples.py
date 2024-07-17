@@ -2,76 +2,105 @@ from db.models import BioSample
 from clients import ebi_client
 import os
 from parsers import biosample as biosample_parser
-from helpers.organism import update_organisms,handle_taxonomic_ids
-from helpers.biosample import handle_biosample_location_data, parse_and_save_biosample, handle_derived_samples
+from helpers.organism import handle_organism
+from helpers.biosample import handle_biosample_location_data, handle_derived_samples
 from celery import shared_task
 
 
 PROJECTS = os.getenv('PROJECTS')
 
-@shared_task(name='import_biosamples',ignore_result=False)
+@shared_task(name='import_biosamples', ignore_result=False)
 def import_biosamples_from_project_names():
+
     if not PROJECTS:
         print("No Projects defined")
         return
     
-    for project_accession in PROJECTS.split(','):
+    for project_name in PROJECTS.split(','):
         
-        print(f"IMPORTING BIOSAMPLES FOR PROJECT {project_accession}")
-        
-        biosamples = ebi_client.retrieve_biosamples_from_ebi_by_project(project_accession)
-        
-        if not biosamples:
-            print(f'biosamples for project {project_accession} not found')
-            continue
-        
-        accession_list = list(set(biosample['accession'] for biosample in biosamples))
-        
-        existing_accession_list = BioSample.objects(accession__in=accession_list).scalar('accession')
-        
-        parsed_biosamples = [biosample_parser.parse_biosample_from_ebi_data(biosample) for biosample in biosamples]
+        print(f"IMPORTING BIOSAMPLES FOR PROJECT {project_name}")
+        url = f"https://www.ebi.ac.uk/biosamples/samples?size=200&filter=attr%3Aproject%20name%3A{project_name}"
+        saved_biosamples_counter=0
+        biosamples_to_save_counter=0
+        counter = 1
 
-        new_parsed_biosamples = [b for b in parsed_biosamples if not b.accession in existing_accession_list]
-        if not new_parsed_biosamples:
-            print(f"Any new biosample to save!")
-            return
+        while url:
+            print(f"{counter}: Fetching biosamples.. ")
 
-        new_parsed_biosamples = handle_taxonomic_ids(new_parsed_biosamples)
+            fetched_biosamples, new_url = ebi_client.fetch_biosamples_from_ebi(url)
+
+            url = new_url
+
+            if not fetched_biosamples:
+                break
+
+            parsed_biosamples = [biosample_parser.parse_biosample_from_ebi_data(biosample) for biosample in fetched_biosamples]
+            existing_accession_list = BioSample.objects(accession__in=[b.accession for b in parsed_biosamples]).scalar('accession')
+            new_biosamples = [parsed_b for parsed_b in parsed_biosamples if parsed_b.accession not in existing_accession_list]
             
-        print(f"New biosamples to save for project {project_accession} {len(new_parsed_biosamples)}")
-        
-        saved_biosamples = BioSample.objects.insert(new_parsed_biosamples)
+            biosamples_to_save_counter += len(new_biosamples)
 
-        taxid_list_to_update = list(set(s.taxid for s in saved_biosamples))
+            print(f"{counter}: New biosamples found {len(new_biosamples)}")
 
-        update_organisms(taxid_list_to_update)
-        
-        for saved_biosample in saved_biosamples:
-            handle_biosample_location_data(saved_biosample)
+            for new_biosample in new_biosamples:
+
+                print(f"{counter}: Fetching organism {new_biosample.taxid} for {new_biosample.accession}")
+                organism = handle_organism(new_biosample.taxid)
+                if not organism:
+                    print(f"{counter}: Organism {new_biosample.taxid} not found for {new_biosample.accession}, skipping..")
+                    continue
+
+                print(f"{counter}: Saving biosample {new_biosample.accession}")
+                new_biosample.save()
+                saved_biosamples_counter+=1
+
+                print(f"{counter}: Updating organism {new_biosample.taxid}")
+                organism.save()
+
+                print(f"{counter}: Handling coordinates for {new_biosample.accession}")
+                handle_biosample_location_data(new_biosample)
             
+            counter+=1
 
-    #Bulk insert biosamples
+        print(f"Saved a total of {saved_biosamples_counter} out of {biosamples_to_save_counter} for project {project_name}")
+
+    print("Job terminated")
+
 @shared_task(name='get_biosamples_derived_from',ignore_result=False)
 def get_biosamples_derived_from_parent():
 
-    possible_parent_samples = BioSample.objects(__raw__ = {'metadata.sample derived from' : {"$exists": False}})
-    
-    possible_children_accessions = BioSample.objects(__raw__ = {'metadata.sample derived from' : {"$exists": True}, 'sub_samples':None}).scalar("accession")
-    
-    for possible_parent in possible_parent_samples:
+    possible_parent_accession_list = BioSample.objects(__raw__ = {'metadata.sample derived from' : {"$exists": False}}).scalar('accession')    
+    print(f"Found a total of {len(possible_parent_accession_list)} potential parents")
+
+    saved_samples_counter=0
+    for possible_parent_accession in possible_parent_accession_list:
+        print(f"Found a total of {len(possible_parent_accession_list)} possible parents")
+
+        sub_samples = BioSample.objects(__raw__ = {'metadata.sample derived from' : possible_parent_accession}).exclude('id','created')
+        if sub_samples:
+            continue
         
-        ebi_biosample_response = ebi_client.get_samples_derived_from(possible_parent.accession)
+        print(f"Fetching sub samples for {possible_parent_accession} parent")
+
+        ebi_biosample_response = ebi_client.get_samples_derived_from(possible_parent_accession)
         
         if not ebi_biosample_response:
+            print(f"No sub samples found for {possible_parent_accession} parent, skipping..")
             continue
 
-        new_parsed_samples = [biosample_parser.parse_biosample_from_ebi_data(b) for b in ebi_biosample_response if b.get('accession') not in possible_children_accessions]
+        new_parsed_samples = [biosample_parser.parse_biosample_from_ebi_data(b) for b in ebi_biosample_response]
         
         for new_parsed_sample in new_parsed_samples:
             
+            if BioSample.objects(accession=new_parsed_sample.accession):
+                continue
+
             new_parsed_sample.save()
 
             handle_biosample_location_data(new_parsed_sample)
+            saved_samples_counter+=1
+
+    print(f"Saved a total of {saved_samples_counter}")
 
 
 @shared_task(name='get_biosamples_parents',ignore_result=False)
@@ -83,7 +112,7 @@ def get_biosample_parents():
         print('No sibling to map')
         return
     
-    print(f'Found a total of: {len(biosample_siblings)} biosample siblings')
+    print(f'Found a total of: {len(biosample_siblings)} potential biosample siblings')
 
     parent_accessions = set([sib.metadata['sample derived from'] for sib in biosample_siblings])
     
@@ -99,10 +128,13 @@ def get_biosample_parents():
         biosample_response = ebi_client.get_sample_from_biosamples(derived_from)
         
         if not biosample_response:
-            print(f'Unable to retrieve parent biosample {derived_from} from EBI BioSamples API')
+            print(f'Unable to retrieve parent biosample {derived_from} from EBI BioSamples API, skipping...')
             continue
         
-        biosample_obj = parse_and_save_biosample(biosample_response)
+        biosample_obj = biosample_parser.parse_biosample_from_ebi_data(biosample_response)
+        biosample_obj.save()
+
         handle_biosample_location_data(biosample_obj)
+        
         handle_derived_samples(biosample_obj)
         

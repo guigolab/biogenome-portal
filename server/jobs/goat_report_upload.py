@@ -60,7 +60,9 @@ def upload_goat_report(self, username, rows):
         publication = data_to_update.get('publications')
         org.target_list_status = data_to_update.get('target_list_status')
         
-        org.goat_status = data_to_update.get('sequencing_status')
+        sequencing_status = data_to_update.get('sequencing_status')
+
+        org.goat_status = GOAT_STATUS_IMPORT_MAPPER.get(sequencing_status)
         
         if publication and not any(pub.id == publication.id for pub in org.publications):
             org.publications.append(publication)
@@ -92,27 +94,7 @@ def map_rows(rows):
 
     return rows_map
 
-def update_goat_organisms(tsv_reader, taxids):
-    saved_organisms = []
-    organisms = Organism.objects(taxid__in=taxids)
-    for index, row in enumerate(tsv_reader):
-        taxid = str(row['ncbi_taxon_id'])
-        for org in organisms:
-            if taxid != org.taxid:
-                continue
-            if row['sequencing_status']:
-                for status in GOAT_STATUS_IMPORT_MAPPER.keys():
-                    if status == row['sequencing_status']:
-                        org.goat_status = GOAT_STATUS_IMPORT_MAPPER[status]
-            org.target_list_status = row['target_list_status']
-            if row['publication_id'] and not any(pub.id == row['publication_id'] for pub in org.publications):
-                pub_to_save = map_publication(row.get('publication_id'))
-                org.publications.append(pub_to_save)
-            saved_organisms.append({taxid: f"Organism {org.scientific_name} correctly saved"})
-            org.save()
-    return saved_organisms
     
-
 def map_publication(pub):
     publication_to_save = Publication()
     if '/' in pub:

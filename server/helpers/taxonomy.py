@@ -1,14 +1,4 @@
-from clients import ncbi_client
 from db.models import TaxonNode,Organism
-from parsers import taxonomy
-
-def create_taxons_from_organisms(organisms):
-    taxon_taxid_list = collect_all_parents(organisms)
-    reports = ncbi_client.get_taxons_from_ncbi_datasets(taxon_taxid_list)
-    if reports:
-        parsed_taxons = taxonomy.parse_taxons_from_ncbi_datasets(reports)
-        for org in organisms:
-            save_taxons_and_update_hierachy(parsed_taxons, org)
 
 
 def save_taxons_and_update_hierachy(parsed_taxons, organism_obj):
@@ -16,20 +6,6 @@ def save_taxons_and_update_hierachy(parsed_taxons, organism_obj):
     ordered_nodes = get_and_order_saved_taxon_nodes(organism_obj)
     update_taxon_hierarchy(ordered_nodes)
     
-
-def collect_all_parents(organisms):
-    # Initialize an empty set to store all unique parent values
-    all_parents = set()
-
-    # Iterate through each taxonomy object in the list
-    for item in organisms:
-        # Extract the parents array from the taxonomy object
-        parents = item.taxon_lineage
-        # Add the parents array to the set of all parents
-        all_parents.update(parents)
-    
-    # Convert the set back to a list
-    return list(all_parents)
 
 def save_parsed_taxons(parsed_taxons):
     existing_taxids = TaxonNode.objects(taxid__in=[t.taxid for t in parsed_taxons]).scalar('taxid')

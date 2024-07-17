@@ -4,9 +4,9 @@
     <VaSkeleton tag="h1" variant="text" class="va-h1" />
     <VaSkeleton variant="text" :lines="1" />
   </VaSkeletonGroup>
-  <VaTabs v-model="tab">
+  <VaTabs v-if="showTabs" v-model="tab">
     <template #tabs>
-      <VaTab label="Metadata" name="metadata"></VaTab>
+      <VaTab v-if="organism && Object.entries(organism.metadata).length" label="Metadata" name="metadata"></VaTab>
       <VaTab :key="dT" v-for="dT in validDataTabs" :label="t(`tabs.${dT}`)" :name="dT" />
       <VaTab v-if="organism && organism.image_urls.length" :label="t('tabs.images')" name="images" />
       <VaTab v-if="organism && organism.common_names.length" :label="t('tabs.names')" name="names" />
@@ -39,7 +39,7 @@
 import OrganismService from '../../services/clients/OrganismService'
 import MetadataTreeCard from '../../components/ui/MetadataTreeCard.vue'
 import DetailsHeader from '../../components/common/DetailsHeader.vue'
-import { ref, watchEffect } from 'vue'
+import { computed, ref, watchEffect } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Details, SampleLocations } from '../../data/types'
 import Publications from './components/Publications.vue'
@@ -73,6 +73,18 @@ const coordinates = ref<SampleLocations[]>([])
 const validDataTabs = ref<DataModel[]>([])
 const organism = ref<Record<string, any>>()
 
+const showTabs = computed(() => {
+  if (organism.value) {
+    return organism.value.image_urls.length ||
+      organism.value.common_names.length ||
+      organism.value.publications.length ||
+      Object.entries(organism.value.metadata)
+      || validDataTabs.value.length
+      || coordinates.value.length
+  }
+  return false
+
+})
 watchEffect(async () => {
   await getData(props.taxid)
 })

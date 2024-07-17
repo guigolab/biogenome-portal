@@ -1,9 +1,9 @@
-from db.models import Assembly, Chromosome, Organism
+from db.models import Assembly, Chromosome, GenomeAnnotation
 from mongoengine.errors import ValidationError
 from errors import NotFound
 from mongoengine.queryset.visitor import Q
 from clients import ncbi_client, genomehubs_client
-from parsers import assembly, chromosome
+from parsers import assembly
 from helpers import data, organism, biosample as biosample_helper, assembly as assembly_helper
 
 FIELDS_TO_EXCLUDE = ['id', 'created', 'chromosomes_aliases']
@@ -81,17 +81,6 @@ def fetch_assembly_report(accession):
 def parse_assembly(report):
     return assembly.parse_assembly_from_ncbi_datasets(report)
 
-
-def save_chromosomes(accession, assembly_obj):
-    sequences_args = ['genome', 'accession', accession, '--report', 'sequence', '--assembly-level', 'chromosome,complete']
-    sequence_report = ncbi_client.get_data_from_ncbi(sequences_args)
-    if sequence_report and sequence_report.get('reports'):
-        chromosomes_to_save = chromosome.parse_chromosomes_from_ncbi_datasets(sequence_report.get('reports'))
-        if chromosomes_to_save:
-            existing_chromosomes = Chromosome.objects(accession_version__in=[chr.accession_version for chr in chromosomes_to_save]).scalar('accession_version')
-            Chromosome.objects.insert([chr for chr in chromosomes_to_save if chr.accession_version not in existing_chromosomes])
-            assembly_obj.chromosomes = [chr.accession_version for chr in chromosomes_to_save]
-
 def get_assembly(accession):
     assembly_obj = assembly_exists(accession)
     if not assembly_obj:
@@ -101,12 +90,16 @@ def get_assembly(accession):
     return assembly_obj
 
 def delete_assembly(accession):
+
     assembly_obj = Assembly.objects(accession=accession).first()
     if not assembly_obj:
         raise NotFound 
+    
+    Chromosome.objects(accession_version__in=assembly_obj.chromosomes).delete()
+    GenomeAnnotation.objects(assembly_accession=accession).delete()
     assembly_obj.delete()
 
-    organism_obj = Organism.objects(taxid=assembly_obj.taxid).first()
+    organism_obj = organism.handle_organism(assembly_obj.taxid)
     if organism_obj:
         organism_obj.save()
 

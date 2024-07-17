@@ -1,5 +1,5 @@
-from db.models import LocalSample,Organism,BioGenomeUser
-from helpers import organism as organism_helper, taxonomy as taxonomy_helper, user as user_helper, geolocation as geoloc_helper
+from db.models import LocalSample,BioGenomeUser
+from helpers import organism as organism_helper, user as user_helper, geolocation as geoloc_helper
 from celery import shared_task
 
 OPTIONS = ['SKIP','UPDATE']
@@ -78,29 +78,3 @@ def upload_samples_spreadsheet(self, username, samples, option="SKIP", source=No
                           f'SAMPLES UPDATED {samples_updated}',
                           f'SAMPLES SKIPPED {samples_skipped}' ]}
     
-
-def save_or_update_local_samples(mapped_samples, option, source):
-
-    existing_local_samples = LocalSample.objects(local_id__in=[s.local_id for s in mapped_samples])
-    saved_or_updated_samples = []
-    for s in mapped_samples:
-        existing_sample = existing_local_samples.filter(local_id=s.local_id).first()
-        
-        if existing_sample:
-            if option == 'UPDATE':
-                existing_sample.update(taxid=s.taxid,broker=source,metadata=s.metadata)
-                existing_sample.reload()
-                geoloc_helper.save_coordinates(existing_sample,'local_id')
-                geoloc_helper.update_countries_from_biosample(existing_sample, existing_sample.local_id)
-                saved_or_updated_samples.append(s)
-            else:
-                continue
-
-        else:
-            s.save()
-            geoloc_helper.save_coordinates(s, 'local_id')
-            geoloc_helper.update_countries_from_biosample(s, s.local_id)
-            saved_or_updated_samples.append(s)
-
-    return saved_or_updated_samples
-

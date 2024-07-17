@@ -23,7 +23,7 @@ const props = defineProps<{
 const { data } = await BioSampleService.getBioSampleRelatedData(props.accession, props.model)
 
 const columns = computed(() => {
-    if (props.model === 'sub_samples') return models.biosamples.columns
+    if (props.model === 'sub_samples') return [...models.biosamples.columns, 'actions']
     return [...models[props.model].columns, 'actions']
 })
 

@@ -3,7 +3,7 @@ from db.enums import GoaTStatus,PublicationSource
 from db.models import Organism,Publication, GoaTUpdateDate
 from io import StringIO
 from itertools import islice
-from helpers import user as user_helper, taxonomy as taxonomy_helper, organism as organism_helper
+from helpers import user as user_helper, taxonomy as taxonomy_helper
 import os
 from jobs import goat_report_upload
 from errors import NotFound
@@ -109,28 +109,6 @@ def upload_goat_report(report):
     return dict(id=task.id, state=task.state ), 200
 
 
-def update_goat_organisms(tsv_reader, taxids):
-    saved_organisms = []
-    organisms = Organism.objects(taxid__in=taxids)
-    for index, row in enumerate(tsv_reader):
-        taxid = str(row['ncbi_taxon_id'])
-        for org in organisms:
-            if taxid != org.taxid:
-                continue
-            if row['sequencing_status']:
-                for status in GOAT_STATUS_IMPORT_MAPPER.keys():
-                    if status == row['sequencing_status']:
-                        org.goat_status = GOAT_STATUS_IMPORT_MAPPER[status]
-            org.target_list_status = row['target_list_status']
-            if row['publication_id'] and not any(pub.id == row['publication_id'] for pub in org.publications):
-                pub_to_save = map_publication(row.get('publication_id'))
-                org.publications.append(pub_to_save)
-            saved_organism = org.save()
-            saved_organisms.append(saved_organism)
-            org.save()
-    return saved_organisms
-    
-
 def validate_fields(tsv_reader):
     errors = []
     for index, row in enumerate(tsv_reader):
@@ -139,17 +117,6 @@ def validate_fields(tsv_reader):
             if not row[m_field]:
                 errors.append(dict(index=row_index, message=f'{m_field} is mandatory'))
     return errors
-
-def map_publication(pub):
-    publication_to_save = Publication()
-    if '/' in pub:
-        publication_to_save.source = PublicationSource.DOI
-    if 'PMC' in pub:
-        publication_to_save.source = PublicationSource.PMCID
-    else:
-        publication_to_save.source = PublicationSource.PMID
-    publication_to_save.id = pub
-    return publication_to_save
 
 
 def get_task_status(task_id):

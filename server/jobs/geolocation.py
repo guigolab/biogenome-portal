@@ -2,6 +2,8 @@ from db.models import BioSample, SampleCoordinates, LocalSample
 import os
 from helpers.geolocation import update_countries_from_biosample,save_coordinates
 from celery import shared_task
+
+
 PROJECTS = os.getenv('PROJECTS')
 COUNTRIES_PATH = './countries.json'
 ROOT_NODE = os.getenv('ROOT_NODE')

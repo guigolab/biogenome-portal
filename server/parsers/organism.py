@@ -26,6 +26,7 @@ def parse_organism_from_ena_browser(organism_data, parsed_taxons):
         'taxid':organism_data.get('taxId'),
         'insdc_common_name': organism_data.get('commonName'),
         'scientific_name': organism_data.get('scientificName'),
+        'tolid_prefix': tolid_client.get_tolid(organism_data.get('taxid')) ,
         'taxon_lineage': [taxon.taxid for taxon in parsed_taxons]
     }
     return Organism(**parsed_organism)
@@ -35,6 +36,7 @@ def parse_organism_from_ena_portal(organism_data):
     parsed_organism = {
         'taxid': organism_data.get('tax_id'),
         'scientific_name': organism_data.get('scientific_name'),
+        'tolid_prefix': tolid_client.get_tolid(organism_data.get('taxid')) ,
         'insdc_common_name': organism_data.get('common_name'),
         'taxon_lineage': list(reversed([taxon_taxid.strip() for taxon_taxid in organism_data.get('tax_lineage').split(';') if taxon_taxid != '1']))
     }
