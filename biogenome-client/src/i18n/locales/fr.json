@@ -14,7 +14,7 @@
         "view": "Voir les détails",
         "fields": "Champs",
         "filters": "Filtres",
-        "goat_report": "Télécharger le rapport de chèvre",
+        "goat_report": "Télécharger le rapport de GoaT",
         "NCBI": "Voir dans NCBI",
         "ENA": "Voir dans ENA"
     },
@@ -100,7 +100,7 @@
         "biosamples": "Biosamples",
         "local_samples": "Échantillons locaux",
         "annotations": "Annotations",
-        "goat_status": "État de la chèvre"
+        "goat_status": "État de GoaT"
     },
     "lookup": {
         "name": "Recherche de taxonomie",

@@ -14,7 +14,7 @@
       "view": "Mostra detalls",
       "fields": "Camps",
       "filters": "Filtres",
-      "goat_report": "Descarrega informe de cabra",
+      "goat_report": "Descarrega informe de GoaT",
       "NCBI": "Visualitza a NCBI",
       "ENA": "Visualitza a ENA"
   },
@@ -100,7 +100,7 @@
       "biosamples": "Biosamples",
       "local_samples": "Mostres locals",
       "annotations": "Anotacions",
-      "goat_status": "Estat de la cabra"
+      "goat_status": "Estat de GoaT"
   },
   "lookup": {
       "name": "Cerca de taxonomia",

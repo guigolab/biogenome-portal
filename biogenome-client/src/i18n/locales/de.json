@@ -14,7 +14,7 @@
         "view": "Details anzeigen",
         "fields": "Felder",
         "filters": "Filter",
-        "goat_report": "Ziegenbericht herunterladen",
+        "goat_report": "GoaT herunterladen",
         "NCBI": "In NCBI anzeigen",
         "ENA": "In ENA anzeigen"
     },
@@ -100,7 +100,7 @@
         "biosamples": "BioProben",
         "local_samples": "Lokale Proben",
         "annotations": "Annotationen",
-        "goat_status": "Ziegenstatus"
+        "goat_status": "GoaT Status"
     },
     "lookup": {
         "name": "Taxonomie-Suche",
