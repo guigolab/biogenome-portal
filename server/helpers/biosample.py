@@ -1,11 +1,7 @@
-from db.models import BioSample,Assembly,Experiment,Read
-from errors import NotFound
+from db.models import BioSample
 from clients import ebi_client
 from parsers import biosample
-from helpers import geolocation, organism
-import time
-ACCESSION_LIST_LIMIT=500
-
+from helpers import geolocation
 
 def handle_biosample(accession):
     biosample_obj = BioSample.objects(accession=accession).first()
@@ -42,15 +38,3 @@ def handle_derived_samples(accession):
         if sibling.accession not in existing_siblings:
             handle_biosample_location_data(sibling)
             sibling.save()
-
-def get_related_experiments(accession):
-    experiments = Experiment.objects(sample_accession=accession).exclude('id', 'created')
-    return experiments
-
-def get_related_assemblies(accession):
-    assemblies = Assembly.objects(sample_accession=accession).exclude('id', 'created')
-    return assemblies
-
-def get_related_sub_samples(accession):
-    sub_samples = BioSample.objects(__raw__ = {'metadata.sample derived from' : accession}).exclude('id','created')
-    return sub_samples
