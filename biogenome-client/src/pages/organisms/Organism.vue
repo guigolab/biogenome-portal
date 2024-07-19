@@ -4,34 +4,31 @@
     <VaSkeleton tag="h1" variant="text" class="va-h1" />
     <VaSkeleton variant="text" :lines="1" />
   </VaSkeletonGroup>
-  <VaTabs v-if="showTabs" v-model="tab">
-    <template #tabs>
-      <VaTab v-if="organism && Object.entries(organism.metadata).length" label="Metadata" name="metadata"></VaTab>
-      <VaTab :key="dT" v-for="dT in validDataTabs" :label="t(`tabs.${dT}`)" :name="dT" />
-      <VaTab v-if="organism && organism.image_urls.length" :label="t('tabs.images')" name="images" />
-      <VaTab v-if="organism && organism.common_names.length" :label="t('tabs.names')" name="names" />
-      <VaTab v-if="organism && organism.publications.length" :label="t('tabs.publications')" name="publications" />
-      <VaTab v-if="coordinates.length" :label="t('tabs.map')" name="map" />
-    </template>
-  </VaTabs>
-  <VaDivider style="margin-top: 0;" />
-  <div class="row">
-    <div v-if="isDataModel(tab)" :key="tab" class="flex lg12 md12 sm12 xs12">
-      <Suspense>
-        <RelatedDataTable :taxid="taxid" :model="(tab as DataModel)" />
-        <template #fallback>
-          <VaSkeleton height="500px"></VaSkeleton>
-        </template>
-      </Suspense>
-    </div>
-    <div v-else-if="tab === 'map'" style="height: 450px;" class="flex lg12 md12 sm12 xs12">
-      <LeafletMap :coordinates="coordinates" />
-    </div>
-    <div v-else-if="organism" class="flex lg12 md12 sm12 xs12">
-      <Images v-if="tab === 'images'" :images="organism.image_urls" />
-      <VernacularNames v-else-if="tab === 'names'" :names="organism.common_names" />
-      <Publications v-else-if="tab === 'publications'" :publications="organism.publications" />
-      <MetadataTreeCard v-else :metadata="Object.entries(organism.metadata)" />
+  <div v-if="showTabs">
+    <VaTabs v-model="tab">
+      <template #tabs>
+        <VaTab v-for="tab in tabs" :key="tab.name" :name="tab.name" :label="tab.label" />
+      </template>
+    </VaTabs>
+    <VaDivider style="margin-top: 0;" />
+    <div class="row">
+      <div v-if="isDataModel(tab)" :key="tab" class="flex lg12 md12 sm12 xs12">
+        <Suspense>
+          <RelatedDataTable :taxid="taxid" :model="(tab as DataModel)" />
+          <template #fallback>
+            <VaSkeleton height="500px"></VaSkeleton>
+          </template>
+        </Suspense>
+      </div>
+      <div v-else-if="tab === 'map'" style="height: 450px;" class="flex lg12 md12 sm12 xs12">
+        <LeafletMap :coordinates="coordinates" />
+      </div>
+      <div v-else class="flex lg12 md12 sm12 xs12">
+        <Images v-if="tab === 'images'" :images="images" />
+        <VernacularNames v-else-if="tab === 'names'" :names="commonNames" />
+        <Publications v-else-if="tab === 'publications'" :publications="publications" />
+        <MetadataTreeCard v-else-if="tab === 'metadata'" :metadata="metadata" />
+      </div>
     </div>
   </div>
 </template>
@@ -39,7 +36,7 @@
 import OrganismService from '../../services/clients/OrganismService'
 import MetadataTreeCard from '../../components/ui/MetadataTreeCard.vue'
 import DetailsHeader from '../../components/common/DetailsHeader.vue'
-import { computed, ref, watchEffect } from 'vue'
+import { computed, ref, watch, watchEffect } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Details, SampleLocations } from '../../data/types'
 import Publications from './components/Publications.vue'
@@ -52,13 +49,12 @@ import RelatedDataTable from './components/RelatedDataTable.vue'
 import { AxiosError } from 'axios'
 import { useToast } from 'vuestic-ui/web-components'
 
-
 const { init } = useToast()
 
 type DataModel = keyof typeof models;
 
 const { t } = useI18n()
-
+const showTabs = ref(false)
 const props = defineProps<{
   taxid: string
 }>()
@@ -66,27 +62,42 @@ const props = defineProps<{
 const details = ref<
   Details | any
 >()
-
-const tab = ref('metadata')
-
+const images = ref<string[]>([])
+const commonNames = ref<Record<string, any>[]>([])
+const publications = ref<Record<string, any>[]>([])
 const coordinates = ref<SampleLocations[]>([])
 const validDataTabs = ref<DataModel[]>([])
-const organism = ref<Record<string, any>>()
+const metadata = ref<[string, any][]>([])
 
-const showTabs = computed(() => {
-  if (organism.value) {
-    return organism.value.image_urls.length ||
-      organism.value.common_names.length ||
-      organism.value.publications.length ||
-      Object.entries(organism.value.metadata)
-      || validDataTabs.value.length
-      || coordinates.value.length
-  }
-  return false
-
+const tabs = computed(() => {
+  const tabs = []
+  if (metadata.value.length) tabs.push({ name: 'metadata', label: 'Metadata' })
+  if (validDataTabs.value.length) tabs.push(...validDataTabs.value.map(tab => {
+    return { label: t(`tabs.${tab}`), name: tab }
+  }))
+  if (coordinates.value.length) tabs.push({ name: 'map', label: t('tabs.map') })
+  if (images.value.length) tabs.push({ name: 'images', label: t('tabs.images') })
+  if (commonNames.value.length) tabs.push({ name: 'names', label: t('tabs.names') })
+  if (publications.value.length) tabs.push({ name: 'publications', label: t('tabs.publications') })
+  return tabs
 })
+
+
+const tab = ref('')
+
 watchEffect(async () => {
   await getData(props.taxid)
+})
+
+
+watch(() => tabs.value, () => {
+  console.log('Watching tabs')
+  if (tabs.value.length) {
+    tab.value = tabs.value[0].name
+    showTabs.value = true
+  } else {
+    showTabs.value = false
+  }
 })
 
 function isDataModel(str: string): boolean {
@@ -97,11 +108,14 @@ async function getData(taxid: string) {
   try {
     const { data } = await OrganismService.getOrganism(props.taxid)
     details.value = { ...parseDetails(data) }
-    organism.value = { ...data }
+    images.value = [...data.image_urls]
+    commonNames.value = [...data.common_names]
+    publications.value = [...data.publications]
+    metadata.value = Object.entries(data.metadata)
     const resp = await lookupData(taxid)
     const filteredEntries: DataModel[] = Object.entries(resp).filter(([k, v]) => v).map(([k, v]) => k as DataModel)
+    coordinates.value = [...await getCoordinates(taxid)]
     validDataTabs.value = [...filteredEntries]
-    await getCoordinates(taxid)
   } catch (e) {
     const axiosError = e as AxiosError
     init({ message: axiosError.message, color: 'danger' })
@@ -125,7 +139,8 @@ async function lookupData(taxid: string) {
 
 async function getCoordinates(taxid: string) {
   const { data } = await GeoLocationService.getLocationsByOrganims(taxid)
-  coordinates.value = [...data]
+  return data
 }
+
 
 </script>

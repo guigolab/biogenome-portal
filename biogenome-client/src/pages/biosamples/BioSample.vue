@@ -4,36 +4,35 @@
     <VaSkeleton tag="h1" variant="text" class="va-h1" />
     <VaSkeleton variant="text" :lines="1" />
   </VaSkeletonGroup>
-  <VaTabs v-model="tab">
-    <template #tabs>
-      <VaTab :label="t('tabs.metadata')" name="metadata"></VaTab>
-      <VaTab :key="tab" v-for="tab in validDataTabs"
-        :label="t(tab === 'sub_samples' ? 'tabs.biosamples' : `tabs.${tab}`)" :name="tab">
-      </VaTab>
-      <VaTab v-if="coordinates.length" :label="t('tabs.map')" name="map"></VaTab>
-    </template>
-  </VaTabs>
-  <VaDivider style="margin-top: 0;" />
-  <div class="row">
-    <div v-if="isDataModel(tab)" :key="tab" class="flex lg12 md12 sm12 xs12">
-      <Suspense>
-        <RelatedDataTable :accession="accession" :model="(tab as DataModel)" />
-        <template #fallback>
-          <VaSkeleton height="500px"></VaSkeleton>
-        </template>
-      </Suspense>
-    </div>
-    <div v-else-if="tab === 'map'" style="height: 450px;" class="flex lg12 md12 sm12 xs12">
-      <LeafletMap :coordinates="coordinates" />
-    </div>
-    <div v-else-if="biosample" class="flex lg12 md12 sm12 xs12">
-      <MetadataTreeCard :metadata="Object.entries(biosample.metadata)" />
+  <div v-if="showTabs">
+    <VaTabs v-model="tab">
+      <template #tabs>
+        <VaTab v-for="tab in tabs" :key="tab.name" :name="tab.name" :label="tab.label" />
+      </template>
+    </VaTabs>
+    <VaDivider style="margin-top: 0;" />
+    <div class="row">
+      <div v-if="isDataModel(tab)" :key="tab" class="flex lg12 md12 sm12 xs12">
+        <Suspense>
+          <RelatedDataTable :accession="accession" :model="(tab as DataModel)" />
+          <template #fallback>
+            <VaSkeleton height="500px"></VaSkeleton>
+          </template>
+        </Suspense>
+      </div>
+      <div v-else-if="tab === 'map'" style="height: 450px;" class="flex lg12 md12 sm12 xs12">
+        <LeafletMap :coordinates="coordinates" />
+      </div>
+      <div v-else-if="tab === 'metadata'" class="flex lg12 md12 sm12 xs12">
+        <MetadataTreeCard :metadata="metadata" />
+      </div>
     </div>
   </div>
+
 </template>
 <script setup lang="ts">
 import BioSampleService from '../../services/clients/BioSampleService'
-import { ref, watchEffect } from 'vue'
+import { computed, ref, watch, watchEffect } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { BioSample, Details, SampleLocations } from '../../data/types'
 import { models } from '../../../config.json'
@@ -51,31 +50,53 @@ const { t } = useI18n()
 const props = defineProps<{
   accession: string
 }>()
+
+const showTabs = ref(false)
 type DataModel = 'experiments' | 'sub_samples' | 'assemblies';
 
 const details = ref<
   Details | any
 >()
-const tab = ref('metadata')
 const coordinates = ref<SampleLocations[]>([])
-const biosample = ref<BioSample>()
+const metadata = ref<[string, any][]>([])
 const validDataTabs = ref<DataModel[]>([])
+
+
+const tab = ref('')
+
+const tabs = computed(() => {
+  const tabs = []
+  if (metadata.value.length) tabs.push({ name: 'metadata', label: 'Metadata' })
+  if (validDataTabs.value.length) tabs.push(...validDataTabs.value.map(tab => {
+    return { label: t(tab === 'sub_samples' ? 'tabs.biosamples' : `tabs.${tab}`), name: tab }
+  }))
+  if (coordinates.value.length) tabs.push({ name: 'map', label: t('tabs.map') })
+  return tabs
+})
 
 function isDataModel(str: string): boolean {
   return Object.keys(models).includes(str) || str === 'sub_samples';
 }
 
-
 watchEffect(async () => {
   await getData(props.accession)
 })
 
+watch(() => tabs.value, () => {
+  console.log('Watching tabs')
+  if (tabs.value.length) {
+    tab.value = tabs.value[0].name
+    showTabs.value = true
+  } else {
+    showTabs.value = false
+  }
+})
 
 async function getData(accession: string) {
   try {
     const { data } = await BioSampleService.getBioSample(accession)
     details.value = { ...parseDetails(data) }
-    biosample.value = { ...data }
+    metadata.value = Object.entries(data.metadata)
     const resp = await lookupData(accession)
     const filteredEntries: DataModel[] = Object.entries(resp).filter(([k, v]) => v).map(([k, v]) => k as DataModel)
     validDataTabs.value = [...filteredEntries]
@@ -112,18 +133,6 @@ function parseDetails(biosample: BioSample) {
   return details
 }
 
-function getRoute(rowData: Record<string, any>) {
-  switch (tab.value) {
-    case 'assemblies':
-      return { name: 'assembly', params: { accession: rowData.accession } }
-
-    case 'biosamples':
-      return { name: 'biosample', params: { accession: rowData.accession } }
-
-    case 'experiments':
-      return { name: 'experiment', params: { accession: rowData.experiment_accession } }
-  }
-}
 </script>
 
 <style lang="scss">
