@@ -3,6 +3,7 @@ from io import StringIO
 from bson.json_util import dumps, JSONOptions, DatetimeRepresentation
 from helpers import organism, user
 from mongoengine.queryset.visitor import Q
+from extensions.cache import cache
 
 def dump_json(response_dict):
     json_options = JSONOptions()
@@ -60,7 +61,6 @@ def get_items(args, model, fieldToExclude, q_query, tsvFields):
 
 def create_query(args, q_query):
     query={}
-    
     for k, v in args.items():
 
         if not v:

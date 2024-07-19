@@ -1,17 +1,19 @@
 from db.models import Organism,SampleCoordinates
 from errors import NotFound
+from extensions.cache import cache
 
 CHUNK_LIMIT=5000
 
+@cache.memoize(timeout=300)
 def get_sample_locations_by_taxon(taxid):
-        related_organisms_by_taxid = Organism.objects(taxon_lineage=taxid).scalar('taxid')
-        if not related_organisms_by_taxid:
-            raise NotFound
-        chunks = [related_organisms_by_taxid[i:i+CHUNK_LIMIT] for i in range(0, len(related_organisms_by_taxid), CHUNK_LIMIT)] if len(related_organisms_by_taxid) > CHUNK_LIMIT else [related_organisms_by_taxid]
-        sample_coordinates=[]
-        for chunk in chunks:
-            sample_coordinates.extend(SampleCoordinates.objects(taxid__in=chunk).exclude('id').as_pymongo())
-        return sample_coordinates
+    related_organisms_by_taxid = Organism.objects(taxon_lineage=taxid).scalar('taxid')
+    if not related_organisms_by_taxid:
+        raise NotFound
+    chunks = [related_organisms_by_taxid[i:i+CHUNK_LIMIT] for i in range(0, len(related_organisms_by_taxid), CHUNK_LIMIT)] if len(related_organisms_by_taxid) > CHUNK_LIMIT else [related_organisms_by_taxid]
+    sample_coordinates=[]
+    for chunk in chunks:
+        sample_coordinates.extend(SampleCoordinates.objects(taxid__in=chunk).exclude('id').as_pymongo())
+    return sample_coordinates
 
 def get_sample_locations_by_organism(taxid):
     if not Organism.objects(taxid=taxid).first():

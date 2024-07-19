@@ -20,13 +20,11 @@ def initialize_routes(api):
 	##AUTH
 	api.add_resource(users_controller.LoginApi, '/api/login')
 	api.add_resource(users_controller.LogoutApi, '/api/logout')
-	# api.add_resource(dumps_controller.DumpApi, '/api/dumps/<model>')
  
-	##LOCAL SAMPLES UPLODA
+	##LOCAL SAMPLES UPLOAD
 	api.add_resource(uploads_controller.ExcelParserApi, '/api/spreadsheet_upload',  '/api/spreadsheet_upload/<task_id>')
 
-
-	##LOOKUP
+	##DATA LOOKUP
 	api.add_resource(lookup_controller.LookupApi, '/api/lookup')
 
  
@@ -42,7 +40,6 @@ def initialize_routes(api):
 	api.add_resource(sample_locations_controller.SampleLocationsByOrganism, '/api/organisms/<taxid>/coordinates')
 	api.add_resource(sample_locations_controller.SampleLocationsByBioSample, '/api/biosamples/<accession>/coordinates' )
 	api.add_resource(sample_locations_controller.SampleLocationsByLocalSample, '/api/local_samples/<local_id>/coordinates')
-
 
 	##TAXONOMY
 	api.add_resource(taxonomy_controller.TreeApi,'/api/tree', '/api/tree/<taxid>')
@@ -66,7 +63,6 @@ def initialize_routes(api):
 	##SEQUENCING STATUS (CUSTOM)
 	api.add_resource(status_controller.StatusItemsApi, '/api/status')
 
-
 	##BIOSAMPLES
 	api.add_resource(biosamples_controller.BioSamplesApi, '/api/biosamples')
 	api.add_resource(biosamples_controller.BioSampleApi, '/api/biosamples/<accession>')
@@ -81,7 +77,7 @@ def initialize_routes(api):
 	api.add_resource(local_samples_controller.LocalSampleApi, '/api/local_samples/<local_id>')
 	
 
-	##READS (Experiment Document in DB)
+	##EXPERIMENTS AND RELATED READS
 	api.add_resource(reads_controller.ExperimentsApi, '/api/experiments')
 	api.add_resource(reads_controller.ExperimentApi, '/api/experiments/<accession>')
 	api.add_resource(reads_controller.ReadsByExperiment, '/api/experiments/<accession>/reads')
@@ -91,9 +87,6 @@ def initialize_routes(api):
 	api.add_resource(organisms_controller.OrganismsApi, '/api/organisms')
 	api.add_resource(organisms_controller.OrganismApi, '/api/organisms/<taxid>')
 	api.add_resource(lookup_controller.OrganismRelatedDataLookup, '/api/organisms/<taxid>/lookup')
-
-	##CRUDS
-
 	api.add_resource(organisms_controller.OrganismLineageApi, '/api/organisms/<taxid>/lineage')
 	api.add_resource(organisms_controller.OrganismRelatedDataApi, '/api/organisms/<taxid>/<model>') 
 
@@ -103,7 +96,6 @@ def initialize_routes(api):
 	api.add_resource(lookup_controller.TaxonRelatedDataLookup, '/api/taxons/<taxid>/stats')
 	api.add_resource(taxons_controller.TaxonChildrenApi, '/api/taxons/<taxid>/children')
 	api.add_resource(taxonomy_controller.RelativeTaxonomyTreeApi, '/api/taxons/<taxid>/lookup') 
-
 
 	##USERS
 	api.add_resource(users_controller.UsersApi, '/api/users')
