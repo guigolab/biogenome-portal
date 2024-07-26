@@ -42,3 +42,31 @@ def parse_experiments_and_reads_from_ena_portal(runs):
         experiments_to_save.append(Experiment(**exp_to_parse))
         seen_exp.add(experiment_accession)
     return experiments_to_save, reads_to_save
+
+
+
+
+def parse_experiment_and_read_from_ena_portal(run):
+
+    run_accession = run.get('run_accession')
+    experiment_accession = run.get('experiment_accession')
+    sample_accession = run.get('sample_accession')
+    scientific_name = run.get('scientific_name')
+    
+    read_to_parse = {
+        'run_accession':run_accession,
+        'experiment_accession':experiment_accession,
+        'metadata': {k: v for k, v in run.items() if k != 'run_accession'}
+    }
+
+    read_to_save = Read(**read_to_parse)
+    
+    exp_to_parse = {
+        'taxid': run.get('tax_id'),
+        'experiment_accession':experiment_accession,
+        'sample_accession':sample_accession,
+        'scientific_name':scientific_name,
+        'metadata': {k: v for k, v in run.items() if k in EXPERIMENT_FIELDS}
+    }
+    experiment_to_save = Experiment(**exp_to_parse)
+    return experiment_to_save, read_to_save

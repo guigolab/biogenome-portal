@@ -1,8 +1,6 @@
 import requests
 import time
-import requests
 import csv
-import io
 
 
 EXPERIMENT_FIELDS = (
@@ -29,26 +27,20 @@ def fetch_experiments_by_bioproject_streaming(project_accession):
         "format": "tsv",
         "download": "false"
     }
-    experiments=[]
+
     try:
         response = requests.get(base_url, params=params, stream=True)
         response.raise_for_status()
 
-        tsv_content=""
+        # Initialize a reader for the streamed response content
+        lines = (line.decode('utf-8') for line in response.iter_lines())
+        reader = csv.DictReader(lines, delimiter='\t')
 
-        for chunk in response.iter_content(chunk_size=None):
-            # Decode chunk to string
-            chunk = chunk.decode('utf-8')
-            tsv_content+=chunk
-
-        reader = csv.DictReader(io.StringIO(tsv_content), delimiter='\t')
         for row in reader:
-            experiments.append(row)
+            yield row
     except Exception as e:
-        print(f"Error occured while fetchin experiments for {project_accession}")
+        print(f"Error occurred while fetching experiments for {project_accession}")
         print(e)
-    finally:
-        return experiments
 
 
 def get_taxon_from_ena_browser(taxon_id):
