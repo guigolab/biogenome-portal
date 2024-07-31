@@ -86,6 +86,10 @@ function parseDetails(experiment: Record<string, any>) {
       route: { name: 'organism', params: { taxid: experiment.taxid } },
       label: experiment.scientific_name || experiment.metadata.scientific_name
     },
+    button2: {
+      route: { name: 'biosamples', params: { accession: experiment.sample_accession } },
+      label: experiment.sample_accession
+    },
     ncbiPath: `https://www.ncbi.nlm.nih.gov/sra/${accession}`,
     ebiPath: `https://www.ebi.ac.uk/ena/browser/view/${accession}`
   }

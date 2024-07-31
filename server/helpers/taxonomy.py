@@ -50,7 +50,7 @@ def count_leaves(father_taxon):
     return Organism.objects(taxon_lineage=father_taxon.taxid, taxid__ne=father_taxon.taxid).count()
 
 
-def dfs_generator(node):
+def dfs_generator_recursive(node):
     tree = {
         "name": node.name,
         "taxid": node.taxid,
@@ -62,9 +62,40 @@ def dfs_generator(node):
     if node.children:
         children = TaxonNode.objects(taxid__in=node.children)
         for child in children:
-            tree["children"].append(dfs_generator(child))
+            tree["children"].append(dfs_generator_recursive(child))
     
     return tree
+
+def dfs_generator_iterative(node):
+    tree = {
+        "name": node.name,
+        "taxid": node.taxid,
+        "rank": node.rank,
+        "leaves": node.leaves,
+        "children": []
+    }
+
+    stack = [(node, tree)]
+
+    while stack:
+        current_node, current_tree = stack.pop()
+
+        if current_node.children:
+            children = TaxonNode.objects(taxid__in=current_node.children)
+            for child in children:
+                child_tree = {
+                    "name": child.name,
+                    "taxid": child.taxid,
+                    "rank": child.rank,
+                    "leaves": child.leaves,
+                    "children": []
+                }
+                current_tree["children"].append(child_tree)
+                stack.append((child, child_tree))
+
+    return tree
+
+
 
 def dfs_generator_from_taxid_list(node, taxid_list):
     tree = {
