@@ -79,7 +79,7 @@ def dfs_generator_iterative(node):
 
     while stack:
         current_node, current_tree = stack.pop()
-
+        print(current_node.taxid, current_node.name)
         if current_node.children:
             children = TaxonNode.objects(taxid__in=current_node.children)
             for child in children:
