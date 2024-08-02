@@ -1,10 +1,13 @@
+variables:
+    DOCKER_REGISTRY: $DOCKER_REGISTRY
+    AWS_DEFAULT_REGION: $AWS_REGION
 
 stages:         
   - deploy
 
 build-containers:
   tags:
-  - docker
+  - shell
   - monstre       
   stage: build
   image: docker:latest
@@ -17,7 +20,7 @@ build-containers:
     - aws --version
   script:
     - cd /home/rodenewadmin
-    - git clone https://${{ secrets.PAT }}@github.com/guigolab/bgp-configs.git 
+    - git clone https://$PAT@github.com/guigolab/bgp-configs.git 
     - rsync -av --delete /home/rodenewadmin/bgp-configs/biogenome-portal-ebp/ /home/rodenewadmin/biogenome-portal-ebp/
     - cd /home/rodenewadmin/biogenome-portal-ebp/
     - docker compose down
