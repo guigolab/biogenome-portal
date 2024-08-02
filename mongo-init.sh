@@ -1,7 +1,7 @@
 set -e
 
 printenv
-mongo <<EOF
+mongosh <<EOF
 
 use admin
 
