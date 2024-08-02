@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const baseURL = import.meta.env.VITE_BASE_PATH? import.meta.env.VITE_BASE_PATH + 'api' : '/api'
+const baseURL = import.meta.env.VITE_BASE_PATH  ?  import.meta.env.VITE_BASE_PATH + '/api' : '/api' 
 const base = axios.create({
   baseURL: baseURL,
   headers: {
@@ -8,7 +8,7 @@ const base = axios.create({
   },
 })
 
-const download =  axios.create({
+const download = axios.create({
   baseURL: baseURL,
   responseType: 'blob'
 })
@@ -47,5 +47,5 @@ export default {
   base: base,
   ena: ena,
   ncbi: ncbi,
-  download:download
+  download: download
 }

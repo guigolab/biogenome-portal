@@ -11,7 +11,7 @@ import RefGetPlugin from 'jbrowse-plugin-refget-api'
 import { Assembly, AssemblyAdapter, TrackData } from '../../data/types'
 // import '@fontsource/roboto'
 const wrapper = ref(null)
-const baseURL = import.meta.env.VITE_BASE_PATH? import.meta.env.VITE_BASE_PATH + 'api' : '/api'
+const baseURL = import.meta.env.VITE_BASE_PATH ? import.meta.env.VITE_BASE_PATH + '/api' : '/api'
 const props = defineProps<{
   defaultSession?: Record<string, any>
   configuration?: Record<string, any>
@@ -52,13 +52,13 @@ function parseAssembly(assembly: Assembly) {
       },
     },
   }
-  if(assembly.has_chromosomes_aliases){
+  if (assembly.has_chromosomes_aliases) {
     assemblyAdapter.refNameAliases = {
-      adapter : {
+      adapter: {
         type: "RefNameAliasAdapter",
         location: {
-          uri:`${baseURL}/assemblies/${assembly.accession}/chr_aliases`,
-          locationType:"UriLocation"
+          uri: `${baseURL}/assemblies/${assembly.accession}/chr_aliases`,
+          locationType: "UriLocation"
         }
       }
     }

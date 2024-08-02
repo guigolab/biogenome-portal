@@ -4,10 +4,6 @@ import { models, maps, cms } from '../../config.json'
 import { cmsRoutes } from './cms-routes'
 import { modelRoutes, mapRoutes } from './custom-routes'
 
-const rootNode = import.meta.env.VITE_ROOT_NODE ?
-  import.meta.env.VITE_ROOT_NODE : '131567'
-
-
 const defaultRoutes: Array<RouteRecordRaw> = [
   {
     path: '/:catchAll(.*)',
@@ -76,7 +72,7 @@ function createRoutes() {
 const routes = [...createRoutes()]
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  history: createWebHistory(import.meta.env.VITE_BASE_PATH ? import.meta.env.VITE_BASE_PATH : import.meta.env.BASE_URL),
   routes,
 })
 
