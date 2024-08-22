@@ -62,8 +62,8 @@ def dfs_generator_recursive(node):
     if node.children:
         children = TaxonNode.objects(taxid__in=node.children)
         for child in children:
-            tree["children"].append(dfs_generator_recursive(child))
-    
+            child_tree = dfs_generator_recursive(child)
+            tree["children"].append(child_tree)
     return tree
 
 def dfs_generator_iterative(node):
@@ -79,7 +79,6 @@ def dfs_generator_iterative(node):
 
     while stack:
         current_node, current_tree = stack.pop()
-        print(current_node.taxid, current_node.name)
         if current_node.children:
             children = TaxonNode.objects(taxid__in=current_node.children)
             for child in children:

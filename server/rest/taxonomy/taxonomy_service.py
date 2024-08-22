@@ -28,7 +28,7 @@ def create_tree(taxid):
     node = TaxonNode.objects(taxid=taxid).exclude('id').first()
     if not node:
         raise NotFound
-    tree = taxonomy_helper.dfs_generator(node)
+    tree = taxonomy_helper.dfs_generator_recursive(node)
     return tree
 
 def generate_tree(data):
@@ -61,4 +61,40 @@ def get_closest_taxon(taxid):
                 return ex_taxon, 200
 
         
+
+def detect_cycle(graph):
+    """
+    Detects a cycle in a directed graph.
+    :param graph: A dictionary where keys are node names and values are lists of child node names.
+    :return: A tuple (has_cycle, cycle_nodes). has_cycle is True if a cycle is detected, False otherwise.
+             cycle_nodes is a list of nodes involved in the cycle if one is detected, empty otherwise.
+    """
+    def dfs(node, visited, rec_stack):
+        visited.add(node)
+        rec_stack.add(node)
+        
+        for child in graph.get(node, []):
+            if child not in visited:
+                if dfs(child, visited, rec_stack):
+                    return True
+            elif child in rec_stack:
+                cycle_nodes.append(child)
+                return True
+        
+        rec_stack.remove(node)
+        return False
+    
+    visited = set()
+    rec_stack = set()
+    cycle_nodes = []
+    
+    for node in graph:
+        if node not in visited:
+            if dfs(node, visited, rec_stack):
+                cycle_nodes.append(node)
+                return True, cycle_nodes
+    
+    return False, []
+
+
 

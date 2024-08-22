@@ -30,5 +30,5 @@ def get_taxon(taxid):
 
 def get_taxon_children(taxid):
     taxon = get_taxon(taxid)
-    children = TaxonNode.objects(taxid__in=[taxon.children])
+    children = TaxonNode.objects(taxid__in=taxon.children)
     return children

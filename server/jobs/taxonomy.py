@@ -1,7 +1,7 @@
 from db.models import ComputedTree,TaxonNode,Organism
 import os
 import datetime
-from helpers.taxonomy import dfs_generator_iterative
+from helpers.taxonomy import dfs_generator_recursive
 from celery import shared_task
 
 ROOT_NODE = os.getenv('ROOT_NODE')
@@ -12,7 +12,7 @@ def compute_tree():
     if not node:
         raise f"Taxon node not found for {ROOT_NODE}"
     
-    tree = dfs_generator_iterative(node)
+    tree = dfs_generator_recursive(node)
     computed_tree = ComputedTree.objects().first()
     if not computed_tree:
         computed_tree = ComputedTree()
