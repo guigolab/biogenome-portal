@@ -13,6 +13,8 @@ servers:
     description: server containing all the data generated under the European Reference Genome Atlas (PRJEB43510) umbrella 
   - url: https://dades.biogenoma.cat/api
     description: server containing all the data generated under the Catalan Initiative for the Earth Biogenome Project 
+  - url: https://lichenoteca.biogenoma.cat/api
+    description: server containing samples derived from the Lichenoteca dataset (https://doi.org/10.15468/dgecw5), accessed via GBIF.org on 2024-05-26, of the Institut Botanic de Barcelona.
 
 tags:
 - name: "organisms"
@@ -32,7 +34,7 @@ paths:
     get:
       tags: 
         - "goat_report"
-      summary: "retrieve GoaT report of organisms' sequencing status"
+      summary: "retrieve GoaT report"
       responses:
         "200":
           description: "successful operations"
