@@ -1,37 +1,33 @@
 <template>
-    <div class="row">
+    <TaxonHeader :taxid="taxid" />
+    <VaTabs :key="taxid" v-model="tab">
+        <template #tabs>
+            <VaTab name="wiki" :label="t('tabs.wiki')"></VaTab>
+            <VaTab :key="validTab" v-for="validTab in validTabs" :label="t(`tabs.${validTab}`)" :name="validTab">
+            </VaTab>
+            <VaTab v-if="coordinates.length" :label="t('tabs.map')" name="map"></VaTab>
+        </template>
+    </VaTabs>
+    <VaDivider style="margin-top: 0;" />
+    <div v-if="isDataModel(tab)" class="row">
         <div class="flex lg12 md12 sm12 xs12">
-            <TaxonHeader :taxid="taxid" />
-            <VaTabs :key="taxid" v-model="tab">
-                <template #tabs>
-                    <VaTab  name="wiki" :label="t('tabs.wiki')"></VaTab>
-                    <VaTab :key="validTab" v-for="validTab in validTabs" :label="t(`tabs.${validTab}`)" :name="validTab">
-                    </VaTab>
-                    <VaTab v-if="coordinates.length" :label="t('tabs.map')" name="map"></VaTab>
-                </template>
-            </VaTabs>
-            <VaDivider style="margin-top: 0;" />
-            <div v-if="isDataModel(tab)" class="row">
-                <div class="flex lg12 md12 sm12 xs12">
-                    <ItemsBlock :parent_taxon="taxid" :columns="models[tab as DataModel].columns"
-                        :filters="(models[tab as DataModel].filters as Filter[])" :model="(tab as DataModel)" />
-                </div>
-            </div>
-            <div class="row" v-else-if="tab === 'map'">
-                <div style="height: 450px;" class="flex lg12 md12 sm12 xs12">
-                    <LeafletMap :coordinates="coordinates" />
-                </div>
-            </div>
-            <div class="row" v-else>
-                <div class="flex lg12 md12 sm12 xs12">
-                    <Wikipedia />
-                </div>
-            </div>
+            <ItemsBlock :parent_taxon="taxid" :columns="models[tab as DataModel].columns"
+                :filters="(models[tab as DataModel].filters as Filter[])" :model="(tab as DataModel)" />
+        </div>
+    </div>
+    <div class="row" v-else-if="tab === 'map'">
+        <div style="height: 450px;" class="flex lg12 md12 sm12 xs12">
+            <LeafletMap :coordinates="coordinates" />
+        </div>
+    </div>
+    <div class="row" v-else>
+        <div class="flex lg12 md12 sm12 xs12">
+            <Wikipedia />
         </div>
     </div>
 </template>
 <script setup lang="ts">
-import { computed, ref,  watchEffect } from 'vue'
+import { computed, ref, watchEffect } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { SampleLocations, Filter } from '../../data/types'
 import TaxonService from '../../services/clients/TaxonService'

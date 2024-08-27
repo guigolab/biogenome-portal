@@ -1,12 +1,12 @@
 <template>
-    <div style="height: 100vh;" ref="hypertree"></div>
+    <div ref="hypertree"></div>
 </template>
 
 <script setup lang="ts">
 import * as hyt from 'd3-hypertree'
 import TaxonService from '../../services/clients/TaxonService'
 import { useTreeData } from './setTreeData'
-import {  onMounted, reactive, ref, watch } from 'vue'
+import { onMounted, reactive, ref, watch } from 'vue'
 import { TreeNode } from '../../data/types'
 
 
@@ -128,4 +128,9 @@ function findNode(taxid: string, node: hyt.N): hyt.N | null {
 </script>
 <style lang="scss">
 @import '../../styles/d3-hypertree-light.css';
+
+
+.unitdisk-nav svg {
+    position: inherit;
+}
 </style>

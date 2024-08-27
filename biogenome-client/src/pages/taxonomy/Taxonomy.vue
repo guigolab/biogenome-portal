@@ -1,58 +1,43 @@
 <template>
-    <div class="row justify-space-between align-end">
-        <div style="padding-top: 0;" class="flex lg8 md8 sm12 xs12">
-            <h1 class="va-h1">{{ t('taxon.title') }}</h1>
-            <p class="va-text-secondary">{{ t('taxon.description') }}</p>
+    <h1 class="va-h1">{{ t('taxon.title') }}</h1>
+    <p class="va-text-secondarty" style="margin-bottom: 6px">{{ t('taxon.description') }}</p>
+    <div class="row align-end">
+        <div class="flex lg6 md6 sm12 xs12">
+            <va-select hideSelected :loading="isLoading" dropdownIcon="search" searchable highlight-matched-text
+                :textBy="(v: TreeNode) => `${v.name} (${v.rank})`" trackBy="taxid" @update:model-value="setCurrentTaxon"
+                @update:search="handleSearch" v-model="taxonomyStore.currentTaxon"
+                :searchPlaceholderText="t('taxon.search.placeholder')" :noOptionsText="t('taxon.search.noOptions')"
+                :options="taxons">
+            </va-select>
         </div>
         <div class="flex">
-            <va-button style="float: right;" color="secondary" icon="github"
-                href="https://github.com/glouwa/d3-hypertree" target="_blank">
-                GitHub
-            </va-button>
+            <VaButton :round="false" @click="router.push({ name: 'taxon', params: { taxid: rootNode } })">
+                {{ t('taxon.search.rootLoad') }}
+            </VaButton>
+        </div>
+        <div class="flex">
+            <VaButton :round="false" @click="showModal = !showModal" color="info">
+                {{ t('taxon.related.button') }}
+            </VaButton>
         </div>
     </div>
-    <VaDivider />
-    <VaSplit class="split-demo" :limits="[10, 10]">
-        <template #start>
-            <div style="position: relative;">
-                <div style="position: absolute;z-index: 1;width: 100%;">
-                    <div class="row align-end">
-                        <div class="flex lg12 md12 sm12 xs12">
-                            <va-select hideSelected :loading="isLoading" dropdownIcon="search" searchable
-                                highlight-matched-text :textBy="(v: TreeNode) => `${v.name} (${v.rank})`"
-                                trackBy="taxid" @update:model-value="setCurrentTaxon" @update:search="handleSearch"
-                                v-model="taxonomyStore.currentTaxon"
-                                :searchPlaceholderText="t('taxon.search.placeholder')"
-                                :noOptionsText="t('taxon.search.noOptions')" :options="taxons">
-                                <template #append>
-                                    <VaButton :round="false" @click="showModal = !showModal" color="warning">
-                                        {{ t('taxon.related.button') }}
-                                    </VaButton>
-                                </template>
-                            </va-select>
-                            <a class="va-link" @click="router.push({ name: 'taxon', params: { taxid: rootNode } })"
-                                flat>
-                                {{ t('taxon.search.rootLoad') }}
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                <Suspense>
-                    <template #fallback>
-                        <va-skeleton height="100vh" />
-                    </template>
-                    <D3HyperTree @node-change="setCurrentTaxon" :filter="taxonomyStore.taxidQuery" />
-                </Suspense>
-            </div>
-        </template>
-        <template #end>
-            <div style="position: relative;padding-left: 10px;">
-                <div style="position: absolute;width: 100%;">
+    <div class="row">
+        <div class="flex lg6 md6 sm12 xs12">
+            <Suspense>
+                <template #fallback>
+                    <va-skeleton height="100vh" />
+                </template>
+                <D3HyperTree @node-change="setCurrentTaxon" :filter="taxonomyStore.taxidQuery" />
+            </Suspense>
+        </div>
+        <div class="flex lg6 md6 sm12 xs12">
+            <va-card>
+                <va-card-content>
                     <router-view></router-view>
-                </div>
-            </div>
-        </template>
-    </VaSplit>
+                </va-card-content>
+            </va-card>
+        </div>
+    </div>
     <VaModal hide-default-actions overlay-opacity="0.2" v-model="showModal">
         <template #header>
             <h2 class="va-h2">{{ t('taxon.related.header') }}</h2>
@@ -79,7 +64,7 @@
 </template>
 <script setup lang="ts">
 import D3HyperTree from '../../components/tree/D3HyperTree.vue'
-import { ref} from 'vue';
+import { ref } from 'vue';
 import TaxonService from '../../services/clients/TaxonService';
 import { useI18n } from 'vue-i18n'
 import { useTaxonomyStore } from '../../stores/taxonomy-store'
@@ -87,7 +72,7 @@ import { TreeNode } from '../../data/types';
 import { AxiosError } from 'axios';
 import { useToast } from 'vuestic-ui'
 import { useRouter } from 'vue-router';
-
+import PageHeader from '../../components/common/PageHeader.vue'
 
 const router = useRouter()
 const rootNode = import.meta.env.VITE_ROOT_NODE ? import.meta.env.VITE_ROOT_NODE : '131567'
