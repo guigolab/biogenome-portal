@@ -22,9 +22,11 @@ def get_stats(model, field):
 
     try:
         pipeline = [
+                {"$unwind": f"${field}"},
             {"$group": {"_id": f"${field}", "count": {"$sum": 1}}}
         ]
-        
+        # for doc in db_model.objects.aggregate(pipeline):
+        #     print(doc)
         response = {
             doc["_id"] if doc["_id"] is not None else "No Value": doc["count"]
             for doc in db_model.objects.aggregate(pipeline)
