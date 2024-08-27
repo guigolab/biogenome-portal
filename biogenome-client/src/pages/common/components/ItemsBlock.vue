@@ -15,6 +15,9 @@
         </div>
     </div>
     <va-data-table :key="model" sticky-header height="100%" :loading="isLoading" :items="items" :columns="tableColumns">
+        <template v-for="column in columns.filter(c => c !== 'actions')" :key="column" v-slot:[`header(${column})`]="{ key }">
+            {{ key.split('.').length ? key.split('.')[key.split('.').length - 1] : key }}
+        </template>
         <template #header(actions)>
             <VaButton @click="showModal = !showModal" color="info" grow :round="false">
                 {{ t('buttons.downloadTSV') }}

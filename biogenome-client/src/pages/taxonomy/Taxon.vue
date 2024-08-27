@@ -31,7 +31,7 @@
     </div>
 </template>
 <script setup lang="ts">
-import { computed, onMounted, ref, watch, watchEffect } from 'vue'
+import { computed, ref,  watchEffect } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { SampleLocations, Filter } from '../../data/types'
 import TaxonService from '../../services/clients/TaxonService'
@@ -54,13 +54,6 @@ const currentTaxonStats = ref<Record<string, number>>()
 
 const tab = ref('wiki')
 
-// watch(() => props.taxid, async (v) => {
-//     if (v) {
-//         tab.value = 'wiki'
-//         await getStats(v)
-//         await getCoordinates(v)
-//     }
-// })
 
 watchEffect(async () => {
     tab.value = 'wiki'

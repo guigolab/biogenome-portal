@@ -14,16 +14,26 @@ MODEL_LIST = {
 
 @cache.memoize(timeout=300)
 def get_stats(model, field):
-    if model not in MODEL_LIST.keys():
-        return 404
+    # Check if the model exists in MODEL_LIST
+    if model not in MODEL_LIST:
+        return {"message": "model not found"}, 404
+
     db_model = MODEL_LIST[model]
+
     try:
-        resp = db_model.objects.item_frequencies(field)
-        status = 200
-    except:
-        resp = {'message': 'field not found'}
-        status = 400
-    if None in resp:
-        resp["No Value"] = resp[None]
-        del resp[None]
-    return resp, status
+        pipeline = [
+            {"$group": {"_id": f"${field}", "count": {"$sum": 1}}}
+        ]
+        
+        response = {
+            doc["_id"] if doc["_id"] is not None else "No Value": doc["count"]
+            for doc in db_model.objects.aggregate(pipeline)
+        }
+        # Sort the response dictionary
+        sorted_response = {key : response[key] for key in sorted(response)}
+
+        return sorted_response, 200
+
+    except Exception as e:
+        # Log the exception e if logging is set up
+        return {"message": str(e)}, 500

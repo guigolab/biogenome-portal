@@ -1,5 +1,9 @@
 <template>
     <VaDataTable :items="data" :columns="columns">
+        <template v-for="column in columns" :key="column"
+            v-slot:[`header(${column})`]="{ key }">
+            {{ key.split('.').length ? key.split('.')[key.split('.').length - 1] : key }}
+        </template>
         <template #cell(actions)="{ rowData }">
             <va-chip v-if="getRoute(rowData)" :to="getRoute(rowData)" size="small">{{ t('buttons.view') }}</va-chip>
         </template>

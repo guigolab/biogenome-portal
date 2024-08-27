@@ -16,7 +16,7 @@ from .status import status_controller
 from .lookup import lookup_controller
 
 def initialize_routes(api):
-
+	
 	##AUTH
 	api.add_resource(users_controller.LoginApi, '/api/login')
 	api.add_resource(users_controller.LogoutApi, '/api/logout')
@@ -24,33 +24,27 @@ def initialize_routes(api):
 	##LOCAL SAMPLES UPLOAD
 	api.add_resource(uploads_controller.ExcelParserApi, '/api/spreadsheet_upload',  '/api/spreadsheet_upload/<task_id>')
 
-	##DATA LOOKUP
-	api.add_resource(lookup_controller.LookupApi, '/api/lookup')
-
- 
 	##UPLOAD/DOWNLOAD GOAT COMPLIANT REPORTS
 	api.add_resource(goat_reports_controller.GoaTReportApi,'/api/goat_report')
 	api.add_resource(goat_reports_controller.GoaTReportUploadApi,'/api/goat_report/<task_id>')
 
-	##CRONJOBS
-	api.add_resource(cronjobs_controller.CronJobApi, '/api/cronjob', '/api/cronjob/<model>')
+	##DATA LOOKUP
+	api.add_resource(lookup_controller.LookupApi, '/api/lookup')
 
-	##GEOGRAPHIC LOCATIONS
-	api.add_resource(sample_locations_controller.SampleLocationsByTaxon, '/api/taxons/<taxid>/coordinates')
-	api.add_resource(sample_locations_controller.SampleLocationsByOrganism, '/api/organisms/<taxid>/coordinates')
-	api.add_resource(sample_locations_controller.SampleLocationsByBioSample, '/api/biosamples/<accession>/coordinates' )
-	api.add_resource(sample_locations_controller.SampleLocationsByLocalSample, '/api/local_samples/<local_id>/coordinates')
+	##STATS TODO: IMPROVE IT.. 
+	api.add_resource(stats_controller.FieldStatsApi, '/api/stats/<model>/<field>')
 
 	##TAXONOMY
-	api.add_resource(taxonomy_controller.TreeApi,'/api/tree', '/api/tree/<taxid>')
 	api.add_resource(taxonomy_controller.ComputedTreeApi, '/api/computed_tree')
 
+	##ORGANISMS
+	api.add_resource(organisms_controller.OrganismsApi, '/api/organisms')
+	api.add_resource(organisms_controller.OrganismApi, '/api/organisms/<taxid>')
+	api.add_resource(lookup_controller.OrganismRelatedDataLookup, '/api/organisms/<taxid>/lookup')
+	api.add_resource(organisms_controller.OrganismLineageApi, '/api/organisms/<taxid>/lineage')
+	api.add_resource(organisms_controller.OrganismRelatedDataApi, '/api/organisms/<taxid>/<model>') 
+	api.add_resource(sample_locations_controller.SampleLocationsByOrganism, '/api/organisms/<taxid>/coordinates')
 
-	##ANNOTATIONS
-	api.add_resource(annotations_controller.AnnotationsApi, '/api/annotations')
-	api.add_resource(annotations_controller.AnnotationApi,  '/api/annotations/<name>')
-	api.add_resource(annotations_controller.StreamAnnotations, '/api/download/<filename>')
-	
 
 	##ASSEMBLIES
 	api.add_resource(assemblies_controller.AssembliesApi, '/api/assemblies')
@@ -59,6 +53,22 @@ def initialize_routes(api):
 	api.add_resource(assemblies_controller.AssemblyRelatedAnnotationsApi, '/api/assemblies/<accession>/annotations')
 	api.add_resource(assemblies_controller.AssembliesRelatedChromosomesApi, '/api/assemblies/<accession>/chromosomes')
 	api.add_resource(assemblies_controller.AssemblyChrAliasesApi, '/api/assemblies/<accession>/chr_aliases')
+
+	##CRONJOBS
+	api.add_resource(cronjobs_controller.CronJobApi, '/api/cronjob', '/api/cronjob/<model>')
+
+	##GEOGRAPHIC LOCATIONS
+	api.add_resource(sample_locations_controller.SampleLocationsByTaxon, '/api/taxons/<taxid>/coordinates')
+	api.add_resource(sample_locations_controller.SampleLocationsByBioSample, '/api/biosamples/<accession>/coordinates' )
+	api.add_resource(sample_locations_controller.SampleLocationsByLocalSample, '/api/local_samples/<local_id>/coordinates')
+
+
+	##ANNOTATIONS
+	api.add_resource(annotations_controller.AnnotationsApi, '/api/annotations')
+	api.add_resource(annotations_controller.AnnotationApi,  '/api/annotations/<name>')
+	api.add_resource(annotations_controller.StreamAnnotations, '/api/download/<filename>')
+	
+
 
 	##SEQUENCING STATUS (CUSTOM)
 	api.add_resource(status_controller.StatusItemsApi, '/api/status')
@@ -83,12 +93,6 @@ def initialize_routes(api):
 	api.add_resource(reads_controller.ReadsByExperiment, '/api/experiments/<accession>/reads')
 
 	
-	##ORGANISMS
-	api.add_resource(organisms_controller.OrganismsApi, '/api/organisms')
-	api.add_resource(organisms_controller.OrganismApi, '/api/organisms/<taxid>')
-	api.add_resource(lookup_controller.OrganismRelatedDataLookup, '/api/organisms/<taxid>/lookup')
-	api.add_resource(organisms_controller.OrganismLineageApi, '/api/organisms/<taxid>/lineage')
-	api.add_resource(organisms_controller.OrganismRelatedDataApi, '/api/organisms/<taxid>/<model>') 
 
 	##TAXONS
 	api.add_resource(taxons_controller.TaxonsApi, '/api/taxons')
@@ -100,10 +104,6 @@ def initialize_routes(api):
 	##USERS
 	api.add_resource(users_controller.UsersApi, '/api/users')
 	api.add_resource(users_controller.UserApi,'/api/users/<name>')
-
-
-	##STATS TODO: IMPROVE IT.. 
-	api.add_resource(stats_controller.FieldStatsApi, '/api/stats/<model>/<field>')
 
 
 
