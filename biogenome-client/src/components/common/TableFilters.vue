@@ -13,8 +13,9 @@
             <VaButtonDropdown preset="primary" :round="true" stickToEdges :closeOnContentClick="false"
                 icon="hide_source" :label="t('buttons.fields')">
                 <div class="w-200">
-                    <div v-for="( field, index ) in  showFields ">
-                        <VaSwitch class="mt-2" :key="index" v-model="showFields[index].show" :label="field.value"
+                    <div v-for="( field, index ) in showFields ">
+                        <VaSwitch class="mt-2" :key="index" v-model="showFields[index].show"
+                            :label="field.value.split('.').length > 0 ? field.value.split('.')[field.value.split('.').length - 1] : field.value"
                             size="small" />
                     </div>
                 </div>
@@ -29,12 +30,12 @@
                             label="parent taxon id" v-model="searchForm.parent_taxon"
                             @update:modelValue="(v: string) => emits('onFormChange', [['parent_taxon', v]])">
                         </VaInput>
-                        <VaInput v-if="searchForm.countries !== undefined" class="mt-2" clearable
-                            label="Country code" v-model="searchForm.countries"
+                        <VaInput v-if="searchForm.countries !== undefined" class="mt-2" clearable label="Country code"
+                            v-model="searchForm.countries"
                             @update:modelValue="(v: string) => emits('onFormChange', [['countries', v]])">
                         </VaInput>
-                        <div v-for="(  field, index  ) in filters" :key=" index ">
-                            <VaInput class="mt-2" clearable :label="field.key" v-if=" isInputField(field.type)"
+                        <div v-for="(  field, index  ) in filters" :key="index">
+                            <VaInput class="mt-2" clearable :label="field.key" v-if="isInputField(field.type)"
                                 v-model="searchForm[field.key]"
                                 @update:modelValue="(v: string) => emits('onFormChange', [[field.key, v]])">
                             </VaInput>
@@ -62,14 +63,15 @@
             </VaBadge>
         </div>
         <div class="flex">
-            <VaBadge style="z-index: 1;" overlap color="info" :text="searchForm.sort_column">
+            <VaBadge style="z-index: 1;" overlap color="info"
+                :text="searchForm.sort_column ? `${searchForm.sort_order} ${searchForm.sort_column}` : null">
                 <VaButtonDropdown preset="primary" :round="true" stickToEdges :closeOnContentClick="false"
                     :label="t('buttons.sort')" icon="sort">
                     <div class="w-200">
                         <div>
                             <VaSelect @update:modelValue="(v: string) => emits('onFormChange', [['sort_column', v]])"
                                 clearable class="mt-2" :label="t('search.sortColumn')" v-model="searchForm.sort_column"
-                                :options="columns" />
+                                :options="columns.map(c => c.split('.').length > 0 ? c.split('.')[c.split('.').length - 1] : c)" />
                         </div>
                         <div>
                             <VaSelect @update:modelValue="(v: string) => emits('onFormChange', [['sort_order', v]])"

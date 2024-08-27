@@ -12,7 +12,7 @@ export type TPieChartData = ChartData<'pie'>
 
 export type TChartData = TLineChartData | TBarChartData | TBubbleChartData | TDoughnutChartData | TPieChartData
 
-export type LangOption = Record<'es-ct'|'gb', string>
+export type LangOption = Record<'es-ct' | 'gb', string>
 
 export interface PageHeaderConfig {
   title: LangOption,
@@ -159,14 +159,15 @@ export type ModelConfig = {
   metadata?: HighLightedMetatada[]
 }
 
+export type ChartType = 'pie' | 'dateline' | 'bar'
 export type InfoBlock = {
   field: string,
   model: string,
   title: Record<string, string>,
   label: Record<string, string>,
-  type: 'pie' | 'dateline' | 'bar' | 'contribution' | 'list' | 'habitat'
+  type: ChartType
   class: string
-  color?:string
+  color?: string
 }
 
 export interface Assembly {
