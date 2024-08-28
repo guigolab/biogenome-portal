@@ -82,8 +82,10 @@
         "description": "Arbre hyperbolique D3 : faites glisser et cliquez sur un taxon pour voir ses détails taxonomiques",
         "search": {
             "placeholder": "Rechercher un taxon",
-            "noOptions": "Aucun taxon trouvé !",
-            "rootLoad": "Charger le taxon racine"
+            "noOptions": "Aucun taxon trouvé!",
+            "rootLoad": "Recharger l'arbre",
+            "show": "Afficher l'arbre",
+            "hide": "Masquer l'arbre"
         },
         "related": {
             "button": "Vous ne le trouvez pas ?",

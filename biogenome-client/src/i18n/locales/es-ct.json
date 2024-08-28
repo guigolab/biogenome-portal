@@ -81,9 +81,11 @@
       "title": "Explorador de taxonomia",
       "description": "Arbre hiperbòlic D3: arrossega i fes clic sobre un taxon per veure els seus detalls taxonòmics",
       "search": {
-          "placeholder": "Cerca un taxon",
-          "noOptions": "¡No s'han trobat taxons!",
-          "rootLoad": "Carrega el taxon arrel"
+        "placeholder": "Cerca un taxó",
+        "noOptions": "No s'han trobat taxons!",
+        "rootLoad": "Recarregar l'arbre",
+        "show": "Mostra l'arbre",
+        "hide": "Amaga l'arbre"
       },
       "related": {
           "button": "No el trobes?",

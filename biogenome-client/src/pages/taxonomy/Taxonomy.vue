@@ -1,8 +1,9 @@
 <template>
     <h1 class="va-h1">{{ t('taxon.title') }}</h1>
-    <p class="va-text-secondarty" style="margin-bottom: 6px">{{ t('taxon.description') }}</p>
+    <p class="va-text-secondary" style="margin-bottom: 6px">{{ t('taxon.description') }}</p>
+    <VaDivider />
     <div class="row align-end">
-        <div class="flex lg6 md6 sm12 xs12">
+        <div class="flex">
             <va-select hideSelected :loading="isLoading" dropdownIcon="search" searchable highlight-matched-text
                 :textBy="(v: TreeNode) => `${v.name} (${v.rank})`" trackBy="taxid" @update:model-value="setCurrentTaxon"
                 @update:search="handleSearch" v-model="taxonomyStore.currentTaxon"
@@ -11,90 +12,89 @@
             </va-select>
         </div>
         <div class="flex">
-            <VaButton :round="false" @click="router.push({ name: 'taxon', params: { taxid: rootNode } })">
-                {{ t('taxon.search.rootLoad') }}
+            <VaButton color="primary" :round="false" @click="showTree = !showTree" :loading="isTreeLoading">
+                {{ showTree ? t('taxon.search.hide') : t('taxon.search.show') }}
             </VaButton>
         </div>
         <div class="flex">
-            <VaButton :round="false" @click="showModal = !showModal" color="info">
-                {{ t('taxon.related.button') }}
+            <VaButton color="info" :round="false" @click="router.push({ name: 'taxon', params: { taxid: rootNode } })">
+                {{ t('taxon.search.rootLoad') }}
             </VaButton>
         </div>
     </div>
-    <div class="row">
-        <div class="flex lg6 md6 sm12 xs12">
-            <Suspense>
-                <template #fallback>
-                    <va-skeleton height="100vh" />
-                </template>
+    <div class="content-row">
+        <div :class="['tree-container', { 'hidden': !showTree }]">
+            <Suspense @resolve="isTreeLoading = !isTreeLoading">
                 <D3HyperTree @node-change="setCurrentTaxon" :filter="taxonomyStore.taxidQuery" />
             </Suspense>
         </div>
-        <div class="flex lg6 md6 sm12 xs12">
+        <div :class="['content-container', { 'full-width': !showTree }]">
             <va-card>
-                <va-card-content>
-                    <router-view></router-view>
-                </va-card-content>
+                <router-view></router-view>
             </va-card>
         </div>
     </div>
-    <VaModal hide-default-actions overlay-opacity="0.2" v-model="showModal">
+    <!-- <VaModal hide-default-actions overlay-opacity="0.2" v-model="showModal">
         <template #header>
             <h2 class="va-h2">{{ t('taxon.related.header') }}</h2>
             <p class="va-text-secondary">{{ t('taxon.related.description') }}</p>
         </template>
-        <va-card-content style="padding-left: 0;">
-            <va-inner-loading :loading="isLoading">
-                <va-form tag="form" @submit.prevent="searchRelatedTaxon">
-                    <div class="row align-center justify-start">
-                        <va-input v-model="taxidInput" class="flex lg12 md12 sm12 xs12"
-                            :placeholder="t('taxon.related.placeholder')" />
-                    </div>
-                    <va-card-actions align="left">
-                        <va-button :disabled="taxidInput.length === 0" type="submit">{{ t('buttons.submit')
-                            }}</va-button>
-                        <va-button color="danger" @click="taxidInput = ''">
-                            {{ t('buttons.reset') }}
-                        </va-button>
-                    </va-card-actions>
-                </va-form>
-            </va-inner-loading>
-        </va-card-content>
-    </VaModal>
+<va-card-content style="padding-left: 0;">
+    <va-inner-loading :loading="isLoading">
+        <va-form tag="form" @submit.prevent="searchRelatedTaxon">
+            <div class="row align-center justify-start">
+                <va-input v-model="taxidInput" class="flex lg12 md12 sm12 xs12"
+                    :placeholder="t('taxon.related.placeholder')" />
+            </div>
+            <va-card-actions align="left">
+                <va-button :disabled="taxidInput.length === 0" type="submit">{{ t('buttons.submit')
+                    }}</va-button>
+                <va-button color="danger" @click="taxidInput = ''">
+                    {{ t('buttons.reset') }}
+                </va-button>
+            </va-card-actions>
+        </va-form>
+    </va-inner-loading>
+</va-card-content>
+</VaModal> -->
 </template>
 <script setup lang="ts">
 import D3HyperTree from '../../components/tree/D3HyperTree.vue'
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import TaxonService from '../../services/clients/TaxonService';
 import { useI18n } from 'vue-i18n'
 import { useTaxonomyStore } from '../../stores/taxonomy-store'
 import { TreeNode } from '../../data/types';
 import { AxiosError } from 'axios';
 import { useToast } from 'vuestic-ui'
-import { useRouter } from 'vue-router';
-import PageHeader from '../../components/common/PageHeader.vue'
+import { useRouter, useRoute } from 'vue-router';
 
+const isTreeLoading = ref(true)
 const router = useRouter()
+const route = useRoute()
+const showTree = ref(false)
 const rootNode = import.meta.env.VITE_ROOT_NODE ? import.meta.env.VITE_ROOT_NODE : '131567'
 
-const showModal = ref(false)
 
-const taxidInput = ref('')
-
-async function searchRelatedTaxon() {
-    try {
-        isLoading.value = !isLoading.value
-        const { data } = await TaxonService.getPhylogeneticallyCloseTree(taxidInput.value)
-        setCurrentTaxon(data)
-        init({ message: `Closest taxon found: ${data.name}`, color: 'success' })
-    } catch (error) {
-        const axiosError = error as AxiosError
-        init({ message: axiosError.message, color: 'danger' })
-    } finally {
-        isLoading.value = !isLoading.value
-        showModal.value = !showModal.value
+onMounted(() => {
+    if (route.params.taxid) {
+        taxonomyStore.taxidQuery = route.params.taxid as string
     }
-}
+})
+// async function searchRelatedTaxon() {
+//     try {
+//         isLoading.value = !isLoading.value
+//         const { data } = await TaxonService.getPhylogeneticallyCloseTree(taxidInput.value)
+//         setCurrentTaxon(data)
+//         init({ message: `Closest taxon found: ${data.name}`, color: 'success' })
+//     } catch (error) {
+//         const axiosError = error as AxiosError
+//         init({ message: axiosError.message, color: 'danger' })
+//     } finally {
+//         isLoading.value = !isLoading.value
+//         showModal.value = !showModal.value
+//     }
+// }
 
 const taxonomyStore = useTaxonomyStore()
 
@@ -132,11 +132,6 @@ async function handleSearch(v: string) {
 </script>
 
 <style lang="scss">
-.split-demo {
-    height: 100vh;
-
-}
-
 .iframe-wrapper {
     position: relative;
     overflow: visible;
@@ -148,13 +143,79 @@ async function handleSearch(v: string) {
     height: 100%;
 }
 
-.slide-bottom-enter-active .inner,
-.slide-bottom-leave-active .inner {
-    transition: transform .5s ease-out;
+.content-row {
+    display: flex;
+    flex-wrap: nowrap;
+    min-width: 0;
+    width: 100%;
+    flex-direction: row;
 }
 
-.slide-bottom-enter-from .inner,
-.slide-bottom-leave-to .inner {
-    transform: translateY(100%);
+/* Tree container, initially hidden */
+.tree-container {
+    flex: 0 0 50%;
+    /* Occupies 50% of the width */
+    max-width: 50%;
+    transition: all 0.5s ease;
+    overflow: hidden;
+    transform: translateX(0);
+    /* Starts in view */
+}
+
+.tree-container.hidden {
+    flex: 0 0 0%;
+    /* Shrinks to 0% width */
+    max-width: 0;
+    transform: translateX(-100%);
+    /* Slides out of view */
+}
+
+/* Content container transitions smoothly */
+.content-container {
+    flex: 1;
+    max-width: 50%;
+    /* Occupies remaining space */
+    transition: all 0.5s ease;
+}
+
+.content-container.full-width {
+    flex: 1 1 100%;
+    /* Takes full width when tree is hidden */
+    max-width: 100%;
+}
+
+/* Responsive design for mobile and tablets */
+@media (max-width: 820px) {
+
+    .tree-container,
+    .content-container {
+        flex: 0 0 100%;
+        /* Take 100% of the width on small screens */
+        max-width: 100%;
+        transform: translateX(0);
+        /* Reset any transform applied */
+    }
+
+    .tree-container.hidden {
+        display: none;
+        /* Hide the tree container completely when toggled off */
+    }
+}
+
+@media (max-width: 480px) {
+
+    .tree-container,
+    .content-container {
+        flex: 0 0 100%;
+        /* Take 100% of the width on small screens */
+        max-width: 100%;
+        transform: translateX(0);
+        /* Reset any transform applied */
+    }
+
+    .tree-container.hidden {
+        display: none;
+        /* Hide the tree container completely when toggled off */
+    }
 }
 </style>

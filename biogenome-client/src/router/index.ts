@@ -4,6 +4,8 @@ import { models, maps, cms } from '../../config.json'
 import { cmsRoutes } from './cms-routes'
 import { modelRoutes, mapRoutes } from './custom-routes'
 
+const rootNode = import.meta.env.VITE_ROOT_NODE ? import.meta.env.VITE_ROOT_NODE : '131567'
+
 const defaultRoutes: Array<RouteRecordRaw> = [
   {
     path: '/:catchAll(.*)',
@@ -25,10 +27,15 @@ const defaultRoutes: Array<RouteRecordRaw> = [
     component: () => import('../pages/auth/unauthorized/Unauthorized.vue'),
   },
   {
-    name: 'taxonomy',
     path: '/taxonomy',
     component: () => import('../pages/taxonomy/Taxonomy.vue'),
     children: [
+      {
+        name: 'taxonomy',
+        path: '',
+        redirect: { name: 'taxon', params: { taxid: rootNode } },
+        meta: { name: 'taxonomy' }
+      },
       {
         name: 'taxon',
         path: ':taxid',

@@ -83,7 +83,9 @@
         "search": {
             "placeholder": "Buscar un taxón",
             "noOptions": "¡No se encontraron taxones!",
-            "rootLoad": "Cargar el taxón raíz"
+            "rootLoad": "Recargar el árbol",
+            "show": "Mostrar el árbol",
+            "hide": "Ocultar el árbol"
         },
         "related": {
             "button": "¿No lo encuentras?",

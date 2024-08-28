@@ -83,7 +83,9 @@
         "search": {
             "placeholder": "Search a taxon",
             "noOptions": "No taxons found!",
-            "rootLoad": "Load root taxon"
+            "rootLoad": "Reload Tree",
+            "show": "Show Tree",
+            "hide": "Hide Tree"
         },
         "related": {
             "button": "Can't Find It?",

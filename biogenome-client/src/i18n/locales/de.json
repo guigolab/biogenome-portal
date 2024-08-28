@@ -81,9 +81,11 @@
         "title": "Taxonomie-Explorer",
         "description": "D3 Hyperbolischer Baum: Ziehen und Klicken Sie auf einen Taxon, um seine taxonomischen Details anzuzeigen",
         "search": {
-            "placeholder": "Taxon suchen",
-            "noOptions": "Keine Taxa gefunden!",
-            "rootLoad": "Wurzel-Taxon laden"
+            "placeholder": "Einen Taxon suchen",
+            "noOptions": "Keine Taxons gefunden!",
+            "rootLoad": "Baum neu laden",
+            "show": "Baum anzeigen",
+            "hide": "Baum ausblenden"
         },
         "related": {
             "button": "Nicht gefunden?",

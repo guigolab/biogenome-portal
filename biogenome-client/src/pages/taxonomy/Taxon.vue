@@ -1,5 +1,7 @@
 <template>
-    <TaxonHeader :taxid="taxid" />
+    <VaCardContent>
+        <TaxonHeader :taxid="taxid" />
+    </VaCardContent>
     <VaTabs :key="taxid" v-model="tab">
         <template #tabs>
             <VaTab name="wiki" :label="t('tabs.wiki')"></VaTab>
@@ -9,22 +11,16 @@
         </template>
     </VaTabs>
     <VaDivider style="margin-top: 0;" />
-    <div v-if="isDataModel(tab)" class="row">
-        <div class="flex lg12 md12 sm12 xs12">
-            <ItemsBlock :parent_taxon="taxid" :columns="models[tab as DataModel].columns"
-                :filters="(models[tab as DataModel].filters as Filter[])" :model="(tab as DataModel)" />
+    <VaCardContent>
+        <div class="row">
+            <div style="min-height: 450px;" class="flex lg12 md12 sm12 xs12">
+                <ItemsBlock v-if="isDataModel(tab)" :parent_taxon="taxid" :columns="models[tab as DataModel].columns"
+                    :filters="(models[tab as DataModel].filters as Filter[])" :model="(tab as DataModel)" />
+                <LeafletMap v-else-if="tab === 'map'" :coordinates="coordinates" />
+                <Wikipedia v-else />
+            </div>
         </div>
-    </div>
-    <div class="row" v-else-if="tab === 'map'">
-        <div style="height: 450px;" class="flex lg12 md12 sm12 xs12">
-            <LeafletMap :coordinates="coordinates" />
-        </div>
-    </div>
-    <div class="row" v-else>
-        <div class="flex lg12 md12 sm12 xs12">
-            <Wikipedia />
-        </div>
-    </div>
+    </VaCardContent>
 </template>
 <script setup lang="ts">
 import { computed, ref, watchEffect } from 'vue'

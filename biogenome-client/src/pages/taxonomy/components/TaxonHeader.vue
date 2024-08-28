@@ -1,13 +1,7 @@
 <template>
-    <div v-if="isLoading">
-        <VaSkeleton tag="h1" variant="text" class="va-h1" />
-        <VaSkeleton variant="text" :lines="1" />
-    </div>
-    <div v-else-if="taxon">
-        <h2 class="va-h2"> {{ taxon.name }}
-        </h2>
-        <p style="margin-bottom: 10px;" class="va-text-secondary">{{ taxon.rank }}</p>
-    </div>
+    <VaSkeleton tag="h2" variant="text" class="va-h2" v-if="isLoading"></VaSkeleton>
+    <h2 v-else-if="taxon" class="va-h2"> {{ taxon.name }}
+    </h2>
 </template>
 <script setup lang="ts">
 import { ref, watchEffect } from 'vue';
@@ -27,7 +21,7 @@ const { init } = useToast()
 const taxonomyStore = useTaxonomyStore()
 const taxon = ref<TreeNode>()
 
-watchEffect(async() => {
+watchEffect(async () => {
     await getTaxon(props.taxid)
 
 })

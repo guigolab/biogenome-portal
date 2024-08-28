@@ -14,8 +14,9 @@
             <b>{{ t('search.total') }}</b> {{ total }}
         </div>
     </div>
-    <va-data-table :key="model" sticky-header height="100%" :loading="isLoading" :items="items" :columns="tableColumns">
-        <template v-for="column in columns.filter(c => c !== 'actions')" :key="column" v-slot:[`header(${column})`]="{ key }">
+    <va-data-table :key="model" :loading="isLoading" :items="items" :columns="tableColumns">
+        <template v-for="column in columns.filter(c => c !== 'actions')" :key="column"
+            v-slot:[`header(${column})`]="{ key }">
             {{ key.split('.').length ? key.split('.')[key.split('.').length - 1] : key }}
         </template>
         <template #header(actions)>
@@ -29,16 +30,17 @@
             </va-avatar>
         </template>
         <template #cell(actions)="{ rowData }">
-            <va-chip v-if="getRoute(rowData)" :to="getRoute(rowData)" size="small">{{ t('buttons.view') }}</va-chip>
+            <va-chip v-if="getRoute(rowData)" :to="getRoute(rowData)" size="small">{{ t('buttons.view')
+                }}</va-chip>
         </template>
         <template #cell(gff_gz_location)="{ rowData }">
             <va-chip :href="rowData.gff_gz_location" outline size="small">{{ t('buttons.download') }}</va-chip>
         </template>
         <template #cell(tab_index_location)="{ rowData }">
-            <va-chip :href="rowData.tab_index_location" outline size="small">{{ t('buttons.download') }}</va-chip>
+            <va-chip :href="rowData.tab_index_location" outline size="small">{{ t('buttons.download')
+                }}</va-chip>
         </template>
     </va-data-table>
-    <va-divider />
     <va-modal v-model="showModal" hide-default-actions :title="t('buttons.downloadTSV')">
         <va-inner-loading :loading="isTSVLoading">
             <div class="row">
