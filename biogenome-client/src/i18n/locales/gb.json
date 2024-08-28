@@ -59,7 +59,7 @@
         "local_samples": "Local Samples",
         "annotations": "Annotations",
         "status": "Sequencing Status",
-        "samples-map": "2D Organisms Map",
+        "samples-map": "Samples Map",
         "countries": "Countries Map",
         "taxonomy": "Taxonomy Explorer",
         "organisms": "Organisms"
