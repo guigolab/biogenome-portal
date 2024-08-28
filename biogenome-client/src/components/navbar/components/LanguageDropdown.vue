@@ -1,7 +1,9 @@
 <template>
   <va-dropdown :stickToEdges="true" class="language-dropdown" fixed position="bottom" :offset="[13, 0]">
     <template #anchor>
-      {{ t(`language.${getLangName(locale)}`) }}
+      <va-chip flat>
+        {{ t(`language.${getLangName(locale)}`) }}
+      </va-chip>
     </template>
     <va-dropdown-content class="language-dropdown__content pl-4 pr-4 pt-2 pb-2">
       <div v-for="(option, id) in options" :key="id"
@@ -17,7 +19,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { languages } from '../../../../../config.json'
+import { languages } from '../../../../config.json'
 const { t, locale } = useI18n()
 
 withDefaults(

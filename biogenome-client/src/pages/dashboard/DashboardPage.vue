@@ -2,9 +2,9 @@
   <div class="dashboard">
     <PageHeader :title="dashboard.title" :description="dashboard.description" />
     <VaDivider />
-    <StatsBlock></StatsBlock>
+    <AppStats/>
     <ChartsBlock v-if="charts.length" :charts="charts" />
-    <ExtraInfoBlock />
+    <!-- <ExtraInfoBlock /> -->
   </div>
 </template>
 
@@ -12,9 +12,8 @@
 import ChartsBlock from '../../components/common/ChartsBlock.vue'
 import { dashboard } from '../../../config.json'
 import { InfoBlock } from '../../data/types';
-import StatsBlock from './components/StatsBlock.vue'
+import AppStats from '../../components/ui/AppStats.vue'
 import PageHeader from '../../components/common/PageHeader.vue'
-import ExtraInfoBlock from './components/ExtraInfoBlock.vue'
 
 
 const charts = dashboard.charts as InfoBlock[]

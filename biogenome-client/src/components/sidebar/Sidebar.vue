@@ -1,46 +1,68 @@
 <template>
-  <va-sidebar :width="width" :minimized="minimized" :minimized-width="minimizedWidth" :animated="animated">
+  <VaSidebar v-model="globalStore.isSidebarVisible">
     <div v-if="nav.logo" class="logo">
-      <a :href="nav.url" target="_blank"><va-icon color="success" :size="minimized ? '2rem' : '4rem'"
-          name=app-logo></va-icon></a>
+      <a :href="nav.url" target="_blank"><va-icon color="success" size="5rem" name=app-logo></va-icon></a>
     </div>
     <va-divider />
-    <menu-minimized v-if="minimized" :items="items" />
-    <menu-accordion v-else :items="items" />
-  </va-sidebar>
+    <VaSidebarItem v-for="item in items" :key="item.name" :active="isRouteActive(item)" :to="{ name: item.name }">
+      <VaSidebarItemContent>
+        <VaSidebarItemTitle>
+          {{ t(item.displayName) }}
+        </VaSidebarItemTitle>
+      </VaSidebarItemContent>
+    </VaSidebarItem>
+    <VaSidebarItem href="https://github.com/guigolab/biogenome-portal" target="_blank">
+      <VaSidebarItemContent>
+        <VaSidebarItemTitle>
+          Github
+        </VaSidebarItemTitle>
+      </VaSidebarItemContent>
+    </VaSidebarItem>
+    <VaSidebarItem v-if="globalStore.isAuthenticated" :to="{ name: 'cms-organisms' }">
+      <VaSidebarItemContent>
+        <VaSidebarItemTitle>
+          Admin
+        </VaSidebarItemTitle>
+      </VaSidebarItemContent>
+    </VaSidebarItem>
+    <VaSidebarItem v-if="globalStore.isAuthenticated">
+      <VaSidebarItemContent @click="logout">
+        <VaSidebarItemTitle>
+          Logout
+        </VaSidebarItemTitle>
+      </VaSidebarItemContent>
+    </VaSidebarItem>
+    <VaSidebarItem v-else-if="cms">
+      <VaSidebarItemContent @click="$router.push({ name: 'login' })">
+        <VaSidebarItemTitle>
+          Login
+        </VaSidebarItemTitle>
+      </VaSidebarItemContent>
+    </VaSidebarItem>
+  </VaSidebar>
 </template>
-
 <script setup lang="ts">
 import { ref } from 'vue'
-import NavigationRoutes from './NavigationRoutes'
-import MenuAccordion from './menu/MenuAccordion.vue'
-import MenuMinimized from './menu/MenuMinimized.vue'
-import { nav } from '../../../config.json'
+import NavigationRoutes, { INavigationRoute } from './NavigationRoutes'
+import { nav, cms } from '../../../config.json'
+import { useGlobalStore } from '../../stores/global-store'
+import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 
-
-withDefaults(
-  defineProps<{
-    width?: string
-    color?: string
-    animated?: boolean
-    minimized?: boolean
-    minimizedWidth?: string
-  }>(),
-  {
-    width: '100wv',
-    color: 'secondary',
-    animated: true,
-    minimized: true,
-    minimizedWidth: undefined,
-  },
-)
-
-
-
-
+const { t } = useI18n()
+const route = useRoute()
+const router = useRouter()
+const globalStore = useGlobalStore()
 const items = ref(NavigationRoutes.routes)
 
+function isRouteActive(item: INavigationRoute) {
+  return item.name === route.name || route.meta.name === item.name
+}
 
+async function logout() {
+  await globalStore.logout()
+  router.push({ name: 'dashboard' })
+}
 </script>
 
 <style lang="scss">
@@ -48,23 +70,5 @@ const items = ref(NavigationRoutes.routes)
   padding: 10px;
   display: flex;
   justify-content: center;
-}
-
-.va-sidebar {
-  width: 100%;
-
-  &__menu {
-    padding: 0.5rem 0;
-  }
-
-  &-item {
-    &__icon {
-      width: 1.5rem;
-      height: 1.5rem;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-  }
 }
 </style>

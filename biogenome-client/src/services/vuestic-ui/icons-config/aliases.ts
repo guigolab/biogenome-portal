@@ -1,14 +1,12 @@
-import NavBarLogo from '../../../components/navbar/components/NavBarLogo.vue'
+import NavBarLogo from '../../../components/icons/NavBarLogo.vue'
 import Wiki from '../../../components/icons/Wiki.vue'
 import GitHub from '../../../components/icons/GitHub.vue'
-
-
 
 export default [
   {
     name: 'app-logo',
     component: NavBarLogo,
-    color:'primary',
+    color: 'primary',
   },
   {
     name: 'wiki',

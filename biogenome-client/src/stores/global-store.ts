@@ -4,21 +4,19 @@ import AuthService from '../services/clients/AuthService'
 export const useGlobalStore = defineStore('global', {
   state: () => {
     return {
-      isSidebarMinimized: false,
+      isSidebarVisible: true,
       userName: '',
       userPassword: '',
       userRole: '',
-      userSpecies:[] as string[],
+      userSpecies: [] as string[],
       isAuthenticated: false,
       showLoginModal: false,
       error: false,
       message: '',
+
     }
   },
   actions: {
-    toggleSidebar() {
-      this.isSidebarMinimized = !this.isSidebarMinimized
-    },
 
     changeUserName(userName: string) {
       this.userName = userName
@@ -34,21 +32,11 @@ export const useGlobalStore = defineStore('global', {
       }
     },
     async logout() {
-      // try {
-          await AuthService.logout()
-          this.userName= ''
-          this.userPassword= ''
-          this.userRole= ''
-          this.isAuthenticated = false
-      // }
-      // catch (error) {
-      //     this.message.text = error.response.data.message
-      //     this.message.color = 'danger'
-      // }
+      await AuthService.logout()
+      this.userName = ''
+      this.userPassword = ''
+      this.userRole = ''
+      this.isAuthenticated = false
     },
-    // setLocalStorage(){
-    //   localStorage.setItem('userName', this.userName)
-    //   localStorage.setItem('userRole', this.userRole)
-    // }
   },
 })

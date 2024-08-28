@@ -1,9 +1,9 @@
 <template>
-  <AppLayout />
+  <Layout />
 </template>
 <script setup>
 import { onMounted } from 'vue'
-import AppLayout from './layouts/AppLayout.vue'
+import Layout from './layouts/Layout.vue'
 import { title, tracker } from '../config.json'
 
 onMounted(() => {
