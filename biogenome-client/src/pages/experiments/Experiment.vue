@@ -15,6 +15,9 @@
     <div class="flex lg12 md12 sm12 xs12">
       <MetadataTreeCard v-if="tab === 'metadata' && experiment" :metadata="Object.entries(experiment.metadata)" />
       <VaDataTable v-else :items="reads" :columns="['run_accession', 'metadata.submitted_bytes', 'actions']">
+        <template #column(metadata.submitted_bytes)>
+          submiteed_bytes
+        </template>
         <template #cell(metadata.submitted_bytes)="{ rowData }">
           {{ convertBytesToMBOrGB(rowData.metadata.submitted_bytes) }}
         </template>
@@ -78,20 +81,23 @@ async function getReads(accession: string) {
 }
 
 function parseDetails(experiment: Record<string, any>) {
-  const accession = experiment.experiment_accession
+  const expAccession = experiment.experiment_accession
+  const sampleAccession = experiment.sample_accession || experiment.metadata.sample_accession
+  console.log(sampleAccession)
+
   const details: Details = {
-    title: accession,
+    title: expAccession,
     description: experiment.metadata.experiment_title,
     button1: {
       route: { name: 'organism', params: { taxid: experiment.taxid } },
       label: experiment.scientific_name || experiment.metadata.scientific_name
     },
     button2: {
-      route: { name: 'biosamples', params: { accession: experiment.sample_accession } },
-      label: experiment.sample_accession
+      route: { name: 'biosample', params: { accession: sampleAccession } },
+      label: sampleAccession
     },
-    ncbiPath: `https://www.ncbi.nlm.nih.gov/sra/${accession}`,
-    ebiPath: `https://www.ebi.ac.uk/ena/browser/view/${accession}`
+    ncbiPath: `https://www.ncbi.nlm.nih.gov/sra/${expAccession}`,
+    ebiPath: `https://www.ebi.ac.uk/ena/browser/view/${expAccession}`
   }
   return details
 }
