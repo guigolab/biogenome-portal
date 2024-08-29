@@ -1,5 +1,6 @@
 from db.models import Assembly, GenomeAnnotation, BioSample, LocalSample, Organism, Experiment,Chromosome
 from errors import NotFound
+from mongoengine.queryset.visitor import Q
 
 CHUNK_LIMIT = 10000
 
@@ -60,10 +61,11 @@ def lookup_assembly_data(accession):
 
 def lookup_biosample_data(accession):
     biosample = BioSample.objects(accession=accession).first()
+    related_exp_query = Q(sample_accession=accession) | Q(metadata__sample_accession=accession)
     if not biosample:
         raise NotFound
     sub_samples =  BioSample.objects(__raw__ = {'metadata.sample derived from' : accession}).count()
     assemblies = Assembly.objects(sample_accession=accession).count()
-    experiments = Experiment.objects(sample_accession=accession).count()
+    experiments = Experiment.objects(related_exp_query).count()
     return dict(sub_samples=sub_samples,assemblies=assemblies,experiments=experiments)
 

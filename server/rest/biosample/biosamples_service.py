@@ -67,7 +67,8 @@ def delete_biosample(accession):
     return accession
 
 def get_related_experiments(accession):
-    experiments = Experiment.objects(sample_accession=accession).exclude('id', 'created')
+    related_exp_query = Q(sample_accession=accession) | Q(metadata__sample_accession=accession)
+    experiments = Experiment.objects(related_exp_query).exclude('id', 'created')
     return experiments
 
 def get_related_assemblies(accession):
