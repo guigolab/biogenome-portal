@@ -7,13 +7,13 @@ info:
     email: "emilio.righi@crg.eu"
 
 servers:
-  - url: https://ebp.biogenoma.cat/api
+  - url: https://genome.crg.es/ebp/api
     description: server containing all the data submitted to INSDC under the Earth Biogenome Project (PRJNA533106) umbrella
-  - url: https://erga.biogenoma.cat/api
+  - url: https://genome.crg.es/erga/api
     description: server containing all the data generated under the European Reference Genome Atlas (PRJEB43510) umbrella 
   - url: https://dades.biogenoma.cat/api
     description: server containing all the data generated under the Catalan Initiative for the Earth Biogenome Project 
-  - url: https://lichenoteca.biogenoma.cat/api
+  - url: https://genome.crg.es/lichenoteca/api
     description: server containing samples derived from the Lichenoteca dataset (https://doi.org/10.15468/dgecw5), accessed via GBIF.org on 2024-05-26, of the Institut Botanic de Barcelona.
 
 tags:
@@ -47,7 +47,7 @@ paths:
                 type: string
                 format: binary
 
-  /stats:
+  /lookup:
     get:
       tags: 
         - "stats"
@@ -74,11 +74,12 @@ paths:
                     type: number
                   taxons:
                     type: number
-  /stats/{model}:
+                    
+  /stats/{model}/{field}:
     get:
       tags: 
         - "stats"
-      summary: "get object properties statistics"
+      summary: "get model field statistics"
       parameters:
         - in: 'path'
           name: 'model'
@@ -93,13 +94,8 @@ paths:
             - "experiments"
             - "organisms"
             - "taxons"
-        - in: 'query'
+        - in: 'path'
           name: 'field'
-          required: true
-          schema:
-            type: string
-        - in: 'query'
-          name: 'query'
           required: true
           schema:
             type: string
@@ -111,7 +107,7 @@ paths:
               schema:
                 type: object
 
-  /tree:
+  /computed_tree:
     get:
       tags:
         - "taxonomy"
@@ -124,27 +120,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/TreeNode"
             
-  /tree/{taxid}:
-    get:
-      tags:
-        - "taxonomy"
-      summary: "generate a tree using the provided taxid as root"
-      parameters:
-        - in: 'path'
-          name: 'taxid'
-          required: true
-          schema:
-            type: "string"
-      responses:
-        "200":
-          description: "successful operation"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/TreeNode"
-        "404":
-          description: "Taxon not found"
-
   /organisms:
     get:
       tags:
@@ -152,18 +127,18 @@ paths:
       summary: "Endpoint to retrieve a paginated list of organisms"
       parameters:
         - in: 'query'
-          name: 'parent_taxid'
-          schema:
-            type: 'string'
-        - in: 'query'
           name: 'filter'
           schema:
             type: 'string'
+        - in: 'query'
+          name: 'parent_taxon'
+          schema:
+            type: 'string'
         - in: "query"
-          name: "country"
+          name: "countries"
           schema:
             type: "string"
-          description: "country code"
+          description: "country code, ex: US, ES"
         - in: 'query'
           name: 'sort_order'
           schema:
@@ -171,6 +146,13 @@ paths:
             enum:
             - "asc"
             - "desc"
+        - in: 'query'
+          name: 'format'
+          schema:
+            type: 'string'
+            enum:
+            - "tsv"
+            - "json"
         - in: 'query'
           name: 'sort_column'
           schema:
@@ -229,6 +211,26 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Organism"
+        "404":
+          description: "Organism not found"
+
+  /organisms/{taxid}/lookup:
+    get:
+      tags:
+        - "organisms"
+      parameters:
+        - in: 'path'
+          name: 'taxid'
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "successful operation"
+          content:
+            application/json:
+              schema:
+                type: object
         "404":
           description: "Organism not found"
 
@@ -395,26 +397,12 @@ paths:
           schema:
             type: 'string'
         - in: 'query'
-          name: 'assembly_level'
+          name: 'format'
           schema:
-            type: "string"
+            type: 'string'
             enum:
-            - "Chromosome"
-            - "Complete Genome"
-            - "Contig"
-            - "Scaffold"
-        - in: 'query'
-          name: 'start_date'
-          schema:
-            type: "string"
-        - in: 'query'
-          name: 'end_date'
-          schema:  
-            type: "string"
-        - in: 'query'
-          name: 'submitter'
-          schema:  
-            type: "string"
+            - "tsv"
+            - "json"
         - in: 'query'
           name: 'sort_order'
           schema:  
@@ -426,10 +414,6 @@ paths:
           name: 'sort_column'
           schema:
             type: "string"
-            enum:
-            - "contig_n50"
-            - "size"
-            - "submission_date"
         - in: 'query'
           name: 'blobtoolkit'
           schema:
@@ -480,6 +464,26 @@ paths:
         "404":
           description: "Assembly not found"
 
+  /assemblies/{accession}/lookup:
+    get:
+      tags:
+        - "organisms"
+      parameters:
+        - in: 'path'
+          name: 'taxid'
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "successful operation"
+          content:
+            application/json:
+              schema:
+                type: object
+        "404":
+          description: "Assembly not found"
+
   /assemblies/{accession}/annotations:
     get:
       tags:
@@ -502,6 +506,28 @@ paths:
         "404":
           description: "Assembly not found"
 
+  /assemblies/{accession}/chromosomes:
+    get:
+      tags:
+        - "assemblies"
+      parameters:
+        - in: 'path'
+          name: 'accession'
+          required: true
+          schema:
+            type: 'string'
+      responses:
+        "200":
+          description: "successful operation"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/Chromosome"
+        "404":
+          description: "Assembly not found"
+
   /experiments:
     get:
       tags:
@@ -513,13 +539,12 @@ paths:
           schema:
             type: 'string'
         - in: 'query'
-          name: 'start_date'
+          name: 'format'
           schema:
-            type: "string"
-        - in: 'query'
-          name: 'end_date'
-          schema:
-            type: "string"
+            type: 'string'
+            enum:
+            - "tsv"
+            - "json"
         - in: 'query'
           name: 'sort_order'
           schema:  
@@ -531,12 +556,6 @@ paths:
           name: 'sort_column'
           schema:
             type: "string"
-            enum:
-            - "first_created"
-        - in: 'query'
-          name: 'center'
-          schema:
-            type: 'string'
         - in: 'query'
           name: 'offset'
           schema:
@@ -596,19 +615,16 @@ paths:
           schema:
             type: 'string'
         - in: 'query'
-          name: 'start_date'
-          schema:  
-            type: "string"
-        - in: 'query'
-          name: 'end_date'
-          schema:  
-            type: "string"
+          name: 'format'
+          schema:
+            type: 'string'
+            enum:
+            - "tsv"
+            - "json"
         - in: "query"
           name: "sort_column"
           schema:
             type: "string"
-            enum:
-              - "collection_date"
         - in: 'query'
           name: 'sort_order'
           schema:  
@@ -759,12 +775,17 @@ paths:
           name: 'filter'
           schema:
             type: 'string'
+        - in: 'query'
+          name: 'format'
+          schema:
+            type: 'string'
+            enum:
+            - "tsv"
+            - "json"
         - in: "query"
           name: "sort_column"
           schema:
             type: "string"
-            enum:
-              - "created"
         - in: 'query'
           name: 'sort_order'
           schema:  
@@ -857,6 +878,13 @@ paths:
           name: 'filter'
           schema:
             type: 'string'
+        - in: 'query'
+          name: 'format'
+          schema:
+            type: 'string'
+            enum:
+            - "tsv"
+            - "json"
         - in: 'query'
           name: 'offset'
           schema:
@@ -1141,6 +1169,14 @@ components:
         metadata:
           type: "object"
           description: "INSDC biosample metadata"
+    
+    Chromosome:
+      type: "object"
+      properties:
+        accession_version:
+          type: "string"
+        metadata:
+          type: "object"
 
     LocalSample:
       type: "object"
