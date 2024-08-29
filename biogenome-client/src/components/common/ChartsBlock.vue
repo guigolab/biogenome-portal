@@ -12,7 +12,6 @@
                                         @click="downloadCanvasAsPNG(`${chart.model}.${chart.field}`, `${chart.type}.png`)">
                                         Download</va-chip>
                                 </div>
-
                             </div>
                         </va-card-content>
                         <va-card-content>

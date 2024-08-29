@@ -1,7 +1,6 @@
 import { computed } from 'vue';
 import StatisticsService from '../../services/clients/StatisticsService';
 import { InfoBlock, ChartType } from '../../data/types';
-import { ChartOptions } from 'chart.js';
 
 
 const colors = [
@@ -14,11 +13,13 @@ const colors = [
 export const useChartMixin = async (infoBlock: InfoBlock, label: string) => {
     const { data } = await StatisticsService.getModelFieldStats(infoBlock.model, infoBlock.field);
 
+    const total = Object.values(data as Record<string, number>).reduce((accumulator, currentValue) => accumulator + currentValue, 0)
+
     const chartData = computed(() => processChartData(data, label));
 
-    const options = getChartOptions(infoBlock.type);
+    const options = getChartOptions(infoBlock.type, total);
 
-    return { chartData, options };
+    return { chartData, options, total };
 };
 
 function processChartData(data: Record<string, number>, label: string) {
@@ -35,7 +36,7 @@ function processChartData(data: Record<string, number>, label: string) {
     };
 }
 
-function getChartOptions(type: ChartType) {
+function getChartOptions(type: ChartType, total: number) {
     let legend
     let datalabels
     let scales
@@ -69,7 +70,14 @@ function getChartOptions(type: ChartType) {
     return {
         scales,
         interaction: { intersect: false, mode: 'index' },
-        plugins: { legend, datalabels },
+        plugins: {
+            legend, datalabels,
+            tooltip: {
+                callbacks: {
+                    footer: () => 'Total: ' + total
+                }
+            }
+        },
         datasets: {
             bar: {
                 borderColor: 'transparent',
