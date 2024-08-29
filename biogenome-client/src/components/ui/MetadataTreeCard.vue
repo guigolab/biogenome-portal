@@ -1,10 +1,14 @@
 <template>
     <div class="row align-center">
-        <div class="flex lg6 md6">
-            <va-input v-model="filter" placeholder="Filter..." clearable />
+        <div class="flex">
+            <va-input v-model="filter" placeholder="Type to search" clearable>
+                <template #appendInner>
+                    <VaIcon name="search"></VaIcon>
+                </template>
+            </va-input>
         </div>
     </div>
-    <va-tree-view :nodes="currenNodes" :filter="filter" :filter-method="customFilterMethod">
+    <va-tree-view expand-all :nodes="currenNodes" :filter="filter" :filter-method="customFilterMethod">
         <template #content="node">
             <div class="flex items-center">
                 <div class="mr-2">
@@ -40,7 +44,7 @@ const customFilterMethod = computed(() => {
 const nodes = ref([...buildTree(props.metadata, undefined)])
 
 const currenNodes = computed(() => {
-    if(nodes.value.length) return nodes
+    if (nodes.value.length) return nodes
     return [{ id: 'noMetadata', label: "No Metadata Found!", description: "No Metadata are linked to this item!" }]
 })
 

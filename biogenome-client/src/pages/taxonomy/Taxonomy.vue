@@ -29,9 +29,7 @@
             </Suspense>
         </div>
         <div :class="['content-container', { 'full-width': !showTree }]">
-            <va-card>
-                <router-view></router-view>
-            </va-card>
+            <router-view></router-view>
         </div>
     </div>
     <!-- <VaModal hide-default-actions overlay-opacity="0.2" v-model="showModal">
