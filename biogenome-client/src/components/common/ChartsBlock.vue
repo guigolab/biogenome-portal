@@ -17,7 +17,7 @@
                         <va-card-content>
                             <component class="va-chart" :key="index" :is="chartComponents[chart.type]"
                                 :info-block="chart" :chart-id="`${chart.model}.${chart.field}`"
-                                :label="t(chart.label[locale])" />
+                                :label="t(`tooltip.${chart.model}`)" />
                         </va-card-content>
                     </va-card>
                 </template>
@@ -48,9 +48,7 @@ import {
     Filler,
 } from 'chart.js'
 
-
 ChartJS.register(Title, Tooltip, Legend, LineElement, LinearScale, PointElement, CategoryScale, Filler, ArcElement, BarElement)
-
 
 const { t, locale } = useI18n()
 
@@ -58,13 +56,11 @@ const props = defineProps<{
     charts: InfoBlock[]
 }>()
 
-
 const chartComponents = {
     'pie': PieChart,
     'bar': BarChart,
     'dateline': DateLineChart
 }
-
 
 function downloadCanvasAsPNG(canvasId: string, filename: string) {
     // Get the canvas element

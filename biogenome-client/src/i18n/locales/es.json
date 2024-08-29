@@ -18,6 +18,14 @@
         "NCBI": "Ver en NCBI",
         "ENA": "Ver en ENA"
     },
+    "tooltip": {
+        "biosamples": "Número de BioMuestras",
+        "local_samples": "Número de Muestras Locales",
+        "experiments": "Número de Experimentos",
+        "assemblies": "Número de Ensamblajes",
+        "organisms": "Número de Organismos",
+        "annotations": "Número de Anotaciones"
+    },
     "tabs": {
         "table": "Tabla",
         "charts": "Estadísticas",
