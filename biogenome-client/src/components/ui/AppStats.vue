@@ -6,7 +6,7 @@
                     <div class="row justify-space-between align-center">
                         <div class="flex">
                             <Counter :duration="2000" :target-value="f.count" />
-                            <p> {{ f.text }}
+                            <p> {{ t(`sidebar.${f.key}`) }}
                             </p>
                         </div>
                         <div class="flex">
@@ -45,7 +45,6 @@ const filteredModels = reactive(
             const { icon, color } = iconMap[m as DataModel]
             return {
                 key: m,
-                text: t(`sidebar.${m}`),
                 count: 0,
                 icon,
                 color
