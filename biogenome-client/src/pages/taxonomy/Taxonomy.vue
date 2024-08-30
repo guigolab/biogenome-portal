@@ -6,14 +6,15 @@
         <div class="flex">
             <va-select hideSelected :loading="isLoading" dropdownIcon="search" searchable highlight-matched-text
                 :textBy="(v: TreeNode) => `${v.name} (${v.rank})`" trackBy="taxid" @update:model-value="setCurrentTaxon"
-                @update:search="handleSearch" v-model="taxonomyStore.currentTaxon"
+                @update:search="taxonomyStore.handleSearch" v-model="taxonomyStore.currentTaxon"
                 :searchPlaceholderText="t('taxon.search.placeholder')" :noOptionsText="t('taxon.search.noOptions')"
-                :options="taxons">
+                :options="taxonomyStore.taxons">
             </va-select>
         </div>
         <div class="flex">
-            <VaButton color="primary" :round="false" @click="showTree = !showTree" :loading="isTreeLoading">
-                {{ showTree ? t('taxon.search.hide') : t('taxon.search.show') }}
+            <VaButton color="primary" :round="false" @click="taxonomyStore.showTree = !taxonomyStore.showTree"
+                :loading="taxonomyStore.isTreeLoading">
+                {{ taxonomyStore.showTree ? t('taxon.search.hide') : t('taxon.search.show') }}
             </VaButton>
         </div>
         <div class="flex">
@@ -23,12 +24,10 @@
         </div>
     </div>
     <div class="content-row">
-        <div :class="['tree-container', { 'hidden': !showTree }]">
-            <Suspense @resolve="isTreeLoading = !isTreeLoading">
-                <D3HyperTree @node-change="setCurrentTaxon" :filter="taxonomyStore.taxidQuery" />
-            </Suspense>
+        <div v-if="taxonomyStore.treeData" :class="['tree-container', { 'hidden': !taxonomyStore.showTree }]">
+            <D3HyperTree @node-change="setCurrentTaxon" />
         </div>
-        <div :class="['content-container', { 'full-width': !showTree }]">
+        <div :class="['content-container', { 'full-width': !taxonomyStore.showTree }]">
             <router-view></router-view>
         </div>
     </div>
@@ -59,18 +58,13 @@
 <script setup lang="ts">
 import D3HyperTree from '../../components/tree/D3HyperTree.vue'
 import { onMounted, ref } from 'vue';
-import TaxonService from '../../services/clients/TaxonService';
 import { useI18n } from 'vue-i18n'
 import { useTaxonomyStore } from '../../stores/taxonomy-store'
 import { TreeNode } from '../../data/types';
-import { AxiosError } from 'axios';
-import { useToast } from 'vuestic-ui'
 import { useRouter, useRoute } from 'vue-router';
 
-const isTreeLoading = ref(true)
 const router = useRouter()
 const route = useRoute()
-const showTree = ref(false)
 const rootNode = import.meta.env.VITE_ROOT_NODE ? import.meta.env.VITE_ROOT_NODE : '131567'
 
 
@@ -96,35 +90,19 @@ onMounted(() => {
 
 const taxonomyStore = useTaxonomyStore()
 
-
-const { init } = useToast()
 const { t } = useI18n()
 
 const taxons = ref<TreeNode[]>([])
 const isLoading = ref(false)
 
 function setCurrentTaxon(taxon: TreeNode) {
-    taxons.value = []
+    taxonomyStore.taxons = []
     taxonomyStore.currentTaxon = { ...taxon }
     // taxonomyStore.taxidQuery = null
     taxonomyStore.taxidQuery = taxon.taxid
     router.push({ name: 'taxon', params: { taxid: taxon.taxid } })
 }
 
-async function handleSearch(v: string) {
-    if (v.length < 2) return
-    isLoading.value = true
-    try {
-        const { data } = await TaxonService.getTaxons({ filter: v })
-        if (data.data) taxons.value = [...data.data]
-    } catch (error) {
-        console.log(error)
-        const axiosError = error as AxiosError
-        init({ message: axiosError.message, color: 'danger' })
-    } finally {
-        isLoading.value = false
-    }
-}
 
 
 </script>

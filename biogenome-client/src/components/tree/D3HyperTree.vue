@@ -4,39 +4,27 @@
 
 <script setup lang="ts">
 import * as hyt from 'd3-hypertree'
-import TaxonService from '../../services/clients/TaxonService'
 import { useTreeData } from './setTreeData'
 import { onMounted, reactive, ref, watch } from 'vue'
 import { TreeNode } from '../../data/types'
-
+import { useTaxonomyStore } from '../../stores/taxonomy-store'
 
 const hypertree = ref(null)
 
-const props = defineProps<{
-    filter: string | null
-}>()
+const taxonomyStore = useTaxonomyStore()
 
 const hTree = reactive<{ tree: hyt.Hypertree | null }>({ tree: null })
-
-const { data } = await TaxonService.getComputedTree()
-
-const { root } = useTreeData(data.tree)
 
 const isInitializing = ref(true)
 
 const emits = defineEmits(['nodeChange'])
 
-watch(() => props.filter, (v) => {
-    console.log(v)
-    console.log("FIlter..")
+watch(() => taxonomyStore.taxidQuery, (v) => {
     if (isInitializing.value || !v) return
     setPath(v)
 })
-
 watch(() => isInitializing.value, (v) => {
-    console.log(v)
-    console.log("Init..")
-    if (props.filter && !v) setPath(props.filter)
+    if (taxonomyStore.taxidQuery && !v) setPath(taxonomyStore.taxidQuery)
 })
 
 function setPath(taxid: string) {
@@ -47,22 +35,17 @@ function setPath(taxid: string) {
             hTree.tree.api.gotoNode(node).then(() => hTree.tree.drawDetailFrame())
         }
     }
-
 }
 
 onMounted(() => {
+    const { root } = useTreeData(taxonomyStore.treeData)
     hTree.tree = createTree(root)
     hTree.tree.initPromise
         .then(() => new Promise((ok, err) => hTree.tree.animateUp(ok, err)))
         .then(() => hTree.tree.drawDetailFrame())
         .catch((err) => console.log(err))
         .finally(() => isInitializing.value = !isInitializing.value)
-
-    // .then(() => {
-    //     if (props.filter) {
-    //         setPath(props.filter)
-    //     }
-    // })
+    // taxonomyStore.showTree = true
 })
 
 function createTree(data) {
@@ -92,7 +75,6 @@ function createTree(data) {
             },
             interaction: {
                 onNodeClick: (n, m, l) => {
-
                     mytree.api.setPathHead(mytree.data.pathes, n)
                     mytree.api.goto({ re: -n.layout.z.re, im: -n.layout.z.im }, null)
                         .then(() => l.view.hypertree.drawDetailFrame())

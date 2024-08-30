@@ -1,8 +1,9 @@
 <template>
-    <VaInnerLoading :style="{ display: isLoading ? 'inherit' : 'initial' }" :size="50" :loading="isLoading">
+    <VaInnerLoading :style="{ display: taxonomyStore.isContentLoading ? 'inherit' : 'initial' }" :size="50"
+        :loading="taxonomyStore.isContentLoading">
         <VaCard>
-            <VaCardContent v-if="taxon">
-                <h2 class="va-h2"> {{ taxon.name }}
+            <VaCardContent v-if="taxonomyStore.currentTaxon">
+                <h2 class="va-h2"> {{ taxonomyStore.currentTaxon.name }}
                 </h2>
             </VaCardContent>
             <VaTabs :key="taxid" v-model="tab">
@@ -30,9 +31,9 @@
     </VaInnerLoading>
 </template>
 <script setup lang="ts">
-import { computed, ref, watchEffect } from 'vue'
+import { computed, onMounted, ref, watchEffect } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { SampleLocations, Filter, TreeNode } from '../../data/types'
+import { SampleLocations, Filter } from '../../data/types'
 import { models } from '../../../config.json'
 import GeoLocationService from '../../services/clients/GeoLocationService'
 import ItemsBlock from '../common/components/ItemsBlock.vue'
@@ -45,7 +46,6 @@ import TaxonService from '../../services/clients/TaxonService'
 
 const { init } = useToast()
 const taxonomyStore = useTaxonomyStore()
-const taxon = ref<TreeNode>()
 
 const props = defineProps<{
     taxid: string
@@ -63,10 +63,13 @@ const isLoading = ref(false)
 
 watchEffect(async () => {
     tab.value = 'wiki'
-    isLoading.value = true
-    await Promise.all([getTaxon(props.taxid), getStats(props.taxid)])
-    isLoading.value = false
+    await getTaxon(props.taxid)
+    await getStats(props.taxid)
     await getCoordinates(props.taxid)
+})
+
+onMounted(async () => {
+    if (!taxonomyStore.treeData) await taxonomyStore.getTree()
 })
 
 const { t } = useI18n()
@@ -96,14 +99,16 @@ async function getCoordinates(taxid: string) {
 }
 
 async function getTaxon(taxid: string) {
+    isLoading.value = true
     try {
         const { data } = await TaxonService.getTaxon(taxid)
-        taxon.value = { ...data }
         taxonomyStore.currentTaxon = { ...data }
         taxonomyStore.taxidQuery = taxid
     } catch (error) {
         const axiosError = error as AxiosError
         init({ message: axiosError.message, color: 'danger' })
+    } finally {
+        isLoading.value = false
     }
 }
 </script>
