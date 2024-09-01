@@ -1,8 +1,7 @@
 <template>
     <div class="row">
         <div class="flex">
-            <VaInput iconColor="primary" v-model="searchForm.filter" clearable
-                @update:modelValue="(v: string) => emits('onFormChange', [['filter', v.length > 2 ? v : '']])"
+            <VaInput iconColor="primary" v-model="storeForm.filter" clearable @update:modelValue="handleInputChange"
                 :placeholder="t('buttons.search')">
                 <template #appendInner>
                     <va-icon name="search" />
@@ -63,15 +62,14 @@
             </VaBadge>
         </div>
         <div class="flex">
-            <VaBadge style="z-index: 1;" overlap color="info"
-                :text="searchForm.sort_column ? `${searchForm.sort_order} ${searchForm.sort_column}` : null">
+            <VaBadge style="z-index: 1;" overlap color="info" :text="sortDropdownText">
                 <VaButtonDropdown preset="primary" :round="true" stickToEdges :closeOnContentClick="false"
                     :label="t('buttons.sort')" icon="sort">
                     <div class="w-200">
                         <div>
                             <VaSelect @update:modelValue="(v: string) => emits('onFormChange', [['sort_column', v]])"
                                 clearable class="mt-2" :label="t('search.sortColumn')" v-model="searchForm.sort_column"
-                                :options="columns.map(c => c.split('.').length > 0 ? c.split('.')[c.split('.').length - 1] : c)" />
+                                textBy="text" valueBy="value" :options="sortOptions" />
                         </div>
                         <div>
                             <VaSelect @update:modelValue="(v: string) => emits('onFormChange', [['sort_order', v]])"
@@ -89,7 +87,6 @@ import { computed, ref, watchEffect } from 'vue';
 import { DateRange, Filter } from '../../data/types'
 import { useI18n } from 'vue-i18n';
 
-
 const { t, locale } = useI18n()
 const props = defineProps<{ filters: Filter[], storeForm: Record<string, any>, columns: string[] }>()
 
@@ -100,16 +97,36 @@ const showFields = ref(props.columns.map(c => {
     }
 }))
 
-
 const dateModels = ref({ ...mapDates(props.storeForm) })
 
 const searchForm = ref({ ...props.storeForm })
 
 const activeFilters = computed(() => {
     return Object.entries(searchForm.value)
+        .filter(([k, v]) => k !== 'sort_column' && k !== 'sort_order')
         .filter(([k, v]) => v).length
 })
 
+const sortOptions = computed(() => {
+    return props.columns.map(c => {
+        const splittedField = c.split('.')
+        if (splittedField.length > 0) {
+            return { text: splittedField[splittedField.length - 1], value: c }
+        } else {
+            return { text: c, value: c }
+        }
+    })
+})
+const sortDropdownText = computed(() => {
+    if (searchForm.value.sort_column) {
+        const splittedField = searchForm.value.sort_column.split('.')
+        if (splittedField.length > 0) {
+            return `${searchForm.value.sort_order} ${splittedField[splittedField.length - 1]}`
+        }
+        return `${searchForm.value.sort_order} ${searchForm.value.sort_column}`
+    }
+    return null
+})
 watchEffect(() => {
     emits('onShowFieldChange', showFields.value.filter(f => f.show).map(f => f.value))
 })
@@ -172,6 +189,19 @@ function isCheckBoxField(type: string) {
     return type === 'checkbox';
 };
 
+const handleInputChange = debounce((v: string) => {
+    emits('onFormChange', [['filter', v.length > 2 ? v : '']]);
+}, 300); // Adjust the delay (300ms) as needed
+
+function debounce(fn: any, delay: number) {
+    let timeoutId: any;
+    return function (...args: any) {
+        if (timeoutId) clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+            fn(...args);
+        }, delay);
+    };
+}
 </script>
 <style scoped>
 .w-200 {

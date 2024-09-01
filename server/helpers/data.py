@@ -3,7 +3,6 @@ from io import StringIO
 from bson.json_util import dumps, JSONOptions, DatetimeRepresentation
 from helpers import organism, user
 from mongoengine.queryset.visitor import Q
-from extensions.cache import cache
 
 def dump_json(response_dict):
     json_options = JSONOptions()
