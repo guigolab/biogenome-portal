@@ -39,7 +39,6 @@ const { t } = useI18n()
 const accessToken = import.meta.env.VITE_CESIUM_TOKEN
 
 const cesium = ref()
-const isLoading = ref(false)
 const showDetails = ref(false)
 
 let source = new Cesium.GeoJsonDataSource()

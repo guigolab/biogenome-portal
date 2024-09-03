@@ -1,29 +1,41 @@
 <template>
-    <VaTabs v-model="tab">
+    <VaTabs :key="tabsKey" v-model="currentTab" @update:modelValue="(v: string) => $emit('updateView', v)">
         <template #tabs>
-            <VaTab v-for="tab in tabs" :label="t(tab.label)" :name="tab.name"></VaTab>
+            <VaTab v-for="(tabItem, idx) in tabs" :key="`${tabItem.name}-${idx}-${tabs.length}`"
+                :label="t(tabItem.label)" :name="tabItem.name">
+            </VaTab>
         </template>
     </VaTabs>
     <VaDivider style="margin-top: 0;" />
 </template>
 
 <script setup lang="ts">
-import { ref, watchEffect } from 'vue';
-import { useI18n } from 'vue-i18n'
+import { ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n()
+const { t } = useI18n();
 
 const props = defineProps<{
-    tabs: { label: string, name: string }[]
-}>()
+    tabs: { label: string, name: string }[];
+    tab: string;
+}>();
 
-const tab = ref(props.tabs[0])
+const emits = defineEmits(['updateView']);
 
-const emits = defineEmits(['updateView'])
+const currentTab = ref(props.tab);
+const tabsKey = ref(0);  // A key to force re-rendering
 
-
-watchEffect(() => {
-    emits("updateView", tab.value)
-})
+// Watch for changes in the tabs prop and update the key to force re-rendering
+watch(
+    () => props.tabs,
+    (newTabs) => {
+        tabsKey.value++;  // Change the key to force re-render
+        if (!newTabs.some(tab => tab.name === currentTab.value)) {
+            currentTab.value = newTabs[0]?.name ?? '';
+            emits('updateView', currentTab.value)
+        }
+    },
+    { immediate: true }
+);
 
 </script>

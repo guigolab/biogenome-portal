@@ -1,23 +1,12 @@
 <template>
-  <DetailsHeader v-if="details" :details="details" />
-  <VaSkeletonGroup v-else>
-    <VaSkeleton tag="h1" variant="text" class="va-h1" />
-    <VaSkeleton variant="text" :lines="1" />
-  </VaSkeletonGroup>
-  <VaTabs v-model="tab">
-    <template #tabs>
-      <VaTab :label="t('tabs.metadata')" name="metadata"></VaTab>
-      <VaTab :label="t('tabs.jbrowse')" name="jbrowse"></VaTab>
-    </template>
-  </VaTabs>
-  <div v-if="tab === 'jbrowse'" class="row">
-    <div class="flex lg12 md12 sm12 xs12">
-      <Jbrowse2 :assembly="assembly" :annotations="annotations" />
-    </div>
-  </div>
-  <div v-else class="row">
-    <div v-if="annotations.length" class="flex lg12 md12 sm12 xs12">
-      <MetadataTreeCard :metadata="Object.entries(annotations[0].metadata)" />
+  <DetailsHeader :details="details" />
+  <div v-if="validTabs.length">
+    <Tabs :tabs="validTabs" :tab="tab" @updateView="(v: string) => tab = v" />
+    <div class="row">
+      <div class="flex lg12 md12 sm12 xs12">
+        <Jbrowse2 v-if="tab === 'jbrowse'" :assembly="assembly" :annotations="[annotation]" />
+        <MetadataTreeCard v-else :metadata="annotation ? Object.entries(annotation.metadata) : []" />
+      </div>
     </div>
   </div>
 </template>
@@ -27,15 +16,14 @@ import { ref, watchEffect } from 'vue'
 import Jbrowse2 from '../../components/genome-browser/Jbrowse2.vue'
 import { Assembly, Details, TrackData } from '../../data/types'
 import AnnotationService from '../../services/clients/AnnotationService'
-import { useI18n } from 'vue-i18n'
 import DetailsHeader from '../../components/common/DetailsHeader.vue'
+import Tabs from '../../components/common/Tabs.vue'
+
 import MetadataTreeCard from '../../components/ui/MetadataTreeCard.vue'
 import { AxiosError } from 'axios'
 import { useToast } from 'vuestic-ui/web-components'
 
-const { t } = useI18n()
-
-const tab = ref('metadata')
+const tab = ref('')
 const props = defineProps<{
   name: string
 }>()
@@ -46,7 +34,8 @@ const details = ref<
   Details | any
 >()
 const assembly = ref<Assembly>()
-const annotations = ref<TrackData[]>([])
+const annotation = ref<TrackData>()
+const validTabs = ref<{ label: string, name: string }[]>([])
 
 
 watchEffect(async () => {
@@ -57,19 +46,29 @@ async function getData(name: string) {
   try {
     const { data } = await AnnotationService.getAnnotation(name)
     details.value = { ...parseDetails(data) }
-    annotations.value.push(data)
+    annotation.value = data
     await getRelatedAssembly(data.assembly_accession)
+    setValidTabs()
   } catch (e) {
     const axiosError = e as AxiosError
     init({ message: axiosError.message, color: 'danger' })
   }
 }
 
+function setValidTabs() {
+  const t = []
+  if (annotation.value?.metadata) {
+    t.push({ name: 'metadata', label: 'tabs.metadata' })
+  }
+  t.push({ name: 'jbrowse', label: 'tabs.jbrowse' })
+  validTabs.value = [...t]
+}
 async function getRelatedAssembly(accession: string) {
   const { data } = await AssemblyService.getAssembly(accession)
   assembly.value = { ...data }
   return data
 }
+
 function parseDetails(annotation: Record<string, any>) {
   const name = annotation.name
   const details: Details = {
@@ -82,4 +81,3 @@ function parseDetails(annotation: Record<string, any>) {
   return details
 }
 </script>
-

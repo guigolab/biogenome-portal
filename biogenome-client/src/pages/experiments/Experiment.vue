@@ -1,63 +1,40 @@
 <template>
-  <DetailsHeader v-if="details" :details="details" />
-  <VaSkeletonGroup v-else>
-    <VaSkeleton tag="h1" variant="text" class="va-h1" />
-    <VaSkeleton variant="text" :lines="1" />
-  </VaSkeletonGroup>
-  <VaTabs v-model="tab">
-    <template #tabs>
-      <VaTab :label="t('tabs.metadata')" name="metadata"></VaTab>
-      <VaTab v-if="reads.length" :label="t('tabs.reads')" name="reads"></VaTab>
-    </template>
-  </VaTabs>
-  <VaDivider style="margin-top: 0;" />
-  <div class="row">
-    <div class="flex lg12 md12 sm12 xs12">
-      <MetadataTreeCard v-if="tab === 'metadata' && experiment" :metadata="Object.entries(experiment.metadata)" />
-      <VaDataTable v-else :items="reads" :columns="['run_accession', 'metadata.submitted_bytes', 'actions']">
-        <template #column(metadata.submitted_bytes)>
-          submiteed_bytes
-        </template>
-        <template #cell(metadata.submitted_bytes)="{ rowData }">
-          {{ convertBytesToMBOrGB(rowData.metadata.submitted_bytes) }}
-        </template>
-        <template #cell(actions)="{ row, isExpanded }">
-          <VaButton :icon="isExpanded ? 'va-arrow-up' : 'va-arrow-down'" preset="secondary" class="w-full"
-            @click="row.toggleRowDetails()">{{ t('buttons.view') }}
-          </VaButton>
-        </template>
-        <template #expandableRow="{ rowData }">
-          <div class="">
-            <MetadataTreeCard :metadata="Object.entries(rowData.metadata)" />
-          </div>
-        </template>
-      </VaDataTable>
+  <DetailsHeader :details="details" />
+  <div v-if="validTabs.length">
+    <Tabs :tabs="validTabs" :tab="tab" @updateView="(v: string) => tab = v" />
+    <div class="row">
+      <div class="flex lg12 md12 sm12 xs12">
+        <MetadataTreeCard v-if="tab === 'metadata'" :metadata="experiment ? Object.entries(experiment.metadata) : []" />
+        <ReadsTable v-else :items="reads" />
+      </div>
     </div>
   </div>
 </template>
 <script setup lang="ts">
 import ExperimentService from '../../services/clients/ExperimentService'
-import { ref, watchEffect } from 'vue'
+import { computed, ref, watchEffect } from 'vue'
 import { Details } from '../../data/types'
 import DetailsHeader from '../../components/common/DetailsHeader.vue'
-import { useI18n } from 'vue-i18n'
+import Tabs from '../../components/common/Tabs.vue'
 import MetadataTreeCard from '../../components/ui/MetadataTreeCard.vue'
 import { AxiosError } from 'axios'
 import { useToast } from 'vuestic-ui/web-components'
-
-const { t } = useI18n()
+import ReadsTable from './components/ReadsTable.vue'
 
 const { init } = useToast()
 const props = defineProps<{
   accession: string
 }>()
+
 const experiment = ref<Record<string, any>>()
-const tab = ref('metadata')
+const tab = ref('')
 const details = ref<
   Details | any
 >()
 
 const reads = ref<Record<string, any>[]>([])
+
+const validTabs = ref<{ label: string, name: string }[]>([])
 
 watchEffect(async () => {
   await getData(props.accession)
@@ -65,14 +42,28 @@ watchEffect(async () => {
 
 async function getData(accession: string) {
   try {
-    const { data } = await ExperimentService.getExperiment(accession)
-    experiment.value = { ...data }
-    details.value = { ...parseDetails(data) }
+    await getExperiment(accession)
     await getReads(accession)
+    setTabs()
   } catch (error) {
     const axiosError = error as AxiosError
     init({ message: axiosError.message, color: 'danger' })
   }
+}
+
+function setTabs() {
+  const tabs = [{ name: 'metadata', label: 'tabs.metadata' }];
+
+  if (reads.value.length) {
+    tabs.push({ name: 'reads', label: 'tabs.reads' });
+  }
+
+  return tabs;
+}
+async function getExperiment(accession: string) {
+  const { data } = await ExperimentService.getExperiment(accession)
+  experiment.value = { ...data }
+  details.value = { ...parseDetails(data) }
 }
 
 async function getReads(accession: string) {
@@ -102,25 +93,5 @@ function parseDetails(experiment: Record<string, any>) {
   return details
 }
 
-function convertBytesToMBOrGB(submittedBytes: string): string {
-  const byteStrings: string[] = submittedBytes.split(';');
-
-  let result: string = "";
-
-  byteStrings.forEach(byteString => {
-    const bytes: number = parseInt(byteString, 10);
-    const mb: number = bytes / (1024 * 1024);
-    const gb: number = mb / 1024;
-
-    if (gb >= 1) {
-      result += gb.toFixed(2) + ' GB, ';
-    } else {
-      result += mb.toFixed(2) + ' MB, ';
-    }
-  });
-  result = result.slice(0, -2);
-
-  return result;
-}
 
 </script>

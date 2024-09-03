@@ -1,85 +1,31 @@
 <template>
-  <DetailsHeader v-if="details" :details="details" />
-  <VaSkeletonGroup v-else>
-    <VaSkeleton tag="h1" variant="text" class="va-h1" />
-    <VaSkeleton variant="text" :lines="1" />
-  </VaSkeletonGroup>
-  <VaTabs v-model="tab">
-    <template #tabs>
-      <VaTab :label="t('tabs.metadata')" name="metadata"></VaTab>
-      <VaTab :label="t('tabs.chromosomes')" v-if="chromosomes.length" name="chromosomes"></VaTab>
-      <VaTab :label="t('tabs.annotations')" v-if="annotations.length" name="annotations"></VaTab>
-      <VaTab :label="t('tabs.jbrowse')" v-if="annotations.length || chromosomes.length" name="jbrowse">
-      </VaTab>
-    </template>
-  </VaTabs>
-  <VaDivider style="margin-top: 0;" />
-  <div class="row" v-if="tab === 'chromosomes'">
-    <div class="flex lg12 md12 sm12 xs12">
-      <VaDataTable :items="chromosomes" :columns="['accession_version', 'metadata.name', 'metadata.length', 'actions']">
-        <template #column(metadata.name)>
-          Name
-        </template>
-        <template #column(metadata.length)>
-          Length
-        </template>
-        <template #cell(metadata.name)="{ rowData }">
-          {{ rowData.metadata.name || rowData.metadata.chr_name }}
-        </template>
-        <template #cell(actions)="{ row, isExpanded }">
-          <VaButton :icon="isExpanded ? 'va-arrow-up' : 'va-arrow-down'" preset="secondary" class="w-full"
-            @click="row.toggleRowDetails()">{{ t('buttons.view') }}
-          </VaButton>
-        </template>
-        <template #expandableRow="{ rowData }">
-          <div class="">
-            <MetadataTreeCard
-              :metadata="Object.entries(rowData.metadata).length ? Object.entries(rowData.metadata) : []" />
-          </div>
-        </template>
-      </VaDataTable>
-    </div>
-  </div>
-  <div class="row" v-else-if="tab === 'annotations'">
-    <div class="flex lg12 md12 sm12 xs12">
-      <VaDataTable :items="annotations" :columns="['name', 'gff_gz_location', 'tab_index_location', 'actions']">
-        <template #cell(actions)="{ rowData }">
-          <va-chip :to="{ name: 'annotation', params: { name: rowData.name } }" size="small">{{ t('buttons.view')
-            }}</va-chip>
-        </template>
-        <template #cell(gff_gz_location)="{ rowData }">
-          <va-chip :href="rowData.gff_gz_location">{{ t('buttons.download') }}</va-chip>
-        </template>
-        <template #cell(tab_index_location)="{ rowData }">
-          <va-chip :href="rowData.tab_index_location" size="small">{{ t('buttons.download') }}</va-chip>
-        </template>
-      </VaDataTable>
-    </div>
-  </div>
-  <div v-else-if="tab === 'jbrowse'" class="row">
-    <div class="flex lg12 md12 sm12 xs12">
-      <Jbrowse2 :assembly="assembly" :annotations="annotations" />
-    </div>
-  </div>
-  <div v-else class="row">
-    <div v-if="assembly" class="flex lg12 md12 sm12 xs12">
-      <MetadataTreeCard :metadata="Object.entries(assembly.metadata)" />
+  <DetailsHeader :details="details" />
+  <div v-if="validTabs.length">
+    <Tabs :tabs="validTabs" :tab="tab" @updateView="(v: string) => tab = v" />
+    <div class="row">
+      <div class="flex lg12 md12 sm12 xs12">
+        <ChromosomesTable v-if="tab === 'chromosomes'" :items="chromosomes" />
+        <AnnotationsTable v-else-if="tab === 'annotations'" :items="annotations" />
+        <Jbrowse2 v-else-if="tab === 'jbrowse'" :assembly="assembly" :annotations="annotations" />
+        <MetadataTreeCard v-else-if="assembly" :metadata="Object.entries(assembly.metadata)" />
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import AssemblyService from '../../services/clients/AssemblyService'
-import { ref, watchEffect } from 'vue'
+import { computed, ref, watchEffect } from 'vue'
 import Jbrowse2 from '../../components/genome-browser/Jbrowse2.vue'
 import { Assembly, Details, TrackData } from '../../data/types'
-import { useI18n } from 'vue-i18n'
 import DetailsHeader from '../../components/common/DetailsHeader.vue'
+import Tabs from '../../components/common/Tabs.vue'
+import ChromosomesTable from './components/ChromosomesTable.vue'
+import AnnotationsTable from './components/AnnotationsTable.vue'
 import MetadataTreeCard from '../../components/ui/MetadataTreeCard.vue'
 import { AxiosError } from 'axios'
 import { useToast } from 'vuestic-ui/web-components'
 
-const { t } = useI18n()
 const { init } = useToast()
 
 const props = defineProps<{
@@ -90,10 +36,13 @@ const details = ref<
   Details | any
 >()
 
-const tab = ref('metadata')
+const tab = ref('')
 const assembly = ref<Assembly>()
 const annotations = ref<TrackData[]>([])
 const chromosomes = ref<Record<string, any>[]>([])
+
+const validTabs = ref<{ label: string, name: string }[]>([])
+
 
 watchEffect(async () => {
   await getData(props.accession)
@@ -101,18 +50,38 @@ watchEffect(async () => {
 
 async function getData(accession: string) {
   try {
-    const { data } = await AssemblyService.getAssembly(accession)
-    details.value = { ...parseDetails(data) }
-    assembly.value = { ...data }
+    await getAssembly(accession)
     await getRelatedAnnotations(accession)
     await getRelatedChromosomes(accession)
+    setValidTabs()
   } catch (error) {
     const axiosError = error as AxiosError
     init({ message: axiosError.message, color: 'danger' })
-
   }
 }
 
+function setValidTabs() {
+  const tabs = [{ name: 'metadata', label: 'tabs.metadata' }];
+
+  if (annotations.value.length) {
+    tabs.push({ name: 'annotations', label: 'tabs.annotations' });
+  }
+
+  if (chromosomes.value.length) {
+    tabs.push({ name: 'chromosomes', label: 'tabs.chromosomes' });
+
+    // Adding 'jbrowse' only if 'chromosomes' are present.
+    tabs.push({ name: 'jbrowse', label: 'tabs.jbrowse' });
+  }
+
+  return tabs;
+}
+
+async function getAssembly(accession: string) {
+  const { data } = await AssemblyService.getAssembly(accession)
+  details.value = { ...parseDetails(data) }
+  assembly.value = { ...data }
+}
 async function getRelatedAnnotations(accession: string) {
   const { data } = await AssemblyService.getRelatedAnnotations(accession)
   annotations.value = [...data]

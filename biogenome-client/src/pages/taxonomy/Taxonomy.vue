@@ -24,36 +24,13 @@
         </div>
     </div>
     <div class="content-row">
-        <div v-if="taxonomyStore.treeData" :class="['tree-container', { 'hidden': !taxonomyStore.showTree }]">
-            <D3HyperTree @node-change="setCurrentTaxon" />
+        <div :class="['tree-container', { 'hidden': !taxonomyStore.showTree }]">
+            <D3HyperTree v-if="taxonomyStore.treeData" @node-change="setCurrentTaxon" />
         </div>
         <div :class="['content-container', { 'full-width': !taxonomyStore.showTree }]">
             <router-view></router-view>
         </div>
     </div>
-    <!-- <VaModal hide-default-actions overlay-opacity="0.2" v-model="showModal">
-        <template #header>
-            <h2 class="va-h2">{{ t('taxon.related.header') }}</h2>
-            <p class="va-text-secondary">{{ t('taxon.related.description') }}</p>
-        </template>
-<va-card-content style="padding-left: 0;">
-    <va-inner-loading :loading="isLoading">
-        <va-form tag="form" @submit.prevent="searchRelatedTaxon">
-            <div class="row align-center justify-start">
-                <va-input v-model="taxidInput" class="flex lg12 md12 sm12 xs12"
-                    :placeholder="t('taxon.related.placeholder')" />
-            </div>
-            <va-card-actions align="left">
-                <va-button :disabled="taxidInput.length === 0" type="submit">{{ t('buttons.submit')
-                    }}</va-button>
-                <va-button color="danger" @click="taxidInput = ''">
-                    {{ t('buttons.reset') }}
-                </va-button>
-            </va-card-actions>
-        </va-form>
-    </va-inner-loading>
-</va-card-content>
-</VaModal> -->
 </template>
 <script setup lang="ts">
 import D3HyperTree from '../../components/tree/D3HyperTree.vue'
@@ -73,32 +50,16 @@ onMounted(() => {
         taxonomyStore.taxidQuery = route.params.taxid as string
     }
 })
-// async function searchRelatedTaxon() {
-//     try {
-//         isLoading.value = !isLoading.value
-//         const { data } = await TaxonService.getPhylogeneticallyCloseTree(taxidInput.value)
-//         setCurrentTaxon(data)
-//         init({ message: `Closest taxon found: ${data.name}`, color: 'success' })
-//     } catch (error) {
-//         const axiosError = error as AxiosError
-//         init({ message: axiosError.message, color: 'danger' })
-//     } finally {
-//         isLoading.value = !isLoading.value
-//         showModal.value = !showModal.value
-//     }
-// }
 
 const taxonomyStore = useTaxonomyStore()
 
 const { t } = useI18n()
 
-const taxons = ref<TreeNode[]>([])
 const isLoading = ref(false)
 
 function setCurrentTaxon(taxon: TreeNode) {
     taxonomyStore.taxons = []
     taxonomyStore.currentTaxon = { ...taxon }
-    // taxonomyStore.taxidQuery = null
     taxonomyStore.taxidQuery = taxon.taxid
     router.push({ name: 'taxon', params: { taxid: taxon.taxid } })
 }
