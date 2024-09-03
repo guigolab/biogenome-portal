@@ -36,7 +36,7 @@
     "ideogram": "^1.44.1",
     "ionicons": "^4.6.3",
     "jbrowse-plugin-refget-api": "^1.0.1",
-    "leaflet": "^1.8.0",
+    "leaflet": "^1.9.4",
     "leaflet-map": "^0.2.1",
     "leaflet.markercluster": "^1.5.3",
     "pinia": "^2.0.16",
@@ -54,7 +54,6 @@
   },
   "devDependencies": {
     "@intlify/vite-plugin-vue-i18n": "^5.0.1",
-    "@types/leaflet": "^1.7.11",
     "@types/medium-editor": "^5.0.5",
     "@types/node": "^17.0.25",
     "@typescript-eslint/eslint-plugin": "^5.20.0",

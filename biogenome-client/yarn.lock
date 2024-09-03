@@ -1111,13 +1111,6 @@
   "resolved" "https://registry.npmjs.org/@types/json-schema/-/json-schema-7.0.11.tgz"
   "version" "7.0.11"
 
-"@types/leaflet@^1.7.11":
-  "integrity" "sha512-VwAYom2pfIAf/pLj1VR5aLltd4tOtHyvfaJlNYCoejzP2nu52PrMi1ehsLRMUS+bgafmIIKBV1cMfKeS+uJ0Vg=="
-  "resolved" "https://registry.npmjs.org/@types/leaflet/-/leaflet-1.7.11.tgz"
-  "version" "1.7.11"
-  dependencies:
-    "@types/geojson" "*"
-
 "@types/lodash@^4.14.161":
   "integrity" "sha512-BdZ5BCCvho3EIXw6wUCXHe7rS53AIDPLE+JzwgT+OsJk53oBfbSmZZ7CX4VaRoN78N+TJpFi9QPlfIVNmJYWxQ=="
   "resolved" "https://registry.npmjs.org/@types/lodash/-/lodash-4.14.191.tgz"
@@ -4187,10 +4180,10 @@
   "resolved" "https://registry.npmjs.org/leaflet/-/leaflet-0.7.7.tgz"
   "version" "0.7.7"
 
-"leaflet@^1.8.0":
-  "integrity" "sha512-gwhMjFCQiYs3x/Sf+d49f10ERXaEFCPr+nVTryhAW8DWbMGqJqt9G4XuIaHmFW08zYvhgdzqXGr8AlW8v8dQkA=="
-  "resolved" "https://registry.npmjs.org/leaflet/-/leaflet-1.8.0.tgz"
-  "version" "1.8.0"
+"leaflet@^1.9.4":
+  "integrity" "sha512-nxS1ynzJOmOlHp+iL3FyWqK89GtNL8U8rvlMOsQdTTssxZwCXh8N2NB3GDQOL+YR3XnWyZAxwQixURb+FA74PA=="
+  "resolved" "https://registry.npmjs.org/leaflet/-/leaflet-1.9.4.tgz"
+  "version" "1.9.4"
 
 "lerc@^2.0.0":
   "integrity" "sha512-7qo1Mq8ZNmaR4USHHm615nEW2lPeeWJ3bTyoqFbd35DLx0LUH7C6ptt5FDCTAlbIzs3+WKrk5SkJvw8AFDE2hg=="
