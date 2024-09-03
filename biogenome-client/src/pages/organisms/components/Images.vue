@@ -15,6 +15,3 @@ const props = defineProps<{
 const value = ref(0)
 
 </script>
-<style lang="scss" scoped>
-
-</style>
