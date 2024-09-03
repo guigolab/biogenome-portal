@@ -35,7 +35,9 @@ def initialize_routes(api):
 	api.add_resource(stats_controller.FieldStatsApi, '/api/stats/<model>/<field>')
 
 	##TAXONOMY
-	api.add_resource(taxonomy_controller.ComputedTreeApi, '/api/computed_tree')
+	api.add_resource(taxonomy_controller.RootTreeApi, '/api/tree')
+
+	api.add_resource(sample_locations_controller.SampleLocations, '/api/coordinates')
 
 	##ORGANISMS
 	api.add_resource(organisms_controller.OrganismsApi, '/api/organisms')

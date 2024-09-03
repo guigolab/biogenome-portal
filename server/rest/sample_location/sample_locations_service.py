@@ -1,35 +1,44 @@
-from db.models import Organism,SampleCoordinates
-from errors import NotFound
-from extensions.cache import cache
+from db.models import SampleCoordinates
+from mongoengine.queryset.visitor import Q
 
-CHUNK_LIMIT=5000
+def get_sample_locations(offset=0, limit=10000, lineage=None, sample_type=None, sample_accession=None, taxid=None, filter=None):
+    offset = int(offset)
+    limit = int(limit)
 
-@cache.memoize(timeout=300)
+    query = Q()
+
+    if sample_accession:
+        query &= Q(sample_accession=sample_accession)
+    
+    if taxid:
+        query &= Q(taxid=str(taxid))
+    
+    if lineage:
+        query &= Q(lineage=str(lineage))
+
+    if sample_type:
+        if sample_type in ['local_sample', 'biosample']:
+            query &= Q(is_local_sample=(sample_type == 'local_sample'))
+    
+    # Apply filtering if needed
+    if filter:
+        filter_query = Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter)
+        query &= filter_query
+
+    coords = SampleCoordinates.objects(query).exclude('id').skip(offset).limit(limit)
+    total = coords.count()
+    response = dict(total=total, data=list(coords.as_pymongo()))
+    return response
+
 def get_sample_locations_by_taxon(taxid):
-    related_organisms_by_taxid = Organism.objects(taxon_lineage=taxid).scalar('taxid')
-    if not related_organisms_by_taxid:
-        raise NotFound
-    chunks = [related_organisms_by_taxid[i:i+CHUNK_LIMIT] for i in range(0, len(related_organisms_by_taxid), CHUNK_LIMIT)] if len(related_organisms_by_taxid) > CHUNK_LIMIT else [related_organisms_by_taxid]
-    sample_coordinates=[]
-    for chunk in chunks:
-        sample_coordinates.extend(SampleCoordinates.objects(taxid__in=chunk).exclude('id').as_pymongo())
-    return sample_coordinates
+    return SampleCoordinates.objects(lineage=taxid).exclude('id').to_json()
 
 def get_sample_locations_by_organism(taxid):
-    if not Organism.objects(taxid=taxid).first():
-        raise NotFound
-    sample_coordinates = SampleCoordinates.objects(taxid=taxid)
-    return sample_coordinates
+    return SampleCoordinates.objects(taxid=taxid).exclude('id').to_json()
 
 def get_sample_locations_by_biosample(accession):
-    sample_coordinates = SampleCoordinates.objects(sample_accession=accession).first()
-    if not sample_coordinates:
-         raise NotFound
-    return sample_coordinates
+    return SampleCoordinates.objects(sample_accession=accession).exclude('id').first().to_json()
 
 def get_sample_locations_by_localsample(local_id):
-    sample_coordinates = SampleCoordinates.objects(sample_accession=local_id).first()
-    if not sample_coordinates:
-         raise NotFound
-    return sample_coordinates
+    return SampleCoordinates.objects(sample_accession=local_id).exclude('id').first()
     

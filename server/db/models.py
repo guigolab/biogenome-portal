@@ -118,7 +118,7 @@ class TaxonNode(db.Document):
     leaves = db.IntField()
     meta = {
         'indexes': [
-            'taxid'
+            'taxid', 'children'
         ]
     }
 
@@ -127,13 +127,14 @@ class Experiment(db.Document):
     sample_accession= db.StringField()
     experiment_accession= db.StringField(unique=True)
     instrument_platform = db.StringField()
+    taxon_lineage = db.ListField(db.StringField())
     instrument_model = db.StringField()
     taxid = db.StringField(required=True)
     scientific_name= db.StringField()
     created = db.DateTimeField(default=datetime.datetime.utcnow)
     metadata=db.DictField()
     meta = {
-        'indexes': ['experiment_accession','taxid']
+        'indexes': ['experiment_accession','taxid', 'taxon_lineage']
     }
 
 class Read(db.Document):
@@ -144,6 +145,7 @@ class Read(db.Document):
 @delete_assembly_related_data.apply
 class Assembly(db.Document):
     accession = db.StringField(unique=True)
+    taxon_lineage = db.ListField(db.StringField())
     assembly_name=db.StringField()
     blobtoolkit_id = db.StringField()
     scientific_name= db.StringField()
@@ -155,7 +157,7 @@ class Assembly(db.Document):
     chromosomes_aliases=db.BinaryField()
     has_chromosomes_aliases=db.BooleanField(default=False)
     meta = {
-        'indexes': ['accession','taxid']
+        'indexes': ['accession','taxid', 'taxon_lineage']
     }
 
 class Chromosome(db.Document):
@@ -179,16 +181,19 @@ class SampleCoordinates(db.Document):
     scientific_name = db.StringField(required=True)
     sample_accession = db.StringField(required=True, unique=True)
     is_local_sample = db.BooleanField(default=False)
+    lineage=db.ListField(db.StringField())
     coordinates = db.PointField()
     image = db.URLField()
     meta = {
-        'indexes': ['sample_accession','taxid']
+        'indexes': ['sample_accession','taxid','scientific_name' ,'lineage']
     }
 
 @delete_local_sample_related_data.apply
 class LocalSample(db.Document):
-    created = db.DateTimeField(default=datetime.datetime.utcnow)
+    created = db.DateTimeField(default=datetime.datetime.now())
     local_id = db.StringField(required=True,unique=True)
+    taxon_lineage = db.ListField(db.StringField())
+
     last_check = db.DateTimeField()
     location = db.PointField() ##list of longitude, latitude tuples: as it can contain one or more tuples it is not a valid geojson 
     country=db.StringField()
@@ -200,7 +205,7 @@ class LocalSample(db.Document):
     metadata=db.DictField()
     meta = {
         'indexes': [
-            'local_id','taxid'
+            'local_id','taxid','taxon_lineage'
         ],
         'strict': False
     }
@@ -209,6 +214,7 @@ class LocalSample(db.Document):
 class BioSample(db.Document):
     assemblies = db.ListField(db.StringField())
     experiments = db.ListField(db.StringField())
+    taxon_lineage = db.ListField(db.StringField())
     accession = db.StringField(required=True,unique=True)
     collection_date=db.StringField() #TODO: add job to parse collection date form metadata 
     location = db.PointField()
@@ -221,7 +227,7 @@ class BioSample(db.Document):
     scientific_name = db.StringField(required=True)
     meta = {
         'indexes': [
-            'accession','taxid'
+            'accession','taxid','scientific_name', 'taxon_lineage'
         ],
         'strict': False
     }
@@ -231,6 +237,7 @@ class GenomeAnnotation(db.Document):
     assembly_name = db.StringField()
     taxid = db.StringField(required=True)
     scientific_name = db.StringField(required=True)
+    taxon_lineage = db.ListField(db.StringField())
     name = db.StringField(required=True,unique=True)
     gff_gz_location = db.URLField(required=True)
     tab_index_location = db.URLField(required=True)
@@ -240,7 +247,7 @@ class GenomeAnnotation(db.Document):
     external=db.BooleanField(default=True)
     meta = {
         'indexes': [
-            'name','taxid'
+            'name','taxid', 'taxon_lineage'
         ],
         'strict': False
     }
@@ -285,7 +292,8 @@ class Organism(db.Document):
             'scientific_name',
             'insdc_common_name',
             'tolid_prefix',
-            'taxid'
+            'taxid',
+            'taxon_lineage'
         ],
         'strict': False
     }

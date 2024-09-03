@@ -3,6 +3,9 @@ import http from '../../http-axios'
 const base = http.base
 
 class GeoLocationService {
+  getLocations(params) {
+    return base.get('/coordinates', { params: params })
+  }
   getLocationsByTaxon(taxid) {
     return base.get(`/taxons/${taxid}/coordinates`)
   }

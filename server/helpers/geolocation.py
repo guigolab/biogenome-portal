@@ -49,6 +49,8 @@ def save_coordinates(saved_sample, id_field='accession'):
                     }
                     if id_field == 'local_id':
                         sample_coordinates_to_save['is_local_sample'] = True
+                    organism = Organism.objects(taxid=saved_sample.taxid).first()
+                    sample_coordinates_to_save['lineage'] = organism.taxon_lineage
                     SampleCoordinates(**sample_coordinates_to_save).save()
         except ValueError:
             print(f'Invalid latitude: {latitude} or longitude: {longitude} for sample: {saved_sample[id_field]}')

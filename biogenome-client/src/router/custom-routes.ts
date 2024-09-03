@@ -94,7 +94,7 @@ export const mapRoutes = [
     {
         name: 'samples-map',
         path: '/samples-map',
-        component: () => import('../pages/maps/2DOrganisms.vue'),
+        component: () => import('../pages/maps/SamplesMap.vue'),
         meta: { name: 'samples-map' }
     },
     {
