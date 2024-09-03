@@ -9,7 +9,7 @@ COUNTRIES_PATH = './countries.json'
 ROOT_NODE = os.getenv('ROOT_NODE')
 
 
-@shared_task(name='update_countries', ignore_result=False)
+@shared_task(name='geo_locations_create_countries', ignore_result=False)
 def update_all_countries():
     biosamples = BioSample.objects()
     for biosample in biosamples:
@@ -19,7 +19,7 @@ def update_all_countries():
     for local_sample in local_samples:
         update_countries_from_biosample(local_sample, local_sample.local_id)
 
-@shared_task(name='create_biosample_coordinates', ignore_result=False)
+@shared_task(name='geo_locations_create_from_biosample', ignore_result=False)
 def create_biosample_coordinates():
     biosamples = BioSample.objects()
     existing_coordinates = SampleCoordinates.objects().scalar('sample_accession')
@@ -29,7 +29,7 @@ def create_biosample_coordinates():
         save_coordinates(biosample)
 
 
-@shared_task(name='create_local_sample_coordinates', ignore_result=False)
+@shared_task(name='geo_locations_create_from_local_samples', ignore_result=False)
 def create_local_sample_coordinates():
     local_samples = LocalSample.objects()
     existing_coordinates = SampleCoordinates.objects().scalar('sample_accession')

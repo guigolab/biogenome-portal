@@ -18,9 +18,10 @@ if num_args <= 1:
     print("No command-line arguments provided.")
 else:
     model = sys.argv[1]
-    print(f"model is: {model}")
+    action = sys.argv[2]
+    print(f"model is: {model}", f"Action is {action}")
     cookies = login_to_api.login(API_URL)
     crsf = cookies['csrf_access_token']
     headers = {"X-CSRF-TOKEN":crsf}
-    response = requests.post(f"{API_URL}/cronjob/{model}",headers=headers,cookies=cookies)
+    response = requests.post(f"{API_URL}/cronjob/{model}/{action}",headers=headers,cookies=cookies)
     print(response.json())

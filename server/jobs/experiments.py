@@ -3,13 +3,15 @@ from clients import ebi_client
 from parsers.experiment import parse_experiment_and_read_from_ena_portal
 from helpers.biosample import  handle_biosample
 from helpers.organism import handle_organism
+from helpers.data import update_lineage
+
 import os
 from celery import shared_task
 
 
 PROJECT_ACCESSION = os.getenv('PROJECT_ACCESSION')
 
-@shared_task(name='get_experiments', ignore_result=False)
+@shared_task(name='experiments_import', ignore_result=False)
 def get_experiments_from_bioproject_accession():
 
     ebi_reads_generator = ebi_client.fetch_experiments_by_bioproject_streaming(PROJECT_ACCESSION)
@@ -52,6 +54,9 @@ def get_experiments_from_bioproject_accession():
 
                 print(f"Updating organism {organism.scientific_name}")
                 organism.save()
+
+                #update lineage
+                update_lineage(experiment_to_save, organism)
 
             except Exception as e:
                 print(e)

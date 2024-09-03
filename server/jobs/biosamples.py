@@ -4,12 +4,14 @@ import os
 from parsers import biosample as biosample_parser
 from helpers.organism import handle_organism
 from helpers.biosample import handle_biosample_location_data, handle_derived_samples
+from helpers.data import update_lineage
+
 from celery import shared_task
 
 
 PROJECTS = os.getenv('PROJECTS')
 
-@shared_task(name='import_biosamples', ignore_result=False)
+@shared_task(name='biosamples_import', ignore_result=False)
 def import_biosamples_from_project_names():
 
     if not PROJECTS:
@@ -57,6 +59,9 @@ def import_biosamples_from_project_names():
                 print(f"{counter}: Updating organism {new_biosample.taxid}")
                 organism.save()
 
+                #update lineage
+                update_lineage(new_biosample, organism)
+
                 print(f"{counter}: Handling coordinates for {new_biosample.accession}")
                 handle_biosample_location_data(new_biosample)
             
@@ -66,7 +71,7 @@ def import_biosamples_from_project_names():
 
     print("Job terminated")
 
-@shared_task(name='get_biosamples_derived_from',ignore_result=False)
+@shared_task(name='biosamples_derived_from',ignore_result=False)
 def get_biosamples_derived_from_parent():
 
     possible_parent_accession_list = BioSample.objects(__raw__ = {'metadata.sample derived from' : {"$exists": False}}).scalar('accession')    
@@ -98,12 +103,18 @@ def get_biosamples_derived_from_parent():
             new_parsed_sample.save()
 
             handle_biosample_location_data(new_parsed_sample)
+
+            organism = handle_organism(new_parsed_sample.taxid)
+
+            #update lineage
+            update_lineage(new_parsed_sample, organism)
+
             saved_samples_counter+=1
 
     print(f"Saved a total of {saved_samples_counter}")
 
 
-@shared_task(name='get_biosamples_parents',ignore_result=False)
+@shared_task(name='biosamples_parents',ignore_result=False)
 def get_biosample_parents():
     
     biosample_siblings = BioSample.objects(__raw__ = {'metadata.sample derived from' : {"$exists": True}})
@@ -138,3 +149,6 @@ def get_biosample_parents():
         
         handle_derived_samples(biosample_obj)
         
+        organism = handle_organism(biosample_obj.taxid)
+            #update lineage
+        update_lineage(biosample_obj, organism)

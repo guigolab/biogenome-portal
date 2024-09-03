@@ -7,41 +7,48 @@ PROJECTS = os.getenv('PROJECTS')
 COUNTRIES_PATH = './countries.json'
 ROOT_NODE = os.getenv('ROOT_NODE')
 
-JOB_MAP = {
-    'get_biosamples_derived_from': biosamples.get_biosamples_derived_from_parent,
-    'get_biosamples_parents':biosamples.get_biosample_parents,
-    'get_experiments': experiments.get_experiments_from_bioproject_accession,
-    'import_assemblies': assemblies.import_assemblies_by_bioproject,
-    'update_assembly_metadata': assemblies.update_assembly_metadata,
-    'update_countries': geolocation.update_all_countries,
-    'import_biosamples': biosamples.import_biosamples_from_project_names,
-    'add_blob_link':assemblies.add_blob_link,
-    'create_biosample_coordinates':geolocation.create_biosample_coordinates,
-    'create_local_sample_coordinates':geolocation.create_local_sample_coordinates,
-    'compute_tree':taxonomy.compute_tree,
-    'handle_orphan_organisms':taxonomy.handle_orphan_organisms,
-    'add_lineage': taxonomy.add_lineage
+
+JOB_MODELS = {
+    'biosamples':{
+        'import':biosamples.import_biosamples_from_project_names,
+        'derived_from':biosamples.get_biosamples_derived_from_parent,
+        'parents':biosamples.get_biosample_parents
+    },
+    'experiments':{
+        'import':experiments.get_experiments_from_bioproject_accession
+    },
+    'assemblies':{
+        'import':assemblies.import_assemblies_by_bioproject
+    },
+    'helpers':{
+        'handle_orphans':taxonomy.handle_orphan_organisms,
+        'add_lineage':taxonomy.add_lineage
+    },
+    'geo_locations':{
+        'create_from_local_samples':geolocation.create_local_sample_coordinates,
+        'create_from_biosamples':geolocation.create_biosample_coordinates,
+        'create_countries':geolocation.update_all_countries
+    }
 }
 
-def create_cronjob(model):
+def create_cronjob(model, action):
     
-    if not model in JOB_MAP.keys():
+    task = JOB_MODELS.get(model).get(action)
+    if not task:
         raise NotFound
-
     try:
-        task = JOB_MAP[model]
         active_tasks = task.app.control.inspect().active()
         
         if active_tasks:
             for v in active_tasks.values():
                 for t in v:
-                    if t.get('name') == model:
-                        return f"A job for {model} is already running", 400
+                    if t.get('name') == f"{model}_{action}":
+                        return f"A job for {model}_{action} is already running", 400
 
-        print(f'Triggering job {model}')
+        print(f'Triggering job {model}_{action}')
 
         result = task.delay()
-        message = f'job {result.id} of model {model} successfully launched'
+        message = f'job {result.id} of model {model} {action} successfully launched'
         return message, 200
     
     except Exception as e:
@@ -50,18 +57,17 @@ def create_cronjob(model):
         return message, 400
 
 def get_cronjobs():
-    active_tasks = get_current_active_tasks()
+    active_tasks = get_current_active_tasks('biosamples','import')
     response = []
     for v in active_tasks.values():
         for t in v:
             response.append(t)
     return response
 
-def get_cronjob(model):
-        
-    if not model in JOB_MAP.keys():
+def get_cronjob(model, action):
+    task = JOB_MODELS.get(model).get(action)
+    if not task:
         raise NotFound
-    
     active_tasks = get_current_active_tasks()
     for v in active_tasks.values():
         for t in v:
@@ -69,14 +75,14 @@ def get_cronjob(model):
                 res = AsyncResult(t.get('id'))
                 return str(res.result)
 
-def get_current_active_tasks():
-    task = JOB_MAP['import_assemblies']
+def get_current_active_tasks(model,action):
+    task = JOB_MODELS.get(model).get(action)
     active_tasks = task.app.control.inspect().active()
     return active_tasks
 
 
-def delete_cronjob(model):
-    task = JOB_MAP[model]
+def delete_cronjob(model, action):
+    task = JOB_MODELS.get(model).get(action)
     active_tasks = get_current_active_tasks()
 
     control = task.app.control

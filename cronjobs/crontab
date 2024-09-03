@@ -1,2 +1,2 @@
-* * * * * python /trigger_cronjob.py import_biosamples
-
+* * * * * python /trigger_cronjob.py helpers add_lineage
+* * * * * python /trigger_cronjob.py helpers handle_orphans

@@ -12,7 +12,7 @@
 </template>
 <script setup lang="ts">
 import ExperimentService from '../../services/clients/ExperimentService'
-import { computed, ref, watchEffect } from 'vue'
+import {  ref, watchEffect } from 'vue'
 import { Details } from '../../data/types'
 import DetailsHeader from '../../components/common/DetailsHeader.vue'
 import Tabs from '../../components/common/Tabs.vue'
@@ -57,8 +57,7 @@ function setTabs() {
   if (reads.value.length) {
     tabs.push({ name: 'reads', label: 'tabs.reads' });
   }
-
-  return tabs;
+  validTabs.value = [...tabs]
 }
 async function getExperiment(accession: string) {
   const { data } = await ExperimentService.getExperiment(accession)
@@ -74,7 +73,6 @@ async function getReads(accession: string) {
 function parseDetails(experiment: Record<string, any>) {
   const expAccession = experiment.experiment_accession
   const sampleAccession = experiment.sample_accession || experiment.metadata.sample_accession
-  console.log(sampleAccession)
 
   const details: Details = {
     title: expAccession,

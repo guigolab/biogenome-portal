@@ -34,7 +34,7 @@ def create_biosample_from_accession(accession):
     if biosample_exists(accession):
         return f"{accession} already exists", 400
     
-    biosample_obj = biosample_helper.create_biosample_from_accession(accession)
+    biosample_obj = biosample_helper.handle_biosample(accession)
 
     if not biosample_obj:
         return f"BioSample {accession} not found in INSDC", 400

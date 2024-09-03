@@ -55,6 +55,7 @@ def create_experiment_from_accession(accession):
 
             exp.save()
             organism_obj.save()
+            data_helper.update_lineage(exp, organism_obj)
 
     if parsed_reads:
         reads_to_save = [run for run in parsed_reads if run.experiment_accession == accession]

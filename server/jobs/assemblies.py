@@ -4,6 +4,7 @@ from parsers.assembly import parse_assembly_from_ncbi_datasets
 from helpers.organism import handle_organism
 from helpers.biosample import  handle_biosample
 from helpers.assembly import save_chromosomes
+from helpers.data import update_lineage
 from db.models import Assembly,Chromosome
 import os
 from celery import shared_task
@@ -11,7 +12,7 @@ import time
 
 PROJECT_ACCESSION = os.getenv('PROJECT_ACCESSION')
 
-@shared_task(name='import_assemblies',ignore_result=False)
+@shared_task(name='assemblies_import',ignore_result=False)
 def import_assemblies_by_bioproject(project_accession=None):
     if not project_accession:
         project_accession = PROJECT_ACCESSION
@@ -76,6 +77,9 @@ def import_assemblies_by_bioproject(project_accession=None):
             print(f"Updating organism {organism.scientific_name}")
             organism.save()
 
+            #add lineage
+            update_lineage(parsed_assembly, organism)
+
         except Exception as e:
             print(e)
             print(f"Impossible to save assembly {new_accession}, 'skipping it..")
@@ -83,38 +87,3 @@ def import_assemblies_by_bioproject(project_accession=None):
             continue
 
     print(f"Job executed. Saved {saved_assemblies} out of {len(new_ids_length)}")
-
-    
-@shared_task(name='add_blob_link',ignore_result=False)
-def add_blob_link():
-    assemblies_accession_list = Assembly.objects(blobtoolkit_id=None).scalar('accession')
-    for acc in assemblies_accession_list:
-        response = get_blobtoolkit_id(acc)
-        if len(response) and 'names' in response[0].keys() and len(response[0]['names']):
-            ass = Assembly.objects(accession=acc).first()
-            ass.blobtoolkit_id = response[0]['names'][0]
-            ass.save()
-
-
-@shared_task(name='update_assembly_metadata',ignore_result=False)
-def update_assembly_metadata():
-
-    assemblies_to_update = Assembly.objects(metadata__assembly_info=None)
-
-    print(f"A total of {len(assemblies_to_update)} assemblies have been found")
-
-    for assembly_to_update in assemblies_to_update:
-        
-        CMD = ["genome","accession", assembly_to_update.accession]
-
-        result = get_data_from_ncbi(CMD)
-
-        if not result or not result.get("reports"):
-            print(f"Nothing found for assembly {assembly_to_update.accession}")
-            continue
-        parsed_assemblies = [parse_assembly_from_ncbi_datasets(ass) for ass in result.get("reports")]
-        for parsed_assembly in parsed_assemblies:
-            if parsed_assembly.accession == assembly_to_update.accession:
-                assembly_to_update.update(metadata=parsed_assembly.metadata)
-        time.sleep(1.5)
-    print("Update done")

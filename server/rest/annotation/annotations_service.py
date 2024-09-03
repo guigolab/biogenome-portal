@@ -1,7 +1,7 @@
 from mongoengine.queryset.visitor import Q
 from db.models import GenomeAnnotation, Assembly
 from errors import NotFound
-from helpers import data
+from helpers import data as data_helper, organism as organism_helper
 from mongoengine.errors import ValidationError
 
 
@@ -136,6 +136,9 @@ def create_annotation(request):
     # Save annotation
     try:
         new_genome_annotation = GenomeAnnotation(**valid_data).save()
+        organism_obj = organism_helper.handle_organism(new_genome_annotation.taxid)
+        data_helper.update_lineage(new_genome_annotation, organism_obj)
+
     except ValidationError as e:
         return e.to_dict(), 400
 

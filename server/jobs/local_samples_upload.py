@@ -1,5 +1,5 @@
 from db.models import LocalSample,BioGenomeUser
-from helpers import organism as organism_helper, user as user_helper, geolocation as geoloc_helper
+from helpers import organism as organism_helper, user as user_helper, geolocation as geoloc_helper, data as data_helper
 from celery import shared_task
 
 OPTIONS = ['SKIP','UPDATE']
@@ -67,6 +67,9 @@ def upload_samples_spreadsheet(self, username, samples, option="SKIP", source=No
             for s in saved_samples:
                 geoloc_helper.save_coordinates(s, 'local_id')
                 geoloc_helper.update_countries_from_biosample(s, s.local_id)
+                organism = organism_helper.handle_organism(s.taxid)
+                #update lineage
+                data_helper.update_lineage(s, organism)
 
     user = BioGenomeUser.objects(name=username).first()
 

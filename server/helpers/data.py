@@ -1,7 +1,7 @@
 import csv
 from io import StringIO
 from bson.json_util import dumps, JSONOptions, DatetimeRepresentation
-from helpers import organism, user
+from helpers import user
 from mongoengine.queryset.visitor import Q
 
 def dump_json(response_dict):
@@ -99,3 +99,7 @@ def get_nested_value(dictionary, keys):
         return value
     except (KeyError, TypeError):
         return None
+    
+def update_lineage(obj, organism):
+    lineage = organism.taxon_lineage
+    obj.update(taxon_lineage=lineage)
