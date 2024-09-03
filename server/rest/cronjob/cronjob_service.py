@@ -19,7 +19,8 @@ JOB_MAP = {
     'create_biosample_coordinates':geolocation.create_biosample_coordinates,
     'create_local_sample_coordinates':geolocation.create_local_sample_coordinates,
     'compute_tree':taxonomy.compute_tree,
-    'handle_orphan_organisms':taxonomy.handle_orphan_organisms
+    'handle_orphan_organisms':taxonomy.handle_orphan_organisms,
+    'add_lineage': taxonomy.add_lineage
 }
 
 def create_cronjob(model):

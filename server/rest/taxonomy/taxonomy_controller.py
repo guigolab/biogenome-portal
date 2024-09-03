@@ -7,7 +7,6 @@ import json
 class TreeApi(Resource):
     @cache.cached(timeout=300)
     def get(self, taxid):
-        #TODO ADD LEVEL CONTROL ON TREE
         tree = taxonomy_service.create_tree(taxid)
         return Response(json.dumps(tree), mimetype="application/json", status=200)
 
@@ -22,8 +21,7 @@ class RelativeTaxonomyTreeApi(Resource):
         taxon, status = taxonomy_service.get_closest_taxon(taxid)
         return Response(taxon.to_json(), mimetype="application/json", status=status)
 
-class ComputedTreeApi(Resource):
-    @cache.cached(timeout=300)
+class RootTreeApi(Resource):
+    @cache.cached(timeout=3600)
     def get(self):
-        tree = taxonomy_service.get_computed_tree()
-        return Response(tree.to_json(),mimetype="application/json", status=200)
+        return Response(json.dumps(taxonomy_service.get_tree()),mimetype="application/json", status=200)

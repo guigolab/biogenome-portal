@@ -25,7 +25,7 @@ class TaxonService {
     return base.get(`/taxons/${taxid}/lookup`)
   }
   getComputedTree(){
-    return base.get('/computed_tree')
+    return base.get('/tree')
   }
 }
 

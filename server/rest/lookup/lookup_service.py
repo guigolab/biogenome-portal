@@ -1,4 +1,4 @@
-from db.models import Assembly, GenomeAnnotation, BioSample, LocalSample, Organism, Experiment,Chromosome
+from db.models import Assembly, GenomeAnnotation, BioSample, LocalSample, Organism, Experiment,Chromosome,TaxonNode
 from errors import NotFound
 from mongoengine.queryset.visitor import Q
 
@@ -33,20 +33,11 @@ def lookup_organism_data(taxid):
     return response
 
 def lookup_taxon_data(taxid):
-    taxid_list = Organism.objects(taxon_lineage=taxid).scalar('taxid')
-    response= {
-        'organisms':len(taxid_list)
-    }
+    if not TaxonNode.objects(taxid=taxid).first():
+        raise NotFound
+    response = {}
     for k,v in MODEL_LIST.items():
-        if k == 'organisms':
-            continue
-        response[k] = 0
-        if len(taxid_list) > CHUNK_LIMIT:
-            chunks = [taxid_list[i:i+CHUNK_LIMIT] for i in range(0, len(taxid_list), CHUNK_LIMIT)]
-            for chunk in chunks:
-                response[k] = response[k] + v.objects(taxid__in=chunk).count()
-        else:
-            response[k] = v.objects(taxid__in=taxid_list).count()
+        response[k] = v.objects(taxon_lineage=taxid).count()
     return response
 
 def lookup_assembly_data(accession):

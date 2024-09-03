@@ -40,5 +40,5 @@ def get_sample_locations_by_biosample(accession):
     return SampleCoordinates.objects(sample_accession=accession).exclude('id').first().to_json()
 
 def get_sample_locations_by_localsample(local_id):
-    return SampleCoordinates.objects(sample_accession=local_id).exclude('id').first()
+    return SampleCoordinates.objects(sample_accession=local_id).exclude('id').first().to_json()
     

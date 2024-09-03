@@ -1,12 +1,10 @@
 <template>
-    <div class="row align-center">
-        <div class="flex">
-            <va-input v-model="filter" placeholder="Type to search" clearable>
-                <template #appendInner>
-                    <VaIcon name="search"></VaIcon>
-                </template>
-            </va-input>
-        </div>
+    <div class="row">
+        <va-input class="flex" style="width: 200px;" v-model="filter" placeholder="Type to search" clearable>
+            <template #appendInner>
+                <VaIcon name="search"></VaIcon>
+            </template>
+        </va-input>
     </div>
     <va-tree-view expand-all :nodes="currenNodes" :filter="filter" :filter-method="customFilterMethod">
         <template #content="node">
@@ -25,6 +23,7 @@
             </div>
         </template>
     </va-tree-view>
+
 </template>
 <script setup lang="ts">
 import { computed, ref } from 'vue';
@@ -34,6 +33,7 @@ const filter = ref('')
 const props = defineProps<{
     metadata: ObjectEntry[]
 }>()
+
 const customFilterMethod = computed(() => {
     return (node: TreeNode, filterText: string, key: any) => {
         return (node.label && node.label.includes(filterText)) ||
@@ -41,12 +41,16 @@ const customFilterMethod = computed(() => {
     }
 })
 
-const nodes = ref([...buildTree(props.metadata, undefined)])
-
 const currenNodes = computed(() => {
-    if (nodes.value.length) return nodes
+    console.log('computing nodes')
+    const metadataLenght = props.metadata.length
+    if (metadataLenght === 0) return
+    const tree = buildTree(props.metadata, undefined)
+    if (tree.length) return tree
     return [{ id: 'noMetadata', label: "No Metadata Found!", description: "No Metadata are linked to this item!" }]
+
 })
+
 
 function buildTree(data: ObjectEntry[], parentKey: string | undefined): TreeNode[] {
     const treeNodes: TreeNode[] = [];

@@ -1,28 +1,19 @@
-from db.models import Organism, TaxonNode,ComputedTree
+from db.models import Organism, TaxonNode
 from datetime import datetime
 from helpers import organism as organism_helper, taxonomy as taxonomy_helper
 from errors import NotFound
-from jobs import taxonomy
+from extensions.cache import cache
+import os
 
-def get_computed_tree():
-    computed_tree = ComputedTree.objects().exclude('id').first()
-    if not computed_tree or is_older_than_one_day(computed_tree.last_update):
-        taxonomy.compute_tree()
-    computed_tree = ComputedTree.objects().exclude('id').first()
-    return computed_tree
+ROOT_NODE = os.getenv('ROOT_NODE')
 
-def is_older_than_one_day(date):
-    # Get current date and time
-    current_date = datetime.now()
-    
-    # Calculate the difference between the current date and the given date
-    difference = current_date - date
-    
-    # Check if the difference is greater than 1 day
-    if difference.days > 1:
-        return True
-    else:
-        return False
+
+def get_tree():
+    node = TaxonNode.objects(taxid=ROOT_NODE).first()
+    if not node:
+        raise NotFound
+    return taxonomy_helper.dfs_generator_recursive(node)
+
 
 def create_tree(taxid):
     node = TaxonNode.objects(taxid=taxid).exclude('id').first()

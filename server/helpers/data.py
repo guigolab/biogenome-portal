@@ -66,11 +66,7 @@ def create_query(args, q_query):
             continue
 
         if k == "parent_taxon":
-            taxids = organism.get_organisms_taxid_from_parent_taxid(v)
-            if query.get('taxid__in'):
-                query['taxid__in'].extend(taxids)
-            else:
-                query['taxid__in'] = taxids
+            query['taxon_lineage'] = v
 
         elif k == "blobtoolkit":
             

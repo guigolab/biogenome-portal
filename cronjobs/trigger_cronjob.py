@@ -3,10 +3,10 @@ import os
 import login_to_api
 import sys
 
-PROXY_HOST=os.getenv('PROXY_HOST')
+API_HOST=os.getenv('API_HOST')
+API_URL = f"http://{API_HOST}:5000/api"
 
-API_URL = f"http://{PROXY_HOST}/api"
-
+print(API_URL)
 username = os.getenv('DB_USER')
 password = os.getenv('DB_PASS')
 
@@ -19,7 +19,7 @@ if num_args <= 1:
 else:
     model = sys.argv[1]
     print(f"model is: {model}")
-    cookies = login_to_api.login()
+    cookies = login_to_api.login(API_URL)
     crsf = cookies['csrf_access_token']
     headers = {"X-CSRF-TOKEN":crsf}
     response = requests.post(f"{API_URL}/cronjob/{model}",headers=headers,cookies=cookies)

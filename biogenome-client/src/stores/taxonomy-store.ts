@@ -43,7 +43,7 @@ export const useTaxonomyStore = defineStore('taxonomy', {
       this.isTreeLoading = true
       try {
         const { data } = await TaxonService.getComputedTree()
-        this.treeData = { ...data.tree }
+        this.treeData = { ...data }
       } catch (error) {
         console.log(error)
       } finally {
