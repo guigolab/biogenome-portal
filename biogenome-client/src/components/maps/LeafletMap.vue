@@ -64,7 +64,7 @@ const hasLocalSamples = computed(() => {
 
 const { init } = useToast()
 // Computed properties for conditions
-const showControls = computed(() => !props.taxid || (!props.sample_accession && hasLocalSamples.value));
+const showControls = computed(() => !props.taxid && !props.sample_accession);
 const showFilterInput = computed(() => !props.taxid);
 const showSampleTypeSelect = computed(() => !props.sample_accession && hasLocalSamples.value);
 
@@ -150,6 +150,10 @@ async function search() {
   isLoading.value = true
   markerCluster.clearLayers()
   await iterateCoordinates(0, { filter: filter.value, sample_type: sampleType.value })
+  fitBounds()
+}
+
+function fitBounds() {
   try {
     const bounds = markerCluster.getBounds()
     map.value.fitBounds(bounds, { maxZoom: 5 })
@@ -160,15 +164,13 @@ async function search() {
     isLoading.value = false
   }
 }
-
 async function reset() {
   filter.value = ''
   sampleType.value = ''
   isLoading.value = true
   markerCluster.clearLayers()
   await iterateCoordinates(0, {})
-  map.value.fitBounds(markerCluster.getBounds())
-  isLoading.value = false
+  fitBounds()
 }
 
 function setIcon(image: string) {
