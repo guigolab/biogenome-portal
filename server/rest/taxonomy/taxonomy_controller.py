@@ -2,6 +2,8 @@ from . import taxonomy_service
 from flask import Response,request
 from flask_restful import Resource
 from extensions.cache import cache
+from flask_jwt_extended import jwt_required
+from jobs import taxonomy
 import json
 
 class TreeApi(Resource):
@@ -24,3 +26,8 @@ class RelativeTaxonomyTreeApi(Resource):
 class RootTreeApi(Resource):
     def get(self):
         return taxonomy_service.get_root_tree()
+
+class GenerateTreeApi(Resource):
+    @jwt_required()
+    def post(self):
+        taxonomy.compute_tree()

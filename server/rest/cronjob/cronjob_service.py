@@ -23,8 +23,7 @@ JOB_MODELS = {
     },
     'helpers':{
         'handle_orphans':taxonomy.handle_orphan_organisms,
-        'add_lineage':taxonomy.add_lineage,
-        "tree":taxonomy.compute_tree
+        'add_lineage':taxonomy.add_lineage
     },
     'geo_locations':{
         'create_from_local_samples':geolocation.create_local_sample_coordinates,

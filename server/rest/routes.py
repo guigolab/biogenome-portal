@@ -37,6 +37,7 @@ def initialize_routes(api):
 	##TAXONOMY
 	api.add_resource(taxonomy_controller.RootTreeApi, '/api/tree')
 
+
 	api.add_resource(sample_locations_controller.SampleLocations, '/api/coordinates')
 
 	##ORGANISMS
@@ -57,7 +58,9 @@ def initialize_routes(api):
 	api.add_resource(assemblies_controller.AssemblyChrAliasesApi, '/api/assemblies/<accession>/chr_aliases')
 
 	##CRONJOBS
+	api.add_resource(taxonomy_controller.GenerateTreeApi, '/api/cronjob/helpers/tree')
 	api.add_resource(cronjobs_controller.CronJobApi, '/api/cronjob', '/api/cronjob/<model>/<action>')
+
 
 	##GEOGRAPHIC LOCATIONS
 	api.add_resource(sample_locations_controller.SampleLocationsByTaxon, '/api/taxons/<taxid>/coordinates')

@@ -1,6 +1,6 @@
 import csv
-from db.enums import GoaTStatus,PublicationSource
-from db.models import Organism,Publication, GoaTUpdateDate
+from db.enums import GoaTStatus
+from db.models import Organism, GoaTUpdateDate
 from io import StringIO
 from itertools import islice
 from helpers import user as user_helper, taxonomy as taxonomy_helper
