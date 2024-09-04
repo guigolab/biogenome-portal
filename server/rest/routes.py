@@ -102,6 +102,8 @@ def initialize_routes(api):
 	api.add_resource(lookup_controller.TaxonRelatedDataLookup, '/api/taxons/<taxid>/stats')
 	api.add_resource(taxons_controller.TaxonChildrenApi, '/api/taxons/<taxid>/children')
 	api.add_resource(taxonomy_controller.RelativeTaxonomyTreeApi, '/api/taxons/<taxid>/lookup') 
+	api.add_resource(taxonomy_controller.TreeApi, '/api/taxons/<taxid>/tree') 
+
 
 	##USERS
 	api.add_resource(users_controller.UsersApi, '/api/users')

@@ -5,12 +5,16 @@ from helpers import geolocation, data as data_helper, organism as organism_helpe
 
 def handle_biosample(accession):
     biosample_obj = BioSample.objects(accession=accession).first()
-    if not biosample_obj:
-        biosample_obj = create_biosample_from_accession(accession)
-        #update lineage 
+    if biosample_obj:
+        return biosample_obj
+
+    biosample_obj = create_biosample_from_accession(accession)
+
+    if biosample_obj:
         organism = organism_helper.handle_organism(biosample_obj.taxid)
         if organism:
             data_helper.update_lineage(biosample_obj, organism)
+            
     return biosample_obj
 
 def create_biosample_from_accession(accession):

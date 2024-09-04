@@ -42,7 +42,6 @@ const customFilterMethod = computed(() => {
 })
 
 const currenNodes = computed(() => {
-    console.log('computing nodes')
     const metadataLenght = props.metadata.length
     if (metadataLenght === 0) return
     const tree = buildTree(props.metadata, undefined)

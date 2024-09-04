@@ -14,7 +14,7 @@
             <b>{{ t('search.total') }}</b> {{ total }}
         </div>
     </div>
-    <va-data-table :key="model" :loading="isLoading" :items="items" :columns="tableColumns">
+    <va-data-table :key="model" :loading="isTableLoading" :items="items" :columns="tableColumns">
         <template v-for="column in columns.filter(c => c !== 'actions')" :key="column"
             v-slot:[`header(${column})`]="{ key }">
             {{ key.split('.').length ? key.split('.')[key.split('.').length - 1] : key }}
@@ -86,7 +86,7 @@ const props = defineProps<{
 const fieldsToDownload = ref([...props.columns])
 const items = ref<Record<string, any>[]>([])
 const showModal = ref(false)
-const isLoading = ref(false)
+const isTableLoading = ref(false)
 const isTSVLoading = ref(false)
 const applyFilters = ref(true)
 
@@ -161,7 +161,7 @@ async function updateData(model: DataModel) {
 }
 
 async function fetchItems(query: Record<string, any>) {
-    isLoading.value = true
+    isTableLoading.value = true
     try {
         const { data } = await CommonService.getItems(`/${props.model}`, query)
         items.value = [...data.data]
@@ -170,7 +170,7 @@ async function fetchItems(query: Record<string, any>) {
         const axiosError = e as AxiosError
         init({ message: axiosError.message, color: 'danger' })
     } finally {
-        isLoading.value = false
+        isTableLoading.value = false
     }
 }
 

@@ -15,7 +15,7 @@
 
 <script setup lang="ts">
 import AssemblyService from '../../services/clients/AssemblyService'
-import { computed, ref, watchEffect } from 'vue'
+import { ref, watchEffect } from 'vue'
 import Jbrowse2 from '../../components/genome-browser/Jbrowse2.vue'
 import { Assembly, Details, TrackData } from '../../data/types'
 import DetailsHeader from '../../components/common/DetailsHeader.vue'
@@ -73,7 +73,6 @@ function setValidTabs() {
     // Adding 'jbrowse' only if 'chromosomes' are present.
     tabs.push({ name: 'jbrowse', label: 'tabs.jbrowse' });
   }
-
   return tabs;
 }
 

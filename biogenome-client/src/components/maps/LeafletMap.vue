@@ -2,7 +2,7 @@
   <div class="container">
     <div v-if="showControls" class="controls">
       <div v-if="showFilterInput" class="control-item">
-        <va-input @keyup.enter="search" style="min-width: 250px;" inner-label v-model="filter" label="Filter"
+        <va-input @keyup.enter="search" style="min-width: 250px;" inner-label v-model="filter" :label="t('buttons.search')"
           placeholder="Search by name or accession">
           <template #appendInner>
             <va-icon name="search" />
@@ -57,7 +57,9 @@ import SampleCard from '../ui/SampleCard.vue'
 import GeoLocationService from '../../services/clients/GeoLocationService'
 import { models } from '../../../config.json'
 import { useToast } from 'vuestic-ui'
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const hasLocalSamples = computed(() => {
   return 'local_samples' in models
 })

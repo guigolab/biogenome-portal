@@ -52,7 +52,6 @@ export const useTaxonomyStore = defineStore('taxonomy', {
     },
     async handleSearch(v: string) {
       if (v.length < 2) return
-      this.isContentLoading = true
       try {
         const { data } = await TaxonService.getTaxons({ filter: v })
         if (data.data) this.taxons = [...data.data]
@@ -60,8 +59,6 @@ export const useTaxonomyStore = defineStore('taxonomy', {
         console.log(error)
         const axiosError = error as AxiosError
         this.init({ message: axiosError.message, color: 'danger' })
-      } finally {
-        this.isContentLoading = false
       }
     }
   },

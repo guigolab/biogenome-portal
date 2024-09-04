@@ -18,11 +18,13 @@ JOB_MODELS = {
         'import':experiments.get_experiments_from_bioproject_accession
     },
     'assemblies':{
-        'import':assemblies.import_assemblies_by_bioproject
+        'import':assemblies.import_assemblies_by_bioproject,
+        'blob_link':assemblies.add_blob_link
     },
     'helpers':{
         'handle_orphans':taxonomy.handle_orphan_organisms,
-        'add_lineage':taxonomy.add_lineage
+        'add_lineage':taxonomy.add_lineage,
+        "tree":taxonomy.compute_tree
     },
     'geo_locations':{
         'create_from_local_samples':geolocation.create_local_sample_coordinates,

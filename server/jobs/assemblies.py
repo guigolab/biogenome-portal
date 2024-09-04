@@ -86,4 +86,16 @@ def import_assemblies_by_bioproject(project_accession=None):
             Chromosome.objects(accession_version__in=parsed_assembly.chromosomes).delete()
             continue
 
-    print(f"Job executed. Saved {saved_assemblies} out of {len(new_ids_length)}")
+    print(f"Job executed. Saved {saved_assemblies} out of {new_ids_length}")
+
+
+    
+@shared_task(name='assemblies_blob_link',ignore_result=False)
+def add_blob_link():
+    assemblies_accession_list = Assembly.objects(blobtoolkit_id=None).scalar('accession')
+    for acc in assemblies_accession_list:
+        response = get_blobtoolkit_id(acc)
+        if len(response) and 'names' in response[0].keys() and len(response[0]['names']):
+            ass = Assembly.objects(accession=acc).first()
+            ass.blobtoolkit_id = response[0]['names'][0]
+            ass.save()

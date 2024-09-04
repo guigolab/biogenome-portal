@@ -22,6 +22,5 @@ class RelativeTaxonomyTreeApi(Resource):
         return Response(taxon.to_json(), mimetype="application/json", status=status)
 
 class RootTreeApi(Resource):
-    @cache.cached(timeout=3600)
     def get(self):
-        return Response(json.dumps(taxonomy_service.get_tree()),mimetype="application/json", status=200)
+        return taxonomy_service.get_root_tree()

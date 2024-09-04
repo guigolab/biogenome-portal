@@ -1,25 +1,50 @@
 from db.models import Organism, TaxonNode
-from datetime import datetime
 from helpers import organism as organism_helper, taxonomy as taxonomy_helper
 from errors import NotFound
+from flask import Response, send_file
 from extensions.cache import cache
+import json
 import os
 
 ROOT_NODE = os.getenv('ROOT_NODE')
 
 
-def get_tree():
+def get_root_tree():
     node = TaxonNode.objects(taxid=ROOT_NODE).first()
     if not node:
         raise NotFound
-    return taxonomy_helper.dfs_generator_recursive(node)
+    
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    static_dir = os.path.join(current_dir, '../../static')
+    file_path = os.path.join(static_dir, 'tree.json')
+    
+    if os.path.isfile(file_path):
+        return send_file(file_path, mimetype='application/json')
+    
+    cached_tree = cache.get('cached_tree_data')
+    
+    if cached_tree is None:
+        # If not cached, compute the tree
+        node = TaxonNode.objects(taxid=ROOT_NODE).first()
+        if not node:
+            raise NotFound
+        
+        # Generate the tree (this is the expensive operation)
+        tree = taxonomy_helper.dfs_generator_iterative(node)
+        
+        # Cache the tree data
+        cache.set('cached_tree_data', tree, timeout=3600)
+    else:
+        # Use the cached tree data
+        tree = cached_tree
+    return Response(json.dumps(tree), mimetype='application/json')
 
 
 def create_tree(taxid):
     node = TaxonNode.objects(taxid=taxid).exclude('id').first()
     if not node:
         raise NotFound
-    tree = taxonomy_helper.dfs_generator_recursive(node)
+    tree = taxonomy_helper.dfs_generator_iterative(node)
     return tree
 
 def generate_tree(data):
