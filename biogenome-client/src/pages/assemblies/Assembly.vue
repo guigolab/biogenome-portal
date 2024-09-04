@@ -73,6 +73,7 @@ function setValidTabs() {
     // Adding 'jbrowse' only if 'chromosomes' are present.
     tabs.push({ name: 'jbrowse', label: 'tabs.jbrowse' });
   }
+  validTabs.value = [...tabs]
   return tabs;
 }
 
