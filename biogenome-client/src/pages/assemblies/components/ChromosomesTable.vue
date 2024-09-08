@@ -23,7 +23,7 @@
     </VaDataTable>
 </template>
 <script setup lang="ts">
-import MetadataTreeCard from '../../../components/ui/MetadataTreeCard.vue'
+import MetadataTreeCard from '../../../components/cards/MetadataTreeCard.vue'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()

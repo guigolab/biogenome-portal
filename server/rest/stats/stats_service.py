@@ -1,6 +1,6 @@
 from db.models import Assembly,GenomeAnnotation,BioSample,LocalSample,Experiment,Organism,TaxonNode
 from extensions.cache import cache
-
+from helpers import data as data_helper
 
 MODEL_LIST = {
     'assemblies':Assembly,
@@ -12,13 +12,19 @@ MODEL_LIST = {
     'taxons':TaxonNode
     }
 
+
 @cache.memoize(timeout=300)
-def get_stats(model, field):
+def get_stats(model, field, query):
     # Check if the model exists in MODEL_LIST
+
     if model not in MODEL_LIST:
         return {"message": "model not found"}, 404
 
     db_model = MODEL_LIST[model]
+    parsed_query, q_query = data_helper.create_query(query, None)
+    items = db_model.objects(**parsed_query)
+    if q_query:
+        items = items.filter(q_query)
 
     try:
         pipeline = [
@@ -40,7 +46,7 @@ def get_stats(model, field):
 
         response = {
             doc["_id"]: doc["count"]
-            for doc in db_model.objects.aggregate(pipeline)
+            for doc in items.aggregate(pipeline)
         }
         # Sort the response dictionary
         sorted_response = {key : response[key] for key in sorted(response)}
@@ -48,5 +54,6 @@ def get_stats(model, field):
         return sorted_response, 200
 
     except Exception as e:
+        print(e)
         # Log the exception e if logging is set up
         return {"message": str(e)}, 500

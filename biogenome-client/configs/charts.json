@@ -1,0 +1,77 @@
+{
+    "dashboard": [
+        {
+            "model": "organisms",
+            "field": "insdc_status",
+            "class": "flex lg6 md6 sm12 xs12",
+            "type": "pie"
+        },
+        {
+            "model": "assemblies",
+            "field": "metadata.assembly_info.assembly_level",
+            "class": "flex lg6 md6 sm12 xs12",
+            "type": "pie"
+        }
+    ],
+    "biosamples": [
+        {
+            "model": "biosamples",
+            "field": "metadata.sex",
+            "class": "flex lg12 md12 sm12 xs12",
+            "type": "bar"
+        },
+        {
+            "model": "biosamples",
+            "field": "metadata.lifestage",
+            "class": "flex lg12 md12 sm12 xs12",
+            "type": "bar"
+        }
+    ],
+    "experiments": [
+        {
+            "model": "experiments",
+            "field": "metadata.library_strategy",
+            "class": "flex lg6 md6 sm12 xs12",
+            "type": "pie"
+        },
+        {
+            "model": "experiments",
+            "field": "metadata.library_selection",
+            "class": "flex lg6 md6 sm12 xs12",
+            "type": "pie"
+        },
+        {
+            "model": "experiments",
+            "field": "metadata.first_public",
+            "class": "flex lg12 md12 sm12 xs12",
+            "type": "dateline"
+        }
+    ],
+    "assemblies": [
+        {
+            "model": "assemblies",
+            "field": "metadata.assembly_info.assembly_level",
+            "class": "flex lg6 md6 sm12 xs12",
+            "type": "bar"
+        },
+        {
+            "model": "assemblies",
+            "field": "metadata.assembly_info.assembly_type",
+            "class": "flex lg3 md3 sm12 xs12",
+            "type": "pie"
+        },
+        {
+            "model": "assemblies",
+            "field": "metadata.assembly_info.assembly_status",
+            "class": "flex lg3 md3 sm12 xs12",
+            "type": "pie"
+        },
+        {
+            "model": "assemblies",
+            "field": "metadata.assembly_info.release_date",
+            "class": "flex lg12 md12 sm12 xs12",
+            "type": "dateline"
+        }
+    ],
+    "organisms": []
+}

@@ -82,7 +82,7 @@ function setCurrentTaxon(taxon: TreeNode) {
 
 .content-row {
     display: flex;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     min-width: 0;
     width: 100%;
     flex-direction: row;

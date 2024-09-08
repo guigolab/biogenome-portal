@@ -46,11 +46,11 @@
     "sass": "^1.53.0",
     "stream-browserify": "^3.0.0",
     "vite-plugin-rewrite-all": "^1.0.1",
-    "vue": "^3.2.25",
+    "vue": "^3.5.3",
     "vue-chartjs": "^4.1.1",
     "vue-i18n": "^9.1.10",
     "vue-router": "^4.0.14",
-    "vuestic-ui": "^1.8.5"
+    "vuestic-ui": "^1.10.0"
   },
   "devDependencies": {
     "@intlify/vite-plugin-vue-i18n": "^5.0.1",
@@ -61,6 +61,7 @@
     "@vitejs/plugin-vue": "^2.3.3",
     "@vue/eslint-config-prettier": "^7.0.0",
     "@vue/eslint-config-typescript": "^10.0.0",
+    "@vuestic/compiler": "^0.1.0",
     "autoprefixer": "^10.4.4",
     "cesium": "^1.101.0",
     "eslint": "^8.13.0",

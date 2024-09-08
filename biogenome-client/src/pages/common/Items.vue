@@ -1,49 +1,60 @@
 <template>
-    <div :key="currentModel">
-        <h1 v-if="config.title" class="va-h1">{{ config.title[locale] }}</h1>
-        <p v-if="config.description" style="margin-bottom: 6px" class="va-text-secondary">{{
+    <div v-if="config">
+        <div class="row align-end justify-space-between">
+            <div class="flex">
+                <h1 v-if="config.title" class="va-h1">{{ config.title[locale] }}</h1>
+                <p v-if="config.description" style="margin-bottom: 6px" class="va-text-secondary">{{
         config.description[locale] }}</p>
-        <VaButton @click="downloadGoatReport" v-if="currentModel === 'status' && goat" :round="false" color="success"
-            style="float: right">{{
+            </div>
+            <div v-if="isGoaTActive" class="flex">
+                <VaButton @click="downloadGoatReport" :round="false" color="info" style="float: right">{{
         t('buttons.goat_report') }}</VaButton>
-        <VaTabs :key="currentModel" v-model="tab">
-            <template #tabs>
-                <VaTab :label="t('tabs.table')" name="table" />
-                <VaTab v-if="config.charts && config.charts.length" name="stats" :label="t('tabs.charts')" />
-            </template>
-        </VaTabs>
-        <VaDivider style="margin-top: 0;" />
-        <ChartsBlock v-if="tab === 'stats'" :charts="(config.charts as InfoBlock[])" />
-        <ItemsBlock v-else :model="currentModel" :columns="config.columns" :filters="config.filters" />
+            </div>
+        </div>
     </div>
+    <FiltersBlock :hasCharts="!!charts.length" />
+    <ChartsBlock :charts="charts" v-if="itemStore.view === 'charts'" />
+    <TableBlock v-else />
 </template>
 
 <script setup lang="ts">
-import ChartsBlock from '../../components/common/ChartsBlock.vue'
 import { useI18n } from 'vue-i18n'
-import { computed, ref, watch } from 'vue'
+import { computed, watchEffect } from 'vue'
 import { useRouter } from 'vue-router'
-import { DataModel, InfoBlock, ModelConfig } from '../../data/types'
-import ItemsBlock from './components/ItemsBlock.vue'
-import { goat } from '../../../config.json'
+import { InfoBlock, ModelConfig } from '../../data/types'
+import general from '../../../configs/general.json'
+import chartsConfig from '../../../configs/charts.json'
+
 import GoaTService from '../../services/clients/GoaTService'
-
-const { t, locale } = useI18n()
-
-const tab = ref('table')
-const router = useRouter()
-
-const currentModel = computed(() => {
-    return router.currentRoute.value.name as DataModel
-})
-
-watch(() => props.config, () => {
-    if (!props.config.charts || !props.config.charts.length) tab.value = 'table'
-})
+import { useItemStore } from '../../stores/items-store'
+import ChartsBlock from '../../components/blocks/ChartsBlock.vue'
+import FiltersBlock from '../../components/blocks/FiltersBlock.vue'
+import TableBlock from '../../components/blocks/TableBlock.vue'
 
 const props = defineProps<{
-    config: ModelConfig
+    config?: ModelConfig,
+    model?: keyof typeof chartsConfig
 }>()
+
+const { t, locale } = useI18n()
+const router = useRouter()
+const itemStore = useItemStore()
+
+const currentModel = computed(() => {
+    return props.model || router.currentRoute.value.name as keyof typeof chartsConfig
+})
+
+const charts = computed(() => chartsConfig[currentModel.value] as InfoBlock[])
+
+const isGoaTActive = computed(() => {
+    return currentModel.value === 'status' && general.goat
+})
+
+
+watchEffect(async () => {
+    itemStore.currentModel = currentModel.value
+    await itemStore.fetchItems()
+})
 
 
 async function downloadGoatReport() {
@@ -56,7 +67,6 @@ async function downloadGoatReport() {
     let name = ''
     if (match && match[1]) {
         name = match[1];
-        console.log(name); // Output: PRJEB43510_species_goat.tsv
     } else {
         name = 'file.tsv'
         console.log("Filename not found in the string.");
@@ -74,15 +84,3 @@ async function downloadGoatReport() {
 }
 
 </script>
-
-<style lang="scss">
-.chart {
-    height: 400px;
-}
-
-.row-equal .flex {
-    .va-card {
-        height: 100%;
-    }
-}
-</style>

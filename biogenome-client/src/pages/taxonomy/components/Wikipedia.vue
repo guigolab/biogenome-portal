@@ -5,13 +5,13 @@
 </template>
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-import { wiki } from '../../../../config.json'
 import { useI18n } from 'vue-i18n'
 import { useTaxonomyStore } from '../../../stores/taxonomy-store'
+import general from '../../../../configs/general.json'
 
 const { locale } = useI18n()
 
-const wikiMapper = wiki as Record<string, any>
+const wikiMapper = general.wiki as Record<string, any>
 const wikiURL = ref<string>(wikiMapper[locale.value])
 
 const taxonomyStore = useTaxonomyStore()
@@ -27,16 +27,13 @@ const src = computed(() => {
 </script>
 
 <style lang="scss">
-
 .iframe-wrapper {
     position: relative;
     overflow: visible;
-    // height: 100vh;
 }
 
 .iframe-wrapper iframe {
     width: 100%;
     height: 100%;
 }
-
 </style>

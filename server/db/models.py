@@ -131,7 +131,7 @@ class Experiment(db.Document):
     instrument_model = db.StringField()
     taxid = db.StringField(required=True)
     scientific_name= db.StringField()
-    created = db.DateTimeField(default=datetime.datetime.utcnow)
+    created = db.DateTimeField(default=datetime.datetime.now())
     metadata=db.DictField()
     meta = {
         'indexes': ['experiment_accession','taxid', 'taxon_lineage']
@@ -151,7 +151,7 @@ class Assembly(db.Document):
     scientific_name= db.StringField()
     taxid = db.StringField(required=True)
     sample_accession=db.StringField()
-    created = db.DateTimeField(default=datetime.datetime.utcnow)
+    created = db.DateTimeField(default=datetime.datetime.now())
     metadata=db.DictField()
     chromosomes=db.ListField(db.StringField())
     chromosomes_aliases=db.BinaryField()
@@ -220,7 +220,7 @@ class BioSample(db.Document):
     location = db.PointField()
     bioprojects = db.ListField(db.StringField())
     sub_samples = db.ListField(db.StringField())
-    created = db.DateTimeField(default=datetime.datetime.utcnow)
+    created = db.DateTimeField(default=datetime.datetime.now())
     last_check = db.DateTimeField()
     metadata=db.DictField()
     taxid = db.StringField(required=True)
@@ -241,7 +241,7 @@ class GenomeAnnotation(db.Document):
     name = db.StringField(required=True,unique=True)
     gff_gz_location = db.URLField(required=True)
     tab_index_location = db.URLField(required=True)
-    created = db.DateTimeField(default=datetime.datetime.utcnow)
+    created = db.DateTimeField(default=datetime.datetime.now())
     metadata=db.DictField()
     user=db.StringField()
     external=db.BooleanField(default=True)
@@ -299,7 +299,7 @@ class Organism(db.Document):
     }
 
 class GoaTUpdateDate(db.Document):
-    updated = db.DateTimeField(default=datetime.datetime.utcnow)
+    updated = db.DateTimeField(default=datetime.datetime.now())
     taxid = db.StringField(required=True)
 
 class CronJob(db.Document):

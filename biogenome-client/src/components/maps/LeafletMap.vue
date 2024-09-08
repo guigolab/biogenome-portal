@@ -2,8 +2,8 @@
   <div class="container">
     <div v-if="showControls" class="controls">
       <div v-if="showFilterInput" class="control-item">
-        <va-input @keyup.enter="search" style="min-width: 250px;" inner-label v-model="filter" :label="t('buttons.search')"
-          placeholder="Search by name or accession">
+        <va-input @keyup.enter="search" style="min-width: 250px;" inner-label v-model="filter"
+          :label="t('buttons.search')" placeholder="Search by name or accession">
           <template #appendInner>
             <va-icon name="search" />
           </template>
@@ -53,22 +53,30 @@ import 'leaflet/dist/leaflet.css';
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 import { SampleLocations } from '../../data/types'
-import SampleCard from '../ui/SampleCard.vue'
+import SampleCard from '../cards/SampleCard.vue'
 import GeoLocationService from '../../services/clients/GeoLocationService'
-import { models } from '../../../config.json'
 import { useToast } from 'vuestic-ui'
 import { useI18n } from 'vue-i18n';
+import pages from '../../../configs/pages.json'
 
 const { t } = useI18n();
-const hasLocalSamples = computed(() => {
-  return 'local_samples' in models
-})
+const props = defineProps<{
+  lineage?: string,
+  taxid?: string,
+  sample_accession?: string
+}>()
 
+const hasLocalSamples = computed(() => {
+  return 'local_samples' in pages
+})
+const hasBioSamples = computed(() => {
+  return 'biosamples' in pages
+})
 const { init } = useToast()
 // Computed properties for conditions
 const showControls = computed(() => !props.taxid && !props.sample_accession);
 const showFilterInput = computed(() => !props.taxid);
-const showSampleTypeSelect = computed(() => !props.sample_accession && hasLocalSamples.value);
+const showSampleTypeSelect = computed(() => !props.sample_accession && (hasLocalSamples.value && hasBioSamples.value));
 
 // Disable button logic
 const isSubmitDisabled = computed(() => {
@@ -95,11 +103,7 @@ const mapRef = ref()
 const map = ref()
 const total = ref(0)
 const limit = ref(5000)
-const props = defineProps<{
-  lineage?: string,
-  taxid?: string,
-  sample_accession?: string
-}>()
+
 
 const organismCard = ref()
 const selectedSample = ref<{

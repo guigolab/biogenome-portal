@@ -1,7 +1,6 @@
 <template>
     <VaDataTable :items="data" :columns="columns">
-        <template v-for="column in columns" :key="column"
-            v-slot:[`header(${column})`]="{ key }">
+        <template v-for="column in columns" :key="column" v-slot:[`header(${column})`]="{ key }">
             {{ key.split('.').length ? key.split('.')[key.split('.').length - 1] : key }}
         </template>
         <template #cell(actions)="{ rowData }">
@@ -16,24 +15,25 @@
     </VaDataTable>
 </template>
 <script setup lang="ts">
-import { models } from '../../../../config.json'
 import { useI18n } from 'vue-i18n'
 import OrganismService from '../../../services/clients/OrganismService'
 import { computed } from 'vue';
-
-type DataModel = keyof typeof models;
+import columnsCongif from '../../../../configs/columns.json'
 
 const { t } = useI18n()
 
 const props = defineProps<{
-    model: DataModel,
+    model: string,
     taxid: string
 }>()
 
 const { data } = await OrganismService.getOrganismRelatedData(props.taxid, props.model)
 
 const columns = computed(() => {
-    return [...models[props.model].columns, 'actions']
+
+    const currentModel = Object.entries(columnsCongif).find(([key, value]) => key === props.model)
+    if (currentModel) return currentModel[0][1]
+    return []
 })
 
 function getRoute(rowData: Record<string, any>) {

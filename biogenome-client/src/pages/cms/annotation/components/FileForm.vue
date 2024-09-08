@@ -151,7 +151,6 @@ function isValid(value: any) {
 function parseRequestData() {
     const metadata = Object.fromEntries(metadataList.value.filter((m) => m.key && m.value)
         .map(m => [m.key, m.value]))
-    console.log(metadata)
     const request = new FormData()
     for (const [key, value] of Object.entries(annotationStore.annotationForm)) {
         if (value) {

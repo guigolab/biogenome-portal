@@ -71,7 +71,7 @@ def login_user(payload):
     if not user_obj or password != user_obj.password:
         return Response(json.dumps(dict(msg=f"Bad user or passwor")), mimetype="application/json", status=401)
     
-    access_token = create_access_token(identity=name,expires_delta=timedelta(minutes=30),additional_claims={"role": user_obj.role.value, "username":user_obj.name})
+    access_token = create_access_token(identity=name,expires_delta=timedelta(hours=12),additional_claims={"role": user_obj.role.value, "username":user_obj.name})
     response = Response(json.dumps(dict(msg=f"welcome {name}",role=user_obj.role.value)), mimetype="application/json", status=200)
     set_access_cookies(response, access_token)
     return response  

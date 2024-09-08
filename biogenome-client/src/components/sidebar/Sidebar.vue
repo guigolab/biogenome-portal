@@ -42,9 +42,9 @@
   </VaSidebar>
 </template>
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import NavigationRoutes, { INavigationRoute } from './NavigationRoutes'
-import { nav, cms } from '../../../config.json'
+import general from '../../../configs/general.json'
 import { useGlobalStore } from '../../stores/global-store'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -54,6 +54,10 @@ const route = useRoute()
 const router = useRouter()
 const globalStore = useGlobalStore()
 const items = ref(NavigationRoutes.routes)
+
+const nav = computed(() => general.nav || {})
+
+const cms = computed(() => general.cms)
 
 function isRouteActive(item: INavigationRoute) {
   return item.name === route.name || route.meta.name === item.name

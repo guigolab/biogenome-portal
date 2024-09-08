@@ -17,7 +17,7 @@ def get_annotations(args):
     selected_fields = [v for k, v in args.items(multi=True) if k.startswith('fields[]')]
     if not selected_fields:
         selected_fields = ['name', 'scientific_name', 'taxid', 'assembly_accession']
-    return data.get_items(args, 
+    return data_helper.get_items(args, 
                                  GenomeAnnotation, 
                                  FIELDS_TO_EXCLUDE, 
                                  filter,
@@ -68,7 +68,7 @@ def extract_metadata(data):
         valid_data['metadata'] = metadata_dict
     return valid_data
 
-def save_files(files, valid_data, assembly_accession, annotation_name, request):
+def save_files(files, valid_data, assembly_accession, annotation_name, taxid, request):
     for k in FILES_REQUIRED_FIELDS:
         if not files.get(k):
             return f'{k} field is required', 400
@@ -113,18 +113,18 @@ def create_annotation(request):
     assembly_obj = get_assembly(assembly_accession)
     if isinstance(assembly_obj, tuple):  # If the function returned an error
         return assembly_obj
-
+    taxid = assembly_obj.taxid
     # Extract metadata
     valid_data = extract_metadata(data)
     valid_data.update({
         'scientific_name': assembly_obj.scientific_name,
-        'taxid': assembly_obj.taxid,
+        'taxid': taxid,
         'assembly_name': assembly_obj.assembly_name
     })
 
     # Handle file saving
     if files:
-        response = save_files(files, valid_data, assembly_accession, annotation_name, request)
+        response = save_files(files, valid_data, assembly_accession, annotation_name, taxid, request)
         if response:
             return response
     else:

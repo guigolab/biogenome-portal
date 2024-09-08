@@ -5,7 +5,7 @@
     <div class="row">
       <div v-if="isDataModel(tab)" :key="tab" class="flex lg12 md12 sm12 xs12">
         <Suspense>
-          <RelatedDataTable :taxid="taxid" :model="(tab as DataModel)" />
+          <RelatedDataTable :taxid="taxid" :model="tab" />
           <template #fallback>
             <VaSkeleton height="500px"></VaSkeleton>
           </template>
@@ -25,7 +25,7 @@
 </template>
 <script setup lang="ts">
 import OrganismService from '../../services/clients/OrganismService'
-import MetadataTreeCard from '../../components/ui/MetadataTreeCard.vue'
+import MetadataTreeCard from '../../components/cards/MetadataTreeCard.vue'
 import DetailsHeader from '../../components/common/DetailsHeader.vue'
 import Tabs from '../../components/common/Tabs.vue'
 import { ref, watchEffect } from 'vue'
@@ -36,14 +36,13 @@ import VernacularNames from './components/VernacularNames.vue'
 import GeoLocationService from '../../services/clients/GeoLocationService'
 import LeafletMap from '../../components/maps/LeafletMap.vue'
 import Images from './components/Images.vue'
-import { models } from '../../../config.json'
 import RelatedDataTable from './components/RelatedDataTable.vue'
 import { AxiosError } from 'axios'
 import { useToast } from 'vuestic-ui/web-components'
+import pages from '../../../configs/pages.json'
 
 const { init } = useToast()
 
-type DataModel = keyof typeof models;
 const { t } = useI18n()
 const props = defineProps<{
   taxid: string
@@ -56,7 +55,7 @@ const images = ref<string[]>([])
 const commonNames = ref<Record<string, any>[]>([])
 const publications = ref<Record<string, any>[]>([])
 const coordinates = ref(0)
-const validDataTabs = ref<DataModel[]>([])
+const validDataTabs = ref<string[]>([])
 const metadata = ref<[string, any][]>([])
 const validTabs = ref<{ label: string, name: string }[]>([])
 
@@ -80,7 +79,7 @@ watchEffect(async () => {
 })
 
 function isDataModel(str: string): boolean {
-  return Object.keys(models).includes(str);
+  return Object.keys(pages).includes(str);
 }
 
 async function getData(taxid: string) {
@@ -102,7 +101,7 @@ async function getOrganism(taxid: string) {
 
 async function lookupData(taxid: string) {
   const { data } = await OrganismService.lookupData(taxid)
-  const filteredEntries: DataModel[] = Object.entries(data).filter(([k, v]) => v).map(([k, v]) => k as DataModel)
+  const filteredEntries = Object.entries(data).filter(([k, v]) => v).map(([k, v]) => k)
   validDataTabs.value = [...filteredEntries]
 }
 

@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
 import DashboardPageVue from '../pages/dashboard/DashboardPage.vue'
-import { models, maps, cms } from '../../config.json'
+import general from '../../configs/general.json'
+import pages from '../../configs/pages.json'
 import { cmsRoutes } from './cms-routes'
 import { modelRoutes, mapRoutes } from './custom-routes'
 
@@ -17,16 +18,6 @@ const defaultRoutes: Array<RouteRecordRaw> = [
     component: DashboardPageVue,
   },
   {
-    name: 'login',
-    path: '/login',
-    component: () => import('../pages/auth/login/Login.vue'),
-  },
-  {
-    name: 'unauthorized',
-    path: '/unauthorized',
-    component: () => import('../pages/auth/unauthorized/Unauthorized.vue'),
-  },
-  {
     path: '/taxonomy',
     component: () => import('../pages/taxonomy/Taxonomy.vue'),
     children: [
@@ -41,22 +32,42 @@ const defaultRoutes: Array<RouteRecordRaw> = [
         path: ':taxid',
         props: true,
         component: () => import('../pages/taxonomy/Taxon.vue'),
-        meta: { name: 'taxonomy' }
+        meta: { name: 'taxonomy' },
+        children: [
+          {
+            name: 'wiki',
+            path: '',
+            props: true,
+
+            component: () => import('../pages/taxonomy/components/Wikipedia.vue')
+          },
+          {
+            name: 'items',
+            path: ':model',
+            props: true,
+            component: () => import('../pages/common/Items.vue')
+          },
+          {
+            name: 'map',
+            path: 'map',
+            props: true,
+            component: () => import('../components/maps/LeafletMap.vue')
+          }
+        ]
       }
     ],
     meta: { name: 'taxonomy' }
   },
-
 ]
 
 function createRoutes() {
 
   const routes = [...defaultRoutes]
 
-  const modelConfigs = { ...models } as Record<string, any>
-  if (cms) routes.push(...cmsRoutes)
+  const modelConfigs = { ...pages } as Record<string, any>
+  if (general.cms) routes.push(...cmsRoutes)
 
-  if (maps) routes.push(...mapRoutes.filter(r => maps.includes(r.name)) as RouteRecordRaw[])
+  if (general.maps && general.maps.length) routes.push(...mapRoutes.filter(r => general.maps.includes(r.name)) as RouteRecordRaw[])
 
   const validNames = Object.keys(modelConfigs)
 
@@ -64,9 +75,11 @@ function createRoutes() {
     .filter(route => validNames.includes(route.meta.name))
     .map(route => {
 
+      const { title, description } = modelConfigs[route.meta.name]
+      const config = { title, description }
       //inject configs props
       return {
-        props: { config: modelConfigs[route.meta.name] },
+        props: { config },
         ...route
       }
     }) as RouteRecordRaw[]

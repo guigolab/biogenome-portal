@@ -9,11 +9,12 @@
             <VaCardContent :key="taxid">
                 <div class="row">
                     <div style="min-height: 450px;" class="flex lg12 md12 sm12 xs12">
-                        <ItemsBlock v-if="isDataModel(tab)" :parent_taxon="taxid"
+                        <router-view v-if="taxonomyStore.currentTaxon"></router-view>
+                        <!-- <ItemsBlock v-if="isDataModel(tab)" :parent_taxon="taxid"
                             :columns="models[tab as DataModel].columns"
                             :filters="(models[tab as DataModel].filters as Filter[])" :model="(tab as DataModel)" />
                         <LeafletMap v-else-if="tab === 'map'" :lineage="taxid" />
-                        <Wikipedia v-else />
+                        <Wikipedia v-else /> -->
                     </div>
                 </div>
             </VaCardContent>
@@ -21,11 +22,8 @@
     </VaInnerLoading>
 </template>
 <script setup lang="ts">
-import {  onMounted, ref, watchEffect } from 'vue'
-import { Filter } from '../../data/types'
-import { models } from '../../../config.json'
+import { onMounted, ref, watchEffect } from 'vue'
 import GeoLocationService from '../../services/clients/GeoLocationService'
-import ItemsBlock from '../common/components/ItemsBlock.vue'
 import LeafletMap from '../../components/maps/LeafletMap.vue'
 import Wikipedia from './components/Wikipedia.vue'
 import { useTaxonomyStore } from '../../stores/taxonomy-store'
@@ -35,15 +33,12 @@ import TaxonService from '../../services/clients/TaxonService'
 import Tabs from '../../components/common/Tabs.vue'
 import Header from './components/Header.vue'
 
-
 const { init } = useToast()
 const taxonomyStore = useTaxonomyStore()
 
 const props = defineProps<{
     taxid: string
 }>()
-
-type DataModel = keyof typeof models;
 
 const coordinates = ref(0)
 
@@ -69,16 +64,12 @@ const validTabs = ref<{ label: string, name: string }[]>([])
 function setTabs() {
     const t = [{ name: 'wiki', label: 'tabs.wiki' }]
     if (currentTaxonStats.value) {
-        const tabs = Object.entries(currentTaxonStats.value).filter(([k, v]) => v && Object.keys(models).includes(k))
+        const tabs = Object.entries(currentTaxonStats.value).filter(([k, v]) => v)
             .map(([k, v]) => { return { name: k, label: `tabs.${k}` } })
         t.push(...tabs)
     }
     if (coordinates.value) t.push({ name: 'map', label: 'tabs.map' })
     validTabs.value = [...t]
-}
-
-function isDataModel(str: string): boolean {
-    return Object.keys(models).includes(str);
 }
 
 async function getStats(taxid: string) {

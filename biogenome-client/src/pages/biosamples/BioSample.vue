@@ -5,7 +5,7 @@
     <div class="row">
       <div v-if="isDataModel(tab)" :key="tab" class="flex lg12 md12 sm12 xs12">
         <Suspense>
-          <BioSampleRelatedTable :accession="accession" :model="(tab as DataModel)" />
+          <!-- <BioSampleRelatedTable :accession="accession" :model="(tab as DataModel)" /> -->
           <template #fallback>
             <VaSkeleton height="500px"></VaSkeleton>
           </template>
@@ -24,16 +24,15 @@
 import BioSampleService from '../../services/clients/BioSampleService'
 import { ref, watchEffect } from 'vue'
 import { BioSample, Details } from '../../data/types'
-import { models } from '../../../config.json'
 import DetailsHeader from '../../components/common/DetailsHeader.vue'
 import Tabs from '../../components/common/Tabs.vue'
-import MetadataTreeCard from '../../components/ui/MetadataTreeCard.vue'
+import MetadataTreeCard from '../../components/cards/MetadataTreeCard.vue'
 import GeoLocationService from '../../services/clients/GeoLocationService'
 import LeafletMap from '../../components/maps/LeafletMap.vue'
 import { AxiosError } from 'axios'
-import BioSampleRelatedTable from './components/BioSampleRelatedTable.vue'
+// import BioSampleRelatedTable from './components/BioSampleRelatedTable.vue'
 import { useToast } from 'vuestic-ui/web-components'
-
+import pages from '../../../configs/pages.json'
 
 const { init } = useToast()
 const props = defineProps<{
@@ -55,7 +54,7 @@ const tab = ref('')
 const validTabs = ref<{ label: string, name: string }[]>([])
 
 function isDataModel(str: string): boolean {
-  return Object.keys(models).includes(str) || str === 'sub_samples';
+  return Object.keys(pages).includes(str) || str === 'sub_samples';
 }
 
 watchEffect(async () => {

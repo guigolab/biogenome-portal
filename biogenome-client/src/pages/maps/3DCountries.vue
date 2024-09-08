@@ -15,7 +15,7 @@
       <template #end>
         <div style="position: relative;height: 100%;">
           <div style="position: absolute;width: 100%;height: 100%;">
-            <OrganismsCountryCard :country="selectedCountry" v-if="showDetails" />
+            <!-- <OrganismsCountryCard :country="selectedCountry" v-if="showDetails" /> -->
           </div>
         </div>
       </template>
@@ -29,7 +29,7 @@ import * as Cesium from 'cesium'
 import StatisticsService from '../../services/clients/StatisticsService'
 import am5geodata_worldLow from '@amcharts/amcharts5-geodata/worldLow'
 import { useI18n } from 'vue-i18n'
-import OrganismsCountryCard from '../../components/ui/OrganismsCountryCard.vue'
+// import OrganismsCountryCard from '../../components/ui/OrganismsCountryCard.vue'
 import { AxiosError } from 'axios'
 import { useToast } from 'vuestic-ui/web-components'
 

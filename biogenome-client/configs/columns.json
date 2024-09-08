@@ -1,0 +1,34 @@
+{
+    "biosamples": [
+        "accession",
+        "scientific_name",
+        "metadata.collection_date",
+        "metadata.sex",
+        "metadata.lifestage",
+        "metadata.tissue"
+    ],
+    "experiments": [
+        "experiment_accession",
+        "metadata.scientific_name",
+        "metadata.experiment_title",
+        "metadata.sample_accession",
+        "metadata.library_strategy",
+        "metadata.library_selection",
+        "metadata.first_public"
+    ],
+    "assemblies": [
+        "assembly_name",
+        "scientific_name",
+        "blobtoolkit_id",
+        "metadata.assembly_info.assembly_level",
+        "metadata.assembly_info.assembly_type",
+        "metadata.assembly_info.assembly_status",
+        "metadata.assembly_info.release_date"
+    ],
+    "organisms": [
+        "scientific_name",
+        "taxid",
+        "insdc_common_name",
+        "insdc_status"
+    ]
+}

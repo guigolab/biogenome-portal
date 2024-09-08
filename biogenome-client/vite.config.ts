@@ -5,14 +5,14 @@ import VueI18nPlugin from '@intlify/vite-plugin-vue-i18n'
 import { defineConfig, loadEnv } from 'vite'
 import cesium from 'vite-plugin-cesium'
 import pluginRewriteAll from 'vite-plugin-rewrite-all'
+import { vuestic } from '@vuestic/compiler/vite'
 
 export default ({ mode }) => {
   const env = loadEnv(mode, process.cwd())
 
   // import.meta.env.VITE_NAME available here with: process.env.VITE_NAME
   // import.meta.env.VITE_PORT available here with: process.env.VITE_PORT
-  const basePath = env.VITE_BASE_PATH ? env.VITE_BASE_PATH + '/': undefined
-  console.log(basePath)
+  const basePath = env.VITE_BASE_PATH ? env.VITE_BASE_PATH + '/' : undefined
   return defineConfig({
     base: basePath,
     resolve: {
@@ -48,6 +48,7 @@ export default ({ mode }) => {
     plugins: [
       vue(),
       cesium(),
+      vuestic(),
       pluginRewriteAll(),
       VueI18nPlugin({
         include: resolve(dirname(fileURLToPath(import.meta.url)), './src/i18n/locales/**'),

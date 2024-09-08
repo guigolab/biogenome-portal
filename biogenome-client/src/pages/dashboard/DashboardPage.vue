@@ -1,22 +1,32 @@
 <template>
   <div class="dashboard">
-    <PageHeader :title="dashboard.title" :description="dashboard.description" />
+    <PageHeader :title="dashboardInfo.title" :description="dashboardInfo.description" />
     <VaDivider />
-    <AppStats/>
-    <ChartsBlock v-if="charts.length" :charts="charts" />
+    <StatsBlock />
+    <ChartsBlock v-if="configCharts.length" :charts="configCharts" />
     <!-- <ExtraInfoBlock /> -->
   </div>
 </template>
 
 <script setup lang="ts">
-import ChartsBlock from '../../components/common/ChartsBlock.vue'
-import { dashboard } from '../../../config.json'
-import { InfoBlock } from '../../data/types';
-import AppStats from '../../components/ui/AppStats.vue'
+import ChartsBlock from '../../components/blocks/ChartsBlock.vue'
+import StatsBlock from '../../components/blocks/StatsBlock.vue'
+
+import pages from '../../../configs/pages.json'
+import charts from '../../../configs/charts.json'
+import { computed } from 'vue'
 import PageHeader from '../../components/common/PageHeader.vue'
 
 
-const charts = dashboard.charts as InfoBlock[]
+const dashboardInfo = computed(() => {
+  const { title = "Dashboard", description = "" } = pages.dashboard || {};
+  return { title, description };
+});
+
+
+const configCharts = computed(() => {
+  return charts.dashboard || []
+})
 
 </script>
 <style lang="scss">

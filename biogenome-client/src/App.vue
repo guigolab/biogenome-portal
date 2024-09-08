@@ -4,11 +4,13 @@
 <script setup>
 import { onMounted } from 'vue'
 import Layout from './layouts/Layout.vue'
-import { title, tracker } from '../config.json'
+import config from '../configs/general.json'
+
+
 
 onMounted(() => {
-  document.title = title
-  if (tracker) {
+  document.title = config.title
+  if (config.tracker) {
     const src = import.meta.env.VITE_BASE_PATH ? import.meta.env.VITE_BASE_PATH + `/tracking/${tracker}` : `/tracking/${tracker}`
     const trackerScript = document.createElement('script')
     trackerScript.setAttribute("type", "text/javascript")
@@ -28,7 +30,12 @@ onMounted(() => {
   -moz-osx-font-smoothing: grayscale;
   color: #2c3e50;
 }
-
+.mr-2{
+  margin-right: 2px;
+}
+.ml-2{
+  margin-left: 2px;
+}
 body {
   margin: 0;
 }

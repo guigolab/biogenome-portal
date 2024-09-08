@@ -3,8 +3,12 @@
 </template>
 <script setup lang="ts">
 
-import { nav } from '../../../config.json'
+import general from '../../../configs/general.json'
+
+const nav = general.nav
 
 const imgUrl = new URL(`/src/assets/${nav.logo}`, import.meta.url).href
+
+
 
 </script>

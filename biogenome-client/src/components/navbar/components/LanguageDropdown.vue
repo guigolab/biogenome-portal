@@ -19,7 +19,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { languages } from '../../../../config.json'
+import general from '../../../../configs/general.json'
 const { t, locale } = useI18n()
 
 withDefaults(
@@ -27,12 +27,12 @@ withDefaults(
     options?: { code: string; name: string }[]
   }>(),
   {
-    options: () => languages
+    options: () => general.languages
   },
 )
 
 function getLangName(code: string) {
-  const currentLang = languages.find(l => l.code === code)
+  const currentLang = general.languages.find(l => l.code === code)
   if (currentLang) return currentLang.name
 }
 </script>

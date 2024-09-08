@@ -4,16 +4,26 @@ import { useGlobalStore } from '../stores/global-store'
 function isAdmin() {
     const { userRole } = useGlobalStore()
     if (userRole !== 'Admin') {
-      return { name: 'unauthorized' }
+        return { name: 'unauthorized' }
     }
-  }
-  
-  function isAuthenticated() {
+}
+
+function isAuthenticated() {
     const { isAuthenticated } = useGlobalStore()
     if (!isAuthenticated) return { name: 'login' }
-  }
+}
 
 export const cmsRoutes = [
+    {
+        name: 'login',
+        path: '/login',
+        component: () => import('../pages/auth/login/Login.vue'),
+    },
+    {
+        name: 'unauthorized',
+        path: '/unauthorized',
+        component: () => import('../pages/auth/unauthorized/Unauthorized.vue'),
+    },
     {
         name: 'cms-dashboard',
         path: '/cms-dashboard',

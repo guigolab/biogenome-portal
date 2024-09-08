@@ -1,6 +1,4 @@
-import { computed } from 'vue';
-import StatisticsService from '../../services/clients/StatisticsService';
-import { InfoBlock, ChartType } from '../../data/types';
+import { ChartType } from '../../data/types';
 
 
 const colors = [
@@ -10,19 +8,7 @@ const colors = [
     '#2980b9', '#f1c40f', '#2ecc71', '#9b59b6'
 ];
 
-export const useChartMixin = async (infoBlock: InfoBlock, label: string) => {
-    const { data } = await StatisticsService.getModelFieldStats(infoBlock.model, infoBlock.field);
-
-    const total = Object.values(data as Record<string, number>).reduce((accumulator, currentValue) => accumulator + currentValue, 0)
-
-    const chartData = computed(() => processChartData(data, label));
-
-    const options = getChartOptions(infoBlock.type, total);
-
-    return { chartData, options, total };
-};
-
-function processChartData(data: Record<string, number>, label: string) {
+export function processChartData(data: Record<string, number>, label: string) {
     const orderedValues = Object.fromEntries(Object.entries(data).sort(([, v], [, v1]) => v - v1));
     return {
         labels: Object.keys(orderedValues),
@@ -36,7 +22,7 @@ function processChartData(data: Record<string, number>, label: string) {
     };
 }
 
-function getChartOptions(type: ChartType, total: number) {
+export function getChartOptions(type: ChartType, total: number) {
     let legend
     let datalabels
     let scales

@@ -20,8 +20,7 @@
 </template>
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import MetadataTreeCard from '../../../components/ui/MetadataTreeCard.vue'
-import { useToast } from 'vuestic-ui/web-components'
+import MetadataTreeCard from '../../../components/cards/MetadataTreeCard.vue'
 
 const { t } = useI18n()
 

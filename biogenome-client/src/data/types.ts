@@ -9,23 +9,40 @@ export type TBarChartData = ChartData<'bar'>
 export type TBubbleChartData = ChartData<'bubble'>
 export type TDoughnutChartData = ChartData<'doughnut'>
 export type TPieChartData = ChartData<'pie'>
-
+export interface ErrorResponseData {
+  message?: string; // Optional, because not all error responses may contain a message
+}
 export type TChartData = TLineChartData | TBarChartData | TBubbleChartData | TDoughnutChartData | TPieChartData
 
 export type LangOption = Record<'es-ct' | 'gb', string>
+
+export type ComponentType = 'biosample' | 'organism' | 'assembly' | 'localSample' | 'experiment' | 'annotation';
 
 export interface PageHeaderConfig {
   title: LangOption,
   description: LangOption
 }
-export type DataModel = 'biosamples' | 'experiments' | 'organisms' | 'annotations' | 'assemblies' | 'local_samples' | 'status'
 
 export type Model = 'biosamples' | 'experiments' | 'organisms' | 'annotations' | 'assemblies' | 'users' | 'local_samples'
-
+export type ColumnShow = {
+  show: boolean,
+  value: string
+}
 export type Metatada = {
   key: string
   value: string
 }
+
+export type DataCounts = {
+  coordinates: number;
+  assemblies: number;
+  assembly: number;
+  experiments: number;
+  local_samples: number;
+  annotations: number;
+  chromosomes: number;
+  sub_samples: number;
+};
 
 interface Node {
   children: Array<string>
@@ -42,10 +59,10 @@ export type DateRange = {
   end: Date | null
 }
 export type Filter = {
-  label: Record<string, any>
+  label?: string
   placeholder?: string
   type: 'input' | 'select' | 'date' | 'checkbox'
-  options?: Array<string | Record<string, any>>
+  options?: Record<string, number>
   key: string
 }
 
@@ -58,6 +75,11 @@ export interface SearchForm {
   rank?: string
 }
 
+export interface ConfigFilter {
+  key: string
+  type: 'date' | 'select' | 'input' | 'checkbox'
+
+}
 export interface OrganismSearchForm extends SearchForm {
   insdc_status: string
   goat_status: string
@@ -153,18 +175,14 @@ export type HighLightedMetatada = {
 export type ModelConfig = {
   title?: Record<string, string>
   description?: Record<string, string>
-  charts?: InfoBlock[]
-  filters: Filter[]
-  columns: string[]
-  metadata?: HighLightedMetatada[]
 }
 
 export type ChartType = 'pie' | 'dateline' | 'bar'
 export type InfoBlock = {
   field: string,
   model: string,
-  title: Record<string, string>,
-  label: Record<string, string>,
+  title?: Record<string, string>,
+  label?: Record<string, string>,
   type: ChartType
   class: string
   color?: string

@@ -19,7 +19,7 @@ import AnnotationService from '../../services/clients/AnnotationService'
 import DetailsHeader from '../../components/common/DetailsHeader.vue'
 import Tabs from '../../components/common/Tabs.vue'
 
-import MetadataTreeCard from '../../components/ui/MetadataTreeCard.vue'
+import MetadataTreeCard from '../../components/cards/MetadataTreeCard.vue'
 import { AxiosError } from 'axios'
 import { useToast } from 'vuestic-ui/web-components'
 

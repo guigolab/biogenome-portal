@@ -1,0 +1,58 @@
+{
+    "biosamples": [
+        {
+            "key": "metadata.collection_date",
+            "type": "date"
+        },
+        {
+            "key": "metadata.lifestage",
+            "type": "select"
+        },
+        {
+            "key": "metadata.sex",
+            "type": "select"
+        }
+    ],
+    "experiments": [
+        {
+            "key": "metadata.first_public",
+            "type": "date"
+        },
+        {
+            "key": "metadata.library_selection",
+            "type": "select"
+        },
+        {
+            "key": "metadata.library_strategy",
+            "type": "select"
+        }
+    ],
+    "assemblies": [
+        {
+            "key": "metadata.assembly_info.release_date",
+            "type": "date"
+        },
+        {
+            "key": "blobtoolkit_id",
+            "type": "checkbox"
+        },
+        {
+            "key": "metadata.assembly_info.assembly_level",
+            "type": "select"
+        },
+        {
+            "key": "metadata.assembly_info.assembly_type",
+            "type": "select"
+        },
+        {
+            "key": "metadata.assembly_info.assembly_status",
+            "type": "select"
+        }
+    ],
+    "organisms": [
+        {
+            "key": "insdc_status",
+            "type": "select"
+        }
+    ]
+}

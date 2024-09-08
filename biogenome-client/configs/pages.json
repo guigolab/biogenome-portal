@@ -1,0 +1,72 @@
+{
+    "dashboard": {
+        "title": {
+            "gb": "EBP Portal Community Edition",
+            "es-ct": "EBP Portal Community Edition",
+            "es": "EBP Portal Community Edition",
+            "fr": "EBP Portal Community Edition"
+        },
+        "description": {
+            "gb": "This portal tracks the INSDC submission progress of the Earth Biogenome Project (EBP)",
+            "es-ct": "Aquest portal segueix el progrés de les submissions a l'INSDC del Projecte Biogenoma Terrestre (EBP).",
+            "es": "Este portal sigue el progreso de la submission en el INSDC del Proyecto de Biogenoma Terrestre (EBP)",
+            "fr": "Ce portail suit l'avancement des soumissions à l'INSDC du Projet de Biogénome Terrestre (EBP)."
+        }
+    },
+    "biosamples": {
+        "title": {
+            "gb": "BioSamples collected under the EBP",
+            "es-ct": "BioSamples recopilades sota l'EBP.",
+            "fr": "BioSamples collectés dans le cadre de l'EBP",
+            "es": "BioSamples recolectadas bajo el EBP"
+        },
+        "description": {
+            "gb": "These biosamples, include those associated with projects ERGA, DTOL, or CBP, as well as those retrieved from assemblies and experiments metadata via a cronjob import.",
+            "es-ct": "Aquestes mostres biològiques inclouen aquelles associades als projectes ERGA, DTOL o CBP, així com aquelles recuperades del metadades de muntatge a través d'una importació de cronjob.",
+            "fr": "Ces échantillons biologiques incluent ceux associés aux projets ERGA, DTOL ou CBP, ainsi que ceux récupérés à partir des métadonnées d'assemblage via une importation cronjob.",
+            "es": "Estas muestras biológicas incluyen aquellas asociadas con los proyectos ERGA, DTOL o CBP, así como aquellas recuperadas de los metadatos de ensamblaje mediante una importación cronjob."
+        }
+    },
+    "experiments": {
+        "title": {
+            "gb": "Experiments collected under the EBP",
+            "es": "Experimentos recopilados bajo el EBP",
+            "es-ct": "Experimentos recopilats sota l'EBP",
+            "fr": "Expériments collectées dans le cadre de l'EBP"
+        },
+        "description": {
+            "gb": "Experiments and Reads collected under the EBP",
+            "es": "Experimentos y lecturas recopilados bajo el EBP",
+            "es-ct": "Experimentos i lectures recopilats sota l'EBP",
+            "fr": "Expériments et lectures collectées dans le cadre de l'EBP"
+        }
+    },
+    "assemblies": {
+        "title": {
+            "gb": "Assemblies collected under the EBP",
+            "es": "Ensambles recopilados bajo el EBP",
+            "es-ct": "Muntatges recopilats sota l'EBP",
+            "fr": "Assemblages collectés dans le cadre de l'EBP"
+        },
+        "description": {
+            "gb": "Assemblies retrieved from NCBI under EBP (PRJNA533106)",
+            "es": "Ensambles recuperados de NCBI bajo el EBP (PRJNA533106)",
+            "es-ct": "Muntatges recuperats de NCBI sota el EBP (PRJNA533106)",
+            "fr": "Assemblages récupérés de NCBI sous le EBP (PRJNA533106)"
+        }
+    },
+    "organisms": {
+        "title": {
+            "gb": "Species sequenced under the EBP umbrella",
+            "es": "Especies secuenciadas bajo el EBP",
+            "es-ct": "Espècies seqüenciades sota l'EBP",
+            "fr": "Espèces séquencées dans le cadre de l'EBP"
+        },
+        "description": {
+            "gb": "INSDC submission status of species sequenced under the EBP umbrella",
+            "es": "Lista de especies secuenciadas bajo el paraguas del EBP",
+            "es-ct": "Llista d'espècies seqüenciades sota el paraigua de l'EBP",
+            "fr": "Liste des espèces séquencées sous l'égide de l'EBP"
+        }
+    }
+}
