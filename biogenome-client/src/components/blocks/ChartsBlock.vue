@@ -1,6 +1,6 @@
 <template>
     <div class="row row-equal">
-        <div v-for="chart, index in charts" :key="index" :class="chart.class">
+        <div v-for="chart, index in charts" :key="`${index}-${chart.model}-${chart.field}`" :class="chart.class">
             <Suspense>
                 <template #default>
                     <va-card>

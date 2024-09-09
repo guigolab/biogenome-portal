@@ -3,7 +3,7 @@
         <div class="flex lg4 md6 sm12 xs12">
             <SearchInput :value="filter" @onSearchChange="debouncedUpdateSearch" />
         </div>
-        <div class="flex">
+        <div v-if="columns.length" class="flex">
             <ColumnDropdown />
         </div>
     </div>
@@ -39,18 +39,12 @@ import { useI18n } from 'vue-i18n'
 import { computed } from 'vue'
 import SearchInput from '../inputs/SearchInput.vue'
 import ColumnDropdown from '../dropdowns/ColumnDropdown.vue'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
 const { t } = useI18n()
 const itemStore = useItemStore()
 
-// const routeMap: Record<string, any> = {
-//     assemblies: { name: 'assembly', params: { accession: rowData.accession } },
-//     biosamples: { name: 'biosample', params: { accession: rowData.accession } },
-//     experiments: { name: 'experiment', params: { accession: rowData.experiment_accession } },
-//     organisms: { name: 'organism', params: { taxid: rowData.taxid } },
-//     local_samples: { name: 'local_sample', params: { id: rowData.local_id } },
-//     annotations: { name: 'annotation', params: { name: rowData.name } }
-// };
 const model = computed(() => {
     return itemStore.currentModel
 })
@@ -105,19 +99,16 @@ function debounce(fn: any, delay: number) {
     };
 }
 const handleClick = (event: any) => {
-
+    const { item } = event
+    const routeMap: Record<string, any> = {
+        assemblies: { name: 'assembly', params: { accession: item.accession } },
+        biosamples: { name: 'biosample', params: { accession: item.accession } },
+        experiments: { name: 'experiment', params: { accession: item.experiment_accession } },
+        organisms: { name: 'organism', params: { taxid: item.taxid } },
+        local_samples: { name: 'local_sample', params: { id: item.local_id } },
+        annotations: { name: 'annotation', params: { name: item.name } }
+    };
+    router.push(routeMap[model.value])
 }
 
-// function getRoute(rowData: Record<string, any>) {
-//         const routeMap: Record<string, any> = {
-//             assemblies: { name: 'assembly', params: { accession: rowData.accession } },
-//             biosamples: { name: 'biosample', params: { accession: rowData.accession } },
-//             experiments: { name: 'experiment', params: { accession: rowData.experiment_accession } },
-//             organisms: { name: 'organism', params: { taxid: rowData.taxid } },
-//             local_samples: { name: 'local_sample', params: { id: rowData.local_id } },
-//             annotations: { name: 'annotation', params: { name: rowData.name } }
-//         };
-
-//         return routeMap[props.model];
-//     }
 </script>

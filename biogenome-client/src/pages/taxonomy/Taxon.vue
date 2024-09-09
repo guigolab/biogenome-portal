@@ -5,16 +5,21 @@
             <VaCardContent v-if="taxonomyStore.currentTaxon">
                 <Header :name="taxonomyStore.currentTaxon.name" />
             </VaCardContent>
-            <Tabs :tabs="validTabs" :tab="tab" @update-view="(v: string) => tab = v" />
-            <VaCardContent :key="taxid">
+            <VaTabs :key="validTabs.length" v-model="tab" @update:model-value="updateView">
+                <template #tabs>
+                    <VaTab name="wiki" key="wiki">
+                        {{ t('tabs.wiki') }}
+                    </VaTab>
+                    <VaTab :name="validTab.name" v-for="validTab in validTabs" :key="validTab.name">
+                        {{ t(validTab.label) }}
+                    </VaTab>
+                </template>
+            </VaTabs>
+            <VaDivider style="margin: 0;"></VaDivider>
+            <VaCardContent :key="lineage">
                 <div class="row">
                     <div style="min-height: 450px;" class="flex lg12 md12 sm12 xs12">
                         <router-view v-if="taxonomyStore.currentTaxon"></router-view>
-                        <!-- <ItemsBlock v-if="isDataModel(tab)" :parent_taxon="taxid"
-                            :columns="models[tab as DataModel].columns"
-                            :filters="(models[tab as DataModel].filters as Filter[])" :model="(tab as DataModel)" />
-                        <LeafletMap v-else-if="tab === 'map'" :lineage="taxid" />
-                        <Wikipedia v-else /> -->
                     </div>
                 </div>
             </VaCardContent>
@@ -24,20 +29,23 @@
 <script setup lang="ts">
 import { onMounted, ref, watchEffect } from 'vue'
 import GeoLocationService from '../../services/clients/GeoLocationService'
-import LeafletMap from '../../components/maps/LeafletMap.vue'
-import Wikipedia from './components/Wikipedia.vue'
 import { useTaxonomyStore } from '../../stores/taxonomy-store'
 import { AxiosError } from 'axios';
 import { useToast } from 'vuestic-ui/web-components';
 import TaxonService from '../../services/clients/TaxonService'
-import Tabs from '../../components/common/Tabs.vue'
 import Header from './components/Header.vue'
+import { useRouter, useRoute } from 'vue-router'
+import { useItemStore } from '../../stores/items-store'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
+const itemStore = useItemStore()
 const { init } = useToast()
 const taxonomyStore = useTaxonomyStore()
-
+const router = useRouter()
+const route = useRoute()
 const props = defineProps<{
-    taxid: string
+    lineage: string
 }>()
 
 const coordinates = ref(0)
@@ -49,11 +57,21 @@ const tab = ref('')
 const isLoading = ref(false)
 
 watchEffect(async () => {
-    await getTaxon(props.taxid)
-    await getStats(props.taxid)
-    await getCoordinates(props.taxid)
+    await getTaxon(props.lineage)
+    await getStats(props.lineage)
+    await getCoordinates(props.lineage)
+    itemStore.parentTaxon = props.lineage
     setTabs()
+    const currentRoute = route.name as string;
+    if (currentRoute === 'map') {
+        tab.value = 'map';
+    } else if (route.params.model) {
+        tab.value = route.params.model as string;
+    } else {
+        tab.value = 'wiki'
+    }
 })
+
 
 onMounted(async () => {
     if (!taxonomyStore.treeData) await taxonomyStore.getTree()
@@ -62,7 +80,7 @@ onMounted(async () => {
 const validTabs = ref<{ label: string, name: string }[]>([])
 
 function setTabs() {
-    const t = [{ name: 'wiki', label: 'tabs.wiki' }]
+    const t = []
     if (currentTaxonStats.value) {
         const tabs = Object.entries(currentTaxonStats.value).filter(([k, v]) => v)
             .map(([k, v]) => { return { name: k, label: `tabs.${k}` } })
@@ -71,7 +89,13 @@ function setTabs() {
     if (coordinates.value) t.push({ name: 'map', label: 'tabs.map' })
     validTabs.value = [...t]
 }
-
+function updateView(v: string) {
+    tab.value = v
+    if (!v) return
+    if (v === 'wiki') router.push({ name: 'wiki' })
+    else if (v === 'map') router.push({ name: 'map' })
+    else router.push({ name: 'items', params: { model: v } })
+}
 async function getStats(taxid: string) {
     currentTaxonStats.value = undefined
     const { data } = await TaxonService.getTaxonStats(taxid)

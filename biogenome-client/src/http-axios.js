@@ -21,7 +21,7 @@ const submitInstance = axios.create({
 })
 
 const ncbi = axios.create({
-  baseURL: 'https://api.ncbi.nlm.nih.gov/datasets/v1',
+  baseURL: 'https://api.ncbi.nlm.nih.gov/datasets/v2',
   headers: {
     'Content-type': 'application/json',
   },

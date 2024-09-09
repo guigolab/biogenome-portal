@@ -7,6 +7,11 @@
         "metadata.lifestage",
         "metadata.tissue"
     ],
+    "local_samples": [
+        "local_id",
+        "scientific_name",
+        "taxid"
+    ],
     "experiments": [
         "experiment_accession",
         "metadata.scientific_name",
@@ -24,11 +29,5 @@
         "metadata.assembly_info.assembly_type",
         "metadata.assembly_info.assembly_status",
         "metadata.assembly_info.release_date"
-    ],
-    "organisms": [
-        "scientific_name",
-        "taxid",
-        "insdc_common_name",
-        "insdc_status"
     ]
 }

@@ -1,19 +1,26 @@
 <template>
-    <VaButtonDropdown left-icon stickToEdges :closeOnContentClick="false" icon="tune" :label="t('buttons.filters')">
-        <div class="w-200">
-            <div class="p-4">
-                <p class="va-text-secondary">Filters apply to both table and chart view</p>
-            </div>
+    <VaBadge overlap color="info" :text="activeFilters.length">
+        <VaButtonDropdown preset="primary" left-icon stickToEdges :closeOnContentClick="false" icon="tune" :label="t('buttons.filters')">
+            <div class="w-200">
+                <div class="p-4">
+                    <p class="va-text-secondary">Filters apply to both table and chart view</p>
+                </div>
 
-            <div class="p-4" v-for="(field, index) in currentFilters" :key="index">
+                <div class="p-4" v-for="(field, index) in currentFilters" :key="index">
 
-                <component :is="getFieldComponent(field.type)" :value="getValue(field)" :label="getLabel(field.key)"
-                    :options="currentFrequencies[field.key]" :key="field.key" class="m-2"
-                    @valueChange="(v: any) => updateSearchForm(field, v)">
-                </component>
+                    <component :is="getFieldComponent(field.type)" :value="getValue(field)" :label="getLabel(field.key)"
+                        :options="currentFrequencies[field.key]" :key="field.key" class="m-2"
+                        @valueChange="(v: any) => updateSearchForm(field, v)">
+                    </component>
+                </div>
+                <div class="p-4">
+                    <VaButton :disabled="activeFilters.length === 0" @click="resetSearchForm" size="small"
+                        color="danger">Reset all
+                    </VaButton>
+                </div>
             </div>
-        </div>
-    </VaButtonDropdown>
+        </VaButtonDropdown>
+    </VaBadge>
 </template>
 
 <script setup lang="ts">
@@ -32,6 +39,8 @@ import { ConfigFilter } from '../../data/types';
 const { t } = useI18n();
 const itemStore = useItemStore();
 
+const staticColumns = ['filter', 'sort_order', 'sort_column']
+
 const model = computed(() => itemStore.currentModel as keyof typeof filtersConfig);
 
 const searchForm = computed(() => itemStore.stores[model.value].searchForm)
@@ -42,6 +51,14 @@ const { currentFilters, frequencies, fetchFrequencies, createFilters } = useFilt
 
 const currentFrequencies = computed(() => frequencies[model.value])
 // Watch for model changes and update filters
+
+const modelFilterEntries = computed(() => Object.entries(itemStore.stores[model.value].searchForm)
+    .filter(([k, v]) => !staticColumns.includes(k)))
+
+const activeFilters = computed(() => modelFilterEntries.value
+    .filter(([k, v]) => (v || v === false))
+)
+
 watch(() => model.value, async () => {
     createFilters(model.value)
 });
@@ -85,9 +102,19 @@ async function updateSearchForm(filter: ConfigFilter, value: any) {
         itemStore.stores[model.value].searchForm[key] = value;
     }
 
-    itemStore.resetPagination()
     await itemStore.fetchItems()
     await fetchFrequencies(model.value)
 }
 
+async function resetSearchForm() {
+    const { filter, sort_column, sort_order, ...entries } = itemStore.stores[model.value].searchForm
+    // Replace all values in `entries` with `null`
+    Object.keys(entries).forEach(key => {
+        entries[key] = null;
+    });
+    itemStore.stores[model.value].searchForm = { filter, sort_column, sort_order, ...entries }
+    itemStore.resetPagination()
+    await itemStore.fetchItems()
+    await fetchFrequencies(model.value)
+}
 </script>

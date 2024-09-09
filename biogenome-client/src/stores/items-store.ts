@@ -1,12 +1,17 @@
 import { defineStore } from 'pinia'
-import { Filter, ErrorResponseData, ConfigFilter } from '../data/types'
+import { ErrorResponseData, ConfigFilter, ConfigType } from '../data/types'
 import { useToast } from 'vuestic-ui'
 import CommonService from '../services/clients/CommonService'
 import StatisticsService from '../services/clients/StatisticsService'
 import filters from '../../configs/filters.json'
 import columns from '../../configs/columns.json'
-
 import { AxiosError } from 'axios'
+
+
+const columnsConf = columns as ConfigType
+const filtersConf = filters as ConfigType
+
+const MODELS = ['organisms', 'biosamples', 'assemblies', 'experiments', 'annotations', 'local_samples']
 
 const staticFilters = {
     filter: "",
@@ -18,9 +23,10 @@ const initPagination = {
     limit: 10,
 }
 
-function mapSearchForm(filters: ConfigFilter[]) {
+function mapSearchForm(modelFilters: ConfigFilter[]) {
 
-    const formEntries = filters.map(f => {
+    const staticEntries = Object.entries(staticFilters)
+    const formEntries = modelFilters.map(f => {
         if (f.type === "date") {
             return [[`${f.key}__gte`, null], [`${f.key}__lte`, null]]
         } else if (f.type === "checkbox") {
@@ -29,22 +35,24 @@ function mapSearchForm(filters: ConfigFilter[]) {
         return [[f.key, null]]
     }).flat()
 
-    return Object.fromEntries(formEntries)
+    return Object.fromEntries([...formEntries, ...staticEntries])
 }
 
 
 //add configs in each store to manage everything from here
-function mapModelStore(value: ConfigFilter[], key: keyof typeof filters) {
+function mapModelStore(m: string) {
 
-    const searchForm = mapSearchForm(value)
-    const tableFilters = { ...staticFilters }
-    const columnsToShow = [...columns[key]] //show all columns by default
+    const columnsToShow = m in columnsConf ? columnsConf[m] : []
+
+    const modelFilters = m in filtersConf ? filtersConf[m] : []
+
+    const searchForm = mapSearchForm(modelFilters)
+
     const pagination = { ...initPagination }
     const items: Record<string, any>[] = []
     const total = 0
     return {
         searchForm,
-        tableFilters,
         pagination,
         items,
         total,
@@ -55,11 +63,10 @@ function mapModelStore(value: ConfigFilter[], key: keyof typeof filters) {
 
 export const useItemStore = defineStore('item', {
     state: () => {
-        const mappedEntries = Object.entries(filters).map(([key, value]) => {
-            return [key, mapModelStore(value as ConfigFilter[], key as keyof typeof filters)]
-        })
 
-        const stores = Object.fromEntries(mappedEntries)
+        const mappedStores = MODELS.map(m => [m, mapModelStore(m)])
+
+        const stores = Object.fromEntries(mappedStores)
         return {
             view: 'table' as 'table' | 'charts',
             stores: { ...stores },
@@ -88,6 +95,9 @@ export const useItemStore = defineStore('item', {
                 //filter out filter, and sort fields
                 const filteredEntries = Object.entries(this.stores[model].searchForm).filter(([k, v]) => !Object.keys(staticFilters).includes(k))
                 const query = Object.fromEntries(filteredEntries)
+                if (this.country) query['countries'] = this.country
+                if (this.parentTaxon) query['taxon_lineage'] = this.parentTaxon
+
                 const { data } = await StatisticsService.getModelFieldStats(model, field, query)
                 return data
             } catch (err) {
@@ -142,6 +152,13 @@ export const useItemStore = defineStore('item', {
             const downloadRequest = { format: "tsv", fields: [...fields] }
             try {
                 const requestData = applyFilters ? { ...this.stores[model].searchForm, ...downloadRequest } : { ...downloadRequest }
+                if (this.country) {
+                    requestData['countries'] = this.country
+                }
+                if (this.parentTaxon) {
+                    requestData['taxon_lineage'] = this.parentTaxon
+                }
+
                 const response = await CommonService.getTsv(`/${model}`, requestData)
                 const data = response.data
                 const href = URL.createObjectURL(data);

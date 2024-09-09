@@ -7,8 +7,8 @@
             "type": "pie"
         },
         {
-            "model": "assemblies",
-            "field": "metadata.assembly_info.assembly_level",
+            "model": "organisms",
+            "field": "goat_status",
             "class": "flex lg6 md6 sm12 xs12",
             "type": "pie"
         }
@@ -73,5 +73,24 @@
             "type": "dateline"
         }
     ],
-    "organisms": []
+    "organisms": [
+        {
+            "model": "organisms",
+            "field": "insdc_status",
+            "class": "flex lg6 md6 sm12 xs12",
+            "type": "pie"
+        },
+        {
+            "model": "organisms",
+            "field": "goat_status",
+            "class": "flex lg6 md6 sm12 xs12",
+            "type": "pie"
+        },
+        {
+            "model": "organisms",
+            "field": "target_list_status",
+            "class": "flex lg6 md6 sm12 xs12",
+            "type": "pie"
+        }
+    ]
 }

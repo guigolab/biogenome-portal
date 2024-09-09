@@ -1,17 +1,15 @@
 <template>
   <div class="dashboard">
-    <PageHeader :title="dashboardInfo.title" :description="dashboardInfo.description" />
-    <VaDivider />
+    <PageHeader :title="(dashboardInfo.title as LangOption)" :description="(dashboardInfo.description as LangOption)" />
     <StatsBlock />
     <ChartsBlock v-if="configCharts.length" :charts="configCharts" />
-    <!-- <ExtraInfoBlock /> -->
   </div>
 </template>
 
 <script setup lang="ts">
 import ChartsBlock from '../../components/blocks/ChartsBlock.vue'
 import StatsBlock from '../../components/blocks/StatsBlock.vue'
-
+import { InfoBlock, LangOption } from '../../data/types'
 import pages from '../../../configs/pages.json'
 import charts from '../../../configs/charts.json'
 import { computed } from 'vue'
@@ -25,7 +23,8 @@ const dashboardInfo = computed(() => {
 
 
 const configCharts = computed(() => {
-  return charts.dashboard || []
+  const dashCharts = charts.dashboard ? charts.dashboard as InfoBlock[] : []
+  return dashCharts
 })
 
 </script>

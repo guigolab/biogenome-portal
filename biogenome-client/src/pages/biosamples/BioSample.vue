@@ -5,7 +5,7 @@
     <div class="row">
       <div v-if="isDataModel(tab)" :key="tab" class="flex lg12 md12 sm12 xs12">
         <Suspense>
-          <!-- <BioSampleRelatedTable :accession="accession" :model="(tab as DataModel)" /> -->
+          <RelatedDataTable :accession="accession" :model="tab" />
           <template #fallback>
             <VaSkeleton height="500px"></VaSkeleton>
           </template>
@@ -14,7 +14,7 @@
       <div v-else-if="tab === 'map'" style="height: 450px;" class="flex lg12 md12 sm12 xs12">
         <LeafletMap :sample_accession="accession" />
       </div>
-      <div v-else-if="tab === 'metadata'" class="flex lg12 md12 sm12 xs12">
+      <div v-else class="flex lg12 md12 sm12 xs12">
         <MetadataTreeCard :metadata="metadata" />
       </div>
     </div>
@@ -30,7 +30,7 @@ import MetadataTreeCard from '../../components/cards/MetadataTreeCard.vue'
 import GeoLocationService from '../../services/clients/GeoLocationService'
 import LeafletMap from '../../components/maps/LeafletMap.vue'
 import { AxiosError } from 'axios'
-// import BioSampleRelatedTable from './components/BioSampleRelatedTable.vue'
+import RelatedDataTable from '../../components/tables/RelatedDataTable.vue'
 import { useToast } from 'vuestic-ui/web-components'
 import pages from '../../../configs/pages.json'
 

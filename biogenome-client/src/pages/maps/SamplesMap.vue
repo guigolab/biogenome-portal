@@ -1,7 +1,6 @@
 <template>
   <h1 class="va-h1">{{ t('maps.samples-map.title') }}</h1>
   <p class="va-text-secondary">{{ t('maps.samples-map.description') }}</p>
-  <va-divider />
   <div style="height: 90vh;" class="row row-equal">
     <div class="flex lg12 md12 sm12 xs12">
       <LeafletMap :lineage="rootNode" />

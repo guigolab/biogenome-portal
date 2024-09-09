@@ -29,10 +29,15 @@ const tabsKey = ref(0);  // A key to force re-rendering
 watch(
     () => props.tabs,
     (newTabs) => {
-        tabsKey.value++;  // Change the key to force re-render
+        console.log(newTabs)
+        console.log(currentTab.value)
         if (!newTabs.some(tab => tab.name === currentTab.value)) {
             currentTab.value = newTabs[0]?.name ?? '';
+            tabsKey.value++;  // Change the key to force re-render
+
             emits('updateView', currentTab.value)
+        } else {
+            emits('updateView', 'wiki')
         }
     },
     { immediate: true }

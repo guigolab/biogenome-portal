@@ -3,6 +3,10 @@ import type { TChartData as ChartData } from 'vue-chartjs/dist/types'
 export type ColorThemes = {
   [key: string]: string
 }
+// Define the type for filters and columns objects
+export interface ConfigType {
+  [key: string]: any[]; // Adjust the type of values if necessary
+}
 
 export type TLineChartData = ChartData<'line'>
 export type TBarChartData = ChartData<'bar'>

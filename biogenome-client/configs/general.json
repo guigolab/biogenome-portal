@@ -1,38 +1,27 @@
 {
-    "title": "EBP Portal Community Edition",
+    "title": "Catalan Initiative for the Earth BioGenome Project",
     "nav": {
-        "logo": "EBP-Logo.png",
-        "url": "https://www.earthbiogenome.org/"
+      "logo": "CBPLogo.png",
+      "url": "https://www.biogenoma.cat"
     },
-    "cms": false,
-    "goat": false,
-    "tracker": "",
+    "cms": true,
+    "goat": true,
+    "tracker": "cbp-tracking.js",
     "languages": [
-        {
-            "code": "gb",
-            "name": "english"
-        },
-        {
-            "code": "es-ct",
-            "name": "catalan"
-        },
-        {
-            "code": "fr",
-            "name": "french"
-        },
-        {
-            "code": "es",
-            "name": "spanish"
-        }
+      {
+        "code": "gb",
+        "name": "english"
+      },
+      {
+        "code": "es-ct",
+        "name": "catalan"
+      }
     ],
     "wiki": {
-        "gb": "https://en.m.wikipedia.org/wiki",
-        "es-ct": "https://ca.m.wikipedia.org/wiki",
-        "fr": "https://fr.m.wikipedia.org/wiki",
-        "es": "https://es.m.wikipedia.org/wiki"
+      "gb": "https://en.m.wikipedia.org/wiki",
+      "es-ct": "https://ca.m.wikipedia.org/wiki"
     },
     "maps": [
-        "samples-map",
-        "countries"
+        "samples-map"
     ]
 }

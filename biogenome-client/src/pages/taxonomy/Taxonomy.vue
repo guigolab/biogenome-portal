@@ -1,24 +1,23 @@
 <template>
     <h1 class="va-h1">{{ t('taxon.title') }}</h1>
     <p class="va-text-secondary" style="margin-bottom: 6px">{{ t('taxon.description') }}</p>
-    <VaDivider />
     <div class="row align-end">
         <div class="flex">
-            <va-select hideSelected :loading="isLoading" dropdownIcon="search" searchable highlight-matched-text
+            <VaButton @click="taxonomyStore.showTree = !taxonomyStore.showTree" :loading="taxonomyStore.isTreeLoading">
+                {{ taxonomyStore.showTree ? t('taxon.search.hide') : t('taxon.search.show') }}
+            </VaButton>
+        </div>
+        <div class="flex lg4 md6 sm12 xs12">
+            <VaSelect hideSelected :loading="isLoading" dropdownIcon="search" searchable highlight-matched-text
                 :textBy="(v: TreeNode) => `${v.name} (${v.rank})`" trackBy="taxid" @update:model-value="setCurrentTaxon"
                 @update:search="taxonomyStore.handleSearch" v-model="taxonomyStore.currentTaxon"
                 :searchPlaceholderText="t('taxon.search.placeholder')" :noOptionsText="t('taxon.search.noOptions')"
                 :options="taxonomyStore.taxons">
-            </va-select>
+            </VaSelect>
         </div>
         <div class="flex">
-            <VaButton color="primary" :round="false" @click="taxonomyStore.showTree = !taxonomyStore.showTree"
-                :loading="taxonomyStore.isTreeLoading">
-                {{ taxonomyStore.showTree ? t('taxon.search.hide') : t('taxon.search.show') }}
-            </VaButton>
-        </div>
-        <div class="flex">
-            <VaButton color="info" :round="false" @click="router.push({ name: 'taxon', params: { taxid: rootNode } })">
+            <VaButton :disabled="taxonomyStore.taxidQuery === rootNode" preset="primary"
+                @click="router.push({ name: 'wiki', params: { lineage: rootNode } })">
                 {{ t('taxon.search.rootLoad') }}
             </VaButton>
         </div>
@@ -34,7 +33,7 @@
 </template>
 <script setup lang="ts">
 import D3HyperTree from '../../components/tree/D3HyperTree.vue'
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n'
 import { useTaxonomyStore } from '../../stores/taxonomy-store'
 import { TreeNode } from '../../data/types';
@@ -46,12 +45,18 @@ const rootNode = import.meta.env.VITE_ROOT_NODE ? import.meta.env.VITE_ROOT_NODE
 
 
 onMounted(() => {
-    if (route.params.taxid) {
-        taxonomyStore.taxidQuery = route.params.taxid as string
+    if (route.params.lineage) {
+        taxonomyStore.taxidQuery = route.params.lineage as string
     }
 })
 
 const taxonomyStore = useTaxonomyStore()
+
+const treeDataExists = computed(() => !!taxonomyStore.treeData)
+
+watch(() => treeDataExists.value, () => {
+    if (treeDataExists.value) taxonomyStore.showTree = true
+})
 
 const { t } = useI18n()
 
@@ -61,7 +66,7 @@ function setCurrentTaxon(taxon: TreeNode) {
     taxonomyStore.taxons = []
     taxonomyStore.currentTaxon = { ...taxon }
     taxonomyStore.taxidQuery = taxon.taxid
-    router.push({ name: 'taxon', params: { taxid: taxon.taxid } })
+    router.push({ name: 'wiki', params: { lineage: taxon.taxid } })
 }
 
 
@@ -93,7 +98,7 @@ function setCurrentTaxon(taxon: TreeNode) {
     flex: 0 0 50%;
     /* Occupies 50% of the width */
     max-width: 50%;
-    transition: all 0.5s ease;
+    transition: all 0.7s ease;
     overflow: hidden;
     transform: translateX(0);
     /* Starts in view */
@@ -112,7 +117,7 @@ function setCurrentTaxon(taxon: TreeNode) {
     flex: 1;
     max-width: 50%;
     /* Occupies remaining space */
-    transition: all 0.5s ease;
+    transition: all 0.7s ease;
 }
 
 .content-container.full-width {

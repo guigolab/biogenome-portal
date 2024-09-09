@@ -24,12 +24,12 @@ const defaultRoutes: Array<RouteRecordRaw> = [
       {
         name: 'taxonomy',
         path: '',
-        redirect: { name: 'taxon', params: { taxid: rootNode } },
+        redirect: { name: 'wiki', params: { lineage: rootNode } },
         meta: { name: 'taxonomy' }
       },
       {
         name: 'taxon',
-        path: ':taxid',
+        path: ':lineage',
         props: true,
         component: () => import('../pages/taxonomy/Taxon.vue'),
         meta: { name: 'taxonomy' },
@@ -38,7 +38,6 @@ const defaultRoutes: Array<RouteRecordRaw> = [
             name: 'wiki',
             path: '',
             props: true,
-
             component: () => import('../pages/taxonomy/components/Wikipedia.vue')
           },
           {

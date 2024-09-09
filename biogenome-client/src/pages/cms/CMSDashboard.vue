@@ -5,25 +5,25 @@
         <va-divider />
         <div class="row aling-end">
             <div class="flex">
-                <VaButton  color="secondary" icon="home" :to="{ name: 'cms-organisms' }"></VaButton>
+                <VaButton color="secondary" icon="home" :to="{ name: 'cms-organisms' }">Organisms </VaButton>
             </div>
             <div class="flex">
                 <va-menu :options="uploadOptions" @selected="(v: Record<string, any>) => $router.push(v.value)">
                     <template #anchor>
-                        <VaButton  color="info">Upload</VaButton>
+                        <VaButton color="info">Upload</VaButton>
                     </template>
                 </va-menu>
             </div>
             <div class="flex">
-                <VaButton  color="warning" :to="{ name: 'cms-local_samples' }">Local Samples</VaButton>
+                <VaButton color="warning" :to="{ name: 'cms-local_samples' }">Local Samples</VaButton>
             </div>
             <div class="flex">
-                <VaButton  color="success" :to="{ name: 'create-organism' }">New Organism</VaButton>
+                <VaButton color="success" :to="{ name: 'create-organism' }">New Organism</VaButton>
             </div>
             <div v-if="isAdmin" class="flex">
                 <va-menu :options="adminOptions" @selected="(v: Record<string, any>) => $router.push(v.value)">
                     <template #anchor>
-                        <VaButton >Options</VaButton>
+                        <VaButton>Options</VaButton>
                     </template>
                 </va-menu>
             </div>
@@ -34,9 +34,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useGlobalStore } from '../../stores/global-store'
-import { useRouter } from 'vue-router'
 
-const router = useRouter()
 const { userName, userRole } = useGlobalStore()
 const uploadOptions = [
     { text: 'Spreadsheet (samples)', value: { name: 'spreadsheet-upload' } },
@@ -61,25 +59,3 @@ const adminOptions = [
 
 
 </script>
-<style lang="scss">
-.row-equal .flex {
-    .va-card {
-        height: 100%;
-    }
-}
-
-.dashboard {
-    .va-card {
-        margin-bottom: 0 !important;
-
-        &__title {
-            display: flex;
-            justify-content: space-between;
-        }
-    }
-}
-
-.chart {
-    height: 400px;
-}
-</style>

@@ -1,11 +1,12 @@
 <template>
-    <VaModal size="large" v-model="itemStore.showChartModal" hide-default-actions :title="t('buttons.chartDownload')">
+    <VaModal size="large" v-model="itemStore.showChartModal" hide-default-actions
+        :title="'Chart creation of ' + itemStore.currentModel">
         <div class="row">
-            <div class="flex">
+            <div class="flex lg6 m6 sm12 xs12">
                 <VaInput label="Field to query" v-model="chart.field" :messages="[fieldMessage]" />
             </div>
-            <div class="flex">
-                <VaSelect label="Chart type" v-model="chart.type" :options="types" />
+            <div class="flex lg4 m4 sm12 xs12">
+                <VaSelect style="padding-left: 6px;" label="Chart type" v-model="chart.type" :options="types" />
             </div>
         </div>
         <div class="row">

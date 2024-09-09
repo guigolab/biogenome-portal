@@ -30,7 +30,7 @@ const organismStore = useOrganismStore()
 
 watchEffect(async () => {
     try {
-        const { data } = await OrganismService.getOrganism(input.value)
+        await OrganismService.getOrganism(input.value)
         isValid.value = false
     } catch {
         isValid.value = true
@@ -50,8 +50,7 @@ async function getTaxonFromENA() {
         }
     } catch (error) {
         const axiosError = error as AxiosError
-        const message = 'Something went wrong'
-        init({ message: message, color: 'danger' })
+        init({ message: axiosError.message, color: 'danger' })
     } finally {
         isLoading.value = false
     }

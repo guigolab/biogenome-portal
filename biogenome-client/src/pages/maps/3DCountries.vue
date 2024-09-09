@@ -2,7 +2,6 @@
   <div>
     <h1 class="va-h1">{{ t('maps.countries.title') }}</h1>
     <p class="va-text-secondary">{{ t('maps.countries.description') }}</p>
-    <va-divider />
     <VaSplit class="split-demo" :limits="[10, 10]">
       <template #start>
         <div style="position: relative;height: 100%;">

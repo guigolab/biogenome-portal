@@ -1,28 +1,39 @@
 <template>
+
   <div class="container">
-    <div v-if="showControls" class="controls">
-      <div v-if="showFilterInput" class="control-item">
-        <va-input @keyup.enter="search" style="min-width: 250px;" inner-label v-model="filter"
-          :label="t('buttons.search')" placeholder="Search by name or accession">
-          <template #appendInner>
-            <va-icon name="search" />
-          </template>
-        </va-input>
-      </div>
-
-      <div v-if="showSampleTypeSelect" class="control-item">
-        <va-select inner-label v-model="sampleType" label="Sample Type" :options="['local_sample', 'biosamples']" />
-      </div>
-
-      <div class="control-item">
-        <va-button :loading="isLoading" :disabled="isSubmitDisabled" :round="false" @click="search">
-          Submit
-        </va-button>
-      </div>
-      <div class="control-item">
-        <va-button :disabled="isLoading" :round="false" @click="reset" color="danger">
-          Reset
-        </va-button>
+    <div class="controls">
+      <div class="row justify-space-between align-center">
+        <div class="flex">
+          <div v-if="showControls" class="row align-center">
+            <div class="flex">
+              <va-input @keyup.enter="search" style="min-width: 250px;" inner-label v-model="filter"
+                :label="t('buttons.search')" placeholder="Search by name or accession">
+                <template #appendInner>
+                  <va-icon name="search" />
+                </template>
+              </va-input>
+            </div>
+            <div v-if="showSampleTypeSelect" class="flex">
+              <va-select inner-label v-model="sampleType" label="Sample Type"
+                :options="['local_sample', 'biosamples']" />
+            </div>
+            <div class="flex">
+              <va-button :loading="isLoading" :disabled="isSubmitDisabled" :round="false" @click="search">
+                Submit
+              </va-button>
+            </div>
+            <div class="flex">
+              <va-button :loading="isLoading" :disabled="isSubmitDisabled" :round="false" @click="reset" color="danger">
+                Reset
+              </va-button>
+            </div>
+          </div>
+        </div>
+        <div class="flex">
+          <h4 class="va-h4">
+            {{ total }} Sample locations
+          </h4>
+        </div>
       </div>
     </div>
     <div class="map-container">
@@ -73,17 +84,14 @@ const hasBioSamples = computed(() => {
   return 'biosamples' in pages
 })
 const { init } = useToast()
+
 // Computed properties for conditions
 const showControls = computed(() => !props.taxid && !props.sample_accession);
-const showFilterInput = computed(() => !props.taxid);
 const showSampleTypeSelect = computed(() => !props.sample_accession && (hasLocalSamples.value && hasBioSamples.value));
 
 // Disable button logic
 const isSubmitDisabled = computed(() => {
-  return (
-    (!props.taxid && !filter.value) ||
-    (!props.sample_accession && hasLocalSamples.value && !sampleType.value)
-  )
+  return !filter.value && !sampleType.value
 });
 
 const L = window['L'];

@@ -5,7 +5,7 @@ const ena = http.ena.enaApi
 ///see https://www.ebi.ac.uk/ena/portal/api/#/
 class ENAClientService {
   getTaxon(taxonId) {
-    return ena.get(`/ena/portal/api/links/taxon?accession=${taxonId}&format=JSON&result=taxon`)
+    return ena.get(`/ena/portal/api/search?result=taxon&query=tax_id%3D${taxonId}&limit=10&format=json`)
   }
 
   getBioSample(accession) {

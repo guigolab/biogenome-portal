@@ -1,6 +1,6 @@
 <template>
     <div class="row">
-        <va-input class="flex" style="width: 200px;" v-model="filter" placeholder="Type to search" clearable>
+        <va-input class="flex" style="width: 300px;" v-model="filter" placeholder="Type to search" clearable>
             <template #appendInner>
                 <VaIcon name="search"></VaIcon>
             </template>

@@ -53,6 +53,14 @@
         {
             "key": "insdc_status",
             "type": "select"
+        },
+        {
+            "key": "goat_status",
+            "type": "select"
+        },
+        {
+            "key": "target_list_status",
+            "type": "select"
         }
     ]
 }

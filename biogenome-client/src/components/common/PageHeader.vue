@@ -1,7 +1,11 @@
 <template>
-    <h1 v-if="title" class="va-h1">{{ title[mappedLocale] }}</h1>
-    <p v-if="description" style="margin-bottom: 6px" class="va-text-secondary">{{
-        description[mappedLocale] }}</p>
+    <div class="row align-end justify-space-between">
+        <div class="flex">
+            <h1 v-if="title" class="va-h1">{{ title[mappedLocale] }}</h1>
+            <p v-if="description" style="margin-bottom: 6px" class="va-text-secondary">{{
+                description[mappedLocale] }}</p>
+        </div>
+    </div>
 </template>
 <script setup lang="ts">
 import { LangOption } from '../../data/types'
