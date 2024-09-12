@@ -86,7 +86,7 @@ const debouncedUpdateSearch = debounce(async (filter: string) => {
     itemStore.stores[model.value].searchForm.filter = filter;
     itemStore.resetPagination();
     await itemStore.fetchItems();
-}, 300);
+}, 200);
 
 
 function debounce(fn: any, delay: number) {

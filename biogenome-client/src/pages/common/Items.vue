@@ -1,12 +1,8 @@
 <template>
     <div v-if="config">
-        <div class="row align-end justify-space-between">
-            <div class="flex">
-                <h1 v-if="config.title" class="va-h1">{{ config.title[locale] }}</h1>
-                <p v-if="config.description" style="margin-bottom: 6px" class="va-text-secondary">{{
-        config.description[locale] }}</p>
-            </div>
-        </div>
+        <h1 v-if="config.title" class="va-h1">{{ config.title[locale] }}</h1>
+        <p v-if="config.description" style="margin-bottom: 6px" class="va-text-secondary">{{
+            config.description[locale] }}</p>
     </div>
     <FiltersBlock :hasCharts="charts.length > 0" />
     <VaCard outlined>
@@ -21,7 +17,6 @@
 import { useI18n } from 'vue-i18n'
 import { computed, ref, watchEffect } from 'vue'
 import { InfoBlock, ModelConfig } from '../../data/types'
-import general from '../../../configs/general.json'
 import chartsConfig from '../../../configs/charts.json'
 import { useRoute } from 'vue-router'
 import { useItemStore } from '../../stores/items-store'
@@ -34,30 +29,31 @@ const props = defineProps<{
     model?: keyof typeof chartsConfig
 }>()
 
-const { t, locale } = useI18n()
+const { locale } = useI18n()
 const route = useRoute()
 const itemStore = useItemStore()
-const isLoading = ref(false)
 
 watchEffect(() => {
     const path = route.fullPath
-    if (!path.includes('taxonomy')) {
-        itemStore.parentTaxon = ""
+
+    const conditions = {
+        parentTaxon: path.includes('taxonomy') || path.includes('countries'),
+        country: path.includes('countries')
     }
-    if (!path.includes('countries')) {
-        itemStore.country = ""
-    }
+
+    Object.keys(conditions).forEach(key => {
+        const field = key as keyof typeof conditions
+        if (!conditions[field]) {
+            itemStore[field] = ""
+        }
+    })
 })
+
 const currentModel = computed(() => {
     return props.model || route.name as keyof typeof chartsConfig
 })
 
 const charts = computed(() => chartsConfig[currentModel.value] ? chartsConfig[currentModel.value] as InfoBlock[] : [])
-
-const isGoaTActive = computed(() => {
-    return currentModel.value === 'organisms' && general.goat
-})
-
 
 watchEffect(async () => {
     itemStore.currentModel = currentModel.value

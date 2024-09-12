@@ -1,17 +1,15 @@
 <template>
-    <div class="row align-end justify-space-between">
-        <div class="flex">
-            <h1 v-if="title" class="va-h1">{{ title[mappedLocale] }}</h1>
-            <p v-if="description" style="margin-bottom: 6px" class="va-text-secondary">{{
-                description[mappedLocale] }}</p>
-        </div>
-    </div>
+
+    <h1 v-if="title" class="va-h1">{{ title[mappedLocale] }}</h1>
+    <p v-if="description" style="padding-bottom: 12px" class="va-text-secondary">{{
+        description[mappedLocale] }}</p>
+
 </template>
 <script setup lang="ts">
 import { LangOption } from '../../data/types'
 import { useI18n } from 'vue-i18n'
 
-const { t, locale } = useI18n()
+const { locale } = useI18n()
 
 const mappedLocale = locale.value as 'gb' | 'es-ct'
 

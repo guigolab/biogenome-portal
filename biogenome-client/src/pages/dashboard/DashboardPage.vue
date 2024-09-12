@@ -1,6 +1,6 @@
 <template>
+  <PageHeader :title="(dashboardInfo.title as LangOption)" :description="(dashboardInfo.description as LangOption)" />
   <div class="dashboard">
-    <PageHeader :title="(dashboardInfo.title as LangOption)" :description="(dashboardInfo.description as LangOption)" />
     <StatsBlock />
     <ChartsBlock v-if="configCharts.length" :charts="configCharts" />
   </div>

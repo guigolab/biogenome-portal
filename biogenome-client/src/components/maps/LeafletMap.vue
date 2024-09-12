@@ -1,5 +1,4 @@
 <template>
-
   <div class="container">
     <div class="controls">
       <div class="row justify-space-between align-center">

@@ -100,7 +100,7 @@ export const mapRoutes = [
     {
         name: 'countries',
         path: '/countries',
-        component: () => import('../pages/maps/3DCountries.vue'),
+        component: () => import('../pages/maps/Countries.vue'),
         meta: { name: 'countries' }
     }
 ]

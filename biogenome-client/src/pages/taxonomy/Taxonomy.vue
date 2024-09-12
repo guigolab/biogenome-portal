@@ -7,19 +7,15 @@
                 {{ taxonomyStore.showTree ? t('taxon.search.hide') : t('taxon.search.show') }}
             </VaButton>
         </div>
-        <div class="flex lg4 md6 sm12 xs12">
-            <VaSelect hideSelected :loading="isLoading" dropdownIcon="search" searchable highlight-matched-text
-                :textBy="(v: TreeNode) => `${v.name} (${v.rank})`" trackBy="taxid" @update:model-value="setCurrentTaxon"
-                @update:search="taxonomyStore.handleSearch" v-model="taxonomyStore.currentTaxon"
-                :searchPlaceholderText="t('taxon.search.placeholder')" :noOptionsText="t('taxon.search.noOptions')"
-                :options="taxonomyStore.taxons">
-            </VaSelect>
-        </div>
         <div class="flex">
             <VaButton :disabled="taxonomyStore.taxidQuery === rootNode" preset="primary"
                 @click="router.push({ name: 'wiki', params: { lineage: rootNode } })">
                 {{ t('taxon.search.rootLoad') }}
             </VaButton>
+        </div>
+        <div class="flex lg4 md6 sm12 xs12">
+            <TaxonSearchSelect :is-loading="isLoading" :current-taxon="taxonomyStore.currentTaxon"
+                @update-taxon="setCurrentTaxon" />
         </div>
     </div>
     <div class="content-row">
@@ -38,6 +34,7 @@ import { useI18n } from 'vue-i18n'
 import { useTaxonomyStore } from '../../stores/taxonomy-store'
 import { TreeNode } from '../../data/types';
 import { useRouter, useRoute } from 'vue-router';
+import TaxonSearchSelect from '../../components/inputs/TaxonSearchSelect.vue';
 
 const router = useRouter()
 const route = useRoute()
@@ -63,7 +60,6 @@ const { t } = useI18n()
 const isLoading = ref(false)
 
 function setCurrentTaxon(taxon: TreeNode) {
-    taxonomyStore.taxons = []
     taxonomyStore.currentTaxon = { ...taxon }
     taxonomyStore.taxidQuery = taxon.taxid
     router.push({ name: 'wiki', params: { lineage: taxon.taxid } })
