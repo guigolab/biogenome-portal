@@ -4,7 +4,8 @@
       <a :href="nav.url" target="_blank"><va-icon color="success" size="5rem" name=app-logo></va-icon></a>
     </div>
     <va-divider />
-    <VaSidebarItem v-for="item in items" :key="item.name" :active="isRouteActive(item)" :to="{ name: item.name }">
+    <VaSidebarItem @click="globalStore.isSidebarVisible = !globalStore.isSidebarVisible" v-for="item in items"
+      :key="item.name" :active="isRouteActive(item)" :to="{ name: item.name }">
       <VaSidebarItemContent>
         <VaSidebarItemTitle>
           {{ t(item.displayName) }}
@@ -18,21 +19,23 @@
         </VaSidebarItemTitle>
       </VaSidebarItemContent>
     </VaSidebarItem>
-    <VaSidebarItem v-if="globalStore.isAuthenticated" :to="{ name: 'cms-organisms' }">
+    <VaSidebarItem @click="globalStore.isSidebarVisible = !globalStore.isSidebarVisible"
+      v-if="globalStore.isAuthenticated" :to="{ name: 'cms-organisms' }">
       <VaSidebarItemContent>
         <VaSidebarItemTitle>
           Admin
         </VaSidebarItemTitle>
       </VaSidebarItemContent>
     </VaSidebarItem>
-    <VaSidebarItem v-if="globalStore.isAuthenticated">
+    <VaSidebarItem @click="globalStore.isSidebarVisible = !globalStore.isSidebarVisible"
+      v-if="globalStore.isAuthenticated">
       <VaSidebarItemContent @click="logout">
         <VaSidebarItemTitle>
           Logout
         </VaSidebarItemTitle>
       </VaSidebarItemContent>
     </VaSidebarItem>
-    <VaSidebarItem v-else-if="cms">
+    <VaSidebarItem @click="globalStore.isSidebarVisible = !globalStore.isSidebarVisible" v-else-if="cms">
       <VaSidebarItemContent @click="$router.push({ name: 'login' })">
         <VaSidebarItemTitle>
           Login
