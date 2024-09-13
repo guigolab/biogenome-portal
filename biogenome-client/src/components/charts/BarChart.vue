@@ -33,7 +33,7 @@ await fetchData()
 
 
 const chartOptions = computed(() => {
-    const total = itemStore.stores[model].total
+    const total = itemStore.stores[model].total || Object.values(data.value).reduce((acc, val) => acc + val, 0)
     return getChartOptions(type, total)
 })
 const chartData = computed(() => {
