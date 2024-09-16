@@ -46,7 +46,6 @@ def initialize_routes(api):
 	api.add_resource(lookup_controller.OrganismRelatedDataLookup, '/api/organisms/<taxid>/lookup')
 	api.add_resource(organisms_controller.OrganismLineageApi, '/api/organisms/<taxid>/lineage')
 	api.add_resource(organisms_controller.OrganismRelatedDataApi, '/api/organisms/<taxid>/<model>') 
-	api.add_resource(sample_locations_controller.SampleLocationsByOrganism, '/api/organisms/<taxid>/coordinates')
 
 
 	##ASSEMBLIES
@@ -60,13 +59,6 @@ def initialize_routes(api):
 	##CRONJOBS
 	api.add_resource(taxonomy_controller.GenerateTreeApi, '/api/cronjob/helpers/tree')
 	api.add_resource(cronjobs_controller.CronJobApi, '/api/cronjob', '/api/cronjob/<model>/<action>')
-
-
-	##GEOGRAPHIC LOCATIONS
-	api.add_resource(sample_locations_controller.SampleLocationsByTaxon, '/api/taxons/<taxid>/coordinates')
-	api.add_resource(sample_locations_controller.SampleLocationsByBioSample, '/api/biosamples/<accession>/coordinates' )
-	api.add_resource(sample_locations_controller.SampleLocationsByLocalSample, '/api/local_samples/<local_id>/coordinates')
-
 
 	##ANNOTATIONS
 	api.add_resource(annotations_controller.AnnotationsApi, '/api/annotations')

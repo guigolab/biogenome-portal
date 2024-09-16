@@ -29,16 +29,3 @@ def get_sample_locations(offset=0, limit=10000, lineage=None, sample_type=None, 
     total = coords.count()
     response = dict(total=total, data=list(coords.as_pymongo()))
     return response
-
-def get_sample_locations_by_taxon(taxid):
-    return SampleCoordinates.objects(lineage=taxid).exclude('id').to_json()
-
-def get_sample_locations_by_organism(taxid):
-    return SampleCoordinates.objects(taxid=taxid).exclude('id').to_json()
-
-def get_sample_locations_by_biosample(accession):
-    return SampleCoordinates.objects(sample_accession=accession).exclude('id').first().to_json()
-
-def get_sample_locations_by_localsample(local_id):
-    return SampleCoordinates.objects(sample_accession=local_id).exclude('id').first().to_json()
-    

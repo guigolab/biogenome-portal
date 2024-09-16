@@ -28,7 +28,10 @@
         "metadata.assembly_info.assembly_level",
         "metadata.assembly_info.assembly_type",
         "metadata.assembly_info.assembly_status",
-        "metadata.assembly_info.release_date"
+        "metadata.assembly_info.release_date",
+        "metadata.assembly_stats.contig_n50",
+        "metadata.assembly_stats.scaffold_n50"
+
     ],
     "organisms":[
         "image",

@@ -1,7 +1,7 @@
 openapi: 3.0.0
 
 info:
-  version: "3.1.2"
+  version: "3.2.0"
   title: "BioGenome Portal API"
   contact:
     email: "emilio.righi@crg.eu"
@@ -12,7 +12,7 @@ servers:
   - url: https://genome.crg.es/erga/api
     description: server containing all the data generated under the European Reference Genome Atlas (PRJEB43510) umbrella 
   - url: https://dades.biogenoma.cat/api
-    description: server containing all the data generated under the Catalan Initiative for the Earth Biogenome Project 
+    description: server containing all the data generated under the Catalan Initiative for the Earth Biogenome Project (PRJEB49670) umbrella
   - url: https://genome.crg.es/lichenoteca/api
     description: server containing samples derived from the Lichenoteca dataset (https://doi.org/10.15468/dgecw5), accessed via GBIF.org on 2024-05-26, of the Institut Botanic de Barcelona.
 
@@ -28,6 +28,7 @@ tags:
 - name: "taxonomy"
 - name: "stats"
 - name: "lookup"
+- name: "geo_location"
 
 paths:
   /goat_report:
@@ -46,7 +47,66 @@ paths:
               schema:
                 type: string
                 format: binary
-
+                
+  /coordinates:
+    get:
+      tags:
+        - "geo_location"
+      summary: "Endpoint to retrieve a paginated list of sample coordinates"
+      parameters:
+        - in: 'query'
+          name: 'filter'
+          description: 'filter by scientific name'
+          schema:
+            type: 'string'
+        - in: 'query'
+          name: 'sample_accession'
+          description: 'id of the sample'
+          schema:
+            type: 'string'
+        - in: 'query'
+          name: 'taxid'
+          description: 'taxid of the samples'
+          schema:
+            type: 'string'
+        - in: 'query'
+          name: 'lineage'
+          description: 'taxid of the parent taxon'
+          schema:
+            type: 'string'
+        - in: 'query'
+          name: 'sample_type'
+          description: 'filter by biosamples or local_samples'
+          schema:
+            type: 'string'
+            enum:
+            - "local_samples"
+            - "biosamples"
+        - in: 'query'
+          name: 'offset'
+          schema:
+            type: 'number'
+            default: 0
+        - in: 'query'
+          name: 'limit'
+          schema:
+            type: 'number'
+            default: 20
+      responses:
+        "200":
+          description: "successful operation"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  data:
+                    type: "array"
+                    items:
+                      $ref: "#/components/schemas/SampleCoordinates"
+                  total:
+                    type: "number"
+  
   /lookup:
     get:
       tags: 
@@ -61,7 +121,7 @@ paths:
                 type: "object"
                 properties:
                   assemblies:
-                    type: number"
+                    type: number
                   annotations:
                     type: number
                   biosamples:
@@ -81,6 +141,13 @@ paths:
         - "stats"
       summary: "get model field statistics"
       parameters:
+        - name: filters
+          in: query
+          description: "Dynamic filters as key-value pairs"
+          schema:
+            type: object
+            additionalProperties:
+              type: string
         - in: 'path'
           name: 'model'
           required: true
@@ -97,6 +164,7 @@ paths:
         - in: 'path'
           name: 'field'
           required: true
+          description: "Field to retrieve frequencies from"
           schema:
             type: string
       responses:
@@ -106,8 +174,11 @@ paths:
             application/json:
               schema:
                 type: object
-
-  /computed_tree:
+                additionalProperties: {
+                    type: number
+                  }
+                  
+  /tree:
     get:
       tags:
         - "taxonomy"
@@ -128,6 +199,7 @@ paths:
       parameters:
         - in: 'query'
           name: 'filter'
+          description: 'Filter by scientific name or taxid'
           schema:
             type: 'string'
         - in: 'query'
@@ -179,6 +251,20 @@ paths:
           schema:
             type: 'number'
             default: 20
+        - name: fields
+          in: query
+          description: "Fields to return"
+          schema:
+            type: array
+            items:
+              type: string
+        - name: filters
+          in: query
+          description: "Dynamic filters as key-value pairs"
+          schema:
+            type: object
+            additionalProperties:
+              type: string
       responses:
         "200":
           description: "successful operation"
@@ -193,7 +279,11 @@ paths:
                       $ref: "#/components/schemas/Organism"
                   total:
                     type: "number"
-
+            text/tab-separated-values: 
+              schema: 
+                type: "string"
+                example: "key1\tkey2\nexample\t123"
+              
   /organisms/{taxid}:
     get:
       tags:
@@ -364,28 +454,6 @@ paths:
         "404":
           description: "Organism not found"
 
-  /organisms/{taxid}/coordinates:
-    get:
-      tags:
-        - "organisms"
-      parameters:
-        - in: 'path'
-          name: 'taxid'
-          required: true
-          schema:
-            type: "string"
-      responses:
-        "200":
-          description: "successful operation"
-          content:
-            application/json:
-              schema:
-                type: "array"
-                items:
-                  $ref: "#/components/schemas/SampleCoordinates"
-        "404":
-          description: "Organism not found"
-                                 
   /assemblies:
     get:
       tags:
@@ -394,6 +462,7 @@ paths:
       parameters:
         - in: 'query'
           name: 'filter'
+          description: 'Filter by scientific name or assembly name'
           schema:
             type: 'string'
         - in: 'query'
@@ -429,6 +498,20 @@ paths:
           schema:
             type: 'number'
             default: 20
+        - name: fields
+          in: query
+          description: "Fields to return"
+          schema:
+            type: array
+            items:
+              type: string
+        - name: filters
+          in: query
+          description: "Dynamic filters as key-value pairs"
+          schema:
+            type: object
+            additionalProperties:
+              type: string
       responses:
         "200":
           description: "successful operation"
@@ -443,6 +526,10 @@ paths:
                       $ref: "#/components/schemas/Assembly"
                   total:
                     type: "number"
+            text/tab-separated-values: 
+              schema: 
+                type: "string"
+                example: "key1\tkey2\nexample\t123"
 
   /assemblies/{accession}:
     get:
@@ -470,7 +557,7 @@ paths:
         - "organisms"
       parameters:
         - in: 'path'
-          name: 'taxid'
+          name: 'accession'
           required: true
           schema:
             type: "string"
@@ -566,6 +653,20 @@ paths:
           schema:  
             type: 'number'
             default: 20
+        - name: fields
+          in: query
+          description: "Fields to return"
+          schema:
+            type: array
+            items:
+              type: string
+        - name: filters
+          in: query
+          description: "Dynamic filters as key-value pairs"
+          schema:
+            type: object
+            additionalProperties:
+              type: string
       responses:
         "200":
           description: "successful operation"
@@ -580,8 +681,10 @@ paths:
                       $ref: "#/components/schemas/Experiment"
                   total:
                     type: "number"
-        "405":
-          description: "Invalid input"
+            text/tab-separated-values: 
+              schema: 
+                type: "string"
+                example: "key1\tkey2\nexample\t123"
 
   /experiments/{accession}:
     get:
@@ -642,6 +745,20 @@ paths:
           schema:
             type: 'number'
             default: 20
+        - name: fields
+          in: query
+          description: "Fields to return"
+          schema:
+            type: array
+            items:
+              type: string
+        - name: filters
+          in: query
+          description: "Dynamic filters as key-value pairs"
+          schema:
+            type: object
+            additionalProperties:
+              type: string
       responses:
         "200":
           description: "successful operation"
@@ -656,8 +773,10 @@ paths:
                       $ref: "#/components/schemas/BioSample"
                   total:
                     type: "number"
-        "405":
-          description: "Invalid input"
+            text/tab-separated-values: 
+              schema: 
+                type: "string"
+                example: "key1\tkey2\nexample\t123"
           
   /biosamples/{accession}:
     get:
@@ -745,26 +864,6 @@ paths:
         "404":
           description: "Read not found"
 
-  /biosamples/{accession}/coordinates:
-    get:
-      tags:
-        - "biosamples"
-      parameters:
-        - in: 'path'
-          name: 'accession'
-          schema:
-            type: 'string'
-          required: true
-      responses:
-        "200":
-          description: "successful operation"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/SampleCoordinates"
-        "404":
-          description: "Read not found"
-             
   /local_samples:
     get:
       tags:
@@ -811,6 +910,20 @@ paths:
           schema:
             type: 'number'
             default: 20
+        - name: fields
+          in: query
+          description: "Fields to return"
+          schema:
+            type: array
+            items:
+              type: string
+        - name: filters
+          in: query
+          description: "Dynamic filters as key-value pairs"
+          schema:
+            type: object
+            additionalProperties:
+              type: string
       responses:
         "200":
           description: "successful operation"
@@ -825,8 +938,10 @@ paths:
                       $ref: "#/components/schemas/LocalSample"
                   total:
                     type: "number"
-        "405":
-          description: "Invalid input"
+            text/tab-separated-values: 
+              schema: 
+                type: "string"
+                example: "key1\tkey2\nexample\t123"
 
   /local_samples/{id}:
     get:
@@ -847,27 +962,7 @@ paths:
                 $ref: "#/components/schemas/LocalSample"
         "404":
           description: "local sample not found"
-
-  /local_samples/{id}/coordinates:
-    get:
-      tags:
-        - "local_samples"
-      parameters:
-        - in: 'path'
-          name: 'id'
-          required: true
-          schema:
-            type: 'string'
-      responses:
-        "200":
-          description: "successful operation"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/SampleCoordinates"
-        "404":
-          description: "local sample not found"
-                 
+         
   /annotations:
     get:
       tags:
@@ -895,6 +990,20 @@ paths:
           schema:
             type: 'number'
             default: 20
+        - name: fields
+          in: query
+          description: "Fields to return"
+          schema:
+            type: array
+            items:
+              type: string
+        - name: filters
+          in: query
+          description: "Dynamic filters as key-value pairs"
+          schema:
+            type: object
+            additionalProperties:
+              type: string
       responses:
         "200":
           description: "successful operation"
@@ -909,8 +1018,10 @@ paths:
                       $ref: "#/components/schemas/Annotation"
                   total:
                     type: "number"
-        "405":
-          description: "Invalid input"
+            text/tab-separated-values: 
+              schema: 
+                type: "string"
+                example: "key1\tkey2\nexample\t123"
 
   /annotations/{name}:
     get:
@@ -962,6 +1073,20 @@ paths:
           schema:
             type: 'number'
             default: 20
+        - name: fields
+          in: query
+          description: "Fields to return"
+          schema:
+            type: array
+            items:
+              type: string
+        - name: filters
+          in: query
+          description: "Dynamic filters as key-value pairs"
+          schema:
+            type: object
+            additionalProperties:
+              type: string
       responses:
         "200":
           description: "successful operation"
@@ -976,8 +1101,10 @@ paths:
                       $ref: "#/components/schemas/TaxonNode"
                   total:
                     type: "number"
-        "405":
-          description: "Invalid input"
+            text/tab-separated-values: 
+              schema: 
+                type: "string"
+                example: "key1\tkey2\nexample\t123"
 
   /taxons/{taxid}:
     get:
@@ -999,28 +1126,6 @@ paths:
         "404":
           description: "Taxon not found"
 
-  /taxons/{taxid}/coordinates:
-    get:
-      tags:
-        - "taxons"
-      parameters:
-        - in: 'path'
-          name: 'taxid'
-          required: true
-          schema:  
-            type: 'string'
-      responses:
-        "200":
-          description: "successful operation"
-          content:
-            application/json:
-              schema:
-                type: "array"
-                items:
-                  $ref: "#/components/schemas/SampleCoordinates"
-        "404":
-          description: "Taxon not found"
-  
   /taxons/{taxid}/children:
     get:
       tags:
@@ -1065,6 +1170,10 @@ components:
           type: "array"
           items:
             type: "string"
+        taxon_lineage:
+          type: "array"
+          items:
+            type: "string"
           description: "list of chromosome accessions"
         metadata:
           type: "object"
@@ -1081,6 +1190,10 @@ components:
           type: "string"
         assembly_accession:
           type: "string"
+        taxon_lineage:
+          type: "array"
+          items:
+            type: "string"
         links:
           type: "array"
           items:
@@ -1100,26 +1213,7 @@ components:
           type: "array"
           items:
             type: "string"
-    
-    GeoLocation:
-      type: "object"
-      description: "geolocation object"
-      properties:
-        geo_location:
-          type: "string"
-          description: "lat:lon formatted string"
-        type:
-          type: "string"
-          default: "Feature"
-        organisms:
-          type: "array"
-          items:
-            type: "string"
-          description: "array of taxids"
-        geometry:
-          $ref: "#/components/schemas/Geometry"
-          
-    
+
     Experiment:
       type: "object"
       description: "Raw or Mapped experiments"
@@ -1136,6 +1230,10 @@ components:
           type: "string"
         scientific_name:
           type: "string"
+        taxon_lineage:
+          type: "array"
+          items:
+            type: "string"
         metadata:
           type: "object"
           description: "INSDC metadata"
@@ -1143,25 +1241,12 @@ components:
     BioSample:
       type: "object"
       properties:
-        assemblies:
-          type: "array"
-          items:
-            type: "string"
-        experiments:
+        taxon_lineage:
           type: "array"
           items:
             type: "string"
         accession:
           type: "string"
-        latitude:
-          type: "string"
-        longitude:
-          type: "string"
-        sub_samples:
-          type: "array"
-          items:
-            type: "string"
-          description: "list of related sample accessions"
         taxid:
           type: "string"
         scientific_name:
@@ -1183,14 +1268,14 @@ components:
       properties:
         local_id:
           type: "string"
-        latitude:
-          type: "string"
-        longitude:
-          type: "string"
         taxid:
           type: "string"
         scientific_name:
           type: "string"
+        taxon_lineage:
+          type: "array"
+          items:
+            type: "string"
         metadata:
           type: "object"
           description: "user defined metadata"
@@ -1271,6 +1356,7 @@ components:
         - "long_list"
         - "family_representative"
         - "other_priority"
+        
     TreeNode:
       type: "object"
       properties:
@@ -1335,6 +1421,10 @@ components:
           type: "string"
         sample_accession:
           type: "string"
+        taxon_lineage:
+          type: "array"
+          items:
+            type: "string"
         is_local_sample:
           type: "boolean"
         image:
