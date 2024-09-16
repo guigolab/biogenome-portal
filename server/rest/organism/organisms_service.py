@@ -20,14 +20,10 @@ FIELDS_TO_EXCLUDE = ['id']
 
 def get_organisms(args):
     filter = get_filter(args.get('filter'))
-    selected_fields = [v for k, v in args.items(multi=True) if k.startswith('fields[]')]
-    if not selected_fields:
-        selected_fields = ['scientific_name', 'taxid', "insdc_common_name"]
     return data_helper.get_items(args, 
                                  Organism, 
-                                 FIELDS_TO_EXCLUDE, 
                                  filter,
-                                 selected_fields)
+                                 ['scientific_name', 'taxid', "insdc_common_name"])
 
 def get_filter(filter):
     if filter:

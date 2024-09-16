@@ -7,17 +7,18 @@
                 </div>
                 <div class="flex">
                     <VaMenu>
-                        <VaMenuItem v-if="isGoaTActive" @selected="downloadGoatReport">
+                        <VaMenuItem icon="article" v-if="isGoaTActive" @selected="downloadGoatReport">
                             GoaT
                         </VaMenuItem>
-                        <VaMenuItem @selected="itemStore.showTsvModal = !itemStore.showTsvModal">
+                        <VaMenuItem icon="article" @selected="itemStore.showTsvModal = !itemStore.showTsvModal">
                             Report
                         </VaMenuItem>
-                        <VaMenuItem @selected="itemStore.showChartModal = !itemStore.showChartModal">
+                        <VaMenuItem icon="insert_chart"
+                            @selected="itemStore.showChartModal = !itemStore.showChartModal">
                             Chart
                         </VaMenuItem>
                         <template #anchor>
-                            <VaButton icon="cloud_download" preset="primary">Export</VaButton>
+                            <VaButton preset="primary" icon="cloud_download">Export</VaButton>
                         </template>
                     </VaMenu>
                 </div>
@@ -56,6 +57,7 @@ watch(() => props.hasCharts, () => {
     if (!props.hasCharts) itemStore.view = 'table'
 })
 
+const emits = defineEmits(['toggleFilter'])
 const options = [
     { value: "table", icon: "table_rows", },
     { value: "charts", icon: "leaderboard", },

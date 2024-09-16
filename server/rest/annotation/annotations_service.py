@@ -14,14 +14,11 @@ FILES_REQUIRED_FIELDS = ['gzipAnnotation', 'tabixAnnotation']
 
 def get_annotations(args):
     filter = get_filter(args.get('filter'))
-    selected_fields = [v for k, v in args.items(multi=True) if k.startswith('fields[]')]
-    if not selected_fields:
-        selected_fields = ['name', 'scientific_name', 'taxid', 'assembly_accession']
     return data_helper.get_items(args, 
                                  GenomeAnnotation, 
                                  FIELDS_TO_EXCLUDE, 
                                  filter,
-                                 selected_fields)
+                                 ['name', 'scientific_name', 'taxid', 'assembly_accession'])
 
 
 def get_filter(filter):

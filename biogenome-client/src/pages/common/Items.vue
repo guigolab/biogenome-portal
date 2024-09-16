@@ -15,7 +15,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { computed, ref, watchEffect } from 'vue'
+import { computed, watch, watchEffect } from 'vue'
 import { InfoBlock, ModelConfig } from '../../data/types'
 import chartsConfig from '../../../configs/charts.json'
 import { useRoute } from 'vue-router'
@@ -55,10 +55,10 @@ const currentModel = computed(() => {
 
 const charts = computed(() => chartsConfig[currentModel.value] ? chartsConfig[currentModel.value] as InfoBlock[] : [])
 
-watchEffect(async () => {
+watch(() => currentModel.value, async () => {
     itemStore.currentModel = currentModel.value
     await itemStore.fetchItems()
-})
+}, { immediate: true })
 
 
 

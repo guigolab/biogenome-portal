@@ -1,5 +1,5 @@
 import os
-from jobs import assemblies, biosamples, experiments, geolocation, taxonomy
+from jobs import assemblies, biosamples, experiments, geolocation, taxonomy, annotations
 from errors import NotFound
 from celery.result import AsyncResult
 
@@ -21,6 +21,9 @@ JOB_MODELS = {
         'import':assemblies.import_assemblies_by_bioproject,
         'blob_link':assemblies.add_blob_link
     },
+    'annotations':{
+        'import_ncbi':annotations.import_annotations_from_ncbi
+    },
     'helpers':{
         'handle_orphans':taxonomy.handle_orphan_organisms,
         'add_lineage':taxonomy.add_lineage
@@ -28,7 +31,7 @@ JOB_MODELS = {
     'geo_locations':{
         'create_from_local_samples':geolocation.create_local_sample_coordinates,
         'create_from_biosamples':geolocation.create_biosample_coordinates,
-        'create_countries':geolocation.update_all_countries
+        'cr,eate_countries':geolocation.update_all_countries
     }
 }
 
@@ -53,7 +56,7 @@ def create_cronjob(model, action):
         return message, 200
     
     except Exception as e:
-        message = f'Error executing job {model}: {e}'
+        message = f'Error executing job {model}{action}: {e}'
         print("ERROR: ", message)
         return message, 400
 

@@ -6,17 +6,11 @@ from helpers import user as user_helper, organism as organism_helper, data as da
 FIELDS_TO_EXCLUDE = ['id']
 
 def get_local_samples(args):
-    
     filter = get_filter(args.get('filter'))
-    selected_fields = [v for k, v in args.items(multi=True) if k.startswith('fields[]')]
-    if not selected_fields:
-        selected_fields = ['local_id', 'scientific_name', 'taxid']
     return data_helper.get_items(args, 
                                  LocalSample, 
-                                 FIELDS_TO_EXCLUDE, 
                                  filter,
-                                 selected_fields)
-
+                                 ['local_id', 'scientific_name', 'taxid'])
 
 def get_filter(filter):
     if filter:

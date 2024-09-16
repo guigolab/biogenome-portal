@@ -1,5 +1,5 @@
 <template>
-    <VaDateInput v-model="model" clearable :format-date="formatDate" :label="label" style="width: 100%" mode="range"
+    <VaDateInput preset="bordered" v-model="model" clearable :format-date="formatDate" :label="label" style="width: 100%" mode="range"
         type="month" prevent-overflow :allowed-years="allowedDate" :allowed-months="allowedDate"
         :allowed-days="allowedDate">
     </VaDateInput>

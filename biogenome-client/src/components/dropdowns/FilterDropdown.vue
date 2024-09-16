@@ -1,21 +1,35 @@
 <template>
     <VaBadge overlap color="info" :text="activeFilters.length">
-        <VaButtonDropdown preset="primary" left-icon stickToEdges :closeOnContentClick="false" icon="tune" :label="t('buttons.filters')">
+
+        <VaButtonDropdown preset="primary" placement="left-bottom" left-icon stickToEdges :closeOnContentClick="false"
+            icon="tune" :label="t('buttons.filters')">
             <div class="w-200">
                 <div class="p-4">
-                    <p class="va-text-secondary">Filters apply to both table and chart view</p>
+                    <p class="va-text-secondary">Filters apply to both table and chart views</p>
                 </div>
 
                 <div class="p-4" v-for="(field, index) in currentFilters" :key="index">
-
                     <component :is="getFieldComponent(field.type)" :value="getValue(field)" :label="getLabel(field.key)"
                         :options="currentFrequencies[field.key]" :key="field.key" class="m-2"
                         @valueChange="(v: any) => updateSearchForm(field, v)">
                     </component>
                 </div>
+
+                <div v-if="showEBPMetrics">
+                    <VaDivider style="margin-bottom: 12px;">EBP metrics</VaDivider>
+                    <div class="p-4">
+                        <VaCheckbox indeterminate :label="'Contig N50 > 1MB'" v-model="ebpFilter.contig" />
+                    </div>
+                    <div class="p-4">
+                        <VaCheckbox indeterminate :label="'Scaffold N50 > 10MB'" v-model="ebpFilter.scaffold" />
+                    </div>
+                </div>
+
                 <div class="p-4">
                     <VaButton :disabled="activeFilters.length === 0" @click="resetSearchForm" size="small"
-                        color="danger">Reset all
+                        color="danger">
+                        Reset
+                        all
                     </VaButton>
                 </div>
             </div>
@@ -24,10 +38,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, watch } from 'vue';
+import { computed, onMounted, reactive, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useItemStore } from '../../stores/items-store';
 import filtersConfig from '../../../configs/filters.json';
+import general from '../../../configs/general.json';
 import Input from '../inputs/Input.vue'
 import Select from '../inputs/Select.vue'
 import DateInput from '../inputs/DateRange.vue'
@@ -39,7 +54,11 @@ import { ConfigFilter } from '../../data/types';
 const { t } = useI18n();
 const itemStore = useItemStore();
 
+const ebpRelated = Boolean(general.ebp_related)
+
 const staticColumns = ['filter', 'sort_order', 'sort_column']
+
+const showEBPMetrics = computed(() => itemStore.currentModel === 'assemblies' && ebpRelated)
 
 const model = computed(() => itemStore.currentModel as keyof typeof filtersConfig);
 
@@ -58,6 +77,51 @@ const modelFilterEntries = computed(() => Object.entries(itemStore.stores[model.
 const activeFilters = computed(() => modelFilterEntries.value
     .filter(([k, v]) => (v || v === false))
 )
+const ebpFilter = reactive({
+    contig: getN50('metadata.assembly_stats.contig_n50'),
+    scaffold: getN50('metadata.assembly_stats.scaffold_n50')
+})
+
+function getN50(field: string) {
+    let v = null
+    if (itemStore.stores[model.value].searchForm[`${field}__gt`]) {
+        v = true
+    } else if (itemStore.stores[model.value].searchForm[`${field}__lt`]) {
+        v = false
+    }
+    return v
+}
+
+watch(ebpFilter, async () => {
+    const {
+        'metadata.assembly_stats.contig_n50__gt': _,
+        'metadata.assembly_stats.scaffold_n50__gt': __,
+        'metadata.assembly_stats.contig_n50__lt': ___,
+        'metadata.assembly_stats.scaffold_n50__lt': ____,
+        ...remainingSearchForm
+    } = itemStore.stores[model.value].searchForm
+
+    // Helper function to manage setting the correct threshold
+    const applyEBPFilter = (filterValue: boolean | null, field: string, threshold: number) => {
+        if (filterValue === true) {
+            remainingSearchForm[`${field}__gt`] = threshold;
+        } else if (filterValue === false) {
+            remainingSearchForm[`${field}__lt`] = threshold;
+        }
+    };
+    // Apply filter for contig and scaffold
+    applyEBPFilter(ebpFilter.contig, 'metadata.assembly_stats.contig_n50', 1000000);
+    applyEBPFilter(ebpFilter.scaffold, 'metadata.assembly_stats.scaffold_n50', 10000000);
+
+    // Update searchForm with remaining fields and the new filters
+    itemStore.stores[model.value].searchForm = { ...remainingSearchForm };
+
+    await handleQuery();
+
+}, { deep: true });
+
+
+
 
 watch(() => model.value, async () => {
     createFilters(model.value)
@@ -65,6 +129,7 @@ watch(() => model.value, async () => {
 
 // Fetch filters when the component mounts
 onMounted(async () => await createFilters(model.value));
+
 
 function getValue(field: ConfigFilter) {
     if (field.type === 'date') return dateModels.value[field.key]
@@ -81,6 +146,11 @@ function getFieldComponent(type: string) {
     }
 }
 
+async function handleQuery() {
+    itemStore.resetPagination()
+    await itemStore.fetchItems()
+    await fetchFrequencies(model.value)
+}
 // pretty print label
 function getLabel(key: string) {
     if (key.includes('metadata.')) {
@@ -102,8 +172,7 @@ async function updateSearchForm(filter: ConfigFilter, value: any) {
         itemStore.stores[model.value].searchForm[key] = value;
     }
 
-    await itemStore.fetchItems()
-    await fetchFrequencies(model.value)
+    await handleQuery()
 }
 
 async function resetSearchForm() {
@@ -113,8 +182,7 @@ async function resetSearchForm() {
         entries[key] = null;
     });
     itemStore.stores[model.value].searchForm = { filter, sort_column, sort_order, ...entries }
-    itemStore.resetPagination()
-    await itemStore.fetchItems()
-    await fetchFrequencies(model.value)
+    await handleQuery()
+
 }
 </script>

@@ -44,7 +44,8 @@ export function getChartOptions(type: ChartType, total: number) {
                     size: 18
                 }
             }
-    } else {
+    }
+    else {
         legend = {
             display: false
         }
@@ -57,7 +58,8 @@ export function getChartOptions(type: ChartType, total: number) {
         scales,
         interaction: { intersect: false, mode: 'index' },
         plugins: {
-            legend, datalabels,
+            legend,
+            datalabels,
             tooltip: {
                 callbacks: {
                     footer: () => 'Total: ' + total

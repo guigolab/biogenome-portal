@@ -9,16 +9,11 @@ from clients import ebi_client
 FIELDS_TO_EXCLUDE = ['id', 'created']
 
 def get_reads(args):
-    
     filter = get_filter(args.get('filter'))
-    selected_fields = [v for k, v in args.items(multi=True) if k.startswith('fields[]')]
-    if not selected_fields:
-        selected_fields = ['experiment_accession', 'taxid', "scientific_name", "sample_accession"]
     return data_helper.get_items(args, 
                                  Experiment, 
-                                 FIELDS_TO_EXCLUDE, 
                                  filter,
-                                 selected_fields)
+                                 ['experiment_accession', 'taxid', "scientific_name", "sample_accession"])
 
 def get_filter(filter):
     if filter:

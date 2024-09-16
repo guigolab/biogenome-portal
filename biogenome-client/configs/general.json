@@ -1,27 +1,29 @@
 {
-    "title": "Catalan Initiative for the Earth BioGenome Project",
-    "nav": {
-      "logo": "CBPLogo.png",
-      "url": "https://www.biogenoma.cat"
+  "title": "Catalan Initiative for the Earth BioGenome Project",
+  "nav": {
+    "logo": "CBPLogo.png",
+    "url": "https://www.biogenoma.cat"
+  },
+  "cms": true,
+  "goat": true,
+  "ebp_related": true,
+  "tracker": "cbp-tracking.js",
+  "languages": [
+    {
+      "code": "gb",
+      "name": "english"
     },
-    "cms": true,
-    "goat": true,
-    "tracker": "cbp-tracking.js",
-    "languages": [
-      {
-        "code": "gb",
-        "name": "english"
-      },
-      {
-        "code": "es-ct",
-        "name": "catalan"
-      }
-    ],
-    "wiki": {
-      "gb": "https://en.m.wikipedia.org/wiki",
-      "es-ct": "https://ca.m.wikipedia.org/wiki"
-    },
-    "maps": [
-        "samples-map"
-    ]
+    {
+      "code": "es-ct",
+      "name": "catalan"
+    }
+  ],
+  "wiki": {
+    "gb": "https://en.m.wikipedia.org/wiki",
+    "es-ct": "https://ca.m.wikipedia.org/wiki"
+  },
+  "maps": [
+    "samples-map",
+    "countries"
+  ]
 }

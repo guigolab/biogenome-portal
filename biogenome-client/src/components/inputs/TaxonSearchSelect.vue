@@ -1,6 +1,6 @@
 <template>
-    <VaSelect @click="emits('inputClicked')" :loading="isLoading" hideSelected dropdownIcon="search" searchable
-        highlight-matched-text :textBy="(v: TreeNode) => `${v.name} (${v.rank})`" trackBy="taxid"
+    <VaSelect preset="bordered" @click="emits('inputClicked')" :loading="isLoading" hideSelected dropdownIcon="search"
+        searchable highlight-matched-text :textBy="(v: TreeNode) => `${v.name} (${v.rank})`" trackBy="taxid"
         @update:search="debouncedUpdateSearch" v-model="taxon" :searchPlaceholderText="t('taxon.search.placeholder')"
         :placeholder="t('taxon.search.placeholder')" :noOptionsText="t('taxon.search.noOptions')" :options="options">
     </VaSelect>

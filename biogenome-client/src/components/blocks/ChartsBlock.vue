@@ -3,26 +3,26 @@
         <div v-for="chart, index in charts" :key="`${index}-${chart.model}-${chart.field}`" :class="chart.class">
             <Suspense>
                 <template #default>
-                    <va-card>
-                        <va-card-content>
+                    <VaCard>
+                        <VaCardContent>
                             <div class="row align-center justify-space-between">
                                 <p class="flex">{{ getTitle(chart) }}</p>
                                 <div class="flex">
-                                    <va-chip size="small" square preset="primary"
+                                    <VaButton size="small"
                                         @click="downloadCanvasAsPNG(`${chart.model}.${chart.field}`, `${chart.type}.png`)">
-                                        Download</va-chip>
+                                        Download</VaButton>
                                 </div>
                             </div>
-                        </va-card-content>
-                        <va-card-content>
+                        </VaCardContent>
+                        <VaCardContent>
                             <component class="va-chart" :key="index" :is="chartComponents[chart.type]"
                                 :info-block="chart" :chart-id="`${chart.model}.${chart.field}`"
                                 :label="t(`tooltip.${chart.model}`)" />
-                        </va-card-content>
-                    </va-card>
+                        </VaCardContent>
+                    </VaCard>
                 </template>
                 <template #fallback>
-                    <va-skeleton height="400px" />
+                    <VaSkeleton height="400px" />
                 </template>
             </Suspense>
         </div>
@@ -51,10 +51,10 @@ import {
 ChartJS.register(Title, Tooltip, Legend, LineElement, LinearScale, PointElement, CategoryScale, Filler, ArcElement, BarElement)
 
 const { t } = useI18n()
-
 const props = defineProps<{
     charts: InfoBlock[]
 }>()
+
 
 const chartComponents = {
     'pie': PieChart,

@@ -2,10 +2,10 @@
   <div class="container">
     <div class="controls">
       <div class="row justify-space-between align-center">
-        <div class="flex">
-          <div v-if="showControls" class="row align-center">
+        <div v-if="showControls" class="flex">
+          <div class="row align-center">
             <div class="flex">
-              <va-input @keyup.enter="search" style="min-width: 250px;" inner-label v-model="filter"
+              <va-input preset="bordered" @keyup.enter="search" style="min-width: 250px;" inner-label v-model="filter"
                 :label="t('buttons.search')" placeholder="Search by name or accession">
                 <template #appendInner>
                   <va-icon name="search" />
@@ -13,7 +13,7 @@
               </va-input>
             </div>
             <div v-if="showSampleTypeSelect" class="flex">
-              <va-select inner-label v-model="sampleType" label="Sample Type"
+              <va-select preset="bordered" inner-label v-model="sampleType" label="Sample Type"
                 :options="['local_sample', 'biosamples']" />
             </div>
             <div class="flex">

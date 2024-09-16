@@ -9,14 +9,10 @@ FIELDS_TO_EXCLUDE = ['id','created','last_check']
 
 def get_biosamples(args):
     filter = get_filter(args.get('filter'))
-    selected_fields = [v for k, v in args.items(multi=True) if k.startswith('fields[]')]
-    if not selected_fields:
-        selected_fields = ['accession', 'scientific_name', 'taxid']
     return data.get_items(args, 
                                  BioSample, 
-                                 FIELDS_TO_EXCLUDE, 
                                  filter,
-                                 selected_fields)
+                                 ['accession', 'scientific_name', 'taxid'])
 
 def get_filter(filter):
     if filter:

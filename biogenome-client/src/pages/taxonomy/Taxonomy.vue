@@ -3,7 +3,7 @@
     <p class="va-text-secondary" style="margin-bottom: 6px">{{ t('taxon.description') }}</p>
     <div class="row align-end">
         <div class="flex">
-            <VaButton @click="taxonomyStore.showTree = !taxonomyStore.showTree" :loading="taxonomyStore.isTreeLoading">
+            <VaButton preset="primary" @click="taxonomyStore.showTree = !taxonomyStore.showTree" :loading="taxonomyStore.isTreeLoading">
                 {{ taxonomyStore.showTree ? t('taxon.search.hide') : t('taxon.search.show') }}
             </VaButton>
         </div>

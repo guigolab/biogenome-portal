@@ -8,14 +8,10 @@ FIELDS_TO_EXCLUDE=['id']
 
 def get_taxons(args):
     filter = get_filter(args.get('filter'))
-    selected_fields = [v for k, v in args.items(multi=True) if k.startswith('fields[]')]
-    if not selected_fields:
-        selected_fields = ['accession', 'scientific_name', 'taxid']
     return data_helper.get_items(args, 
                                  TaxonNode, 
-                                 FIELDS_TO_EXCLUDE, 
                                  filter,
-                                 selected_fields)
+                                 ['taxid', 'scientific_name', 'rank'])
 
 def get_filter(filter):
     if filter:

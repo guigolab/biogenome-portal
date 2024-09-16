@@ -1,5 +1,5 @@
 <template>
-    <VaSelect clearable :label="label" v-model="model" :options="keys">
+    <VaSelect preset="bordered" clearable :label="label" v-model="model" :options="keys">
         <template #option="{ option, selectOption }">
             <div class="row option align-center justify-space-between" @click="selectOption(option)">
                 <div class="flex">

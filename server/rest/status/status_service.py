@@ -5,16 +5,11 @@ from helpers import data as data_helper
 FIELDS_TO_EXCLUDE = ['id']
 
 def get_status(args):
-    
     filter = get_filter(args.get('filter'))
-    selected_fields = [v for k, v in args.items(multi=True) if k.startswith('fields[]')]
-    if not selected_fields:
-        selected_fields = ['taxid', "scientific_name", "insdc_status", "goat_status", "target_list_status"]
     return data_helper.get_items(args, 
                                  Organism, 
-                                 FIELDS_TO_EXCLUDE, 
                                  filter,
-                                 selected_fields)
+                                 ['taxid', "scientific_name", "insdc_status", "goat_status", "target_list_status"])
 
 
 def get_filter(filter):

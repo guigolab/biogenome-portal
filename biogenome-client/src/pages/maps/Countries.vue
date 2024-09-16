@@ -36,6 +36,8 @@ import { useToast } from 'vuestic-ui/web-components'
 import Items from '../common/Items.vue'
 import { useItemStore } from '../../stores/items-store'
 import { AxiosError } from 'axios'
+import StatisticsService from '../../services/clients/StatisticsService'
+
 
 const { init } = useToast()
 const { t } = useI18n()
@@ -64,7 +66,7 @@ onMounted(async () => {
 
 async function getCountries() {
   try {
-    const data = await itemStore.getStats('organisms', 'countries')
+    const { data } = await StatisticsService.getModelFieldStats('organisms', 'countries')
     createCesiumMap(data)
   } catch (error) {
     console.error(error)
