@@ -251,7 +251,7 @@ paths:
           schema:
             type: 'number'
             default: 20
-        - name: fields
+        - name: fields[]
           in: query
           description: "Fields to return"
           schema:
@@ -498,7 +498,7 @@ paths:
           schema:
             type: 'number'
             default: 20
-        - name: fields
+        - name: fields[]
           in: query
           description: "Fields to return"
           schema:
@@ -554,7 +554,7 @@ paths:
   /assemblies/{accession}/lookup:
     get:
       tags:
-        - "organisms"
+        - "assemblies"
       parameters:
         - in: 'path'
           name: 'accession'
@@ -653,7 +653,7 @@ paths:
           schema:  
             type: 'number'
             default: 20
-        - name: fields
+        - name: fields[]
           in: query
           description: "Fields to return"
           schema:
@@ -706,7 +706,28 @@ paths:
                 $ref: "#/components/schemas/Experiment"
         "404":
           description: "Read not found"
-                
+  
+  /experiments/{accession}/reads:
+    get:
+      tags:
+        - "assemblies"
+      parameters:
+        - in: 'path'
+          name: 'accession'
+          required: true
+          schema:
+            type: 'string'
+      responses:
+        "200":
+          description: "successful operation"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/Read"
+        "404":
+          description: "Assembly not found"          
   /biosamples:
     get:
       tags:
@@ -745,7 +766,7 @@ paths:
           schema:
             type: 'number'
             default: 20
-        - name: fields
+        - name: fields[]
           in: query
           description: "Fields to return"
           schema:
@@ -910,7 +931,7 @@ paths:
           schema:
             type: 'number'
             default: 20
-        - name: fields
+        - name: fields[]
           in: query
           description: "Fields to return"
           schema:
@@ -990,7 +1011,7 @@ paths:
           schema:
             type: 'number'
             default: 20
-        - name: fields
+        - name: fields[]
           in: query
           description: "Fields to return"
           schema:
@@ -1073,7 +1094,7 @@ paths:
           schema:
             type: 'number'
             default: 20
-        - name: fields
+        - name: fields[]
           in: query
           description: "Fields to return"
           schema:
@@ -1216,15 +1237,9 @@ components:
 
     Experiment:
       type: "object"
-      description: "Raw or Mapped experiments"
+      description: "INSDC experiments"
       properties:
         sample_accession:
-          type: "string"
-        experiment_accession:
-          type: "string"
-        instrument_platform:
-          type: "string"
-        instrument_model:
           type: "string"
         taxid:
           type: "string"
@@ -1237,7 +1252,19 @@ components:
         metadata:
           type: "object"
           description: "INSDC metadata"
-    
+          
+    Read:
+      type: "object"
+      description: "Experiment's related read"
+      properties:
+        experiment_accession:
+          type: "string"
+        run_accession:
+          type: "string"
+        metadata:
+          type: "object"
+          description: "INSDC metadata"
+          
     BioSample:
       type: "object"
       properties:
