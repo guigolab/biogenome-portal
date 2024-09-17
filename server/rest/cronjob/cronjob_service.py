@@ -1,5 +1,5 @@
 import os
-from jobs import assemblies, biosamples, experiments, geolocation, taxonomy, annotations
+from jobs import assemblies, biosamples, experiments, geolocation, taxonomy
 from errors import NotFound
 from celery.result import AsyncResult
 
@@ -20,9 +20,6 @@ JOB_MODELS = {
     'assemblies':{
         'import':assemblies.import_assemblies_by_bioproject,
         'blob_link':assemblies.add_blob_link
-    },
-    'annotations':{
-        'import_ncbi':annotations.import_annotations_from_ncbi
     },
     'helpers':{
         'handle_orphans':taxonomy.handle_orphan_organisms,
