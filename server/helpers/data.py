@@ -50,7 +50,7 @@ def get_pagination(args):
     return int(args.get('limit', 10)),  int(args.get('offset', 0))
 
 def get_sort(args):
-    return args.get('sort_column'), args.get('sort_order', None)
+    return args.get('sort_column'), args.get('sort_order')
 
 def get_items(args, db_model, q_query, default_tsv_fields):
 

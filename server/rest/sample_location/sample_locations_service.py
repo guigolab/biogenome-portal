@@ -16,9 +16,8 @@ def get_sample_locations(offset=0, limit=10000, lineage=None, sample_type=None, 
     if lineage:
         query &= Q(lineage=str(lineage))
 
-    if sample_type:
-        if sample_type in ['local_sample', 'biosample']:
-            query &= Q(is_local_sample=(sample_type == 'local_sample'))
+    if sample_type and sample_type in ['local_sample', 'biosample']:
+        query &= Q(is_local_sample=(sample_type == 'local_sample'))
     
     # Apply filtering if needed
     if filter:
