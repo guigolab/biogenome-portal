@@ -5,8 +5,8 @@ from helpers import data as data_helper, organism as organism_helper
 from mongoengine.errors import ValidationError
 import os
 
-ANNOTATIONS_DATA_PATH = os.getenv('ANNOTATIONS_PATH')
-FIELDS_TO_EXCLUDE = ['id']
+ANNOTATIONS_DATA_PATH = '/server/annotations_data'
+BASE_PATH = os.getenv('BASE_PATH')
 DATA_REQUIRED_FIELDS = ['name', 'assembly_accession']
 URL_FIELDS = ['gff_gz_location', 'tab_index_location']
 FILES_REQUIRED_FIELDS = ['gzipAnnotation', 'tabixAnnotation']
@@ -16,7 +16,6 @@ def get_annotations(args):
     filter = get_filter(args.get('filter'))
     return data_helper.get_items(args, 
                                  GenomeAnnotation, 
-                                 FIELDS_TO_EXCLUDE, 
                                  filter,
                                  ['name', 'scientific_name', 'taxid', 'assembly_accession'])
 
@@ -31,6 +30,16 @@ def delete_annotation(name):
     if not ann_obj:
         raise NotFound
     deleted_name = ann_obj.name
+    if not ann_obj.external:
+        files_to_remove = [
+            f'{ann_obj.assembly_accession}.{name}.gff.gz',
+            f'{ann_obj.assembly_accession}.{name}.gff.gz.tbi'
+        ]
+        for f in files_to_remove:
+            path = f'{ANNOTATIONS_DATA_PATH}/{f}'
+            if os.path.exists(path):
+                os.remove(path)
+
     ann_obj.delete()
     return deleted_name
 
@@ -66,6 +75,9 @@ def extract_metadata(data):
     return valid_data
 
 def save_files(files, valid_data, assembly_accession, annotation_name, request):
+    if not os.path.exists(ANNOTATIONS_DATA_PATH):
+        os.makedirs(ANNOTATIONS_DATA_PATH)
+
     for k in FILES_REQUIRED_FIELDS:
         if not files.get(k):
             return f'{k} field is required', 400
@@ -76,9 +88,8 @@ def save_files(files, valid_data, assembly_accession, annotation_name, request):
         files[k].save(f"{ANNOTATIONS_DATA_PATH}/{filename}")
         
         valid_data['external'] = False
-        host_url = f"{request.host_url}api/download/{filename}"
+        host_url = f"{request.host_url}{BASE_PATH}/api/download/{filename}" if BASE_PATH else f"{request.host_url}/api/download/{filename}"
         valid_data[key] = host_url
-    return None
 
 
 def check_url_fields(valid_data):
@@ -142,7 +153,7 @@ def create_annotation(request):
     return f'genome annotation {new_genome_annotation.name} correctly saved', 201
 
 def get_annotation(name):
-    ann_obj = GenomeAnnotation.objects(name=name).exclude(*[FIELDS_TO_EXCLUDE, 'created']).first()
+    ann_obj = GenomeAnnotation.objects(name=name).exclude('id', 'created').first()
     if not ann_obj:
         raise NotFound
     return ann_obj
@@ -151,5 +162,5 @@ def update_annotation(name, data):
     ann_obj = GenomeAnnotation.objects(name=name).first()
     if not ann_obj:
         raise NotFound
-    ann_obj.save(**data)
+    ann_obj.update(**data)
     return f'genome annotation {name} correctly updated', 201

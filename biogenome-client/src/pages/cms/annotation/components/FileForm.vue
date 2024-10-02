@@ -61,7 +61,6 @@ import { useToast } from 'vuestic-ui'
 import { useAnnotationStore } from '../../../../stores/annotation-store'
 import AuthService from '../../../../services/clients/AuthService'
 import AnnotationService from '../../../../services/clients/AnnotationService'
-
 import { AxiosError } from 'axios'
 
 const { init } = useToast()
@@ -79,11 +78,16 @@ const emits = defineEmits(['onLoading'])
 
 watch(() => props.name, (v) => {
     resetForm()
+    if (props.name) {
+        uploadMode.value = 'links'
+    }
 })
 
 onMounted(async () => {
-    if (props.name === undefined) return
-    await retrieveAnnotation(props.name)
+    if (props.name) {
+        await retrieveAnnotation(props.name)
+        uploadMode.value = 'links'
+    }
 })
 
 
@@ -98,6 +102,7 @@ function resetForm() {
 }
 
 async function retrieveAnnotation(name: string) {
+
     try {
         const { data } = await AnnotationService.getAnnotation(name)
         isLocalAssembly.value = Boolean(data.external)
@@ -121,11 +126,15 @@ async function retrieveAnnotation(name: string) {
     }
 }
 async function handleSubmit() {
+    if (!annotationStore.annotationForm.assembly_accession) {
+        init({ message: "Select an assembly", color: 'danger' })
+        return
+    }
     //parse form data
     const requestData = parseRequestData()
     try {
         emits('onLoading', true)
-        const { data } = await AuthService.createAnnotation(requestData)
+        const { data } = props.name ? await AuthService.updateAnnotation(props.name, requestData) : await AuthService.createAnnotation(requestData)
         init({ message: data, color: 'success' })
     } catch (error) {
         const axiosError = error as AxiosError

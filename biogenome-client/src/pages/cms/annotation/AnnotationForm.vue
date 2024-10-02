@@ -2,8 +2,10 @@
   <h4 class="va-h4">Annotation Form</h4>
   <p class="mb-4">{{ name ? `Edit ${name}` : 'Create a new annotation' }}</p>
   <va-inner-loading :loading="isLoading">
-    <NameInput v-if="!name" />
-    <AssemblyInput />
+    <div v-if="!name">
+      <NameInput />
+      <AssemblyInput />
+    </div>
     <FileForm :name="name" @on-loading="(v) => isLoading = v" />
   </va-inner-loading>
 </template>

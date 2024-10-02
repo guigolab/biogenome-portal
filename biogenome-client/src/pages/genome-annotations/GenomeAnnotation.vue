@@ -1,6 +1,37 @@
 <template>
-  <DetailsHeader :details="details" />
-  <div v-if="validTabs.length">
+  <div v-if="details" class="row">
+    <div class="flex lg12 md12 sm12 xs12">
+      <h1 style="margin: 0;" class="va-h1">{{ details.title }}</h1>
+      <p class="va-text-secondary" v-if="details.description">{{ details.description }}</p>
+    </div>
+    <div class="flex lg12 md12 sm12 xs12">
+      <div class="row">
+        <div class="flex">
+          <va-button :round="false" preset="primary" icon="pets" :to="details.button1.route">{{
+            details.button1.label
+            }}</va-button>
+        </div>
+        <div class="flex">
+          <va-button :round="false" :to="details.button2.route" preset="primary" icon="fa-dna">{{
+            details.button2.label
+            }}</va-button>
+        </div>
+        <div class="flex">
+          <va-button :href="annotation?.gff_gz_location" :round="false" preset="primary"
+            icon="cloud_download">
+            Download
+          </va-button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div v-else>
+    <VaSkeletonGroup>
+      <VaSkeleton tag="h1" variant="text" class="va-h1" />
+      <VaSkeleton variant="text" :lines="1" />
+    </VaSkeletonGroup>
+  </div>
+  <div v-if="validTabs.length && annotation">
     <Tabs :tabs="validTabs" :tab="tab" @updateView="(v: string) => tab = v" />
     <div class="row">
       <div class="flex lg12 md12 sm12 xs12">
@@ -16,7 +47,6 @@ import { ref, watchEffect } from 'vue'
 import Jbrowse2 from '../../components/genome-browser/Jbrowse2.vue'
 import { Assembly, Details, TrackData } from '../../data/types'
 import AnnotationService from '../../services/clients/AnnotationService'
-import DetailsHeader from '../../components/common/DetailsHeader.vue'
 import Tabs from '../../components/common/Tabs.vue'
 
 import MetadataTreeCard from '../../components/cards/MetadataTreeCard.vue'
@@ -57,7 +87,7 @@ async function getData(name: string) {
 
 function setValidTabs() {
   const t = []
-  if (annotation.value?.metadata) {
+  if (annotation.value?.metadata && Object.keys(annotation.value.metadata).length) {
     t.push({ name: 'metadata', label: 'tabs.metadata' })
   }
   t.push({ name: 'jbrowse', label: 'tabs.jbrowse' })
@@ -76,6 +106,10 @@ function parseDetails(annotation: Record<string, any>) {
     button1: {
       route: { name: 'organism', params: { taxid: annotation.taxid } },
       label: annotation.scientific_name
+    },
+    button2: {
+      route: { name: 'assembly', params: { accession: annotation.assembly_accession } },
+      label: annotation.assembly_accession
     }
   }
   return details

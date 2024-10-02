@@ -84,7 +84,7 @@ function parseAnnotations() {
       category: ["Genes"],
       adapter: {
         type: "Gff3TabixAdapter",
-        gff_gz_location: {
+        gffGzLocation: {
           uri: d.gff_gz_location,
           locationType: "UriLocation",
         },

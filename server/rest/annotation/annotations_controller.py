@@ -6,7 +6,7 @@ from flask_jwt_extended import jwt_required
 from wrappers.admin import admin_required
 
 
-ANNOTATION_FOLDER = 'annotations_data'
+ANNOTATION_FOLDER = '/server/annotations_data'
 
 
 class AnnotationsApi(Resource):
@@ -41,5 +41,5 @@ class AnnotationApi(Resource):
 
 class StreamAnnotations(Resource):
     def get(self,filename):
-        mime_type = 'text/gff'
+        mime_type = 'binary/octet-stream'
         return send_from_directory(ANNOTATION_FOLDER, filename, conditional=True, mimetype=mime_type)

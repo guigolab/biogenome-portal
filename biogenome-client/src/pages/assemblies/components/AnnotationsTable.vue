@@ -5,19 +5,21 @@
                 }}</va-chip>
         </template>
         <template #cell(gff_gz_location)="{ rowData }">
-            <va-chip :href="rowData.gff_gz_location">{{ t('buttons.download') }}</va-chip>
+            <VaChip :href="rowData.gff_gz_location" outline size="small">{{ t('buttons.download') }}</VaChip>
         </template>
         <template #cell(tab_index_location)="{ rowData }">
-            <va-chip :href="rowData.tab_index_location" size="small">{{ t('buttons.download') }}</va-chip>
+            <VaChip :href="rowData.tab_index_location" outline size="small">{{ t('buttons.download')
+                }}</VaChip>
         </template>
     </VaDataTable>
 </template>
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import { TrackData } from '../../../data/types';
 
 const { t } = useI18n()
 const props = defineProps<{
-    items: string
+    items: TrackData[]
 }>()
 
 

@@ -18,7 +18,7 @@
         </template>
         <template #cell(chromosome_aliases)="{ rowData }">
             <va-button :to="{ name: 'chr-aliases', params: { accession: rowData.accession } }" size="small"
-                v-if="rowData.metadata.assembly_level === 'Chromosome'" icon="add" color="secondary" />
+                v-if="rowData.metadata.assembly_info.assembly_level === 'Chromosome'" icon="add" />
         </template>
     </va-data-table>
     <div class="row justify-center">

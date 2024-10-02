@@ -12,8 +12,7 @@
     </va-form>
     <va-data-table :items="annotations" :columns="['name', 'scientific_name', 'assembly_name', 'edit', 'delete']">
         <template #cell(edit)="{ rowData }">
-            <va-icon @click="$router.push({ name: 'annotation-form-update', params: { name: rowData.name } })"
-                name="edit" />
+            <va-icon @click="$router.push({ name: 'update-annotation', params: { name: rowData.name } })" name="edit" />
         </template>
         <template #cell(delete)="{ rowData }">
             <va-icon color="danger" name="delete" @click="deleteConfirmation(rowData)" />
