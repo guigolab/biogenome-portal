@@ -3,9 +3,9 @@ from db.models import GenomeAnnotation, Assembly
 from errors import NotFound
 from helpers import data as data_helper, organism as organism_helper
 from mongoengine.errors import ValidationError
+import os
 
-
-ANNOTATIONS_DATA_PATH = "/server/annotations_data"
+ANNOTATIONS_DATA_PATH = os.getenv('ANNOTATIONS_PATH')
 FIELDS_TO_EXCLUDE = ['id']
 DATA_REQUIRED_FIELDS = ['name', 'assembly_accession']
 URL_FIELDS = ['gff_gz_location', 'tab_index_location']
@@ -65,7 +65,7 @@ def extract_metadata(data):
         valid_data['metadata'] = metadata_dict
     return valid_data
 
-def save_files(files, valid_data, assembly_accession, annotation_name, taxid, request):
+def save_files(files, valid_data, assembly_accession, annotation_name, request):
     for k in FILES_REQUIRED_FIELDS:
         if not files.get(k):
             return f'{k} field is required', 400
@@ -121,7 +121,7 @@ def create_annotation(request):
 
     # Handle file saving
     if files:
-        response = save_files(files, valid_data, assembly_accession, annotation_name, taxid, request)
+        response = save_files(files, valid_data, assembly_accession, annotation_name, request)
         if response:
             return response
     else:
