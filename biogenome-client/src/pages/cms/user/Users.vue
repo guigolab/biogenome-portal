@@ -78,27 +78,34 @@ const userToDelete = ref({
     name: null,
 })
 onMounted(async () => {
-    const { data } = await UserService.getUsers({ ...pagination.value })
-    users.value = data.data
-    total.value = data.total
+    await fetchData()
 })
+
+async function fetchData() {
+    try {
+        const { data } = await UserService.getUsers({ ...pagination.value })
+        users.value = data.data
+        total.value = data.total
+    } catch (e) {
+        console.log(e)
+    }
+}
 
 async function handlePagination(value: number) {
     pagination.value.offset = value - 1
-    const { data } = await UserService.getUsers({ ...pagination.value, ...filter.value })
-    users.value = data.data
-    total.value = data.total
+    await fetchData()
+
 }
 async function handleSubmit() {
-    const { data } = await UserService.getUsers({ ...pagination.value, ...filter.value })
-    users.value = data.data
-    total.value = data.total
+    await fetchData()
+
     pagination.value = { ...initPagination }
 }
-function reset() {
+async function reset() {
     filter.value = { ...initFilter }
     pagination.value = { ...initPagination }
-    handleSubmit()
+    await fetchData()
+
 }
 function deleteConfirmation(rowData: Record<string, any>) {
     userToDelete.value.name = rowData.name

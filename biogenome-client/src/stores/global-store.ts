@@ -1,41 +1,52 @@
 import { defineStore } from 'pinia'
 import AuthService from '../services/clients/AuthService'
+import { useToast } from 'vuestic-ui'
 
 export const useGlobalStore = defineStore('global', {
   state: () => {
     return {
       isSidebarVisible: true,
       userName: '',
-      userPassword: '',
       userRole: '',
       userSpecies: [] as string[],
       isAuthenticated: false,
-      showLoginModal: false,
       error: false,
       message: '',
-
+      toast: useToast().init
     }
   },
   actions: {
-
-    changeUserName(userName: string) {
-      this.userName = userName
+    mapUser(data:Record<string,any>){
+      this.userName = data.name
+      this.userRole = data.role 
+      if(this.userRole !== 'Admin') this.userSpecies = data.species 
+      this.isAuthenticated = true
     },
-    async login() {
+    async login(name: string, password:string) {
       try {
-        const response = await AuthService.login({ name: this.userName, password: this.userPassword })
-        if (response.status === 200) this.isAuthenticated = true
-        // this.setLocalStorage()
+        const {data} = await AuthService.login({ name, password})
+        this.mapUser(data)
+        this.toast({message: `Welcome ${this.userName}!`, color:'success'})
       } catch (error) {
         console.log(error)
+        this.toast({ message: 'Bad user or password', color: 'danger' })
+        this.isAuthenticated = false
+      }
+    },
+    async checkUserIsLoggedIn() {
+      try {
+        const { data } = await AuthService.check()
+        this.mapUser(data)
+      } catch (error) {
+        console.error(error)
         this.isAuthenticated = false
       }
     },
     async logout() {
       await AuthService.logout()
       this.userName = ''
-      this.userPassword = ''
       this.userRole = ''
+      this.userSpecies = []
       this.isAuthenticated = false
     },
   },

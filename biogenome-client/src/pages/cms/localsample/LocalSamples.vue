@@ -38,10 +38,8 @@
 </template>
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import LocalSampleService from '../../../services/clients/LocalSampleService'
 import { useToast } from 'vuestic-ui'
 import AuthService from '../../../services/clients/AuthService'
-import { useGlobalStore } from '../../../stores/global-store'
 
 const { init } = useToast()
 const initPagination = {
@@ -53,11 +51,6 @@ const initFilter = {
     filter: '',
     user: ''
 }
-const { userRole, userName } = useGlobalStore()
-
-const isAdmin = computed(() => {
-    return userRole === 'Admin'
-})
 
 const isValidInput = computed(() => {
     return filter.value.filter.length > 2
@@ -73,23 +66,26 @@ const sampleToDelete = ref({
     id: null,
 })
 onMounted(async () => {
-    if (!isAdmin.value) filter.value.user = userName
-    const { data } = await LocalSampleService.getLocalSamples({ ...pagination.value, ...filter.value })
-    localSamples.value = data.data
-    total.value = data.total
+    await fetchData()
 })
 
 async function handlePagination(value: number) {
     pagination.value.offset = value - 1
-    const { data } = await LocalSampleService.getLocalSamples({ ...pagination.value, ...filter.value })
-    localSamples.value = data.data
-    total.value = data.total
+    await fetchData()
 }
 async function handleSubmit() {
-    const { data } = await LocalSampleService.getLocalSamples({ ...pagination.value, ...filter.value })
-    localSamples.value = data.data
-    total.value = data.total
+    await fetchData()
     pagination.value = { ...initPagination }
+}
+
+async function fetchData() {
+    try {
+        const { data } = await AuthService.getUserSamples({ ...pagination.value, ...filter.value })
+        localSamples.value = data.data
+        total.value = data.total
+    } catch (e) {
+        console.log(e)
+    }
 }
 
 function deleteConfirmation(rowData: Record<string, any>) {
@@ -109,9 +105,9 @@ async function deleteLocalSample() {
     }
 }
 
-function reset() {
+async function reset() {
     filter.value.filter = ''
     pagination.value = { ...initPagination }
-    handleSubmit()
+    await fetchData()
 }
 </script>

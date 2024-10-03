@@ -33,34 +33,37 @@ class AuthService {
   logout() {
     return base.get('/logout')
   }
+  check() {
+    return auth.get('/login')
+  }
   createOrganism(formData) {
     return auth.post('/organisms', formData)
   }
   updateOrganism(taxid, formData) {
     return auth.put(`/organisms/${taxid}`, formData)
   }
-  getCronjobs(){
+  getCronjobs() {
     return auth.get('/cronjobs')
   }
-  createCronjob(model){
+  createCronjob(model) {
     return auth.post(`/cronjobs/${model}`)
   }
-  deleteCronjob(model){
+  deleteCronjob(model) {
     return auth.delete(`/cronjobs/${model}`)
   }
   deleteOrganism(taxid) {
     return auth.delete(`/organisms/${taxid}`)
   }
-  importSpreadsheetStatus(id){
+  importSpreadsheetStatus(id) {
     return auth.get(`/spreadsheet_upload/${id}`)
   }
   importSpreadsheet(formData) {
     return auth.post('/spreadsheet_upload', formData)
   }
-  importGoatReport(formData){
-    return auth.post('/goat_report',formData)
+  importGoatReport(formData) {
+    return auth.post('/goat_report', formData)
   }
-  importGoatReportStatus(id){
+  importGoatReportStatus(id) {
     return auth.get(`/goat_report/${id}`)
   }
   createAnnotation(formData) {
@@ -76,7 +79,7 @@ class AuthService {
     return auth.post(`/assemblies/${accession}`)
   }
   uploadRefNameAliases(accession, formData) {
-    return auth.post(`/assemblies/${accession}/chr_aliases`,formData)
+    return auth.post(`/assemblies/${accession}/chr_aliases`, formData)
   }
   deleteAssembly(accession) {
     return auth.delete(`/assemblies/${accession}`)
@@ -99,7 +102,7 @@ class AuthService {
   createUser(data) {
     return auth.post('/users', data)
   }
-  getUsers(){
+  getUsers() {
     return auth.get('/users')
   }
   deleteUser(name) {
@@ -110,6 +113,12 @@ class AuthService {
   }
   updateUser(name, data) {
     return auth.put(`/users/${name}`, data)
+  }
+  getUserSpecies(name) {
+    return auth.get(`/users/${name}/organisms`)
+  }
+  getUserSamples(name) {
+    return auth.get(`/users/${name}/local_samples`)
   }
 }
 

@@ -63,21 +63,26 @@ const annotationTodelete = ref({
     name: null,
 })
 onMounted(async () => {
-    const { data } = await AnnotationService.getAnnotations({ ...pagination.value })
-    annotations.value = data.data
-    total.value = data.total
+    await fetchData()
 })
+
+async function fetchData() {
+    try {
+        const { data } = await AnnotationService.getAnnotations({ ...pagination.value })
+        annotations.value = data.data
+        total.value = data.total
+    } catch (e) {
+        console.log(e)
+    }
+}
 
 async function handlePagination(value: number) {
     pagination.value.offset = value - 1
-    const { data } = await AnnotationService.getAnnotations({ ...pagination.value, ...filter.value })
-    annotations.value = data.data
-    total.value = data.total
+    await fetchData()
+
 }
 async function handleSubmit() {
-    const { data } = await AnnotationService.getAnnotations({ ...pagination.value, ...filter.value })
-    annotations.value = data.data
-    total.value = data.total
+    await fetchData()
     pagination.value = { ...initPagination }
 }
 
@@ -98,8 +103,9 @@ async function deleteAnnotation() {
     }
 }
 
-function reset() {
+async function reset() {
     filter.value = { ...initFilter }
     pagination.value = { ...initPagination }
+    await fetchData()
 }
 </script>

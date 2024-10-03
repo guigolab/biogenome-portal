@@ -8,9 +8,10 @@ function isAdmin() {
     }
 }
 
-function isAuthenticated() {
-    const { isAuthenticated } = useGlobalStore()
-    if (!isAuthenticated) return { name: 'login' }
+async function isAuthenticated() {
+    const gStore = useGlobalStore()
+    await gStore.checkUserIsLoggedIn()
+    if (!gStore.isAuthenticated) return { name: 'login' }
 }
 
 export const cmsRoutes = [
