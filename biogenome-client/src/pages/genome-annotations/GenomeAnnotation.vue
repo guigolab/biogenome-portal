@@ -17,8 +17,7 @@
             }}</va-button>
         </div>
         <div class="flex">
-          <va-button :href="annotation?.gff_gz_location" :round="false" preset="primary"
-            icon="cloud_download">
+          <va-button :href="annotation?.gff_gz_location" :round="false" preset="primary" icon="cloud_download">
             Download
           </va-button>
         </div>
@@ -35,8 +34,10 @@
     <Tabs :tabs="validTabs" :tab="tab" @updateView="(v: string) => tab = v" />
     <div class="row">
       <div class="flex lg12 md12 sm12 xs12">
-        <Jbrowse2 v-if="tab === 'jbrowse'" :assembly="assembly" :annotations="[annotation]" />
-        <MetadataTreeCard v-else :metadata="annotation ? Object.entries(annotation.metadata) : []" />
+        <Jbrowse2 v-if="tab === 'jbrowse'" :assembly="assembly" :chromosomes="chromosomes"
+          :annotations="[annotation]" />
+        <MetadataTreeCard v-else-if="tab === 'metadata'"
+          :metadata="annotation ? Object.entries(annotation.metadata) : []" />
       </div>
     </div>
   </div>
@@ -45,7 +46,7 @@
 import AssemblyService from '../../services/clients/AssemblyService'
 import { ref, watchEffect } from 'vue'
 import Jbrowse2 from '../../components/genome-browser/Jbrowse2.vue'
-import { Assembly, Details, TrackData } from '../../data/types'
+import { Assembly, ChromosomeInterface, Details, TrackData } from '../../data/types'
 import AnnotationService from '../../services/clients/AnnotationService'
 import Tabs from '../../components/common/Tabs.vue'
 
@@ -64,6 +65,7 @@ const details = ref<
   Details | any
 >()
 const assembly = ref<Assembly>()
+const chromosomes = ref<ChromosomeInterface[]>()
 const annotation = ref<TrackData>()
 const validTabs = ref<{ label: string, name: string }[]>([])
 
@@ -78,6 +80,7 @@ async function getData(name: string) {
     details.value = { ...parseDetails(data) }
     annotation.value = data
     await getRelatedAssembly(data.assembly_accession)
+    await getChromosomes(data.assembly_accession)
     setValidTabs()
   } catch (e) {
     const axiosError = e as AxiosError
@@ -96,7 +99,11 @@ function setValidTabs() {
 async function getRelatedAssembly(accession: string) {
   const { data } = await AssemblyService.getAssembly(accession)
   assembly.value = { ...data }
-  return data
+}
+
+async function getChromosomes(accession: string) {
+  const { data } = await AssemblyService.getRelatedChromosomes(accession)
+  chromosomes.value = [...data]
 }
 
 function parseDetails(annotation: Record<string, any>) {

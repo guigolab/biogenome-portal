@@ -22,4 +22,4 @@ class LocalSampleApi(Resource):
     @jwt_required()
     def delete(self,local_id):
         deleted_local_id = local_samples_service.delete_local_sample(local_id)
-        return Response(json.dumps(deleted_local_id), mimetype="application/json", status=201)
+        return Response(json.dumps(deleted_local_id), mimetype="application/json", status=200)

@@ -15,7 +15,7 @@ def get_filter(filter):
         return (Q(taxid__iexact=filter) | Q(taxid__icontains=filter)) |  (Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter))
 
 def get_biosample(accession):
-    biosample_obj = BioSample.objects(accession=accession).exclude('id','created').first()
+    biosample_obj = BioSample.objects(accession=accession).first()
     if not biosample_obj:
         raise NotFound(description=f"BioSample {accession} not found!")
     return biosample_obj

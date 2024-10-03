@@ -17,7 +17,7 @@ def get_filter(filter):
         return (Q(taxid__iexact=filter) | Q(taxid__icontains=filter)) | (Q(local_id__iexact=filter) | Q(local_id__icontains=filter)) |  (Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter))
 
 def get_local_sample(id):
-    sample = LocalSample.objects(local_id=id).exclude(*FIELDS_TO_EXCLUDE).first()
+    sample = LocalSample.objects(local_id=id).first()
     if not sample:
         raise NotFound(description=f"Local Sample {id} not found!")
     return sample

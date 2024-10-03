@@ -21,7 +21,6 @@ def get_assemblies(args):
 def get_filter(filter):
     if filter:
         return (Q(taxid__iexact=filter) | Q(taxid__icontains=filter)) |  (Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter)) | (Q(assembly_name__iexact=filter) | Q(assembly_name__icontains=filter))
-    return None
 
 def create_assembly_from_accession(accession):
     if Assembly.objects(accession=accession).first():
@@ -66,12 +65,11 @@ def fetch_assembly_report(accession):
     if report and report.get('reports'):
         return report.get('reports')[0]
 
+
 def get_assembly(assembly_accession):
     assembly_obj = Assembly.objects(accession=assembly_accession).first()
     if not assembly_obj:
         raise NotFound(description=f"Assembly {assembly_accession} not found")
-    if assembly_obj.chromosomes:
-        assembly_obj.chromosomes = Chromosome.objects(accession_version__in=assembly_obj.chromosomes).exclude('id').as_pymongo()
     return assembly_obj
 
 def delete_assembly(accession):
@@ -105,7 +103,7 @@ def get_related_annotations(accession):
 
 def get_chr_aliases_file(accession):
     assembly_obj = get_assembly(accession)
-    if not assembly_obj.chromosomes_aliases:
+    if not assembly_obj.has_chromosomes_aliases:
         raise BadRequest(description=f"Assembly {accession} lacks of chromosome aliases file")
     return send_file(
     io.BytesIO(assembly_obj.chromosomes_aliases),

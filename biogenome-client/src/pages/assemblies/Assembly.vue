@@ -6,7 +6,8 @@
       <div class="flex lg12 md12 sm12 xs12">
         <ChromosomesTable v-if="tab === 'chromosomes'" :items="chromosomes" />
         <AnnotationsTable v-else-if="tab === 'annotations'" :items="annotations" />
-        <Jbrowse2 v-else-if="tab === 'jbrowse'" :assembly="assembly" :annotations="annotations" />
+        <Jbrowse2 v-else-if="tab === 'jbrowse'" :assembly="assembly" :annotations="annotations"
+          :chromosomes="chromosomes" />
         <MetadataTreeCard v-else-if="assembly" :metadata="Object.entries(assembly.metadata)" />
       </div>
     </div>
@@ -17,7 +18,7 @@
 import AssemblyService from '../../services/clients/AssemblyService'
 import { ref, watchEffect } from 'vue'
 import Jbrowse2 from '../../components/genome-browser/Jbrowse2.vue'
-import { Assembly, Details, TrackData } from '../../data/types'
+import { Assembly, ChromosomeInterface, Details, TrackData } from '../../data/types'
 import DetailsHeader from '../../components/common/DetailsHeader.vue'
 import Tabs from '../../components/common/Tabs.vue'
 import ChromosomesTable from './components/ChromosomesTable.vue'
@@ -39,7 +40,7 @@ const details = ref<
 const tab = ref('')
 const assembly = ref<Assembly>()
 const annotations = ref<TrackData[]>([])
-const chromosomes = ref<Record<string, any>[]>([])
+const chromosomes = ref<ChromosomeInterface[]>([])
 
 const validTabs = ref<{ label: string, name: string }[]>([])
 

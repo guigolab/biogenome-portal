@@ -1,9 +1,9 @@
 <template>
-    <h4 class="va-h4">Experiments</h4>
+    <h4 class="va-h4">Experiments: {{total}}</h4>
     <p class="mb-4">Delete Experiments </p>
     <va-form @submit.prevent="handleSubmit">
         <div class="row align-end">
-            <va-input v-model="filter.filter" label="search experiment" class="flex lg4 md4 sm12 xs12"></va-input>
+            <va-input v-model="filter" label="search experiment" class="flex lg4 md4 sm12 xs12"></va-input>
             <div class="flex">
                 <va-button icon="search" @click="handleSubmit"> </va-button>
                 <va-button icon="cancel" color="danger" @click="reset"> </va-button>
@@ -54,12 +54,8 @@ const initPagination = {
     limit: 10,
 }
 
-const initFilter = {
-    filter: '',
-}
-
 const showModal = ref(false)
-const filter = ref({ ...initFilter })
+const filter = ref('')
 const pagination = ref({ ...initPagination })
 const offset = ref(1 + pagination.value.offset)
 const experiments = ref([])
@@ -74,7 +70,7 @@ onMounted(async () => {
 
 async function fetchData() {
     try {
-        const { data } = await ExperimentService.getExperiments({ ...pagination.value })
+        const { data } = await ExperimentService.getExperiments({ ...pagination.value, filter: filter.value })
         experiments.value = data.data
         total.value = data.total
     } catch (e) {
@@ -110,7 +106,7 @@ async function deleteRead() {
 }
 
 async function reset() {
-    filter.value = { ...initFilter }
+    filter.value = ''
     pagination.value = { ...initPagination }
     await fetchData()
 }

@@ -131,7 +131,7 @@ def create_annotation(request):
     return new_genome_annotation.name
 
 def get_annotation(name):
-    ann_obj = GenomeAnnotation.objects(name=name).exclude('id', 'created').first()
+    ann_obj = GenomeAnnotation.objects(name=name).first()
     if not ann_obj:
         raise NotFound(description=f"Annotation {name} not found")
     return ann_obj

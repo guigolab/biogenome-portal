@@ -264,21 +264,13 @@ class Publication(db.EmbeddedDocument):
 @delete_organism_related_data.apply
 @update_organism_status.apply
 class Organism(db.Document):
-    assemblies = db.ListField(db.StringField())
-    experiments = db.ListField(db.StringField())
     publications = db.ListField(db.EmbeddedDocumentField(Publication))
-    related_publications = db.ListField(db.StringField())
     metadata = db.DictField()
     tolid_prefix = db.StringField()
     links = db.ListField(db.URLField())
     common_names= db.ListField(db.EmbeddedDocumentField(CommonName))
-    bioprojects = db.ListField(db.StringField())
-    annotations = db.ListField(db.StringField())
-    locations = db.ListField(db.ListField(db.FloatField()))
     countries = db.ListField(db.StringField())
     insdc_common_name = db.StringField()
-    local_samples = db.ListField(db.StringField())
-    biosamples = db.ListField(db.StringField())
     scientific_name = db.StringField(required=True,unique=True)
     taxid = db.StringField(required= True,unique=True)
     image = db.URLField()
@@ -312,31 +304,6 @@ class BioGenomeUser(db.Document):
     role=db.EnumField(Roles, required=True)
     species=db.ListField(db.StringField())
 
-# class GoaTStatus(db.Document):
-#     goat_status = db.EnumField(GoaTStatus)
-#     target_list_status = db.EnumField(TargetListStatus)
-#     scientific_name = db.StringField(required=True,unique=True)
-#     taxid = db.StringField(required= True,unique=True)
-#     meta = {
-#         'indexes': [
-#             'scientific_name',
-#             'taxid'
-#         ],
-#         'strict': False
-#     }
-
-# class INSDCStatus(db.Document):
-#     scientific_name = db.StringField(required=True,unique=True)
-#     taxid = db.StringField(required= True,unique=True)
-#     insdc_status = db.EnumField(INSDCStatus)
-#     meta = {
-#         'indexes': [
-#             'scientific_name',
-#             'taxid'
-#         ],
-#         'strict': False
-#     }
-
 class OrganismPublication(db.Document):
     source = db.EnumField(PublicationSource)
     id = db.StringField()
@@ -348,7 +315,4 @@ class OrganismNames(db.Document):
     locality=db.StringField()
     taxid=db.StringField(required=True)
 
-class ComputedTree(db.Document):
-    last_update = db.DateTimeField(default=datetime.datetime.now())
-    tree = db.DictField()
 

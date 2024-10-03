@@ -3,11 +3,11 @@
     <p class="mb-4">Create, Edit or Delete your users</p>
     <va-form @submit.prevent="handleSubmit">
         <div class="row align-end">
-            <va-input class="flex lg4 md6 sm12 xs12" v-model="filter.filter" label="search user">
+            <va-input class="flex lg4 md6 sm12 xs12" v-model="filter" label="search user">
                 <template #append>
-                    <va-button type="submit" :disabled="filter.filter.length < 2" icon="search">
+                    <va-button type="submit" icon="search">
                     </va-button>
-                    <va-button type="reset" :disabled="filter.filter.length < 2" icon="cancel" @click="reset">
+                    <va-button type="reset" icon="cancel" @click="reset">
                     </va-button>
                 </template>
             </va-input>
@@ -60,15 +60,11 @@ const initPagination = {
     limit: 10,
 }
 
-const initFilter = {
-    filter: '',
-}
-
 const isAdmin = computed(() => {
     return GlobalStore.userRole && GlobalStore.userRole === 'Admin'
 })
 const showModal = ref(false)
-const filter = ref({ ...initFilter })
+const filter = ref('')
 const pagination = ref({ ...initPagination })
 const offset = ref(1 + pagination.value.offset)
 const users = ref([])
@@ -83,7 +79,7 @@ onMounted(async () => {
 
 async function fetchData() {
     try {
-        const { data } = await UserService.getUsers({ ...pagination.value })
+        const { data } = await UserService.getUsers({ ...pagination.value, filter: filter.value })
         users.value = data.data
         total.value = data.total
     } catch (e) {
@@ -102,7 +98,7 @@ async function handleSubmit() {
     pagination.value = { ...initPagination }
 }
 async function reset() {
-    filter.value = { ...initFilter }
+    filter.value = ''
     pagination.value = { ...initPagination }
     await fetchData()
 
@@ -118,9 +114,7 @@ async function deleteUser() {
         const { data } = await AuthService.deleteUser(userToDelete.value.name)
         init({ message: `${userToDelete.value.name} successfully deleted!` })
         handleSubmit()
-
     } catch (e) {
-
         init({ message: "Something happened" })
     }
 }

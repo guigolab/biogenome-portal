@@ -28,7 +28,7 @@ def get_filter(filter):
         return (Q(taxid__iexact=filter) | Q(taxid__icontains=filter)) | (Q(insdc_common_name__iexact=filter) | Q(insdc_common_name__icontains=filter)) | (Q(tolid_prefix__iexact=filter) | Q(tolid_prefix__icontains=filter)) |(Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter))
 
 def get_organism(taxid):
-    organism = Organism.objects(taxid=taxid).exclude('id').first()
+    organism = Organism.objects(taxid=taxid).first()
     if not organism:
         raise NotFound(description=f"Organism {taxid} not found!")
     return organism

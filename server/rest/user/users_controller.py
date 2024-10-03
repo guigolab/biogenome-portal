@@ -61,10 +61,10 @@ class UserRelatedSpecies(Resource):
     @jwt_required()
     def get(self, name):
         response = users_service.get_related_species(name)
-        return Response(json.dumps(response), mimetype="application/json", status=200)
+        return Response(response, mimetype="application/json", status=200)
 
 class UserRelatedSamples(Resource):
     @jwt_required()
     def get(self, name):
         response = users_service.get_related_samples(name)
-        return Response(json.dumps(response), mimetype="application/json", status=200)
+        return Response(response, mimetype="application/json", status=200)

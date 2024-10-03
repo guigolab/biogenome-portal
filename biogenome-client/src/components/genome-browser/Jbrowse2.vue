@@ -8,7 +8,7 @@ import { createRoot } from 'react-dom/client'
 import React from 'react'
 import { onMounted, ref } from 'vue'
 import RefGetPlugin from 'jbrowse-plugin-refget-api'
-import { Assembly, AssemblyAdapter, TrackData } from '../../data/types'
+import { Assembly, AssemblyAdapter, ChromosomeInterface, TrackData } from '../../data/types'
 // import '@fontsource/roboto'
 const wrapper = ref(null)
 const baseURL = import.meta.env.VITE_BASE_PATH ? import.meta.env.VITE_BASE_PATH + '/api' : '/api'
@@ -16,6 +16,7 @@ const props = defineProps<{
   defaultSession?: Record<string, any>
   configuration?: Record<string, any>
   assembly: Assembly | undefined
+  chromosomes: ChromosomeInterface[] | undefined
   annotations: TrackData[]
 }>()
 const assemblyAdapter = ref<Record<string, any>>()
@@ -23,7 +24,7 @@ const tracks = ref<Record<string, any>[]>([])
 
 onMounted(() => {
   if (props.assembly) {
-    assemblyAdapter.value = parseAssembly(props.assembly)
+    assemblyAdapter.value = parseAssembly(props.assembly, props.chromosomes)
     if (props.annotations.length) tracks.value = parseAnnotations()
     renderBrowser()
   }
@@ -39,7 +40,7 @@ function renderBrowser() {
   )
 }
 
-function parseAssembly(assembly: Assembly) {
+function parseAssembly(assembly: Assembly, chromosomes: ChromosomeInterface[]) {
   const assemblyAdapter: AssemblyAdapter = {
     name: assembly.assembly_name,
     sequence: {
@@ -63,7 +64,7 @@ function parseAssembly(assembly: Assembly) {
       }
     }
   }
-  assembly.chromosomes.forEach((chr: Record<string, any>) => {
+  chromosomes.forEach((chr: Record<string, any>) => {
     const key = 'insdc:' + chr.accession_version
     assemblyAdapter.sequence.adapter.sequenceData[key] = {
       name: chr.metadata.chr_name || chr.metadata.name || chr.accession_version,

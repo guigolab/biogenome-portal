@@ -18,6 +18,9 @@ class AssemblyService {
   getRelatedChromosomes(accession){
     return base.get(`/assemblies/${accession}/chromosomes`)
   }
+  getChrAliases(accession){
+    return base.get(`/assemblies/${accession}/chr_aliases`)
+  }
 }
 
 export default new AssemblyService()

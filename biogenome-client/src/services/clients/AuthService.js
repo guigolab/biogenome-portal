@@ -114,11 +114,11 @@ class AuthService {
   updateUser(name, data) {
     return auth.put(`/users/${name}`, data)
   }
-  getUserSpecies(name) {
-    return auth.get(`/users/${name}/organisms`)
+  getUserSpecies(name, params) {
+    return auth.get(`/users/${name}/organisms`, {params})
   }
-  getUserSamples(name) {
-    return auth.get(`/users/${name}/local_samples`)
+  getUserSamples(name, params) {
+    return auth.get(`/users/${name}/local_samples`, {params})
   }
 }
 

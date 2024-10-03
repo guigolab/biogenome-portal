@@ -3,12 +3,12 @@
     <p class="mb-4">Edit or delete your organisms</p>
     <va-form @submit.prevent="handleSubmit">
         <div class="row align-end">
-            <va-input v-model="filter.filter" label="search organism" class="flex lg4 md4 sm12 xs12"></va-input>
+            <va-input v-model="filter" label="search organism" class="flex lg4 md4 sm12 xs12"></va-input>
             <div class="flex">
-                <va-button type="submit" :disabled="!isValidInput" icon="search" />
+                <va-button type="submit" icon="search" />
             </div>
             <div class="flex">
-                <va-button type="reset" :disabled="!isValidInput" color="danger" icon="cancel" @click="reset" />
+                <va-button type="reset" color="danger" icon="cancel" @click="reset" />
             </div>
         </div>
     </va-form>
@@ -45,23 +45,18 @@
 import { ref, onMounted, computed } from 'vue'
 import AuthService from '../../../services/clients/AuthService'
 import { useToast } from 'vuestic-ui/web-components'
+import { useGlobalStore } from '../../../stores/global-store';
 
+
+const globalStore = useGlobalStore()
 const { init } = useToast()
 const initPagination = {
     offset: 0,
     limit: 10,
 }
 
-const initFilter = {
-    filter: '',
-    user: ''
-}
-
-const isValidInput = computed(() => {
-    return filter.value.filter.length > 2
-})
 const showModal = ref(false)
-const filter = ref({ ...initFilter })
+const filter = ref('')
 const pagination = ref({ ...initPagination })
 const offset = ref(1 + pagination.value.offset)
 const organisms = ref([])
@@ -81,7 +76,7 @@ onMounted(async () => {
 
 async function fetchData() {
     try {
-        const { data } = await AuthService.getUserSpecies({ ...pagination.value, ...filter.value })
+        const { data } = await AuthService.getUserSpecies(globalStore.userName, { ...pagination.value, filter: filter.value })
         organisms.value = data.data
         total.value = data.total
     } catch (e) {
@@ -100,7 +95,7 @@ async function handleSubmit() {
 }
 
 async function reset() {
-    filter.value.filter = ''
+    filter.value = ''
     pagination.value = { ...initPagination }
     await fetchData()
 }
@@ -121,7 +116,7 @@ async function deleteOrganism() {
     } finally {
         organismToDelete.value.taxid = null
         organismToDelete.value.scientific_name = null
-        filter.value.filter = ''
+        filter.value = ''
         handleSubmit()
     }
 }

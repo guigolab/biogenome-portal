@@ -39,6 +39,8 @@ def get_items(args, db_model, q_query, default_tsv_fields):
     
     query, q_query = create_query(args, q_query)
     
+    print(query)
+
     format = args.get('format', 'json')
 
     selected_fields = [v for k, v in args.items(multi=True) if k.startswith('fields[]')]
@@ -74,6 +76,12 @@ def create_query(args, q_query):
         if not value or key in ignored_keys:
             continue
         
+        if value == 'false':
+            value = False
+
+        if value == 'true':
+            value = True
+
         if value == 'No Value' or ( '__exists' in key and value == 'false'):
             value = None
 
@@ -81,7 +89,7 @@ def create_query(args, q_query):
             key = key.replace('.', '__')
 
         # Handle greater than/less than conditions
-        elif any(op in key for op in ['__gte', '__lte', '__gt', '__lt']):
+        if any(op in key for op in ['__gte', '__lte', '__gt', '__lt']):
             q_query = add_range_filter(key, value, q_query)
 
         else:

@@ -3,12 +3,12 @@
     <p class="mb-4">Delete your local samples, to update or add new local samples use the spreadsheet import form</p>
     <va-form @submit.prevent="handleSubmit">
         <div class="row align-end">
-            <va-input v-model="filter.filter" label="search sample" class="flex lg4 md4 sm12 xs12"></va-input>
+            <va-input v-model="filter" label="search sample" class="flex lg4 md4 sm12 xs12"></va-input>
             <div class="flex">
-                <va-button type="submit" :disabled="!isValidInput" icon="search" />
+                <va-button type="submit" icon="search" />
             </div>
             <div class="flex">
-                <va-button type="reset" :disabled="!isValidInput" color="danger" icon="cancel" @click="reset" />
+                <va-button type="reset" color="danger" icon="cancel" @click="reset" />
             </div>
         </div>
     </va-form>
@@ -40,6 +40,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useToast } from 'vuestic-ui'
 import AuthService from '../../../services/clients/AuthService'
+import { useGlobalStore } from '../../../stores/global-store';
 
 const { init } = useToast()
 const initPagination = {
@@ -47,16 +48,10 @@ const initPagination = {
     limit: 10,
 }
 
-const initFilter = {
-    filter: '',
-    user: ''
-}
+const globalStore = useGlobalStore()
 
-const isValidInput = computed(() => {
-    return filter.value.filter.length > 2
-})
 const showModal = ref(false)
-const filter = ref({ ...initFilter })
+const filter = ref('')
 const pagination = ref({ ...initPagination })
 const offset = ref(1 + pagination.value.offset)
 const localSamples = ref([])
@@ -80,7 +75,7 @@ async function handleSubmit() {
 
 async function fetchData() {
     try {
-        const { data } = await AuthService.getUserSamples({ ...pagination.value, ...filter.value })
+        const { data } = await AuthService.getUserSamples(globalStore.userName, { ...pagination.value, filter: filter.value })
         localSamples.value = data.data
         total.value = data.total
     } catch (e) {
@@ -106,7 +101,7 @@ async function deleteLocalSample() {
 }
 
 async function reset() {
-    filter.value.filter = ''
+    filter.value = ''
     pagination.value = { ...initPagination }
     await fetchData()
 }

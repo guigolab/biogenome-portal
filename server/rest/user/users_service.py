@@ -97,7 +97,7 @@ def get_related_species(name, filter=None, offset=0, limit=10):
     else:
         organisms = Organism.objects().exclude('id').skip(offset).limit(limit)
     total = organisms.count()
-    return {'total':total, 'data': list(organisms.to_pymongo())}
+    return data_helper.dump_json({'total':total, 'data': list(organisms.as_pymongo())})
 
 def get_related_samples(name, filter=None, offset=0, limit=10):
     user = get_user(name)
@@ -114,7 +114,7 @@ def get_related_samples(name, filter=None, offset=0, limit=10):
         samples = LocalSample.objects().exclude('id').skip(offset).limit(limit)
     total = samples.count()
 
-    return {'total':total, 'data': list(samples.to_pymongo())}
+    return data_helper.dump_json({'total':total, 'data': list(samples.as_pymongo())})
 
 def get_local_samples_filter(filter):
     if filter:

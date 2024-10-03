@@ -20,7 +20,7 @@ def get_filter(filter):
         return (Q(taxid__iexact=filter) | Q(taxid__icontains=filter)) | (Q(metadata__experiment_title__icontains=filter)) | (Q(experiment_accession__iexact=filter)) | (Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter))
 
 def get_experiment(accession):
-    experiment = Experiment.objects(experiment_accession=accession).exclude('id').first()
+    experiment = Experiment.objects(experiment_accession=accession).first()
     if not experiment:
         raise NotFound(description=f"Experiment {accession} not found!")
     return experiment

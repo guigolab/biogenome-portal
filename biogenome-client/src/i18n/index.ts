@@ -18,9 +18,6 @@ Object.entries(fileNameToLocaleModuleDict)
     messages[localeNameLocaleMessagesTuple[0]] = localeNameLocaleMessagesTuple[1]
   })
 
-
-console.log(navigator.language)
-
 const browserLanguage = navigator.language || 'gb';
 
 let locale = browserLanguage.split('-')[0]; // Default to language code, e.g., 'es'
