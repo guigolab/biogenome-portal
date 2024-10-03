@@ -11,12 +11,9 @@ const app = createApp(App)
 app.use(stores)
 app.use(router)
 
-app.config.globalProperties.t = i18n.global.t
-
 app.use(i18n)
 app.use(createVuestic())
 
-console.log(navigator.language)
 if (import.meta.env.VITE_APP_GTM_ENABLED) {
   app.use(
     createGtm({
