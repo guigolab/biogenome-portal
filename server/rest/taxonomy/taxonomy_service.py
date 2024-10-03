@@ -1,6 +1,6 @@
 from db.models import Organism, TaxonNode
 from helpers import organism as organism_helper, taxonomy as taxonomy_helper
-from errors import NotFound
+from werkzeug.exceptions import NotFound
 from flask import Response, send_file
 from extensions.cache import cache
 import json
@@ -27,7 +27,7 @@ def get_root_tree():
         # If not cached, compute the tree
         node = TaxonNode.objects(taxid=ROOT_NODE).first()
         if not node:
-            raise NotFound
+            raise NotFound(description=f"Taxon {ROOT_NODE} not found!")
         
         # Generate the tree (this is the expensive operation)
         tree = taxonomy_helper.dfs_generator_iterative(node)
@@ -43,7 +43,7 @@ def get_root_tree():
 def create_tree(taxid):
     node = TaxonNode.objects(taxid=taxid).exclude('id').first()
     if not node:
-        raise NotFound
+        raise NotFound(description=f"Taxon {taxid} not found")
     tree = taxonomy_helper.dfs_generator_iterative(node)
     return tree
 

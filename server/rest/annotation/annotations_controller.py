@@ -1,13 +1,9 @@
 from flask_restful import Resource
-from flask import Response, request, send_from_directory
+from flask import Response, request
 from . import annotations_service
 import json
 from flask_jwt_extended import jwt_required
 from wrappers.admin import admin_required
-
-
-ANNOTATION_FOLDER = '/server/annotations_data'
-
 
 class AnnotationsApi(Resource):
     def get(self):
@@ -17,8 +13,8 @@ class AnnotationsApi(Resource):
     @admin_required()
     @jwt_required()
     def post(self):
-        message,status = annotations_service.create_annotation(request)
-        return Response(json.dumps(message), mimetype="application/json", status=status)
+        message = annotations_service.create_annotation(request)
+        return Response(json.dumps(message), mimetype="application/json", status=201)
 
 class AnnotationApi(Resource):
     def get(self, name):
@@ -29,8 +25,8 @@ class AnnotationApi(Resource):
     @jwt_required()
     def put(self, name):
         data = request.json if request.is_json else request.form
-        message, status = annotations_service.update_annotation(name, data)        
-        return Response(json.dumps(message), mimetype="application/json", status=status)
+        message = annotations_service.update_annotation(name, data)        
+        return Response(json.dumps(message), mimetype="application/json", status=200)
 
     @admin_required()
     @jwt_required()
@@ -41,5 +37,4 @@ class AnnotationApi(Resource):
 
 class StreamAnnotations(Resource):
     def get(self,filename):
-        mime_type = 'binary/octet-stream'
-        return send_from_directory(ANNOTATION_FOLDER, filename, conditional=True, mimetype=mime_type)
+        return annotations_service.stream_annotation(filename)

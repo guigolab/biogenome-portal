@@ -1,8 +1,9 @@
 from mongoengine.queryset.visitor import Q
 from db.models import GenomeAnnotation, Assembly
-from errors import NotFound
 from helpers import data as data_helper, organism as organism_helper
 from mongoengine.errors import ValidationError
+from werkzeug.exceptions import BadRequest, Conflict, NotFound
+from flask import send_from_directory
 import os
 
 ANNOTATIONS_DATA_PATH = '/server/annotations_data'
@@ -19,16 +20,12 @@ def get_annotations(args):
                                  filter,
                                  ['name', 'scientific_name', 'taxid', 'assembly_accession'])
 
-
 def get_filter(filter):
     if filter:
         return (Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter)) | (Q(assembly_name__iexact=filter) | Q(assembly_name__icontains=filter)) |  (Q(taxid__iexact=filter) | Q(taxid__icontains=filter)) | (Q(name__iexact=filter) | Q(name__icontains=filter))
-    return None
 
 def delete_annotation(name):
-    ann_obj = GenomeAnnotation.objects(name=name).first()
-    if not ann_obj:
-        raise NotFound
+    ann_obj = get_annotation(name)
     deleted_name = ann_obj.name
     if not ann_obj.external:
         files_to_remove = [
@@ -44,21 +41,19 @@ def delete_annotation(name):
     return deleted_name
 
 
-def check_required_fields(data):
-    for field in DATA_REQUIRED_FIELDS:
-        if field not in data:
-            return f'{field} field is required', 400
-    return None
+def check_required_fields(fields, data):
+    missing_fields = [field for field in fields if field not in data]
+    if missing_fields:
+        raise BadRequest(descriptioncheck_required_fields=f"Missing required files: {', '.join(missing_fields)}")
 
 def check_annotation_exists(annotation_name):
     if GenomeAnnotation.objects(name=annotation_name).first():
-        return f'A genome annotation with name: {annotation_name} already exists', 400
-    return None
+        raise Conflict(description=f"{annotation_name} already exists")
 
 def get_assembly(assembly_accession):
     assembly_obj = Assembly.objects(accession=assembly_accession).first()
     if not assembly_obj:
-        return f"Assembly {assembly_accession} not found", 400
+        raise NotFound(description=f"Assembly {assembly_accession} not found")
     return assembly_obj
 
 def extract_metadata(data):
@@ -80,7 +75,7 @@ def save_files(files, valid_data, assembly_accession, annotation_name, request):
 
     for k in FILES_REQUIRED_FIELDS:
         if not files.get(k):
-            return f'{k} field is required', 400
+            raise BadRequest(description=f"{k} is a required field")
         
         extension = 'gz' if k == 'gzipAnnotation' else 'gz.tbi'
         key = 'gff_gz_location' if extension == 'gz' else 'tab_index_location'
@@ -91,36 +86,23 @@ def save_files(files, valid_data, assembly_accession, annotation_name, request):
         host_url = f"{request.host_url}{BASE_PATH}/api/download/{filename}" if BASE_PATH else f"{request.host_url}/api/download/{filename}"
         valid_data[key] = host_url
 
-
-def check_url_fields(valid_data):
-    missing_fields = [field for field in URL_FIELDS if field not in valid_data]
-    if missing_fields:
-        return f'{", ".join(missing_fields)} field(s) is(are) required', 400
-    return None
-
-
 def create_annotation(request):
     data = request.json if request.is_json else request.form
     files = request.files
 
     # Check required fields
-    response = check_required_fields(data)
-    if response:
-        return response
+    check_required_fields(DATA_REQUIRED_FIELDS, data)
 
     annotation_name = data.get('name')
 
     # Check if annotation already exists
-    response = check_annotation_exists(annotation_name)
-    if response:
-        return response
+    check_annotation_exists(annotation_name)
 
     assembly_accession = data.get('assembly_accession')
 
     # Get assembly object
     assembly_obj = get_assembly(assembly_accession)
-    if isinstance(assembly_obj, tuple):  # If the function returned an error
-        return assembly_obj
+
     taxid = assembly_obj.taxid
     # Extract metadata
     valid_data = extract_metadata(data)
@@ -132,14 +114,10 @@ def create_annotation(request):
 
     # Handle file saving
     if files:
-        response = save_files(files, valid_data, assembly_accession, annotation_name, request)
-        if response:
-            return response
+        save_files(files, valid_data, assembly_accession, annotation_name, request)
     else:
         # Check URL fields if no files are provided
-        response = check_url_fields(valid_data)
-        if response:
-            return response
+        check_required_fields(FILES_REQUIRED_FIELDS, valid_data)
 
     # Save annotation
     try:
@@ -148,19 +126,21 @@ def create_annotation(request):
         data_helper.update_lineage(new_genome_annotation, organism_obj)
 
     except ValidationError as e:
-        return e.to_dict(), 400
+        raise BadRequest(description=f"{e.to_dict()}")
 
-    return f'genome annotation {new_genome_annotation.name} correctly saved', 201
+    return new_genome_annotation.name
 
 def get_annotation(name):
     ann_obj = GenomeAnnotation.objects(name=name).exclude('id', 'created').first()
     if not ann_obj:
-        raise NotFound
+        raise NotFound(description=f"Annotation {name} not found")
     return ann_obj
 
 def update_annotation(name, data):
-    ann_obj = GenomeAnnotation.objects(name=name).first()
-    if not ann_obj:
-        raise NotFound
+    ann_obj = get_annotation(name)
     ann_obj.update(**data)
-    return f'genome annotation {name} correctly updated', 201
+    return name
+
+def stream_annotation(filename):
+    mime_type = 'binary/octet-stream'
+    return send_from_directory(ANNOTATIONS_DATA_PATH, filename, conditional=True, mimetype=mime_type)

@@ -10,41 +10,20 @@ def dump_json(response_dict):
     json_options.datetime_representation = DatetimeRepresentation.ISO8601
     return dumps(response_dict, indent=4, sort_keys=True, json_options=json_options)
 
-
-def generate_tsv(cursor, fields, batch_size=1000):
-    """
-    Generates a TSV string from a MongoDB cursor with the specified fields.
-    
-    Args:
-    - cursor: MongoDB cursor object.
-    - fields: List of fields to extract from each document.
-    - batch_size: Number of rows to yield at once to minimize frequent yielding.
-    """
-    # Join the header row
-    yield '\t'.join(fields) + '\n'
-    
-    buffer = []
-    for doc in cursor:
-        doc_dict = doc.to_mongo().to_dict()
-        
-        # Using list comprehension for faster row generation
-        new_row = [
-            get_nested_value(doc_dict, k) if 'metadata.' in k else doc_dict.get(k, " ") 
-            for k in fields
-        ]
-        
-        buffer.append('\t'.join(map(str, new_row)) + '\n')
-        
-        # Yield in batches to improve performance
-        if len(buffer) >= batch_size:
-            yield ''.join(buffer)
-            buffer.clear()
-
-    # Yield any remaining rows
-    if buffer:
-        yield ''.join(buffer)
-
-
+def create_tsv(items, fields):
+    writer_file = StringIO()
+    tsv = csv.writer(writer_file, delimiter='\t')
+    tsv.writerow(fields)
+    for item in items:
+        new_row = []
+        for k in fields:
+            if 'metadata.' in k:
+                value = get_nested_value(item, k)
+            else:
+                value = item.get(k)
+            new_row.append(value)
+        tsv.writerow(new_row)
+    return writer_file.getvalue()
 
 def get_pagination(args):
     return int(args.get('limit', 10)),  int(args.get('offset', 0))
@@ -80,7 +59,7 @@ def get_items(args, db_model, q_query, default_tsv_fields):
 
     if format == 'tsv':
         fields = selected_fields if selected_fields else default_tsv_fields
-        return generate_tsv(items, fields), "text/tab-separated-values", 200
+        return create_tsv(items.as_pymongo(), fields).encode('utf-8'), "text/tab-separated-values", 200
 
     response = dict(total=total, data=list(items.skip(offset).limit(limit).as_pymongo()))
     return dump_json(response), "application/json", 200
@@ -101,9 +80,6 @@ def create_query(args, q_query):
         if 'metadata.' in key:
             key = key.replace('.', '__')
 
-        if key == "user":
-            query = handle_user_query(query, value)
-
         # Handle greater than/less than conditions
         elif any(op in key for op in ['__gte', '__lte', '__gt', '__lt']):
             q_query = add_range_filter(key, value, q_query)
@@ -112,17 +88,6 @@ def create_query(args, q_query):
             query[key] = value
 
     return query, q_query
-
-def handle_user_query(query, username):
-    """Handle query logic for the 'user' field."""
-    taxids = user.get_species_by_user_name(username)
-    if 'taxid__in' in query:
-        query['taxid__in'].extend(taxids)
-    else:
-        query['taxid__in'] = taxids
-    return query
-
-
 
 def add_range_filter(key, value, q_query):
     """Add range filtering to the query (e.g., __gte and __lte), and attempt to convert the value to a number or date."""

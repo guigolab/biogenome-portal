@@ -103,6 +103,9 @@ def initialize_routes(api):
 	##USERS
 	api.add_resource(users_controller.UsersApi, '/api/users')
 	api.add_resource(users_controller.UserApi,'/api/users/<name>')
+	api.add_resource(users_controller.UserRelatedSpecies,'/api/users/<name>/organisms')
+	api.add_resource(users_controller.UserRelatedSamples,'/api/users/<name>/local_samples')
+
 
 
 

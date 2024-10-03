@@ -1,7 +1,6 @@
 import os
 from jobs import assemblies, biosamples, experiments, geolocation, taxonomy
-from errors import NotFound
-from celery.result import AsyncResult
+from werkzeug.exceptions import BadRequest, NotFound
 
 PROJECTS = os.getenv('PROJECTS')
 COUNTRIES_PATH = './countries.json'
@@ -28,15 +27,19 @@ JOB_MODELS = {
     'geo_locations':{
         'create_from_local_samples':geolocation.create_local_sample_coordinates,
         'create_from_biosamples':geolocation.create_biosample_coordinates,
-        'cr,eate_countries':geolocation.update_all_countries
+        'create_countries':geolocation.update_all_countries
     }
 }
 
-def create_cronjob(model, action):
-    
+def get_task(model, action):
     task = JOB_MODELS.get(model).get(action)
     if not task:
-        raise NotFound
+        raise NotFound(description=f"Action {action} of model {model} not found")
+    return task
+
+def create_cronjob(model, action):
+    
+    task = get_task(model, action)
     try:
         active_tasks = task.app.control.inspect().active()
         
@@ -44,53 +47,28 @@ def create_cronjob(model, action):
             for v in active_tasks.values():
                 for t in v:
                     if t.get('name') == f"{model}_{action}":
-                        return f"A job for {model}_{action} is already running", 400
+                        raise BadRequest(description=f"A job for {model}_{action} is already running")
 
         print(f'Triggering job {model}_{action}')
 
         result = task.delay()
-        message = f'job {result.id} of model {model} {action} successfully launched'
-        return message, 200
+        return f'job {result.id} of model {model} {action} successfully launched'
     
     except Exception as e:
         message = f'Error executing job {model}{action}: {e}'
         print("ERROR: ", message)
-        return message, 400
+        raise BadRequest(description=message)
 
 def get_cronjobs():
-    active_tasks = get_current_active_tasks('biosamples','import')
+    active_tasks = biosamples.import_biosamples_from_project_names.app.control.inspect().active()
     response = []
     for v in active_tasks.values():
         for t in v:
             response.append(t)
     return response
 
-def get_cronjob(model, action):
-    task = JOB_MODELS.get(model).get(action)
-    if not task:
-        raise NotFound
-    active_tasks = get_current_active_tasks()
-    for v in active_tasks.values():
-        for t in v:
-            if t.get('name') == model:
-                res = AsyncResult(t.get('id'))
-                return str(res.result)
-
 def get_current_active_tasks(model,action):
     task = JOB_MODELS.get(model).get(action)
     active_tasks = task.app.control.inspect().active()
     return active_tasks
 
-
-def delete_cronjob(model, action):
-    task = JOB_MODELS.get(model).get(action)
-    active_tasks = get_current_active_tasks()
-
-    control = task.app.control
-    for v in active_tasks.values():
-        for t in v:
-            if t.get('name') == model:
-                id = t.get('id')
-                control.revoke(id)
-
-    return f"Cron {model} succesfully deleted", 201

@@ -15,11 +15,5 @@ class CronJobApi(Resource):
     @jwt_required()
     @admin_required()
     def post(self, model, action):
-        message, code = cronjob_service.create_cronjob(model, action)
-        return Response(json.dumps(message), mimetype="application/json", status=code)
-
-    @jwt_required()
-    @admin_required()
-    def delete(self, model, action):
-        message, status = cronjob_service.delete_cronjob(model, action)
-        return Response(message, mimetype="application/json", status=status)
+        message = cronjob_service.create_cronjob(model, action)
+        return Response(json.dumps(message), mimetype="application/json", status=201)

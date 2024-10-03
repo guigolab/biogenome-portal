@@ -1,9 +1,9 @@
 
-from mongoengine.queryset.visitor import Q
 from db.models import CommonName,TaxonNode, Organism, Publication,Assembly,GenomeAnnotation,BioSample,LocalSample,Experiment
-import os 
-from errors import NotFound
 from helpers import taxonomy as taxonomy_helper, user as user_helper, organism as organism_helper, geolocation as geoloc_helper, data as data_helper
+from werkzeug.exceptions import BadRequest, Conflict, NotFound
+from mongoengine.queryset.visitor import Q
+import os 
 
 ROOT_NODE=os.getenv('ROOT_NODE')
 PROJECT_ACCESSION=os.getenv('PROJECT_ACCESSION')
@@ -16,8 +16,6 @@ MODEL_LIST = {
     'experiments':{'model':Experiment, 'id':'experiment_accession'},
     }
 
-FIELDS_TO_EXCLUDE = ['id']
-
 def get_organisms(args):
     filter = get_filter(args.get('filter'))
     return data_helper.get_items(args, 
@@ -28,40 +26,46 @@ def get_organisms(args):
 def get_filter(filter):
     if filter:
         return (Q(taxid__iexact=filter) | Q(taxid__icontains=filter)) | (Q(insdc_common_name__iexact=filter) | Q(insdc_common_name__icontains=filter)) | (Q(tolid_prefix__iexact=filter) | Q(tolid_prefix__icontains=filter)) |(Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter))
-    return None
+
+def get_organism(taxid):
+    organism = Organism.objects(taxid=taxid).exclude('id').first()
+    if not organism:
+        raise NotFound(description=f"Organism {taxid} not found!")
+    return organism
 
 def get_organism_related_data(taxid, model):
-    organism_obj = Organism.objects(taxid=taxid).first()
-    if not organism_obj or not model in MODEL_LIST.keys():
-        raise NotFound
+
+    get_organism(taxid)
+
+    if not model in MODEL_LIST.keys():
+        raise BadRequest(description=f"{model} is not in {' '.join(MODEL_LIST.keys)}")
+    
     mapped_model = MODEL_LIST.get(model)
     return mapped_model.get('model').objects(taxid=taxid)
 
 def update_organism(data, taxid):
-    organism = Organism.objects(taxid=taxid).first()
-    if not organism:
-        raise NotFound
+    organism = get_organism(taxid)
+
     organism_data = map_organism_data(data,taxid)
 
     organism.update(**organism_data)
     organism.save()
     
-    return f"Organism {organism.scientific_name} correctly updated", 201
+    return taxid
 
 def create_organism(data):
-
     taxid = data.get('taxid')
     if not taxid:
-        return "Taxid is mandatory", 400
+        raise BadRequest(description="taxid is mandatory!")
     
     if Organism.objects(taxid=taxid):
-        return f"An organism with taxid {taxid} already exists", 400
-        ## add organism to user 
+        raise Conflict(description=f"An organisms with taxid {taxid} already exists")
+
     user = user_helper.get_current_user()
             
     organism = organism_helper.create_organism_and_related_taxons(taxid)
     if not organism:
-        return f"Organisms with taxid {taxid} not found in INSDC", 400
+        raise BadRequest(description=f"Organisms with taxid {taxid} not found in INSDC")
     
     organism_data = map_organism_data(data, taxid)
     organism.update(**organism_data)
@@ -70,7 +74,7 @@ def create_organism(data):
     if user:
         user_helper.add_species_to_datamanager([taxid], user)
 
-    return f"Organism {organism.scientific_name} correctly saved", 201
+    return organism.scientific_name
 
 def map_organism_data(data,taxid):
     organism = dict()
@@ -98,20 +102,17 @@ def map_organism_data(data,taxid):
         organism['publications'] = [Publication(**pub) for pub in filtered_data.get('publications', []) if 'id' in pub]
     return organism
 
-
 #map lineage into tree structure
 def map_organism_lineage(lineage):
     root_to_organism = list(reversed(lineage))
-    tree=dict()
+    tree={}
     root = TaxonNode.objects(taxid=root_to_organism[0]).first()
     tree = taxonomy_helper.dfs_generator(root)
     return tree
 
 
 def delete_organism(taxid):
-    organism_to_delete = Organism.objects(taxid=taxid).first()
-    if not organism_to_delete:
-        raise NotFound
+    organism_to_delete = get_organism(taxid)
     organism_to_delete.delete()
     return f"Organisms {taxid} succesfully deleted", 200
     

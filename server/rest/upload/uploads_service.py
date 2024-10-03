@@ -2,9 +2,9 @@ from db.models import BrokerSource,Organism
 from helpers import user as user_helper, taxonomy as taxonomy_helper
 from jobs import local_samples_upload
 from celery.result import AsyncResult
+from werkzeug.exceptions import NotFound
 import openpyxl
 import itertools
-from errors import NotFound
 
 OPTIONS = ['SKIP','UPDATE']
 
@@ -153,4 +153,4 @@ def get_task_status(task_id):
     if task.result:
         print(task.result)
         return dict(messages=task.result['messages'], state=task.state )
-    raise NotFound
+    raise NotFound(description=f"{task_id} not found")

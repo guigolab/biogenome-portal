@@ -11,13 +11,18 @@ import config from '../configs/general.json'
 onMounted(() => {
   document.title = config.title
   if (config.tracker) {
-    const src = import.meta.env.VITE_BASE_PATH ? import.meta.env.VITE_BASE_PATH + `/tracking/${config.tracker}` : `/tracking/${config.tracker}`
+    setConfigTracker()
+  }
+
+})
+
+function setConfigTracker(){
+  const src = import.meta.env.VITE_BASE_PATH ? import.meta.env.VITE_BASE_PATH + `/tracking/${config.tracker}` : `/tracking/${config.tracker}`
     const trackerScript = document.createElement('script')
     trackerScript.setAttribute("type", "text/javascript")
     trackerScript.setAttribute("src", src)
     document.head.appendChild(trackerScript)
-  }
-})
+}
 
 </script>
 

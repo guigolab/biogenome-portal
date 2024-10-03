@@ -1,5 +1,5 @@
 from db.models import Experiment, Read
-from errors import NotFound
+from werkzeug.exceptions import BadRequest, Conflict, NotFound
 from mongoengine.queryset.visitor import Q
 from helpers import data as data_helper, organism as organism_helper, biosample as biosample_helper
 from parsers import experiment as exp_parser
@@ -18,23 +18,22 @@ def get_reads(args):
 def get_filter(filter):
     if filter:
         return (Q(taxid__iexact=filter) | Q(taxid__icontains=filter)) | (Q(metadata__experiment_title__icontains=filter)) | (Q(experiment_accession__iexact=filter)) | (Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter))
-    return None
 
 def get_experiment(accession):
-    experiment = Experiment.objects(experiment_accession=accession).first()
+    experiment = Experiment.objects(experiment_accession=accession).exclude('id').first()
     if not experiment:
-        raise NotFound
+        raise NotFound(description=f"Experiment {accession} not found!")
     return experiment
 
 
 def create_experiment_from_accession(accession):
     existing_experiment = Experiment.objects(experiment_accession=accession).first()
     if existing_experiment:
-        return f"{accession} already exists", 400
+        raise Conflict(description= f"Experiment {accession} already exists")
 
     reads = ebi_client.get_reads(accession)
     if not reads:
-        return f"Experiment with {accession} not found in INSDC", 400
+        raise BadRequest(description=f"Experiment {accession} not found in INSDC")
     
     parsed_exps, parsed_reads = exp_parser.parse_experiments_and_reads_from_ena_portal(reads)
 
@@ -42,11 +41,11 @@ def create_experiment_from_accession(accession):
         if exp.experiment_accession == accession:
             organism_obj = organism_helper.handle_organism(exp.taxid)
             if not organism_obj:
-                return f"Organism with taxid: {exp.taxid} not found in INSDC", 400
+                raise BadRequest(description=f"Organisms {exp.taxid} not found in INSDC")
 
             biosample_obj = biosample_helper.handle_biosample(exp.sample_accession)
             if not biosample_obj:
-                return f"Biosample with accession: {exp.sample_accession} not found in INSDC", 400
+                raise BadRequest(description=f"Biosample {exp.sample_accession} not found in INSDC")
 
             exp.save()
             organism_obj.save()
@@ -58,16 +57,13 @@ def create_experiment_from_accession(accession):
         filtered_reads = [read for read in reads_to_save if read.run_accession not in existing_reads]
         Read.objects.insert(filtered_reads)
 
-    return f"Experiment {accession} correctly saved", 201
+    return accession
 
 def delete_experiment(accession):
-    experiment_to_delete = Experiment.objects(experiment_accession=accession).first()
-    if not experiment_to_delete:
-        raise NotFound
+    experiment_to_delete = get_experiment(accession)
     experiment_to_delete.delete()
     return accession
 
 def get_reads_by_experiment(accession):
-    if not Experiment.objects(experiment_accession=accession).first():
-        raise NotFound
+    get_experiment(accession)
     return Read.objects(experiment_accession=accession).exclude('id')

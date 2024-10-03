@@ -6,7 +6,7 @@ from itertools import islice
 from helpers import user as user_helper, taxonomy as taxonomy_helper
 import os
 from jobs import goat_report_upload
-from errors import NotFound
+from werkzeug.exceptions import NotFound
 from celery.result import AsyncResult
 
 GOAT_STATUS_EXPORT_MAPPER={
@@ -122,6 +122,5 @@ def validate_fields(tsv_reader):
 def get_task_status(task_id):
     task = AsyncResult(task_id)
     if task.result:
-        print(task.result)
         return dict(messages=task.result['messages'], state=task.state )
-    raise NotFound
+    raise NotFound(description=f"Task {task_id} not found!")

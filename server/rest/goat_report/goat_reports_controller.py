@@ -27,7 +27,6 @@ class GoaTReportApi(Resource):
     
 
 class GoaTReportUploadApi(Resource):
-
     def get(self, task_id):
         response = goat_reports_service.get_task_status(task_id)
         return Response(json.dumps(response), mimetype="application/json", status=200)
