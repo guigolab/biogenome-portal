@@ -4,10 +4,11 @@
             {{ key.split('.').length ? key.split('.')[key.split('.').length - 1] : key }}
         </template>
         <template #cell(gff_gz_location)="{ rowData }">
-            <va-chip :href="rowData.gff_gz_location">{{ t('buttons.download') }}</va-chip>
+            <VaChip :href="rowData.gff_gz_location" outline size="small">{{ t('buttons.download') }}</VaChip>
         </template>
         <template #cell(tab_index_location)="{ rowData }">
-            <va-chip :href="rowData.tab_index_location" size="small">{{ t('buttons.download') }}</va-chip>
+            <VaChip :href="rowData.tab_index_location" outline size="small">{{ t('buttons.download')
+                }}</VaChip>
         </template>
     </VaDataTable>
 </template>

@@ -1,6 +1,5 @@
 from db.models import Assembly, Chromosome, GenomeAnnotation
 from werkzeug.exceptions import BadRequest, Conflict, NotFound
-from mongoengine.queryset.visitor import Q
 from clients import ncbi_client, genomehubs_client
 from parsers import assembly
 from helpers import data, organism, biosample as biosample_helper, assembly as assembly_helper
@@ -12,15 +11,7 @@ def get_related_chromosomes(accession):
     return Chromosome.objects(accession_version__in=assembly.chromosomes).exclude('id')
 
 def get_assemblies(args):
-    filter = get_filter(args.get('filter'))
-    return data.get_items(args, 
-                            Assembly, 
-                            filter,
-                            ['accession', 'scientific_name', 'taxid'])
-
-def get_filter(filter):
-    if filter:
-        return (Q(taxid__iexact=filter) | Q(taxid__icontains=filter)) |  (Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter)) | (Q(assembly_name__iexact=filter) | Q(assembly_name__icontains=filter))
+    return data.get_items('assemblies', args)
 
 def create_assembly_from_accession(accession):
     if Assembly.objects(accession=accession).first():

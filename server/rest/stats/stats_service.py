@@ -25,7 +25,6 @@ def get_stats(model, field, query):
     items = db_model.objects(**parsed_query)
     if q_query:
         items = items.filter(q_query)
-
     try:
         pipeline = [
             {
@@ -55,5 +54,4 @@ def get_stats(model, field, query):
 
     except Exception as e:
         print(e)
-        # Log the exception e if logging is set up
         return {"message": str(e)}, 500

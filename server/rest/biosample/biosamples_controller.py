@@ -14,13 +14,13 @@ class BioSampleApi(Resource):
     @admin_required()
     def post(self,accession):
         message = biosamples_service.create_biosample_from_accession(accession)
-        return Response(json.dumps(message), mimetype="application/json", status=status)
+        return Response(json.dumps(message), mimetype="application/json", status=201)
     
     @jwt_required()
     @admin_required()
     def delete(self,accession):
         deleted_accession = biosamples_service.delete_biosample(accession)
-        return Response(json.dumps(deleted_accession), mimetype="application/json", status=201)
+        return Response(json.dumps(deleted_accession), mimetype="application/json", status=200)
 
 class BioSamplesApi(Resource):
 

@@ -4,15 +4,7 @@ from mongoengine.queryset.visitor import Q
 from helpers import data, organism as organism_helper, biosample as biosample_helper
 
 def get_biosamples(args):
-    filter = get_filter(args.get('filter'))
-    return data.get_items(args, 
-                        BioSample, 
-                        filter,
-                        ['accession', 'scientific_name', 'taxid'])
-
-def get_filter(filter):
-    if filter:
-        return (Q(taxid__iexact=filter) | Q(taxid__icontains=filter)) |  (Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter))
+    return data.get_items('biosamples', args)
 
 def get_biosample(accession):
     biosample_obj = BioSample.objects(accession=accession).first()

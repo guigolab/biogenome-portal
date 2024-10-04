@@ -1,20 +1,11 @@
 from db.models import LocalSample
 from werkzeug.exceptions import NotFound,Unauthorized
-from mongoengine.queryset.visitor import Q
 from helpers import user as user_helper, organism as organism_helper, data as data_helper
 
 FIELDS_TO_EXCLUDE = ['id']
 
 def get_local_samples(args):
-    filter = get_filter(args.get('filter'))
-    return data_helper.get_items(args, 
-                                 LocalSample, 
-                                 filter,
-                                 ['local_id', 'scientific_name', 'taxid'])
-
-def get_filter(filter):
-    if filter:
-        return (Q(taxid__iexact=filter) | Q(taxid__icontains=filter)) | (Q(local_id__iexact=filter) | Q(local_id__icontains=filter)) |  (Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter))
+    return data_helper.get_items('local_samples', args)
 
 def get_local_sample(id):
     sample = LocalSample.objects(local_id=id).first()

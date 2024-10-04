@@ -1,30 +1,18 @@
 from db.models import Experiment, Read
 from werkzeug.exceptions import BadRequest, Conflict, NotFound
-from mongoengine.queryset.visitor import Q
 from helpers import data as data_helper, organism as organism_helper, biosample as biosample_helper
 from parsers import experiment as exp_parser
 from clients import ebi_client
 
 
-FIELDS_TO_EXCLUDE = ['id', 'created']
-
 def get_reads(args):
-    filter = get_filter(args.get('filter'))
-    return data_helper.get_items(args, 
-                                 Experiment, 
-                                 filter,
-                                 ['experiment_accession', 'taxid', "scientific_name", "sample_accession"])
-
-def get_filter(filter):
-    if filter:
-        return (Q(taxid__iexact=filter) | Q(taxid__icontains=filter)) | (Q(metadata__experiment_title__icontains=filter)) | (Q(experiment_accession__iexact=filter)) | (Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter))
+    return data_helper.get_items('experiments', args)
 
 def get_experiment(accession):
     experiment = Experiment.objects(experiment_accession=accession).first()
     if not experiment:
         raise NotFound(description=f"Experiment {accession} not found!")
     return experiment
-
 
 def create_experiment_from_accession(accession):
     existing_experiment = Experiment.objects(experiment_accession=accession).first()

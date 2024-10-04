@@ -4,15 +4,7 @@ from helpers import data as data_helper
 from werkzeug.exceptions import NotFound
 
 def get_taxons(args):
-    filter = get_filter(args.get('filter'))
-    return data_helper.get_items(args, 
-                                 TaxonNode, 
-                                 filter,
-                                 ['taxid', 'scientific_name', 'rank'])
-
-def get_filter(filter):
-    if filter:
-        return (Q(taxid__iexact=filter) | Q(taxid__icontains=filter)) |  (Q(name__iexact=filter) | Q(name__icontains=filter))
+    return data_helper.get_items('taxons', args)
 
 def get_taxon(taxid):
     taxon = TaxonNode.objects(taxid=taxid).first()

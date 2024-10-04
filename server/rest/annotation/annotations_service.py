@@ -1,4 +1,3 @@
-from mongoengine.queryset.visitor import Q
 from db.models import GenomeAnnotation, Assembly
 from helpers import data as data_helper, organism as organism_helper
 from mongoengine.errors import ValidationError
@@ -12,17 +11,8 @@ DATA_REQUIRED_FIELDS = ['name', 'assembly_accession']
 URL_FIELDS = ['gff_gz_location', 'tab_index_location']
 FILES_REQUIRED_FIELDS = ['gzipAnnotation', 'tabixAnnotation']
 
-
 def get_annotations(args):
-    filter = get_filter(args.get('filter'))
-    return data_helper.get_items(args, 
-                                 GenomeAnnotation, 
-                                 filter,
-                                 ['name', 'scientific_name', 'taxid', 'assembly_accession'])
-
-def get_filter(filter):
-    if filter:
-        return (Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter)) | (Q(assembly_name__iexact=filter) | Q(assembly_name__icontains=filter)) |  (Q(taxid__iexact=filter) | Q(taxid__icontains=filter)) | (Q(name__iexact=filter) | Q(name__icontains=filter))
+    return data_helper.get_items('annotations', args)
 
 def delete_annotation(name):
     ann_obj = get_annotation(name)

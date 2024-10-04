@@ -3,12 +3,8 @@ from flask_restful import Resource
 from . import local_samples_service
 import json
 from flask_jwt_extended import jwt_required
-# #CRUD operations on sample
-FIELDS_TO_EXCLUDE = ['id','created','last_check']
-
 
 class LocalSamplesApi(Resource):
-
     def get(self):
         response, mimetype, status = local_samples_service.get_local_samples(request.args)
         return Response(response, mimetype=mimetype, status=status)

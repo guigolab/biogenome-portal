@@ -2,7 +2,6 @@
 from db.models import CommonName,TaxonNode, Organism, Publication,Assembly,GenomeAnnotation,BioSample,LocalSample,Experiment
 from helpers import taxonomy as taxonomy_helper, user as user_helper, organism as organism_helper, geolocation as geoloc_helper, data as data_helper
 from werkzeug.exceptions import BadRequest, Conflict, NotFound
-from mongoengine.queryset.visitor import Q
 import os 
 
 ROOT_NODE=os.getenv('ROOT_NODE')
@@ -17,15 +16,7 @@ MODEL_LIST = {
     }
 
 def get_organisms(args):
-    filter = get_filter(args.get('filter'))
-    return data_helper.get_items(args, 
-                                 Organism, 
-                                 filter,
-                                 ['scientific_name', 'taxid', "insdc_common_name"])
-
-def get_filter(filter):
-    if filter:
-        return (Q(taxid__iexact=filter) | Q(taxid__icontains=filter)) | (Q(insdc_common_name__iexact=filter) | Q(insdc_common_name__icontains=filter)) | (Q(tolid_prefix__iexact=filter) | Q(tolid_prefix__icontains=filter)) |(Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter))
+    return data_helper.get_items('organisms', args)
 
 def get_organism(taxid):
     organism = Organism.objects(taxid=taxid).first()

@@ -1,9 +1,54 @@
 import csv
 from io import StringIO
 from bson.json_util import dumps, JSONOptions, DatetimeRepresentation
-from helpers import user
 from mongoengine.queryset.visitor import Q
+from werkzeug.datastructures import MultiDict
+from db import models
+from . import query_visitors
 
+MODEL_MAPPER = {
+    'annotations':{
+        'model': models.GenomeAnnotation,
+        'query': query_visitors.annotation_query,
+        'tsv_fields': ['name', 'scientific_name', 'taxid', 'assembly_accession']
+    },
+    'assemblies':{
+        'model': models.Assembly,
+        'query': query_visitors.assembly_query,
+        'tsv_fields': ['accession','assembly_name','scientific_name', 'taxid']
+    },
+    'biosamples':{
+        'model': models.BioSample,
+        'query': query_visitors.biosample_query,
+        'tsv_fields': ['accession', 'scientific_name', 'taxid']
+    },
+    'experiments':{
+        'model': models.Experiment,
+        'query': query_visitors.experiment_query,
+        'tsv_fields': ['experiment_accession', 'taxid', "scientific_name", "sample_accession"]
+    },
+    'local_samples':{
+        'model': models.LocalSample,
+        'query': query_visitors.local_sample_query,
+        'tsv_fields': ['local_id', 'scientific_name', 'taxid']
+    },
+    'organisms':{
+        'model': models.Organism,
+        'query': query_visitors.organism_query,
+        'tsv_fields': ['scientific_name', 'taxid', "insdc_common_name"]
+    },
+    'status':{
+        'model': models.Organism,
+        'query': query_visitors.organism_query,
+        'tsv_fields': ['taxid', "scientific_name", "insdc_status", "goat_status", "target_list_status"]
+    },
+    'taxons':{
+        'model': models.TaxonNode,
+        'query': query_visitors.taxon_query,
+        'tsv_fields':  ['taxid', 'name', 'rank']
+    }
+
+}
 
 def dump_json(response_dict):
     json_options = JSONOptions()
@@ -26,26 +71,32 @@ def create_tsv(items, fields):
     return writer_file.getvalue()
 
 def get_pagination(args):
-    return int(args.get('limit', 10)),  int(args.get('offset', 0))
+    return int(args.pop('limit', 10)),  int(args.pop('offset', 0))
 
 def get_sort(args):
-    return args.get('sort_column'), args.get('sort_order')
+    return args.pop('sort_column'), args.pop('sort_order')
 
-def get_items(args, db_model, q_query, default_tsv_fields):
+def get_items(model, immutable_dict):
+
+    mapper = MODEL_MAPPER.get(model)
+
+    args = MultiDict(immutable_dict)
+    
+    filter = args.pop('filter')
+
+    q_query = mapper.get('query')(filter) if filter else None
 
     limit, offset = get_pagination(args)     
 
     sort_column, sort_order = get_sort(args)
     
-    query, q_query = create_query(args, q_query)
+    format = args.pop('format', 'json')
     
-    print(query)
+    selected_fields = args.poplist('fields[]')
+    
+    query, q_query = create_query(args, q_query)
 
-    format = args.get('format', 'json')
-
-    selected_fields = [v for k, v in args.items(multi=True) if k.startswith('fields[]')]
-
-    items = db_model.objects(**query)
+    items = mapper.get('model').objects(**query)
 
     if q_query:
         items = items.filter(q_query)
@@ -60,7 +111,7 @@ def get_items(args, db_model, q_query, default_tsv_fields):
     total = items.count()
 
     if format == 'tsv':
-        fields = selected_fields if selected_fields else default_tsv_fields
+        fields = selected_fields if selected_fields else mapper.get('tsv_fields')
         return create_tsv(items.as_pymongo(), fields).encode('utf-8'), "text/tab-separated-values", 200
 
     response = dict(total=total, data=list(items.skip(offset).limit(limit).as_pymongo()))
@@ -69,11 +120,9 @@ def get_items(args, db_model, q_query, default_tsv_fields):
 def create_query(args, q_query):
     query = {}
 
-    ignored_keys = {"limit", "offset", "sort_order", "sort_column", "filter", "format", "fields[]"}
-
     for key, value in args.items():
         # Skip keys with empty values
-        if not value or key in ignored_keys:
+        if not value:
             continue
         
         if value == 'false':
@@ -82,7 +131,7 @@ def create_query(args, q_query):
         if value == 'true':
             value = True
 
-        if value == 'No Value' or ( '__exists' in key and value == 'false'):
+        if value == 'No Value' or ( '__exists' in key and value == False):
             value = None
 
         if 'metadata.' in key:
