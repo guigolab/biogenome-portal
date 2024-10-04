@@ -37,11 +37,6 @@ MODEL_MAPPER = {
         'query': query_visitors.organism_query,
         'tsv_fields': ['scientific_name', 'taxid', "insdc_common_name"]
     },
-    'status':{
-        'model': models.Organism,
-        'query': query_visitors.organism_query,
-        'tsv_fields': ['taxid', "scientific_name", "insdc_status", "goat_status", "target_list_status"]
-    },
     'taxons':{
         'model': models.TaxonNode,
         'query': query_visitors.taxon_query,

@@ -12,7 +12,6 @@ from .upload import uploads_controller
 from .taxonomy import taxonomy_controller
 from .goat_report import goat_reports_controller
 from .sample_location import sample_locations_controller
-from .status import status_controller
 from .lookup import lookup_controller
 
 def initialize_routes(api):
@@ -65,11 +64,6 @@ def initialize_routes(api):
 	api.add_resource(annotations_controller.AnnotationApi,  '/api/annotations/<name>')
 	api.add_resource(annotations_controller.StreamAnnotations, '/api/download/<filename>')
 	
-
-
-	##SEQUENCING STATUS (CUSTOM)
-	api.add_resource(status_controller.StatusItemsApi, '/api/status')
-
 	##BIOSAMPLES
 	api.add_resource(biosamples_controller.BioSamplesApi, '/api/biosamples')
 	api.add_resource(biosamples_controller.BioSampleApi, '/api/biosamples/<accession>')
