@@ -69,7 +69,7 @@ def get_pagination(args):
     return int(args.pop('limit', 10)),  int(args.pop('offset', 0))
 
 def get_sort(args):
-    return args.pop('sort_column'), args.pop('sort_order')
+    return args.pop('sort_column', None), args.pop('sort_order', None)
 
 def get_items(model, immutable_dict):
 
@@ -77,7 +77,7 @@ def get_items(model, immutable_dict):
 
     args = MultiDict(immutable_dict)
     
-    filter = args.pop('filter')
+    filter = args.pop('filter', None)
 
     q_query = mapper.get('query')(filter) if filter else None
 
