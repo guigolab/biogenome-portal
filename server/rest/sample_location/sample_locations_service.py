@@ -21,7 +21,7 @@ def get_sample_locations(offset=0, limit=10000, lineage=None, sample_type=None, 
     
     # Apply filtering if needed
     if filter:
-        filter_query = Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter)
+        filter_query = Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter) | Q(sample_accession__iexact=filter) | Q(sample_accession__icontains=filter)
         query &= filter_query
 
     coords = SampleCoordinates.objects(query).exclude('id').skip(offset).limit(limit)

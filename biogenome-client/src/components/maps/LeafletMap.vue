@@ -14,7 +14,7 @@
             </div>
             <div v-if="showSampleTypeSelect" class="flex">
               <va-select preset="bordered" inner-label v-model="sampleType" label="Sample Type"
-                :options="['local_sample', 'biosamples']" />
+                :options="['local_sample', 'biosample']" />
             </div>
             <div class="flex">
               <va-button :loading="isLoading" :disabled="isSubmitDisabled" :round="false" @click="search">

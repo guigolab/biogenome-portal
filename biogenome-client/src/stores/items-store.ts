@@ -89,6 +89,32 @@ export const useItemStore = defineStore('item', {
             const model = this.currentModel
             this.stores[model].searchForm[field] = null
         },
+        catchError(error: any) {
+            console.error(error)
+            const axiosError = error as AxiosError<ErrorResponseData>
+            let message
+            if (axiosError.response && axiosError.response.data && axiosError.response.data.message) {
+                message = axiosError.response.data.message
+
+            } else {
+                message = axiosError.message
+            }
+            this.toast({ message: message, color: 'danger' })
+        },
+        downloadFile(data: any) {
+            const href = URL.createObjectURL(data);
+
+            const filename = `${this.currentModel}_report.tsv`
+            // create "a" HTML element with href to file & click
+            const link = document.createElement('a');
+            link.href = href;
+            link.setAttribute('download', filename); //or any other extension
+            document.body.appendChild(link);
+            link.click();
+            // clean up "a" element & remove ObjectURL
+            document.body.removeChild(link);
+            URL.revokeObjectURL(href);
+        },
         //incoming model may not correspond to currentModel
         async getStats(model: string, field: string) {
             try {
@@ -101,20 +127,12 @@ export const useItemStore = defineStore('item', {
                 const { data } = await StatisticsService.getModelFieldStats(model, field, query)
                 return data
             } catch (err) {
-                const axiosError = err as AxiosError<ErrorResponseData>
-                let message
-                if (axiosError.response && axiosError.response.data && axiosError.response.data.message) {
-                    message = axiosError.response.data.message
-
-                } else {
-                    message = axiosError.message
-                }
-                this.toast({ message: message, color: 'danger' })
+                this.catchError(err)
             }
         },
         async fetchItems() {
             const model = this.currentModel
-            this.stores[model].isLoading = true
+            this.isTableLoading = true
             const { searchForm, pagination } = this.stores[model]
 
             // Build the query params
@@ -127,23 +145,14 @@ export const useItemStore = defineStore('item', {
             if (this.parentTaxon) {
                 params['taxon_lineage'] = this.parentTaxon
             }
-
             try {
                 const { data } = await CommonService.getItems(`/${model}`, params)
                 this.stores[model].items = [...data.data]
                 this.stores[model].total = data.total
             } catch (err) {
-                const axiosError = err as AxiosError<ErrorResponseData>
-                let message
-                if (axiosError.response && axiosError.response.data && axiosError.response.data.message) {
-                    message = axiosError.response.data.message
-
-                } else {
-                    message = axiosError.message
-                }
-                this.toast({ message: message, color: 'danger' })
+                this.catchError(err)
             } finally {
-                this.stores[model].isLoading = false
+                this.isTableLoading = false
             }
         },
         async downloadData(fields: string[], applyFilters: boolean) {
@@ -158,25 +167,11 @@ export const useItemStore = defineStore('item', {
                 if (this.parentTaxon) {
                     requestData['taxon_lineage'] = this.parentTaxon
                 }
+                const { data } = await CommonService.getTsv(`/${model}`, requestData)
+                this.downloadFile(data)
 
-                const response = await CommonService.getTsv(`/${model}`, requestData)
-                const data = response.data
-                const href = URL.createObjectURL(data);
-
-                const filename = `${model}_report.tsv`
-                // create "a" HTML element with href to file & click
-                const link = document.createElement('a');
-                link.href = href;
-                link.setAttribute('download', filename); //or any other extension
-                document.body.appendChild(link);
-                link.click();
-                // clean up "a" element & remove ObjectURL
-                document.body.removeChild(link);
-                URL.revokeObjectURL(href);
             } catch (e) {
-                console.log(e)
-                const axiosError = e as AxiosError
-                this.toast({ message: axiosError.message, color: 'danger' })
+                this.catchError(e)
             } finally {
                 this.isTSVLoading = false
             }

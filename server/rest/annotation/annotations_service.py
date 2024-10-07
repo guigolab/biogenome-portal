@@ -73,7 +73,11 @@ def save_files(files, valid_data, assembly_accession, annotation_name, request):
         files[k].save(f"{ANNOTATIONS_DATA_PATH}/{filename}")
         
         valid_data['external'] = False
-        host_url = f"{request.host_url}{BASE_PATH}/api/download/{filename}" if BASE_PATH else f"{request.host_url}/api/download/{filename}"
+        
+        if BASE_PATH:
+            host_url = f"{request.host_url}{BASE_PATH[1:]}/api/download/{filename}"
+        else:
+            host_url = f"{request.host_url}/api/download/{filename}"
         valid_data[key] = host_url
 
 def create_annotation(request):

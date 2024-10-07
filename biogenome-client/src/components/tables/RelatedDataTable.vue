@@ -4,11 +4,14 @@
             {{ key.split('.').length ? key.split('.')[key.split('.').length - 1] : key }}
         </template>
         <template #cell(gff_gz_location)="{ rowData }">
-            <VaChip :href="rowData.gff_gz_location" outline size="small">{{ t('buttons.download') }}</VaChip>
+            <VaChip @click.stop :href="rowData.gff_gz_location" outline size="small">{{
+                t('buttons.download') }}
+            </VaChip>
         </template>
         <template #cell(tab_index_location)="{ rowData }">
-            <VaChip :href="rowData.tab_index_location" outline size="small">{{ t('buttons.download')
-                }}</VaChip>
+            <VaChip @click.stop :href="rowData.tab_index_location" outline size="small">{{
+                t('buttons.download')
+            }}</VaChip>
         </template>
     </VaDataTable>
 </template>
@@ -41,8 +44,11 @@ const columns = computed(() => {
     } else {
         return []
     }
-
 })
+
+const handleLinkClick = (event: MouseEvent) => {
+    event.stopPropagation(); // Prevent event from bubbling to the row
+};
 
 const handleClick = (event: any) => {
     const { item } = event

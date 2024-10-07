@@ -19,12 +19,12 @@
             <va-icon color="danger" name="delete" @click="deleteConfirmation(rowData)" />
         </template>
         <template #cell(chromosome_aliases)="{ rowData }">
-            <div class="row justify-space-between">
+            <div class="row">
                 <div v-if="rowData.has_chromosomes_aliases" class="flex">
                     <va-button size="small" :href="`${baseURL}/assemblies/${rowData.accession}/chr_aliases`"
                         icon="download"></va-button>
                 </div>
-                <div v-if="rowData.metadata.assembly_info.assembly_level === 'Chromosome'" class="flex">
+                <div v-if="rowData.metadata && rowData.metadata.assembly_info.assembly_level === 'Chromosome'" class="flex">
                     <va-button :to="{ name: 'chr-aliases', params: { accession: rowData.accession } }" size="small"
                         icon="add" />
                 </div>

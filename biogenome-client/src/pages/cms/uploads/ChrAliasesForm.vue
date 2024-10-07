@@ -22,8 +22,11 @@ import { ref } from 'vue';
 import AuthService from '../../../services/clients/AuthService';
 import { useToast } from 'vuestic-ui/web-components';
 import { AxiosError } from 'axios';
+import { useRouter } from 'vue-router';
 
-const {init} = useToast()
+
+const router = useRouter()
+const { init } = useToast()
 const props = defineProps<{
     accession: string,
 }>()
@@ -39,11 +42,12 @@ async function handleSubmit() {
         const formData = new FormData()
         formData.append('chr_aliases', refName.value)
         const { data } = await AuthService.uploadRefNameAliases(props.accession, formData)
-        init({message: data as string, color:'success'})
+        init({ message: data as string, color: 'success' })
+        router.push({ name: 'cms-assemblies' })
     } catch (error) {
         const axiosError = error as AxiosError
-        if(axiosError.response && axiosError.response.data){
-            init({message:axiosError.response.data as string,color:'danger'})
+        if (axiosError.response && axiosError.response.data) {
+            init({ message: axiosError.response.data as string, color: 'danger' })
         }
         console.log(error)
     } finally {

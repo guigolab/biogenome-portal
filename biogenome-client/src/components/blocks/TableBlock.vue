@@ -17,10 +17,13 @@
                     </va-avatar>
                 </template>
                 <template #cell(gff_gz_location)="{ rowData }">
-                    <VaChip :href="rowData.gff_gz_location" outline size="small">{{ t('buttons.download') }}</VaChip>
+                    <VaChip @click.stop :href="rowData.gff_gz_location" outline size="small">{{
+                        t('buttons.download') }}
+                    </VaChip>
                 </template>
                 <template #cell(tab_index_location)="{ rowData }">
-                    <VaChip :href="rowData.tab_index_location" outline size="small">{{ t('buttons.download')
+                    <VaChip @click.stop :href="rowData.tab_index_location" outline size="small">{{
+                        t('buttons.download')
                         }}</VaChip>
                 </template>
             </VaDataTable>
