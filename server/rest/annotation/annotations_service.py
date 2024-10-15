@@ -132,9 +132,21 @@ def get_annotation(name):
 
 def update_annotation(name, data):
     ann_obj = get_annotation(name)
-    ann_obj.update(**data)
+    valid_data = extract_metadata(data)
+    ann_obj.update(**valid_data)
     return name
 
 def stream_annotation(filename):
     mime_type = 'binary/octet-stream'
     return send_from_directory(ANNOTATIONS_DATA_PATH, filename, conditional=True, mimetype=mime_type)
+
+def create_nested_dict(dotted_key, value):
+    keys = dotted_key.split('.')
+    nested_dict = current = {}
+
+    for key in keys[:-1]:
+        current[key] = {}
+        current = current[key]
+    
+    current[keys[-1]] = value
+    return nested_dict

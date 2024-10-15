@@ -18,7 +18,7 @@
 
     <!-- Upload Mode: Files -->
     <div class="row" v-else>
-        <div v-if="isLocal" class="flex lg12 md12 sm12 xs12">
+        <div v-if="name" class="flex lg12 md12 sm12 xs12">
             <p>
                 Update of uploaded files is not supported. If you need to change the file, it is necessary to delete
                 this
@@ -142,7 +142,7 @@ async function handleSubmit() {
             : await AuthService.createAnnotation(requestData)
 
         init({ message: `${data} saved successfully!`, color: 'success' })
-        router.push({ name: 'cms-assemblies' })
+        router.push({ name: 'cms-annotations' })
     } catch (error) {
         handleError(error)
     } finally {
