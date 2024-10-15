@@ -99,9 +99,12 @@ def get_chr_aliases_file(accession):
     
     # Assuming chromosomes is a list of dictionaries with fields 'name' and 'accession_version'
     for chromosome in chromosomes:
-        chr_name = chromosome.get('metadata', {}).get('name')
+        print(chromosome)
+        name = chromosome.get('metadata', {}).get('chr_name')
+        if not name:
+            name = chromosome.get('metadata', {}).get('name')
         accession_version = chromosome.get('accession_version')
-        tsv_data.write(f"{chr_name}\t{accession_version}\n")
+        tsv_data.write(f"{name}\t{accession_version}\n")
     
     tsv_data.seek(0)  # Go back to the start of the StringIO object
     

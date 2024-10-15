@@ -53,14 +53,12 @@ function parseAssembly(assembly: Assembly, chromosomes: ChromosomeInterface[]) {
       },
     },
   }
-  if (assembly.has_chromosomes_aliases) {
-    assemblyAdapter.refNameAliases = {
-      adapter: {
-        type: "RefNameAliasAdapter",
-        location: {
-          uri: `${baseURL}/assemblies/${assembly.accession}/chr_aliases`,
-          locationType: "UriLocation"
-        }
+  assemblyAdapter.refNameAliases = {
+    adapter: {
+      type: "RefNameAliasAdapter",
+      location: {
+        uri: `${baseURL}/assemblies/${assembly.accession}/chr_aliases`,
+        locationType: "UriLocation"
       }
     }
   }
