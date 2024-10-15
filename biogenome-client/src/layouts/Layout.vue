@@ -27,13 +27,21 @@ import { useBreakpoint } from 'vuestic-ui'
 import { useGlobalStore } from "../stores/global-store"
 import NavBar from '../components/navbar/Navbar.vue'
 import Sidebar from '../components/sidebar/Sidebar.vue'
-import { onMounted } from 'vue';
+import { onMounted, watch } from 'vue';
+import { useItemStore } from '../stores/items-store';
+import { useRoute } from 'vue-router';
 
+const itemStore = useItemStore()
 const globalStore = useGlobalStore()
 const breakpoints = useBreakpoint()
+const route = useRoute()
 
 onMounted(async () => {
     if (!globalStore.isAuthenticated) await globalStore.checkUserIsLoggedIn()
+})
+
+watch(() => route.name, () => {
+    itemStore.isDashBoard = route.name === 'dashboard'
 })
 
 </script>

@@ -83,7 +83,7 @@ def import_assemblies_by_bioproject(project_accession=None):
         except Exception as e:
             print(e)
             print(f"Impossible to save assembly {new_accession}, 'skipping it..")
-            Chromosome.objects(accession_version__in=parsed_assembly.chromosomes).delete()
+            Chromosome.objects(metadata__assembly_accession=new_accession).delete()
             continue
 
     print(f"Job executed. Saved {saved_assemblies} out of {new_ids_length}")

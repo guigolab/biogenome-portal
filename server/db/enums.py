@@ -26,6 +26,7 @@ class INSDCStatus(Enum):
     SAMPLE = 'Biosample Submitted'
     READS = 'Reads Submitted'
     ASSEMBLIES = 'Assemblies Submitted'
+    ANNOTATIONS = 'Annotation Completed'
 
 class Roles(Enum):
     ##CRUD LOCAL_SAMPLES

@@ -76,6 +76,7 @@ export const useItemStore = defineStore('item', {
             showChartModal: false,
             currentModel: "",
             isTableLoading: false,
+            isDashBoard: false,
             isTSVLoading: false,
             toast: useToast().init
         }
@@ -118,11 +119,16 @@ export const useItemStore = defineStore('item', {
         //incoming model may not correspond to currentModel
         async getStats(model: string, field: string) {
             try {
-                //filter out filter, and sort fields
-                const filteredEntries = Object.entries(this.stores[model].searchForm).filter(([k, v]) => !Object.keys(staticFilters).includes(k))
-                const query = Object.fromEntries(filteredEntries)
-                if (this.country) query['countries'] = this.country
-                if (this.parentTaxon) query['taxon_lineage'] = this.parentTaxon
+                let query = {}
+                if (!this.isDashBoard) {
+
+                    const filteredEntries = Object.entries(this.stores[model].searchForm).filter(([k, v]) => !Object.keys(staticFilters).includes(k))
+                    if (this.country) filteredEntries.push(['countries', this.country])
+                    if (this.parentTaxon) filteredEntries.push(['taxon_lineage', this.parentTaxon])
+
+                    query = Object.fromEntries(filteredEntries)
+                }
+
 
                 const { data } = await StatisticsService.getModelFieldStats(model, field, query)
                 return data

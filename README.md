@@ -5,16 +5,13 @@ This project aims to provide a user-friendly interface to show and manage biodiv
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10363191.svg)](https://doi.org/10.5281/zenodo.10363191)
 
 
-## Online instances
-* [CBP](https://dades.biogenoma.cat)
-* [EBP](https://ebp.biogenoma.cat/)
+## API specs and Instances
 
-## API specs
-[API](https://guigolab.github.io/biogenome-portal/)
+See the API specs [here](https://guigolab.github.io/biogenome-portal/)
 
-## Full Documentation
+## Docs
 
-Full documentation is now [HERE](https://github.com/guigolab/biogenome-portal/wiki)
+Full documentation is now [here](https://github.com/guigolab/biogenome-portal/wiki)
 
 <!-- CONTRIBUTING -->
 ## Contributing
@@ -30,14 +27,10 @@ Don't forget to give the project a star! Thanks again!
 4. Push to the Branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-<!-- LICENSE -->
 ## License
 
 Distributed under the MIT License. See `LICENSE.txt` for more information.
 
-<p align="right">(<a href="#top">back to top</a>)</p>
-
-<!-- CONTACT -->
 ## Contact
 
 Emilio Righi - emilio.righi@crg.eu

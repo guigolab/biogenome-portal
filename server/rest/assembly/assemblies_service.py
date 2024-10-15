@@ -7,8 +7,11 @@ from flask import send_file
 import io
 
 def get_related_chromosomes(accession):
-    assembly = get_assembly(accession)
-    return Chromosome.objects(accession_version__in=assembly.chromosomes).exclude('id')
+    ass = get_assembly(accession)
+    chromosomes = Chromosome.objects(metadata__assembly_accession=accession)
+    if not chromosomes.count():
+        chromosomes = Chromosome.objects(accession_version__in=ass.chromosomes)
+    return chromosomes.exclude('id')
 
 def get_assemblies(args):
     return data.get_items('assemblies', args)
@@ -77,16 +80,6 @@ def delete_assembly(accession):
 
     return accession
 
-def store_chromosome_aliases(accession, request):
-    assembly = get_assembly(accession)
-    aliases_file = request.files.get('chr_aliases')
-    if not aliases_file:
-        raise BadRequest(description=f"chr_aliases file is required!")
-    
-    assembly.chromosomes_aliases = aliases_file.read()
-    assembly.has_chromosomes_aliases = True
-    assembly.save()
-    return "Chromosome aliases successfully updated"
 
 def get_related_annotations(accession):
     get_assembly(accession)
@@ -94,11 +87,28 @@ def get_related_annotations(accession):
 
 def get_chr_aliases_file(accession):
     assembly_obj = get_assembly(accession)
-    if not assembly_obj.has_chromosomes_aliases:
-        raise BadRequest(description=f"Assembly {accession} lacks of chromosome aliases file")
-    return send_file(
-    io.BytesIO(assembly_obj.chromosomes_aliases),
-    mimetype='text/plain',
-    as_attachment=True,
-    download_name=f'{assembly_obj.accession}_chr_aliases.txt')
     
+    # Query chromosomes based on accession_version
+    chromosomes = Chromosome.objects(accession_version__in=assembly_obj.chromosomes).as_pymongo()
+    
+    if not chromosomes:
+        raise BadRequest(description=f"Assembly {accession} lacks chromosomes")
+    
+    # Prepare the TSV data
+    tsv_data = io.StringIO()
+    
+    # Assuming chromosomes is a list of dictionaries with fields 'name' and 'accession_version'
+    for chromosome in chromosomes:
+        chr_name = chromosome.get('metadata', {}).get('name')
+        accession_version = chromosome.get('accession_version')
+        tsv_data.write(f"{chr_name}\t{accession_version}\n")
+    
+    tsv_data.seek(0)  # Go back to the start of the StringIO object
+    
+    # Send the TSV as a downloadable file
+    return send_file(
+        io.BytesIO(tsv_data.getvalue().encode('utf-8')),  # Convert StringIO to bytes
+        mimetype='text/tab-separated-values',
+        as_attachment=True,
+        download_name=f'{assembly_obj.accession}_chr_aliases.tsv'
+    )

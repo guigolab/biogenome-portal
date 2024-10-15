@@ -3,32 +3,20 @@
     <p class="mb-4">Add genome annotations, chromosome aliases or delete assemblies </p>
     <va-form @submit.prevent="handleSubmit">
         <div class="row align-end">
-            <va-input v-model="filter" label="search assembly" class="flex lg4 md4 sm12 xs12"></va-input>
             <div class="flex">
-                <va-checkbox indeterminate v-model="hasAliases" label="Has chromosome aliases?"></va-checkbox>
+                <va-input v-model="filter" label="search assembly"/>
             </div>
             <div class="flex">
-                <va-button icon="search" @click="handleSubmit"> </va-button>
-                <va-button icon="cancel" color="danger" @click="reset"> </va-button>
+                <va-button icon="search" @click="handleSubmit">Search </va-button>
+            </div>
+            <div class="flex">
+                <va-button style="margin-left: 3px;" icon="cancel" color="danger" @click="reset"> Reset </va-button>
             </div>
         </div>
     </va-form>
-    <va-data-table :items="assemblies"
-        :columns="['accession', 'scientific_name', 'assembly_name', 'metadata.assembly_info.assembly_level', 'chromosome_aliases', 'delete']">
+    <va-data-table :items="assemblies" :columns="['accession', 'scientific_name', 'assembly_name', 'delete']">
         <template #cell(delete)="{ rowData }">
             <va-icon color="danger" name="delete" @click="deleteConfirmation(rowData)" />
-        </template>
-        <template #cell(chromosome_aliases)="{ rowData }">
-            <div class="row">
-                <div v-if="rowData.has_chromosomes_aliases" class="flex">
-                    <va-button size="small" :href="`${baseURL}/assemblies/${rowData.accession}/chr_aliases`"
-                        icon="download"></va-button>
-                </div>
-                <div v-if="rowData.metadata && rowData.metadata.assembly_info.assembly_level === 'Chromosome'" class="flex">
-                    <va-button :to="{ name: 'chr-aliases', params: { accession: rowData.accession } }" size="small"
-                        icon="add" />
-                </div>
-            </div>
         </template>
     </va-data-table>
     <div class="row justify-center">
@@ -55,9 +43,6 @@ import { ref, onMounted } from 'vue'
 import AssemblyService from '../../../services/clients/AssemblyService'
 import AuthService from '../../../services/clients/AuthService'
 import { useToast } from 'vuestic-ui/web-components'
-
-const baseURL = import.meta.env.VITE_BASE_PATH ? import.meta.env.VITE_BASE_PATH + '/api' : '/api'
-
 
 const { init } = useToast()
 const initPagination = {

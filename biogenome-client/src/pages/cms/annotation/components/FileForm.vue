@@ -62,6 +62,7 @@ import { useAnnotationStore } from '../../../../stores/annotation-store'
 import AuthService from '../../../../services/clients/AuthService'
 import AnnotationService from '../../../../services/clients/AnnotationService'
 import { AxiosError } from 'axios'
+import { useRouter } from 'vue-router'
 
 const { init } = useToast()
 const annotationStore = useAnnotationStore()
@@ -74,6 +75,7 @@ const props = defineProps<{
     name?: string
 }>()
 
+const router = useRouter()
 const emits = defineEmits(['onLoading'])
 
 watch(() => props.name, (v) => {
@@ -135,7 +137,8 @@ async function handleSubmit() {
     try {
         emits('onLoading', true)
         const { data } = props.name ? await AuthService.updateAnnotation(props.name, requestData) : await AuthService.createAnnotation(requestData)
-        init({ message: data, color: 'success' })
+        init({ message: data  + ' saved!', color: 'success' })
+        router.push({name:'cms-assemblies'})
     } catch (error) {
         const axiosError = error as AxiosError
         if (axiosError.response && axiosError.response.data) {

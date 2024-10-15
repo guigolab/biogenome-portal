@@ -82,13 +82,6 @@ export const cmsRoutes = [
                 component: () => import('../pages/cms/annotation/AnnotationForm.vue'),
             },
             {
-                name: 'chr-aliases',
-                path: 'chr-aliases/:accession',
-                props: true,
-                beforeEnter: [isAdmin],
-                component: () => import('../pages/cms/uploads/ChrAliasesForm.vue')
-            },
-            {
                 name: 'insdc-form',
                 path: 'insdc-form',
                 beforeEnter: [isAdmin],

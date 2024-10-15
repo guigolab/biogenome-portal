@@ -49,8 +49,7 @@ def get_stats(model, field, query):
         }
         # Sort the response dictionary
         sorted_response = {key : response[key] for key in sorted(response)}
-
-        return sorted_response, 200
+        return data_helper.dump_json(sorted_response), 200
 
     except Exception as e:
         print(e)

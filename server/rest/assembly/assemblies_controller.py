@@ -36,12 +36,6 @@ class AssemblyChrAliasesApi(Resource):
     def get(self,accession):
         return assemblies_service.get_chr_aliases_file(accession)
     
-    @data_manager_required()
-    @jwt_required()
-    def post(self,accession):
-        msg = assemblies_service.store_chromosome_aliases(accession, request)
-        return Response(json.dumps(msg), mimetype="application/json", status=200)
-
 class AssembliesRelatedChromosomesApi(Resource):
     def get(self,accession):
         chromosomes = assemblies_service.get_related_chromosomes(accession)
