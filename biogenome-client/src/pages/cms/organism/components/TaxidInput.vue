@@ -1,8 +1,8 @@
 <template>
     <div class="row">
         <div class="flex lg12 md12 sm12 xs12">
-            <va-input :loading="isLoading" v-model="input" style="padding-bottom: 10px"
-                label="Taxonomic identifier (NCBI)" placeholder="Insert a valid NCBI Taxonomic identifier"
+            <va-input :loading="isLoading" v-model="input" class="pb-10" label="Taxonomic identifier (NCBI)"
+                placeholder="Insert a valid NCBI Taxonomic identifier"
                 :rules="[(v: string) => v.length > 0 || 'Value is mandatory', (v: string) => isValid || 'An organism with this taxid already exists']">
                 <template #append>
                     <va-button :disabled="input.length < 1" type="submit" icon="search"

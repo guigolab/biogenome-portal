@@ -1,6 +1,6 @@
 <template>
   <h4 class="va-h4">Organism Form</h4>
-  <p class="mb-4">{{taxid? `Edit ${taxid}`:'Create a new organism, start by typing its NCBI taxonomic identifier'}}</p>
+  <p class="light-paragraph mb-4">{{taxid? `Edit ${taxid}`:'Create a new organism, start by typing its NCBI taxonomic identifier'}}</p>
   <TaxidInput v-if="!taxid" />
   <div v-if="organismStore.organismForm.taxid">
     <va-inner-loading :loading="isLoading">

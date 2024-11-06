@@ -1,7 +1,7 @@
 <template>
     <div class="dashboard">
         <h2 class="va-h2">Welcome, {{ userName }}!</h2>
-        <p style="padding-bottom: 12px" class="va-text-secondary">
+        <p class="light-paragraph mb-12">
             {{ isAdmin ? adminMessage : dataManagerMessage }}
         </p>
         <div class="row aling-end">

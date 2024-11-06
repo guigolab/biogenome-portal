@@ -35,9 +35,9 @@
     </div>
     <va-modal v-model="showModal" hide-default-actions>
         <template #header>
-            <h2 style="color: red">Delete {{ userToDelete.name }}</h2>
+            <h2 class="va-text-danger">Delete {{ userToDelete.name }}</h2>
         </template>
-        <div style="padding: 10px">
+        <div class="p-10">
             Are you sure you want to delete user: <strong>{{ userToDelete.name }}</strong> ?
         </div>
         <template #footer>

@@ -18,12 +18,18 @@
         "NCBI": "View in NCBI",
         "ENA": "View in ENA"
     },
-    "tooltip":{
-        "biosamples":"Number of BioSamples",
-        "local_samples":"Number of Local Samples",
+    "chart": {
+        "modalTitle": "Create chart",
+        "modalDescription": "If the field is part of metadata or is nested, use the format: 'metadata.fieldYouWantToSelect' for top-level fields, or 'metadata.parentField.nestedField' for nested fields.",
+        "fieldInputLabel": "Field",
+        "chartSelectLabel": "Chart type"
+    },
+    "tooltip": {
+        "biosamples": "Number of BioSamples",
+        "local_samples": "Number of Local Samples",
         "experiments": "Number of Experiments",
-        "assemblies":"Number of Assemblies",
-        "organisms":"Number of Organisms",
+        "assemblies": "Number of Assemblies",
+        "organisms": "Number of Organisms",
         "annotations": "Number of Annotations"
     },
     "tabs": {

@@ -8,6 +8,12 @@ export interface ConfigType {
   [key: string]: any[]; // Adjust the type of values if necessary
 }
 
+export type Frequency = {
+  source: string,
+  model: DataModels,
+  field: string,
+  data: Record<string, number>
+}
 export type TLineChartData = ChartData<'line'>
 export type TBarChartData = ChartData<'bar'>
 export type TBubbleChartData = ChartData<'bubble'>
@@ -25,6 +31,14 @@ export type ComponentType = 'biosample' | 'organism' | 'assembly' | 'localSample
 export interface PageHeaderConfig {
   title: LangOption,
   description: LangOption
+}
+export type DataModels = 'biosamples' | 'experiments' | 'organisms' | 'annotations' | 'assemblies' | 'local_samples'
+
+export type Stat = {
+  key: DataModels,
+  count: number,
+  icon?: string
+  color?: string
 }
 
 export type Model = 'biosamples' | 'experiments' | 'organisms' | 'annotations' | 'assemblies' | 'users' | 'local_samples'
@@ -82,7 +96,6 @@ export interface SearchForm {
 export interface ConfigFilter {
   key: string
   type: 'date' | 'select' | 'input' | 'checkbox'
-
 }
 export interface OrganismSearchForm extends SearchForm {
   insdc_status: string

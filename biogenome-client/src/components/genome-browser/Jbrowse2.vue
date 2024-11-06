@@ -1,5 +1,5 @@
 <template>
-  <div ref="wrapper" style="height: inherit; width: inherit"></div>
+  <div ref="wrapper" class="jbrowse-wrapper"></div>
 </template>
 
 <script setup lang="ts">
@@ -119,3 +119,9 @@ function setDefaultSession() {
   }
 }
 </script>
+<style scoped>
+.jbrowse-wrapper {
+  height: inherit;
+  width: inherit
+}
+</style>

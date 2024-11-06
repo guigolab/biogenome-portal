@@ -20,13 +20,14 @@ const defaultRoutes: Array<RouteRecordRaw> = [
   {
     path: '/taxonomy',
     component: () => import('../pages/taxonomy/Taxonomy.vue'),
+    name: 'taxonomy',
     children: [
-      {
-        name: 'taxonomy',
-        path: '',
-        redirect: { name: 'wiki', params: { lineage: rootNode } },
-        meta: { name: 'taxonomy' }
-      },
+      // {
+      //   name: 'taxonomy',
+      //   path: '',
+      //   redirect: { name: 'wiki', params: { lineage: rootNode } },
+      //   meta: { name: 'taxonomy' }
+      // },
       {
         name: 'taxon',
         path: ':lineage',
@@ -34,12 +35,6 @@ const defaultRoutes: Array<RouteRecordRaw> = [
         component: () => import('../pages/taxonomy/Taxon.vue'),
         meta: { name: 'taxonomy' },
         children: [
-          {
-            name: 'wiki',
-            path: '',
-            props: true,
-            component: () => import('../pages/taxonomy/components/Wikipedia.vue')
-          },
           {
             name: 'items',
             path: ':model',

@@ -1,7 +1,6 @@
 <template>
-    <VaDateInput preset="bordered" v-model="model" clearable :format-date="formatDate" :label="label" style="width: 100%" mode="range"
-        type="month" prevent-overflow :allowed-years="allowedDate" :allowed-months="allowedDate"
-        :allowed-days="allowedDate">
+    <VaDateInput v-model="model" clearable :format-date="formatDate" :label="label" mode="range" type="month"
+        prevent-overflow :allowed-years="allowedDate" :allowed-months="allowedDate" :allowed-days="allowedDate">
     </VaDateInput>
 </template>
 <script setup lang="ts">
@@ -16,7 +15,7 @@ type DateType = Date | string | null
 
 const model = computed({
     get() {
-        
+
         return props.value
     },
     set(value: { start: DateType, end: DateType }) {

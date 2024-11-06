@@ -1,6 +1,6 @@
 <template>
     <h4 class="va-h4">Experiments: {{total}}</h4>
-    <p class="mb-4">Delete Experiments </p>
+    <p class="light-paragraph mb-4">Delete Experiments </p>
     <va-form @submit.prevent="handleSubmit">
         <div class="row align-end">
             <va-input v-model="filter" label="search experiment" class="flex lg4 md4 sm12 xs12"></va-input>
@@ -31,9 +31,9 @@
     </div>
     <va-modal v-model="showModal" hide-default-actions>
         <template #header>
-            <h2 style="color: red">Delete {{ readToDelete.accession }}</h2>
+            <h2 class="va-text-danger">Delete {{ readToDelete.accession }}</h2>
         </template>
-        <div style="padding: 10px">
+        <div class="p-10">
             Are you sure you want to delete experiment: <strong>{{ readToDelete.accession }}</strong> ?
         </div>
         <template #footer>

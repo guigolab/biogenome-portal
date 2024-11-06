@@ -1,5 +1,5 @@
 <template>
-  <VaNavbar shadowed>
+  <VaNavbar hide-on-scroll class="navbar-h">
     <template #left>
       <VaIcon size="2rem" color="primary" :name="globalStore.isSidebarVisible ? 'menu_open' : 'menu'"
         @click="globalStore.isSidebarVisible = !globalStore.isSidebarVisible" />

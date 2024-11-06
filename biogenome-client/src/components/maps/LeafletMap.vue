@@ -5,7 +5,7 @@
         <div v-if="showControls" class="flex">
           <div class="row align-center">
             <div class="flex">
-              <va-input preset="bordered" @keyup.enter="search" style="min-width: 250px;" inner-label v-model="filter"
+              <va-input class="mw-250" preset="bordered" @keyup.enter="search" inner-label v-model="filter"
                 :label="t('buttons.search')" placeholder="Search by name or accession">
                 <template #appendInner>
                   <va-icon name="search" />

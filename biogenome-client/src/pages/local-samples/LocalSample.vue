@@ -3,7 +3,7 @@
   <div v-if="validTabs.length">
     <Tabs :tabs="validTabs" :tab="tab" @updateView="(v: string) => tab = v" />
     <div class="row">
-      <div v-if="tab === 'map'" style="height: 450px;" class="flex lg12 md12 sm12 xs12">
+      <div v-if="tab === 'map'" class="flex lg12 md12 sm12 xs12 h-450">
         <LeafletMap :sample_accession="id" />
       </div>
       <div v-else class="flex lg12 md12 sm12 xs12">

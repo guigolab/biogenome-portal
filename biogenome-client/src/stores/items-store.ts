@@ -1,19 +1,12 @@
 import { defineStore } from 'pinia'
-import { ErrorResponseData, ConfigFilter, ConfigType } from '../data/types'
+import { ErrorResponseData, ConfigFilter, DataModels, Frequency } from '../data/types'
 import { useToast } from 'vuestic-ui'
 import CommonService from '../services/clients/CommonService'
 import StatisticsService from '../services/clients/StatisticsService'
-import filters from '../../configs/filters.json'
-import columns from '../../configs/columns.json'
 import { AxiosError } from 'axios'
+import { useConfig } from '../composable/useConfig'
 
-
-const columnsConf = columns as ConfigType
-const filtersConf = filters as ConfigType
-
-const MODELS = ['organisms', 'biosamples', 'assemblies', 'experiments', 'annotations', 'local_samples']
-
-const staticFilters = {
+export const staticFilters = {
     filter: "",
     sort_order: "",
     sort_column: "",
@@ -23,9 +16,10 @@ const initPagination = {
     limit: 10,
 }
 
+
 function mapSearchForm(modelFilters: ConfigFilter[]) {
 
-    const staticEntries = Object.entries(staticFilters)
+    const staticEntries = Object.entries({ ...staticFilters })
     const formEntries = modelFilters.map(f => {
         if (f.type === "date") {
             return [[`${f.key}__gte`, null], [`${f.key}__lte`, null]]
@@ -38,57 +32,70 @@ function mapSearchForm(modelFilters: ConfigFilter[]) {
     return Object.fromEntries([...formEntries, ...staticEntries])
 }
 
-
-//add configs in each store to manage everything from here
-function mapModelStore(m: string) {
-
-    const columnsToShow = m in columnsConf ? columnsConf[m] : []
-
-    const modelFilters = m in filtersConf ? filtersConf[m] : []
-
-    const searchForm = mapSearchForm(modelFilters)
-
-    const pagination = { ...initPagination }
-    const items: Record<string, any>[] = []
-    const total = 0
+// Factory function to create a store for a specific model
+function createModelStore(model: DataModels) {
+    const { columns, filters } = useConfig(model);
     return {
-        searchForm,
-        pagination,
-        items,
-        total,
-        columnsToShow,
-        filters,
-    }
+        searchForm: mapSearchForm(filters.value),
+        pagination: { ...initPagination },
+        items: [],
+        total: 0,
+        frequencies: [] as Record<string, Record<string, number>>[],
+        columnsToShow: columns.value,
+    };
 }
 
 export const useItemStore = defineStore('item', {
     state: () => {
 
-        const mappedStores = MODELS.map(m => [m, mapModelStore(m)])
-
-        const stores = Object.fromEntries(mappedStores)
         return {
             view: 'table' as 'table' | 'charts',
-            stores: { ...stores },
+            stores: {} as Record<DataModels, any>,
             parentTaxon: "" as string | undefined,
             country: "" as string | undefined,
+            frequencies: [] as Frequency[],
             showTsvModal: false,
             showChartModal: false,
-            currentModel: "",
             isTableLoading: false,
-            isDashBoard: false,
             isTSVLoading: false,
+            showFilters: false,
             toast: useToast().init
         }
     },
 
     actions: {
-        resetPagination() {
-            this.stores[this.currentModel].pagination = { ...initPagination }
+        initStore(model: DataModels) {
+            if (!this.stores[model]) {
+                this.stores[model] = createModelStore(model);
+            }
         },
-        resetActiveFilter(field: string) {
-            const model = this.currentModel
-            this.stores[model].searchForm[field] = null
+        getSearchForm(model: DataModels) {
+            this.initStore(model);  // Ensure store exists
+            return this.stores[model]?.searchForm ?? null;
+        },
+        initSearchForm(model: DataModels) {
+            this.initStore(model);  // Ensure store exists
+            const { filters } = useConfig(model)
+            this.stores[model].searchForm = mapSearchForm(filters.value)
+        },
+        setSearchFormField(model: DataModels, key: string, value: any) {
+            this.initStore(model);  // Ensure store exists
+            if (this.stores[model]) {
+                this.stores[model].searchForm[key] = value;
+            }
+        },
+        buildQuery(model: DataModels) {
+            const searchFormEntries = Object.entries(this.stores[model].searchForm)
+                .filter(([key, value]) => !staticFilters.hasOwnProperty(key) && value !== null && value !== "");
+
+            if (this.country) searchFormEntries.push(['countries', this.country]);
+            if (this.parentTaxon) searchFormEntries.push(['taxon_lineage', this.parentTaxon]);
+
+            return Object.fromEntries(searchFormEntries);
+        },
+        resetPagination(model: DataModels) {
+            this.initStore(model);  // Ensure store exists
+            this.stores[model].pagination = { ...initPagination }
         },
         catchError(error: any) {
             console.error(error)
@@ -102,10 +109,11 @@ export const useItemStore = defineStore('item', {
             }
             this.toast({ message: message, color: 'danger' })
         },
-        downloadFile(data: any) {
+
+        downloadFile(model: DataModels, data: any) {
             const href = URL.createObjectURL(data);
 
-            const filename = `${this.currentModel}_report.tsv`
+            const filename = `${model}_report.tsv`
             // create "a" HTML element with href to file & click
             const link = document.createElement('a');
             link.href = href;
@@ -117,27 +125,31 @@ export const useItemStore = defineStore('item', {
             URL.revokeObjectURL(href);
         },
         //incoming model may not correspond to currentModel
-        async getStats(model: string, field: string) {
+        async getFrequencies(source: string, model: DataModels, field: string, ignoreQuery: boolean) {
+            this.initStore(model);  // Ensure store exists
             try {
-                let query = {}
-                if (!this.isDashBoard) {
 
-                    const filteredEntries = Object.entries(this.stores[model].searchForm).filter(([k, v]) => !Object.keys(staticFilters).includes(k))
-                    if (this.country) filteredEntries.push(['countries', this.country])
-                    if (this.parentTaxon) filteredEntries.push(['taxon_lineage', this.parentTaxon])
-
-                    query = Object.fromEntries(filteredEntries)
-                }
-
-
+                const query = ignoreQuery ? {} : this.buildQuery(model)
+                const freqs = this.frequencies
                 const { data } = await StatisticsService.getModelFieldStats(model, field, query)
-                return data
+                const newFreq: Frequency = { source, model, field, data }
+                const existingIndex = freqs.findIndex(
+                    f => f.source === source && f.model === model && f.field === field
+                );
+
+                if (existingIndex !== -1) {
+                    freqs[existingIndex] = newFreq;
+                } else {
+                    freqs.push(newFreq);
+                }
+                this.frequencies = [...freqs]
             } catch (err) {
                 this.catchError(err)
             }
         },
-        async fetchItems() {
-            const model = this.currentModel
+        async fetchItems(model: DataModels) {
+            this.initStore(model);  // Ensure store exists
+
             this.isTableLoading = true
             const { searchForm, pagination } = this.stores[model]
 
@@ -161,8 +173,9 @@ export const useItemStore = defineStore('item', {
                 this.isTableLoading = false
             }
         },
-        async downloadData(fields: string[], applyFilters: boolean) {
-            const model = this.currentModel
+        async downloadData(model: DataModels, fields: string[], applyFilters: boolean) {
+            this.initStore(model);  // Ensure store exists
+
             this.isTSVLoading = true
             const downloadRequest = { format: "tsv", fields: [...fields] }
             try {
@@ -174,7 +187,7 @@ export const useItemStore = defineStore('item', {
                     requestData['taxon_lineage'] = this.parentTaxon
                 }
                 const { data } = await CommonService.getTsv(`/${model}`, requestData)
-                this.downloadFile(data)
+                this.downloadFile(model, data)
 
             } catch (e) {
                 this.catchError(e)

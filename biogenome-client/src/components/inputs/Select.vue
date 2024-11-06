@@ -1,5 +1,5 @@
 <template>
-    <VaSelect preset="bordered" clearable :label="label" v-model="model" :options="keys">
+    <VaSelect clearable :label="label" v-model="model" :options="keys">
         <template #option="{ option, selectOption }">
             <div class="row option align-center justify-space-between" @click="selectOption(option)">
                 <div class="flex">
@@ -7,7 +7,7 @@
                 </div>
                 <div class="flex">
                     <VaChip outline size="small">
-                        {{ options[option] }}
+                        {{ options[option as string] }}
                     </VaChip>
                 </div>
             </div>

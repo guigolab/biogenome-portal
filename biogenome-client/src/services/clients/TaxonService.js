@@ -18,14 +18,15 @@ class TaxonService {
   getTree(node, params) {
     return base.get(`/tree/${node}`, { params: params })
   }
-  getTaxonChildren(taxid) {
-    return base.get(`/taxons/${taxid}/children`)
-  }
   getPhylogeneticallyCloseTree(taxid){
     return base.get(`/taxons/${taxid}/lookup`)
   }
   getComputedTree(){
     return base.get('/tree')
+  }
+  getAncestors(taxid){
+    return base.get(`/taxons/${taxid}/ancestors`)
+
   }
 }
 

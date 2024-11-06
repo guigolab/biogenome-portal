@@ -1,50 +1,52 @@
 <template>
     <div class="row">
-        <div v-for="f in models" class="flex lg2 md2 sm6 xs6">
-            <StatCard :icon="f.icon" :color="f.color" :count="f.count" :field="f.key" />
+        <div v-for="f in mappedModels" class="flex lg2 md2 sm6 xs6">
+            <VaCard :to="{ name: f.key }" class="hover-shadow">
+                <VaCardContent>
+                    <div class="row justify-space-between align-center">
+                        <div class="flex">
+                            <Counter :duration="2000" :target-value="f.count" />
+                            <p> {{ t(`sidebar.${f.key}`) }}
+                            </p>
+                        </div>
+                        <div class="flex">
+                            <VaIcon :color="f.color" :name="f.icon" size="large"></VaIcon>
+                        </div>
+                    </div>
+                </VaCardContent>
+            </VaCard>
         </div>
     </div>
 </template>
 <script setup lang="ts">
-import LookupService from '../../services/clients/LookupService';
-import StatCard from '../../components/cards/StatCard.vue'
-import { onMounted, reactive } from 'vue'
-import pages from '../../../configs/pages.json'
+import { computed } from 'vue'
+import { iconMap } from '../../composable/useIconMap';
+import { useStatsStore } from '../../stores/stats-store';
+import Counter from '../common/Counter.vue'
+import { useI18n } from 'vue-i18n';
+import { useRouter } from 'vue-router';
 
-const iconMap = {
-    biosamples: { icon: 'fa-vial', color: 'success' },
-    local_samples: { icon: 'fa-vial', color: 'warning' },
-    experiments: { icon: 'fa-folder', color: 'info' },
-    assemblies: { icon: 'fa-dna', color: 'primary' },
-    annotations: { icon: 'fa-bars-staggered', color: 'secondary' },
-    organisms: { icon: 'fa-paw', color: 'textPrimary' }
-}
+const statsStore = useStatsStore()
+const { t } = useI18n()
 
-const MODELS = ['biosamples', 'local_samples', 'experiments', 'assemblies', 'annotations', 'organisms']
+const router = useRouter()
 
-const models = reactive(getMappedModels())
+const routes = computed(() => router.getRoutes().filter(f => f.name))
 
-onMounted(async () => {
+const mappedModels = computed(() => {
+    const models = statsStore.stats.filter(({ key, count }) => {
 
-    const { data } = await LookupService.lookupData()
-    models.forEach(f => {
-        if (data[f.key]) {
-            f.count = data[f.key]
-        }
+        return routes.value.find(r => r.name === key) && count > 0
+    }).map(({ key, count }) => {
+        const { icon, color } = iconMap[key]
+        return { key, count, icon, color }
     })
+    return models
 })
 
-function getMappedModels() {
-    const models = MODELS.filter(m => Object.keys(pages).includes(m))
-    return models.map(m => {
-        const key = m as keyof typeof iconMap
-        const { icon, color } = iconMap[key]
-        return {
-            key: m,
-            count: 0,
-            icon,
-            color
-        }
-    })
-}
 </script>
+<style scoped>
+.hover-shadow:hover {
+    box-shadow: rgba(0, 0, 0, 0.12) 0px 6px 10px 10px;
+}
+</style>

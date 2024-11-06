@@ -1,16 +1,16 @@
 <template>
     <h4 class="va-h4">Assemblies: {{ total }}</h4>
-    <p class="mb-4">Add genome annotations, chromosome aliases or delete assemblies </p>
+    <p class="light-paragraph mb-4">Add genome annotations, chromosome aliases or delete assemblies </p>
     <va-form @submit.prevent="handleSubmit">
         <div class="row align-end">
             <div class="flex">
-                <va-input v-model="filter" label="search assembly"/>
+                <va-input v-model="filter" label="search assembly" />
             </div>
             <div class="flex">
                 <va-button icon="search" @click="handleSubmit">Search </va-button>
             </div>
             <div class="flex">
-                <va-button style="margin-left: 3px;" icon="cancel" color="danger" @click="reset"> Reset </va-button>
+                <va-button class="ml-2" icon="cancel" color="danger" @click="reset"> Reset </va-button>
             </div>
         </div>
     </va-form>
@@ -28,9 +28,9 @@
     </div>
     <va-modal v-model="showModal" hide-default-actions>
         <template #header>
-            <h2 style="color: red">Delete {{ assemblyToDelete.assemblyName }}</h2>
+            <h2 class="va-text-danger">Delete {{ assemblyToDelete.assemblyName }}</h2>
         </template>
-        <div style="padding: 10px">
+        <div class="p-10">
             Are you sure you want to delete assembly: <strong>{{ assemblyToDelete.assemblyName }}</strong> ?
         </div>
         <template #footer>

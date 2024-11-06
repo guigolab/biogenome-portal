@@ -1,6 +1,6 @@
 <template>
   <h4 class="va-h4">Annotation Form</h4>
-  <p class="mb-4">{{ name ? `Edit ${name}` : 'Create a new annotation' }}</p>
+  <p class="light-paragraph mb-4">{{ name ? `Edit ${name}` : 'Create a new annotation' }}</p>
   <va-inner-loading :loading="isLoading">
     <div v-if="!name">
       <NameInput />

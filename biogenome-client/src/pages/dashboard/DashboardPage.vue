@@ -1,31 +1,20 @@
 <template>
-  <PageHeader :title="(dashboardInfo.title as LangOption)" :description="(dashboardInfo.description as LangOption)" />
+  <PageHeader :title="(page.title as LangOption)" :description="(page.description as LangOption)" />
   <div class="dashboard">
     <StatsBlock />
-    <ChartsBlock v-if="configCharts.length" :charts="configCharts" />
+
+    <ChartsBlock source="dashboard" v-if="charts.length" :charts="charts" />
   </div>
 </template>
 
 <script setup lang="ts">
 import ChartsBlock from '../../components/blocks/ChartsBlock.vue'
 import StatsBlock from '../../components/blocks/StatsBlock.vue'
-import { InfoBlock, LangOption } from '../../data/types'
-import pages from '../../../configs/pages.json'
-import charts from '../../../configs/charts.json'
-import { computed } from 'vue'
+import { LangOption } from '../../data/types'
 import PageHeader from '../../components/common/PageHeader.vue'
+import { useConfig } from '../../composable/useConfig'
 
-
-const dashboardInfo = computed(() => {
-  const { title = "Dashboard", description = "" } = pages.dashboard || {};
-  return { title, description };
-});
-
-
-const configCharts = computed(() => {
-  const dashCharts = charts.dashboard ? charts.dashboard as InfoBlock[] : []
-  return dashCharts
-})
+const { page, charts } = useConfig('dashboard')
 
 </script>
 <style lang="scss">

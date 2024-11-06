@@ -1,5 +1,5 @@
 <template>
-    <VaInput preset="bordered" iconColor="primary" v-model="filter" clearable :placeholder="t('buttons.search')">
+    <VaInput class="mw-200" v-model="filter" clearable :placeholder="t('buttons.search')">
         <template #appendInner>
             <va-icon name="search" />
         </template>

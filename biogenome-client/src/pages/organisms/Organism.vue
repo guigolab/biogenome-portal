@@ -11,7 +11,7 @@
           </template>
         </Suspense>
       </div>
-      <div v-else-if="tab === 'map'" style="height: 450px;" class="flex lg12 md12 sm12 xs12">
+      <div v-else-if="tab === 'map'" class="h-450 flex lg12 md12 sm12 xs12">
         <LeafletMap :taxid="taxid" />
       </div>
       <div v-else class="flex lg12 md12 sm12 xs12">

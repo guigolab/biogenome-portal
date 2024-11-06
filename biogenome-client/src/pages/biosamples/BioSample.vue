@@ -7,11 +7,11 @@
         <Suspense>
           <RelatedDataTable :accession="accession" :model="tab" />
           <template #fallback>
-            <VaSkeleton height="500px"></VaSkeleton>
+            <VaSkeleton height="450px"></VaSkeleton>
           </template>
         </Suspense>
       </div>
-      <div v-else-if="tab === 'map'" style="height: 450px;" class="flex lg12 md12 sm12 xs12">
+      <div v-else-if="tab === 'map'" class="flex lg12 md12 sm12 xs12 h-450">
         <LeafletMap :sample_accession="accession" />
       </div>
       <div v-else class="flex lg12 md12 sm12 xs12">

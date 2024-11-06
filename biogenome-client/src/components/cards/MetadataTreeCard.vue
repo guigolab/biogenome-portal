@@ -1,6 +1,6 @@
 <template>
     <div class="row">
-        <va-input class="flex" style="width: 300px;" v-model="filter" placeholder="Type to search" clearable>
+        <va-input class="flex w-300" v-model="filter" placeholder="Type to search" clearable>
             <template #appendInner>
                 <VaIcon name="search"></VaIcon>
             </template>
@@ -12,10 +12,10 @@
                 <div class="mr-2">
                     <b v-if="node.label" class="display-6">{{ node.label }}</b>
                     <div v-if="node.description">
-                        <a class="va-text-secondary mb-0" target="_blank"
+                        <a class="mb-0" target="_blank"
                             v-if="node.description && typeof node.description === 'string' && node.description.includes('http')"
                             :href="node.description">{{ node.description }}</a>
-                        <p v-else class="va-text-secondary mb-0">
+                        <p v-else class="mb-0">
                             {{ node.description }}
                         </p>
                     </div>

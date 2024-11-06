@@ -1,11 +1,11 @@
 <template>
     <h4 class="va-h4">Genome Annotations: {{ total }}</h4>
-    <p class="mb-4">Edit or delete genome annotations </p>
+    <p class="light-paragraph mb-4">Edit or delete genome annotations </p>
     <va-form @submit.prevent="handleSubmit">
         <div class="row align-end">
             <va-input v-model="filter" label="search annotation" class="flex lg4 md4 sm12 xs12"></va-input>
             <div class="flex">
-                <va-button  icon="search" @click="handleSubmit"> </va-button>
+                <va-button icon="search" @click="handleSubmit"> </va-button>
                 <va-button icon="cancel" color="danger" @click="reset"> </va-button>
             </div>
         </div>
@@ -27,9 +27,9 @@
     </div>
     <va-modal v-model="showModal" hide-default-actions>
         <template #header>
-            <h2 style="color: red">Delete {{ annotationTodelete.name }}</h2>
+            <h2 class="va-text-danger">Delete {{ annotationTodelete.name }}</h2>
         </template>
-        <div style="padding: 10px">
+        <div class="p-10">
             Are you sure you want to delete annotation: <strong>{{ annotationTodelete.name }}</strong> ?
         </div>
         <template #footer>

@@ -8,7 +8,7 @@
                     {{ selectedSample.sample_accession }}
                 </router-link>
             </h6>
-            <p class="va-text-secondary">{{ data.scientific_name }}</p>
+            <p>{{ data.scientific_name }}</p>
         </VaCardContent>
     </VaCard>
 </template>

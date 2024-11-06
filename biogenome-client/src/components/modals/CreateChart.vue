@@ -1,40 +1,42 @@
 <template>
-    <VaModal size="large" v-model="itemStore.showChartModal" hide-default-actions
-        :title="'Chart creation of ' + itemStore.currentModel">
-        <div class="row">
-            <div class="flex lg6 m6 sm12 xs12">
-                <VaInput label="Field to query" v-model="chart.field" :messages="[fieldMessage]" />
-            </div>
-            <div class="flex lg4 m4 sm12 xs12">
-                <VaSelect style="padding-left: 6px;" label="Chart type" v-model="chart.type" :options="types" />
-            </div>
-        </div>
-        <div class="row">
+    <VaModal size="large" v-model="itemStore.showChartModal">
+        <h3 class="va-h3">{{ t('chart.modalTitle') }}</h3>
+        <p class="light-paragraph mb-15">
+            {{ t('chart.modalDescription') }}
+        </p>
+        <div class="row align-end mb-15 gap-1">
             <div class="flex">
-                <VaButton :disabled="isDisabled" @click="createChart"> {{ t('buttons.submit') }} </VaButton>
+                <VaInput class="w-250" :label="t('chart.fieldInputLabel')" v-model="chart.field" />
+            </div>
+            <div class="flex">
+                <VaSelect class="w-250" :label="t('chart.chartSelectLabel')" v-model="chart.type" :options="types" />
+            </div>
+            <div class="flex">
+                <VaButton preset="submit" :disabled="isDisabled" @click="createChart"> {{ t('buttons.submit') }}
+                </VaButton>
             </div>
         </div>
-        <VaDivider />
-        <ChartsBlock :charts="charts" />
+        <VaDivider v-if="charts.length" />
+        <ChartsBlock :source="model" :charts="charts" />
     </VaModal>
 </template>
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useItemStore } from '../../stores/items-store'
 import { useI18n } from 'vue-i18n'
-import columns from '../../../configs/columns.json'
 import ChartsBlock from '../blocks/ChartsBlock.vue'
-import { InfoBlock } from '../../data/types'
+import { DataModels, InfoBlock } from '../../data/types'
 
 const { t } = useI18n()
 const itemStore = useItemStore()
 
 const types = ['pie', 'dateline', 'bar']
-const fieldMessage = "If the field is contained in metadata or is nested type: 'metadata.fieldYouWantToSelect' or metadata.parentField.nestedField"
 
-const model = computed(() => itemStore.currentModel as keyof typeof columns)
+const props = defineProps<{
+    model: DataModels
+}>()
 
-watch(() => model.value, () => {
+watch(() => props.model, () => {
     charts.value = []
     chart.value = { ...initChart }
 })
@@ -50,7 +52,7 @@ const chart = ref<InfoBlock>({ ...initChart })
 const charts = ref<InfoBlock[]>([])
 
 async function createChart() {
-    chart.value.model = model.value
+    chart.value.model = props.model
     charts.value = [...[{ ...chart.value }]]
 
 }

@@ -1,6 +1,6 @@
 <template>
     <h4 class="va-h4">BioSamples: {{ total }}</h4>
-    <p class="mb-4">Delete BioSamples </p>
+    <p class="light-paragraph mb-4">Delete BioSamples </p>
     <va-form @submit.prevent="handleSubmit">
         <div class="row align-end">
             <va-input v-model="filter" label="search BioSample" class="flex lg4 md4 sm12 xs12"></va-input>
@@ -27,9 +27,9 @@
     </div>
     <va-modal v-model="showModal" hide-default-actions>
         <template #header>
-            <h2 style="color: red">Delete {{ sampleToDelete.accession }}</h2>
+            <h2 class="va-text-danger">Delete {{ sampleToDelete.accession }}</h2>
         </template>
-        <div style="padding: 10px">
+        <div class="p-10">
             Are you sure you want to delete sample: <strong>{{ sampleToDelete.accession }}</strong> ?
         </div>
         <template #footer>

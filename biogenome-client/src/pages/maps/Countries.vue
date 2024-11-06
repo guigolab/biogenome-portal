@@ -1,7 +1,7 @@
 <template>
   <div>
     <h1 class="va-h1">{{ t('maps.countries.title') }}</h1>
-    <p class="va-text-secondary">{{ t('maps.countries.description') }}</p>
+    <p>{{ t('maps.countries.description') }}</p>
     <div class="row">
       <div class="flex">
         <VaButton :disabled="!showDetails" @click="showDetails = !showDetails"> Show Map </VaButton>
@@ -15,11 +15,11 @@
       <div :class="['details-container', { 'hidden': !showDetails }]">
         <VaCard :key="selectedCountry.id">
           <VaCardContent>
-            <h2 class="va-h2" style="margin: 0;"> {{ selectedCountry.name }} </h2>
+            <h2 class="va-h2 m-0"> {{ selectedCountry.name }} </h2>
           </VaCardContent>
-          <VaDivider style="margin: 0;" />
+          <VaDivider class="m-0" />
           <VaCardContent>
-            <Items :model="'organisms'" />
+            <Items :key="'country'" :model="'organisms'" />
           </VaCardContent>
         </VaCard>
       </div>
@@ -28,7 +28,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import * as Cesium from 'cesium'
 import am5geodata_worldLow from '@amcharts/amcharts5-geodata/worldLow'
 import { useI18n } from 'vue-i18n'
@@ -74,6 +74,12 @@ async function getCountries() {
     init({ message: axiosError.message, color: 'danger' })
   }
 }
+
+onUnmounted(() => {
+  console.log('Unmounting')
+  itemStore.resetSearchForm()
+  console.log(itemStore.stores[itemStore.currentModel].searchForm)
+})
 
 function createCesiumMap(data: Record<string, number>) {
 

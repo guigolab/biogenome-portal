@@ -16,3 +16,15 @@ def get_taxon_children(taxid):
     taxon = get_taxon(taxid)
     children = TaxonNode.objects(taxid__in=taxon.children).exclude('id')
     return children
+
+def get_ancestors(taxid):
+
+    taxon = get_taxon(taxid)
+    ancestors = [taxon.to_mongo().to_dict()]
+    parent = TaxonNode.objects(children=taxid).exclude('id').first()
+    while parent:
+        ancestors.append(parent.to_mongo().to_dict())
+        parent = TaxonNode.objects(children=parent.taxid).exclude('id').first()
+    ancestors.reverse()
+    return data_helper.dump_json(ancestors)
+    

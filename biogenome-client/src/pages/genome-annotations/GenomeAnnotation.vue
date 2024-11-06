@@ -1,8 +1,8 @@
 <template>
   <div v-if="details" class="row">
     <div class="flex lg12 md12 sm12 xs12">
-      <h1 style="margin: 0;" class="va-h1">{{ details.title }}</h1>
-      <p class="va-text-secondary" v-if="details.description">{{ details.description }}</p>
+      <h1 class="va-h1 m-0">{{ details.title }}</h1>
+      <p class="light-paragraph" v-if="details.description">{{ details.description }}</p>
     </div>
     <div class="flex lg12 md12 sm12 xs12">
       <div class="row">
