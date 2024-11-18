@@ -4,6 +4,12 @@ This project aims to provide a user-friendly interface to show and manage biodiv
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10363191.svg)](https://doi.org/10.5281/zenodo.10363191)
 
+## 📝 We Value Your Feedback!
+
+👉 [Fill out our Feedback Form](https://forms.gle/NcZXJtXqHQTVRdHW8) 👈
+
+It only takes a few minutes, and your input is invaluable to us.
+
 
 ## API specs and Instances
 
@@ -14,6 +20,7 @@ See the API specs [here](https://guigolab.github.io/biogenome-portal/)
 Full documentation is now [here](https://github.com/guigolab/biogenome-portal/wiki)
 
 <!-- CONTRIBUTING -->
+
 ## Contributing
 
 Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
