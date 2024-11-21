@@ -1,5 +1,5 @@
 <template>
-    <VaModal v-model="itemStore.showTsvModal">
+    <VaModal hide-default-actions close-button v-model="itemStore.showTsvModal">
         <VaInnerLoading :loading="itemStore.isTSVLoading">
 
             <h3 class="va-h3">{{ t('buttons.downloadTSV') }}</h3>
@@ -13,7 +13,8 @@
                         :placeholder="t('download.fieldsPlaceholder')" allow-create="unique" multiple
                         @create-new="(v: string) => fields.push(v)">
                         <template #content="{ value }">
-                            <VaChip square size="small" color="secondary" v-for="v in value" :key="v" class="m-2">
+                            <VaChip square outline size="small" color="secondary" v-for="v in value" :key="v"
+                                class="m-2">
                                 {{ v }}
                             </VaChip>
                         </template>

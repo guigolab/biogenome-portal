@@ -42,7 +42,6 @@ export const useGlobalStore = defineStore('global', {
     },
 
     async checkUserIsLoggedIn() {
-      console.log(this.isAuthenticated)
       if (!this.isAuthenticated) return
       try {
         const { data } = await AuthService.check()

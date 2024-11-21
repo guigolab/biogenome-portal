@@ -6,11 +6,18 @@
                     <p>{{ option }}</p>
                 </div>
                 <div class="flex">
-                    <VaChip outline size="small">
+                    <VaChip size="small">
                         {{ options[option as string] }}
                     </VaChip>
                 </div>
             </div>
+        </template>
+        <template #content>
+            <VaIcon class="mr-2" v-if="icon" :name="icon" :color="color" />
+            {{ value }}
+        </template>
+        <template #prepenInner>
+            <VaIcon v-if="icon" :name="icon" :color="color" />
         </template>
     </VaSelect>
 </template>
@@ -18,9 +25,11 @@
 import { computed } from 'vue'
 
 const props = defineProps<{
-    label: string,
+    label?: string,
     value: string,
     options: Record<string, number>
+    icon?: string
+    color?: string
 }>()
 
 const keys = computed(() => {

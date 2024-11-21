@@ -34,7 +34,7 @@ const router = useRouter()
 const routes = computed(() => router.getRoutes().filter(f => f.name))
 
 const mappedModels = computed(() => {
-    const models = statsStore.stats.filter(({ key, count }) => {
+    const models = statsStore.currentStats.filter(({ key, count }) => {
 
         return routes.value.find(r => r.name === key) && count > 0
     }).map(({ key, count }) => {

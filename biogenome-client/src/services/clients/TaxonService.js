@@ -6,6 +6,9 @@ class TaxonService {
   getTaxon(taxid) {
     return base.get(`/taxons/${taxid}`)
   }
+  getTaxonChildren(taxid) {
+    return base.get(`/taxons/${taxid}/children`)
+  }
   getTaxonStats(taxid) {
     return base.get(`/taxons/${taxid}/stats`)
   }

@@ -6,7 +6,7 @@
     <p class="light-paragraph" v-else>
         {{ rank }}
     </p>
-    <VaModal v-model="showModal">
+    <VaModal close-button hide-default-actions  v-model="showModal">
         <div class="iframe-wrapper">
             <iframe :src="src" :key="src"></iframe>
         </div>
@@ -17,7 +17,6 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n'
 import general from '../../../../configs/general.json'
-import { RouterLink } from 'vue-router';
 
 const { locale } = useI18n()
 
@@ -71,6 +70,7 @@ async function getContent(lang: string, name: string) {
 .iframe-wrapper {
     position: relative;
     overflow: visible;
+    height: 90vh;
 }
 
 .iframe-wrapper iframe {

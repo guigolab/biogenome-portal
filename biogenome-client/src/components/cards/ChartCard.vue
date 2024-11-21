@@ -2,12 +2,12 @@
     <VaCard v-if="freq">
         <VaCardContent>
             <div class="row align-center justify-space-between">
-                <p class="flex">{{ chartTitle }}</p>
+                <p class="flex va-text-bold">{{ chartTitle }}</p>
                 <div class="flex">
-                    <VaButton size="small"
+                    <VaChip square color="secondary" size="small"
                         @click="downloadCanvasAsPNG(`${chart.model}.${chart.field}`, `${chart.type}.png`)">
                         Download
-                    </VaButton>
+                    </VaChip>
                 </div>
             </div>
         </VaCardContent>

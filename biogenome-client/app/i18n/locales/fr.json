@@ -1,0 +1,135 @@
+{
+    "auth": {
+        "login": "Connexion",
+        "password": "Mot de passe",
+        "logout": "Déconnexion"
+    },
+    "buttons": {
+        "submit": "Soumettre",
+        "reset": "Réinitialiser",
+        "search": "Rechercher",
+        "download": "Télécharger",
+        "downloadTSV": "Télécharger le rapport TSV",
+        "sort": "Trier",
+        "view": "Voir les détails",
+        "fields": "Champs",
+        "filters": "Filtres",
+        "goat_report": "Télécharger le rapport de GoaT",
+        "NCBI": "Voir dans NCBI",
+        "ENA": "Voir dans ENA"
+    },
+    "tooltip": {
+        "biosamples": "Nombre d'échantillons biologiques",
+        "local_samples": "Nombre d'échantillons locaux",
+        "experiments": "Nombre d'expériences",
+        "assemblies": "Nombre d'assemblages",
+        "organisms": "Nombre d'organismes",
+        "annotations": "Nombre d'annotations"
+    },
+    "tabs": {
+        "table": "Tableau",
+        "charts": "Statistiques",
+        "metadata": "Métadonnées",
+        "images": "Images",
+        "assemblies": "Assemblages",
+        "biosamples": "Biosamples",
+        "reads": "Lectures",
+        "annotations": "Annotations",
+        "local_samples": "Échantillons locaux",
+        "experiments": "Expériences",
+        "names": "Noms vernaculaires",
+        "map": "Carte",
+        "publications": "Publications",
+        "jbrowse": "Navigateur de génome",
+        "chromosomes": "Chromosomes",
+        "wiki": "Wikipédia",
+        "organisms": "Organismes"
+    },
+    "download": {
+        "fieldsLabel": "Sélection des champs",
+        "fieldsPlaceholder": "Sélectionner plusieurs champs",
+        "fieldsSearchPlaceholder": "Écrire ici...",
+        "fieldsMessage": "Sélectionner plusieurs champs ou écrire un nouveau champ, si le champ est contenu dans les métadonnées, écrire : 'metadata.champQueVousVoulezSélectionner'",
+        "applyFilters": "Appliquer les filtres actuels"
+    },
+    "search": {
+        "total": "Total :",
+        "filterBy": "Filtrer par",
+        "sortColumn": "Trier par colonne",
+        "sortOrder": "Ordre de tri",
+        "date": "Sélectionner une date"
+    },
+    "routes": {
+        "dashboard": "Tableau de bord",
+        "assemblies": "Assemblages",
+        "experiments": "Expériences",
+        "biosamples": "Biosamples",
+        "local_samples": "Échantillons locaux",
+        "annotations": "Annotations",
+        "status": "État du séquençage",
+        "samples-map": "Carte des èchantillons",
+        "countries": "Carte des pays",
+        "taxonomy": "Explorateur de taxonomie",
+        "organisms": "Organismes"
+    },
+    "commons": {
+        "wikipedia": "Wikipédia"
+    },
+    "maps": {
+        "samples-map": {
+            "title": "Carte des échantillons",
+            "description": "Localisations géographiques des échantillons"
+        },
+        "countries": {
+            "title": "Carte des pays",
+            "description": "Organismes collectés dans chaque pays"
+        }
+    },
+    "taxon": {
+        "title": "Explorateur de taxonomie",
+        "description": "Arbre hyperbolique D3 : faites glisser et cliquez sur un taxon pour voir ses détails taxonomiques",
+        "search": {
+            "placeholder": "Rechercher un taxon",
+            "noOptions": "Aucun taxon trouvé!",
+            "rootLoad": "Recharger l'arbre",
+            "show": "Afficher l'arbre",
+            "hide": "Masquer l'arbre"
+        },
+        "related": {
+            "button": "Vous ne le trouvez pas ?",
+            "header": "Recherche de taxon",
+            "description": "Fournissez un identifiant taxonomique NCBI (taxid) pour trouver le taxon le plus proche présent dans la base de données.\n Si le taxon exact est présent, il sera retourné à la place",
+            "placeholder": "Tapez un taxid"
+        }
+    },
+    "sidebar": {
+        "dashboard": "Tableau de bord",
+        "organisms": "Organismes",
+        "experiments": "Expériences",
+        "assemblies": "Assemblages",
+        "biosamples": "Biosamples",
+        "local_samples": "Échantillons locaux",
+        "annotations": "Annotations",
+        "goat_status": "État de GoaT"
+    },
+    "lookup": {
+        "name": "Recherche de taxonomie",
+        "description": "Retourne le taxon phylogénétique le plus proche",
+        "placeholder": "Rechercher par NCBI TaxID"
+    },
+    "language": {
+        "english": "Anglais",
+        "catalan": "Catalan",
+        "french": "Français",
+        "spanish": "Espagnol",
+        "german": "Allemand"
+    },
+    "tree": {
+        "indented": {
+            "title": "Arbre taxonomique",
+            "description": "Cliquez sur un nom"
+        },
+        "message": "Pour des raisons de performance, cet arbre taxonomique est précalculé et peut ne pas représenter l'état actuel de la base de données",
+        "last_update": "Dernière mise à jour"
+    }
+}

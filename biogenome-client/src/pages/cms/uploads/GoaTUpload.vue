@@ -5,7 +5,7 @@
       href="https://docs.google.com/spreadsheets/d/1eC6jQctRoUaeGWWDbb1qsWs-7ajC462nnJdHK4N3ivw"><b>THIS</b></a></p>
   <p> IMPORTANT: the species' related data (in case of insdc_submitted status) have to be imported separatedly!!
   </p>
-  <div class="row row-equal justify-center">
+  <div class="row   justify-center">
     <div class="flex lg8 md8">
       <va-card>
         <va-inner-loading :loading="isLoading">

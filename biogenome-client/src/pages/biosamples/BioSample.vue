@@ -11,9 +11,6 @@
           </template>
         </Suspense>
       </div>
-      <div v-else-if="tab === 'map'" class="flex lg12 md12 sm12 xs12 h-450">
-        <LeafletMap :sample_accession="accession" />
-      </div>
       <div v-else class="flex lg12 md12 sm12 xs12">
         <MetadataTreeCard :metadata="metadata" />
       </div>
@@ -28,7 +25,6 @@ import DetailsHeader from '../../components/common/DetailsHeader.vue'
 import Tabs from '../../components/common/Tabs.vue'
 import MetadataTreeCard from '../../components/cards/MetadataTreeCard.vue'
 import GeoLocationService from '../../services/clients/GeoLocationService'
-import LeafletMap from '../../components/maps/LeafletMap.vue'
 import { AxiosError } from 'axios'
 import RelatedDataTable from '../../components/tables/RelatedDataTable.vue'
 import { useToast } from 'vuestic-ui/web-components'

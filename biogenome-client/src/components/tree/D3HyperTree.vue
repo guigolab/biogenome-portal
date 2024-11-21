@@ -6,12 +6,14 @@
 import * as hyt from 'd3-hypertree'
 import { useTreeData } from './setTreeData'
 import { onMounted, reactive, ref, watch } from 'vue'
-import { TreeNode } from '../../data/types'
 import { useTaxonomyStore } from '../../stores/taxonomy-store'
+import { useItemStore } from '../../stores/items-store'
+import { useToast } from 'vuestic-ui/web-components'
 
+const { init } = useToast()
 const hypertree = ref(null)
-
 const taxonomyStore = useTaxonomyStore()
+const itemStore = useItemStore()
 
 const hTree = reactive<{ tree: hyt.Hypertree | null }>({ tree: null })
 
@@ -19,39 +21,51 @@ const isInitializing = ref(true)
 
 const emits = defineEmits(['nodeChange'])
 
-watch(() => taxonomyStore.taxidQuery, (v) => {
+
+watch(() => itemStore.parentTaxon, (v) => {
     if (isInitializing.value || !v) return
-    setPath(v)
+    setPath(v.taxid)
 })
+
 watch(() => isInitializing.value, (v) => {
-    if (taxonomyStore.taxidQuery && !v) setPath(taxonomyStore.taxidQuery)
+    if (itemStore.parentTaxon && !v) setPath(itemStore.parentTaxon.taxid)
 })
 
 function setPath(taxid: string) {
-    if (hTree.tree) {
-        const node = findNode(taxid, hTree.tree.data)
-        if (node) {
-            hTree.tree.api.setPathHead(hTree.tree.data.pathes, node)
-            hTree.tree.api.gotoNode(node).then(() => hTree.tree.drawDetailFrame())
-        }
+    if (!hTree.tree) return
+
+    const node = findNode(taxid, hTree.tree.data)
+
+    if (node) {
+        hTree.tree.api.setPathHead(hTree.tree.data.pathes as any, node as any)
+        hTree.tree.api.gotoNode(node as hyt.N).then(() => hTree.tree?.drawDetailFrame())
+        taxonomyStore.isOutOfBoundaries = false
+    } else {
+        taxonomyStore.isOutOfBoundaries = true
+        init({ message: `${itemStore.parentTaxon?.name} is not under ${taxonomyStore.treeData?.name}`, color: 'warning' })
     }
 }
 
-onMounted(() => {
+async function initTree() {
+    if (!taxonomyStore.treeData) await taxonomyStore.getTree()
+
     const { root } = useTreeData(taxonomyStore.treeData)
     hTree.tree = createTree(root)
     hTree.tree.initPromise
-        .then(() => new Promise((ok, err) => hTree.tree.animateUp(ok, err)))
-        .then(() => hTree.tree.drawDetailFrame())
+        .then(() => new Promise((ok, err) => hTree.tree?.animateUp(ok, err)))
+        .then(() => hTree.tree?.drawDetailFrame())
         .catch((err) => console.log(err))
         .finally(() => isInitializing.value = !isInitializing.value)
-    // taxonomyStore.showTree = true
+}
+
+onMounted(async () => {
+    await initTree()
 })
 
-function createTree(data) {
+function createTree(data: any) {
 
     const mytree = new hyt.Hypertree(
-        { parent: hypertree.value },
+        { parent: hypertree.value as any },
         {
             dataloader: ok => ok(data),
             langInitBFS: (ht, n) => {
@@ -75,19 +89,16 @@ function createTree(data) {
             },
             interaction: {
                 onNodeClick: (n, m, l) => {
+                    emits('nodeChange', n.data.data)
                     mytree.api.setPathHead(mytree.data.pathes, n)
                     mytree.api.goto({ re: -n.layout.z.re, im: -n.layout.z.im }, null)
                         .then(() => l.view.hypertree.drawDetailFrame())
-                    emits('nodeChange', n.data.data as TreeNode)
-
-
                 }
             }
         }
     )
     return mytree
 }
-
 function findNode(taxid: string, node: hyt.N): hyt.N | null {
     // Check if the current node matches the specified name
     if (node.data.data.taxid === taxid) {
@@ -114,5 +125,9 @@ function findNode(taxid: string, node: hyt.N): hyt.N | null {
 
 .unitdisk-nav svg {
     position: inherit;
+}
+
+.unitdisk-nav {
+    background-color: var(--va-background-primary);
 }
 </style>

@@ -1,10 +1,11 @@
 import { defineStore } from 'pinia'
-import { ErrorResponseData, ConfigFilter, DataModels, Frequency } from '../data/types'
+import { ErrorResponseData, ConfigFilter, DataModels, Frequency, TaxonNode } from '../data/types'
 import { useToast } from 'vuestic-ui'
 import CommonService from '../services/clients/CommonService'
 import StatisticsService from '../services/clients/StatisticsService'
 import { AxiosError } from 'axios'
 import { useConfig } from '../composable/useConfig'
+import general from '../../configs/general.json';
 
 export const staticFilters = {
     filter: "",
@@ -35,6 +36,7 @@ function mapSearchForm(modelFilters: ConfigFilter[]) {
 // Factory function to create a store for a specific model
 function createModelStore(model: DataModels) {
     const { columns, filters } = useConfig(model);
+
     return {
         searchForm: mapSearchForm(filters.value),
         pagination: { ...initPagination },
@@ -51,8 +53,8 @@ export const useItemStore = defineStore('item', {
         return {
             view: 'table' as 'table' | 'charts',
             stores: {} as Record<DataModels, any>,
-            parentTaxon: "" as string | undefined,
-            country: "" as string | undefined,
+            parentTaxon: null as TaxonNode | null,
+            country: null as { name: string, id: string, rank: string } | null,
             frequencies: [] as Frequency[],
             showTsvModal: false,
             showChartModal: false,
@@ -88,8 +90,7 @@ export const useItemStore = defineStore('item', {
             const searchFormEntries = Object.entries(this.stores[model].searchForm)
                 .filter(([key, value]) => !staticFilters.hasOwnProperty(key) && value !== null && value !== "");
 
-            if (this.country) searchFormEntries.push(['countries', this.country]);
-            if (this.parentTaxon) searchFormEntries.push(['taxon_lineage', this.parentTaxon]);
+            if (this.country && model === 'organisms') searchFormEntries.push(['countries', this.country.id]);
 
             return Object.fromEntries(searchFormEntries);
         },
@@ -124,12 +125,31 @@ export const useItemStore = defineStore('item', {
             document.body.removeChild(link);
             URL.revokeObjectURL(href);
         },
+        async fetchFrequenciesForSelectFields(model: DataModels) {
+            const { filters } = useConfig(model)
+            const selectFields = filters.value
+                .filter((field: ConfigFilter) => field.type === 'select')
+                .map((field: ConfigFilter) => field.key);
+            for (const field of selectFields) {
+                await this.getFrequencies(model, model, field, false);
+            }
+        },
+        async handleQuery(model: DataModels) {
+            if (model === 'organisms' && general.maps && general.maps.includes('countries')) {
+                //handle countries frequencies
+                await this.getFrequencies('organisms', 'organisms', 'countries', false)
+            }
+            this.resetPagination(model)
+            this.fetchItems(model)
+            this.fetchFrequenciesForSelectFields(model)
+        },
         //incoming model may not correspond to currentModel
         async getFrequencies(source: string, model: DataModels, field: string, ignoreQuery: boolean) {
             this.initStore(model);  // Ensure store exists
             try {
 
                 const query = ignoreQuery ? {} : this.buildQuery(model)
+                if (this.parentTaxon) query.taxon_lineage = this.parentTaxon.taxid
                 const freqs = this.frequencies
                 const { data } = await StatisticsService.getModelFieldStats(model, field, query)
                 const newFreq: Frequency = { source, model, field, data }
@@ -157,11 +177,11 @@ export const useItemStore = defineStore('item', {
             const params = { ...searchForm, ...pagination }
 
             // Conditionally add `countries` and `parentTaxon` if they exist
-            if (this.country) {
-                params['countries'] = this.country
+            if (this.country && model === 'organisms') {
+                params['countries'] = this.country.id
             }
             if (this.parentTaxon) {
-                params['taxon_lineage'] = this.parentTaxon
+                params['taxon_lineage'] = this.parentTaxon.taxid
             }
             try {
                 const { data } = await CommonService.getItems(`/${model}`, params)

@@ -1,42 +1,18 @@
 <template>
-    <VaLayout :top="{ fixed: true, order: 3 }" :left="{ fixed: true, absolute: breakpoints.smDown, order: 2, }"
-        @left-overlay-click="globalStore.isSidebarVisible = !globalStore.isSidebarVisible">
-        <template #top>
-            <NavBar />
-        </template>
-        <template #left>
-            <div style="display: flex; height: 100%;">
-                <Sidebar />
-            </div>
-        </template>
-        <template #content>
-            <main>
-                <div class="layout fluid va-gutter-5">
-                    <router-view v-slot="{ Component }">
-                        <Transition name="fade">
-                            <component :is="Component" />
-                        </Transition>
-                    </router-view>
-                </div>
-            </main>
-        </template>
-    </VaLayout>
+    <!-- <Navbar class="main-nav-h" /> -->
+    <router-view />
+
 </template>
 <script setup lang="ts">
-import { useBreakpoint } from 'vuestic-ui'
-import { useGlobalStore } from "../stores/global-store"
-import NavBar from '../components/navbar/Navbar.vue'
-import Sidebar from '../components/sidebar/Sidebar.vue'
-import { onMounted } from 'vue';
-import { useStatsStore } from '../stores/stats-store';
-
-const globalStore = useGlobalStore()
-const breakpoints = useBreakpoint()
-const statsStore = useStatsStore()
-
-onMounted(async () => {
-    await globalStore.checkUserIsLoggedIn()
-    await statsStore.getStats()
-})
-
+import Navbar from '../components/navbar/Navbar.vue';
 </script>
+<style>
+.main-nav-h {
+    height: 5.25rem;
+    position: fixed
+}
+
+.main-content-mt {
+    margin-top: 5.25rem;
+}
+</style>

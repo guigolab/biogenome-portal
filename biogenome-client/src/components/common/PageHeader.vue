@@ -1,6 +1,6 @@
 <template>
-    <h1 class="va-h1">{{ validTitle }}</h1>
-    <p class="light-paragraph pb-12" v-if="validDescription">{{
+    <h1 class="va-text-primary">{{ validTitle }}</h1>
+    <p v-if="validDescription">{{
         validDescription }}</p>
 </template>
 <script setup lang="ts">

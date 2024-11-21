@@ -1,5 +1,5 @@
 <template>
-    <div class="row row-equal">
+    <div class="row">
         <div v-for="chart, index in charts" :key="`${index}-${chart.model}-${chart.field}`" :class="chart.class">
             <ChartCard :source="source" :chart="chart" :index="index" />
         </div>

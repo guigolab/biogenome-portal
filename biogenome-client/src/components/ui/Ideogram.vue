@@ -1,5 +1,5 @@
 <template>
-    <div class="row row-equal">
+    <div class="row  ">
         <div class="flex lg12 md12 sm12 xs12">
             <div id="ideo-container"></div>
         </div>

@@ -11,9 +11,6 @@
           </template>
         </Suspense>
       </div>
-      <div v-else-if="tab === 'map'" class="h-450 flex lg12 md12 sm12 xs12">
-        <LeafletMap :taxid="taxid" />
-      </div>
       <div v-else class="flex lg12 md12 sm12 xs12">
         <Images v-if="tab === 'images'" :images="images" />
         <VernacularNames v-else-if="tab === 'names'" :names="commonNames" />
@@ -34,7 +31,6 @@ import { Details } from '../../data/types'
 import Publications from './components/Publications.vue'
 import VernacularNames from './components/VernacularNames.vue'
 import GeoLocationService from '../../services/clients/GeoLocationService'
-import LeafletMap from '../../components/maps/LeafletMap.vue'
 import Images from './components/Images.vue'
 import RelatedDataTable from '../../components/tables/RelatedDataTable.vue'
 import { AxiosError } from 'axios'

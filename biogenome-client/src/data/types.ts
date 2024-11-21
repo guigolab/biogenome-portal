@@ -14,6 +14,19 @@ export type Frequency = {
   field: string,
   data: Record<string, number>
 }
+
+export interface ChoroplethData {
+  countryName: string;
+  countryId: string;
+  occurrences: number;
+  geojson: GeoJSON.Feature;
+}
+
+export type CoordinatesFrequency = {
+  coordinates: [number, number],
+  count: number,
+  images: string[]
+}
 export type TLineChartData = ChartData<'line'>
 export type TBarChartData = ChartData<'bar'>
 export type TBubbleChartData = ChartData<'bubble'>
@@ -126,11 +139,7 @@ export type LocalSampleSearchForm = SearchForm
 
 export type ModelSearchForm = OrganismSearchForm | AssemblySearchForm | ReadSearchForm | BioSampleSearchForm
 
-export interface TaxonNode extends Node {
-  name: string
-  rank: string
-  taxid: string
-}
+
 
 export type BreadCrumb = {
   name: string
@@ -138,11 +147,12 @@ export type BreadCrumb = {
   active: boolean
 }
 
-export type TreeNode = {
+export type TaxonNode = {
   name: string
   rank: string
-  taxid: string
-  leaves: number
+  taxid: string,
+  children?: string[],
+  leaves?: number
 }
 
 export type Publication = {

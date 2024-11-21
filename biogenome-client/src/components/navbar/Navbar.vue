@@ -1,14 +1,13 @@
 <template>
-  <VaNavbar hide-on-scroll class="navbar-h">
+  <VaNavbar  class="nav-p">
     <template #left>
-      <VaIcon size="2rem" color="primary" :name="globalStore.isSidebarVisible ? 'menu_open' : 'menu'"
-        @click="globalStore.isSidebarVisible = !globalStore.isSidebarVisible" />
+      <VaIcon size="4rem" name="app-logo"></VaIcon>
     </template>
     <template #center>
       <span v-if="globalStore.userName && globalStore.isAuthenticated">{{ globalStore.userName }}</span>
     </template>
     <template #right>
-      <LanguageDropdown class="app-navbar-actions__item" />
+      <LanguageDropdown />
     </template>
   </VaNavbar>
 </template>
@@ -21,6 +20,12 @@ import LanguageDropdown from './components/LanguageDropdown.vue'
 const globalStore = useGlobalStore()
 
 
-
-
 </script>
+<style>
+
+.nav-p{
+  padding-bottom: 10px!important;
+  padding-top: 10px!important;
+}
+
+</style>

@@ -1,31 +1,65 @@
 <template>
     <VaCard>
-        <VaCardContent>
-            <h6 class="va-h6">
-                <router-link style="color: inherit;"
-                    :to="selectedSample.is_local_sample ?
-                        { name: 'local_sample', params: { id: selectedSample.sample_accession } } : { name: 'biosample', params: { accession: selectedSample.sample_accession } }">
-                    {{ selectedSample.sample_accession }}
+        <VaDataTable :columns="cols" sticky-header height="150px" :items="filteredData">
+            <template #cell(sample_accession)="{ rowData }">
+                <router-link
+                    :to="rowData.is_local_sample ?
+                        { name: 'local_sample', params: { id: rowData.sample_accession } } : { name: 'biosample', params: { accession: rowData.sample_accession } }">
+                    {{ rowData.sample_accession }}
                 </router-link>
-            </h6>
-            <p>{{ data.scientific_name }}</p>
-        </VaCardContent>
+            </template>
+            <template #cell(scientific_name)="{ rowData }">
+                <router-link :to="{ name: 'organism', params: { taxid: rowData.taxid } }">
+                    {{ rowData.scientific_name }}
+                </router-link>
+            </template>
+        </VaDataTable>
     </VaCard>
 </template>
 <script setup lang="ts">
-import BioSampleService from '../../services/clients/BioSampleService'
-import LocalSampleService from '../../services/clients/LocalSampleService'
+import { computed, ref, watchEffect } from 'vue';
+import GeoLocationService from '../../services/clients/GeoLocationService';
+import { SampleLocations } from '../../data/types';
+import { useMapStore } from '../../stores/map-store';
 
 const props = defineProps<{
-    selectedSample: {
-        sample_accession: string
-        is_local_sample: boolean
-        image?: string
-    }
+    coords: string
 }>()
 
-const { data } = props.selectedSample.is_local_sample ?
-    await LocalSampleService.getLocalSample(props.selectedSample.sample_accession) :
-    await BioSampleService.getBioSample(props.selectedSample.sample_accession)
+const mapStore = useMapStore()
 
+const defaultCols = ['taxid', 'scientific_name']
+const cols = computed(() => mapStore.view === 'organisms' ? defaultCols : ['sample_accession', ...defaultCols])
+const locs = ref<SampleLocations[]>([])
+
+
+watchEffect(async () => await getCoords(props.coords))
+
+
+async function getCoords(coords: string) {
+    const { data } = await GeoLocationService.getLocation(coords)
+    locs.value = [...data]
+}
+
+
+const filteredData = computed(() => {
+    if (mapStore.view === 'samples') {
+        return locs.value; // Return all data for 'samples'
+    }
+
+    // Return a unique list of objects for 'organisms' based on 'taxid' and 'scientific_name'
+    const uniqueMap: Record<string, { taxid: string; scientific_name: string }> = {};
+
+    locs.value.forEach((item: any) => {
+        const key = `${item.taxid}_${item.scientific_name}`;
+        if (!uniqueMap[key]) {
+            uniqueMap[key] = {
+                taxid: item.taxid,
+                scientific_name: item.scientific_name,
+            };
+        }
+    });
+
+    return Object.values(uniqueMap); // Convert uniqueMap to a list
+});
 </script>

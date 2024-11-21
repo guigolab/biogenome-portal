@@ -1,0 +1,135 @@
+{
+    "auth": {
+        "login": "Inicia sessió",
+        "password": "Contrasenya",
+        "logout": "Tanca sessió"
+    },
+    "buttons": {
+        "submit": "Envia",
+        "reset": "Restableix",
+        "search": "Cerca",
+        "download": "Descarrega",
+        "downloadTSV": "Descarrega informe TSV",
+        "sort": "Ordena",
+        "view": "Mostra detalls",
+        "fields": "Camps",
+        "filters": "Filtres",
+        "goat_report": "Descarrega informe de GoaT",
+        "NCBI": "Visualitza a NCBI",
+        "ENA": "Visualitza a ENA"
+    },
+    "tooltip": {
+        "biosamples": "Nombre de BioMostres",
+        "local_samples": "Nombre de Mostres Locals",
+        "experiments": "Nombre d'Experiments",
+        "assemblies": "Nombre d'Assemblatges",
+        "organisms": "Nombre d'Organismes",
+        "annotations": "Nombre d'Anotacions"
+    },
+    "tabs": {
+        "table": "Taula",
+        "charts": "Estadístiques",
+        "metadata": "Metadades",
+        "images": "Imatges",
+        "assemblies": "Assemblatges",
+        "biosamples": "Biosamples",
+        "reads": "Lectures",
+        "annotations": "Anotacions",
+        "local_samples": "Mostres locals",
+        "experiments": "Experiments",
+        "names": "Noms vernacles",
+        "map": "Mapa",
+        "publications": "Publicacions",
+        "jbrowse": "Navegador de genoma",
+        "chromosomes": "Cromosomes",
+        "wiki": "Wikipedia",
+        "organisms": "Organismes"
+    },
+    "download": {
+        "fieldsLabel": "Selecció de camps",
+        "fieldsPlaceholder": "Selecciona múltiples camps",
+        "fieldsSearchPlaceholder": "Escriu aquí...",
+        "fieldsMessage": "Selecciona múltiples camps o escriu un camp nou, si el camp està contingut en les metadades, escriu: 'metadata.campQueVolsSeleccionar'",
+        "applyFilters": "Aplica els filtres actuals"
+    },
+    "search": {
+        "total": "Total:",
+        "filterBy": "Filtra per",
+        "sortColumn": "Ordena per columna",
+        "sortOrder": "Ordre de l'ordenació",
+        "date": "Selecciona data"
+    },
+    "routes": {
+        "dashboard": "Tauler de control",
+        "assemblies": "Assemblatges",
+        "experiments": "Experiments",
+        "biosamples": "Biosamples",
+        "local_samples": "Mostres locals",
+        "annotations": "Anotacions",
+        "status": "Estat del sequenciatge",
+        "samples-map": "Mapa de mostres",
+        "countries": "Mapa de països",
+        "taxonomy": "Explorador de taxonomia",
+        "organisms": "Organismes"
+    },
+    "commons": {
+        "wikipedia": "Wikipedia"
+    },
+    "maps": {
+        "samples-map": {
+            "title": "Mapa de mostres",
+            "description": "Ubicacions geogràfiques de les mostres"
+        },
+        "countries": {
+            "title": "Mapa de països",
+            "description": "Organismes recollits en cada país"
+        }
+    },
+    "taxon": {
+        "title": "Explorador de taxonomia",
+        "description": "Arbre hiperbòlic D3: arrossega i fes clic sobre un taxon per veure els seus detalls taxonòmics",
+        "search": {
+            "placeholder": "Cerca un taxó",
+            "noOptions": "No s'han trobat taxons!",
+            "rootLoad": "Recarregar l'arbre",
+            "show": "Mostra l'arbre",
+            "hide": "Amaga l'arbre"
+        },
+        "related": {
+            "button": "No el trobes?",
+            "header": "Cerca de taxons",
+            "description": "Proporciona un identificador taxonòmic NCBI (taxid) per trobar el taxon més proper present a la base de dades.\n Si el taxon exacte està present, es retornarà enlloc",
+            "placeholder": "Escriu un taxid"
+        }
+    },
+    "sidebar": {
+        "dashboard": "Tauler de control",
+        "organisms": "Organismes",
+        "experiments": "Experiments",
+        "assemblies": "Assemblatges",
+        "biosamples": "Biosamples",
+        "local_samples": "Mostres locals",
+        "annotations": "Anotacions",
+        "goat_status": "Estat de GoaT"
+    },
+    "lookup": {
+        "name": "Cerca de taxonomia",
+        "description": "Retorna el taxon filogenètic més proper",
+        "placeholder": "Cerca per NCBI TaxID"
+    },
+    "language": {
+        "english": "Anglès",
+        "catalan": "Català",
+        "french": "Francès",
+        "spanish": "Espanyol",
+        "german": "Alemany"
+    },
+    "tree": {
+        "indented": {
+            "title": "Arbre taxonòmic",
+            "description": "Fes clic sobre un nom"
+        },
+        "message": "Per raons de rendiment, aquest arbre taxonòmic està precalculat i pot no representar l'estat actual de la base de dades",
+        "last_update": "Última actualització"
+    }
+}

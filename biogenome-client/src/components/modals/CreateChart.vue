@@ -1,5 +1,5 @@
 <template>
-    <VaModal size="large" v-model="itemStore.showChartModal">
+    <VaModal hide-default-actions close-button size="large" v-model="itemStore.showChartModal">
         <h3 class="va-h3">{{ t('chart.modalTitle') }}</h3>
         <p class="light-paragraph mb-15">
             {{ t('chart.modalDescription') }}

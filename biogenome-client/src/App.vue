@@ -1,16 +1,45 @@
 <template>
   <Layout />
+  <!-- <VaLayout :top="{ fixed: true, order: 3 }" :left="{ fixed: true, absolute: breakpoints.smDown, order: 2, }"
+    @left-overlay-click="globalStore.isSidebarVisible = !globalStore.isSidebarVisible">
+    <template #top>
+      <NavBar />
+    </template>
+<template #left>
+      <div style="display: flex; height: 100%;">
+        <Sidebar />
+      </div>
+    </template>
+<template #content>
+      <main>
+        <router-view v-slot="{ Component }">
+          <Transition name="fade">
+            <component :is="Component" />
+          </Transition>
+        </router-view>
+      </main>
+    </template>
+</VaLayout> -->
 </template>
-<script setup>
+<script setup lang="ts">
 import { onMounted } from 'vue'
-import Layout from './layouts/Layout.vue'
 import config from '../configs/general.json'
+import { useBreakpoint } from 'vuestic-ui'
+import { useGlobalStore } from "./stores/global-store"
+import NavBar from './components/navbar/Navbar.vue'
+import Sidebar from './components/sidebar/Sidebar.vue'
+import { useStatsStore } from './stores/stats-store';
+import Layout from './layouts/Layout.vue'
+const globalStore = useGlobalStore()
+const breakpoints = useBreakpoint()
+const statsStore = useStatsStore()
 
-onMounted(() => {
+onMounted(async () => {
   document.title = config.title
   if (config.tracker) {
     setConfigTracker()
   }
+  await globalStore.checkUserIsLoggedIn()
 })
 
 function setConfigTracker() {
@@ -33,6 +62,21 @@ function setConfigTracker() {
   color: #2c3e50;
 }
 
+.row-equal {
+  .flex {
+    .va-card {
+      height: 100%;
+    }
+  }
+}
+
+.custom-chip {
+  border: 2px solid;
+  border-radius: 1rem;
+  padding: 3px;
+  font-size: 0.75rem;
+}
+
 .mr-2 {
   margin-right: 2px;
 }
@@ -46,7 +90,7 @@ function setConfigTracker() {
 }
 
 .p-0 {
-  padding: 0;
+  padding: 0 !important;
 }
 
 .pb-0 {
@@ -58,7 +102,7 @@ function setConfigTracker() {
 }
 
 .navbar-h {
-  height: 70px;
+  height: 4rem;
 }
 
 .h-450 {
@@ -77,6 +121,7 @@ function setConfigTracker() {
 .pt-0 {
   padding-top: 0;
 }
+
 
 .p-10 {
   padding: 10;

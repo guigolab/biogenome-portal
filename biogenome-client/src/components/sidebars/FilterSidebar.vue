@@ -26,7 +26,6 @@ const itemStore = useItemStore()
 .sidebar-container {
     position: relative;
     z-index: 1000;
-    /* Ensures it’s above other page elements */
 }
 
 /* Overlay Styling */
@@ -37,40 +36,37 @@ const itemStore = useItemStore()
     width: 100vw;
     height: 100vh;
     background-color: rgba(0, 0, 0, 0.5);
-    /* Semi-transparent overlay */
     z-index: 1001;
-    /* Below toggle button but above other elements */
 }
 
 /* Sidebar Styling */
 .sidebar {
     position: fixed;
     top: 70px;
-    right: 0;
-    /* Sidebar positioned on the right */
-    width: 300px;
+    left: 0;
+    /* Changed from right: 0 to left: 0 */
+    width: 30rem;
     height: 100vh;
     background-color: #f4f4f4;
-    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
-    /* Shadow to the left */
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    /* Shadow to the right */
     padding: 20px;
     overflow-y: auto;
     z-index: 1003;
-    /* Above everything, including the overlay */
 }
 
-/* Transition for Sidebar Slide from Right */
-.slide-right-enter-active,
-.slide-right-leave-active {
+/* Transition for Sidebar Slide from Left */
+.slide-left-enter-active,
+.slide-left-leave-active {
     transition: transform 0.3s ease;
 }
 
-.slide-right-enter-from {
-    transform: translateX(100%);
+.slide-left-enter-from {
+    transform: translateX(-100%);
 }
 
-.slide-right-leave-to {
-    transform: translateX(100%);
+.slide-left-leave-to {
+    transform: translateX(-100%);
 }
 
 /* Transition for Overlay Fade */
@@ -83,4 +79,4 @@ const itemStore = useItemStore()
 .fade-leave-to {
     opacity: 0;
 }
-</style>
+</style>u

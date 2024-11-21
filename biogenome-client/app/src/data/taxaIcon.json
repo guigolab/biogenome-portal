@@ -1,0 +1,11 @@
+{
+    "Mammalia": "fa-dog",
+    "Aves": "fa-dove",
+    "Amphibia": "fa-frog",
+    "Reptilia": "fa-dragon",
+    "Insecta": "fa-bug",
+    "Actinopterygii": "fa-fish",
+    "Chondrichthyes": "fa-shark",
+    "Arachnida": "fa-spider",
+    "Echinodermata": "fa-star"
+}

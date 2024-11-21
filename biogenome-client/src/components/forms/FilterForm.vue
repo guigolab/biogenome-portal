@@ -1,35 +1,34 @@
 <template>
-    <h3>Filters</h3>
-    <p>Filters apply to both table and chart views</p>
-    <div class="row align-end">
-        <div class="flex" v-for="(field, index) in currentFilters" :key="index">
-            <component :is="getFieldComponent(field.type)" :value="getValue(field)" :label="getLabel(field.key)"
-                :options="currentFrequencies[field.key]" :key="field.key" class="m-2"
-                @valueChange="(v: any) => updateSearchForm(field, v)">
-            </component>
-        </div>
-    </div>
-
-    <div v-if="showEBPMetrics">
-        <VaDivider orientation="left" class="mb-12">EBP metrics</VaDivider>
-        <div class="row">
-            <div class="flex">
-                <VaCheckbox indeterminate :label="'Contig N50 > 1MB'" v-model="ebpFilter.contig" />
-            </div>
-            <div class="flex">
-                <VaCheckbox indeterminate :label="'Scaffold N50 > 10MB'" v-model="ebpFilter.scaffold" />
+    <section aria-labelledby="filters-heading">
+        <div v-if="hasCountries" class="row">
+            <div class="flex lg12 md12 sm12 xs12">
+                <CountrySelect />
             </div>
         </div>
-    </div>
-
-    <div class="row">
-        <div class="flex">
-            <VaButton :disabled="!activeFilters" @click="resetSearchForm" color="danger">
-                Reset
-                all
-            </VaButton>
+        <div class="row align-end">
+            <div class="flex lg12 md12 sm12 xs12 mb-6" v-for="(field, index) in currentFilters" :key="index">
+                <component :is="getFieldComponent(field.type)" :value="getValue(field)" :label="getLabel(field.key)"
+                    :options="field.key in currentFrequencies ? currentFrequencies[field.key] : []" :key="field.key"
+                    class="m-2" @valueChange="(v: any) => updateSearchForm(field, v)">
+                </component>
+            </div>
         </div>
-    </div>
+
+        <div v-if="showEBPMetrics">
+            <span class="va-text-bold">EBP metrics</span>
+            <p>Assemblies compliant with the Earth BioGenome Project quality standards</p>
+            <VaDivider orientation="left" class="mb-12"></VaDivider>
+            <div class="row">
+                <div class="flex lg12 md12 sm12 xs12">
+                    <VaCheckbox indeterminate :label="'Contig N50 > 1MB'" v-model="ebpFilter.contig" />
+                </div>
+                <div class="flex lg12 md12 sm12 xs12">
+                    <VaCheckbox indeterminate :label="'Scaffold N50 > 10MB'" v-model="ebpFilter.scaffold" />
+                </div>
+            </div>
+        </div>
+    </section>
+
 </template>
 
 <script setup lang="ts">
@@ -43,6 +42,7 @@ import CheckBox from '../inputs/CheckBox.vue'
 import { useDateMapper } from '../../composable/useDates'
 import { ConfigFilter, DataModels } from '../../data/types';
 import { useConfig } from '../../composable/useConfig';
+import CountrySelect from '../inputs/CountrySelect.vue';
 
 const props = defineProps<{
     model: DataModels
@@ -55,6 +55,8 @@ const searchForm = computed(() => itemStore.stores[props.model].searchForm)
 const dateModels = computed(() => useDateMapper(searchForm.value));
 const currentFilters = ref<ConfigFilter[]>([]);
 
+const hasCountries = computed(() => props.model === 'organisms' && general.maps.includes('countries'))
+
 const currentFrequencies = computed(() => {
     const mappedFreqs = itemStore.frequencies
         .filter(f => f.model === props.model && f.source === props.model)
@@ -64,11 +66,6 @@ const currentFrequencies = computed(() => {
     return Object.fromEntries(mappedFreqs)
 })
 
-// Optimized activeFilters computation
-const activeFilters = computed(() =>
-    Object.values(itemStore.stores[props.model].searchForm).some(v => v !== null && v !== '')
-);
-
 const ebpFilter = reactive({
     contig: getN50('metadata.assembly_stats.contig_n50'),
     scaffold: getN50('metadata.assembly_stats.scaffold_n50')
@@ -76,14 +73,15 @@ const ebpFilter = reactive({
 
 // Get N50 threshold value
 function getN50(field: string) {
-    const value = itemStore.stores[props.model].searchForm[`${field}__gt`] ? true
-        : itemStore.stores[props.model].searchForm[`${field}__lt`] ? false
+    const value = itemStore.stores[props.model]?.searchForm[`${field}__gt`] ? true
+        : itemStore.stores[props.model]?.searchForm[`${field}__lt`] ? false
             : null;
     return value;
 }
 
 
 watch(ebpFilter, async () => {
+    if (!showEBPMetrics.value) return
     const {
         'metadata.assembly_stats.contig_n50__gt': _,
         'metadata.assembly_stats.scaffold_n50__gt': __,
@@ -107,7 +105,7 @@ watch(ebpFilter, async () => {
     // Update searchForm with remaining fields and the new filters
     itemStore.stores[props.model].searchForm = { ...remainingSearchForm };
 
-    await handleQuery();
+    await itemStore.handleQuery(props.model);
 
 }, { deep: true });
 
@@ -132,7 +130,11 @@ watch(() => props.model, async () => {
 });
 
 // Fetch filters when the component mounts
-onMounted(async () => await createFilters());
+onMounted(async () => {
+    if (!itemStore.stores[props.model]) itemStore.initStore(props.model)
+    await createFilters()
+
+});
 
 
 function getValue(field: ConfigFilter) {
@@ -150,47 +152,34 @@ function getFieldComponent(type: string) {
     }
 }
 
-async function handleQuery() {
-    itemStore.resetPagination(props.model)
-    await itemStore.fetchItems(props.model)
-    await fetchFrequencies(props.model)
-}
-
-async function fetchFrequencies(model: DataModels) {
-    const selectFields = currentFilters.value
-        .filter((field: ConfigFilter) => field.type === 'select')
-        .map((field: ConfigFilter) => field.key);
-    for (const field of selectFields) {
-        await itemStore.getFrequencies(model, model, field, false);
-    }
-}
-
 function getLabel(key: string) {
     return key.includes('metadata.') ? key.split('.').pop() || key : key.replace(/_/g, ' ');
 }
-
+// Helper function to format date values
+function formatDate(date: Date | undefined) {
+    return date ? date.toISOString().split('T')[0] : null;
+}
 async function updateSearchForm(filter: ConfigFilter, value: any) {
     const { key, type } = filter
     if (type === 'date') {
-        itemStore.stores[props.model].searchForm[`${key}__gte`] = value && value.start ? value.start.toISOString().split('T')[0] : null;
-        itemStore.stores[props.model].searchForm[`${key}__lte`] = value && value.end ? value.end.toISOString().split('T')[0] : null;
+        itemStore.setSearchFormField(props.model, `${key}__gte`, formatDate(value?.start));
+        itemStore.setSearchFormField(props.model, `${key}__lte`, formatDate(value?.end));
     } else if (type === 'checkbox') {
-        itemStore.stores[props.model].searchForm[`${key}__exists`] = value
+        itemStore.setSearchFormField(props.model, `${key}__exists`, value);
     } else {
-        itemStore.stores[props.model].searchForm[key] = value;
+        itemStore.setSearchFormField(props.model, key, value);
     }
 
-    await handleQuery()
+    await itemStore.handleQuery(props.model);
 }
 
-async function resetSearchForm() {
-    const { filter, sort_column, sort_order, ...entries } = itemStore.stores[props.model].searchForm
-    // Replace all values in `entries` with `null`
-    Object.keys(entries).forEach(key => {
-        entries[key] = null;
-    });
-    itemStore.stores[props.model].searchForm = { filter, sort_column, sort_order, ...entries }
-    await handleQuery()
-
-}
+// async function resetSearchForm() {
+//     const { filter, sort_column, sort_order, ...entries } = itemStore.stores[props.model].searchForm
+//     // Replace all values in `entries` with `null`
+//     Object.keys(entries).forEach(key => {
+//         entries[key] = null;
+//     });
+//     itemStore.stores[props.model].searchForm = { filter, sort_column, sort_order, ...entries }
+//     await itemStore.handleQuery(props.model)
+// }
 </script>

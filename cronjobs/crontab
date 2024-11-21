@@ -1,2 +1,4 @@
 * * * * * python /trigger_cronjob.py helpers add_lineage
 * * * * * python /trigger_cronjob.py helpers handle_orphans
+* * * * * python /trigger_cronjob.py geo_locations create_from_local_samples
+

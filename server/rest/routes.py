@@ -38,6 +38,11 @@ def initialize_routes(api):
 
 
 	api.add_resource(sample_locations_controller.SampleLocations, '/api/coordinates')
+	api.add_resource(sample_locations_controller.LocationFromCoords, '/api/coordinates/<coordinates>')
+
+	api.add_resource(sample_locations_controller.UniqueLocations, '/api/coordinates/frequency')
+
+
 
 	##ORGANISMS
 	api.add_resource(organisms_controller.OrganismsApi, '/api/organisms')

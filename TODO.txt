@@ -1,50 +1,9 @@
-Common this for all cases is organisms
 
-BUGS:
- DOWNLOAD TSV MODAL IS NOT DISPLAYING LOADING WHEEL WHILE DOING THE REQUEST
-SHOULD USE ONE COMMON STORE FOR ALL THE MODELS,
+
+add card stack transition in taxonomy explorer
+
 
 CLIENT:
-    -CHANGE FLAGS TO TEXT
-    -IMPROVE UX TAXONOMY PAGE
-        - TAXONOMY 
-            TAXONOMY HEADER
-            TAXONOMY SEARCH INPUT
-            DIVIDER
-            - HYPERTREE
-            - RELATED COMPONENTS
+should add landing page with just one title and description and taxon search bar and explore data button to dashboard
 
-    -FIX Organism publications, VernacularNames, images components
-    -ADD GENOME BROWSER PAGE, MORE EXPLICIT??
-
-    NEW UI:
-        - DASHBOARD:
-            SEARCH BAR -> 
-            STATISTICS
-            CHARTS
-            IMAGES?
-        - INSDC DATA
-            ASSEMBLIES
-                ASSEMBLY
-            SAMPLES 
-                SAMPLE
-            EXPERIMENTS
-                EXPERIMENT
-        - LOCAL DATA
-            SAMPLES
-            ANNOTATIONS
-        - TAXONOMY
-            - HYPER-TREE | WIKI, ASSEMBLIES, EXPERIMENTS, ANNOTATIONS, SAMPLES, DETAILS
-        - ORGANISM:
-            - DETAILS
-        - GOAT STATUS
-
-
-SERVER:
-
-
-DB:
-
-
-CRONJOB:
-
+improve repo wiki 

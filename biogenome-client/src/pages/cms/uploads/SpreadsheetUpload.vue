@@ -8,7 +8,7 @@
     longitude.<br />
     If you do not wish to generate coordinates, please ensure that your spreadsheet does not contain columns
     labeled "Latitude" or "Longitude."</p>
-  <div class="row row-equal justify-center">
+  <div class="row   justify-center">
     <div class="flex lg8 md8">
       <va-inner-loading :loading="isLoading">
         <va-card :disabled="false">
