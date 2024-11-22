@@ -1,5 +1,4 @@
 import { defineStore } from 'pinia'
-import { useToast } from 'vuestic-ui'
 
 
 export const useGlobalStore = defineStore('global', {
@@ -8,7 +7,6 @@ export const useGlobalStore = defineStore('global', {
       isSidebarVisible: true,
       error: false,
       message: '',
-      toast: useToast().init
     }
   }
 })

@@ -1,6 +1,5 @@
 <template>
     <div ref="hypertree"></div>
-    <Toast />
 </template>
 
 <script setup lang="ts">
@@ -10,7 +9,6 @@ import { onMounted, reactive, ref, watch } from 'vue'
 import { useTaxonomyStore } from '../stores/taxonomy-store'
 import { useItemStore } from '../stores/items-store'
 import { useToast } from 'primevue/usetoast';
-import Toast from 'primevue/toast';
 
 const toast = useToast();
 const hypertree = ref(null)
@@ -122,7 +120,7 @@ function findNode(taxid: string, node: hyt.N): hyt.N | null {
 }
 
 </script>
-<style lang="scss">
+<style >
 @import '../styles/d3-hypertree-light.css';
 
 

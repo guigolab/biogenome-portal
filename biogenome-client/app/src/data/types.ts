@@ -1,4 +1,5 @@
 import type { TChartData as ChartData } from 'vue-chartjs/dist/types'
+import { GeoJSON } from "leaflet";
 
 export type ColorThemes = {
   [key: string]: string
@@ -98,7 +99,9 @@ export interface SearchForm {
 
 export interface ConfigFilter {
   key: string
-  type: 'date' | 'select' | 'input' | 'checkbox'
+  type: 'date' | 'select' | 'input' | 'checkbox' | 'range'
+  value: any
+  options?: Record<string,number>
 }
 export interface OrganismSearchForm extends SearchForm {
   insdc_status: string

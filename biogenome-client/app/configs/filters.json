@@ -47,6 +47,14 @@
         {
             "key": "metadata.assembly_info.assembly_status",
             "type": "select"
+        },
+        {
+            "key": "metadata.assembly_stats.contig_n50",
+            "type": "range"
+        },
+        {
+            "key": "metadata.assembly_stats.scaffold_n50",
+            "type": "range"
         }
     ],
     "organisms": [

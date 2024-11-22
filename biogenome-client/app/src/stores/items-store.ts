@@ -1,49 +1,32 @@
 import { defineStore } from 'pinia'
-import { ErrorResponseData, ConfigFilter, DataModels, Frequency, TaxonNode } from '../data/types'
-import { useToast } from 'vuestic-ui'
+import { ErrorResponseData, ConfigFilter, DataModels, TaxonNode, Filter } from '../data/types'
 import CommonService from '../services/CommonService'
 import StatisticsService from '../services/StatisticsService'
 import { AxiosError } from 'axios'
 import { useConfig } from '../composable/useConfig'
-import general from '../../configs/general.json';
+import { useToast } from 'primevue'
 
-export const staticFilters = {
-    filter: "",
-    sort_order: "",
-    sort_column: "",
-}
 const initPagination = {
     offset: 0,
     limit: 10,
 }
 
-
-function mapSearchForm(modelFilters: ConfigFilter[]) {
-
-    const staticEntries = Object.entries({ ...staticFilters })
-    const formEntries = modelFilters.map(f => {
-        if (f.type === "date") {
-            return [[`${f.key}__gte`, null], [`${f.key}__lte`, null]]
-        } else if (f.type === "checkbox") {
-            return [[`${f.key}__exists`, null]]
-        }
-        return [[f.key, null]]
-    }).flat()
-
-    return Object.fromEntries([...formEntries, ...staticEntries])
+const initSort = {
+    sort_column: "",
+    sort_order: ""
 }
 
+const mapFilters = (filters: Filter[]) => filters.map(f => ({ ...f, value: null }))
+    .sort((a, b) => (a.type === 'checkbox' ? 1 : 0) - (b.type === 'checkbox' ? 1 : 0))
 // Factory function to create a store for a specific model
 function createModelStore(model: DataModels) {
-    const { columns, filters } = useConfig(model);
-
+    const { filters } = useConfig(model);
     return {
-        searchForm: mapSearchForm(filters.value),
+        filters: mapFilters(filters.value),
         pagination: { ...initPagination },
+        sort: { ...initSort },
         items: [],
         total: 0,
-        frequencies: [] as Record<string, Record<string, number>>[],
-        columnsToShow: columns.value,
     };
 }
 
@@ -55,44 +38,67 @@ export const useItemStore = defineStore('item', {
             stores: {} as Record<DataModels, any>,
             parentTaxon: null as TaxonNode | null,
             country: null as { name: string, id: string, rank: string } | null,
-            frequencies: [] as Frequency[],
             showTsvModal: false,
             showChartModal: false,
             isTableLoading: false,
             isTSVLoading: false,
             showFilters: false,
-            toast: useToast().init
+            toast: useToast()
         }
     },
-
     actions: {
         initStore(model: DataModels) {
             if (!this.stores[model]) {
                 this.stores[model] = createModelStore(model);
             }
         },
-        getSearchForm(model: DataModels) {
-            this.initStore(model);  // Ensure store exists
-            return this.stores[model]?.searchForm ?? null;
-        },
-        initSearchForm(model: DataModels) {
-            this.initStore(model);  // Ensure store exists
+        resetFilters(model: DataModels) {
+            this.initStore(model)
             const { filters } = useConfig(model)
-            this.stores[model].searchForm = mapSearchForm(filters.value)
+            this.stores[model].filters = [...mapFilters(filters.value)]
         },
-        setSearchFormField(model: DataModels, key: string, value: any) {
-            this.initStore(model);  // Ensure store exists
-            if (this.stores[model]) {
-                this.stores[model].searchForm[key] = value;
+        async updateFilter(model: DataModels, filter: ConfigFilter) {
+            this.initStore(model)
+            const { filters } = this.stores[model] as { filters: ConfigFilter[] }
+            // Find the index of the filter to update
+            const index = filters.findIndex(({ key }) => key === filter.key);
+
+            if (index !== -1) {
+                // Update the specific filter in the list
+                const updatedFilters = [...filters];
+                const { value } = filter
+                updatedFilters[index] = { ...updatedFilters[index], value };
+
+                // Replace the filters array to trigger reactivity
+                this.stores[model].filters = [...updatedFilters]
+                this.resetPagination(model)
+                await this.fetchItems(model)
             }
         },
+        // agnostic query does not contain pagination or sort
         buildQuery(model: DataModels) {
-            const searchFormEntries = Object.entries(this.stores[model].searchForm)
-                .filter(([key, value]) => !staticFilters.hasOwnProperty(key) && value !== null && value !== "");
-
-            if (this.country && model === 'organisms') searchFormEntries.push(['countries', this.country.id]);
-
-            return Object.fromEntries(searchFormEntries);
+            const entries = [] as [string, any][]
+            const { filters } = this.stores[model]
+            filters
+                .filter((f: ConfigFilter) => f.value !== null && f.value !== "")
+                .forEach((f: ConfigFilter) => {
+                    if (f.type === 'checkbox') {
+                        entries.push([`${f.key}__exists`, f.value])
+                    } else if (f.type === 'date') {
+                        const [lt, gt] = f.value
+                        entries.push([`${f.key}__lte`, lt], [`${f.key}__gte`, gt])
+                    } else if (f.type === 'range') {
+                        const [lt, gt] = f.value
+                        entries.push([`${f.key}__lt`, lt], [`${f.key}__gt`, gt])
+                    } else if (f.type === 'select') {
+                        entries.push([f.key, f.value])
+                    } else {
+                        entries.push([`${f.key}__icontains`, f.value])
+                    }
+                })
+            if (this.parentTaxon) entries.push(['taxon_lineage', this.parentTaxon.taxid])
+            if (this.country && model === 'organisms') entries.push(['countries', this.country.id]);
+            return Object.fromEntries(entries);
         },
         resetPagination(model: DataModels) {
             this.initStore(model);  // Ensure store exists
@@ -108,61 +114,16 @@ export const useItemStore = defineStore('item', {
             } else {
                 message = axiosError.message
             }
-            this.toast({ message: message, color: 'danger' })
+            this.toast.add({ detail: message, severity: 'error' })
         },
 
-        downloadFile(model: DataModels, data: any) {
-            const href = URL.createObjectURL(data);
-
-            const filename = `${model}_report.tsv`
-            // create "a" HTML element with href to file & click
-            const link = document.createElement('a');
-            link.href = href;
-            link.setAttribute('download', filename); //or any other extension
-            document.body.appendChild(link);
-            link.click();
-            // clean up "a" element & remove ObjectURL
-            document.body.removeChild(link);
-            URL.revokeObjectURL(href);
-        },
-        async fetchFrequenciesForSelectFields(model: DataModels) {
-            const { filters } = useConfig(model)
-            const selectFields = filters.value
-                .filter((field: ConfigFilter) => field.type === 'select')
-                .map((field: ConfigFilter) => field.key);
-            for (const field of selectFields) {
-                await this.getFrequencies(model, model, field, false);
-            }
-        },
-        async handleQuery(model: DataModels) {
-            if (model === 'organisms' && general.maps && general.maps.includes('countries')) {
-                //handle countries frequencies
-                await this.getFrequencies('organisms', 'organisms', 'countries', false)
-            }
-            this.resetPagination(model)
-            this.fetchItems(model)
-            this.fetchFrequenciesForSelectFields(model)
-        },
         //incoming model may not correspond to currentModel
-        async getFrequencies(source: string, model: DataModels, field: string, ignoreQuery: boolean) {
+        async getFrequencies(model: DataModels, field: string) {
             this.initStore(model);  // Ensure store exists
             try {
-
-                const query = ignoreQuery ? {} : this.buildQuery(model)
-                if (this.parentTaxon) query.taxon_lineage = this.parentTaxon.taxid
-                const freqs = this.frequencies
+                const query = this.buildQuery(model)
                 const { data } = await StatisticsService.getModelFieldStats(model, field, query)
-                const newFreq: Frequency = { source, model, field, data }
-                const existingIndex = freqs.findIndex(
-                    f => f.source === source && f.model === model && f.field === field
-                );
-
-                if (existingIndex !== -1) {
-                    freqs[existingIndex] = newFreq;
-                } else {
-                    freqs.push(newFreq);
-                }
-                this.frequencies = [...freqs]
+                return data
             } catch (err) {
                 this.catchError(err)
             }
@@ -171,18 +132,12 @@ export const useItemStore = defineStore('item', {
             this.initStore(model);  // Ensure store exists
 
             this.isTableLoading = true
-            const { searchForm, pagination } = this.stores[model]
+            const { sort, pagination } = this.stores[model]
+            const query = this.buildQuery(model)
 
             // Build the query params
-            const params = { ...searchForm, ...pagination }
+            const params = { ...query, ...pagination, ...sort }
 
-            // Conditionally add `countries` and `parentTaxon` if they exist
-            if (this.country && model === 'organisms') {
-                params['countries'] = this.country.id
-            }
-            if (this.parentTaxon) {
-                params['taxon_lineage'] = this.parentTaxon.taxid
-            }
             try {
                 const { data } = await CommonService.getItems(model, params)
                 this.stores[model].items = [...data.data]
@@ -199,15 +154,9 @@ export const useItemStore = defineStore('item', {
             this.isTSVLoading = true
             const downloadRequest = { format: "tsv", fields: [...fields] }
             try {
-                const requestData = applyFilters ? { ...this.stores[model].searchForm, ...downloadRequest } : { ...downloadRequest }
-                if (this.country) {
-                    requestData['countries'] = this.country
-                }
-                if (this.parentTaxon) {
-                    requestData['taxon_lineage'] = this.parentTaxon
-                }
+                const requestData = applyFilters ? { ...this.buildQuery(model), ...downloadRequest } : { ...downloadRequest }
                 const { data } = await CommonService.getTsv(model, requestData)
-                this.downloadFile(model, data)
+                return data
 
             } catch (e) {
                 this.catchError(e)

@@ -1,6 +1,5 @@
 <template>
-    <Button type="button" variant="outlined" :label="parentTaxon ? parentTaxon.name : 'Select a taxon'"
-        @click="toggle" />
+    <Button type="button" :label="parentTaxon ? parentTaxon.name : 'Select a taxon'" @click="toggle" />
     <Popover ref="op">
         <div class="flex flex-col gap-4 w-[20rem]">
             <div class="w-full">

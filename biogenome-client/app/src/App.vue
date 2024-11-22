@@ -2,11 +2,8 @@
   <div class="min-h-screen flex flex-col">
     <!-- Top Bar -->
     <NavBar :imgUrl="imgUrl" />
-    <main class="flex-1 p-4">
-      <router-view v-slot="{ Component }">
-        <Transition name="fade">
-          <component :is="Component" />
-        </Transition>
+    <main class="flex-1 p-8">
+      <router-view>
       </router-view>
     </main>
     <Toast />
@@ -39,14 +36,7 @@ function setConfigTracker() {
 
 </script>
 
-<style lang="scss">
-.row-equal {
-  .flex {
-    .va-card {
-      height: 100%;
-    }
-  }
-}
+<style>
 
 .fade-enter-from,
 .fade-leave-to {

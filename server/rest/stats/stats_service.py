@@ -12,11 +12,11 @@ MODEL_LIST = {
     'taxons':TaxonNode
     }
 
+NO_VALUE_KEY= 'No Value'
 
 @cache.memoize(timeout=300)
 def get_stats(model, field, query):
     # Check if the model exists in MODEL_LIST
-
     if model not in MODEL_LIST:
         return {"message": "model not found"}, 404
 
@@ -30,7 +30,7 @@ def get_stats(model, field, query):
             {
                 "$project": {
                     "field_value": {
-                        "$ifNull": [f"${field}", "No Value"]
+                        "$ifNull": [f"${field}", f"{NO_VALUE_KEY}"]
                     }
                 }
             },
@@ -44,11 +44,11 @@ def get_stats(model, field, query):
         ]
 
         response = {
-            doc["_id"]: doc["count"]
+            str(doc["_id"]): int(doc["count"])
             for doc in items.aggregate(pipeline)
         }
-        # Sort the response dictionary
-        sorted_response = {key : response[key] for key in sorted(response)}
+
+        sorted_response = {key: value for key, value in sorted(response.items())}
         return data_helper.dump_json(sorted_response), 200
 
     except Exception as e:

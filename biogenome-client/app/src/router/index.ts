@@ -20,14 +20,14 @@ const defaultRoutes: Array<RouteRecordRaw> = [
   {
     path: '/:model/:id',
     name: 'item',
-    component: () => import('../pages/Items.vue'),
+    component: () => import('../pages/Item.vue'),
     props: true,
   },
-  {
-    path: '/taxons',
-    name: 'taxonomy',
-    component: () => import('../pages/Items.vue'),
-  },
+  // {
+  //   path: '/taxons',
+  //   name: 'taxonomy',
+  //   component: () => import('../pages/Items.vue'),
+  // },
 ]
 
 const router = createRouter({

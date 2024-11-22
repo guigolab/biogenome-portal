@@ -1,92 +1,98 @@
 <template>
-    <Drawer v-model:visible="filterStore.showFilters" :header="model" position="right">
-        <div>
-            <Fieldset legend="Add filter" :toggleable="true">
-                <div>
-                    <InputGroup>
-                        <InputText @update:model-value="debouncedUpdateSearch" :invalid="invalidField"
-                            v-model="fieldKey" placeholder="Field Key" />
-                        <Button></Button>
-                        <Button :loading="isLoading" :severity="invalidField" label="Check field" />
-                    </InputGroup>
-                </div>
-                <div>
-                    <Select v-model="filterType" :options="filterChoices" placeholder="Select a Type"></Select>
-                    <Message>{{ selectTypeMessage }}</Message>
-                </div>
-                <div>
-                    <Button label="Submit"></Button>
-                </div>
-            </Fieldset>
+    <Accordion lazy value="0">
+        <AccordionPanel v-for="f, index in filters" :key="f.key" :value="index">
+            <AccordionHeader>
+                <span class="flex items-center gap-2 w-full">
+                    <i :class="filterDetails[f.type].icon" />
+                    <span class="font-bold whitespace-nowrap">{{ useLabel(f.key)
+                        }}</span>
+                </span>
+            </AccordionHeader>
+            <AccordionContent>
+                <SelectSwitch @valueChange="(v: any) => updateSearchForm(f, v)" :filter="f"
+                    v-if="f.type === 'checkbox'" />
+                <SelectField @valueChange="(v: any) => updateSearchForm(f, v)" :model="model" :filter="f"
+                    v-else-if="f.type === 'select'" />
+                <DateField @valueChange="(v: any) => updateSearchForm(f, v)" :filter="f"
+                    v-else-if="f.type === 'date'" />
+                <RangeField @valueChange="(v: any) => updateSearchForm(f, v)" :filter="f" :model="model"
+                    v-else-if="f.type === 'range'" />
+                <!-- <div class="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                    <div>
 
-            <BlockUI title="Filters">
-                
-            </BlockUI>
-        </div>
-    </Drawer>
+                    </div>
+                    <div v-if="name === 'Ranges'">
+                        <div v-for="f in filters">
+
+                        </div>
+                    </div>
+                    <div v-else>
+                        <div v-for="f in filters">
+                            <DynamicLabel :fieldKey="f.key">
+                                <component :is="getFieldComponent(f.type)" :model="model" :filter="f" :key="f.key"
+                                    @valueChange="(v: any) => updateSearchForm(f, v)">
+                                </component>
+                            </DynamicLabel>
+                        </div>
+
+                    </div>
+
+                </div> -->
+            </AccordionContent>
+        </AccordionPanel>
+    </Accordion>
 </template>
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
-import { DataModels, Filter } from '../data/types';
-import { useFilterStore } from '../stores/filter-store';
-import StatisticsService from '../services/StatisticsService';
+import { computed } from 'vue';
+import { ConfigFilter, DataModels } from '../data/types';
 import { useItemStore } from '../stores/items-store';
-import CommonService from '../services/CommonService';
-import { useDebounce } from '../composable/useDebounce';
+import DateField from './inputs/DateField.vue';
+import SelectField from './inputs/SelectField.vue';
+import SelectSwitch from './inputs/SelectSwitch.vue';
+import { useLabel } from '../composable/useLabel';
+import RangeField from './inputs/RangeField.vue';
+const itemStore = useItemStore()
 
 const props = defineProps<{
     model: DataModels
 }>()
 
-const invalidField = ref(false)
-const filterStore = useFilterStore()
-const form = ref<Record<string, any> | null>(null)
-const currentFilters = ref<Filter[]>([])
-const validField = ref("")
-const isLoading = ref(false)
-const itemStore = useItemStore()
-const fieldKey = ref('')
-const filterChoices = ['range', ' date', 'checkbox', 'select']
-const filterType = ref('range')
+const filterDetails = {
+    input: {
+        label: "Search",
+        description: "Use this field to enter keywords or text to filter the results based on specific terms.",
+        icon: "pi pi-search",
+    },
+    select: {
+        label: "Dropdown Filter",
+        description: "Choose from predefined options in the dropdown to refine your search or data selection.",
+        icon: "pi pi-filter",
+    },
+    date: {
+        label: "Date Range",
+        description: "Specify a date or date range to filter results by time period or relevant events.",
+        icon: "pi pi-calendar",
+    },
+    range: {
+        label: "Numeric Range",
+        description:
+            "Adjust the slider to filter results within a specific range of numerical values (e.g., sizes, counts).",
+        icon: "pi pi-sliders-h",
+    },
+    checkbox: {
+        label: "Toggle Options",
+        description: "Enable or disable specific options to include or exclude certain criteria from your results.",
+        icon: "pi pi-check-square",
+    },
+};
+// Computed Filters
+const filters = computed(() =>
+    itemStore.stores[props.model]?.filters as ConfigFilter[] || []
+);
 
-const selectTypeMessage = computed(() => filterType.value === 'range' ? 'Select between a range of values useful with numbers and dates' : filterType.value === 'checkbox' ? 'Check whether a field exists' : filterType.value === 'data' ? 'Selecte a data range' : 'Select between a list of options')
+async function updateSearchForm(filter: ConfigFilter, value: any) {
 
-
-watch(() => props.model, (v1, v2) => {
-    console.log(v1)
-    console.log(v2)
-    const { filters, searchForm } = filterStore.getForm(props.model)
-    form.value = { ...searchForm }
-    currentFilters.value = [...filters]
-
-}, { immediate: true })
-
-const debouncedUpdateSearch = useDebounce(async (key: string) => {
-    if (!key || !key.trim().length) return
-    const field = `${key}__exists`
-    const { data } = await CommonService.getItems(props.model, Object.fromEntries([[field, true]]))
-    if (data.total > 0) {
-        invalidField.value = false
-        validField.value = key
-    }
-
-}, 400);
-
-
-async function checkField(key: string) {
-    const field = `${key}__exists`
-    isLoading.value = true
-    try {
-        const { data } = await CommonService.getItems(props.model, Object.fromEntries([[field, true]]))
-        if (data.total > 0) {
-            invalidField.value = false
-            validField.value = key
-        }
-    } catch (e) {
-
-    } finally {
-        isLoading.value = true
-    }
-    const { data } = await item
+    await itemStore.updateFilter(props.model, { ...filter, value })
 }
+
 </script>

@@ -44,7 +44,7 @@ const src = computed(() => {
 })
 
 </script>
-<style lang="scss">
+<style >
 .iframe-wrapper {
     position: relative;
     overflow: visible;

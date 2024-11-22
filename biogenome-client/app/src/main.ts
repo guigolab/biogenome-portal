@@ -3,7 +3,7 @@ import stores from './stores'
 import App from './App.vue'
 import PrimeVue from 'primevue/config';
 import { definePreset } from '@primevue/themes';
-import Aura from '@primevue/themes/aura';
+import Lara from '@primevue/themes/lara';
 import './assets/tailwind.css'; // Adjust the path if needed
 import uiConfig from '../configs/ui.json'
 import ToastService from 'primevue/toastservice';
@@ -14,13 +14,12 @@ import router from './router'
 
 const app = createApp(App)
 
-app.use(stores)
 app.use(router)
 
 // app.use(router)
 
 
-const MyPreset = definePreset(Aura, {
+const MyPreset = definePreset(Lara, {
     ...uiConfig
     //Your customizations, see the following sections for examples
 });
@@ -36,6 +35,7 @@ app.use(PrimeVue, {
 });
 
 app.use(ToastService);
+app.use(stores)
 
 app.mount('#app')
 

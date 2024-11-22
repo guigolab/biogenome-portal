@@ -14,7 +14,6 @@ import L, { Map, TileLayer, Control } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useMapStore } from "../stores/map-store";
 import { useItemStore } from "../stores/items-store";
-import Card from "primevue/card";
 
 const mapStore = useMapStore();
 const itemStore = useItemStore();
