@@ -63,9 +63,9 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
 import { useToast } from 'vuestic-ui'
-import { useAnnotationStore } from '../../../../stores/annotation-store'
-import AuthService from '../../../../services/clients/AuthService'
-import AnnotationService from '../../../../services/clients/AnnotationService'
+import { useAnnotationStore } from '../../../stores/annotation-store'
+import AuthService from '../../../services/clients/AuthService'
+import AnnotationService from '../../../services/clients/AnnotationService'
 import { AxiosError } from 'axios'
 import { useRouter } from 'vue-router'
 

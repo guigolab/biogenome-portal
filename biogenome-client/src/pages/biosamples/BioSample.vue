@@ -28,7 +28,7 @@ import GeoLocationService from '../../services/clients/GeoLocationService'
 import { AxiosError } from 'axios'
 import RelatedDataTable from '../../components/tables/RelatedDataTable.vue'
 import { useToast } from 'vuestic-ui/web-components'
-import pages from '../../../configs/pages.json'
+import pages from '../../configs/pages.json'
 
 const { init } = useToast()
 const props = defineProps<{

@@ -36,8 +36,8 @@
 </template>
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue';
-import AuthService from '../../../services/clients/AuthService';
-import OrganismService from '../../../services/clients/OrganismService';
+import AuthService from '../../services/clients/AuthService';
+import OrganismService from '../../services/clients/OrganismService';
 import { useToast } from 'vuestic-ui/web-components';
 import { useRouter } from 'vue-router';
 

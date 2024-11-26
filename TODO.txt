@@ -7,3 +7,8 @@ CLIENT:
 should add landing page with just one title and description and taxon search bar and explore data button to dashboard
 
 improve repo wiki 
+
+
+REFACTOR FRONT END AND NGINX LOGIC:
+
+SEE LAST CONVERSATION: https://chatgpt.com/share/e/674207c5-845c-8005-8c38-e6bdd81696b1

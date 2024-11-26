@@ -28,8 +28,8 @@
 </template>
 
 <script setup lang="ts">
-import TaxonService from '../../../services/clients/TaxonService';
-import IndentedTree from '../../../components/tree/IndentedTree.vue';
+import TaxonService from '../../services/clients/TaxonService';
+import IndentedTree from '../../components/tree/IndentedTree.vue';
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()

@@ -40,8 +40,8 @@
 </template>
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import AssemblyService from '../../../services/clients/AssemblyService'
-import AuthService from '../../../services/clients/AuthService'
+import AssemblyService from '../../services/clients/AssemblyService'
+import AuthService from '../../services/clients/AuthService'
 import { useToast } from 'vuestic-ui/web-components'
 
 const { init } = useToast()

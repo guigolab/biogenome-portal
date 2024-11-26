@@ -25,7 +25,7 @@
     </va-card-content>
 </template>
 <script setup lang="ts">
-import { useOrganismStore } from '../../../../stores/organism-store';
+import { useOrganismStore } from '../../../stores/organism-store';
 
 const organismStore = useOrganismStore()
 

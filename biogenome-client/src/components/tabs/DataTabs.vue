@@ -31,7 +31,7 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import pagesC from '../../../configs/pages.json'
+import pagesC from '../../configs/pages.json'
 import { useStatsStore } from '../../stores/stats-store'
 import { useItemStore } from '../../stores/items-store'
 

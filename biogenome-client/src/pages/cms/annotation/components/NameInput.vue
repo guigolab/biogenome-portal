@@ -11,8 +11,8 @@
 <script setup lang="ts">
 import { ref, watchEffect } from 'vue';
 import { useToast } from 'vuestic-ui/web-components';
-import AnnotationService from '../../../../services/clients/AnnotationService';
-import { useAnnotationStore } from '../../../../stores/annotation-store';
+import AnnotationService from '../../../services/clients/AnnotationService';
+import { useAnnotationStore } from '../../../stores/annotation-store';
 
 const { init } = useToast()
 const input = ref('')

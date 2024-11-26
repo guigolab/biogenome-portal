@@ -39,9 +39,9 @@
 </template>
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import BioSampleService from '../../../services/clients/BioSampleService'
+import BioSampleService from '../../services/clients/BioSampleService'
 import { useToast } from 'vuestic-ui'
-import AuthService from '../../../services/clients/AuthService';
+import AuthService from '../../services/clients/AuthService';
 const { init } = useToast()
 const initPagination = {
     offset: 0,

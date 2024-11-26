@@ -1,5 +1,5 @@
-import general from '../../../configs/general.json'
-import pages from '../../../configs/pages.json'
+import general from '../../configs/general.json'
+import pages from '../../configs/pages.json'
 
 export interface INavigationRoute {
   name: string,

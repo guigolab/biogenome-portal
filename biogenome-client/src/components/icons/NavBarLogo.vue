@@ -3,7 +3,7 @@
 </template>
 <script setup lang="ts">
 
-import general from '../../../configs/general.json'
+import general from '../../configs/general.json'
 
 const nav = general.nav
 

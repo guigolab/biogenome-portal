@@ -20,7 +20,7 @@ import { useI18n } from 'vue-i18n'
 import OrganismService from '../../services/clients/OrganismService'
 import BioSampleService from '../../services/clients/BioSampleService'
 import { computed } from 'vue';
-import columnsCongif from '../../../configs/columns.json'
+import columnsCongif from '../../configs/columns.json'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()

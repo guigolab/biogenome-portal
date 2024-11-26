@@ -13,8 +13,8 @@
 <script setup lang="ts">
 
 import { ref, watchEffect } from 'vue';
-import { TaxonNode } from '../../../data/types';
-import TaxonService from '../../../services/clients/TaxonService';
+import { TaxonNode } from '../../data/types';
+import TaxonService from '../../services/clients/TaxonService';
 
 const props = defineProps<{
     taxid: string

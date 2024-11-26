@@ -7,4 +7,4 @@ export default defineVuesticConfig({
     // Config here
     icons: iconsConfig,
     ...UI
-})
+})cd 

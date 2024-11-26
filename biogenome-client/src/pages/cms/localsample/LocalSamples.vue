@@ -40,8 +40,8 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useToast } from 'vuestic-ui'
-import AuthService from '../../../services/clients/AuthService'
-import { useGlobalStore } from '../../../stores/global-store';
+import AuthService from '../../services/clients/AuthService'
+import { useGlobalStore } from '../../stores/global-store';
 
 const { init } = useToast()
 const initPagination = {

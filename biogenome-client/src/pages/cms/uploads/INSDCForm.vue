@@ -19,10 +19,10 @@
 </template>
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import AssemblyService from '../../../services/clients/AssemblyService'
-import BioSampleService from '../../../services/clients/BioSampleService'
-import ExperimentService from '../../../services/clients/ExperimentService'
-import AuthService from '../../../services/clients/AuthService'
+import AssemblyService from '../../services/clients/AssemblyService'
+import BioSampleService from '../../services/clients/BioSampleService'
+import ExperimentService from '../../services/clients/ExperimentService'
+import AuthService from '../../services/clients/AuthService'
 import { useToast } from 'vuestic-ui'
 import { AxiosError } from 'axios'
 
@@ -44,19 +44,16 @@ const crudList = [
     {
         label: 'Import BioSample',
         value: 'biosample',
-        checkDB: BioSampleService.getBioSample,
         postDB: AuthService.importBioSample,
     },
     {
         label: 'Import Assembly',
         value: 'assembly',
-        checkDB: AssemblyService.getAssembly,
         postDB: AuthService.importAssembly,
     },
     {
         label: 'Import Experiment',
         value: 'experiment',
-        checkDB: ExperimentService.getExperiment,
         postDB: AuthService.importRead,
     },
 ]

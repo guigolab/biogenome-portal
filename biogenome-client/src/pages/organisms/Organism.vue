@@ -35,7 +35,7 @@ import Images from './components/Images.vue'
 import RelatedDataTable from '../../components/tables/RelatedDataTable.vue'
 import { AxiosError } from 'axios'
 import { useToast } from 'vuestic-ui/web-components'
-import pages from '../../../configs/pages.json'
+import pages from '../../configs/pages.json'
 
 const { init } = useToast()
 

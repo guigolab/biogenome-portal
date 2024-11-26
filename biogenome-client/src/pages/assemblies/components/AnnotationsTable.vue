@@ -15,7 +15,7 @@
 </template>
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { TrackData } from '../../../data/types';
+import { TrackData } from '../../data/types';
 
 const { t } = useI18n()
 const props = defineProps<{

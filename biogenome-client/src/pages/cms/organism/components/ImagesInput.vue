@@ -24,7 +24,7 @@
 </template>
 <script setup lang="ts">
 import { onMounted, ref, computed } from 'vue';
-import { useOrganismStore } from '../../../../stores/organism-store'
+import { useOrganismStore } from '../../../stores/organism-store'
 
 const organismStore = useOrganismStore()
 

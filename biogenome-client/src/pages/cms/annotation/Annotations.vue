@@ -39,8 +39,8 @@
 </template>
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import AnnotationService from '../../../services/clients/AnnotationService'
-import AuthService from '../../../services/clients/AuthService';
+import AnnotationService from '../../services/clients/AnnotationService'
+import AuthService from '../../services/clients/AuthService';
 import { useToast } from 'vuestic-ui/web-components';
 const { init } = useToast()
 const initPagination = {

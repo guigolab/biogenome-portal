@@ -47,7 +47,7 @@
 </template>
 <script setup lang="ts">
 import { onUnmounted, ref } from 'vue'
-import AuthService from '../../../services/clients/AuthService'
+import AuthService from '../../services/clients/AuthService'
 import { AxiosError } from 'axios'
 
 const isLoading = ref(false)

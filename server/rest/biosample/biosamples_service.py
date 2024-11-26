@@ -40,7 +40,7 @@ def delete_biosample(accession):
     Read.objects(experiment_accession__in=experiments).delete()
     Experiment.objects(sample_accession=accession).delete()
     
-    organism_obj = organism_helper.handle_organism(biosample_to_delete.accession)
+    organism_obj = organism_helper.handle_organism(biosample_to_delete.taxid)
     biosample_to_delete.delete()
     organism_obj.save()
     return accession

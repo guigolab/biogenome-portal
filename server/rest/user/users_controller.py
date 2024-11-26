@@ -60,7 +60,7 @@ class UserApi(Resource):
 class UserRelatedSpecies(Resource):
     @jwt_required()
     def get(self, name):
-        response = users_service.get_related_species(name)
+        response = users_service.get_related_species(name, **request.args)
         return Response(response, mimetype="application/json", status=200)
 
 class UserRelatedSamples(Resource):

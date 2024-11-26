@@ -22,7 +22,7 @@
 
 import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n'
-import general from '../../../configs/general.json'
+import general from '../../configs/general.json'
 import { useTaxonomyStore } from '../../stores/taxonomy-store';
 import { useItemStore } from '../../stores/items-store';
 import { tree } from 'd3';

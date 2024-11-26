@@ -15,10 +15,10 @@
 </template>
 <script setup lang="ts">
 import { ref, watchEffect } from 'vue';
-import OrganismService from '../../../../services/clients/OrganismService'
-import ENAClientService from '../../../../services/clients/ENAClientService'
+import OrganismService from '../../../services/clients/OrganismService'
+import ENAClientService from '../../../services/clients/ENAClientService'
 import { useToast } from 'vuestic-ui/web-components';
-import { useOrganismStore } from '../../../../stores/organism-store'
+import { useOrganismStore } from '../../../stores/organism-store'
 import { AxiosError } from 'axios';
 
 

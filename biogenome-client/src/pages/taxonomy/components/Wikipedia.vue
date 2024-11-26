@@ -6,8 +6,8 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n'
-import { useTaxonomyStore } from '../../../stores/taxonomy-store'
-import general from '../../../../configs/general.json'
+import { useTaxonomyStore } from '../../stores/taxonomy-store'
+import general from '../../../configs/general.json'
 
 const { locale } = useI18n()
 

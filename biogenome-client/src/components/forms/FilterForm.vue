@@ -34,7 +34,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { useItemStore } from '../../stores/items-store';
-import general from '../../../configs/general.json';
+import general from '../../configs/general.json';
 import Input from '../inputs/Input.vue'
 import Select from '../inputs/Select.vue'
 import DateInput from '../inputs/DateRange.vue'

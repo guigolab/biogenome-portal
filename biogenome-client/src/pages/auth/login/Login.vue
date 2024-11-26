@@ -18,7 +18,7 @@
 
 </template>
 <script setup lang="ts">
-import { useGlobalStore } from '../../../stores/global-store'
+import { useGlobalStore } from '../../stores/global-store'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 

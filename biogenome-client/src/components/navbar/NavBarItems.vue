@@ -36,7 +36,7 @@
 import { computed, onMounted, watchEffect } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import pagesC from '../../../configs/pages.json'
+import pagesC from '../../configs/pages.json'
 import { useStatsStore } from '../../stores/stats-store'
 import { iconMap } from '../../composable/useIconMap'
 import { useBreakpoint } from 'vuestic-ui'

@@ -43,8 +43,8 @@
 </template>
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import ExperimentService from '../../../services/clients/ExperimentService'
-import AuthService from '../../../services/clients/AuthService';
+import ExperimentService from '../../services/clients/ExperimentService'
+import AuthService from '../../services/clients/AuthService';
 import { useToast } from 'vuestic-ui/web-components';
 
 const { init } = useToast()
