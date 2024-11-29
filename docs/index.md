@@ -4,7 +4,7 @@ Welcome to the **BioGenome Portal**, a powerful platform designed for managing, 
 
 ## Core Concept: Organism-Centric Data Integration
 
-![Image showing the organism-centered model](./organism-centered.png "Schema depicting the organism-centered model")
+![Image showing the organism-centered model](/organism-centered.png "Schema depicting the organism-centered model")
 
 
 At the heart of the portal is the concept of an **organism**. In this context, an **organism** represents a taxonomic entity that can include any taxon—ranging from a virus to a mammal, a subspecies, or even a metagenomic taxon. Organisms serve as the primary linkage for data imported from external sources and user-provided metadata.
