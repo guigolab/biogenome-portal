@@ -6,7 +6,7 @@ layout: page
 <script>
 import SwaggerUI from 'swagger-ui';
 import 'swagger-ui/dist/swagger-ui.css';
-
+import { withBase } from 'vitepress'
 export default {
     name: 'SwaggerUI',
     props: {
@@ -17,7 +17,7 @@ export default {
     },
     mounted() {
         SwaggerUI({
-            url: './biogenome-portal-schema.yaml',
+            url: withBase('./biogenome-portal-schema.yaml'),
             dom_id: '#swagger-ui',
             deepLinking: true,
             presets: [SwaggerUI.presets.apis],
