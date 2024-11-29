@@ -4,3 +4,6 @@ venv
 .env
 __pycache__
 blog_old.md
+bgp-docs/.vitepress/dist
+bgp-docs/.vitepress/cache
+node_modules
