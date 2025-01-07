@@ -1,6 +1,5 @@
 from flask import Response,request
 from flask_restful import Resource
-import json
 from . import stats_service
 
 

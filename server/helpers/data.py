@@ -3,6 +3,8 @@ from io import StringIO
 from bson.json_util import dumps, JSONOptions, DatetimeRepresentation
 from mongoengine.queryset.visitor import Q
 from werkzeug.datastructures import MultiDict
+from celery.result import AsyncResult
+from werkzeug.exceptions import NotFound
 from db import models
 from . import query_visitors
 
@@ -176,3 +178,8 @@ def validate_number(number):
         return False   
     
 
+def get_task_status(task_id):
+    task = AsyncResult(task_id)
+    if task.result:
+        return dict(messages=task.result['messages'], state=task.state )
+    raise NotFound(description=f"{task_id} not found")

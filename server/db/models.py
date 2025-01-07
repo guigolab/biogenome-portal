@@ -160,6 +160,18 @@ class Assembly(db.Document):
         'indexes': ['accession','taxid', 'taxon_lineage']
     }
 
+class LocalAssembly(db.Document):
+    assembly_id = db.StringField(unique=True)
+    taxon_lineage = db.ListField(db.StringField())
+    scientific_name= db.StringField()
+    taxid = db.StringField(required=True)
+    sample_accession=db.StringField()
+    created = db.DateTimeField(default=datetime.datetime.now())
+    metadata=db.DictField()
+    meta = {
+        'indexes': ['assembly_id','taxid', 'taxon_lineage']
+    }
+
 class Chromosome(db.Document):
     accession_version = db.StringField(required=True,unique=True)
     metadata=db.DictField()

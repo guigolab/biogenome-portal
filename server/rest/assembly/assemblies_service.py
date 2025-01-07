@@ -99,7 +99,6 @@ def get_chr_aliases_file(accession):
     
     # Assuming chromosomes is a list of dictionaries with fields 'name' and 'accession_version'
     for chromosome in chromosomes:
-        print(chromosome)
         name = chromosome.get('metadata', {}).get('chr_name')
         if not name:
             name = chromosome.get('metadata', {}).get('name')

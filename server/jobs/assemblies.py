@@ -8,7 +8,6 @@ from helpers.data import update_lineage
 from db.models import Assembly,Chromosome
 import os
 from celery import shared_task
-import time
 
 PROJECT_ACCESSION = os.getenv('PROJECT_ACCESSION')
 

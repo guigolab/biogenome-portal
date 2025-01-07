@@ -105,7 +105,7 @@ onUnmounted(() => {
 const excelData = reactive({ ...excelForm })
 
 async function fetchStatus() {
-  const { data } = await AuthService.importSpreadsheetStatus(jobID.value)
+  const { data } = await AuthService.taskStatus(jobID.value)
   const state = data.state
   if (state === 'SUCCESS' && intervalId.value) {
     clearInterval(intervalId.value)

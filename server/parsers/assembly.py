@@ -10,12 +10,9 @@ def parse_assembly_from_ncbi_datasets(assembly):
         'taxid': str(organism.get('tax_id')),
         'sample_accession': assembly_info.get('biosample', {}).get('accession'),
     }
+    ## save the assembly as it is
     assembly_to_save['metadata'] = {
-        'annotation_info': assembly.get('annotation_info'),
-        'assembly_info': {k:v for k,v in assembly_info.items() if k != 'biosample'},
-        'assembly_stats': assembly.get('assembly_stats'),
-        'source_database': assembly.get('source_database'),
-        'wsg_info': assembly.get('wsg_info')
+        **assembly
     }
     
     return Assembly(**assembly_to_save)

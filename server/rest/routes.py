@@ -8,7 +8,6 @@ from .organism import organisms_controller
 from .taxon import taxons_controller
 from .annotation import annotations_controller
 from .stats import stats_controller
-from .upload import uploads_controller
 from .taxonomy import taxonomy_controller
 from .goat_report import goat_reports_controller
 from .sample_location import sample_locations_controller
@@ -20,13 +19,11 @@ def initialize_routes(api):
 	api.add_resource(users_controller.LoginApi, '/api/login')
 	api.add_resource(users_controller.LogoutApi, '/api/logout')
  
-	##LOCAL SAMPLES UPLOAD
-	api.add_resource(uploads_controller.ExcelParserApi, '/api/spreadsheet_upload',  '/api/spreadsheet_upload/<task_id>')
-
 	##UPLOAD/DOWNLOAD GOAT COMPLIANT REPORTS
 	api.add_resource(goat_reports_controller.GoaTReportApi,'/api/goat_report')
-	api.add_resource(goat_reports_controller.GoaTReportUploadApi,'/api/goat_report/<task_id>')
 
+	##TASK PROGRESS
+	api.add_resource(cronjobs_controller.TaskStatusAPI, '/api/tasks/<task_id>')
 	##DATA LOOKUP
 	api.add_resource(lookup_controller.LookupApi, '/api/lookup')
 
@@ -75,6 +72,7 @@ def initialize_routes(api):
 
 	##LOCAL_SAMPLES
 	api.add_resource(local_samples_controller.LocalSamplesApi, '/api/local_samples')
+	api.add_resource(local_samples_controller.LocalSampleUploadApi, '/api/local_samples/upload')
 	api.add_resource(local_samples_controller.LocalSampleApi, '/api/local_samples/<local_id>')
 	
 

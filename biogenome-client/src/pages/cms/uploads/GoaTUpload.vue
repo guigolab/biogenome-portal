@@ -68,7 +68,7 @@ onUnmounted(() => {
 })
 
 async function fetchStatus() {
-  const { data } = await AuthService.importGoatReportStatus(jobID.value)
+  const { data } = await AuthService.taskStatus(jobID.value)
   const state = data.state
   if (state === 'SUCCESS' && intervalId.value) {
     clearInterval(intervalId.value)

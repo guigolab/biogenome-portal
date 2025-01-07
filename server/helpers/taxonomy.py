@@ -22,7 +22,7 @@ def check_species_permission(user, existing_taxids):
 
 def check_user_permission_for_taxid(user, taxid):
     if taxid not in user.species:
-        return {'taxonomy': f"The organism {taxid} already exists in the db and you don't have the rights to modify it!"}
+        return f"The organism {taxid} already exists in the db and you don't have the rights to modify it!"
     return None
 
 def get_and_order_saved_taxon_nodes(organism_obj):
