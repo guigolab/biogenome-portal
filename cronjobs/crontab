@@ -1,2 +1,1 @@
-* * * * * python /trigger_cronjob.py helpers add_lineage
-* * * * * python /trigger_cronjob.py helpers handle_orphans
+* * * * * python /trigger_cronjob.py helpers unset_fields

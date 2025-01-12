@@ -3,9 +3,8 @@ from flask_restful import Resource
 from . import goat_reports_service
 from helpers import data as data_helper
 from flask_jwt_extended import jwt_required
-import json
-
 from wrappers.data_manager import data_manager_required
+import json
 
 class GoaTReportApi(Resource):
     def get(self):

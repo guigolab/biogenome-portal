@@ -2,7 +2,6 @@ import requests
 
 BLOBTOOLKIT_API = "https://blobtoolkit.genomehubs.org/api/v1/search/autocomplete"
 
-
 def get_blobtoolkit_id(accession):
     response = None
     try:

@@ -22,3 +22,9 @@ class CronJobApi(Resource):
 class TaskStatusAPI(Resource):
     def get(self, task_id):
         return data_helper.get_task_status(task_id)
+    
+
+# class ModelsUploadApi(Resource):
+#     def post(self, model):
+
+        

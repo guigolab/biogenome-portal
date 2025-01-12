@@ -2,7 +2,6 @@ import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
 import DashboardPageVue from '../pages/dashboard/DashboardPage.vue'
 import general from '../../configs/general.json'
 import pages from '../../configs/pages.json'
-import { cmsRoutes } from './cms-routes'
 import { modelRoutes, mapRoutes } from './custom-routes'
 
 const rootNode = import.meta.env.VITE_ROOT_NODE ? import.meta.env.VITE_ROOT_NODE : '131567'
@@ -64,7 +63,6 @@ function createRoutes() {
   const routes = [...defaultRoutes]
 
   const modelConfigs = { ...pages } as Record<string, any>
-  if (general.cms) routes.push(...cmsRoutes)
 
   if (general.maps && general.maps.length) routes.push(...mapRoutes.filter(r => general.maps.includes(r.name)) as RouteRecordRaw[])
 

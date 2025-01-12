@@ -5,9 +5,9 @@ from helpers.organism import handle_organism
 from helpers.biosample import  handle_biosample
 from helpers.assembly import save_chromosomes
 from helpers.data import update_lineage
-from db.models import Assembly,Chromosome
-import os
+from db.models import Assembly, Chromosome
 from celery import shared_task
+import os
 
 PROJECT_ACCESSION = os.getenv('PROJECT_ACCESSION')
 
