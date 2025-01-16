@@ -13,7 +13,6 @@ onMounted(() => {
   if (config.tracker) {
     setConfigTracker()
   }
-
 })
 
 function setConfigTracker(){

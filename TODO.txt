@@ -1,22 +1,40 @@
-IMPROVEMENTS:
+IMPROVEMENTS: 1-> PRIORITY 2-> AVERAGE 3-> SOMETIME IN THE FUTURE
 
- API MULTI SELECT FIELDS LIKE MULTIPLE INSDC_STATUS
- JOBS UPDATE ASSEMBLY METADATA
- CLEAN ORGANISM DATA
- JOBS DISTINGUISH BETWEEN EXPERIMENT TYPES
- REFACTOR FILTERS --> FILTERS + HITS -> SUBMIT FILTERS
- FRONT MODULARIZE APPS: MAIN APP, CMS, GENOME BROWSER
- FIX PAGINATION ISSUE IN 
 
- FIX GOAT SPREADSHEET UPLOAD ISSUES
- 
-USE YAML TO DEFINE JOBS
-USE READ INSTEAD OF EXPERIMENTS?
-    -ADD GENOME BROWSER PAGE, MORE EXPLICIT??
+ 1 ADD MORE LEGENDS:
+    search input placeholder
+    form feedback
+    chart export example (example metadata)
+    tsv or json export (add jsonlines format?)
+    remove colors of tax explorer branches or add LEGENDS
+    improve countries map (On the EBP instance, the “countries” map is a neat idea, but the “globe” explorer is hard to use, the zoom option is required to see small countries, especially in Europe, but it took me a while to find through trial and error. In addition, the “imagery” menu seems out of place: why the need for a “street map”, “Earth at night” etc. This 3D Earth display mode needs a bit more work, with some guidance added and some options disabled)
+ 2 countries map should be a leaflet heatmap, selecting a country should add a filter in the organism?
+ 1 add jbrowse legend
+ 1 instead of repetitive view in add button with dropdown (view in ena, view in NCBI and view blobtoolkit)
+ 1 instead of different related data buttons, add related data dropdown (related organism, biosample)
+ 2 API MULTI SELECT FIELDS LIKE MULTIPLE INSDC_STATUS
+ 2 JOBS UPDATE ASSEMBLY METADATA
+ 2 JOBS DISTINGUISH BETWEEN EXPERIMENT and READS TYPES
+ 2 REFACTOR FILTERS --> FILTERS + HITS -> SUBMIT FILTERS
+ 1 FRONT MODULARIZE APPS: MAIN APP, CMS, GENOME BROWSER, LANDING PAGE AT ROOT PATH
+ 1 FIX PAGINATION ISSUE IN (pinia stores are a problem between countries, tax explorer and data. Should add a selected taxon button)
+ 1 fix DOI DIFFERENCE BETWEEN PAPER AND GH (USE STATIC ONE)
+ 1 FIX GOAT SPREADSHEET UPLOAD ISSUES (some goat status is not updated)
+ 1 JBROWSE CREATE DEFAULT SESSION
+2 USE YAML TO DEFINE JOBS
+3 USE READ INSTEAD OF EXPERIMENTS?
 
 MODULARIZE APP:
 
 API
+
+
+SHOUDL FRONT-END APPS BE CONFIGURATION AGNOSTIC?
+
+CREATE CONFIGURATION WIZARD?? STORE CONFIGS IN DATABASE??
+
 CMS --> PUBLISH CONTAINER IN DOCKERHUB -> INJECT VARIABLES AT RUNNING TIME
-PORTAL --> 
-JBROWSE -->
+PORTAL --> more taxonomy explorer centered 
+JBROWSE --> use url parameters to pass data (assembly, annotations, taxonomic lineage, assembly details) to genome browser
+
+

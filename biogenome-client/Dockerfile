@@ -26,7 +26,7 @@ RUN npm run build
 # production stage
 FROM nginx:stable-alpine
 
-ARG BASE_PATH
+ARG API_PATH
 
 # Copy the nginx templates
 COPY root.template /etc/nginx/templates/root.template

@@ -12,9 +12,13 @@ from .taxonomy import taxonomy_controller
 from .goat_report import goat_reports_controller
 from .sample_location import sample_locations_controller
 from .lookup import lookup_controller
+from .configs import config_controller
 
 def initialize_routes(api):
 	
+	#APP CONFIG
+	api.add_resource(config_controller.ConfigApi, '/api/configs')
+
 	##AUTH
 	api.add_resource(users_controller.LoginApi, '/api/login')
 	api.add_resource(users_controller.LogoutApi, '/api/logout')
