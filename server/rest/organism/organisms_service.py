@@ -4,7 +4,6 @@ from helpers import taxonomy as taxonomy_helper, user as user_helper, organism a
 from werkzeug.exceptions import BadRequest, Conflict, NotFound
 import os 
 
-ROOT_NODE=os.getenv('ROOT_NODE')
 PROJECT_ACCESSION=os.getenv('PROJECT_ACCESSION')
 
 MODEL_LIST = {

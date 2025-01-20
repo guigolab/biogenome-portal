@@ -2,13 +2,13 @@
     <img :src="imgUrl" />
 </template>
 <script setup lang="ts">
+import { inject } from 'vue';
 
-import general from '../../../configs/general.json'
+const settings = inject('appConfig')
 
-const nav = general.nav
+const appLogo = settings.general.nav.logo
 
-const imgUrl = new URL(`/src/assets/${nav.logo}`, import.meta.url).href
-
+const imgUrl = new URL(`/src/assets/${appLogo}`, import.meta.url).href
 
 
 </script>

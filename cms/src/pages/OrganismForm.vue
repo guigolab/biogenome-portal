@@ -1,47 +1,44 @@
 <template>
-  <Header :title="title" :description="description" />
-  <TaxidInput v-if="!isUpdate" />
-  <div v-if="organismStore.organismForm.taxid" class="row">
-    <div class="flex lg12 md12 sm12 xs12">
-      <va-form ref="organismForm" tag="form" @submit.prevent="handleSubmit">
-        <VaCard outlined bordered>
-          <VaCardTitle>
-            Organism Details
-          </VaCardTitle>
-          <VaInnerLoading :loading="isLoading">
-            <va-card-content>
-              <h2 class="va-h2">{{ organismStore.organismForm.scientific_name }}</h2>
-              <p class="va-text-secondary">{{ organismStore.organismForm.taxid }}</p>
-            </va-card-content>
-            <VaDivider />
-            <VaCardContent>
-              <FormContainer v-for="el in componentList" :key="el.title" :title="el.title">
-                <component :is="el.component" />
-              </FormContainer>
-            </VaCardContent>
-            <VaDivider style="margin: 0;" />
-            <va-card-actions align="between">
-              <va-button type="reset" color="danger">Reset</va-button>
-              <va-button type="submit">Submit</va-button>
-            </va-card-actions>
-          </VaInnerLoading>
-        </VaCard>
-      </va-form>
-    </div>
+  <h4 class="va-h4">Organism Form</h4>
+  <p class="light-paragraph mb-4">{{taxid? `Edit ${taxid}`:'Create a new organism, start by typing its NCBI taxonomic identifier'}}</p>
+  <TaxidInput v-if="!taxid" />
+  <div v-if="organismStore.organismForm.taxid">
+    <va-inner-loading :loading="isLoading">
+      <va-card stripe stripe-color="success">
+        <va-form ref="organismForm" tag="form" @submit.prevent="handleSubmit">
+          <va-card-content>
+            <h2 class="va-h2">{{ organismStore.organismForm.scientific_name }}</h2>
+            <p class="secondary-text">{{ organismStore.organismForm.taxid }}</p>
+          </va-card-content>
+          <ImagesInput />
+          <GoaTInput />
+          <MetadataInput />
+          <PublicationsInput />
+          <LocalNamesInput />
+          <va-divider />
+          <va-card-actions align="between">
+            <va-button type="reset" color="danger">Reset</va-button>
+            <va-button type="submit">Submit</va-button>
+          </va-card-actions>
+        </va-form>
+      </va-card>
+    </va-inner-loading>
   </div>
 </template>
 <script setup lang="ts">
 import Header from '../components/Header.vue'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useToast } from 'vuestic-ui'
-import { useOrganismStore } from '../stores/organism-store'
-import TaxidInput from '../components/TaxidInput.vue'
-import ImagesInput from '../components/ImagesInput.vue'
-import GoaTInput from '../components/GoaTInput.vue'
-import MetadataInput from '../components/MetadataInput.vue'
-import PublicationsInput from '../components/PublicationsInput.vue'
-import LocalNamesInput from '../components/LocalNamesInput.vue'
-import { OrganismForm } from '../data/types'
+import { useOrganismStore } from '../../stores/organism-store'
+import TaxidInput from './components/TaxidInput.vue'
+import ImagesInput from './components/ImagesInput.vue'
+import GoaTInput from './components/GoaTInput.vue'
+import MetadataInput from './components/MetadataInput.vue'
+import PublicationsInput from './components/PublicationsInput.vue'
+import LocalNamesInput from './components/LocalNamesInput.vue'
+import AuthService from '../../services/clients/AuthService'
+import OrganismService from '../../services/clients/OrganismService'
+import { OrganismForm } from '../../data/types'
 import { useRouter } from 'vue-router'
 import { AxiosError } from 'axios'
 

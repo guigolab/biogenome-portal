@@ -1,13 +1,14 @@
 {
   "title": "Catalan Initiative for the Earth BioGenome Project",
+  "description": "The Biogenome portal app provides a user friendly way to explore biodiversity genomics",
   "nav": {
-    "logo": "CBPLogo.png",
+    "logo": "EBP-Logo.png",
     "url": "https://www.biogenoma.cat"
   },
   "cms": true,
   "goat": true,
   "ebp_related": true,
-  "tracker": "cbp-tracking.js",
+  "tracker": "",
   "languages": [
     {
       "code": "gb",

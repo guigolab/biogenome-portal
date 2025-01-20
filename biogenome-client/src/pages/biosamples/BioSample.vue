@@ -7,12 +7,9 @@
         <Suspense>
           <RelatedDataTable :accession="accession" :model="tab" />
           <template #fallback>
-            <VaSkeleton height="500px"></VaSkeleton>
+            <VaSkeleton height="450px"></VaSkeleton>
           </template>
         </Suspense>
-      </div>
-      <div v-else-if="tab === 'map'" style="height: 450px;" class="flex lg12 md12 sm12 xs12">
-        <LeafletMap :sample_accession="accession" />
       </div>
       <div v-else class="flex lg12 md12 sm12 xs12">
         <MetadataTreeCard :metadata="metadata" />
@@ -28,11 +25,10 @@ import DetailsHeader from '../../components/common/DetailsHeader.vue'
 import Tabs from '../../components/common/Tabs.vue'
 import MetadataTreeCard from '../../components/cards/MetadataTreeCard.vue'
 import GeoLocationService from '../../services/clients/GeoLocationService'
-import LeafletMap from '../../components/maps/LeafletMap.vue'
 import { AxiosError } from 'axios'
 import RelatedDataTable from '../../components/tables/RelatedDataTable.vue'
 import { useToast } from 'vuestic-ui/web-components'
-import pages from '../../../configs/pages.json'
+import pages from '../../configs/pages.json'
 
 const { init } = useToast()
 const props = defineProps<{

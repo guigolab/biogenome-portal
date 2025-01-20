@@ -4,8 +4,9 @@ from bson.json_util import dumps, JSONOptions, DatetimeRepresentation
 from mongoengine.queryset.visitor import Q
 from werkzeug.datastructures import MultiDict
 from celery.result import AsyncResult
-from werkzeug.exceptions import NotFound
+from werkzeug.exceptions import NotFound, BadRequest
 from db import models
+import json
 from . import query_visitors
 
 MODEL_MAPPER = {
@@ -74,45 +75,52 @@ def get_sort(args):
     return args.pop('sort_column', None), args.pop('sort_order', None)
 
 def get_items(model, immutable_dict):
+    try:
+        mapper = MODEL_MAPPER.get(model)
 
-    mapper = MODEL_MAPPER.get(model)
+        args = MultiDict(immutable_dict)
+        
+        filter = args.pop('filter', None)
 
-    args = MultiDict(immutable_dict)
-    
-    filter = args.pop('filter', None)
+        q_query = mapper.get('query')(filter) if filter else None
 
-    q_query = mapper.get('query')(filter) if filter else None
+        limit, offset = get_pagination(args)     
 
-    limit, offset = get_pagination(args)     
+        sort_column, sort_order = get_sort(args)
+        
+        format = args.pop('format', 'json')
+        
+        selected_fields = args.poplist('fields[]')
+        
+        query, q_query = create_query(args, q_query)
 
-    sort_column, sort_order = get_sort(args)
-    
-    format = args.pop('format', 'json')
-    
-    selected_fields = args.poplist('fields[]')
-    
-    query, q_query = create_query(args, q_query)
+        items = mapper.get('model').objects(**query)
 
-    items = mapper.get('model').objects(**query)
+        if q_query:
+            items = items.filter(q_query)
 
-    if q_query:
-        items = items.filter(q_query)
+        if sort_column and sort_order:
+            sort = '-' + sort_column if sort_order == 'desc' else sort_column
+            items = items.order_by(sort)
 
-    if sort_column and sort_order:
-        sort = '-' + sort_column if sort_order == 'desc' else sort_column
-        items = items.order_by(sort)
+        if selected_fields:
+            items = items.only(*selected_fields)
 
-    if selected_fields:
-        items = items.only(*selected_fields)
+        total = items.count()
 
-    total = items.count()
+        if format == 'tsv':
+            fields = selected_fields if selected_fields else mapper.get('tsv_fields')
+            return create_tsv(items.as_pymongo(), fields).encode('utf-8'), "text/tab-separated-values", 200
+        elif format == 'jsonl':
+            return generate_jsonlines(items.as_pymongo()), "application/jsonlines",200
+        response = dict(total=total, data=list(items.skip(offset).limit(limit).as_pymongo()))
+        return dump_json(response), "application/json", 200
+    except Exception as e:
+        raise BadRequest(description=f"{e}")
 
-    if format == 'tsv':
-        fields = selected_fields if selected_fields else mapper.get('tsv_fields')
-        return create_tsv(items.as_pymongo(), fields).encode('utf-8'), "text/tab-separated-values", 200
-
-    response = dict(total=total, data=list(items.skip(offset).limit(limit).as_pymongo()))
-    return dump_json(response), "application/json", 200
+def generate_jsonlines(pymongo_data):
+    for item in pymongo_data:
+        yield dump_json(item) + "\n"
 
 def create_query(args, q_query):
     query = {}

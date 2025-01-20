@@ -30,6 +30,11 @@ services:
   #   container_name: biogenome_cron
   #   env_file:
   #     - .env
+  # biogenome_cron:
+  #   build: ./cronjobs
+  #   container_name: biogenome_cron
+  #   env_file:
+  #     - .env
 
   biogenome_nginx:
     build:
@@ -63,6 +68,44 @@ services:
       - biogenome_server
       - biogenome_mongo
       - redis
+
+  # biogenome_cron:
+  #   build: ./cronjobs
+  #   container_name: biogenome_cron
+  #   env_file:
+  #     - .env
+
+  # biogenome_nginx:
+  #   build:
+  #     context: ./biogenome-client
+  #     dockerfile: Dockerfile
+  #     args:
+  #       - ROOT_NODE=$ROOT_NODE
+  #       - CESIUM_TOKEN=$CESIUM_TOKEN
+  #       - BASE_PATH=$BASE_PATH
+  #   container_name: "biogenome_nginx"
+  #   restart: always
+  #   volumes:
+  #     - node_modules:/biogenome-client/node_modules
+  #   environment:
+  #     - API_PORT=${API_PORT}
+  #     - API_HOST=${API_HOST}
+  #     - BASE_PATH=${BASE_PATH}
+  #   ports:
+  #       - "91:${API_PORT}"
+
+  # celery:
+  #   build: ./server
+  #   command: celery --app app.celery_app worker --loglevel=info --autoscale=1,1 --max-tasks-per-child=1
+  #   restart: always
+  #   volumes:
+  #     - ${ANNOTATIONS_PATH}:/annotations_data
+  #   env_file:
+  #     - .env
+  #   depends_on:
+  #     - biogenome_server
+  #     - biogenome_db
+  #     - redis
 
   redis:
     image: "redis:alpine"

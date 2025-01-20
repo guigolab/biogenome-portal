@@ -8,10 +8,50 @@
     To ensure accurate coordinate generation, it is recommended to provide decimal values for latitude and
     longitude.<br />
     If you do not wish to generate coordinates, please ensure that your spreadsheet does not contain columns
-    containing "lat or latitude" or "long or longitude."</p>
-  <div v-if="isLoading" class="row">
-    <div class="flex lg12 md12 sm12 xs12">
-      <va-card :stripe="!!messages.length" :stripe-color="isError ? 'danger' : 'success'">
+    labeled "Latitude" or "Longitude."</p>
+  <div class="row   justify-center">
+    <div class="flex lg8 md8">
+      <va-inner-loading :loading="isLoading">
+        <va-card :disabled="false">
+          <va-card-title>Import Options</va-card-title>
+          <va-form ref="uploadForm" tag="form" @submit.prevent="handleSubmit">
+            <va-card-content class="row">
+              <va-input class="flex lg12 md12" v-model="excelData.id" label="ID column name"
+                :messages="['Column name of the ID of the samples']"
+                :rules="[(v: string) => v.length > 0 || 'Field is mandatory']">
+              </va-input>
+              <va-input class="flex lg12 md12" v-model="excelData.taxid" label="TAXID column name"
+                :messages="['Column name of the Taxonomic identifier (NCBI) of the samples']"
+                :rules="[(v: string) => v.length > 0 || 'Field is mandatory']"></va-input>
+              <va-input class="flex lg12 md12" v-model="excelData.scientific_name" label="Scientific Name column name"
+                :messages="['Column name of the Scientific Name of the samples']"
+                :rules="[(v: string) => v.length > 0 || 'Field is mandatory']"></va-input>
+            </va-card-content>
+            <va-divider>File Options</va-divider>
+            <va-card-content class="row aling-end">
+              <va-select class="flex lg12 md12" v-model="excelData.option" :options="['SKIP', 'UPDATE']"
+                label="Existing ID behaviour"
+                :messages="['SKIP or UPDATE existing samples (related to ID column name)']"></va-select>
+              <div class="flex lg12 md12">
+                <va-counter label="Row number" v-model="excelData.header" :min="1"
+                  :messages="['Row number of the column definitions']" />
+              </div>
+              <div class="flex lg12 md12">
+                <va-file-upload color="warning" v-model="excel" file-types=".xlsx" type="single" undo>
+                  <!-- <va-chip color="info" icon="upload" flat :disabled="fileLoaded">Upload Spreadsheet</va-chip> -->
+                </va-file-upload>
+              </div>
+            </va-card-content>
+            <va-card-actions align="between">
+              <va-button color="danger" type="reset"> Reset Form </va-button>
+              <va-button :disabled="!excel" type="submit"> Submit Spreadsheet </va-button>
+            </va-card-actions>
+          </va-form>
+        </va-card>
+      </va-inner-loading>
+    </div>
+    <div class="flex lg4 md4">
+      <va-card :stripe="messages.length" :stripe-color="isError ? 'danger' : 'success'">
         <va-card-title>Logs</va-card-title>
         <va-card-content>
           <p v-if="uploadState">{{ uploadState }}</p>
@@ -81,7 +121,7 @@
 </template>
 <script setup lang="ts">
 import { onUnmounted, reactive, ref } from 'vue'
-import AuthService from '../services/AuthService'
+import AuthService from '../../services/clients/AuthService'
 import { AxiosError } from 'axios'
 import Header from '../components/Header.vue'
 

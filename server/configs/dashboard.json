@@ -1,0 +1,24 @@
+{
+    "title": {
+        "gb": "Catalan Initiative for the Earth BioGenome Project",
+        "es-ct": "Iniciativa Catalana per a l’Earth BioGenome Project"
+    },
+    "description": {
+        "gb": "The Catalan Initiative for the Earth BioGenome Project (CBP) aims to produce a detailed catalogue of the genome of eukaryotic species in the Catalan territories",
+        "es-ct": "La Iniciativa Catalana per a l’Earth BioGenome Project (CBP) té per objectiu la producció d’un catàleg detallat del genoma de les espècies eucariotes dels territoris de parla catalana."
+    },
+    "charts": [
+        {
+            "model": "organisms",
+            "field": "insdc_status",
+            "class": "flex lg6 md6 sm12 xs12",
+            "type": "pie"
+        },
+        {
+            "model": "organisms",
+            "field": "goat_status",
+            "class": "flex lg6 md6 sm12 xs12",
+            "type": "pie"
+        }
+    ]
+}

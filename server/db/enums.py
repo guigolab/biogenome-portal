@@ -1,5 +1,14 @@
 from enum import Enum
 
+MODELS=[
+    'biosamples',
+    'annotations',
+    'assemblies',
+    'experiments',
+    'organisms',
+    'local_samples'
+]
+
 class BrokerSource(Enum):
     LOCAL = 'local'
     COPO = 'copo'

@@ -3,56 +3,32 @@
 </template>
 
 <script async setup lang="ts">
-import { InfoBlock } from '../../data/types';
 import { Line } from 'vue-chartjs';
 import { useColors } from 'vuestic-ui';
-import { computed, watch, ref } from 'vue';
-import { useItemStore } from '../../stores/items-store';
+import { computed } from 'vue';
 
 const props = defineProps<{
-  infoBlock: InfoBlock,
+  data: Record<string, any>,
   label: string,
   chartId: string,
 }>();
 
 // Pinia store
-const itemStore = useItemStore();
 const colors = useColors();
 
 // Extract model and field from props
-const { model, field } = props.infoBlock;
-
 // Ref to hold the data
-const data = ref<Record<string, number>>({});
-
-// Initial data fetch from the store
-const fetchData = async () => {
-  data.value = await itemStore.getStats(model, field);
-};
-
-// Fetch data on mount
-await fetchData();
-
-// Watch for changes in the itemStore data related to `model` and `field`
-watch(
-  () => itemStore.stores[model].searchForm, // Watch this part of the store
-  async () => {
-    await fetchData(); // Fetch the updated data when changes are detected
-  },
-  { deep: true }
-);
-
 // Computed property to process the chart data
 const chartData = computed(() => {
   const label = props.label;
 
   // Process the data into monthly submission counts
-  const submissionDatesByMonth: Record<string, number> = Object.keys(data.value)
+  const submissionDatesByMonth: Record<string, number> = Object.keys(props.data)
     .filter((key) => key.includes('-'))
     .reduce((acc: Record<string, number>, key: string) => {
       const [year, month] = key.split('-');
       const date = `${year}-${month}`;
-      acc[date] = acc[date] ? acc[date] + data.value[key] : data.value[key];
+      acc[date] = acc[date] ? acc[date] + props.data[key] : props.data[key];
       return acc;
     }, {});
 

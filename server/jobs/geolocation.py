@@ -6,7 +6,6 @@ from celery import shared_task
 
 PROJECTS = os.getenv('PROJECTS')
 COUNTRIES_PATH = './countries.json'
-ROOT_NODE = os.getenv('ROOT_NODE')
 
 
 @shared_task(name='geo_locations_create_countries', ignore_result=False)

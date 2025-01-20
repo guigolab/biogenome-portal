@@ -1,0 +1,50 @@
+{
+    "title": {
+        "gb": "BioSamples",
+        "es-ct": "BioSamples"
+    },
+    "description": {
+        "gb": "These BioSamples include those associated with the CBP project, as well as those retrieved from assemblies and experiments metadata, all imported via a cronjob.",
+        "es-ct": "Aquestes BioSamples inclouen les associades amb el projecte CBP, així com les recuperades de les metadades d'assemblatges i experiments, totes importades mitjançant un cronjob."
+    },
+    "label": {
+        "gb": "biosamples",
+        "es-ct": "biosamples"
+    },
+    "filters": [
+        {
+            "key": "metadata.collection_date",
+            "type": "date"
+        },
+        {
+            "key": "metadata.lifestage",
+            "type": "select"
+        },
+        {
+            "key": "metadata.sex",
+            "type": "select"
+        }
+    ],
+    "columns": [
+        "accession",
+        "scientific_name",
+        "metadata.collection_date",
+        "metadata.sex",
+        "metadata.lifestage",
+        "metadata.tissue"
+    ],
+    "charts": [
+        {
+            "model": "biosamples",
+            "field": "metadata.sex",
+            "class": "flex lg12 md12 sm12 xs12",
+            "type": "bar"
+        },
+        {
+            "model": "biosamples",
+            "field": "metadata.lifestage",
+            "class": "flex lg12 md12 sm12 xs12",
+            "type": "bar"
+        }
+    ]
+}

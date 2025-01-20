@@ -16,3 +16,9 @@ class TaxonChildrenApi(Resource):
     def get(self, taxid):
         items = taxons_service.get_taxon_children(taxid)
         return Response(items.to_json(), mimetype="application/json", status=200)
+    
+class TaxonAncestoresApi(Resource):
+    def get(self, taxid):
+        resp = taxons_service.get_ancestors(taxid)
+        return Response(resp, mimetype="application/json", status=200)
+    

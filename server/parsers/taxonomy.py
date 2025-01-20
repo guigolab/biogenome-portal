@@ -22,6 +22,7 @@ def parse_taxon_from_ena_browser(xml):
                 lineage.append(node.attrib)
     taxon_lineage = []
     for node in lineage:
+        print(node)
         if node['scientificName'] == 'root':
             continue
         rank = node['rank'] if 'rank' in node.keys() else 'other'

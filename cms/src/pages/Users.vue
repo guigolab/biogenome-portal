@@ -47,9 +47,9 @@
 </template>
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import UserService from '../services/UserService'
- import { useGlobalStore } from '../stores/global-store';
-import AuthService from '../services/AuthService';
+import UserService from '../../services/clients/UserService'
+import { useGlobalStore } from '../../stores/global-store';
+import AuthService from '../../services/clients/AuthService';
 import { useToast } from 'vuestic-ui/web-components';
 
 

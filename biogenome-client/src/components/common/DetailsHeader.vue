@@ -1,20 +1,20 @@
 <template>
     <div v-if="details" class="row">
         <div class="flex lg12 md12 sm12 xs12">
-            <h1 style="margin: 0;" class="va-h1">{{ details.title }}</h1>
-            <p class="va-text-secondary" v-if="details.description">{{ details.description }}</p>
+            <h1 class="va-h1 m-0">{{ details.title }}</h1>
+            <p class="light-paragraph" v-if="details.description">{{ details.description }}</p>
         </div>
         <div class="flex lg12 md12 sm12 xs12">
             <div class="row">
                 <div v-if="details.button1" class="flex">
                     <va-button :round="false" preset="primary" icon="pets" :to="details.button1.route">{{
-        details.button1.label
-    }}</va-button>
+                        details.button1.label
+                    }}</va-button>
                 </div>
                 <div v-if="details.button2" class="flex">
                     <va-button :round="false" :to="details.button2.route" preset="primary" icon="fa-vial">{{
-        details.button2.label
-    }}</va-button>
+                        details.button2.label
+                    }}</va-button>
                 </div>
                 <div v-if="details.blobtoolkit" class="flex">
                     <va-button :round="false" target="_blank"
@@ -24,12 +24,12 @@
                 <div v-if="details.ncbiPath" class="flex">
                     <va-button :round="false" target="_blank" :href="details.ncbiPath" preset="primary"
                         icon-right="arrow_forward">{{
-        t('buttons.NCBI') }}</va-button>
+                            t('buttons.NCBI') }}</va-button>
                 </div>
                 <div v-if="details.ebiPath" class="flex">
                     <va-button :round="false" target="_blank" :href="details.ebiPath" preset="primary"
                         icon-right="arrow_forward">{{
-                        t('buttons.ENA') }}</va-button>
+                            t('buttons.ENA') }}</va-button>
                 </div>
             </div>
         </div>

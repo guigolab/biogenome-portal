@@ -1,9 +1,6 @@
 import { createI18n } from 'vue-i18n'
-import config from '../../configs/general.json'
 
 const fileNameToLocaleModuleDict = import.meta.globEager('./locales/*.json')
-
-
 
 const messages: { [P: string]: Record<string, string> } = {}
 Object.entries(fileNameToLocaleModuleDict)
@@ -18,7 +15,7 @@ Object.entries(fileNameToLocaleModuleDict)
     messages[localeNameLocaleMessagesTuple[0]] = localeNameLocaleMessagesTuple[1]
   })
 
-const browserLanguage = navigator.language || 'gb';
+const browserLanguage = navigator.language || 'en';
 
 let locale = browserLanguage.split('-')[0]; // Default to language code, e.g., 'es'
 
@@ -27,14 +24,15 @@ if (browserLanguage.toLowerCase() === 'es-ct' || browserLanguage.toLocaleLowerCa
   locale = 'es-ct';
 }
 // Check if locale is supported; if not, fall back to 'en'
-const supportedLocales = config.languages.map(l => l.code)
+// const supportedLocales = config.languages.map(l => l.code)
 
-if (!supportedLocales.includes(locale)) {
-  locale = 'gb';
-}
+// if (!supportedLocales.includes(locale)) {
+//   locale = 'gb';
+// }
+
 export default createI18n({
   legacy: false,
   locale: locale,
-  fallbackLocale: 'gb',
+  fallbackLocale: 'en',
   messages,
 })

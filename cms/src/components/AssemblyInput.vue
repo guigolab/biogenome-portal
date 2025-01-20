@@ -11,8 +11,8 @@
 </template>
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useAnnotationStore } from '../stores/annotation-store';
-import ItemService from '../services/ItemService';
+import { useAnnotationStore } from '../../../stores/annotation-store';
+import AssemblyService from '../../../services/clients/AssemblyService'
 
 const annotationStore = useAnnotationStore()
 const assemblies = ref<Record<string, any>[]>([])

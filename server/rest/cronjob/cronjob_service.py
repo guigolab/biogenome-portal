@@ -4,7 +4,6 @@ from werkzeug.exceptions import BadRequest, NotFound
 
 PROJECTS = os.getenv('PROJECTS')
 COUNTRIES_PATH = './countries.json'
-ROOT_NODE = os.getenv('ROOT_NODE')
 
 
 JOB_MODELS = {

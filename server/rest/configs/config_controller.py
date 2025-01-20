@@ -8,6 +8,6 @@ from extensions.cache import cache
 class ConfigApi(Resource):
 	@cache.cached(timeout=300)
 	def get(self):
-		config = config_service.load_json_config
+		config = config_service.load_json_config()
 		return Response(data.dump_json(config),mimetype="application/json", status=200)
 

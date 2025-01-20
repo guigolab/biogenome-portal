@@ -1,8 +1,8 @@
 <template>
     <div class="row">
         <div class="flex lg12 md12 sm12 xs12">
-            <va-input :loading="isLoading" v-model="input" class="pb-10" label="Annotation name"
-                placeholder="Insert a valid genome annotation name"
+            <va-input :loading="isLoading" v-model="input" class="pb-10"
+                label="Annotation name" placeholder="Insert a valid genome annotation name"
                 :rules="[(v: string) => v.length > 0 || 'Value is mandatory', (v: string) => isValid || 'An annotation with this name already exists']">
             </va-input>
         </div>
@@ -10,8 +10,9 @@
 </template>
 <script setup lang="ts">
 import { ref, watchEffect } from 'vue';
-import { useAnnotationStore } from '../stores/annotation-store';
-import ItemService from '../services/ItemService';
+import { useToast } from 'vuestic-ui/web-components';
+import AnnotationService from '../../../services/clients/AnnotationService';
+import { useAnnotationStore } from '../../../stores/annotation-store';
 
 const input = ref('')
 const isValid = ref(true)

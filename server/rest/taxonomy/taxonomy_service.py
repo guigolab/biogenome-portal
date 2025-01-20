@@ -6,13 +6,10 @@ from extensions.cache import cache
 import json
 import os
 
-ROOT_NODE = os.getenv('ROOT_NODE')
-
-
 def get_root_tree():
-    node = TaxonNode.objects(taxid=ROOT_NODE).first()
+    node = taxonomy_helper.create_or_update_root_taxon()
     if not node:
-        raise NotFound(description=f"{ROOT_NODE} not found!")
+        raise NotFound(description=f"Root node not found!")
     
     current_dir = os.path.dirname(os.path.abspath(__file__))
     static_dir = os.path.join(current_dir, '../../static')
@@ -25,10 +22,6 @@ def get_root_tree():
     
     if cached_tree is None:
         # If not cached, compute the tree
-        node = TaxonNode.objects(taxid=ROOT_NODE).first()
-        if not node:
-            raise NotFound(description=f"Taxon {ROOT_NODE} not found!")
-        
         # Generate the tree (this is the expensive operation)
         tree = taxonomy_helper.dfs_generator_iterative(node)
         

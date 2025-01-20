@@ -1,5 +1,41 @@
 from db.models import TaxonNode,Organism
 
+def create_or_update_root_taxon():
+    # Fetch the first element of the taxon lineage for each organism
+    parent_taxids = Organism.objects(slice_taxon_lineage=[0, 1]).scalar('taxon_lineage')
+
+    # Ensure unique parent taxids using set
+    unique_taxids = set(parent_taxids)
+
+    # Fetch taxon nodes matching the unique taxids
+    taxons = TaxonNode.objects(taxid__in=list(unique_taxids)).scalar('taxid', 'leaves')
+
+    # Build the children and calculate the total leaves
+    children = [{'taxid': t[0], 'leaves': t[1]} for t in taxons]
+    total_leaves = sum(t[1] for t in taxons if t[1] is not None)
+
+    # Check if root node already exists
+    root = TaxonNode.objects(taxid=1).first()
+
+    if root:
+        # Update the existing root node
+        root.update(
+            set__children=children,
+            set__leaves=total_leaves
+        )
+    else:
+        # Create a new root node
+        root = TaxonNode(
+            name='root',
+            taxid=1,
+            children=children,
+            leaves=total_leaves
+        )
+        root.save()
+
+    root.reload()
+    return root
+
 
 def save_taxons_and_update_hierachy(parsed_taxons, organism_obj):
     save_parsed_taxons(parsed_taxons)

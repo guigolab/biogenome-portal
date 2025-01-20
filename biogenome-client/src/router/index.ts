@@ -1,92 +1,89 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
-import DashboardPageVue from '../pages/dashboard/DashboardPage.vue'
-import general from '../../configs/general.json'
-import pages from '../../configs/pages.json'
-import { modelRoutes, mapRoutes } from './custom-routes'
+import Home from '../pages/Home.vue'
 
-const rootNode = import.meta.env.VITE_ROOT_NODE ? import.meta.env.VITE_ROOT_NODE : '131567'
 
 const defaultRoutes: Array<RouteRecordRaw> = [
   {
     path: '/:catchAll(.*)',
-    redirect: { name: 'dashboard' },
+    redirect: { name: 'home' },
   },
   {
-    name: 'dashboard',
+    name: 'home',
     path: '/',
-    component: DashboardPageVue,
+    component: Home,
   },
   {
-    path: '/taxonomy',
-    component: () => import('../pages/taxonomy/Taxonomy.vue'),
-    children: [
-      {
-        name: 'taxonomy',
-        path: '',
-        redirect: { name: 'wiki', params: { lineage: rootNode } },
-        meta: { name: 'taxonomy' }
-      },
-      {
-        name: 'taxon',
-        path: ':lineage',
-        props: true,
-        component: () => import('../pages/taxonomy/Taxon.vue'),
-        meta: { name: 'taxonomy' },
-        children: [
-          {
-            name: 'wiki',
-            path: '',
-            props: true,
-            component: () => import('../pages/taxonomy/components/Wikipedia.vue')
-          },
-          {
-            name: 'items',
-            path: ':model',
-            props: true,
-            component: () => import('../pages/common/Items.vue')
-          },
-          {
-            name: 'map',
-            path: 'map',
-            props: true,
-            component: () => import('../components/maps/LeafletMap.vue')
-          }
-        ]
-      }
-    ],
-    meta: { name: 'taxonomy' }
+    path: '/data',
+    redirect: { name: 'model', params: { model: 'organisms' } },
   },
+  {
+    name: 'model',
+    path: '/data/:model',
+    props: true,
+    component: () => import('../pages/Items.vue')
+  }
+  // {
+  //   name: 'data',
+  //   props: true,
+  //   path: ':model/:id',
+  //   component: () => import('../pages/Item.vue')
+  // },
+  // {
+  //   path: '/taxons/:taxid',
+  //   props: (route: RouteLocationNormalizedLoaded) => ({ taxid: route.query.taxid || 'root' }),
+  //   component: () => import('../layouts/DataLayout.vue'),
+  //   children: [
+  //     {
+  //       name: 'taxon',
+  //       props: true,
+  //       path: '',
+  //       component: () => import('../pages/DashBoard.vue')
+  //       // taxon details
+  //     },
+  //     {
+  //       name: 'items',
+  //       props: true,
+  //       path: ':model',
+  //       component: () => import('../pages/Items.vue')
+  //     },
+  //     {
+  //       name: 'item',
+  //       props: true,
+  //       path: ':model/:id',
+  //       component: () => import('../pages/Item.vue')
+  //     },
+  //     {
+  //       path: 'tree',
+  //       props: true,
+  //       component: () => import('../pages/Tree.vue'),
+  //       name: 'tree'
+  //     },
+  //     {
+  //       path: 'countries',
+  //       props: true,
+  //       component: () => import('../pages/Tree.vue'),
+  //       name: 'countries'
+  //     },
+  //     {
+  //       path: 'genome-browser',
+  //       props: true,
+  //       component: () => import('../pages/Tree.vue'),
+  //       name: 'browser'
+  //     }
+  //   ] as RouteRecordRaw[],
+  // }
 ]
 
-function createRoutes() {
+function initRoutes() {
 
   const routes = [...defaultRoutes]
 
-  const modelConfigs = { ...pages } as Record<string, any>
-
-  if (general.maps && general.maps.length) routes.push(...mapRoutes.filter(r => general.maps.includes(r.name)) as RouteRecordRaw[])
-
-  const validNames = Object.keys(modelConfigs)
-
-  const customRoutes = modelRoutes
-    .filter(route => validNames.includes(route.meta.name))
-    .map(route => {
-
-      const { title, description } = modelConfigs[route.meta.name]
-      const config = { title, description }
-      //inject configs props
-      return {
-        props: { config },
-        ...route
-      }
-    }) as RouteRecordRaw[]
-
-  routes.push(...customRoutes)
+  // if (general.cms) routes.push(...cmsRoutes)
 
   return routes
 }
 
-const routes = [...createRoutes()]
+const routes = initRoutes()
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.VITE_BASE_PATH ? import.meta.env.VITE_BASE_PATH : import.meta.env.BASE_URL),

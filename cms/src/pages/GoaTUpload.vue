@@ -1,14 +1,31 @@
 <template>
-  <Header :title="title" :description="description" />
-  <div class="row">
-    <div class="flex">
-      <p class="va-text-secondary">
-        The tsv format have to be compliant with <a target="_blank"
-          href="https://docs.google.com/spreadsheets/d/1eC6jQctRoUaeGWWDbb1qsWs-7ajC462nnJdHK4N3ivw"><b>this</b></a></p>
-      <p class="va-text-secondary">
-        <b>IMPORTANT:</b> the species' INSDC related data (in case of insdc_submitted status) have to be imported
-        separatedly
-      </p>
+  <h4 class="va-h4"> GoaT Report Upload
+  </h4>
+  <p class="mb-4"> Upload a goat report, the format MUST be compliant with <a target="_blank"
+      href="https://docs.google.com/spreadsheets/d/1eC6jQctRoUaeGWWDbb1qsWs-7ajC462nnJdHK4N3ivw"><b>THIS</b></a></p>
+  <p> IMPORTANT: the species' related data (in case of insdc_submitted status) have to be imported separatedly!!
+  </p>
+  <div class="row   justify-center">
+    <div class="flex lg8 md8">
+      <va-card>
+        <va-inner-loading :loading="isLoading">
+          <va-form tag="form" @submit.prevent="handleSubmit">
+            <va-card-content>
+              <div class="row">
+                <div class="flex lg3 md3">
+                  <va-file-upload uploadButtonText="Upload GoaT report" v-model="tsv" file-types=".tsv" type="single"
+                    undo>
+                  </va-file-upload>
+                </div>
+              </div>
+            </va-card-content>
+            <va-card-actions align="between">
+              <va-button color="danger" type="reset"> Reset </va-button>
+              <va-button :disabled="!tsv" type="submit"> Submit </va-button>
+            </va-card-actions>
+          </va-form>
+        </va-inner-loading>
+      </va-card>
     </div>
   </div>
   <div v-if="isLoading" class="row">
@@ -49,7 +66,7 @@
 </template>
 <script setup lang="ts">
 import { onUnmounted, ref } from 'vue'
-import AuthService from '../services/AuthService'
+import AuthService from '../../services/clients/AuthService'
 import { AxiosError } from 'axios'
 import Header from '../components/Header.vue';
 import { useToast } from 'vuestic-ui';

@@ -1,0 +1,53 @@
+{
+    "title": {
+        "gb": "Organisms",
+        "es-ct": "Organismes"
+    },
+    "description": {
+        "gb": "List of organisms currently targeted by the CBP",
+        "es-ct": "Llista d'organismes actualment objectiu del CBP"
+    },
+    "filters":[
+        {
+            "key": "insdc_status",
+            "type": "select"
+        },
+        {
+            "key": "goat_status",
+            "type": "select"
+        },
+        {
+            "key": "target_list_status",
+            "type": "select"
+        }
+    ],
+    "columns":[
+        "image",
+        "scientific_name",
+        "taxid",
+        "insdc_common_name",
+        "insdc_status",
+        "goat_status",
+        "target_list_status"
+    ],
+    "charts":[
+        {
+            "model": "organisms",
+            "field": "insdc_status",
+            "class": "flex lg6 md6 sm12 xs12",
+            "type": "pie"
+        },
+        {
+            "model": "organisms",
+            "field": "goat_status",
+            "class": "flex lg6 md6 sm12 xs12",
+            "type": "pie"
+        },
+        {
+            "model": "organisms",
+            "field": "target_list_status",
+            "class": "flex lg6 md6 sm12 xs12",
+            "type": "pie"
+        }
+    ]
+}

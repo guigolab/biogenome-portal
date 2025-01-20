@@ -6,7 +6,7 @@
             </VaTab>
         </template>
     </VaTabs>
-    <VaDivider style="margin-top: 0;" />
+    <VaDivider class="mt-0" />
 </template>
 
 <script setup lang="ts">

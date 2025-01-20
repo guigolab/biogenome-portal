@@ -8,6 +8,43 @@ export interface ConfigType {
   [key: string]: any[]; // Adjust the type of values if necessary
 }
 
+
+export interface AppConfig {
+  dashboard: ConfigModel
+  general: Record<string, any>
+  ui: Record<string, any>
+  models: Record<DataModels, ConfigModel>
+}
+
+export type ConfigModel = {
+  title?: Record<string, any>
+  description?: Record<string, any>
+  label?: Record<string, any>
+  filters?: ConfigFilter[]
+  columns?: string[]
+  charts?: InfoBlock[]
+}
+
+export type Pages = DataModels | 'dashboard'
+
+export type Frequency = {
+  model: DataModels,
+  field: string,
+  data: Record<string, number>
+}
+
+export interface ChoroplethData {
+  countryName: string;
+  countryId: string;
+  occurrences: number;
+  geojson: GeoJSON.Feature;
+}
+
+export type CoordinatesFrequency = {
+  coordinates: [number, number],
+  count: number,
+  images: string[]
+}
 export type TLineChartData = ChartData<'line'>
 export type TBarChartData = ChartData<'bar'>
 export type TBubbleChartData = ChartData<'bubble'>
@@ -18,13 +55,28 @@ export interface ErrorResponseData {
 }
 export type TChartData = TLineChartData | TBarChartData | TBubbleChartData | TDoughnutChartData | TPieChartData
 
-export type LangOption = Record<'es-ct' | 'gb', string>
+export type LangOption = Record<'es-ct' | 'en', string>
 
 export type ComponentType = 'biosample' | 'organism' | 'assembly' | 'localSample' | 'experiment' | 'annotation';
 
 export interface PageHeaderConfig {
   title: LangOption,
   description: LangOption
+}
+export type DataModels = 'biosamples' | 'experiments' | 'organisms' | 'annotations' | 'assemblies' | 'local_samples'
+export const dataModels: DataModels[] = [
+  'biosamples',
+  'experiments',
+  'organisms',
+  'annotations',
+  'assemblies',
+  'local_samples',
+];
+export type Stat = {
+  key: DataModels,
+  count: number,
+  icon?: string
+  color?: string
 }
 
 export type Model = 'biosamples' | 'experiments' | 'organisms' | 'annotations' | 'assemblies' | 'users' | 'local_samples'
@@ -82,7 +134,6 @@ export interface SearchForm {
 export interface ConfigFilter {
   key: string
   type: 'date' | 'select' | 'input' | 'checkbox'
-
 }
 export interface OrganismSearchForm extends SearchForm {
   insdc_status: string
@@ -113,11 +164,7 @@ export type LocalSampleSearchForm = SearchForm
 
 export type ModelSearchForm = OrganismSearchForm | AssemblySearchForm | ReadSearchForm | BioSampleSearchForm
 
-export interface TaxonNode extends Node {
-  name: string
-  rank: string
-  taxid: string
-}
+
 
 export type BreadCrumb = {
   name: string
@@ -125,11 +172,12 @@ export type BreadCrumb = {
   active: boolean
 }
 
-export type TreeNode = {
+export type TaxonNode = {
   name: string
   rank: string
-  taxid: string
-  leaves: number
+  taxid: string,
+  children?: string[],
+  leaves?: number
 }
 
 export type Publication = {

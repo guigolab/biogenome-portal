@@ -1,32 +1,91 @@
 <template>
-  <Layout />
+  <VaLayout :top="{ fixed: true, order: 3, }" :right="{ fixed: true, absolute: breakpoints.smDown, order: 2, }">
+    <template #top>
+      <NavBar />
+      <TaxonNavbar v-if="taxonomyStore.currentTaxon" :taxid="taxonomyStore.currentTaxon.taxid"
+        :leaves="taxonomyStore.currentTaxon.leaves ?? 0"></TaxonNavbar>
+    </template>
+    <template #right>
+      <TaxonSidebar />
+    </template>
+    <template #content>
+      <main class="layout fluid va-gutter-5">
+        <router-view v-slot="{ Component }">
+          <Transition name="fade">
+            <component :is="Component" />
+          </Transition>
+        </router-view>
+      </main>
+    </template>
+  </VaLayout>
+
 </template>
-<script setup>
-import { onMounted } from 'vue'
-import Layout from './layouts/Layout.vue'
-import config from '../configs/general.json'
+<script setup lang="ts">
+import { useBreakpoint } from 'vuestic-ui';
+import NavBar from './components/Navbar.vue'
+import TaxonSidebar from './components/taxon/TaxonSidebar.vue'
+import { useTaxonomyStore } from './stores/taxonomy-store';
+import { computed } from 'vue';
+import TaxonNavbar from './components/taxon/TaxonNavbar.vue';
+import {
+    Chart as ChartJS,
+    Title,
+    Tooltip,
+    Legend,
+    BarElement,
+    LineElement,
+    LinearScale,
+    PointElement,
+    CategoryScale,
+    ArcElement,
+    Filler,
+} from 'chart.js'
 
+ChartJS.register(Title, Tooltip, Legend, LineElement, LinearScale, PointElement, CategoryScale, Filler, ArcElement, BarElement)
 
+const breakpoints = useBreakpoint()
+const taxonomyStore = useTaxonomyStore()
 
-onMounted(() => {
-  document.title = config.title
-  if (config.tracker) {
-    setConfigTracker()
-  }
-})
-
-function setConfigTracker(){
-  const src = import.meta.env.VITE_BASE_PATH ? import.meta.env.VITE_BASE_PATH + `/tracking/${config.tracker}` : `/tracking/${config.tracker}`
-    const trackerScript = document.createElement('script')
-    trackerScript.setAttribute("type", "text/javascript")
-    trackerScript.setAttribute("src", src)
-    document.head.appendChild(trackerScript)
-}
+const detailsBtn = computed(() => taxonomyStore.showSidebar ? { icon: 'fa-chevron-left', text: 'Hide details' } : { icon: 'fa-chevron-right', text: 'Show details' })
 
 </script>
 
 <style lang="scss">
 @import 'scss/main.scss';
+
+/* Initial state when the element is inserted */
+.slide-enter-from {
+  transform: translateY(-100%);
+  opacity: 0;
+}
+
+/* Active transition state when the element is entering */
+.slide-enter-active {
+  transition: all 0.3s ease;
+}
+
+/* Final state when the element has entered */
+.slide-enter-to {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* Initial state when the element is leaving */
+.slide-leave-from {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* Active transition state when the element is leaving */
+.slide-leave-active {
+  transition: all 0.3s ease;
+}
+
+/* Final state when the element has left */
+.slide-leave-to {
+  transform: translateY(-100%);
+  opacity: 0;
+}
 
 #app {
   font-family: 'Source Sans Pro', Avenir, Helvetica, Arial, sans-serif;
@@ -34,14 +93,119 @@ function setConfigTracker(){
   -moz-osx-font-smoothing: grayscale;
   color: #2c3e50;
 }
-.mr-2{
+
+.row-equal {
+  .flex {
+    .va-card {
+      height: 100%;
+    }
+  }
+}
+
+.custom-chip {
+  border: 2px solid;
+  border-radius: 1rem;
+  padding: 3px;
+  font-size: 0.75rem;
+}
+
+.mr-2 {
   margin-right: 2px;
 }
-.ml-2{
+
+.mt-0 {
+  margin-top: 0;
+}
+
+.m-0 {
+  margin: 0
+}
+
+.p-0 {
+  padding: 0 !important;
+}
+
+.pb-0 {
+  padding-bottom: 0;
+}
+
+.ml-2 {
   margin-left: 2px;
 }
+
+.navbar-h {
+  height: 4rem;
+}
+
+.h-450 {
+  height: 450;
+}
+
+
+.w-300 {
+  width: 300px;
+}
+
+.mt-6 {
+  margin-top: 6;
+}
+
+.pt-0 {
+  padding-top: 0;
+}
+
+
+.p-10 {
+  padding: 10;
+}
+
+
+.pb-10 {
+  padding-bottom: 10px;
+}
+
+.ml-6 {
+  margin-left: 6px;
+}
+
+.mb-15 {
+  margin-bottom: 15px;
+}
+
+.mh-450 {
+  min-height: 450px;
+}
+
+.w-250 {
+  width: 250px;
+}
+
+.mw-200 {
+  min-width: 200px
+}
+
+.mw-250 {
+  min-width: 250px
+}
+
+.mb-6 {
+  margin-bottom: 6px
+}
+
+.gap-1 {
+  gap: 1rem
+}
+
+.mb-12 {
+  margin-bottom: 12px
+}
+
 body {
   margin: 0;
+}
+
+.light-paragraph {
+  color: var(--va-light, #666E75);
 }
 
 .fade-enter-from,
