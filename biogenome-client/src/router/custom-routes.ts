@@ -1,7 +1,7 @@
 export const modelRoutes = [
     {
         path: 'assemblies',
-        component: () => import('../pages/Data.vue'),
+        component: () => import('../pages/Items.vue'),
         name: 'assemblies',
         meta: { name: 'assemblies' }
     },
@@ -17,7 +17,7 @@ export const modelRoutes = [
     {
         path: 'annotations',
         name: 'annotations',
-        component: () => import('../pages/Data.vue'),
+        component: () => import('../pages/Items.vue'),
         meta: { name: 'annotations' }
     },
     {
@@ -31,7 +31,7 @@ export const modelRoutes = [
     {
         path: 'experiments',
         name: 'experiments',
-        component: () => import('../pages/Data.vue'),
+        component: () => import('../pages/Items.vue'),
         meta: { name: 'experiments' }
     },
     {
@@ -45,7 +45,7 @@ export const modelRoutes = [
     {
         path: 'biosamples',
         name: 'biosamples',
-        component: () => import('../pages/Data.vue'),
+        component: () => import('../pages/Items.vue'),
         meta: { name: 'biosamples' }
     },
     {
@@ -57,14 +57,8 @@ export const modelRoutes = [
 
     },
     {
-        path: 'status',
-        name: 'status',
-        component: () => import('../pages/Data.vue'),
-        meta: { name: 'status' }
-    },
-    {
         path: 'organisms',
-        component: () => import('../pages/Data.vue'),
+        component: () => import('../pages/Items.vue'),
         name: 'organisms',
         meta: { name: 'organisms' }
     },
@@ -78,7 +72,7 @@ export const modelRoutes = [
     {
         path: 'local_samples',
         name: 'local_samples',
-        component: () => import('../pages/Data.vue'),
+        component: () => import('../pages/Items.vue'),
         meta: { name: 'local_samples' }
     },
     {

@@ -8,6 +8,7 @@ ARG SITE_LOGO
 ARG CESIUM_TOKEN
 
 ARG BASE_PATH
+ARG API_PATH
 
 WORKDIR /client
 
@@ -25,6 +26,7 @@ ENV VITE_BASE_PATH=${BASE_PATH}
 ENV VITE_MATOMO_URL=${MATOMO_URL}
 ENV VITE_MATOMO_SITE_ID=${MATOMO_SITE_ID}
 ENV VITE_SITE_LOGO=${SITE_LOGO}
+ENV VITE_API_PATH=${API_PATH}
 
 
 
@@ -32,8 +34,6 @@ RUN npm run build
 
 # production stage
 FROM nginx:stable-alpine
-
-ARG API_PATH
 
 # Copy the nginx templates
 COPY root.template /etc/nginx/templates/root.template

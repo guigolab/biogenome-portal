@@ -4,6 +4,8 @@ import json
 from celery import shared_task
 from helpers import taxonomy as taxonomy_helper
 
+ROOT_NODE = os.getenv('ROOT_NODE', 1)
+
 
 
 @shared_task(name='helpers_handle_orphans', ignore_result=False)
@@ -16,7 +18,11 @@ def handle_orphan_organisms():
 
 
 def compute_tree():
-    node = taxonomy_helper.create_or_update_root_taxon()
+    node = taxonomy_helper.create_or_update_root_taxon(ROOT_NODE)
+    if not node:
+        print(f"{node} not found")
+        return
+    
     tree = taxonomy_helper.dfs_generator_iterative(node)
     # Resolve the path to the static folder
     current_dir = os.path.dirname(os.path.abspath(__file__))

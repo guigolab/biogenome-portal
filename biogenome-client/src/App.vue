@@ -23,10 +23,10 @@
 <script setup lang="ts">
 import { useBreakpoint } from 'vuestic-ui';
 import NavBar from './components/Navbar.vue'
-import TaxonSidebar from './components/taxon/TaxonSidebar.vue'
+import TaxonSidebar from './components/TaxonSidebar.vue'
 import { useTaxonomyStore } from './stores/taxonomy-store';
 import { computed } from 'vue';
-import TaxonNavbar from './components/taxon/TaxonNavbar.vue';
+import TaxonNavbar from './components/TaxonNavbar.vue';
 import {
     Chart as ChartJS,
     Title,

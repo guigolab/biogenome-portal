@@ -14,7 +14,7 @@
     </div>
 </template>
 <script setup lang="ts">
-import D3HyperTree from '../components/tree/D3HyperTree.vue'
+import D3HyperTree from '../components/D3HyperTree.vue'
 import { useI18n } from 'vue-i18n'
 import { TaxonNode } from '../data/types';
 import { useRouter } from 'vue-router';
@@ -25,7 +25,6 @@ const itemsStore = useItemStore()
 const router = useRouter()
 async function setCurrentTaxon(taxon: TaxonNode) {
     const { taxid } = taxon
-
     router.push({ name: 'tree', params: { taxid } })
 }
 

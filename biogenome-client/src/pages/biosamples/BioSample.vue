@@ -29,7 +29,10 @@ import { AxiosError } from 'axios'
 import RelatedDataTable from '../../components/tables/RelatedDataTable.vue'
 import { useToast } from 'vuestic-ui/web-components'
 import pages from '../../configs/pages.json'
+import { useRoute } from 'vue-router'
 
+const route = useRoute()
+route
 const { init } = useToast()
 const props = defineProps<{
   accession: string

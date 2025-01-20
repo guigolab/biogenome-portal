@@ -111,10 +111,10 @@ import Chart from '../components/Chart.vue';
 import Table from '../components/Table.vue';
 import { computed, inject, watch } from 'vue'
 import { DataModels, LangOption, AppConfig, ConfigModel } from '../data/types'
-import ExportTSV from '../components/modals/ExportTSV.vue'
-import CreateChart from '../components/modals/CreateChart.vue'
+import ExportTSV from '../components/ModelExport.vue'
+import CreateChart from '../components/ModelChart.vue'
 import Header from '../components/Header.vue';
-import TaxonSearch from '../components/taxon/TaxonSearch.vue';
+import TaxonSearch from '../components/TaxonSearch.vue';
 import ModelFilters from '../components/ModelFilters.vue';
 import { useItemStore } from '../stores/items-store';
 import { useTaxonomyStore } from '../stores/taxonomy-store';

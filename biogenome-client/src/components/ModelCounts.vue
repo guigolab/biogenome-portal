@@ -22,7 +22,7 @@
 import { Stat } from '../data/types';
 import { iconMap } from '../composable/useIconMap';
 import { computed } from 'vue';
-import Counter from './common/Counter.vue';
+import Counter from './Counter.vue';
 const props = defineProps<{
     counts: Stat[]
 }>()

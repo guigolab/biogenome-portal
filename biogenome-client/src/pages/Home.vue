@@ -62,7 +62,7 @@
 <script setup lang="ts">
 import { computed, inject, onMounted } from 'vue';
 import { useStatsStore } from '../stores/stats-store';
-import TaxonSearch from '../components/taxon/TaxonSearch.vue';
+import TaxonSearch from '../components/TaxonSearch.vue';
 import ModelCounts from '../components/ModelCounts.vue';
 import { AppConfig, LangOption } from '../data/types';
 import Header from '../components/Header.vue';

@@ -42,9 +42,10 @@ import D3HyperTree from '../components/tree/D3HyperTree.vue';
 import { useRouter } from 'vue-router';
 import { TaxonNode } from '../data/types';
 import Table from '../components/tree/Table.vue';
+
 const itemStore = useItemStore()
 const taxonomyStore = useTaxonomyStore()
-const rootNode = import.meta.env.VITE_ROOT_NODE ? import.meta.env.VITE_ROOT_NODE : '131567'
+const rootNode = import.meta.env.VITE_ROOT_NODE ? import.meta.env.VITE_ROOT_NODE : '1'
 const breakpoints = useBreakpoint()
 const isLoading = ref(false)
 const statsService = useStatsStore()

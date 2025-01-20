@@ -14,6 +14,15 @@ export default ({ mode }) => {
   // import.meta.env.VITE_PORT available here with: process.env.VITE_PORT
   const basePath = env.VITE_BASE_PATH ? env.VITE_BASE_PATH + '/' : undefined
   return defineConfig({
+    server: {
+      proxy: {
+        '/api': {
+          target: 'https://genome.crg.es/ebp/api', // Backend API
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api/, ''), // Remove `/api` prefix
+        },
+      },
+    },
     base: basePath,
     resolve: {
       alias: {

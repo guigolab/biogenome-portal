@@ -22,6 +22,8 @@ services:
       - ${ANNOTATIONS_PATH}:/annotations_data
     env_file:
       - .env
+    ports:
+     - 5000:5000
     depends_on:
       - redis
 
