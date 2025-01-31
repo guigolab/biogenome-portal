@@ -10,10 +10,10 @@
                 <div class="flex lg12 md12 sm12 xs12">
                     <VaInput v-model="filter" placeholder="Type to search metadata" clearable>
                         <template #append>
-                            <VaButton style="margin-left: 5px;" preset="primary" color="secondary"
+                            <VaButton style="margin-left: 5px;" preset="primary" color="textPrimary"
                                 @click="copyToClipboard" icon="fa-copy">
                             </VaButton>
-                            <VaButton style="margin-left: 5px;" preset="primary" color="secondary"
+                            <VaButton style="margin-left: 5px;" preset="primary" color="textPrimary"
                                 @click="downloadJsonFile" icon="fa-cloud-download">
 
                             </VaButton>

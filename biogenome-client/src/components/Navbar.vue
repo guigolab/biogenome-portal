@@ -2,50 +2,76 @@
   <VaNavbar shadowed bordered>
     <template #left>
       <VaNavbarItem class="image-wrapper">
-        <VaImage fit="contain" class="image-h" lazy :src="imgUrl">
+        <VaImage fit="contain" class="image-h" lazy :src="generatedLink">
         </VaImage>
       </VaNavbarItem>
     </template>
     <template #right>
       <VaNavbarItem>
+        <VaButton :to="{ name: 'home' }" preset="secondary" icon="fa-house" color="textPrimary">{{ !hideIcon ?
+          t('nav.home') : ''
+          }}
+        </VaButton>
         <VaMenu :options="models" :text-by="(item: any) => t(`models.${item.text}`)"
           @selected="(obj) => router.push({ name: 'model', params: { model: obj.value } })">
           <template #anchor>
-            <VaButton preset="secondary" icon="fa-database" color="textPrimary">{{ breakpoint.smUp ? t('nav.data') : ''
+            <VaButton preset="secondary" icon="fa-database" color="textPrimary">{{ !hideIcon ? t('nav.data') : ''
               }}
             </VaButton>
           </template>
         </VaMenu>
         <VaMenu>
           <template #anchor>
-            <VaButton icon="fa-wrench" preset="secondary" color="textPrimary">{{ breakpoint.smUp ? t('nav.tools') : ''
+            <VaButton icon="fa-wrench" preset="secondary" color="textPrimary">{{ !hideIcon ? t('nav.tools') : ''
               }}
             </VaButton>
           </template>
-          <VaMenuItem @selected="router.push({ name: 'tree' })">
-            {{ t('nav.taxExplorer') }}
+          <VaMenuItem>
+            <RouterLink :style="{ 'color': colors.textPrimary }" :to="{ name: 'tree' }">
+              {{ t('nav.taxExplorer') }}
+            </RouterLink>
           </VaMenuItem>
-          <VaMenuItem @selected="router.push({ name: 'tree' })">
-            {{ t('nav.genomeBrowser') }}
+          <VaMenuItem v-if="config.models.assemblies">
+            <RouterLink :style="{ 'color': colors.textPrimary }" :to="{ name: 'jbrowse' }">
+              {{ t('nav.genomeBrowser') }}
+            </RouterLink>
           </VaMenuItem>
+          <VaMenuItem v-if="hasGoat" @selected="downloadGoatReport"> {{ t('buttons.goat') }}</VaMenuItem>
         </VaMenu>
         <VaMenu :options="settings">
           <template #anchor>
-            <VaButton preset="secondary" icon="fa-cog" color="textPrimary">{{ breakpoint.smUp ? t('nav.settings') : '' }}
+            <VaButton preset="secondary" icon="fa-cog" color="textPrimary">{{ !hideIcon ? t('nav.settings') : ''
+              }}
             </VaButton>
           </template>
+          <VaMenuItem v-if="config.general.cms">
+            <RouterLink :style="{ 'color': colors.textPrimary }" :to="{ name: 'login' }">
+              Login
+            </RouterLink>
+          </VaMenuItem>
+          <VaMenuItem>
+            <a :style="{ 'color': colors.textPrimary }" href="https://github.com/guigolab/biogenome-portal"
+              target="_blank">
+              GitHub
+            </a>
+          </VaMenuItem>
+          <VaMenuItem>
+            <a :style="{ 'color': colors.textPrimary }" href="https://guigolab.github.io/biogenome-portal/"
+              target="_blank">
+              API Docs
+            </a>
+          </VaMenuItem>
         </VaMenu>
         <VaMenu>
           <template #anchor>
             <VaButton color="textPrimary">{{ locale }}
             </VaButton>
           </template>
-          <VaMenuItem @selected="handleLang(lang)" v-for="lang in languages"  :key="lang.code">{{ t(`language.${lang.name}`)}}
+          <VaMenuItem @selected="handleLang(lang)" v-for="lang in languages" :key="lang.code">{{
+            t(`language.${lang.name}`) }}
           </VaMenuItem>
         </VaMenu>
       </VaNavbarItem>
-
-
     </template>
   </VaNavbar>
 </template>
@@ -53,42 +79,67 @@
 <script setup lang="ts">
 import { computed, inject } from 'vue';
 // import LanguageDropdown from './LanguageDropdown.vue'
-import { iconMap } from '../composable/useIconMap';
-import { DataModels, AppConfig } from '../data/types';
-import { useRouter } from 'vue-router';
-import { useBreakpoint } from 'vuestic-ui';
+import { AppConfig } from '../data/types';
+import { RouterLink, useRouter } from 'vue-router';
+import { useBreakpoint, useColors, useToast } from 'vuestic-ui';
 import { useI18n } from 'vue-i18n';
+import GoaTService from '../services/GoaTService';
 
+
+const { colors } = useColors()
 const { t, locale } = useI18n()
 const breakpoint = useBreakpoint()
-
 const config = inject('appConfig') as AppConfig
 const router = useRouter()
-const generalConfigs = ['general', 'dashboard', 'ui']
+const generalConfigs = ['general', 'ui']
 
+const { init } = useToast()
 
 const appLogo = config.general.logo
+const hasGoat = config.general.goat
+const generatedLink = computed(() => appLogo && appLogo.includes('http') ?
+  appLogo :
+  new URL(`/src/assets/${appLogo}`, import.meta.url).href
+)
 
+const hideIcon = computed(() => breakpoint.sm || breakpoint.xs)
 const languages = computed(() => config.general.languages as { code: string, name: string }[])
-const imgUrl = new URL(`/src/assets/${appLogo}`, import.meta.url).href
 
 const models = computed(() =>
   Object.keys(config.models)
     .filter(k => !generalConfigs.includes(k))
     .map((k) => {
-      return { icon: iconMap[k as DataModels].icon, text: k, value: k }
+      return { text: k, value: k }
     }
     ))
 
-const features = ['Taxonomy Explorer', 'Genome Browser', '3D Map']
-
-const settings = ['Login', 'Languages', 'GitHub', 'API Docs']
+const settings = ['Login', 'GitHub', 'API Docs']
 //retrieve configured models 
 
 function handleLang(lang: { code: string, name: string }) {
   locale.value = lang.code
 }
 
+async function downloadGoatReport() {
+  try {
+    const response = await GoaTService.getGoatReport()
+    const data = response.data
+    const href = URL.createObjectURL(data);
+    let name = 'goat_report.tsv'
+    // create "a" HTML element with href to file & click
+    const link = document.createElement('a');
+    link.href = href;
+    link.setAttribute('download', name); //or any other extension
+    document.body.appendChild(link);
+    link.click();
+    // clean up "a" element & remove ObjectURL
+    document.body.removeChild(link);
+    URL.revokeObjectURL(href);
+  } catch (err) {
+    console.error(err)
+    init({ message: 'Error downloading Goat Report', color: 'danger' })
+  }
+}
 </script>
 <style>
 .nav-p {
@@ -103,7 +154,7 @@ function handleLang(lang: { code: string, name: string }) {
 }
 
 .image-h {
-  height: 5rem;
+  height: 3.5rem;
   width: 100%;
 }
 

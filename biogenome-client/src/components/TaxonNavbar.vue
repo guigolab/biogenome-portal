@@ -6,16 +6,16 @@
             </VaNavbarItem>
             <VaNavbarItem class="navbar-item-slot">
                 <TaxonBreadcrumbs :taxid="taxid" />
-                <VaButtonDropdown v-if="leaves > 0" hide-icon label="..." color="background-secondary">
+                <VaButtonDropdown preset="secondary" v-if="leaves > 0" hide-icon label="..." color="textPrimary">
                     <TaxonChildren :taxid="taxid" />
                 </VaButtonDropdown>
             </VaNavbarItem>
         </template>
         <template #right>
             <VaNavbarItem class="navbar-item-slot">
-                <VaButton @click="taxonomyStore.showSidebar = !taxonomyStore.showSidebar" color="background-secondary">
+                <VaButton @click="taxonomyStore.showSidebar = !taxonomyStore.showSidebar" preset="primary" color="textPrimary">
                     {{ t(detailsBtn) }}</VaButton>
-                <VaButton @click="taxonomyStore.resetTaxon" style="margin-left: 5px;" color="background-secondary"
+                <VaButton @click="taxonomyStore.resetTaxon" style="margin-left: 5px;" preset="primary" color="textPrimary"
                     icon="fa-close">{{ t('taxon.clearBtn') }}
                 </VaButton>
             </VaNavbarItem>

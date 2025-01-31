@@ -1,17 +1,22 @@
 {
-  "title": "Catalan Initiative for the Earth BioGenome Project",
-  "description": "The Biogenome portal app provides a user friendly way to explore biodiversity genomics",
-  "nav": {
-    "logo": "EBP-Logo.png",
-    "url": "https://www.biogenoma.cat"
+  "title": {
+    "en": "Catalan Initiative for the Earth BioGenome Project",
+    "es-ct": "Iniciativa Catalana per a l’Earth BioGenome Project"
   },
+  "description": {
+    "en": "The Catalan Initiative for the Earth BioGenome Project (CBP) aims to produce a detailed catalogue of the genome of eukaryotic species in the Catalan territories",
+    "es-ct": "La Iniciativa Catalana per a l’Earth BioGenome Project (CBP) té per objectiu la producció d’un catàleg detallat del genoma de les espècies eucariotes dels territoris de parla catalana."
+  },
+  "logo": "CBPLogo.png",
+  "externalLink": "https://www.biogenoma.cat",
   "cms": true,
   "goat": true,
-  "ebp_related": true,
-  "tracker": "",
+  "ebpRelated": true,
+  "insdcStatus": true,
+  "showCountries": true,
   "languages": [
     {
-      "code": "gb",
+      "code": "en",
       "name": "english"
     },
     {
@@ -20,11 +25,7 @@
     }
   ],
   "wiki": {
-    "gb": "https://en.m.wikipedia.org/wiki",
+    "en": "https://en.m.wikipedia.org/wiki",
     "es-ct": "https://ca.m.wikipedia.org/wiki"
-  },
-  "maps": [
-    "samples-map",
-    "countries"
-  ]
+  }
 }

@@ -15,8 +15,8 @@
                 <div class="flex">
                     <div class="row">
                         <div class="flex">
-                            <VaButton @click="itemStore.showTsvModal = !itemStore.showTsvModal" icon="fa-table"
-                                preset="primary" color="textPrimary">
+                            <VaButton @click="itemStore.showTsvModal = !itemStore.showTsvModal"
+                                icon="fa-file-arrow-down" preset="primary" color="textPrimary">
                                 {{ t('items.data.reportBtn') }}
                             </VaButton>
                         </div>
@@ -48,7 +48,7 @@
                 </div>
             </div>
         </VaCardContent>
-        <CreateChart :model="model" :filters="filters" />
+        <CreateChart :key="model" :model="model" :filters="filters" />
         <ExportTSV :model="model" :columns="columns" />
     </VaCard>
 </template>
@@ -71,10 +71,6 @@ const config = inject('appConfig') as AppConfig
 const props = defineProps<{
     model: DataModels
 }>()
-
-const strippedName = computed(() => taxonomyStore.currentTaxon && taxonomyStore.currentTaxon.name.length > 9 ?
-    taxonomyStore.currentTaxon.name.slice(0, 9) + '..'
-    : taxonomyStore.currentTaxon?.name)
 
 const itemStore = useItemStore()
 const taxonomyStore = useTaxonomyStore()

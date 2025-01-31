@@ -35,15 +35,15 @@
                                     </div>
                                 </VaCardContent>
                                 <VaCardActions align="stretch" vertical>
-                                    <VaButton color="secondary" preset="primary" icon-right="fa-up-right-from-square"
+                                    <VaButton color="textPrimary" preset="primary" icon-right="fa-up-right-from-square"
                                         v-if="detailsObject.downloadLink" :href="detailsObject.downloadLink">
                                         {{t('buttons.download')}}</VaButton>
-                                    <VaButton color="secondary" preset="primary" icon-right="fa-up-right-from-square"
+                                    <VaButton color="textPrimary" preset="primary" icon-right="fa-up-right-from-square"
                                         v-if="detailsObject.speciesLink" :to="detailsObject.speciesLink">
                                         {{ item ? item.scientific_name || item.metadata.scientific_name : ""
                                         }}
                                     </VaButton>
-                                    <VaButton color="secondary" preset="primary" icon-right="fa-up-right-from-square"
+                                    <VaButton color="textPrimary" preset="primary" icon-right="fa-up-right-from-square"
                                         v-if="detailsObject.sampleLink" :to="detailsObject.sampleLink">
                                         {{ item ? item.sample_accession || item.metadata.sample_accession ||
                                             item.metadata['sample derived from'] : ""
@@ -65,11 +65,11 @@
                                     </div>
                                 </VaCardContent>
                                 <VaCardActions align="stretch" vertical>
-                                    <VaButton icon-right="fa-up-right-from-square" color="secondary" preset="primary"
+                                    <VaButton icon-right="fa-up-right-from-square" color="textPrimary" preset="primary"
                                         v-if="detailsObject.ncbiLink" :href="detailsObject.ncbiLink" target="_blank">
                                         NCBI
                                     </VaButton>
-                                    <VaButton icon-right="fa-up-right-from-square" color="secondary" preset="primary"
+                                    <VaButton icon-right="fa-up-right-from-square" color="textPrimary" preset="primary"
                                         v-if="detailsObject.enaLink" :href="detailsObject.enaLink" target="_blank">
                                         ENA</VaButton>
                                     <VaButton icon-right="fa-up-right-from-square" color="#9b518a" preset="primary"
@@ -89,7 +89,7 @@
                                     </div>
                                 </VaCardContent>
                                 <VaCardActions align="stretch" vertical>
-                                    <VaButton icon-right="fa-up-right-from-square" preset="primary" color="secondary"
+                                    <VaButton icon-right="fa-up-right-from-square" preset="primary" color="textPrimary"
                                         :href="getLink(pub)" target="_blank" v-for="pub in detailsObject.publications"
                                         :key="pub.id">
                                         {{ pub.source }}
@@ -292,12 +292,10 @@ const mapField = (key: string) => {
 
 const handleClick = async (event: any, key: DataModels | 'reads') => {
     const { item } = event
-
     if (key !== 'reads') {
         const idKey = getIdKey(key)
         router.push({ name: 'item', params: { model: key, id: item[idKey] } })
     }
-
 }
 
 function convertBytesToMBOrGB(submittedBytes: string): string {
@@ -349,7 +347,6 @@ async function createGenomeBrowserSession() {
     //fetch chromosomes and related annotations
     await gBStore.fetchAnnotations(accession)
     await gBStore.fetchChromosomes(accession)
-
     // Set assembly
     if (props.model === 'annotations') {
         await gBStore.fetchAssembly(accession)

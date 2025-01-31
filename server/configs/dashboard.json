@@ -1,10 +1,10 @@
 {
     "title": {
-        "gb": "Catalan Initiative for the Earth BioGenome Project",
+        "en": "Catalan Initiative for the Earth BioGenome Project",
         "es-ct": "Iniciativa Catalana per a l’Earth BioGenome Project"
     },
     "description": {
-        "gb": "The Catalan Initiative for the Earth BioGenome Project (CBP) aims to produce a detailed catalogue of the genome of eukaryotic species in the Catalan territories",
+        "en": "The Catalan Initiative for the Earth BioGenome Project (CBP) aims to produce a detailed catalogue of the genome of eukaryotic species in the Catalan territories",
         "es-ct": "La Iniciativa Catalana per a l’Earth BioGenome Project (CBP) té per objectiu la producció d’un catàleg detallat del genoma de les espècies eucariotes dels territoris de parla catalana."
     },
     "charts": [

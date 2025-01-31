@@ -2,7 +2,7 @@ import { ref } from 'vue';
 import ConfigService from '../services/ConfigService';
 import { AppConfig, ConfigModel, DataModels, dataModels } from '../data/types';
 
-const generalConfigs = ['general', 'dashboard', 'ui']
+const generalConfigs = ['general','ui']
 
 export function useAppSettings() {
   const configs = ref<AppConfig | null>(null);

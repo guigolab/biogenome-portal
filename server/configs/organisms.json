@@ -1,10 +1,10 @@
 {
     "title": {
-        "gb": "Organisms",
+        "en": "Organisms",
         "es-ct": "Organismes"
     },
     "description": {
-        "gb": "List of organisms currently targeted by the CBP",
+        "en": "List of organisms currently targeted by the CBP",
         "es-ct": "Llista d'organismes actualment objectiu del CBP"
     },
     "filters":[

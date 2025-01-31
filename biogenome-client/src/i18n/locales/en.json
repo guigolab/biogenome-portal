@@ -1,13 +1,25 @@
 {
     "home": {
         "taxonomy": {
-            "title": "Explore Taxonomy",
-            "description": "Search and select a taxon to filter its related data",
+            "title": "Filter by Taxonomy",
+            "description": "Search and select a taxon to see its details",
             "exploreBtn": "Explore Taxonomy",
             "viewBtn": "View"
         },
         "data": {
             "title": "Explore by Data"
+        },
+        "features": {
+            "title": "Features"
+        },
+        "stats": {
+            "title": ""
+        },
+        "goat": {
+            "title": "Genomes on a Tree Status"
+        },
+        "insdc": {
+            "title": "INSDC Submission Status"
         }
     },
     "nav": {
@@ -17,7 +29,8 @@
         "docs": "API Docs",
         "data": "Data",
         "tools": "Tools",
-        "settings": "Settings"
+        "settings": "Access",
+        "home": "Home"
     },
     "tree": {
         "title": "Taxonomy Explorer",
@@ -51,7 +64,9 @@
             "accession": "Assembly Accession: ",
             "sampleAccession": "Sample Accession: ",
             "metadata": "Show Metadata",
-            "chromosomes": "Chromosomes"
+            "chromosomes": "Chromosomes",
+            "modalTitle": "About the genome browser",
+            "modelDescription": "The page features the JBrowse 2 Linear Genome Viewer (JBrowse 2), an interactive tool for exploring genome sequences and annotations. Users can navigate along the genome, zoom in on specific regions, and, when available, visualize annotations such as genes and features. The browser also allows downloading FASTA sequences for selected regions, enabling further analysis. If annotations are present, users can inspect gene structures, coding regions, and other genomic features in a clear, interactive format."
         }
     },
     "items": {
@@ -78,7 +93,7 @@
         }
     },
     "item": {
-        "internalLinks":"Internal Links",
+        "internalLinks": "Internal Links",
         "externalLinks": "External Links",
         "genomeBrowserLink": "View in Genome Browser",
         "publications": "Related Publications",
@@ -87,49 +102,49 @@
         "data": "Related Data",
         "details": "View Details",
         "coordinates": "Geographical Locations",
-        "status":"Sequencing Status: ",
+        "status": "Sequencing Status: ",
         "targetList": "Target List Status: "
     },
-    "insdc":{
-        "title":"INSDC Status",
-        "biosample":{
+    "insdc": {
+        "title": "INSDC Status",
+        "biosample": {
             "label": "Biosample Submitted",
-            "description":"At least one INSDC BioSample is linked to this organisms"
+            "description": "At least one INSDC BioSample is linked to this organisms"
         },
-        "experiment":{
+        "experiment": {
             "label": "Reads Submitted",
-            "description":"At least one INSDC Experiment is linked to a BioSample related to this organism"
+            "description": "At least one INSDC Experiment is linked to a BioSample related to this organism"
         },
-        "assembly":{
+        "assembly": {
             "label": "Assemblies Submitted",
-            "description":"At least one INSDC Assembly is linked to a BioSample related to this organism"
+            "description": "At least one INSDC Assembly is linked to a BioSample related to this organism"
         }
     },
-    "goat":{
-        "title":"GOAT Status",
-        "collected":{
+    "goat": {
+        "title": "GOAT Status",
+        "collected": {
             "label": "Sample Collected",
-            "description":"A sample for the species has been collected by field workers but has not yet been sent to a sequencing center"
+            "description": "A sample for the species has been collected by field workers but has not yet been sent to a sequencing center"
         },
-        "acquired":{
+        "acquired": {
             "label": "Sample Acquired",
-            "description":"A sample for the species has been acquired and is “in house” at the sequencing centre, but has not been processed yet"
+            "description": "A sample for the species has been acquired and is “in house” at the sequencing centre, but has not been processed yet"
         },
-        "generation":{
+        "generation": {
             "label": "Data Generation",
-            "description":"Sequencing data are currently being generated for the species"
+            "description": "Sequencing data are currently being generated for the species"
         },
-        "assembly":{
+        "assembly": {
             "label": "In Assembly",
-            "description":"All sequencing and related data have been collected and genome assembly is in process"
+            "description": "All sequencing and related data have been collected and genome assembly is in process"
         },
-        "submitted":{
+        "submitted": {
             "label": "INSDC Submitted",
-            "description":"The species’ genome assembly has been submitted to INSDC and is openly accessible under the generating project’s Bioproject ID"
+            "description": "The species’ genome assembly has been submitted to INSDC and is openly accessible under the generating project’s Bioproject ID"
         },
-        "publication":{
+        "publication": {
             "label": "Publication Available",
-            "description":"Assembly has an associated publication with a DOI or PubMed ID"
+            "description": "Assembly has an associated publication with a DOI or PubMed ID"
         }
     },
     "fieldLookup": {
@@ -155,7 +170,9 @@
     },
     "buttons": {
         "download": "Download",
-        "submit": "Submit"
+        "submit": "Submit",
+        "view": "View",
+        "goat": "GoaT Report"
     },
     "models": {
         "organisms": "Organisms",
@@ -163,7 +180,8 @@
         "assemblies": "Assemblies",
         "biosamples": "BioSamples",
         "local_samples": "Local Samples",
-        "annotations": "Annotations"
+        "annotations": "Annotations",
+        "reads": "Reads"
     },
     "language": {
         "english": "English",

@@ -2,8 +2,8 @@
     <div>
         <div class="row justify-center">
             <div style="text-align: center;" class="flex">
-                <Header title-class="va-h1" description-class="va-text-secondary" :title="t('taxon.title')"
-                    :description="t('taxon.description')" />
+                <Header title-class="va-h1" description-class="va-text-secondary" :title="t('tree.title')"
+                    :description="t('tree.description')" />
             </div>
         </div>
         <div style="position: relative;" class="row justify-center">
@@ -50,7 +50,7 @@ async function setCurrentTaxon(taxon: TaxonNode) {
 
 /* Tree container, initially hidden */
 .tree-container {
-    flex: 0 0 66.6%;
+    flex: 0 0 100%;
     /* Occupies 50% of the width */
     overflow: hidden;
     margin: auto;

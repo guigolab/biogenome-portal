@@ -1,7 +1,7 @@
 <template>
     <VaModal hide-default-actions close-button v-model="itemStore.showTsvModal">
         <div class="va-gutter-5 layout fluid">
-            <h3 class="va-h3">{{t('reportModal.title')}}</h3>
+            <h3 class="va-h3">{{ t('reportModal.title') }}</h3>
             <p class="light-paragraph mb-15">
                 {{ t('reportModal.description') }}
             </p>
@@ -49,11 +49,12 @@
                         <div v-if="fieldExists && fieldToQuery" class="flex">
                             <VaButton :disabled="fields.includes(fieldToQuery)" @click="addField" color="success"
                                 icon="fa-plus">
-                                {{t('reportModal.addFieldBtn')}}</VaButton>
+                                {{ t('reportModal.addFieldBtn') }}</VaButton>
                         </div>
                         <div class="flex">
                             <VaButton @click="inputField = ''; fieldToQuery = ''" color="danger"
-                                :disabled="!fieldToQuery" icon="fa-close">{{t('reportModal.clearFieldBtn')}}
+                                :disabled="!fieldToQuery" icon="fa-close">
+                                {{ t('reportModal.clearFieldBtn') }}
                             </VaButton>
                         </div>
                     </div>
@@ -62,7 +63,7 @@
                             <VaSelect v-model="selectedFields" :label="t('download.fieldsLabel')" :options="fields"
                                 :placeholder="t('download.fieldsPlaceholder')" multiple>
                                 <template #content="{ value }">
-                                    <VaChip size="small" v-for="v in value" :key="v" style="margin: 4px;">
+                                    <VaChip outline color="textPrimary" size="small" v-for="v in value" :key="v" style="margin: 4px;">
                                         {{ v }}
                                     </VaChip>
                                 </template>
@@ -74,7 +75,7 @@
             </VaInnerLoading>
         </div>
         <template #footer>
-            <VaButton preset="submit" :loading="itemStore.isTSVLoading" @click="downloadData()"> {{ t('buttons.submit')
+            <VaButton :loading="itemStore.isTSVLoading" @click="downloadData()"> {{ t('buttons.submit')
                 }} </VaButton>
         </template>
     </VaModal>

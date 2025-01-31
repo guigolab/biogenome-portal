@@ -6,7 +6,7 @@
                     <h3 class="va-h6"> {{ t(title) }}</h3>
                 </div>
                 <div class="flex">
-                    <VaButton color="secondary" preset="secondary" @click="showDetails = !showDetails">{{showDetails?'Hide':'Show'}} Details</VaButton>
+                    <VaButton color="textPrimary" preset="secondary" @click="showDetails = !showDetails">{{showDetails?'Hide':'Show'}} Details</VaButton>
                 </div>
             </div>
         </VaCardContent>
@@ -35,7 +35,7 @@
                             <VaButton
                                 :icon="statusIndex !== -1 && statusIndex < i ? 'far-circle' : 'far-circle-check'"
                                 preset="secondary"
-                                :color="currentStatus === step.label ? 'success' : 'textPrimary'">
+                                :color="currentStatus === step.value ? 'success' : 'textPrimary'">
                                 {{ t(step.label) }}
                             </VaButton>
                             <p class="va-text-secondary"> {{ t(step.description) }}</p>

@@ -9,6 +9,7 @@ export const useGlobalStore = defineStore('global', {
     return {
       isSidebarVisible: true,
       error: false,
+      fluid:false,
       message: '',
       toast: useToast().init
     }

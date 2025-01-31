@@ -10,7 +10,7 @@
                         </div>
                         <div class="flex">
                             <Counter :duration="2000" :target-value="count" />
-                            <p> {{ t(`sidebar.${key}`) }}
+                            <p> {{ t(`models.${key}`) }}
 
                             </p>
                         </div>

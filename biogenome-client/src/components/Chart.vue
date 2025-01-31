@@ -4,16 +4,16 @@
             <div class="row align-center justify-space-between">
                 <p class="flex va-text-bold">{{ chartTitle }}</p>
                 <div class="flex">
-                    <VaChip square color="secondary" size="small"
+                    <VaButton color="textPrimary" size="small"
                         @click="downloadCanvasAsPNG(`${chart.model}.${chart.field}`, `${chart.type}.png`)">
-                        {{t('buttons.download')}}
-                    </VaChip>
+                        {{ t('buttons.download') }}
+                    </VaButton>
                 </div>
             </div>
         </VaCardContent>
         <VaCardContent>
-            <component class="va-chart" :key="`${chart.model}.${chart.field}`" :is="chartComponents[chart.type]" :data="{...freq}"
-                :chart-id="`${chart.model}.${chart.field}`" :label="t(`models.${chart.model}`)" />
+            <component class="va-chart" :key="`${chart.model}.${chart.field}`" :is="chartComponents[chart.type]"
+                :data="{ ...freq }" :chart-id="`${chart.model}.${chart.field}`" :label="t(`models.${chart.model}`)" />
         </VaCardContent>
     </VaCard>
 </template>
@@ -45,22 +45,14 @@ const freq = ref<Record<string, number>>({})
 
 watch(() => itemStore.searchForm, async () => {
     const f = await itemStore.getFieldFrequencies(props.chart.model as DataModels, props.chart.field, props.ignoreQuery)
-    freq.value = {...f}
-},{immediate: true, deep: true})
+    freq.value = { ...f }
+}, { immediate: true, deep: true })
 
 const chartTitle = computed(() => {
     const { field, model } = props.chart;
     let key = field.includes('metadata.') ? field.split('.').pop() : field.replace('_', ' ');
     return `${model.charAt(0).toUpperCase() + model.slice(1)} by ${key}`;
 });
-
-// const chartOptions = computed(() => {
-//     const total = Object.values(props.data).reduce((acc, val) => acc + val, 0)
-//     return getChartOptions('bar', total)
-// })
-// const chartData = computed(() => {
-//     return processChartData(props.data, props.label)
-// })
 
 function downloadCanvasAsPNG(canvasId: string, filename: string) {
     // Get the canvas element

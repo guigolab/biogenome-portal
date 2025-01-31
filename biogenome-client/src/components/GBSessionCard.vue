@@ -8,7 +8,7 @@
 
                 </div>
                 <div class="flex">
-                    <VaButton @click="emits('onDelete')" color="secondary" preset="secondary" icon="fa-close" />
+                    <VaButton @click="emits('onDelete')" color="textPrimary" preset="secondary" icon="fa-close" />
                 </div>
             </div>
             <div class="row align-center">
@@ -43,6 +43,7 @@
             <MetadataTreeCard v-if="selectedAssembly" :id="selectedAssembly.assembly_name"
                 :metadata="Object.entries(selectedAssembly.metadata)" />
         </VaModal>
+
     </VaCard>
 
 
@@ -50,7 +51,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import Jbrowse2 from '../components/Jbrowse2.vue';
-import { useGenomeBrowserStore } from '../stores/genome-browser-store';
 import Chromosomes from '../components/Chromosomes.vue';
 import { Annotation, Assembly, ChromosomeInterface } from '../data/types';
 import MetadataTreeCard from './MetadataTreeCard.vue';
@@ -58,7 +58,6 @@ import { useI18n } from 'vue-i18n';
 
 
 const { t } = useI18n()
-const gBStore = useGenomeBrowserStore()
 
 const props = defineProps<{
     assembly: Assembly,
@@ -71,7 +70,6 @@ const props = defineProps<{
 const emits = defineEmits(['onDelete'])
 
 const showModal = ref(false)
-
 const selectedAssembly = ref<Assembly>()
 
 function showMetadata(ass: Assembly) {

@@ -1,10 +1,10 @@
 {
     "title": {
-        "gb": "Experiments",
+        "en": "Experiments",
         "es-ct": "Experimentos"
     },
     "description": {
-        "gb": "Experiments and Reads imported from INSDC under the CBP",
+        "en": "Experiments and Reads imported from INSDC under the CBP",
         "es-ct": "Experiments i lectures importades de l'INSDC sota l'accés al projecte CBP"
     },
     "filters":[

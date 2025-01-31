@@ -1,84 +1,198 @@
 <template>
   <div>
-    <div class="row align-center hero-section section-mb">
+    <div class="row align-center justify-center hero-section">
       <div class="flex lg12 md12 sm12 xs12">
         <div class="row justify-center">
-          <div class="flex">
-            <VaIcon style="text-align: center;" name="app-logo" size="6rem" />
+          <div style="padding: 0;" class="flex lg4 md6 sm6 xs6">
+            <VaImage fit="contain" :ratio="1" lazy :src="generatedLink">
+            </VaImage>
           </div>
         </div>
         <div class="row justify-center align-center">
-          <div style="text-align: center;" class="flex lg12 md12 sm12 xs12">
-            <Header :title="title" :description="description" description-class="description-class" title-class="va-h1">
+          <div style="text-align: center;padding-top: 0;" class="flex lg12 md12 sm12 xs12">
+            <Header :title="title" :description="description" description-class="description-class va-text-secondary"
+              title-class="va-h1">
             </Header>
           </div>
         </div>
       </div>
     </div>
-  </div>
-  <div class="row align-center">
-    <div class="flex">
-      <h2 class="va-h2">
-        {{ t('home.taxonomy.title') }}
-      </h2>
-      <p>{{ t('home.taxonomy.description') }}</p>
+    <div class="row align-center">
+      <div class="flex">
+        <h2 class="va-h2">
+          {{ t('home.taxonomy.title') }}
+        </h2>
+        <p class="va-text-secondary">{{ t('home.taxonomy.description') }}</p>
+      </div>
     </div>
-  </div>
-  <div class="row justify-center section-mb">
-    <div class="flex lg12 md12 sm12 xs12">
-      <TaxonSearch />
-      <div class="row">
-        <div class="flex lg6 md6 sm12 xs12">
-          <VaButton preset="primary" block :to="{ name: 'tree' }" color="secondary">
-            {{ t('home.taxonomy.exploreBtn') }}
-          </VaButton>
-        </div>
-        <div v-if="rootTaxon" class="flex lg6 md6 sm12 xs12">
-          <VaButton @click="updateTaxon(rootTaxon)" preset="primary" block>
-            {{ t('home.taxonomy.viewBtn') }} {{ rootTaxon.name }}
-          </VaButton>
+    <div class="row justify-center section-mb">
+      <div class="flex lg12 md12 sm12 xs12">
+        <TaxonSearch />
+        <div class="row">
+          <div class="flex lg6 md6 sm12 xs12">
+            <VaButton preset="primary" block :to="{ name: 'tree' }" color="textPrimary">
+              {{ t('home.taxonomy.exploreBtn') }}
+            </VaButton>
+          </div>
+          <div v-if="rootTaxon" class="flex lg6 md6 sm12 xs12">
+            <VaButton @click="updateTaxon(rootTaxon)" preset="primary" block>
+              {{ t('home.taxonomy.viewBtn') }} {{ rootTaxon.name }}
+            </VaButton>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-  <div class="row align-end justify-space-between">
-    <div class="flex">
-      <h2 class="va-h2">
-        {{ t('home.data.title') }}
-      </h2>
+    <div class="row align-center justify-center">
+      <div class="flex">
+        <h2 style="text-align: center;" class="va-h2">
+          {{ t('home.data.title') }}
+        </h2>
+      </div>
+      <div v-if="taxonomyStore.currentTaxon" class="flex">
+        <TaxonChip />
+      </div>
     </div>
-    <div v-if="taxonomyStore.currentTaxon" class="flex">
-      <TaxonChip />
+    <ModelCounts class="section-mb" :counts="stats"></ModelCounts>
+    <div v-if="hasGoat" class="row section-mb">
+      <div class="flex lg12 md12 sm12 xs12">
+        <div class="row align-center justify-space-between">
+          <div class="flex">
+            <h2 style="text-align: center;" class="va-h2">
+              {{ t('home.goat.title') }}
+            </h2>
+          </div>
+          <div v-if="taxonomyStore.currentTaxon" class="flex">
+            <TaxonChip />
+          </div>
+          <div class="flex">
+            <VaButton @click="downloadGoatReport" icon="fa-file-arrow-down">{{ t('buttons.goat') }}</VaButton>
+          </div>
+        </div>
+        <div class="row">
+          <div v-for="chart, index in goatCharts" :key="`${index}-${chart.model}-${chart.field}`" :class="chart.class">
+            <Chart :chart="(chart as InfoBlock)" :index="index" :ignore-query="false" />
+          </div>
+        </div>
+      </div>
+    </div>
+    <div v-if="insdcStatus" class="row section-mb">
+      <div class="flex lg12 md12 sm12 xs12">
+        <div class="row align-center justify-space-between">
+          <div class="flex">
+            <h2 style="text-align: center;" class="va-h2">
+              {{ t('home.insdc.title') }}
+            </h2>
+          </div>
+          <div v-if="taxonomyStore.currentTaxon" class="flex">
+            <TaxonChip />
+          </div>
+        </div>
+        <div class="row">
+          <div class="flex lg12 md12 sm12 xs12">
+            <Chart :ignore-query="false"
+              :chart="{ model: 'organisms', field: 'insdc_status', type: 'bar', class: '' }" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row justify-center">
+      <div class="flex">
+        <h2 style="text-align: center;" class="va-h2">
+          {{ t('home.features.title') }}
+        </h2>
+      </div>
+    </div>
+    <div class="row row-equal">
+      <div class="flex lg6 md6 sm12 xs12">
+        <VaCard>
+          <VaCardContent>
+            <div class="row justify-space-between align-center">
+              <div class="flex">
+                <h3 class="va-h3">{{ t('tree.title') }}</h3>
+
+              </div>
+              <div class="flex">
+                <VaButton color="textPrimary" :to="{ name: 'tree' }">{{ t('buttons.view') }}</VaButton>
+
+              </div>
+            </div>
+          </VaCardContent>
+          <VaDivider style="margin: 0;" />
+          <VaCardContent>
+            <p class="va-text-secondary">{{ t('tree.description') }}</p>
+          </VaCardContent>
+        </VaCard>
+      </div>
+      <div v-if="settings.models.assemblies" class="flex lg6 md6 sm12 xs12">
+        <VaCard>
+          <VaCardContent>
+            <div class="row justify-space-between align-center">
+              <div class="flex">
+                <h3 class="va-h3">{{ t('genomeBrowser.title') }}</h3>
+              </div>
+              <div class="flex">
+                <VaButton color="textPrimary" :to="{ name: 'jbrowse' }">{{ t('buttons.view') }}</VaButton>
+              </div>
+            </div>
+          </VaCardContent>
+          <VaDivider style="margin: 0;" />
+          <VaCardContent>
+            <p class="va-text-secondary">{{ t('genomeBrowser.assembly.modelDescription') }}</p>
+          </VaCardContent>
+        </VaCard>
+      </div>
     </div>
   </div>
-  <ModelCounts :counts="stats"></ModelCounts>
-
-
-  <!-- 
-      hero section
-      stats section
-      charts section
-      features section
-     
-     -->
 </template>
 <script setup lang="ts">
 import { computed, inject, onMounted, ref, watch } from 'vue';
 import { useStatsStore } from '../stores/stats-store';
 import TaxonSearch from '../components/TaxonSearch.vue';
 import ModelCounts from '../components/ModelCounts.vue';
-import { AppConfig, LangOption, TaxonNode } from '../data/types';
+import { AppConfig, InfoBlock, LangOption, TaxonNode } from '../data/types';
 import Header from '../components/Header.vue';
 import TaxonService from '../services/TaxonService';
 import { useTaxonomyStore } from '../stores/taxonomy-store';
 import { useI18n } from 'vue-i18n';
 import TaxonChip from '../components/TaxonChip.vue';
-
+import { useItemStore } from '../stores/items-store';
+import Chart from '../components/Chart.vue';
+import { useToast } from 'vuestic-ui/web-components';
+import GoaTService from '../services/GoaTService';
 
 const { t } = useI18n()
 const statsStore = useStatsStore()
 const taxonomyStore = useTaxonomyStore()
 const settings = inject('appConfig') as AppConfig
+const itemStore = useItemStore()
+
+const { init } = useToast()
+const appLogo = settings.general.logo
+
+const hasGoat = settings.general.goat //show goat status
+const insdcStatus = settings.general.insdcStatus //show indsc status
+
+
+const goatCharts = [
+  {
+    "model": "organisms",
+    "field": "goat_status",
+    "class": "flex lg6 md6 sm12 xs12",
+    "type": "pie"
+  },
+  {
+    "model": "organisms",
+    "field": "target_list_status",
+    "class": "flex lg6 md6 sm12 xs12",
+    "type": "pie"
+  }
+
+]
+const generatedLink = computed(() => appLogo && appLogo.includes('http') ?
+  appLogo :
+  new URL(`/src/assets/${appLogo}`, import.meta.url).href
+)
 
 const currentTaxon = computed(() => taxonomyStore.currentTaxon)
 const rootNode = import.meta.env.VITE_ROOT_NODE ?
@@ -86,20 +200,21 @@ const rootNode = import.meta.env.VITE_ROOT_NODE ?
 const dashboardDefaultTitle = "BioGenome Portal"
 const dashboardDefaultDescription = "Welcome to the BioGenome Portal, explore all the data contained in this instance"
 
-const title = computed<LangOption | string>(() => settings.dashboard.title as LangOption ?? dashboardDefaultTitle)
-const description = computed<LangOption | string>(() => settings.dashboard.description as LangOption ?? dashboardDefaultDescription)
+const title = computed<LangOption | string>(() => settings.general.title as LangOption ?? dashboardDefaultTitle)
+const description = computed<LangOption | string>(() => settings.general.description as LangOption ?? dashboardDefaultDescription)
 
 const stats = computed(() => statsStore.currentStats.length ? statsStore.currentStats : statsStore.portalStats)
 
 const rootTaxon = ref<TaxonNode>()
 
 watch(() => currentTaxon.value, async () => {
+  itemStore.searchForm = { taxon_lineage: currentTaxon.value?.taxid }
   if (!currentTaxon.value) {
     statsStore.currentStats = []
     return
   }
   await statsStore.getTaxonStats(currentTaxon.value?.taxid)
-})
+}, { immediate: true })
 //fetch root node on mounting
 onMounted(async () => {
   const { data } = await TaxonService.getTaxon(rootNode)
@@ -111,7 +226,26 @@ async function updateTaxon(root: TaxonNode) {
   taxonomyStore.showSidebar = true
 }
 
-
+async function downloadGoatReport() {
+  try {
+    const response = await GoaTService.getGoatReport()
+    const data = response.data
+    const href = URL.createObjectURL(data);
+    let name = 'goat_report.tsv'
+    // create "a" HTML element with href to file & click
+    const link = document.createElement('a');
+    link.href = href;
+    link.setAttribute('download', name); //or any other extension
+    document.body.appendChild(link);
+    link.click();
+    // clean up "a" element & remove ObjectURL
+    document.body.removeChild(link);
+    URL.revokeObjectURL(href);
+  } catch (err) {
+    console.error(err)
+    init({ message: 'Error downloading Goat Report', color: 'danger' })
+  }
+}
 </script>
 <style>
 .section-mb {
@@ -119,7 +253,7 @@ async function updateTaxon(root: TaxonNode) {
 }
 
 .hero-section {
-  height: 50vh;
+  height: 80vh;
 }
 
 .description-class {

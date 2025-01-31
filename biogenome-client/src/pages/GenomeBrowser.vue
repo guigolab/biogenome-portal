@@ -1,9 +1,14 @@
 <template>
     <div>
-        <div class="row">
+        <div class="row align-end justify-space-between">
             <div class="flex">
-                <Header title-class="va-h1" description-class="va-text-secondary"
-                    :title="t('genomeBrowser.title')" :description="t('genomeBrowser.description')"></Header>
+                <Header title-class="va-h1" description-class="va-text-secondary" :title="t('genomeBrowser.title')"
+                    :description="t('genomeBrowser.description')"></Header>
+            </div>
+            <div class="flex">
+                <VaIcon @click="showTip = !showTip" color="info" name="fa-circle-question">
+
+                </VaIcon>
             </div>
         </div>
         <div class="row">
@@ -27,10 +32,21 @@
                     :session="session" :annotations="annotations" />
             </div>
         </div>
+        <VaModal v-model="showTip" ok-text="Ok">
+            <h3 class="va-h3">
+                {{ t('genomeBrowser.assembly.modalTitle') }}
+            </h3>
+            <p>
+                {{ t('genomeBrowser.assembly.modelDescription') }}
+
+            </p>
+
+            <VaChip style="margin-top: 10px;" outline target="_blank" href="https://jbrowse.org/storybook/lgv/main/">JBrowse Docs</VaChip>
+        </VaModal>
     </div>
 </template>
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import Header from '../components/Header.vue';
 import TaxonSearch from '../components/TaxonSearch.vue';
 import { useGenomeBrowserStore } from '../stores/genome-browser-store';
@@ -40,6 +56,8 @@ import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n()
 const gBStore = useGenomeBrowserStore()
+
+const showTip = ref(false)
 
 const sessions = computed(() => gBStore.sessions)
 

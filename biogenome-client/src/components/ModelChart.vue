@@ -20,7 +20,7 @@
                     <VaMenu :options="examples" :text-by="(({ key, type }: ConfigFilter) => `${key} --> ${type}`)"
                         @selected="loadExample">
                         <template #anchor>
-                            <VaButton color="secondary">{{t('chartModal.exampleBtn')}}</VaButton>
+                            <VaButton color="textPrimary">{{t('chartModal.exampleBtn')}}</VaButton>
                         </template>
                     </VaMenu>
                 </div>

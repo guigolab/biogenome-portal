@@ -1,10 +1,10 @@
 {
     "title": {
-        "gb": "Assemblies",
+        "en": "Assemblies",
         "es-ct": "Assemblatges"
     },
     "description": {
-        "gb": "Assemblies retrieved from NCBI under CBP (PRJEB49670)",
+        "en": "Assemblies retrieved from NCBI under CBP (PRJEB49670)",
         "es-ct": "Assemblatges recuperats de NCBI sota la CBP (PRJEB49670)"
     },
     "filters":[

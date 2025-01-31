@@ -5,9 +5,8 @@ import { dataModels, DataModels } from '../data/types'
 
 export function isDataModel(to: RouteLocationNormalized) {
   const model = to.params.model
-  if (!dataModels.includes(model as DataModels))
-  {
-    return {name: 'home'}
+  if (!dataModels.includes(model as DataModels)) {
+    return { name: 'home' }
   }
 }
 
@@ -42,15 +41,20 @@ const defaultRoutes: Array<RouteRecordRaw> = [
   {
     name: 'tree',
     path: '/tree',
-    redirect : '/'
+    // redirect: '/'
 
-    // component: () => import('../pages/Tree.vue')
+    component: () => import('../pages/Tree.vue')
   },
   {
     name: 'jbrowse',
     path: '/jbrowse',
-    redirect : '/'
-    // component: () => import('../pages/GenomeBrowser.vue')
+    // redirect: '/'
+    component: () => import('../pages/GenomeBrowser.vue')
+  },
+  {
+    name: 'login',
+    path: '/login',
+    redirect: '/'
   }
 
 ]

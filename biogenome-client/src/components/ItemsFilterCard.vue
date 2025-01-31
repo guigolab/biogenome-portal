@@ -8,13 +8,13 @@
 
                 <div class="flex">
                     <VaButton icon="fa-close" :disabled="activeFilters.length === 0" @click="resetFilters()"
-                        color="background-secondary">
+                        color="textPrimary">
                         {{ t('items.filters.clearBtn') }}</VaButton>
                 </div>
             </div>
             <div class="row">
                 <div class="flex lg12 md12 sm12 xs12">
-                    <VaButton color="secondary" preset="primary" @click="showModal = !showModal" icon="fa-plus" block>
+                    <VaButton color="textPrimary" preset="primary" @click="showModal = !showModal" icon="fa-plus" block>
                         {{ t('items.filters.addBtn') }}</VaButton>
                 </div>
             </div>
@@ -186,9 +186,6 @@ const activeFilters = computed(() => Object.entries(itemStore.searchForm ?? {})
     .filter(([k, v]) => v && !otherParams.includes(k)))
 
 watch(() => props.model, async () => {
-    console.log('passing here')
-    console.log('Item store is ' + itemStore.model)
-    console.log('Props is: ' + props.model)
     if (itemStore.model && props.model === itemStore.model) return
     itemStore.initStore(props.model)
     await handleUpdate()
