@@ -8,8 +8,8 @@ from wrappers.admin import admin_required
 
 class AssembliesApi(Resource):
     def get(self):
-        resp, mimetype, status = assemblies_service.get_assemblies(request.args)
-        return Response(resp, mimetype=mimetype, status=status)
+        resp, mimetype = assemblies_service.get_assemblies(request.args)
+        return Response(resp, mimetype=mimetype, status=200)
 
 class AssemblyApi(Resource):
     def get(self,accession):
@@ -27,6 +27,11 @@ class AssemblyApi(Resource):
     def delete(self,accession):
         deleted_accession = assemblies_service.delete_assembly(accession)
         return Response(json.dumps(deleted_accession), mimetype="application/json", status=201)
+
+class AssembliesFromAnnotations(Resource):
+    def get(self):
+        resp, mimetype = assemblies_service.get_assemblies_from_annotations(request.args)
+        return Response(resp, mimetype=mimetype, status=200)
 
 class AssemblyRelatedAnnotationsApi(Resource):
     def get(self, accession):

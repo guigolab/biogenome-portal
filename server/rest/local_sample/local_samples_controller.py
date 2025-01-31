@@ -15,8 +15,8 @@ class LocalSampleUploadApi(Resource):
 
 class LocalSamplesApi(Resource):
     def get(self):
-        response, mimetype, status = local_samples_service.get_local_samples(request.args)
-        return Response(response, mimetype=mimetype, status=status)
+        response, mimetype = local_samples_service.get_local_samples(request.args)
+        return Response(response, mimetype=mimetype, status=200)
 
 class LocalSampleApi(Resource):
     def get(self, local_id):

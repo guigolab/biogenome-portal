@@ -1,5 +1,5 @@
 <template>
-    <VaInput inner-label clearable :label="label" v-model="model">
+    <VaInput clearable :label="label" v-model="model">
     </VaInput>
 </template>
 <script setup lang="ts">

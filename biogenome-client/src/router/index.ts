@@ -1,6 +1,15 @@
-import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
+import { createRouter, createWebHistory, RouteLocationNormalized, RouteRecordRaw } from 'vue-router'
 import Home from '../pages/Home.vue'
+import { dataModels, DataModels } from '../data/types'
 
+
+export function isDataModel(to: RouteLocationNormalized) {
+  const model = to.params.model
+  if (!dataModels.includes(model as DataModels))
+  {
+    return {name: 'home'}
+  }
+}
 
 const defaultRoutes: Array<RouteRecordRaw> = [
   {
@@ -20,58 +29,30 @@ const defaultRoutes: Array<RouteRecordRaw> = [
     name: 'model',
     path: '/data/:model',
     props: true,
-    component: () => import('../pages/Items.vue')
+    component: () => import('../pages/Items.vue'),
+    beforeEnter: [isDataModel],
+  },
+  {
+    name: 'item',
+    path: '/data/:model/:id',
+    props: true,
+    component: () => import('../pages/Item.vue'),
+    beforeEnter: [isDataModel],
+  },
+  {
+    name: 'tree',
+    path: '/tree',
+    redirect : '/'
+
+    // component: () => import('../pages/Tree.vue')
+  },
+  {
+    name: 'jbrowse',
+    path: '/jbrowse',
+    redirect : '/'
+    // component: () => import('../pages/GenomeBrowser.vue')
   }
-  // {
-  //   name: 'data',
-  //   props: true,
-  //   path: ':model/:id',
-  //   component: () => import('../pages/Item.vue')
-  // },
-  // {
-  //   path: '/taxons/:taxid',
-  //   props: (route: RouteLocationNormalizedLoaded) => ({ taxid: route.query.taxid || 'root' }),
-  //   component: () => import('../layouts/DataLayout.vue'),
-  //   children: [
-  //     {
-  //       name: 'taxon',
-  //       props: true,
-  //       path: '',
-  //       component: () => import('../pages/DashBoard.vue')
-  //       // taxon details
-  //     },
-  //     {
-  //       name: 'items',
-  //       props: true,
-  //       path: ':model',
-  //       component: () => import('../pages/Items.vue')
-  //     },
-  //     {
-  //       name: 'item',
-  //       props: true,
-  //       path: ':model/:id',
-  //       component: () => import('../pages/Item.vue')
-  //     },
-  //     {
-  //       path: 'tree',
-  //       props: true,
-  //       component: () => import('../pages/Tree.vue'),
-  //       name: 'tree'
-  //     },
-  //     {
-  //       path: 'countries',
-  //       props: true,
-  //       component: () => import('../pages/Tree.vue'),
-  //       name: 'countries'
-  //     },
-  //     {
-  //       path: 'genome-browser',
-  //       props: true,
-  //       component: () => import('../pages/Tree.vue'),
-  //       name: 'browser'
-  //     }
-  //   ] as RouteRecordRaw[],
-  // }
+
 ]
 
 function initRoutes() {
@@ -84,7 +65,6 @@ function initRoutes() {
 }
 
 const routes = initRoutes()
-
 const router = createRouter({
   history: createWebHistory(import.meta.env.VITE_BASE_PATH ? import.meta.env.VITE_BASE_PATH : import.meta.env.BASE_URL),
   routes,

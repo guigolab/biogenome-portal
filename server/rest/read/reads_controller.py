@@ -7,8 +7,8 @@ from wrappers.admin import admin_required
 
 class ExperimentsApi(Resource):
     def get(self):
-        response, mimetype, status = reads_service.get_reads(request.args)
-        return Response(response, mimetype=mimetype, status=status)
+        response, mimetype = reads_service.get_reads(request.args)
+        return Response(response, mimetype=mimetype, status=200)
 
 class ExperimentApi(Resource):
 

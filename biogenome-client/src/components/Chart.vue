@@ -6,14 +6,14 @@
                 <div class="flex">
                     <VaChip square color="secondary" size="small"
                         @click="downloadCanvasAsPNG(`${chart.model}.${chart.field}`, `${chart.type}.png`)">
-                        Download
+                        {{t('buttons.download')}}
                     </VaChip>
                 </div>
             </div>
         </VaCardContent>
         <VaCardContent>
             <component class="va-chart" :key="`${chart.model}.${chart.field}`" :is="chartComponents[chart.type]" :data="{...freq}"
-                :chart-id="`${chart.model}.${chart.field}`" :label="t(`tooltip.${chart.model}`)" />
+                :chart-id="`${chart.model}.${chart.field}`" :label="t(`models.${chart.model}`)" />
         </VaCardContent>
     </VaCard>
 </template>

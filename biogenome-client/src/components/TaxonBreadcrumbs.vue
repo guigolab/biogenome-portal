@@ -1,12 +1,10 @@
 <template>
     <VaBreadcrumbs color="primary" separator=">">
-        <VaBreadcrumbsItem style="cursor: pointer;" @click="fetchTaxon(taxid)" v-for="({ name, taxid }) in ancestors" :label="name">
+        <VaBreadcrumbsItem style="cursor: pointer;" @click="fetchTaxon(taxid)" v-for="({ name, taxid }) in ancestors" :key="taxid" :label="name">
         </VaBreadcrumbsItem>
         <VaBreadcrumbsItem>
-            <!-- <VaButton color="textPrimary" preset="secondary">{{ taxonomyStore.currentTaxon?.name }}</VaButton> -->
             <span class="va-text-bold">{{ taxonomyStore.currentTaxon?.name }}</span>
         </VaBreadcrumbsItem>
-        <!-- <VaBreadcrumbsItem style="cursor: pointer;" v-if="children.length">...</VaBreadcrumbsItem> -->
     </VaBreadcrumbs>
 </template>
 <script setup lang="ts">

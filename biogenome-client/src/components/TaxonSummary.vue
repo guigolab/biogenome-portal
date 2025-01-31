@@ -4,7 +4,7 @@
             {{ content }}
         </p>
         <p>
-            <a class="va-link" @click="showModal = !showModal">Read more
+            <a class="va-link" @click="showModal = !showModal">{{ t('taxon.wikiLink') }}
             </a>
         </p>
     </div>
@@ -24,6 +24,8 @@ import { computed, onMounted, ref, watch, inject } from 'vue';
 import { useI18n } from 'vue-i18n'
 import { useTaxonomyStore } from '../stores/taxonomy-store';
 
+
+const { t } = useI18n()
 const { locale } = useI18n()
 const taxonomyStore = useTaxonomyStore()
 
@@ -34,10 +36,9 @@ const props = defineProps<{
 }>()
 const showModal = ref(false)
 const wikiMapper = settings.general.wiki as Record<string, any>
-console.log(locale.value)
 const wikiURL = ref<string>(wikiMapper[locale.value])
 
-const content = computed(() => taxonomyStore.wikiSummary.split('.')[0]?  taxonomyStore.wikiSummary.split('.')[0] + '...' : null)
+const content = computed(() => taxonomyStore.wikiSummary.split('.')[0] ? taxonomyStore.wikiSummary.split('.')[0] + '...' : null)
 // const summary = computed(() => wikiStore.summary ? wikiStore.summary.split('.')[0] + '...' : null)
 
 watch(locale, async () => {

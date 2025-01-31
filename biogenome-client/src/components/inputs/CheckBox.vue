@@ -1,5 +1,5 @@
 <template>
-    <VaCheckbox indeterminate v-model="model" :label="label + ' exists?'" />
+    <VaSwitch size="small" v-model="model" :label= "'Has '+ label"></VaSwitch>
 </template>
 <script setup lang="ts">
 import { computed } from 'vue'

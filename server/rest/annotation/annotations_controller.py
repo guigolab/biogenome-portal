@@ -7,8 +7,8 @@ from wrappers.admin import admin_required
 
 class AnnotationsApi(Resource):
     def get(self):
-        response, mimetype, status = annotations_service.get_annotations(request.args)
-        return Response(response, mimetype=mimetype, status=status)
+        response, mimetype = annotations_service.get_annotations(request.args)
+        return Response(response, mimetype=mimetype, status=200)
 
     @admin_required()
     @jwt_required()

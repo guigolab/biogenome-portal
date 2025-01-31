@@ -3,8 +3,8 @@
         verticalScrollOnOverflow>
         <template #anchor>
             <VaInput class="taxon-input-width" clearable v-model="filter" @update:model-value="debouncedUpdateSearch"
-                :loading="isLoading" placeholder="Search a taxon (e.g., Mammalia)">
-                <template #appendInner>
+                :loading="isLoading" :placeholder="t('taxon.searchPlaceholder')">
+                <template #prependInner>
                     <VaIcon name="fa-magnifying-glass" />
                 </template>
             </VaInput>
@@ -13,7 +13,7 @@
             <VaMenuList style="min-width: 100%!important;" v-if="taxons.length" :track-by="'taxid'"
                 :text-by="({ name, rank }: TaxonNode) => `${name} (${rank})`" :options="taxons"
                 @selected="updateTaxon" />
-            <p v-else>No taxons for: {{ filter }}</p>
+            <p v-else>{{ t('taxon.noTaxons') }} {{ filter }}</p>
         </VaDropdownContent>
     </VaDropdown>
 </template>
@@ -22,8 +22,9 @@ import { ref, watch } from 'vue';
 import { TaxonNode } from '../data/types';
 import TaxonService from '../services/TaxonService';
 import { useTaxonomyStore } from '../stores/taxonomy-store';
+import { useI18n } from 'vue-i18n';
 
-
+const {t} = useI18n()
 const taxons = ref<TaxonNode[]>([])
 const filter = ref()
 const isLoading = ref(false)
@@ -59,9 +60,8 @@ const debouncedUpdateSearch = debounce(async (filter: string) => {
 
 async function updateTaxon(taxon: TaxonNode) {
     taxonomyStore.currentTaxon = { ...taxon }
-    taxonomyStore.showSidebar = !taxonomyStore.showSidebar
+    taxonomyStore.showSidebar = true
     filter.value = ''
-
 }
 
 </script>

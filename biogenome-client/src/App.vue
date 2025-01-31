@@ -9,7 +9,7 @@
       <TaxonSidebar />
     </template>
     <template #content>
-      <main class="layout fluid va-gutter-5">
+      <main class="layout va-gutter-5">
         <router-view v-slot="{ Component }">
           <Transition name="fade">
             <component :is="Component" />
@@ -25,29 +25,32 @@ import { useBreakpoint } from 'vuestic-ui';
 import NavBar from './components/Navbar.vue'
 import TaxonSidebar from './components/TaxonSidebar.vue'
 import { useTaxonomyStore } from './stores/taxonomy-store';
-import { computed } from 'vue';
+import { onMounted } from 'vue';
 import TaxonNavbar from './components/TaxonNavbar.vue';
 import {
-    Chart as ChartJS,
-    Title,
-    Tooltip,
-    Legend,
-    BarElement,
-    LineElement,
-    LinearScale,
-    PointElement,
-    CategoryScale,
-    ArcElement,
-    Filler,
+  Chart as ChartJS,
+  Title,
+  Tooltip,
+  Legend,
+  BarElement,
+  LineElement,
+  LinearScale,
+  PointElement,
+  CategoryScale,
+  ArcElement,
+  Filler,
 } from 'chart.js'
+import { useStatsStore } from './stores/stats-store';
 
 ChartJS.register(Title, Tooltip, Legend, LineElement, LinearScale, PointElement, CategoryScale, Filler, ArcElement, BarElement)
 
 const breakpoints = useBreakpoint()
 const taxonomyStore = useTaxonomyStore()
+const statsStore = useStatsStore()
 
-const detailsBtn = computed(() => taxonomyStore.showSidebar ? { icon: 'fa-chevron-left', text: 'Hide details' } : { icon: 'fa-chevron-right', text: 'Show details' })
-
+onMounted(async () => {
+  await statsStore.getPortalStats()
+})
 </script>
 
 <style lang="scss">

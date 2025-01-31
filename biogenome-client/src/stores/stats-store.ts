@@ -14,14 +14,6 @@ export const useStatsStore = defineStore('stats', {
         }
     },
     actions: {
-        async getCoordinatesCount(taxid: string | 'root') {
-            const query = taxid === 'root' ? {} : { taxid }
-            const { data } = await GeoLocationService.getLocationsFrequency(query)
-            return {
-                key: 'coordinates' as DataModels | 'coordinates',
-                count: Object.keys(data).length
-            }
-        },
         async getPortalStats() {
             try {
                 this.isLoading = true

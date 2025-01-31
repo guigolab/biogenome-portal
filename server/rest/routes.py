@@ -55,6 +55,7 @@ def initialize_routes(api):
 
 	##ASSEMBLIES
 	api.add_resource(assemblies_controller.AssembliesApi, '/api/assemblies')
+	api.add_resource(assemblies_controller.AssembliesFromAnnotations, '/api/assemblies/from_annotations')
 	api.add_resource(assemblies_controller.AssemblyApi,  '/api/assemblies/<accession>')
 	api.add_resource(lookup_controller.AssemblyRelatedDataLookup,  '/api/assemblies/<accession>/lookup')
 	api.add_resource(assemblies_controller.AssemblyRelatedAnnotationsApi, '/api/assemblies/<accession>/annotations')

@@ -19,6 +19,10 @@ class AssemblyService {
   getChrAliases(accession:string) {
     return base.get(`/assemblies/${accession}/chr_aliases`)
   }
+  getAssembliesFromAnnotations(params: Record<string, any>) {
+    return base.get('/assemblies/from_annotations', { params: params })
+  }
+
 }
 
 export default new AssemblyService()

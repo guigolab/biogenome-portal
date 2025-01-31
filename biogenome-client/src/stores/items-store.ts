@@ -1,9 +1,14 @@
 import { defineStore } from 'pinia'
-import { ErrorResponseData, ConfigFilter, DataModels, Frequency, TaxonNode, ConfigModel } from '../data/types'
+import { ErrorResponseData, DataModels, Frequency, ConfigFilter } from '../data/types'
 import { useToast } from 'vuestic-ui'
 import CommonService from '../services/CommonService'
 import StatisticsService from '../services/StatisticsService'
 import { AxiosError } from 'axios'
+import AssemblyService from '../services/AssemblyService'
+import BioSampleService from '../services/BioSampleService'
+import GeoLocationService from '../services/GeoLocationService'
+import ExperimentService from '../services/ExperimentService'
+import OrganismService from '../services/OrganismService'
 
 export const staticFilters = {
     sort_order: "",
@@ -14,43 +19,16 @@ const initPagination = {
     limit: 10,
 }
 
-
-function mapSearchForm(modelFilters: ConfigFilter[]) {
-
-    const staticEntries = Object.entries({ ...staticFilters })
-    const formEntries = modelFilters.map(f => {
-        if (f.type === "date") {
-            return [[`${f.key}__gte`, null], [`${f.key}__lte`, null]]
-        } else if (f.type === "checkbox") {
-            return [[`${f.key}__exists`, null]]
-        }else if(f.type === "input"){
-            return [[`${f.key}__icontains`]]
-        }
-        return [[f.key, null]]
-    }).flat()
-
-    return Object.fromEntries([...formEntries, ...staticEntries])
-}
-
-// Factory function to create a store for a specific model
-function createModelStore(config: ConfigModel) {
-    const { filters } = config
-    return {
-        searchForm: mapSearchForm(filters ?? []),
-        pagination: { ...initPagination },
-        items: [],
-        total: 0,
-    };
-}
-
 export const useItemStore = defineStore('item', {
     state: () => {
         return {
             view: 'table' as 'table' | 'charts',
-            stores: {} as Record<DataModels, any>,
             frequencies: [] as Frequency[],
-            model: 'organisms' as DataModels,
-            searchForm: null as Record<string, any> | null,
+            customFilters: [] as ConfigFilter[],
+            item: null as Record<string, any> | null,
+            itemId: null as string | null,
+            model: null as DataModels | null,
+            searchForm: { ...staticFilters } as Record<string, any>,
             pagination: { ...initPagination },
             items: [] as Record<string, any>[],
             total: 0,
@@ -63,8 +41,9 @@ export const useItemStore = defineStore('item', {
     },
 
     actions: {
-        initStore(model: DataModels, filters: ConfigFilter[]) {
-            this.searchForm = { ...mapSearchForm(filters) }
+        initStore(model: DataModels) {
+            this.searchForm = { ...staticFilters }
+            this.customFilters = []
             this.model = model
         },
         setSearchFormField(key: string, value: any) {
@@ -75,22 +54,21 @@ export const useItemStore = defineStore('item', {
         buildQuery() {
             if (this.searchForm) {
                 const searchFormEntries = Object.entries(this.searchForm)
-                    .filter(([key, value]) => !staticFilters.hasOwnProperty(key) && value !== null && value !== "");
+                    .filter(([key, value]) => !staticFilters.hasOwnProperty(key) && value);
                 return Object.fromEntries(searchFormEntries);
-            }else{
+            } else {
                 return {}
             }
 
         },
         //resets only the related filters (skips taxon_lineage)
-        resetFilters(){
-            if(this.searchForm){
-                const resettedForm = Object.fromEntries(Object.entries(this.searchForm).filter(([k,v]) => k !== 'taxon_lineage').map(([k,v]) => [k, null]))
-                this.searchForm = {...this.searchForm, ...resettedForm}
+        resetFilters() {
+            if (this.searchForm) {
+                const resettedForm = Object.fromEntries(Object.entries(this.searchForm).filter(([k, v]) => k !== 'taxon_lineage').map(([k, v]) => [k, null]))
+                this.searchForm = { ...this.searchForm, ...resettedForm }
             }
         },
         resetPagination() {
-            // this.initStore(model);  // Ensure store exists
             this.pagination = { ...initPagination }
         },
         catchError(error: any) {
@@ -106,7 +84,7 @@ export const useItemStore = defineStore('item', {
             this.toast({ message: message, color: 'danger' })
         },
 
-        downloadFile(model: DataModels, data: any, format:string) {
+        downloadFile(model: DataModels, data: any, format: string) {
             const href = URL.createObjectURL(data);
 
             const filename = `${model}_report.${format}`
@@ -120,12 +98,19 @@ export const useItemStore = defineStore('item', {
             document.body.removeChild(link);
             URL.revokeObjectURL(href);
         },
-
+        async fetchItem(model: DataModels, id: string) {
+            try {
+                const { data } = await CommonService.getItem(model, id)
+                return data
+            } catch (err) {
+                this.catchError(err)
+            }
+        },
         async handleQuery() {
             this.resetPagination()
             this.fetchItems()
         },
-        async getFieldFrequencies(model: DataModels, field: string, ignoreQuery:boolean) {
+        async getFieldFrequencies(model: DataModels, field: string, ignoreQuery: boolean) {
             try {
                 const query = ignoreQuery ? {} : this.buildQuery()
                 const { data } = await StatisticsService.getModelFieldStats(model, field, query)
@@ -158,12 +143,12 @@ export const useItemStore = defineStore('item', {
         },
         async fetchItems() {
             // this.initStore(model);  // Ensure store exists
-
+            if (!this.model) return
             this.isTableLoading = true
-            const { searchForm, pagination } = this
+            const { pagination } = this
 
             // Build the query params
-            const params = { ...searchForm, ...pagination }
+            const params = { ...this.buildQuery(), ...pagination }
             try {
                 const { data } = await CommonService.getItems(this.model, params)
                 this.items = [...data.data]
@@ -174,15 +159,15 @@ export const useItemStore = defineStore('item', {
                 this.isTableLoading = false
             }
         },
-        async downloadData(model: DataModels, fields: string[], format:string) {
+        async downloadData(model: DataModels, fields: string[], format: string) {
             // this.initStore(model);  // Ensure store exists
 
             this.isTSVLoading = true
-            const downloadRequest = { format, fields: [...fields] }
+            const downloadRequest = { format, fields: fields.join(',') }
             const query = this.buildQuery()
-            
+
             try {
-                const requestData = { ...query, ...downloadRequest, ...{offset: 0, limit: this.total+1} } 
+                const requestData = { ...query, ...downloadRequest, ...{ offset: 0, limit: this.total + 1 } }
                 const { data } = await CommonService.getTsv(model, requestData)
                 this.downloadFile(model, data, format)
 
@@ -191,7 +176,65 @@ export const useItemStore = defineStore('item', {
             } finally {
                 this.isTSVLoading = false
             }
-        }
+        },
+        async fetchAssemblyData(id: string) {
+            try {
+                const chromosomes = await AssemblyService.getRelatedChromosomes(id)
+                const annotations = await AssemblyService.getRelatedAnnotations(id)
+                return { chromosomes: chromosomes.data, annotations: annotations.data }
+            } catch (e) {
+                this.catchError(e)
+            }
+        },
+        async fetchBioSampleData(id: string) {
+            try {
+                const assemblies = await BioSampleService.getBioSampleRelatedData(id, 'assemblies')
+                const experiments = await BioSampleService.getBioSampleRelatedData(id, 'experiments')
+                const subSamples = await BioSampleService.getBioSampleRelatedData(id, 'sub_samples')
+                const coordinates = await GeoLocationService.getLocationsFrequency({ sample_accession: id })
+                return { assemblies: assemblies.data, biosamples: subSamples.data, experiments: experiments.data, coordinates: coordinates.data }
 
+            } catch (e) {
+                this.catchError(e)
+            }
+        },
+        async fetchLocalSampleData(id: string) {
+            try {
+                const coordinates = await GeoLocationService.getLocationsFrequency({ sample_accession: id })
+                return { coordinates: coordinates.data }
+
+            } catch (e) {
+                this.catchError(e)
+            }
+        },
+        async fetchExperimentData(id: string) {
+            try {
+                const { data } = await ExperimentService.getReadsByExperiment(id)
+                return { reads: data }
+
+            } catch (e) {
+                this.catchError(e)
+            }
+        },
+        async fetchOrganismData(id: string) {
+            try {
+                const assemblies = await OrganismService.getOrganismRelatedData(id, 'assemblies')
+                const annotations = await OrganismService.getOrganismRelatedData(id, 'annotations')
+                const experiments = await OrganismService.getOrganismRelatedData(id, 'experiments')
+                const biosamples = await OrganismService.getOrganismRelatedData(id, 'biosamples')
+                const local_samples = await OrganismService.getOrganismRelatedData(id, 'local_samples')
+                const coordinates = await GeoLocationService.getLocationsFrequency({ taxid: id })
+                return {
+                    assemblies: assemblies.data,
+                    biosamples: biosamples.data,
+                    experiments: experiments.data,
+                    local_samples: local_samples.data,
+                    annotations: annotations.data,
+                    coordinates: coordinates.data
+                }
+            } catch (e) {
+                this.catchError(e)
+            }
+        }
     },
 })

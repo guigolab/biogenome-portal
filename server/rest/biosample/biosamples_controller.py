@@ -25,8 +25,8 @@ class BioSampleApi(Resource):
 class BioSamplesApi(Resource):
 
     def get(self):
-        response, mimetype, status = biosamples_service.get_biosamples(request.args)
-        return Response(response,mimetype=mimetype, status=status)
+        response, mimetype = biosamples_service.get_biosamples(request.args)
+        return Response(response,mimetype=mimetype, status=200)
     
 class ExperimentsByBiosample(Resource):
     def get(self, accession):

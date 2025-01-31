@@ -6,3 +6,4 @@ __pycache__
 blog_old.md
 node_modules
 biogenome-client/src/components/LanguageDropdown.vue
+server/configs

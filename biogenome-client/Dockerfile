@@ -35,6 +35,8 @@ RUN npm run build
 # production stage
 FROM nginx:stable-alpine
 
+ARG BASE_PATH
+
 # Copy the nginx templates
 COPY root.template /etc/nginx/templates/root.template
 COPY subpath.template /etc/nginx/templates/subpath.template

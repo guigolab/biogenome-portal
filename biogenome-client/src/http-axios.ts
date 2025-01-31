@@ -1,16 +1,17 @@
 import axios from 'axios'
 
-const baseURL = import.meta.env.VITE_API_PATH ? import.meta.env.VITE_API_PATH + '/api' : '/api'
+const baseURL = import.meta.env.VITE_API_PATH ?
+ import.meta.env.VITE_API_PATH : import.meta.env.BASE_URL + '/api'
 
 export const base = axios.create({
-  baseURL: baseURL,
+  baseURL,
   headers: {
     'Content-type': 'application/json',
   },
 })
 
 export const download = axios.create({
-  baseURL: baseURL,
+  baseURL,
   responseType: 'blob'
 })
 

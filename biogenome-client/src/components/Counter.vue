@@ -1,11 +1,11 @@
 <template>
-    <h4 class="va-h4">
+    <h4 style="margin: 0;" class="va-h4">
         {{ counter }}
     </h4>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, watch } from 'vue'
 
 const props = defineProps<{
     targetValue: number,
@@ -14,9 +14,10 @@ const props = defineProps<{
 
 const counter = ref(0)
 
-onMounted(() => {
+watch(() => props.targetValue, () => {
+    counter.value = 0
     animateCounter()
-})
+}, {immediate: true})
 
 function animateCounter() {
     const startTime = performance.now();

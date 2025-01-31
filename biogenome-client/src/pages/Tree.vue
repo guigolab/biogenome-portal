@@ -1,15 +1,24 @@
 <template>
-    <div class="row justify-center">
-        <div style="text-align: center;" class="flex lg12 md12 sm12 xs12">
-            <h2 class="va-h2 mt-0">{{ t('taxon.title') }}</h2>
-            <p class="light-paragraph">
-                {{ t('taxon.description') }}
-            </p>
+    <div>
+        <div class="row justify-center">
+            <div style="text-align: center;" class="flex">
+                <Header title-class="va-h1" description-class="va-text-secondary" :title="t('taxon.title')"
+                    :description="t('taxon.description')" />
+            </div>
         </div>
-    </div>
-    <div class="content-row">
-        <div :class="['tree-container']">
-            <D3HyperTree @node-change="setCurrentTaxon" />
+        <div style="position: relative;" class="row justify-center">
+            <div style="position: absolute;width: max(300px, 50%)" class="flex">
+                <VaCard>
+                    <VaCardContent>
+                        <TaxonSearch />
+                    </VaCardContent>
+                </VaCard>
+            </div>
+        </div>
+        <div class="content-row">
+            <div class="tree-container">
+                <D3HyperTree @node-change="setCurrentTaxon" />
+            </div>
         </div>
     </div>
 </template>
@@ -17,15 +26,16 @@
 import D3HyperTree from '../components/D3HyperTree.vue'
 import { useI18n } from 'vue-i18n'
 import { TaxonNode } from '../data/types';
-import { useRouter } from 'vue-router';
-import { useItemStore } from '../stores/items-store';
+import { useTaxonomyStore } from '../stores/taxonomy-store';
+import Header from '../components/Header.vue';
+import TaxonSearch from '../components/TaxonSearch.vue';
 
 const { t } = useI18n()
-const itemsStore = useItemStore()
-const router = useRouter()
+const taxonomyStore = useTaxonomyStore()
+
 async function setCurrentTaxon(taxon: TaxonNode) {
-    const { taxid } = taxon
-    router.push({ name: 'tree', params: { taxid } })
+    taxonomyStore.currentTaxon = { ...taxon }
+    taxonomyStore.showSidebar = true
 }
 
 </script>
@@ -42,7 +52,6 @@ async function setCurrentTaxon(taxon: TaxonNode) {
 .tree-container {
     flex: 0 0 66.6%;
     /* Occupies 50% of the width */
-    max-width: 66.6%;
     overflow: hidden;
     margin: auto;
     /* Starts in view */
@@ -53,8 +62,9 @@ async function setCurrentTaxon(taxon: TaxonNode) {
 
     .tree-container {
         flex: 0 0 100%;
+        overflow: hidden;
+        margin: auto;
         /* Take 100% of the width on small screens */
-        max-width: 100%;
         /* Reset any transform applied */
     }
 }
@@ -63,8 +73,8 @@ async function setCurrentTaxon(taxon: TaxonNode) {
 
     .tree-container {
         flex: 0 0 100%;
-        /* Take 100% of the width on small screens */
-        max-width: 100%;
+        overflow: hidden;
+        margin: auto;
         /* Reset any transform applied */
     }
 

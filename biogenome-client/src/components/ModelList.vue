@@ -1,22 +1,25 @@
 <template>
-    <div class="row">
-        <div class="flex" v-for="({ key, count }) in modelList" :key="key">
-            <VaChip :to="{ name: 'model', params: { model: key } }" :icon="iconMap[key].icon" size="small"
-                :outline="key !== modelParam" color="textPrimary">{{ key }}
-                <span class="va-text-bold" style="margin-left: 3px;">
-                    {{ count }}
-                </span>
-            </VaChip>
-        </div>
+
+    <div>
+        <VaChip style="margin: 3px;" v-for="({ key, count }) in modelList" :key="key"
+            :to="{ name: 'model', params: { model: key } }" size="small" :outline="key !== modelParam">{{ key }}
+            <span class="va-text-bold" style="margin-left: 3px;">
+                {{ count }}
+            </span>
+        </VaChip>
     </div>
+
 </template>
 <script setup lang="ts">
-import { computed, watchEffect } from 'vue';
+import { computed, inject, watchEffect } from 'vue';
 import { useStatsStore } from '../stores/stats-store';
-import { iconMap } from '../composable/useIconMap';
 import { useRoute } from 'vue-router';
+import { AppConfig } from '../data/types';
 
 const route = useRoute()
+const appConfig = inject('appConfig') as AppConfig
+
+const implementedModels = computed(() => Object.keys(appConfig.models))
 
 const modelParam = computed(() => route.params.model)
 
@@ -26,7 +29,7 @@ const props = defineProps<{
 }>()
 
 
-const modelList = computed(() => statsStore.currentStats.filter(({ count }) => count > 0))
+const modelList = computed(() => statsStore.currentStats.filter(({ key, count }) => count > 0 && implementedModels.value.includes(key)))
 
 
 watchEffect(async () => {

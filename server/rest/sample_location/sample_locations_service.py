@@ -1,6 +1,5 @@
 from db.models import SampleCoordinates
 from mongoengine.queryset.visitor import Q
-from helpers import data as data_helper
 
 def get_sample_locations(offset=0, limit=10000, sample_type=None, sample_accession=None, taxid=None, filter=None):
     offset = int(offset)

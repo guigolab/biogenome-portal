@@ -16,6 +16,7 @@ export function useAppSettings() {
     } catch (err) {
       error.value = (err as Error).message;
     }
+    //load defaults as a fallback
     if (error.value) {
       settings = await loadJsonFiles()
     }
@@ -40,7 +41,6 @@ export function useAppSettings() {
 async function loadJsonFiles(): Promise<Record<string, any>> {
   // Dynamically import all JSON files in the folder
   const modules = import.meta.glob('../data/configs/*.json');
-  console.log(modules)
   const result: Record<string, any> = {};
 
   for (const [filePath, module] of Object.entries(modules)) {

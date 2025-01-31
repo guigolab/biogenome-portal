@@ -1,7 +1,9 @@
 <template>
-    <VaSelect  inner-label :loading="isLoading" @open="fetchOptions" clearable :label="label" v-model="model" :options="optionsKeys">
+    <VaSelect multiple @clear="fetchOptions" :loading="isLoading" @open="fetchOptions" clearable
+        :label="label" v-model="modelValue" :options="optionsKeys">
         <template #option="{ option, selectOption }">
-            <div class="row option align-center justify-space-between" @click="selectOption(option)">
+            <div :class="['row option align-center justify-space-between', modelValue.includes(option as any) ? 'is-active' : '']"
+                @click="selectOption(option)">
                 <div class="flex">
                     <p>{{ option }}</p>
                 </div>
@@ -12,8 +14,10 @@
                 </div>
             </div>
         </template>
-        <template #content>
-            {{ value }}
+        <template #content="{ value }">
+            <VaChip v-for="chip in value.slice(0, 3)" :key="chip" size="small" class="mr-1 my-1">
+                {{ chip }}
+            </VaChip>
         </template>
     </VaSelect>
 </template>
@@ -32,12 +36,14 @@ const props = defineProps<{
 }>()
 
 const isLoading = ref(false)
-const model = computed({
+const modelValue = computed({
     get() {
-        return props.value
+        if (props.value)
+            return props.value.split(',')
+        return []
     },
-    set(value: string) {
-        emits('valueChange', value)
+    set(values: string[]) {
+        emits('valueChange', values.join(','))
     }
 })
 
@@ -51,6 +57,7 @@ async function fetchOptions() {
     options.value = { ...opts }
     isLoading.value = false
 }
+
 const emits = defineEmits(['valueChange'])
 
 </script>
@@ -63,5 +70,10 @@ const emits = defineEmits(['valueChange'])
 .option:hover {
     background-color: #dee5f2;
     /* Background color on hover */
+}
+
+.is-active {
+    background-color: #dee5f2;
+
 }
 </style>

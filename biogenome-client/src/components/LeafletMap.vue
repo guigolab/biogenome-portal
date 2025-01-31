@@ -7,21 +7,42 @@
 import { ref, watch, onMounted, computed } from "vue";
 import L, { Map, TileLayer, Control } from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { useMapStore } from "../stores/map-store";
-import { useItemStore } from "../stores/items-store";
+import { useColors } from "vuestic-ui/web-components";
 
-const mapStore = useMapStore();
+const { colors } = useColors()
 
 const props = defineProps<{
-    taxid: string
+    mapType: 'cloropleth' | 'points',
+    locations: Record<string,any>[]
+    countries: Record<string,any>[]
+    selectedCountries: Record<string,any>[]
 }>()
 
+const emits = defineEmits(['countrySelected'])
 // Refs
+const locations = computed(() => props.locations)
+const countries = computed(() => props.countries)
+
 const mapContainer = ref<HTMLDivElement | null>(null);
 const map = ref<Map | null>(null);
 const choroplethLayerGroup = ref(L.layerGroup());
 const pointsLayerGroup = ref(L.layerGroup());
 
+watch(() => props.selectedCountries, () => {
+    if (props.mapType === 'cloropleth') {
+        renderChoropleth();
+    }
+});
+// Initialize map on mount
+onMounted(() => {
+    initMap();
+    if (props.mapType === "cloropleth") {
+        renderChoropleth();
+    } else if (props.mapType === "points") {
+        renderPoints();
+    }
+    // switchLayerGroup();
+});
 // Initialize the Leaflet map
 const initMap = () => {
     if (map.value || !mapContainer.value) return;
@@ -32,7 +53,7 @@ const initMap = () => {
     const tileLayer: TileLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     });
-    tileLayer.addTo(map.value);
+    tileLayer.addTo(map.value as any);
 
     var legend = new Control({ position: 'bottomright' });
 
@@ -45,61 +66,108 @@ const initMap = () => {
         // loop through our density intervals and generate a label with a colored square for each interval
         for (var i = 0; i < grades.length; i++) {
             div.innerHTML +=
-                '<p> <i style="background:' + getColor(grades[i] + 1) + '"></i> ' +
+                '<p> <i style="background:' + getColor.value(grades[i] + 1) + '"></i> ' +
                 grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] : '+') + '</p>';
         }
 
         return div;
     };
 
-    legend.addTo(map.value);
+    legend.addTo(map.value as any);
 };
 
-// Render choropleth map
-const renderChoropleth = async () => {
-    console.log("Rendering choropleth...");
+const renderChoropleth = () => {
+    if (!map.value) return
+
     choroplethLayerGroup.value.clearLayers();
-    const query ={ taxon_lineage: props.taxid }
-    await mapStore.getCountries(query);
 
-    const { countries } = mapStore;
-    console.log("Choropleth countries data:", countries);
+    map.value.removeLayer(choroplethLayerGroup.value as any)
 
-    countries.forEach((item) => {
-        const geojsonLayer = L.geoJSON(item.geojson, {
+    countries.value.forEach((item) => {
+        const { countryId, countryName, geojson, occurrences } = item
+        const existingCounty = props.selectedCountries.find(c => c.id === countryId)
+
+        const geojsonLayer = L.geoJSON(geojson, {
             style: () => ({
-                fillColor: getColor(item.occurrences),
-                weight: 2,
+                fillColor: getColor.value(occurrences),
+                color: existingCounty ? colors.primary : undefined,
+                weight: 4,
                 opacity: 1,
-                color: "white",
                 fillOpacity: 0.7,
             }),
+            onEachFeature: (feature: any, layer: L.Layer) => {
+                // Reset previous selection style
+                // Add hover effects
+                layer.on("mouseover", (e: any) => {
+                    const hoveredLayer = e.target;
+                    hoveredLayer.setStyle({
+                        weight: 4,
+                        color: colors.primary, // Highlight border color
+                        fillOpacity: 0.9,
+                    });
+
+                    // Ensure styles persist across different Leaflet versions
+                    if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+                        hoveredLayer.bringToFront();
+                    }
+
+                    const tooltipContent = `<strong>${countryName}</strong>: ${occurrences}`;
+                    hoveredLayer.bindTooltip(tooltipContent, {
+                        sticky: true,
+                    }).openTooltip();
+                });
+
+                // Reset style on hover out
+                layer.on("mouseout", (e: any) => {
+
+                    const hoveredLayer = e.target;
+                    hoveredLayer.closeTooltip();
+                    if (existingCounty) return
+                    geojsonLayer.resetStyle(hoveredLayer);
+
+                });
+
+                // Add selection logic
+                layer.on("click", (e: any) => {
+                    const clickedLayer = e.target;
+                    if (existingCounty) {
+                        geojsonLayer.resetStyle(clickedLayer);
+                    } else {
+                        clickedLayer.setStyle({
+                            weight: 4,
+                            color: colors.primary, // Selected border color
+                            fillOpacity: 0.8,
+                        });
+                    }
+                    emits('countrySelected', { id: countryId, name: countryName })
+                });
+
+            },
         });
         choroplethLayerGroup.value.addLayer(geojsonLayer);
     });
+    map.value.addLayer(choroplethLayerGroup.value as any)
+    map.value.invalidateSize(); // Ensure map renders correctly
 };
 
 // Render point markers
-const renderPoints = async () => {
-    console.log("Rendering points...");
+const renderPoints = () => {
+    if (!map.value) return;
     pointsLayerGroup.value.clearLayers();
-    const query ={ taxid: props.taxid }
-
-    await mapStore.getCoordinates(query);
-    const { locations } = mapStore;
-    console.log("Points locations data:", locations);
-
-    locations.forEach((item) => {
+    map.value?.removeLayer(pointsLayerGroup.value as any)
+    locations.value.forEach((item) => {
         const [lng, lat] = item.coordinates;
-        const marker = L.circleMarker([lat, lng], { color: getColor(item.count), radius: 10 });
+        const marker = L.circleMarker([lat, lng], { color: getColor.value(item.count), radius: 10 });
         pointsLayerGroup.value.addLayer(marker);
     });
+    map.value.addLayer(pointsLayerGroup.value as any)
+    map.value.invalidateSize(); // Ensure map renders correctly
+
 };
 
+const getColor = computed(() => props.mapType === 'cloropleth' ? getCloroplethColor : getPointsColor)
 
-
-
-function getColor(d: number) {
+function getCloroplethColor(d: number) {
     return d > 1000 ? '#800026' :
         d > 500 ? '#BD0026' :
             d > 200 ? '#E31A1C' :
@@ -110,52 +178,18 @@ function getColor(d: number) {
                                 '#FFEDA0';
 }
 
-// Switch between the two layer groups
-const switchLayerGroup = () => {
-    if (!map.value) return;
+function getPointsColor(d: number) {
+    return d > 1000 ? '#00429d' : // Dark Blue
+        d > 500 ? '#2a6fdb' :   // Medium Blue
+            d > 200 ? '#62a9ff' :  // Light Blue
+                d > 100 ? '#80d3f7' : // Cyan
+                    d > 50 ? '#bae4bc' :  // Light Green
+                        d > 20 ? '#a1d99b' :  // Medium Green
+                            d > 10 ? '#74c476' :  // Green
+                                '#31a354';       // Dark Green
+}
 
-    if (mapStore.mapType === "cloropleth") {
-        console.log("Switching to choropleth layer group...");
-        map.value.addLayer(choroplethLayerGroup.value);
-        map.value.removeLayer(pointsLayerGroup.value);
-    } else if (mapStore.mapType === "points") {
-        console.log("Switching to points layer group...");
-        map.value.addLayer(pointsLayerGroup.value);
-        map.value.removeLayer(choroplethLayerGroup.value);
-    }
-    map.value.invalidateSize(); // Ensure map renders correctly
-};
 
-// Watch for changes in mapType
-watch(
-    () => mapStore.mapType,
-    async () => {
-        if (mapStore.mapType === "cloropleth") {
-            await renderChoropleth();
-        } else if (mapStore.mapType === "points") {
-            await renderPoints();
-        }
-        switchLayerGroup();
-    });
-
-watch(() => props.taxid, async () => {
-    if (mapStore.mapType === "cloropleth") {
-        await renderChoropleth();
-    } else if (mapStore.mapType === "points") {
-        await renderPoints();
-    }
-    switchLayerGroup();
-});
-// Initialize map on mount
-onMounted(async () => {
-    initMap();
-    if (mapStore.mapType === "cloropleth") {
-        await renderChoropleth();
-    } else if (mapStore.mapType === "points") {
-        await renderPoints();
-    }
-    switchLayerGroup();
-});
 </script>
 
 <style>
@@ -165,7 +199,7 @@ onMounted(async () => {
 }
 
 .leaflet-map {
-    height: 300px;
+    height: 400px;
     width: 100%;
     z-index: 99;
 }

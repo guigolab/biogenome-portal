@@ -9,6 +9,14 @@ export default createIconsConfig({
       resolve: ({ code }) => ({ class: `fas fa-${code}` }),
     },
     {
+      name: 'far-{code}',
+      resolve: ({ code }) => ({ class: `far fa-${code}` }),
+    },
+    {
+      name: 'fal-{code}',
+      resolve: ({ code }) => ({ class: `fal fa-${code}` }),
+    },
+    {
       name: 'material-icons-{code}',
       resolve: ({ code }) => ({ to: code }),
     },

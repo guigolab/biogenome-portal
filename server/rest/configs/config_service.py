@@ -30,11 +30,8 @@ def load_json_config():
                 # Read and parse the JSON file
                 with open(file_path, 'r') as json_file:
                     content = json.load(json_file)
-                    # Use the file name (without extension) as the key
-                    if key in MODELS:
-                        config_data['models'][key] = content
-                    else:
-                        config_data[key] = content
+
+                    config_data[key] = content
             except json.JSONDecodeError as e:
                 raise BadRequest(f"Invalid JSON format in file {file_name}: {e}")
             except Exception as e:

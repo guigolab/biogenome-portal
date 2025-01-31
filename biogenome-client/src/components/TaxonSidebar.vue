@@ -1,49 +1,43 @@
 <template>
     <VaSidebar width="20rem" v-model="taxonomyStore.showSidebar">
         <section v-if="selectedTaxon" class="layout va-gutter-5 fluid">
-            <!-- <TaxonBreadcrumbs :taxid="selectedTaxon.taxid" /> -->
-
             <h3 class="va-h3">{{ selectedTaxon.name }}</h3>
             <TaxonSummary :name="selectedTaxon.name" :rank="selectedTaxon.rank" />
             <VaDivider />
-            <div class="row">
-                <div class="flex">
-                    <h4 class="va-h6">
-                        Related Data
-                    </h4>
-                </div>
-            </div>
+            <h4 class="va-h6">
+                {{ t('taxon.relatedData') }}
+            </h4>
             <ModelList :taxid="selectedTaxon.taxid" />
-            <div class="row align-center justify-space-between">
-                <div class="flex">
-                    <h4 class="va-h6">
-                        Occurrences Map
-                    </h4>
-                </div>
-                <div class="flex">
-                    <VaIcon name="fa-expand" />
-                </div>
+            <div v-if="mapStore.hasCoordinates">
+                <h4 class="va-h6">
+                    {{ t('taxon.occurrencesMap') }}
+                </h4>
+                <LeafletMap :locations="locations" :countries="[]" :selected-countries="[]" :map-type="'points'" />
             </div>
-            <LeafletMap :taxid="selectedTaxon.taxid" />
-
         </section>
     </VaSidebar>
 </template>
 <script setup lang="ts">
 
-import { computed } from 'vue';
+import { computed, watch } from 'vue';
 import { useTaxonomyStore } from '../stores/taxonomy-store'
 import TaxonSummary from './TaxonSummary.vue';
 import ModelList from './ModelList.vue';
 import LeafletMap from './LeafletMap.vue';
+import { useMapStore } from '../stores/map-store';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n()
 const taxonomyStore = useTaxonomyStore()
-
+const mapStore = useMapStore()
 const selectedTaxon = computed(() => taxonomyStore.currentTaxon)
 
+watch(() => selectedTaxon.value, async () => {
+    if (!selectedTaxon.value) return
+    await mapStore.getCoordinates({ taxid: selectedTaxon.value?.taxid })
+})
 
-
-
+const locations = computed(() => mapStore.locations)
 
 </script>
 <style>

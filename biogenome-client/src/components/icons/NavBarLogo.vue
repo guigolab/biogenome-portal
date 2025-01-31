@@ -6,7 +6,7 @@ import { inject } from 'vue';
 
 const settings = inject('appConfig')
 
-const appLogo = settings.general.nav.logo
+const appLogo = settings.general.logo
 
 const imgUrl = new URL(`/src/assets/${appLogo}`, import.meta.url).href
 

@@ -1,53 +1,16 @@
 version: '3'
 
 services:
-  nginx:
-    image: nginx:stable-alpine
-    container_name: nginx
-    build:
-      context: ./nginx
-    volumes:
-      - ./nginx/templates:/etc/nginx/templates
-      - ./nginx-entrypoint.sh:/nginx-entrypoint.sh
-      - cms:/usr/share/nginx/html/cms
-      - genome-browser:/usr/share/nginx/html/genome-browser
-      - portal:/usr/share/nginx/html/portal
-    environment:
-      - API_PATH=/ # Set to "/" for root or any subpath
-    entrypoint: ["/bin/sh", "/nginx-entrypoint.sh"]
-    ports:
-      - "80:80"
 
-  cms:
-    build:
-      context: ./cms
-    container_name: cms
-    volumes:
-      - cms:/usr/share/nginx/html/cms
-
-  genome-browser:
-    build:
-      context: ./genome-browser
-    container_name: genome-browser
-    volumes:
-      - genome-browser:/usr/share/nginx/html/genome-browser
-
-  portal:
-    build:
-      context: ./portal
-    container_name: portal
-    volumes:
-      - portal:/usr/share/nginx/html/portal
-
-
-  biogenome_mongo:
+  biogenome_mongo_dev_env:
     image: mongo:6.0
     container_name: "${DB_HOST}"
     env_file:
       - .env
     volumes:
+     - /home/emilior/cbp-data:/data/db
      - ./mongo-init.sh:/docker-entrypoint-initdb.d/mongo-init.sh
-     - /home/cbp-data:/data/db
+
     ports:
       - 27015:${DB_PORT}
 
@@ -57,11 +20,43 @@ services:
     restart: always
     volumes:
       - ./server:/server
-      - ${ANNOTATIONS_PATH}:/annotations_data
+      - /home/emilior/cbp-annotations-data:/annotations_data
+
     env_file:
       - .env
+    ports:
+     - 5000:5000
     depends_on:
       - redis
+
+  # biogenome_cron:
+  #   build: ./cronjobs
+  #   container_name: biogenome_cron
+  #   env_file:
+  #     - .env
+  # biogenome_cron:
+  #   build: ./cronjobs
+  #   container_name: biogenome_cron
+  #   env_file:
+  #     - .env
+
+  biogenome_nginx:
+    build:
+      context: ./biogenome-client
+      dockerfile: Dockerfile
+      args:
+        BASE_PATH: ${BASE_PATH}
+    container_name: "biogenome_nginx"
+    restart: always
+    volumes:
+      - ./biogenome-client:/biogenome-client
+      - node_modules:/biogenome-client/node_modules
+    env_file:
+      - .env
+    ports:
+        - "91:${API_PORT}"
+
+
   celery:
     build: ./server
     command: celery --app app.celery_app worker --loglevel=info --autoscale=2,1
@@ -72,17 +67,50 @@ services:
       - .env
     depends_on:
       - biogenome_server
-      - biogenome_mongo
+      - biogenome_mongo_dev_env
       - redis
+
+  # biogenome_cron:
+  #   build: ./cronjobs
+  #   container_name: biogenome_cron
+  #   env_file:
+  #     - .env
+
+  # biogenome_nginx:
+  #   build:
+  #     context: ./biogenome-client
+  #     dockerfile: Dockerfile
+  #     args:
+  #       - ROOT_NODE=$ROOT_NODE
+  #       - CESIUM_TOKEN=$CESIUM_TOKEN
+  #       - BASE_PATH=$BASE_PATH
+  #   container_name: "biogenome_nginx"
+  #   restart: always
+  #   volumes:
+  #     - node_modules:/biogenome-client/node_modules
+  #   environment:
+  #     - API_PORT=${API_PORT}
+  #     - API_HOST=${API_HOST}
+  #     - BASE_PATH=${BASE_PATH}
+  #   ports:
+  #       - "91:${API_PORT}"
+
+  # celery:
+  #   build: ./server
+  #   command: celery --app app.celery_app worker --loglevel=info --autoscale=1,1 --max-tasks-per-child=1
+  #   restart: always
+  #   volumes:
+  #     - ${ANNOTATIONS_PATH}:/annotations_data
+  #   env_file:
+  #     - .env
+  #   depends_on:
+  #     - biogenome_server
+  #     - biogenome_db
+  #     - redis
 
   redis:
     image: "redis:alpine"
 
 volumes:
-  cms:
-  genome-browser:
-  portal:
   app:
-  mongodb-data:
   node_modules:
-

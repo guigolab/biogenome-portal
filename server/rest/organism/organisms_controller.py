@@ -7,8 +7,8 @@ from wrappers import data_manager, organism_access
 
 class OrganismsApi(Resource):
 	def get(self):
-		response, mimetype, status = organisms_service.get_organisms(request.args)
-		return Response(response, mimetype=mimetype, status=status)
+		response, mimetype = organisms_service.get_organisms(request.args)
+		return Response(response, mimetype=mimetype, status=200)
     
 	@jwt_required()
 	@data_manager.data_manager_required()

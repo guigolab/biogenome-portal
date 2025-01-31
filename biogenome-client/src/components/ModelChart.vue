@@ -2,38 +2,38 @@
     <VaModal hide-default-actions close-button size="large" v-model="itemStore.showChartModal">
 
         <div class="va-gutter-5 layout fluid">
-            <h3 class="va-h3">{{ t('chart.modalTitle') }}</h3>
+            <h3 class="va-h3">{{ t('chartModal.title') }}</h3>
             <p class="light-paragraph mb-15">
-                {{ t('chart.modalDescription') }}
+                {{ t('chartModal.description') }}
             </p>
-            <VaCard outlined square>
-                <VaCardContent>
-                    <div class="row">
-                        <div class="flex">
-                            <VaInput inner-label :label="t('chart.fieldInputLabel')" v-model="chartForm.field" />
 
-                        </div>
-                        <div class="flex">
-                            <VaSelect inner-label :label="t('chart.chartSelectLabel')" v-model="chartForm.type"
-                                :options="types" />
-                        </div>
-                        <div v-if="examples.length" class="flex">
-                            <VaMenu :options="examples"
-                                :text-by="(({ key, type }: ConfigFilter) => `${key} --> ${type}`)"
-                                @selected="loadExample">
-                                <template #anchor>
-                                    <VaButton color="secondary">Load example</VaButton>
-                                </template>
-                            </VaMenu>
-                        </div>
-                    </div>
-                </VaCardContent>
-                <VaCardActions>
+            <div class="row">
+                <div class="flex">
+                    <VaInput inner-label :label="t('chartModal.fieldInputLabel')" v-model="chartForm.field" />
+
+                </div>
+                <div class="flex">
+                    <VaSelect inner-label :label="t('chartModal.selectLabel')" v-model="chartForm.type"
+                        :options="types" />
+                </div>
+                <div v-if="examples.length" class="flex">
+                    <VaMenu :options="examples" :text-by="(({ key, type }: ConfigFilter) => `${key} --> ${type}`)"
+                        @selected="loadExample">
+                        <template #anchor>
+                            <VaButton color="secondary">{{t('chartModal.exampleBtn')}}</VaButton>
+                        </template>
+                    </VaMenu>
+                </div>
+            </div>
+            <div class="row justify-end">
+                <div class="flex">
                     <VaButton type="submit" :disabled="isDisabled" @click="createChart"> {{
                         t('buttons.submit') }}
                     </VaButton>
-                </VaCardActions>
-            </VaCard>
+                </div>
+            </div>
+
+
             <div v-for="ch in charts" class="row">
                 <div class="flex lg12 md12 sm12 xs12">
                     <Chart :key="counter" :chart="ch" :ignore-query="false" />

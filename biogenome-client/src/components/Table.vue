@@ -24,8 +24,8 @@
     <VaDivider />
     <div class="row justify-center">
         <div class="flex">
-            <VaPagination v-model="offset" :page-size="limit" :total="itemStore.total" :visible-pages="3" rounded
-                buttons-preset="primary" color="secondary" gapped />
+            <VaPagination color="textPrimary" v-model="offset" :page-size="limit" :total="itemStore.total" :visible-pages="3" rounded
+                buttons-preset="primary" gapped />
         </div>
     </div>
 </template>
@@ -50,6 +50,7 @@ const props = defineProps<{
 const columnsToShow = computed(() => {
     return props.columns.map((c: string) => { return { key: c, sortable: true, label: mapField(c) } })
 })
+
 const items = computed(() => itemStore.items)
 
 const offset = computed({
@@ -77,10 +78,13 @@ async function sortItems(event: { columnName: string, value: 'asc' | 'desc' | nu
     await itemStore.fetchItems()
 }
 
-const handleClick = (event: any) => {
+const handleClick = async (event: any) => {
     const { item } = event
-    const rMap = routeMap(item)
-    router.push(rMap[props.model])
+    const map = routeMap(item)
+    //fetch data
+    const route = map[props.model]
+    itemStore.item = { ...item }
+    router.push(route)
 }
 
 </script>

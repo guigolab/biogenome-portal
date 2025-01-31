@@ -8,6 +8,33 @@ export interface ConfigType {
   [key: string]: any[]; // Adjust the type of values if necessary
 }
 
+export type ItemDetails = {
+  title: string,
+  description: string,
+  ncbiLink?: string
+  enaLink?: string
+  blobtoolkitLink?: string
+  speciesLink?: Record<string, any>
+  sampleLink?: Record<string, any>
+  jbrowseLink?: boolean
+  downloadLink?: string
+  chromosomes?: ChromosomeInterface[]
+  annotations?: Annotation[]
+  experiments?: Record<string, any>[]
+  reads?: Record<string, any>
+  biosamples?: Record<string, any>[]
+  local_samples?: Record<string, any>[]
+  assemblies?: Record<string, any>[]
+  coordinates?: Record<string, any>[]
+  metadata?: Record<string, any>
+  images?: string[]
+  avatar?: string
+  insdcStatus?:string
+  goat?: {status:string,targetList:string}
+  publications?: Record<string, any>[]
+  vernacularNames?: Record<string, any>[]
+
+}
 
 export interface AppConfig {
   dashboard: ConfigModel
@@ -100,15 +127,6 @@ export type DataCounts = {
   sub_samples: number;
 };
 
-interface Node {
-  children: Array<string>
-  leaves: number
-  assemblies?: number
-  biosamples?: number
-  experiments?: number
-  local_samples?: number
-  annotations?: number
-}
 
 export type DateRange = {
   start: Date | null
@@ -251,6 +269,17 @@ export interface Assembly {
   metadata: Record<string, any>,
   has_chromosomes_aliases: boolean
 }
+export interface Annotation {
+  assembly_accession: string,
+  assembly_name: string,
+  scientific_name: string,
+  taxid: string,
+  name: string,
+  gff_gz_location: string
+  tab_index_location: string,
+  metadata: Record<string, any>,
+}
+
 export interface TrackData {
   name: string;
   gff_gz_location: string;

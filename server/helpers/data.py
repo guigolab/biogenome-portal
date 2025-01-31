@@ -2,11 +2,9 @@ import csv
 from io import StringIO
 from bson.json_util import dumps, JSONOptions, DatetimeRepresentation
 from mongoengine.queryset.visitor import Q
-from werkzeug.datastructures import MultiDict
 from celery.result import AsyncResult
 from werkzeug.exceptions import NotFound, BadRequest
 from db import models
-import json
 from . import query_visitors
 
 MODEL_MAPPER = {
@@ -78,7 +76,7 @@ def get_items(model, immutable_dict):
     try:
         mapper = MODEL_MAPPER.get(model)
 
-        args = MultiDict(immutable_dict)
+        args = dict(**immutable_dict)
         
         filter = args.pop('filter', None)
 
@@ -90,7 +88,7 @@ def get_items(model, immutable_dict):
         
         format = args.pop('format', 'json')
         
-        selected_fields = args.poplist('fields[]')
+        selected_fields = args.pop('fields', None)
         
         query, q_query = create_query(args, q_query)
 
@@ -104,23 +102,26 @@ def get_items(model, immutable_dict):
             items = items.order_by(sort)
 
         if selected_fields:
+            selected_fields = selected_fields.split(',')
             items = items.only(*selected_fields)
 
         total = items.count()
 
         if format == 'tsv':
             fields = selected_fields if selected_fields else mapper.get('tsv_fields')
-            return create_tsv(items.as_pymongo(), fields).encode('utf-8'), "text/tab-separated-values", 200
+            return create_tsv(items.as_pymongo(), fields).encode('utf-8'), "text/tab-separated-values"
         elif format == 'jsonl':
             return generate_jsonlines(items.as_pymongo()), "application/jsonlines",200
         response = dict(total=total, data=list(items.skip(offset).limit(limit).as_pymongo()))
-        return dump_json(response), "application/json", 200
+        return dump_json(response), "application/json"
     except Exception as e:
         raise BadRequest(description=f"{e}")
 
 def generate_jsonlines(pymongo_data):
     for item in pymongo_data:
         yield dump_json(item) + "\n"
+
+
 
 def create_query(args, q_query):
     query = {}
@@ -143,9 +144,21 @@ def create_query(args, q_query):
             key = key.replace('.', '__')
 
         # Handle greater than/less than conditions
-        if any(op in key for op in ['__gte', '__lte', '__gt', '__lt']):
+        if any(op in key for op in ['__gte', '__lte', '__gt', '__lt', '__size']):
             q_query = add_range_filter(key, value, q_query)
 
+        #handle potential lists
+        elif '__in' in key:
+            if isinstance(value, str):
+                result = [
+                    None if part.strip() == "No Value" else part.strip()
+                    for part in value.split(",")
+                ] 
+            elif isinstance(value, list):
+                result = value
+            else:
+                result = [value]
+            query[key] = result
         else:
             query[key] = value
 

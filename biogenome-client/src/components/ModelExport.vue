@@ -1,84 +1,77 @@
 <template>
     <VaModal hide-default-actions close-button v-model="itemStore.showTsvModal">
         <div class="va-gutter-5 layout fluid">
-            <h3 class="va-h3">Download Report</h3>
+            <h3 class="va-h3">{{t('reportModal.title')}}</h3>
             <p class="light-paragraph mb-15">
-                {{ t('download.fieldsMessage') }}
+                {{ t('reportModal.description') }}
             </p>
-            <VaCard outlined square>
-                <VaInnerLoading :loading="itemStore.isTSVLoading">
-                    <VaCardContent>
-                        <div class="row align-center justify-space-between">
-                            <div class="flex lg8 md8 sm12 xs12">
-                                <VaSelect inner-label label="Format" v-model="format" :options="formats"></VaSelect>
+            <VaInnerLoading :loading="itemStore.isTSVLoading">
+                <p>
+                    Downloading
+                    <span class="va-text-bold">{{ itemStore.total }}</span>
+                    {{ model }} in
+                    <span class="va-text-bold"> {{ format }}</span>
+                    format
+                </p>
+                <div class="row align-center justify-space-between">
+                    <div class="flex lg8 md8 sm12 xs12">
+                        <VaSelect inner-label label="Format" v-model="format" :options="formats"></VaSelect>
+                        <span style="font-size: 0.8rem;" class="va-text-secondary">
+                            {{ t('reportModal.tip') }}
+                        </span>
+                    </div>
+                </div>
+                <div v-if="format === 'tsv'">
+                    <div class="row">
+                        <div class="flex lg8 md8 sm12 xs12">
+                            <VaInput @update:model-value="debouncedUpdateSearch" v-model="inputField" inner-label
+                                label="Field lookup">
+                                <template v-if="fieldToQuery" #appendInner>
+                                    <VaIcon name="fa-circle-check" :color="fieldExists ? 'success' : 'danger'"
+                                        style="margin-left: 5px;" :loading="isLoading">
+                                    </VaIcon>
+                                </template>
+                            </VaInput>
+                            <div v-if="fieldToQuery">
+                                <span style="font-size: 0.8rem;"
+                                    :class="fieldExists ? 'va-text-success' : 'va-text-danger'"> {{ inputField }}
+                                    is {{
+                                        fieldExists ? '' : 'not' }} valid {{ duplicate ? `, but the field is already
+                                    present in the options, select if
+                                    from there` : '' }}</span>
+                            </div>
+                            <div v-else>
                                 <span style="font-size: 0.8rem;" class="va-text-secondary">
-                                    Select TSV or JSONL for faster retrieval
+                                    {{ t('reportModal.queryMessage') }}
                                 </span>
                             </div>
                         </div>
-                    </VaCardContent>
-                    <VaCardContent>
-                        <p>
-                            Downloading
-                            <span class="va-text-bold">{{ itemStore.total }}</span>
-                            {{ model }} in
-                            <span class="va-text-bold"> {{ format }}</span>
-                            format
-                        </p>
-                    </VaCardContent>
-                    <VaCardContent v-if="format === 'tsv'">
-                        <div class="row">
-                            <div class="flex lg8 md8 sm12 xs12">
-                                <VaInput @update:model-value="debouncedUpdateSearch" v-model="inputField" inner-label
-                                    label="Field lookup">
-                                    <template v-if="fieldToQuery" #appendInner>
-                                        <VaIcon name="fa-circle-check" :color="fieldExists ? 'success' : 'danger'"
-                                            style="margin-left: 5px;" :loading="isLoading">
-                                        </VaIcon>
-                                    </template>
-                                </VaInput>
-                                <div v-if="fieldToQuery">
-                                    <span style="font-size: 0.8rem;"
-                                        :class="fieldExists ? 'va-text-success' : 'va-text-danger'"> {{ inputField }}
-                                        is {{
-                                            fieldExists ? '' : 'not' }} valid {{ duplicate ? `, but the field is already
-                                        present in the options, select if
-                                        from there` : '' }}</span>
-                                </div>
-                                <div v-else>
-                                    <span style="font-size: 0.8rem;" class="va-text-secondary">
-                                        Type a field and check if it exists
-                                    </span>
-                                </div>
-                            </div>
-                            <div v-if="fieldExists && fieldToQuery" class="flex">
-                                <VaButton :disabled="fields.includes(fieldToQuery)" @click="addField" color="success"
-                                    icon="fa-plus">
-                                    Field</VaButton>
-                            </div>
-                            <div class="flex">
-                                <VaButton @click="inputField = ''; fieldToQuery = ''" color="danger"
-                                    :disabled="!fieldToQuery" icon="fa-close">Clear
-                                </VaButton>
-                            </div>
+                        <div v-if="fieldExists && fieldToQuery" class="flex">
+                            <VaButton :disabled="fields.includes(fieldToQuery)" @click="addField" color="success"
+                                icon="fa-plus">
+                                {{t('reportModal.addFieldBtn')}}</VaButton>
                         </div>
-                        <div class="row">
-                            <div class="flex lg12 md12 sm12 xs12">
-                                <VaSelect v-model="selectedFields" :label="t('download.fieldsLabel')" :options="fields"
-                                    :placeholder="t('download.fieldsPlaceholder')" multiple>
-                                    <template #content="{ value }">
-                                        <VaChip square outline size="small" color="textPrimary" v-for="v in value"
-                                            :key="v" style="margin: 4px;">
-                                            {{ v }}
-                                        </VaChip>
-                                    </template>
-                                </VaSelect>
-                            </div>
+                        <div class="flex">
+                            <VaButton @click="inputField = ''; fieldToQuery = ''" color="danger"
+                                :disabled="!fieldToQuery" icon="fa-close">{{t('reportModal.clearFieldBtn')}}
+                            </VaButton>
                         </div>
-                    </VaCardContent>
+                    </div>
+                    <div class="row">
+                        <div class="flex lg12 md12 sm12 xs12">
+                            <VaSelect v-model="selectedFields" :label="t('download.fieldsLabel')" :options="fields"
+                                :placeholder="t('download.fieldsPlaceholder')" multiple>
+                                <template #content="{ value }">
+                                    <VaChip size="small" v-for="v in value" :key="v" style="margin: 4px;">
+                                        {{ v }}
+                                    </VaChip>
+                                </template>
+                            </VaSelect>
+                        </div>
+                    </div>
+                </div>
 
-                </VaInnerLoading>
-            </VaCard>
+            </VaInnerLoading>
         </div>
         <template #footer>
             <VaButton preset="submit" :loading="itemStore.isTSVLoading" @click="downloadData()"> {{ t('buttons.submit')

@@ -27,8 +27,8 @@
     "src/**/*.d.ts",
     "src/**/*.vue",
     "vite.config.ts",
-    "src/components/tree/setTreeData.js"
-, "vuestic-ui"  ],
+    "vuestic-ui"
+  ],
   "exclude": [
     "node_modules/**/*"
   ]
