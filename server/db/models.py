@@ -122,6 +122,21 @@ class TaxonNode(db.Document):
         ]
     }
 
+
+class SubProject(db.Document):
+    name = db.StringField(required=True, unique=True)
+    primary_contact = db.StringField(required=True)
+    primary_contact_institution = db.StringField(required=True)
+    primary_contact_email = db.StringField(required=True)
+    date_of_update = db.DateField()
+    schema_version = db.StringField()
+    metadata = db.DictField()
+    meta = {
+        'indexes': [
+            'name', 'primary_contact_email'
+        ]
+    }
+
 @delete_experiment_related_data.apply
 class Experiment(db.Document):
     sample_accession= db.StringField()
@@ -278,6 +293,7 @@ class Publication(db.EmbeddedDocument):
 class Organism(db.Document):
     publications = db.ListField(db.EmbeddedDocumentField(Publication))
     metadata = db.DictField()
+    sub_project= db.StringField()
     tolid_prefix = db.StringField()
     links = db.ListField(db.URLField())
     common_names= db.ListField(db.EmbeddedDocumentField(CommonName))
@@ -315,6 +331,8 @@ class BioGenomeUser(db.Document):
     password=db.StringField(required=True)
     role=db.EnumField(Roles, required=True)
     species=db.ListField(db.StringField())
+    sub_projects = db.ListField(db.StringField())
+    email = db.StringField()
 
 class OrganismPublication(db.Document):
     source = db.EnumField(PublicationSource)

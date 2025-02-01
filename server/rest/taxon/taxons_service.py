@@ -2,9 +2,6 @@ from db.models import  TaxonNode
 from helpers import data as data_helper, taxonomy as taxonomy_helper
 from werkzeug.exceptions import NotFound
 
-def get_root():
-    root = taxonomy_helper.create_or_update_root_taxon()
-
 def get_taxons(args):
     return data_helper.get_items('taxons', args)
 

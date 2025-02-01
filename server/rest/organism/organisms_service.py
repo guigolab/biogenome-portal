@@ -81,7 +81,7 @@ def map_organism_data(data,taxid):
         organism[key] = value
 
     organism['metadata'] = filtered_data.get('metadata')
-
+    print(organism.get('metadata'))
     organism['common_names'] = None
     if filtered_data.get('common_names'):
         organism['common_names'] = [CommonName(**c_name) for c_name in filtered_data['common_names'] if 'value' in c_name]

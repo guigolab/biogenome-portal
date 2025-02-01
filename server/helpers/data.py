@@ -42,6 +42,11 @@ MODEL_MAPPER = {
         'model': models.TaxonNode,
         'query': query_visitors.taxon_query,
         'tsv_fields':  ['taxid', 'name', 'rank']
+    },
+        'sub_projects':{
+        'model': models.SubProject,
+        'query': query_visitors.sub_project_query,
+        'tsv_fields':  ['taxid', 'name', 'rank']
     }
 
 }
@@ -201,6 +206,8 @@ def validate_number(number):
 
 def get_task_status(task_id):
     task = AsyncResult(task_id)
+    print(task)
+
     if task.result:
         return dict(messages=task.result['messages'], state=task.state )
     raise NotFound(description=f"{task_id} not found")

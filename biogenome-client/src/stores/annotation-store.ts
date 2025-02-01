@@ -1,7 +1,5 @@
 import { defineStore } from 'pinia'
 
-
-
 const initAnnotationForm: Record<string, any> = {
   name: '',
   assembly_accession: '',

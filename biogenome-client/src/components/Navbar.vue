@@ -45,8 +45,8 @@
             </VaButton>
           </template>
           <VaMenuItem v-if="config.general.cms">
-            <RouterLink :style="{ 'color': colors.textPrimary }" :to="{ name: 'login' }">
-              Login
+            <RouterLink :style="{ 'color': colors.textPrimary }" :to="{ name: 'admin' }">
+              Admin
             </RouterLink>
           </VaMenuItem>
           <VaMenuItem>

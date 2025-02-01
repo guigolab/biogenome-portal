@@ -110,14 +110,32 @@ def generate_tsv_reader(request_files):
         raise BadRequest(description=f"File decoding error: {e}")
     except Exception as e:
         raise BadRequest(description=f"Unexpected error: {e}")
-    
+"""
+FLOW:
+
+GET USER
+GET PROJECT
+
+-SUBPROJECT EXISTS
+    USER IN PROJECT
+    NEW SPECIES OR SPECIES IN PROJECT
+    OK
+
+-SUBPROJECT DOESNT EXISTS
+    CREATE SUBPROJECT
+    ASSIGN USER AND SPECIES TO SUBPROJECT
+
+SPECIES PRESENT IN THE DB
+    USER OR SUBPROJECT
+
+"""
 def upload_goat_report(request_files):
 
     tsvreader = generate_tsv_reader(request_files)
     rows = [row for row in tsvreader]
 
     if errors := validate_fields(rows):
-        raise BadRequest(description=f"Validation errors: {' '.join(errors)}")
+        raise BadRequest(description=f"Validation errors: {'; '.join(errors)}")
         
     user_obj = user_helper.get_current_user()
     if not user_obj:
@@ -129,7 +147,7 @@ def upload_goat_report(request_files):
     if existing_taxids:
         taxonomy_errors = taxonomy_helper.check_species_permission(user_obj, existing_taxids)
         if taxonomy_errors:
-            raise BadRequest(description=f"Taxonomy permission errors: {' '.join(taxonomy_errors)}")
+            raise BadRequest(description=f"Taxonomy permission errors: {'; '.join(taxonomy_errors)}")
         
     task = goat_report_upload.upload_goat_report.delay(user_obj.name, rows)
     return dict(id=task.id, state=task.state), 200

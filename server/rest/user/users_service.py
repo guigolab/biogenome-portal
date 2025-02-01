@@ -26,6 +26,13 @@ def get_user(name):
         raise NotFound(description=f"User {name} not found")
     return user
 
+
+def check_user(name):
+    user = BioGenomeUser.objects(name=name).first()
+    if not user:
+        raise NotFound(description=f"User {name} not found")
+    return user
+
 def create_user(data):
 
     required_fields = ['name','password','role']
@@ -56,14 +63,15 @@ def create_user(data):
     return username
 
 def update_user(name, data):
-    ex_user = get_user(name)
-    ex_user.update(**data)
+
+    user = check_user(name)
+    user.update(**data)
     return name
 
 def delete_user(name):
-    ex_user = get_user(name)
-    name = ex_user.name
-    ex_user.delete()
+    user = check_user(name)
+    name = user.name
+    user.delete()
     return name
 
 def login_user(payload):
@@ -88,7 +96,7 @@ def get_related_species(name, filter=None, offset=0, limit=10):
     limit, offset = data_helper.get_pagination({'limit':limit, 'offset':offset})
     q_query = get_organisms_filter(filter)
    
-    if user.role == Roles.DATA_MANAGER.value:
+    if user.role.value == Roles.DATA_MANAGER.value:
         species_query = Q(taxid__in=user.species)
         q_query = q_query & species_query if q_query else species_query
         
@@ -104,7 +112,7 @@ def get_related_samples(name, filter=None, offset=0, limit=10):
     limit, offset = data_helper.get_pagination({'limit':limit, 'offset':offset})
     q_query = get_local_samples_filter(filter)
    
-    if user.role == Roles.DATA_MANAGER.value:
+    if user.role.value == Roles.DATA_MANAGER.value:
         species_query = Q(taxid__in=user.species)
         q_query = q_query & species_query if q_query else species_query
         

@@ -352,5 +352,5 @@ export type OrganismForm = {
   metadata: Record<string, string>,
   publications: Publication[],
   goat_status: string,
-  target_list_status: string,
+  target_list_status: 'long_list' | 'family_representative' | 'other_priority',
 }

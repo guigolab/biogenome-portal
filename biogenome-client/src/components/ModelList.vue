@@ -1,21 +1,22 @@
 <template>
-
     <div>
         <VaChip style="margin: 3px;" v-for="({ key, count }) in modelList" :key="key"
-            :to="{ name: 'model', params: { model: key } }" size="small" :outline="key !== modelParam">{{ key }}
+            :to="{ name: 'model', params: { model: key } }" size="small" :outline="key !== modelParam">{{
+                t(`models.${key}`) }}
             <span class="va-text-bold" style="margin-left: 3px;">
                 {{ count }}
             </span>
         </VaChip>
     </div>
-
 </template>
 <script setup lang="ts">
 import { computed, inject, watchEffect } from 'vue';
 import { useStatsStore } from '../stores/stats-store';
 import { useRoute } from 'vue-router';
 import { AppConfig } from '../data/types';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n()
 const route = useRoute()
 const appConfig = inject('appConfig') as AppConfig
 

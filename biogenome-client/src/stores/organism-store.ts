@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { Publication, CommonName, Metatada, OrganismForm, Filter } from '../data/types'
+import { Publication, CommonName, Metatada, OrganismForm } from '../data/types'
 
 
 const initOrganismForm: OrganismForm = {
@@ -14,11 +14,6 @@ const initOrganismForm: OrganismForm = {
   target_list_status: '',
 }
 
-const initPagination = {
-  offset: 0,
-  limit: 10,
-}
-
 export const useOrganismStore = defineStore('organism', {
   state: () => {
     return {
@@ -26,7 +21,9 @@ export const useOrganismStore = defineStore('organism', {
       metadataList: [] as Metatada[],
       publications: [] as Publication[],
       vernacularNames: [] as CommonName[],
-      images: [] as Record<'value', string>[]
+      images: [] as Record<'value', string>[],
+      isValid: false,
+      filter: ''
     }
   },
 

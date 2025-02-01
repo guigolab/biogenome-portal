@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const baseURL = import.meta.env.VITE_API_PATH ?
- import.meta.env.VITE_API_PATH : import.meta.env.BASE_URL + '/api'
+ import.meta.env.VITE_API_PATH : import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL + 'api' : import.meta.env.BASE_URL + '/api'
 
 export const base = axios.create({
   baseURL,
@@ -22,15 +22,14 @@ export const ncbi = axios.create({
   },
 })
 
-export const wikipedia = (lang:string) =>  axios.create({
-  baseURL: `https://${lang}.m.wikipedia.org/api/rest_v1/page/summary`,
-  headers: {
-    'Content-type': 'application/json',
-  },
-})
-
 export const ena = {
   enaApi: axios.create({
     baseURL: 'https://www.ebi.ac.uk',
+    withCredentials: true,
   })
 }
+
+export const submission = axios.create({
+  baseURL: baseURL,
+  withCredentials: true,
+})

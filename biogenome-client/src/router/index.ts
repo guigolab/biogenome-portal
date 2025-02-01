@@ -1,14 +1,13 @@
 import { createRouter, createWebHistory, RouteLocationNormalized, RouteRecordRaw } from 'vue-router'
-import Home from '../pages/Home.vue'
 import { dataModels, DataModels } from '../data/types'
-
-
+import { cmsRoutes } from './cms-routes'
 export function isDataModel(to: RouteLocationNormalized) {
   const model = to.params.model
   if (!dataModels.includes(model as DataModels)) {
     return { name: 'home' }
   }
 }
+
 
 const defaultRoutes: Array<RouteRecordRaw> = [
   {
@@ -18,7 +17,8 @@ const defaultRoutes: Array<RouteRecordRaw> = [
   {
     name: 'home',
     path: '/',
-    component: Home,
+    component: () => import('../pages/front/Home.vue'),
+    meta: { layout: 'DataLayout' }
   },
   {
     path: '/data',
@@ -28,47 +28,57 @@ const defaultRoutes: Array<RouteRecordRaw> = [
     name: 'model',
     path: '/data/:model',
     props: true,
-    component: () => import('../pages/Items.vue'),
+    meta: { layout: 'DataLayout' },
+
+    component: () => import('../pages/front/Items.vue'),
     beforeEnter: [isDataModel],
   },
   {
     name: 'item',
     path: '/data/:model/:id',
     props: true,
-    component: () => import('../pages/Item.vue'),
+    meta: { layout: 'DataLayout' },
+
+    component: () => import('../pages/front/Item.vue'),
     beforeEnter: [isDataModel],
   },
   {
     name: 'tree',
     path: '/tree',
-    // redirect: '/'
+    redirect: '/',
+    meta: { layout: 'DataLayout' },
 
-    component: () => import('../pages/Tree.vue')
+    // component: () => import('../pages/front/Tree.vue')
   },
   {
     name: 'jbrowse',
     path: '/jbrowse',
-    // redirect: '/'
-    component: () => import('../pages/GenomeBrowser.vue')
+    redirect: '/',
+    meta: { layout: 'DataLayout' },
+
+    // component: () => import('../pages/front/GenomeBrowser.vue')
   },
   {
     name: 'login',
     path: '/login',
-    redirect: '/'
+    component: () => import('../pages/cms/Login.vue')
+  },
+  {
+    name: 'unauthorized',
+    path: '/unauthorized',
+    component: () => import('../pages/cms/Unauthorized.vue')
   }
 
 ]
 
 function initRoutes() {
 
-  const routes = [...defaultRoutes]
-
-  // if (general.cms) routes.push(...cmsRoutes)
-
+  const routes = [...defaultRoutes, ...cmsRoutes as RouteRecordRaw[]]
   return routes
 }
 
 const routes = initRoutes()
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.VITE_BASE_PATH ? import.meta.env.VITE_BASE_PATH : import.meta.env.BASE_URL),
   routes,

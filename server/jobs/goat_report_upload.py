@@ -4,12 +4,12 @@ from helpers import organism as organism_helper, user as user_helper
 from celery import shared_task
 
 GOAT_STATUS_IMPORT_MAPPER={
-    "sample_collected":GoaTStatus.SAMPLE_COLLECTED,
-    "sample_acquired":GoaTStatus.SAMPLE_ACQUIRED,
-    "data_generation":GoaTStatus.DATA_GENERATION,
-    "in_assembly":GoaTStatus.IN_ASSEMBLY,
-    "insdc_submitted":GoaTStatus.INSDC_SUBMITTED,
-    "publication_available":GoaTStatus.PUBLICATION_AVAILABLE
+    "sample_collected":GoaTStatus.SAMPLE_COLLECTED.value,
+    "sample_acquired":GoaTStatus.SAMPLE_ACQUIRED.value,
+    "data_generation":GoaTStatus.DATA_GENERATION.value,
+    "in_assembly":GoaTStatus.IN_ASSEMBLY.value,
+    "insdc_submitted":GoaTStatus.INSDC_SUBMITTED.value,
+    "publication_available":GoaTStatus.PUBLICATION_AVAILABLE.value
 }
 
 @shared_task(name='goat_upload', ignore_result=False, bind=True)
@@ -56,13 +56,9 @@ def upload_goat_report(self, username, rows):
         self.update_state(state='PROGRESS', meta={'messages': [f"Updating {org.scientific_name}"]})
 
         data_to_update = rows_map[org.taxid]
-
         publication = data_to_update.get('publications')
         org.target_list_status = data_to_update.get('target_list_status')
-        
-        sequencing_status = data_to_update.get('sequencing_status')
-
-        org.goat_status = GOAT_STATUS_IMPORT_MAPPER.get(sequencing_status)
+        org.goat_status = data_to_update.get('goat_status')
         
         if publication and not any(pub.id == publication.id for pub in org.publications):
             org.publications.append(publication)
@@ -70,7 +66,6 @@ def upload_goat_report(self, username, rows):
         org.save()
 
     self.update_state(state='PROGRESS', meta={'messages': [f'A total of {len(organisms_to_update)} have been updated']})
-
     user = BioGenomeUser.objects(name=username).first()
 
     user_helper.add_species_to_datamanager([org.taxid for org in organisms_to_update], user)

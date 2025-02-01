@@ -48,7 +48,6 @@ class Roles(Enum):
     ## CREATE ANNOTATION
     ## CRUD RELATED DATA
     DATA_MANAGER = 'DataManager'
-
     ## ALL ACTIONS
     DATA_ADMIN = 'Admin'
 

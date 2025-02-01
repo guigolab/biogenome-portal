@@ -34,7 +34,7 @@ def delete_annotation(name):
 def check_required_fields(fields, data):
     missing_fields = [field for field in fields if field not in data]
     if missing_fields:
-        raise BadRequest(description=f"Missing required files: {', '.join(missing_fields)}")
+        raise BadRequest(description=f"Missing required fields: {', '.join(missing_fields)}")
 
 def check_annotation_exists(annotation_name):
     if GenomeAnnotation.objects(name=annotation_name).first():

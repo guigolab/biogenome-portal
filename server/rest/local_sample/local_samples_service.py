@@ -36,7 +36,7 @@ def parse_excel(excel=None, id=None, taxid=None, scientific_name=None, header=1,
     
     param_errors = excel_helper.validate_params(excel, header, source)
     if param_errors:
-        raise BadRequest(description=f"{' '.join(param_errors) }")
+        raise BadRequest(description=f"{'; '.join(param_errors) }")
     
     wb_obj = openpyxl.load_workbook(excel, data_only=True)
     sheet_obj = wb_obj.active
@@ -49,7 +49,7 @@ def parse_excel(excel=None, id=None, taxid=None, scientific_name=None, header=1,
 
     errors = excel_helper.validate_and_check_options(header_row, mandatory_fields, option)
     if errors:
-        raise BadRequest(description=f"{' '.join(errors) }")
+        raise BadRequest(description=f"{'; '.join(errors) }")
     
     rows_to_process = itertools.islice(sheet_obj.rows, header, None)
 

@@ -1,68 +1,33 @@
 <template>
-  <VaLayout :top="{ fixed: true, order: 3, }" :right="{ fixed: true, absolute: breakpoints.smDown, order: 2, }">
-    <template #top>
-      <NavBar />
-      <VaDivider style="margin: 0;" />
-      <VaAlert closeable v-model="showAlert" color="warning" class="mb-6">
-        <h4 class="va-h6">We Value your feedback</h4>
-        <a style="margin-right: 3px;" class="va-text-bold va-link" href="https://forms.gle/NcZXJtXqHQTVRdHW8"
-          target="_blank">Fill out our Feedback Form.</a>
-        It only takes a few minutes, and your input is invaluable to us.
-      </VaAlert>
-      <TaxonNavbar v-if="taxonomyStore.currentTaxon" :taxid="taxonomyStore.currentTaxon.taxid"
-        :leaves="taxonomyStore.currentTaxon.leaves ?? 0"></TaxonNavbar>
-    </template>
-    <template #right>
-      <TaxonSidebar />
-    </template>
-    <template #content>
-      <main :class="['layout', 'va-gutter-5']">
-        <router-view v-slot="{ Component }">
-          <Transition name="fade">
-            <component :is="Component" />
-          </Transition>
-        </router-view>
-      </main>
-    </template>
-  </VaLayout>
+  <component :is="route.meta.layout === 'AdminLayout' ? AdminLayout : DefaultLayout">
+    <router-view />
+  </component>
 
 </template>
 <script setup lang="ts">
-import { useBreakpoint } from 'vuestic-ui';
-import NavBar from './components/Navbar.vue'
-import TaxonSidebar from './components/TaxonSidebar.vue'
-import { useTaxonomyStore } from './stores/taxonomy-store';
-import { onMounted, ref } from 'vue';
-import TaxonNavbar from './components/TaxonNavbar.vue';
-import {
-  Chart as ChartJS,
-  Title,
-  Tooltip,
-  Legend,
-  BarElement,
-  LineElement,
-  LinearScale,
-  PointElement,
-  CategoryScale,
-  ArcElement,
-  Filler,
-} from 'chart.js'
-import { useStatsStore } from './stores/stats-store';
+
+import { computed, inject, onMounted } from 'vue';
 import { useGlobalStore } from './stores/global-store';
+import { AppConfig, LangOption } from './data/types';
+import { useI18n } from 'vue-i18n';
 
-ChartJS.register(Title, Tooltip, Legend, LineElement, LinearScale, PointElement, CategoryScale, Filler, ArcElement, BarElement)
+import { useRoute } from 'vue-router';
+import DefaultLayout from './layouts/DataLayout.vue';
+import AdminLayout from './layouts/AdminLayout.vue';
 
-const breakpoints = useBreakpoint()
-const taxonomyStore = useTaxonomyStore()
-const statsStore = useStatsStore()
-const globalStore = useGlobalStore()
-const showAlert = ref(false)
-onMounted(async () => {
-  await statsStore.getPortalStats()
-  showAlert.value = true
+const route = useRoute();
+
+const settings = inject('appConfig') as AppConfig
+const dashboardDefaultTitle = "BioGenome Portal"
+const { locale } = useI18n()
+
+const title = computed<LangOption | string>(() => settings.general.title[locale.value] ?? dashboardDefaultTitle)
+
+onMounted(() => {
+  document.title = title.value as string
 })
-</script>
 
+</script>
 <style lang="scss">
 @import 'scss/main.scss';
 

@@ -4,9 +4,9 @@
             <VaDataTable @columnSorted="sortItems" disableClientSideSorting @row:click="handleClick" hoverable clickable
                 :loading="itemStore.isTableLoading" :items="items" :columns="columnsToShow">
                 <template #cell(image)="{ rowData }">
-                    <va-avatar v-if="rowData.image" size="large">
+                    <VaAvatar v-if="rowData.image" size="large">
                         <img :src="rowData.image" />
-                    </va-avatar>
+                    </VaAvatar>
                 </template>
                 <template #cell(gff_gz_location)="{ rowData }">
                     <VaChip @click.stop :href="rowData.gff_gz_location" outline size="small">{{

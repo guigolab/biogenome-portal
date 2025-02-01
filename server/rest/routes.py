@@ -13,6 +13,7 @@ from .goat_report import goat_reports_controller
 from .sample_location import sample_locations_controller
 from .lookup import lookup_controller
 from .configs import config_controller
+from .sub_project import sub_projects_controller
 
 def initialize_routes(api):
 	
@@ -43,7 +44,11 @@ def initialize_routes(api):
 
 	api.add_resource(sample_locations_controller.UniqueLocations, '/api/coordinates/frequency')
 
-
+	##SUB_PROJECTS
+	api.add_resource(sub_projects_controller.SubProjectsApi, '/api/sub_projects')
+	api.add_resource(sub_projects_controller.SubProjectApi, '/api/sub_projects/<name>')
+	api.add_resource(sub_projects_controller.SubProjectRelatedSpecies,  '/api/sub_projects/<name>/organisms')
+	api.add_resource(sub_projects_controller.SubProjectRelatedUsers,  '/api/sub_projects/<name>/users')
 
 	##ORGANISMS
 	api.add_resource(organisms_controller.OrganismsApi, '/api/organisms')

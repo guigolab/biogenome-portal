@@ -24,3 +24,5 @@ def local_sample_query(filter):
 def experiment_query(filter):
     return taxonomic_query(filter) | (Q(experiment_accession__iexact=filter) | Q(experiment_accession__icontains=filter)) | (Q(metadata__experiment_title__icontains=filter))
 
+def sub_project_query(filter):
+    return (Q(name__iexact=filter) | Q(name__icontains=filter)) | (Q(primary_contact__iexact=filter) | Q(primary_contact__icontains=filter))
