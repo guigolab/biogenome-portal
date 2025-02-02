@@ -45,4 +45,8 @@ class OrganismLineageApi(Resource):
 		organism_obj = organisms_service.get_organism(taxid)
 		tree = organisms_service.map_organism_lineage(organism_obj.taxon_lineage)
 		return Response(json.dumps(tree),mimetype="application/json", status=200)
-	
+
+class UnassignedOrganismsApi(Resource):
+	def get(self):
+		json, mimetype = organisms_service.get_unassigned_organisms(**request.args)
+		return Response(json, mimetype=mimetype, status=200)

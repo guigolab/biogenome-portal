@@ -110,23 +110,24 @@ def get_items(model, immutable_dict):
             selected_fields = selected_fields.split(',')
             items = items.only(*selected_fields)
 
-        total = items.count()
+        fields = selected_fields if selected_fields else mapper.get('tsv_fields')
+        return generate_response(format, fields, items, limit, offset)
 
-        if format == 'tsv':
-            fields = selected_fields if selected_fields else mapper.get('tsv_fields')
-            return create_tsv(items.as_pymongo(), fields).encode('utf-8'), "text/tab-separated-values"
-        elif format == 'jsonl':
-            return generate_jsonlines(items.as_pymongo()), "application/jsonlines",200
-        response = dict(total=total, data=list(items.skip(offset).limit(limit).as_pymongo()))
-        return dump_json(response), "application/json"
     except Exception as e:
         raise BadRequest(description=f"{e}")
+
+def generate_response(format, fields, items, limit, offset):
+    if format == 'tsv':
+        return create_tsv(items.as_pymongo(), fields).encode('utf-8'), "text/tab-separated-values"
+    elif format == 'jsonl':
+        return generate_jsonlines(items.as_pymongo()), "application/jsonlines"
+    total = items.count()
+    response = dict(total=total, data=list(items.skip(offset).limit(limit).as_pymongo()))
+    return dump_json(response), "application/json"
 
 def generate_jsonlines(pymongo_data):
     for item in pymongo_data:
         yield dump_json(item) + "\n"
-
-
 
 def create_query(args, q_query):
     query = {}
@@ -209,5 +210,5 @@ def get_task_status(task_id):
     print(task)
 
     if task.result:
-        return dict(messages=task.result['messages'], state=task.state )
+        return dict(messages=task.result.get('messages'), state=task.state )
     raise NotFound(description=f"{task_id} not found")

@@ -1,14 +1,9 @@
 from db.models import Organism
-from extensions.cache import cache
 from clients import ebi_client, ncbi_client
 from parsers import taxonomy as taxonomy_parser, organism as organism_parser
 from . import taxonomy as taxonomy_helper
 
 TAXID_LIST_LIMIT=5000
-
-@cache.memoize(timeout=300)
-def get_organisms_taxid_from_parent_taxid(taxid):
-    return Organism.objects(taxon_lineage=taxid).scalar('taxid')
 
 def handle_organism(taxid):
     organism_obj = Organism.objects(taxid=taxid).first()

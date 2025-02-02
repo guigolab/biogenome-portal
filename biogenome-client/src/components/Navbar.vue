@@ -84,11 +84,13 @@ import { RouterLink, useRouter } from 'vue-router';
 import { useBreakpoint, useColors, useToast } from 'vuestic-ui';
 import { useI18n } from 'vue-i18n';
 import GoaTService from '../services/GoaTService';
+import { useGlobalStore } from '../stores/global-store';
 
 
 const { colors } = useColors()
 const { t, locale } = useI18n()
 const breakpoint = useBreakpoint()
+const globalStore = useGlobalStore()
 const config = inject('appConfig') as AppConfig
 const router = useRouter()
 const generalConfigs = ['general', 'ui']
@@ -118,6 +120,7 @@ const settings = ['Login', 'GitHub', 'API Docs']
 
 function handleLang(lang: { code: string, name: string }) {
   locale.value = lang.code
+  globalStore.changeLang(lang.code)
 }
 
 async function downloadGoatReport() {

@@ -52,6 +52,8 @@ def initialize_routes(api):
 
 	##ORGANISMS
 	api.add_resource(organisms_controller.OrganismsApi, '/api/organisms')
+	api.add_resource(organisms_controller.UnassignedOrganismsApi, '/api/organisms/unassigned')
+
 	api.add_resource(organisms_controller.OrganismApi, '/api/organisms/<taxid>')
 	api.add_resource(lookup_controller.OrganismRelatedDataLookup, '/api/organisms/<taxid>/lookup')
 	api.add_resource(organisms_controller.OrganismLineageApi, '/api/organisms/<taxid>/lineage')

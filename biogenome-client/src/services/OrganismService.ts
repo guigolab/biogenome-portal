@@ -9,6 +9,11 @@ class OrganismService {
     })
   }
 
+  getUnassignedOrganisms(params: Record<string, any>) {
+    return base.get('/organisms/unassigned', {
+      params: params,
+    })
+  }
   getOrganismsLocations(params: Record<string, any>) {
     return base.get('/organisms/locations', {
       params: params,

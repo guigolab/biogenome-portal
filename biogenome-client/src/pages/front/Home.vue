@@ -27,19 +27,25 @@
     </div>
     <div class="row justify-center section-mb">
       <div class="flex lg12 md12 sm12 xs12">
-        <TaxonSearch />
-        <div class="row">
-          <div class="flex lg6 md6 sm12 xs12">
-            <VaButton preset="primary" block :to="{ name: 'tree' }" color="textPrimary">
-              {{ t('home.taxonomy.exploreBtn') }}
-            </VaButton>
-          </div>
-          <div v-if="rootTaxon" class="flex lg6 md6 sm12 xs12">
-            <VaButton @click="updateTaxon(rootTaxon)" preset="primary" block>
-              {{ t('home.taxonomy.viewBtn') }} {{ rootTaxon.name }}
-            </VaButton>
-          </div>
-        </div>
+        <VaCard>
+          <VaCardContent>
+            
+            <TaxonSearch />
+            <div class="row">
+              <div class="flex lg6 md6 sm12 xs12">
+                <VaButton preset="primary" block :to="{ name: 'tree' }" color="textPrimary">
+                  {{ t('home.taxonomy.exploreBtn') }}
+                </VaButton>
+              </div>
+              <div v-if="rootTaxon" class="flex lg6 md6 sm12 xs12">
+                <VaButton @click="updateTaxon(rootTaxon)" preset="primary" block>
+                  {{ t('home.taxonomy.viewBtn') }} {{ rootTaxon.name }}
+                </VaButton>
+              </div>
+            </div>
+          </VaCardContent>
+        </VaCard>
+
       </div>
     </div>
     <div class="row align-center justify-center">

@@ -3,8 +3,10 @@ import { useToast } from 'vuestic-ui'
 import AuthService from '../services/AuthService'
 
 const AUTH_KEY = 'auth'
+const LANG = 'lang'
 const isAuth = localStorage.getItem(AUTH_KEY) === 'true'
 
+const lang = localStorage.getItem(LANG)
 export const useGlobalStore = defineStore('global', {
   state: () => {
     return {
@@ -13,6 +15,7 @@ export const useGlobalStore = defineStore('global', {
       userRole: '',
       userSpecies: [] as string[],
       isAuthenticated: isAuth,
+      language: lang,
       error: false,
       message: '',
       toast: useToast().init
@@ -27,7 +30,10 @@ export const useGlobalStore = defineStore('global', {
       localStorage.setItem(AUTH_KEY, 'true');
       this.isAuthenticated = true
     },
-
+    changeLang(lang:string){
+      this.language = lang
+      localStorage.setItem(LANG, lang)
+    },
     async login(name: string, password: string) {
       try {
         const { data } = await AuthService.login({ name, password })

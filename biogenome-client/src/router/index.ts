@@ -45,18 +45,12 @@ const defaultRoutes: Array<RouteRecordRaw> = [
   {
     name: 'tree',
     path: '/tree',
-    redirect: '/',
-    meta: { layout: 'DataLayout' },
-
-    // component: () => import('../pages/front/Tree.vue')
+    component: () => import('../pages/front/Tree.vue')
   },
   {
     name: 'jbrowse',
     path: '/jbrowse',
-    redirect: '/',
-    meta: { layout: 'DataLayout' },
-
-    // component: () => import('../pages/front/GenomeBrowser.vue')
+    component: () => import('../pages/front/GenomeBrowser.vue')
   },
   {
     name: 'login',

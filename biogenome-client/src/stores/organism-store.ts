@@ -11,7 +11,7 @@ const initOrganismForm: OrganismForm = {
   metadata: {} as Record<string, string>,
   publications: [] as Publication[],
   goat_status: '',
-  target_list_status: '',
+  target_list_status: null,
 }
 
 export const useOrganismStore = defineStore('organism', {

@@ -92,13 +92,6 @@
                 </h2>
               </VaCardContent>
               <VaCardContent>
-                <div class="row justify-center">
-                  <div class="flex">
-                    <p class="va-text-bold">
-                      Metadata
-                    </p>
-                  </div>
-                </div>
                 <div class="row">
                   <div class="flex lg12 md12 sm12 xs12">
                     <VaButton block icon="add" @click="addNewAttribute">Add new attribute</VaButton>
@@ -125,11 +118,11 @@
           </div>
         </div>
         <div class="row justify-space-between">
-          <div class="flex lg6 md6 sm12 xs12">
+          <div class="flex">
             <VaButton color="danger" @click="resetForm">Reset</VaButton>
 
           </div>
-          <div class="flex lg6 md6 sm12 xs12">
+          <div class="flex">
             <VaButton @click="handleSubmit">Submit</VaButton>
 
           </div>

@@ -1,5 +1,5 @@
 
-from db.models import CommonName,TaxonNode, Organism, Publication,Assembly,GenomeAnnotation,BioSample,LocalSample,Experiment
+from db.models import CommonName,TaxonNode, Organism, Publication,Assembly,GenomeAnnotation,BioSample,LocalSample,Experiment,BioGenomeUser
 from helpers import taxonomy as taxonomy_helper, user as user_helper, organism as organism_helper, geolocation as geoloc_helper, data as data_helper
 from werkzeug.exceptions import BadRequest, Conflict, NotFound
 import os 
@@ -100,9 +100,18 @@ def map_organism_lineage(lineage):
     tree = taxonomy_helper.dfs_generator(root)
     return tree
 
-
 def delete_organism(taxid):
     organism_to_delete = get_organism(taxid)
     organism_to_delete.delete()
     return f"Organisms {taxid} succesfully deleted", 200
+    
+def get_unassigned_organisms(format='json',filter=None, limit=20, offset=0):
+    users_taxids = BioGenomeUser.objects().distinct('species')
+    offset = int(offset)
+    limit = int(limit)
+    fields = ['scientific_name', 'taxid', "goat_status","target_list_status"]
+    organisms = Organism.objects(taxid__not__in=users_taxids)
+    if filter:
+        organisms = organisms.filter(data_helper.query_visitors.organism_query(filter))
+    return data_helper.generate_response(format, fields, organisms, limit, offset)
     

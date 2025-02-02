@@ -20,11 +20,12 @@ const route = useRoute();
 const settings = inject('appConfig') as AppConfig
 const dashboardDefaultTitle = "BioGenome Portal"
 const { locale } = useI18n()
-
+const globalStore = useGlobalStore()
 const title = computed<LangOption | string>(() => settings.general.title[locale.value] ?? dashboardDefaultTitle)
 
 onMounted(() => {
   document.title = title.value as string
+  if(globalStore.language) locale.value = globalStore.language
 })
 
 </script>

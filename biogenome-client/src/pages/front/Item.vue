@@ -20,7 +20,7 @@
                                 title="insdc.title">
                             </SequencingStatusCard>
                         </div>
-                        <div class="flex lg12 md12 sm12 xs12" v-if="detailsObject.goat">
+                        <div class="flex lg12 md12 sm12 xs12" v-if="detailsObject.goat && detailsObject.goat.status">
                             <SequencingStatusCard :current-status="detailsObject.goat.status" :statuses="goatSteps"
                                 :target-list="detailsObject.goat.targetList" title="goat.title">
                             </SequencingStatusCard>
@@ -30,14 +30,14 @@
                                 <VaCardContent>
                                     <div class="row align-center">
                                         <div class="flex">
-                                            <h3 class="va-h6"> {{t('item.internalLinks')}}</h3>
+                                            <h3 class="va-h6"> {{ t('item.internalLinks') }}</h3>
                                         </div>
                                     </div>
                                 </VaCardContent>
                                 <VaCardActions align="stretch" vertical>
                                     <VaButton color="textPrimary" preset="primary" icon-right="fa-up-right-from-square"
                                         v-if="detailsObject.downloadLink" :href="detailsObject.downloadLink">
-                                        {{t('buttons.download')}}</VaButton>
+                                        {{ t('buttons.download') }}</VaButton>
                                     <VaButton color="textPrimary" preset="primary" icon-right="fa-up-right-from-square"
                                         v-if="detailsObject.speciesLink" :to="detailsObject.speciesLink">
                                         {{ item ? item.scientific_name || item.metadata.scientific_name : ""
@@ -51,7 +51,7 @@
                                     </VaButton>
                                     <VaButton icon-right="fa-up-right-from-square" preset="primary" block
                                         color="#742061" v-if="detailsObject.jbrowseLink"
-                                        @click="createGenomeBrowserSession"> {{t('item.genomeBrowserLink')}}</VaButton>
+                                        @click="createGenomeBrowserSession"> {{ t('item.genomeBrowserLink') }}</VaButton>
                                 </VaCardActions>
                             </VaCard>
                         </div>
@@ -60,7 +60,7 @@
                                 <VaCardContent>
                                     <div class="row align-center">
                                         <div class="flex">
-                                            <h3 class="va-h6">{{t('item.externalLinks')}}</h3>
+                                            <h3 class="va-h6">{{ t('item.externalLinks') }}</h3>
                                         </div>
                                     </div>
                                 </VaCardContent>
@@ -84,7 +84,7 @@
                                 <VaCardContent>
                                     <div class="row align-center">
                                         <div class="flex">
-                                            <h3 class="va-h6">{{t('item.publications')}}</h3>
+                                            <h3 class="va-h6">{{ t('item.publications') }}</h3>
                                         </div>
                                     </div>
                                 </VaCardContent>
@@ -102,7 +102,7 @@
                                 <VaCardContent>
                                     <div class="row align-center">
                                         <div class="flex">
-                                            <h3 class="va-h6">{{t('item.vernacularNames')}}</h3>
+                                            <h3 class="va-h6">{{ t('item.vernacularNames') }}</h3>
                                         </div>
                                     </div>
                                 </VaCardContent>
@@ -130,7 +130,7 @@
                                 <VaCardContent>
                                     <div class="row">
                                         <div class="flex lg12 md12 sm12 xs12">
-                                            <h3 class="va-h6">{{t('item.chromosomes')}}</h3>
+                                            <h3 class="va-h6">{{ t('item.chromosomes') }}</h3>
                                         </div>
                                     </div>
                                     <Chromosomes :chromosomes="detailsObject.chromosomes" :selected-chromosomes="[]"
@@ -143,7 +143,7 @@
                                 <VaCardContent>
                                     <div class="row align-center">
                                         <div class="flex">
-                                            <h3 class="va-h6">{{t('item.data')}}</h3>
+                                            <h3 class="va-h6">{{ t('item.data') }}</h3>
                                         </div>
                                     </div>
                                 </VaCardContent>

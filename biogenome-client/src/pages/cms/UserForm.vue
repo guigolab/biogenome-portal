@@ -47,6 +47,10 @@
                             <p class="va-text-secondary">Click over a species to assign it, start typing in the filter
                                 to show species</p>
                         </div>
+                        <div class="flex">
+                            <VaCheckbox label="Show only unassigned organisms" v-model="onlyAvailableOrganisms"
+                                @update:modelValue="handleSearch('')"></VaCheckbox>
+                        </div>
                     </div>
                 </VaCardContent>
                 <VaCardContent>
@@ -62,6 +66,12 @@
                                 :columns="['scientific_name', 'goat_status', 'target_list_status']"
                                 :items="filteredOrganisms">
                             </VaDataTable>
+                        </div>
+                    </div>
+                    <div class="row justify-center">
+                        <div class="flex">
+                            <VaPagination color="textPrimary" v-model="offset" :page-size="pagination.limit"
+                                :total="total" :visible-pages="3" rounded buttons-preset="primary" gapped />
                         </div>
                     </div>
                 </VaCardContent>
@@ -112,12 +122,13 @@
     </div>
 </template>
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, reactive, ref, watch } from 'vue';
 import AuthService from '../../services/AuthService';
 import { useToast } from 'vuestic-ui/web-components';
 import { useRouter } from 'vue-router';
 import ItemService from '../../services/CommonService';
 import Header from '../../components/cms/Header.vue';
+import OrganismService from '../../services/OrganismService';
 
 
 const router = useRouter()
@@ -133,11 +144,28 @@ const description = computed(() => props.name ? `Edit ${props.name}` : 'Create a
 
 const isValid = computed(() => user.value && user.value.name && user.value.password)
 const filter = ref<string>('')
+const pagination = reactive({
+    limit: 10,
+    offset: 0
+})
 
+const offset = computed({
+    get() {
+        return pagination.offset + 1
+    },
+    set(v: number) {
+        pagination.offset = v - 1
+    }
+})
+
+watch(() => offset.value, async () => {
+    await handleSearch("")
+})
 const isLoading = ref(false)
+const total = ref(0)
 const assignedSpeciesFilter = ref('')
 const availableSpeciesFilter = ref('')
-
+const onlyAvailableOrganisms = ref(true)
 const initUser = {
     name: '',
     password: '',
@@ -151,11 +179,10 @@ const selectedAssignedSpecies = ref<Record<string, any>[]>([])
 const userOrganisms = ref<Record<string, any>[]>([])
 const organisms = ref<Record<string, any>[]>([])
 
-const filteredOrganisms = computed(() =>
-    organisms.value
-        .filter(
-            ({ taxid }) => !userOrganisms.value.map((org) => org.taxid).includes(taxid)
-        )
+const filteredOrganisms = computed(() => {
+    return organisms.value.filter(({ taxid }) => !userOrganisms.value.map((org) => org.taxid).includes(taxid))
+}
+
 )
 const user = ref<{
     name: string,
@@ -188,12 +215,20 @@ onMounted(async () => {
         user.value = { ...data }
         await getRelatedOrganism(user.value.name)
     }
+    await handleSearch("")
 })
 
 async function handleSearch(v: string) {
     filter.value = v
-    const { data } = await ItemService.getItems('organisms', { filter: filter.value })
-    if (data.data) organisms.value = [...data.data]
+    if (onlyAvailableOrganisms.value) {
+        const { data } = await OrganismService.getUnassignedOrganisms({ filter: filter.value, ...pagination })
+        organisms.value = [...data.data]
+        total.value = data.total
+    } else {
+        const { data } = await ItemService.getItems('organisms', { filter: filter.value, ...pagination })
+        organisms.value = [...data.data]
+        total.value = data.total
+    }
 }
 
 async function handleSubmit() {

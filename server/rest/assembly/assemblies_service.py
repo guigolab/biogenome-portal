@@ -121,3 +121,4 @@ def get_chr_aliases_file(accession):
         as_attachment=True,
         download_name=f'{assembly_obj.accession}_chr_aliases.tsv'
     )
+
