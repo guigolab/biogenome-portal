@@ -12,9 +12,6 @@
         "features": {
             "title": "Features"
         },
-        "stats": {
-            "title": ""
-        },
         "goat": {
             "title": "Genomes on a Tree Status"
         },
@@ -29,7 +26,7 @@
         "docs": "API Docs",
         "data": "Data",
         "tools": "Tools",
-        "settings": "Access",
+        "settings": "Resources",
         "home": "Home"
     },
     "tree": {

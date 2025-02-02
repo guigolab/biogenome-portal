@@ -1,121 +1,157 @@
 {
-    "auth": {
-        "login": "Inicia sessió",
-        "password": "Contrasenya",
-        "logout": "Tanca sessió"
-    },
-    "buttons": {
-        "submit": "Envia",
-        "reset": "Restableix",
-        "search": "Cerca",
-        "download": "Descarrega",
-        "downloadTSV": "Descarrega informe TSV",
-        "sort": "Ordena",
-        "view": "Mostra detalls",
-        "fields": "Camps",
-        "filters": "Filtres",
-        "goat_report": "Descarrega informe de GoaT",
-        "NCBI": "Visualitza a NCBI",
-        "ENA": "Visualitza a ENA"
-    },
-    "tooltip": {
-        "biosamples": "Nombre de BioMostres",
-        "local_samples": "Nombre de Mostres Locals",
-        "experiments": "Nombre d'Experiments",
-        "assemblies": "Nombre d'Assemblatges",
-        "organisms": "Nombre d'Organismes",
-        "annotations": "Nombre d'Anotacions"
-    },
-    "tabs": {
-        "table": "Taula",
-        "charts": "Estadístiques",
-        "metadata": "Metadades",
-        "images": "Imatges",
-        "assemblies": "Assemblatges",
-        "biosamples": "Biosamples",
-        "reads": "Lectures",
-        "annotations": "Anotacions",
-        "local_samples": "Mostres locals",
-        "experiments": "Experiments",
-        "names": "Noms vernacles",
-        "map": "Mapa",
-        "publications": "Publicacions",
-        "jbrowse": "Navegador de genoma",
-        "chromosomes": "Cromosomes",
-        "wiki": "Wikipedia",
-        "organisms": "Organismes"
-    },
-    "download": {
-        "fieldsLabel": "Selecció de camps",
-        "fieldsPlaceholder": "Selecciona múltiples camps",
-        "fieldsSearchPlaceholder": "Escriu aquí...",
-        "fieldsMessage": "Selecciona múltiples camps o escriu un camp nou, si el camp està contingut en les metadades, escriu: 'metadata.campQueVolsSeleccionar'",
-        "applyFilters": "Aplica els filtres actuals"
-    },
-    "search": {
-        "total": "Total:",
-        "filterBy": "Filtra per",
-        "sortColumn": "Ordena per columna",
-        "sortOrder": "Ordre de l'ordenació",
-        "date": "Selecciona data"
-    },
-    "routes": {
-        "dashboard": "Tauler de control",
-        "assemblies": "Assemblatges",
-        "experiments": "Experiments",
-        "biosamples": "Biosamples",
-        "local_samples": "Mostres locals",
-        "annotations": "Anotacions",
-        "status": "Estat del sequenciatge",
-        "samples-map": "Mapa de mostres",
-        "countries": "Mapa de països",
-        "taxonomy": "Explorador de taxonomia",
-        "organisms": "Organismes"
-    },
-    "commons": {
-        "wikipedia": "Wikipedia"
-    },
-    "maps": {
-        "samples-map": {
-            "title": "Mapa de mostres",
-            "description": "Ubicacions geogràfiques de les mostres"
+    "home": {
+        "taxonomy": {
+            "title": "Filtra per Taxonomia",
+            "description": "Cerca i selecciona un tàxon per veure'n els detalls",
+            "exploreBtn": "Explorar Taxonomia",
+            "viewBtn": "Veure"
         },
-        "countries": {
-            "title": "Mapa de països",
-            "description": "Organismes recollits en cada país"
+        "data": {
+            "title": "Explorar per Dades"
+        },
+        "features": {
+            "title": "Característiques"
+        },
+        "stats": {
+            "title": ""
+        },
+        "goat": {
+            "title": "Estat de Genomes en un Arbre"
+        },
+        "insdc": {
+            "title": "Estat de l’Enviament a INSDC"
         }
+    },
+    "nav": {
+        "taxExplorer": "Explorador de Taxonomia",
+        "genomeBrowser": "Navegador del Genoma",
+        "login": "Inicia Sessió",
+        "docs": "Documentació de l'API",
+        "data": "Dades",
+        "tools": "Eines",
+        "settings": "Recursos",
+        "home": "Inici"
+    },
+    "tree": {
+        "title": "Explorador de Taxonomia",
+        "description": "L'Explorador d'Arbre Taxonòmic et permet navegar per la taxonomia amb un Arbre Hiperbòlic D3. Usa la roda del ratolí o el panell tàctil per fer zoom, arrossega per desplaçar-te i fes clic als nodes per veure’n els detalls. Explora fàcilment per obtenir una visió dinàmica de l'arbre de la vida."
     },
     "taxon": {
-        "title": "Explorador de taxonomia",
-        "description": "Arbre hiperbòlic D3: arrossega i fes clic sobre un taxon per veure els seus detalls taxonòmics",
-        "search": {
-            "placeholder": "Cerca un taxó",
-            "noOptions": "No s'han trobat taxons!",
-            "rootLoad": "Recarregar l'arbre",
-            "show": "Mostra l'arbre",
-            "hide": "Amaga l'arbre"
+        "chip": "Tàxon Seleccionat: ",
+        "searchPlaceholder": "Cerca un tàxon per nom o taxid",
+        "noTaxons": "No s'han trobat tàxons per a: ",
+        "wikiLink": "Llegir més",
+        "relatedData": "Dades Relacionades",
+        "occurrencesMap": "Mapa d'Ocurrències",
+        "clearBtn": "Esborra la Selecció",
+        "showDetails": "Mostra Detalls",
+        "hideDetails": "Amaga Detalls"
+    },
+    "genomeBrowser": {
+        "title": "Navegador del Genoma",
+        "description": "Selecciona un assemblatge per veure en el navegador del genoma",
+        "assemblies": {
+            "title": "Afegir Nova Sessió del Navegador del Genoma",
+            "placeholder": "Cerca per espècie o nom de l'assemblatge",
+            "searchPlaceholder": "Escriu aquí per cercar",
+            "noOptions": "Cap assemblatge coincideix amb els criteris de cerca",
+            "withAnnotations": "Filtra assemblatges amb anotacions",
+            "chromosomesPlaceholder": "Selecciona cromosomes (opcional)",
+            "annotationsPlaceholder": "Selecciona anotacions (opcional)",
+            "createBtn": "Obrir en el Navegador del Genoma"
         },
-        "related": {
-            "button": "No el trobes?",
-            "header": "Cerca de taxons",
-            "description": "Proporciona un identificador taxonòmic NCBI (taxid) per trobar el taxon més proper present a la base de dades.\n Si el taxon exacte està present, es retornarà enlloc",
-            "placeholder": "Escriu un taxid"
+        "assembly": {
+            "accession": "Accession de l’Assemblatge: ",
+            "sampleAccession": "Accession de la Mostra: ",
+            "metadata": "Mostra Metadades",
+            "chromosomes": "Cromosomes",
+            "modalTitle": "Sobre el navegador del genoma",
+            "modelDescription": "Aquesta pàgina presenta el Visor Lineal del Genoma JBrowse 2 (JBrowse 2), una eina interactiva per explorar seqüències i anotacions genòmiques. Els usuaris poden navegar pel genoma, fer zoom en regions específiques i, quan estiguin disponibles, visualitzar anotacions com ara gens i característiques. El navegador també permet descarregar seqüències FASTA de regions seleccionades per a una anàlisi posterior. Si hi ha anotacions disponibles, els usuaris poden inspeccionar estructures gèniques, regions codificants i altres característiques genòmiques de manera clara i interactiva."
         }
     },
-    "sidebar": {
-        "dashboard": "Tauler de control",
-        "organisms": "Organismes",
-        "experiments": "Experiments",
-        "assemblies": "Assemblatges",
-        "biosamples": "Biosamples",
-        "local_samples": "Mostres locals",
-        "annotations": "Anotacions",
-        "goat_status": "Estat de GoaT"
+    "items": {
+        "countries": {
+            "title": "Selecció de Països",
+            "infoTitle": "Com es Determinen els Països",
+            "infoDescription": "Els països mostrats es determinen a partir de les metadades de la mostra, si contenen un camp 'país', o verificant si les coordenades geogràfiques de les mostres es troben dins dels límits d'un país. Tingues en compte que aquest procés pot ocasionar algunes inexactituds."
+        },
+        "filters": {
+            "title": "Filtres",
+            "clearBtn": "Esborra Filtres",
+            "selectLabel": "Tipus de Filtre",
+            "addBtn": "Afegeix Filtre Personalitzat",
+            "createBtn": "Crea Filtre",
+            "modalTitle": "Creació de Filtre",
+            "modalDescription": "Introdueix un nom de camp per verificar si existeix a la base de dades. Usa la notació de punts per a camps niats, com ara",
+            "ebpMetricsTitle": "Mètriques de EBP",
+            "ebpMetricsDescription": "Assemblatges que compleixen els estàndards de qualitat del Projecte Earth BioGenome"
+        },
+        "data": {
+            "results": "Resultats: ",
+            "reportBtn": "Informe",
+            "chartBtn": "Gràfic"
+        }
     },
-    "lookup": {
-        "name": "Cerca de taxonomia",
-        "description": "Retorna el taxon filogenètic més proper",
-        "placeholder": "Cerca per NCBI TaxID"
+    "item": {
+        "internalLinks": "Enllaços Interns",
+        "externalLinks": "Enllaços Externs",
+        "genomeBrowserLink": "Veure en el Navegador del Genoma",
+        "publications": "Publicacions Relacionades",
+        "vernacularNames": "Noms Vernacles",
+        "chromosomes": "Cromosomes",
+        "data": "Dades Relacionades",
+        "details": "Veure Detalls",
+        "coordinates": "Ubicacions Geogràfiques",
+        "status": "Estat de Seqüenciació: ",
+        "targetList": "Estat de la Llista d'Objectius: "
+    },
+    "insdc": {
+        "title": "Estat de INSDC",
+        "biosample": {
+            "label": "Biosample Enviat",
+            "description": "Almenys una BioSample de INSDC està vinculada a aquest organisme"
+        },
+        "experiment": {
+            "label": "Lectures Enviades",
+            "description": "Almenys un Experiment INSDC està vinculat a una BioSample relacionada amb aquest organisme"
+        },
+        "assembly": {
+            "label": "Assemblatges Enviats",
+            "description": "Almenys un Assemblatge INSDC està vinculat a una BioSample relacionada amb aquest organisme"
+        }
+    },
+    "goat": {
+        "title": "Estat de GOAT",
+        "collected": {
+            "label": "Mostra Recollida",
+            "description": "S'ha recollit una mostra de l'espècie al camp, però encara no s'ha enviat a un centre de seqüenciació"
+        },
+        "acquired": {
+            "label": "Mostra Adquirida",
+            "description": "La mostra està en possessió del centre de seqüenciació però encara no ha estat processada"
+        },
+        "generation": {
+            "label": "Generació de Dades",
+            "description": "Les dades de seqüenciació s'estan generant per a l'espècie"
+        },
+        "assembly": {
+            "label": "En Assemblatge",
+            "description": "Totes les dades de seqüenciació han estat recollides i l'assemblatge del genoma està en procés"
+        },
+        "submitted": {
+            "label": "Enviat a INSDC",
+            "description": "L'assemblatge del genoma de l'espècie ha estat enviat a INSDC i és accessible públicament sota l'ID de Bioproject del projecte generador"
+        },
+        "publication": {
+            "label": "Publicació Disponible",
+            "description": "L'assemblatge té una publicació associada amb un DOI o ID de PubMed"
+        }
+    },
+    "buttons": {
+        "download": "Descarregar",
+        "submit": "Enviar",
+        "view": "Veure",
+        "goat": "Informe GoaT"
     },
     "language": {
         "english": "Anglès",
@@ -123,13 +159,5 @@
         "french": "Francès",
         "spanish": "Espanyol",
         "german": "Alemany"
-    },
-    "tree": {
-        "indented": {
-            "title": "Arbre taxonòmic",
-            "description": "Fes clic sobre un nom"
-        },
-        "message": "Per raons de rendiment, aquest arbre taxonòmic està precalculat i pot no representar l'estat actual de la base de dades",
-        "last_update": "Última actualització"
     }
 }

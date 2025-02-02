@@ -1,121 +1,163 @@
 {
-    "auth": {
-        "login": "Iniciar sesión",
-        "password": "Contraseña",
-        "logout": "Cerrar sesión"
-    },
-    "buttons": {
-        "submit": "Enviar",
-        "reset": "Restablecer",
-        "search": "Buscar",
-        "download": "Descargar",
-        "downloadTSV": "Descargar informe TSV",
-        "sort": "Ordenar",
-        "view": "Ver detalles",
-        "fields": "Campos",
-        "filters": "Filtros",
-        "goat_report": "Descargar informe de GoaT",
-        "NCBI": "Ver en NCBI",
-        "ENA": "Ver en ENA"
-    },
-    "tooltip": {
-        "biosamples": "Número de BioMuestras",
-        "local_samples": "Número de Muestras Locales",
-        "experiments": "Número de Experimentos",
-        "assemblies": "Número de Ensamblajes",
-        "organisms": "Número de Organismos",
-        "annotations": "Número de Anotaciones"
-    },
-    "tabs": {
-        "table": "Tabla",
-        "charts": "Estadísticas",
-        "metadata": "Metadatos",
-        "images": "Imágenes",
-        "assemblies": "Ensamblajes",
-        "biosamples": "Biosamples",
-        "reads": "Lecturas",
-        "annotations": "Anotaciones",
-        "local_samples": "Muestras locales",
-        "experiments": "Experimentos",
-        "names": "Nombres vernáculos",
-        "map": "Mapa",
-        "publications": "Publicaciones",
-        "jbrowse": "Navegador de genoma",
-        "chromosomes": "Cromosomas",
-        "wiki": "Wikipedia",
-        "organisms": "Organismos"
-    },
-    "download": {
-        "fieldsLabel": "Selección de campos",
-        "fieldsPlaceholder": "Seleccionar múltiples campos",
-        "fieldsSearchPlaceholder": "Escribe aquí...",
-        "fieldsMessage": "Seleccionar múltiples campos o escribir un campo nuevo, si el campo está contenido en metadatos, escribir: 'metadata.campoQueQuieresSeleccionar'",
-        "applyFilters": "Aplicar los filtros actuales"
-    },
-    "search": {
-        "total": "Total:",
-        "filterBy": "Filtrar por",
-        "sortColumn": "Ordenar por columna",
-        "sortOrder": "Orden de la ordenación",
-        "date": "Seleccionar fecha"
-    },
-    "routes": {
-        "dashboard": "Tablero de control",
-        "assemblies": "Ensamblajes",
-        "experiments": "Experimentos",
-        "biosamples": "Biosamples",
-        "local_samples": "Muestras locales",
-        "annotations": "Anotaciones",
-        "status": "Estado del secuenciamiento",
-        "samples-map": "Mapa de muestras",
-        "countries": "Mapa de países",
-        "taxonomy": "Explorador de taxonomía",
-        "organisms": "Organismos"
-    },
-    "commons": {
-        "wikipedia": "Wikipedia"
-    },
-    "maps": {
-        "samples-map": {
-            "title": "Mapa de muestras",
-            "description": "Ubicaciones geográficas de las muestras"
+    "home": {
+        "taxonomy": {
+            "title": "Filtrar por Taxonomía",
+            "description": "Busca y selecciona un taxón para ver sus detalles",
+            "exploreBtn": "Explorar Taxonomía",
+            "viewBtn": "Ver"
         },
-        "countries": {
-            "title": "Mapa de países",
-            "description": "Organismos recolectados en cada país"
+        "data": {
+            "title": "Explorar por Datos"
+        },
+        "features": {
+            "title": "Características"
+        },
+        "stats": {
+            "title": ""
+        },
+        "goat": {
+            "title": "Estado de Genomas en un Árbol"
+        },
+        "insdc": {
+            "title": "Estado de Envío a INSDC"
         }
+    },
+    "nav": {
+        "taxExplorer": "Explorador de Taxonomía",
+        "genomeBrowser": "Navegador del Genoma",
+        "login": "Iniciar Sesión",
+        "docs": "Documentación de la API",
+        "data": "Datos",
+        "tools": "Herramientas",
+        "settings": "Recursos",
+        "home": "Inicio"
+    },
+    "tree": {
+        "title": "Explorador de Taxonomía",
+        "description": "El Explorador de Árbol Taxonómico te permite navegar por la taxonomía con un Árbol Hiperbólico D3. Usa la rueda del ratón o el panel táctil para hacer zoom, arrastra para desplazarte y haz clic en los nodos para ver detalles. Explora fácilmente para obtener una vista dinámica del árbol de la vida."
     },
     "taxon": {
-        "title": "Explorador de taxonomía",
-        "description": "Árbol hiperbólico D3: arrastra y haz clic sobre un taxón para ver sus detalles taxonómicos",
-        "search": {
-            "placeholder": "Buscar un taxón",
-            "noOptions": "¡No se encontraron taxones!",
-            "rootLoad": "Recargar el árbol",
-            "show": "Mostrar el árbol",
-            "hide": "Ocultar el árbol"
+        "chip": "Taxón Seleccionado: ",
+        "searchPlaceholder": "Busca un taxón por nombre o taxid",
+        "noTaxons": "No se encontraron taxones para: ",
+        "wikiLink": "Leer más",
+        "relatedData": "Datos Relacionados",
+        "occurrencesMap": "Mapa de Ocurrencias",
+        "clearBtn": "Borrar Selección",
+        "showDetails": "Mostrar Detalles",
+        "hideDetails": "Ocultar Detalles"
+    },
+    "genomeBrowser": {
+        "title": "Navegador del Genoma",
+        "description": "Selecciona un ensamblaje para ver en el navegador del genoma",
+        "assemblies": {
+            "title": "Agregar Nueva Sesión de Navegador del Genoma",
+            "placeholder": "Buscar por especie o nombre del ensamblaje",
+            "searchPlaceholder": "Escribe aquí para buscar",
+            "noOptions": "Ningún ensamblaje coincide con los criterios de búsqueda",
+            "withAnnotations": "Filtrar ensamblajes con anotaciones",
+            "chromosomesPlaceholder": "Seleccionar cromosomas (opcional)",
+            "annotationsPlaceholder": "Seleccionar anotaciones (opcional)",
+            "createBtn": "Abrir en el Navegador del Genoma"
         },
-        "related": {
-            "button": "¿No lo encuentras?",
-            "header": "Búsqueda de taxones",
-            "description": "Proporciona un identificador taxonómico NCBI (taxid) para encontrar el taxón más cercano presente en la base de datos.\n Si el taxón exacto está presente, será devuelto en su lugar",
-            "placeholder": "Escribe un taxid"
+        "assembly": {
+            "accession": "Accesión del Ensamblaje: ",
+            "sampleAccession": "Accesión de la Muestra: ",
+            "metadata": "Mostrar Metadatos",
+            "chromosomes": "Cromosomas",
+            "modalTitle": "Sobre el navegador del genoma",
+            "modelDescription": "Esta página presenta el Visor Lineal del Genoma JBrowse 2 (JBrowse 2), una herramienta interactiva para explorar secuencias y anotaciones genómicas. Los usuarios pueden navegar por el genoma, hacer zoom en regiones específicas y, cuando estén disponibles, visualizar anotaciones como genes y características. El navegador también permite descargar secuencias FASTA de regiones seleccionadas para su posterior análisis. Si hay anotaciones disponibles, los usuarios pueden inspeccionar estructuras génicas, regiones codificantes y otras características genómicas de forma clara e interactiva."
         }
     },
-    "sidebar": {
-        "dashboard": "Tablero de control",
-        "organisms": "Organismos",
-        "experiments": "Experimentos",
-        "assemblies": "Ensamblajes",
-        "biosamples": "Biosamples",
-        "local_samples": "Muestras locales",
-        "annotations": "Anotaciones",
-        "goat_status": "Estado de la GoaT"
+    "items": {
+        "countries": {
+            "title": "Selección de Países",
+            "infoTitle": "Cómo se Determinan los Países",
+            "infoDescription": "Los países mostrados se determinan en función de los metadatos de la muestra, si contienen un campo 'país', o verificando si las coordenadas geográficas de las muestras se encuentran dentro de los límites de un país. Ten en cuenta que este proceso puede ocasionalmente resultar en inexactitudes."
+        },
+        "filters": {
+            "title": "Filtros",
+            "clearBtn": "Borrar Filtros",
+            "selectLabel": "Tipo de Filtro",
+            "addBtn": "Agregar Filtro Personalizado",
+            "createBtn": "Crear Filtro",
+            "modalTitle": "Creación de Filtro",
+            "modalDescription": "Ingresa un nombre de campo para verificar si existe en la base de datos. Usa notación de puntos para campos anidados, como",
+            "ebpMetricsTitle": "Métricas de EBP",
+            "ebpMetricsDescription": "Ensamblajes que cumplen con los estándares de calidad del Proyecto Earth BioGenome"
+        },
+        "data": {
+            "results": "Resultados: ",
+            "reportBtn": "Informe",
+            "chartBtn": "Gráfico"
+        }
     },
-    "lookup": {
-        "name": "Búsqueda de taxonomía",
-        "description": "Devuelve el taxón filogenético más cercano",
-        "placeholder": "Buscar por NCBI TaxID"
+    "item": {
+        "internalLinks": "Enlaces Internos",
+        "externalLinks": "Enlaces Externos",
+        "genomeBrowserLink": "Ver en el Navegador del Genoma",
+        "publications": "Publicaciones Relacionadas",
+        "vernacularNames": "Nombres Vernáculos",
+        "chromosomes": "Cromosomas",
+        "data": "Datos Relacionados",
+        "details": "Ver Detalles",
+        "coordinates": "Ubicaciones Geográficas",
+        "status": "Estado de Secuenciación: ",
+        "targetList": "Estado de Lista Objetivo: "
+    },
+    "insdc": {
+        "title": "Estado de INSDC",
+        "biosample": {
+            "label": "Biosample Enviado",
+            "description": "Al menos una BioSample de INSDC está vinculada a este organismo"
+        },
+        "experiment": {
+            "label": "Lecturas Enviadas",
+            "description": "Al menos un Experimento INSDC está vinculado a una BioSample relacionada con este organismo"
+        },
+        "assembly": {
+            "label": "Ensamblajes Enviados",
+            "description": "Al menos un Ensamblaje INSDC está vinculado a una BioSample relacionada con este organismo"
+        }
+    },
+    "goat": {
+        "title": "Estado de GOAT",
+        "collected": {
+            "label": "Muestra Recogida",
+            "description": "Se ha recogido una muestra de la especie en el campo, pero aún no se ha enviado a un centro de secuenciación"
+        },
+        "acquired": {
+            "label": "Muestra Adquirida",
+            "description": "La muestra está en posesión del centro de secuenciación pero aún no ha sido procesada"
+        },
+        "generation": {
+            "label": "Generación de Datos",
+            "description": "Los datos de secuenciación están siendo generados para la especie"
+        },
+        "assembly": {
+            "label": "En Ensamblaje",
+            "description": "Todos los datos de secuenciación han sido recolectados y el ensamblaje del genoma está en proceso"
+        },
+        "submitted": {
+            "label": "Enviado a INSDC",
+            "description": "El ensamblaje del genoma de la especie ha sido enviado a INSDC y es accesible públicamente bajo el ID de Bioproject del proyecto generador"
+        },
+        "publication": {
+            "label": "Publicación Disponible",
+            "description": "El ensamblaje tiene una publicación asociada con un DOI o ID de PubMed"
+        }
+    },
+    "fieldLookup": {
+        "placeholder": "Introduce el nombre del campo para verificar...",
+        "label": "Verificar Existencia del Campo",
+        "valid": "Campo válido",
+        "invalid": "Escribe un campo válido"
+    },
+    "buttons": {
+        "download": "Descargar",
+        "submit": "Enviar",
+        "view": "Ver",
+        "goat": "Informe GoaT"
     },
     "language": {
         "english": "Inglés",
@@ -123,13 +165,5 @@
         "french": "Francés",
         "spanish": "Español",
         "german": "Alemán"
-    },
-    "tree": {
-        "indented": {
-            "title": "Árbol taxonómico",
-            "description": "Haz clic en un nombre"
-        },
-        "message": "Por razones de rendimiento, este árbol taxonómico está precalculado y puede no representar el estado actual de la base de datos",
-        "last_update": "Última actualización"
     }
 }
