@@ -12,7 +12,11 @@ export function useAppSettings() {
     let settings
     try {
       const { data } = await ConfigService.getConfig()
-      settings = { ...data }
+      if(!Object.keys(data).length){
+        error.value = 'Error'
+      }else{
+        settings = { ...data }
+      }
     } catch (err) {
       error.value = (err as Error).message;
     }

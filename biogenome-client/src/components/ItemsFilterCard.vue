@@ -58,7 +58,7 @@
             <div class="row">
                 <div class="flex lg12 md12 sm12 xs12">
                     <VaButton @click="mapStore.showCountriesMap = !mapStore.showCountriesMap" block>
-                        {{ mapStore.showCountriesMap ? 'Hide' : 'Show' }} Map</VaButton>
+                        {{ mapStore.showCountriesMap ? t('items.filters.hideMap'):t('items.filters.showMap') }} </VaButton>
                 </div>
             </div>
         </VaCardContent>
@@ -164,7 +164,7 @@ const customFilter = ref<ConfigFilter>(
 )
 
 const showModal = ref(false)
-const ebpRelated = Boolean(config.general.ebp_related)
+const ebpRelated = Boolean(config.general.ebpRelated)
 const showFilter = ref(false)
 
 const showEBPMetrics = computed(() => props.model === 'assemblies' && ebpRelated)

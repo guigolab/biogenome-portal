@@ -50,12 +50,15 @@
 </template>
 <script setup lang="ts">
 import { ref } from 'vue';
-import Jbrowse2 from '../components/Jbrowse2.vue';
 import Chromosomes from '../components/Chromosomes.vue';
 import { Annotation, Assembly, ChromosomeInterface } from '../data/types';
 import MetadataTreeCard from './MetadataTreeCard.vue';
 import { useI18n } from 'vue-i18n';
+import { defineAsyncComponent } from 'vue'
 
+const Jbrowse2 = defineAsyncComponent(() =>
+    import('../components/Jbrowse2.vue')
+)
 
 const { t } = useI18n()
 

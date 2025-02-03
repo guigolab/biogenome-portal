@@ -84,7 +84,9 @@
             "modalTitle": "Filtererstellung",
             "modalDescription": "Geben Sie einen Feldnamen ein, um zu überprüfen, ob er in der Datenbank existiert. Verwenden Sie Punktnotation für verschachtelte Felder, z. B.",
             "ebpMetricsTitle": "EBP-Metriken",
-            "ebpMetricsDescription": "Assemblierungen, die den Qualitätsstandards des Earth BioGenome Project entsprechen"
+            "ebpMetricsDescription": "Assemblierungen, die den Qualitätsstandards des Earth BioGenome Project entsprechen",
+            "showMap": "Karte anzeigen",
+            "hideMap": "Karte ausblenden"
         },
         "data": {
             "results": "Ergebnisse: ",
@@ -92,11 +94,18 @@
             "chartBtn": "Diagramm"
         }
     },
-    "buttons": {
-        "download": "Herunterladen",
-        "submit": "Absenden",
-        "view": "Ansehen",
-        "goat": "GoaT-Bericht"
+    "item": {
+        "internalLinks": "Interne Links",
+        "externalLinks": "Externe Links",
+        "genomeBrowserLink": "Im Genom-Browser anzeigen",
+        "publications": "Verwandte Publikationen",
+        "vernacularNames": "Trivialnamen",
+        "chromosomes": "Chromosomen",
+        "data": "Verwandte Daten",
+        "details": "Details anzeigen",
+        "coordinates": "Geografische Standorte",
+        "status": "Sequenzierungsstatus: ",
+        "targetList": "Zielstatusliste: "
     },
     "insdc": {
         "title": "INSDC-Status",
@@ -121,7 +130,7 @@
         },
         "acquired": {
             "label": "Probe erworben",
-            "description": "Die Probe wurde erworben und befindet sich im Sequenzierungszentrum, wurde aber noch nicht verarbeitet"
+            "description": "Eine Probe der Art wurde erworben und befindet sich im Sequenzierungszentrum, wurde aber noch nicht verarbeitet"
         },
         "generation": {
             "label": "Datengenerierung",
@@ -129,7 +138,7 @@
         },
         "assembly": {
             "label": "In Assemblierung",
-            "description": "Alle Sequenzierungsdaten wurden gesammelt und die Genomassemblierung ist im Gange"
+            "description": "Alle Sequenzierungs- und zugehörigen Daten wurden gesammelt und die Genomassemblierung ist im Gange"
         },
         "submitted": {
             "label": "Bei INSDC eingereicht",
@@ -141,10 +150,40 @@
         }
     },
     "fieldLookup": {
-        "placeholder": "Geben Sie einen Feldnamen ein, um ihn zu überprüfen...",
+        "placeholder": "Feldnamen eingeben, um zu überprüfen...",
         "label": "Feldexistenz überprüfen",
         "valid": "Gültiges Feld",
         "invalid": "Geben Sie ein gültiges Feld ein"
+    },
+    "reportModal": {
+        "title": "Bericht herunterladen",
+        "description": "Wählen Sie mehrere Felder aus oder geben Sie ein neues Feld ein. Falls das Feld in den Metadaten enthalten ist, verwenden Sie das Format: 'metadata.FeldDasSieWählenMöchten'",
+        "tip": "Wählen Sie TSV oder JSONL für eine schnellere Abfrage",
+        "queryMessage": "Geben Sie ein Feld ein und prüfen Sie, ob es existiert",
+        "addFieldBtn": "Feld hinzufügen",
+        "clearFieldBtn": "Löschen"
+    },
+    "chartModal": {
+        "title": "Diagramm erstellen",
+        "description": "Falls das Feld Teil der Metadaten oder verschachtelt ist, verwenden Sie das Format: 'metadata.FeldDasSieWählenMöchten' für oberste Felder oder 'metadata.ÜbergeordnetesFeld.VerschachteltesFeld' für verschachtelte Felder.",
+        "fieldInputLabel": "Feld",
+        "selectLabel": "Diagrammtyp",
+        "exampleBtn": "Beispiel laden"
+    },
+    "buttons": {
+        "download": "Herunterladen",
+        "submit": "Absenden",
+        "view": "Ansehen",
+        "goat": "GoaT-Bericht"
+    },
+    "models": {
+        "organisms": "Organismen",
+        "experiments": "Experimente",
+        "assemblies": "Assemblierungen",
+        "biosamples": "BioProben",
+        "local_samples": "Lokale Proben",
+        "annotations": "Annotationen",
+        "reads": "Sequenzierte Reads"
     },
     "language": {
         "english": "Englisch",

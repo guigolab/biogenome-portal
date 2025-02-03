@@ -20,7 +20,7 @@
                                 title="insdc.title">
                             </SequencingStatusCard>
                         </div>
-                        <div class="flex lg12 md12 sm12 xs12" v-if="detailsObject.goat && detailsObject.goat.status">
+                        <div class="flex lg12 md12 sm12 xs12" v-if="hasGoat && detailsObject.goat && detailsObject.goat.status">
                             <SequencingStatusCard :current-status="detailsObject.goat.status" :statuses="goatSteps"
                                 :target-list="detailsObject.goat.targetList" title="goat.title">
                             </SequencingStatusCard>
@@ -208,8 +208,8 @@
     </div>
 </template>
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
-import { Annotation, Assembly, DataModels, ItemDetails, dataModels } from '../../data/types';
+import { computed, inject, ref, watch } from 'vue';
+import { Annotation, AppConfig, Assembly, DataModels, ItemDetails, dataModels } from '../../data/types';
 import { useItemStore } from '../../stores/items-store';
 import Header from '../../components/Header.vue';
 import MetadataTreeCard from '../../components/MetadataTreeCard.vue';
@@ -223,6 +223,8 @@ import { useI18n } from 'vue-i18n';
 const { t } = useI18n()
 const gBStore = useGenomeBrowserStore()
 const itemStore = useItemStore()
+const settings = inject('appConfig') as AppConfig
+const hasGoat = settings.general.goat
 const router = useRouter()
 const props = defineProps<{
     id: string,

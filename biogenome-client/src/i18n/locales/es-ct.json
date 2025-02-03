@@ -84,7 +84,9 @@
             "modalTitle": "Creació de Filtre",
             "modalDescription": "Introdueix un nom de camp per verificar si existeix a la base de dades. Usa la notació de punts per a camps niats, com ara",
             "ebpMetricsTitle": "Mètriques de EBP",
-            "ebpMetricsDescription": "Assemblatges que compleixen els estàndards de qualitat del Projecte Earth BioGenome"
+            "ebpMetricsDescription": "Assemblatges que compleixen els estàndards de qualitat del Projecte Earth BioGenome",
+            "showMap": "Mostra el mapa",
+            "hideMap": "Amage el mapa"
         },
         "data": {
             "results": "Resultats: ",
@@ -93,59 +95,80 @@
         }
     },
     "item": {
-        "internalLinks": "Enllaços Interns",
-        "externalLinks": "Enllaços Externs",
-        "genomeBrowserLink": "Veure en el Navegador del Genoma",
-        "publications": "Publicacions Relacionades",
-        "vernacularNames": "Noms Vernacles",
+        "internalLinks": "Enllaços interns",
+        "externalLinks": "Enllaços externs",
+        "genomeBrowserLink": "Veure en el navegador del genoma",
+        "publications": "Publicacions relacionades",
+        "vernacularNames": "Noms vernacles",
         "chromosomes": "Cromosomes",
-        "data": "Dades Relacionades",
-        "details": "Veure Detalls",
-        "coordinates": "Ubicacions Geogràfiques",
-        "status": "Estat de Seqüenciació: ",
-        "targetList": "Estat de la Llista d'Objectius: "
+        "data": "Dades relacionades",
+        "details": "Veure detalls",
+        "coordinates": "Localitzacions geogràfiques",
+        "status": "Estat de seqüenciació: ",
+        "targetList": "Estat de la llista d'objectius: "
     },
     "insdc": {
-        "title": "Estat de INSDC",
+        "title": "Estat INSDC",
         "biosample": {
-            "label": "Biosample Enviat",
-            "description": "Almenys una BioSample de INSDC està vinculada a aquest organisme"
+            "label": "Biomostra enviada",
+            "description": "Almenys una biomostra d'INSDC està vinculada a aquest organisme"
         },
         "experiment": {
-            "label": "Lectures Enviades",
-            "description": "Almenys un Experiment INSDC està vinculat a una BioSample relacionada amb aquest organisme"
+            "label": "Lectures enviades",
+            "description": "Almenys un experiment d'INSDC està vinculat a una biomostra relacionada amb aquest organisme"
         },
         "assembly": {
-            "label": "Assemblatges Enviats",
-            "description": "Almenys un Assemblatge INSDC està vinculat a una BioSample relacionada amb aquest organisme"
+            "label": "Assemblatges enviats",
+            "description": "Almenys un assemblatge d'INSDC està vinculat a una biomostra relacionada amb aquest organisme"
         }
     },
     "goat": {
-        "title": "Estat de GOAT",
+        "title": "Estat GOAT",
         "collected": {
-            "label": "Mostra Recollida",
-            "description": "S'ha recollit una mostra de l'espècie al camp, però encara no s'ha enviat a un centre de seqüenciació"
+            "label": "Mostra recollida",
+            "description": "S'ha recollit una mostra de l'espècie en el camp, però encara no s'ha enviat a un centre de seqüenciació"
         },
         "acquired": {
-            "label": "Mostra Adquirida",
-            "description": "La mostra està en possessió del centre de seqüenciació però encara no ha estat processada"
+            "label": "Mostra adquirida",
+            "description": "S'ha adquirit una mostra de l'espècie i es troba al centre de seqüenciació, però encara no ha estat processada"
         },
         "generation": {
-            "label": "Generació de Dades",
-            "description": "Les dades de seqüenciació s'estan generant per a l'espècie"
+            "label": "Generació de dades",
+            "description": "Actualment s'estan generant dades de seqüenciació per a l'espècie"
         },
         "assembly": {
-            "label": "En Assemblatge",
-            "description": "Totes les dades de seqüenciació han estat recollides i l'assemblatge del genoma està en procés"
+            "label": "En assemblatge",
+            "description": "Totes les dades de seqüenciació s'han recopilat i l'assemblatge del genoma està en procés"
         },
         "submitted": {
             "label": "Enviat a INSDC",
-            "description": "L'assemblatge del genoma de l'espècie ha estat enviat a INSDC i és accessible públicament sota l'ID de Bioproject del projecte generador"
+            "description": "L'assemblatge del genoma de l'espècie s'ha enviat a INSDC i és accessible públicament sota l'ID del projecte Bioproject generador"
         },
         "publication": {
-            "label": "Publicació Disponible",
-            "description": "L'assemblatge té una publicació associada amb un DOI o ID de PubMed"
+            "label": "Publicació disponible",
+            "description": "L'assemblatge té una publicació associada amb un DOI o un ID de PubMed"
         }
+    },
+    "fieldLookup": {
+        "placeholder": "Introduïu el nom del camp per verificar...",
+        "label": "Verificar l'existència del camp",
+        "valid": "Camp vàlid",
+        "invalid": "Introduïu un camp vàlid"
+    },
+    "reportModal": {
+        "title": "Descarregar informe",
+        "description": "Seleccioneu diversos camps o introduïu-ne un de nou. Si el camp està inclòs en les metadades, utilitzeu el format: 'metadata.campQueVoleuSeleccionar'",
+        "tip": "Seleccioneu TSV o JSONL per a una recuperació més ràpida",
+        "queryMessage": "Introduïu un camp i verifiqueu si existeix",
+        "addFieldBtn": "Afegir camp",
+        "clearFieldBtn": "Esborrar"
+    },
+    "chartModal": {
+        "title": "Crear gràfic",
+        "description": "Si el camp forma part de les metadades o està niat, utilitzeu el format: 'metadata.campQueVoleuSeleccionar' per a camps de primer nivell, o 'metadata.campPare.campNiat' per a camps niats.",
+        "fieldInputLabel": "Camp",
+        "selectLabel": "Tipus de gràfic",
+        "exampleBtn": "Carregar exemple"
     },
     "buttons": {
         "download": "Descarregar",
@@ -153,11 +176,20 @@
         "view": "Veure",
         "goat": "Informe GoaT"
     },
+    "models": {
+        "organisms": "Organismes",
+        "experiments": "Experiments",
+        "assemblies": "Assemblatges",
+        "biosamples": "Biomostres",
+        "local_samples": "Mostres locals",
+        "annotations": "Anotacions",
+        "reads": "Lectures"
+    },
     "language": {
         "english": "Anglès",
         "catalan": "Català",
         "french": "Francès",
-        "spanish": "Espanyol",
+        "spanish": "Castellà",
         "german": "Alemany"
     }
 }

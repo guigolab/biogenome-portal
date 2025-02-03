@@ -23,4 +23,3 @@ else:
     crsf = cookies['csrf_access_token']
     headers = {"X-CSRF-TOKEN":crsf}
     response = requests.post(f"{API_URL}/cronjob/{model}/{action}",headers=headers,cookies=cookies)
-    print(response.json())

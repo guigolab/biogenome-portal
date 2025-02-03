@@ -1,9 +1,8 @@
 import os
 import json
-from db.enums import MODELS
 from werkzeug.exceptions import NotFound, Forbidden, BadRequest, InternalServerError
 
-CONFIG_PATH= os.getenv('CONFIG_PATH')
+CONFIG_PATH= '/server/configs'
 
 def load_json_config():
     """

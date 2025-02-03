@@ -81,7 +81,9 @@
             "modalTitle": "Filter Creation",
             "modalDescription": "Enter a field name to check if it exists in the database. Use dot notation for nested fields, such as",
             "ebpMetricsTitle": "EBP Metrics",
-            "ebpMetricsDescription": "Assemblies compliant with the Earth BioGenome Project quality standards"
+            "ebpMetricsDescription": "Assemblies compliant with the Earth BioGenome Project quality standards",
+            "showMap":"Show Map",
+            "hideMap": "Hide Map"
         },
         "data": {
             "results": "Results: ",

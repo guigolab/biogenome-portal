@@ -16,7 +16,7 @@ def handle_orphan_organisms():
 
 
 def compute_tree():
-    node = TaxonNode.objects(taxid=ROOT_NODE)
+    node = TaxonNode.objects(taxid=ROOT_NODE).first()
     if not node:
         print(f"{node} not found")
         return

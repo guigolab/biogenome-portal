@@ -37,7 +37,6 @@ export type ItemDetails = {
 }
 
 export interface AppConfig {
-  dashboard: ConfigModel
   general: Record<string, any>
   ui: Record<string, any>
   models: Record<DataModels, ConfigModel>

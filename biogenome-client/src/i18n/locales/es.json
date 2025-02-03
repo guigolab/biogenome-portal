@@ -84,7 +84,9 @@
             "modalTitle": "Creación de Filtro",
             "modalDescription": "Ingresa un nombre de campo para verificar si existe en la base de datos. Usa notación de puntos para campos anidados, como",
             "ebpMetricsTitle": "Métricas de EBP",
-            "ebpMetricsDescription": "Ensamblajes que cumplen con los estándares de calidad del Proyecto Earth BioGenome"
+            "ebpMetricsDescription": "Ensamblajes que cumplen con los estándares de calidad del Proyecto Earth BioGenome",
+            "showMap": "Mostrar mapa",
+            "hideMap": "Ocultar mapa"
         },
         "data": {
             "results": "Resultados: ",
@@ -103,7 +105,7 @@
         "details": "Ver Detalles",
         "coordinates": "Ubicaciones Geográficas",
         "status": "Estado de Secuenciación: ",
-        "targetList": "Estado de Lista Objetivo: "
+        "targetList": "Estado de la Lista de Objetivos: "
     },
     "insdc": {
         "title": "Estado de INSDC",
@@ -128,15 +130,15 @@
         },
         "acquired": {
             "label": "Muestra Adquirida",
-            "description": "La muestra está en posesión del centro de secuenciación pero aún no ha sido procesada"
+            "description": "La muestra ha sido adquirida y está en el centro de secuenciación, pero aún no ha sido procesada"
         },
         "generation": {
             "label": "Generación de Datos",
-            "description": "Los datos de secuenciación están siendo generados para la especie"
+            "description": "Actualmente se están generando datos de secuenciación para la especie"
         },
         "assembly": {
             "label": "En Ensamblaje",
-            "description": "Todos los datos de secuenciación han sido recolectados y el ensamblaje del genoma está en proceso"
+            "description": "Todos los datos de secuenciación han sido recopilados y el ensamblaje del genoma está en proceso"
         },
         "submitted": {
             "label": "Enviado a INSDC",
@@ -144,20 +146,44 @@
         },
         "publication": {
             "label": "Publicación Disponible",
-            "description": "El ensamblaje tiene una publicación asociada con un DOI o ID de PubMed"
+            "description": "El ensamblaje tiene una publicación asociada con un DOI o un ID de PubMed"
         }
     },
     "fieldLookup": {
         "placeholder": "Introduce el nombre del campo para verificar...",
         "label": "Verificar Existencia del Campo",
         "valid": "Campo válido",
-        "invalid": "Escribe un campo válido"
+        "invalid": "Introduce un campo válido"
+    },
+    "reportModal": {
+        "title": "Descargar Informe",
+        "description": "Selecciona múltiples campos o escribe un nuevo campo. Si el campo está contenido en los metadatos, usa el formato: 'metadata.campoQueQuieresSeleccionar'",
+        "tip": "Selecciona TSV o JSONL para una recuperación más rápida",
+        "queryMessage": "Escribe un campo y verifica si existe",
+        "addFieldBtn": "Agregar Campo",
+        "clearFieldBtn": "Borrar"
+    },
+    "chartModal": {
+        "title": "Crear Gráfico",
+        "description": "Si el campo es parte de los metadatos o está anidado, usa el formato: 'metadata.campoQueQuieresSeleccionar' para campos de nivel superior, o 'metadata.campoPadre.campoAnidado' para campos anidados.",
+        "fieldInputLabel": "Campo",
+        "selectLabel": "Tipo de Gráfico",
+        "exampleBtn": "Cargar Ejemplo"
     },
     "buttons": {
         "download": "Descargar",
         "submit": "Enviar",
         "view": "Ver",
         "goat": "Informe GoaT"
+    },
+    "models": {
+        "organisms": "Organismos",
+        "experiments": "Experimentos",
+        "assemblies": "Ensambles",
+        "biosamples": "BioMuestras",
+        "local_samples": "Muestras Locales",
+        "annotations": "Anotaciones",
+        "reads": "Lecturas"
     },
     "language": {
         "english": "Inglés",

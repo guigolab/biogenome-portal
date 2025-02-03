@@ -29,23 +29,18 @@ services:
     depends_on:
       - redis
 
-  # biogenome_cron:
-  #   build: ./cronjobs
-  #   container_name: biogenome_cron
-  #   env_file:
-  #     - .env
-  # biogenome_cron:
-  #   build: ./cronjobs
-  #   container_name: biogenome_cron
-  #   env_file:
-  #     - .env
+  biogenome_cron:
+    build: ./cronjobs
+    container_name: biogenome_cron
+    env_file:
+      - .env
+
 
   biogenome_nginx:
     build:
       context: ./biogenome-client
       dockerfile: Dockerfile
       args:
-        BASE_PATH: ${BASE_PATH}
         ROOT_NODE: ${ROOT_NODE}
     container_name: "biogenome_nginx"
     restart: always

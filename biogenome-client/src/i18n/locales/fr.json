@@ -84,7 +84,9 @@
             "modalTitle": "Création de Filtre",
             "modalDescription": "Entrez un nom de champ pour vérifier s'il existe dans la base de données. Utilisez la notation par points pour les champs imbriqués, comme",
             "ebpMetricsTitle": "Métriques EBP",
-            "ebpMetricsDescription": "Assemblages conformes aux normes de qualité du projet Earth BioGenome"
+            "ebpMetricsDescription": "Assemblages conformes aux normes de qualité du projet Earth BioGenome",
+            "showMap": "Afficher la carte",
+            "hideMap": "Masquer la carte"
         },
         "data": {
             "results": "Résultats : ",
@@ -92,59 +94,96 @@
             "chartBtn": "Graphique"
         }
     },
+    "item": {
+        "internalLinks": "Liens internes",
+        "externalLinks": "Liens externes",
+        "genomeBrowserLink": "Voir dans le navigateur génomique",
+        "publications": "Publications associées",
+        "vernacularNames": "Noms vernaculaires",
+        "chromosomes": "Chromosomes",
+        "data": "Données associées",
+        "details": "Voir les détails",
+        "coordinates": "Localisations géographiques",
+        "status": "Statut du séquençage : ",
+        "targetList": "Statut de la liste cible : "
+    },
+    "insdc": {
+        "title": "Statut INSDC",
+        "biosample": {
+            "label": "Échantillon biologique soumis",
+            "description": "Au moins un échantillon biologique INSDC est lié à cet organisme"
+        },
+        "experiment": {
+            "label": "Lectures soumises",
+            "description": "Au moins une expérience INSDC est liée à un échantillon biologique associé à cet organisme"
+        },
+        "assembly": {
+            "label": "Assemblages soumis",
+            "description": "Au moins un assemblage INSDC est lié à un échantillon biologique associé à cet organisme"
+        }
+    },
+    "goat": {
+        "title": "Statut GOAT",
+        "collected": {
+            "label": "Échantillon collecté",
+            "description": "Un échantillon de cette espèce a été collecté par des chercheurs sur le terrain, mais n'a pas encore été envoyé à un centre de séquençage"
+        },
+        "acquired": {
+            "label": "Échantillon acquis",
+            "description": "Un échantillon de cette espèce a été acquis et est disponible au centre de séquençage, mais n'a pas encore été traité"
+        },
+        "generation": {
+            "label": "Génération des données",
+            "description": "Les données de séquençage sont actuellement en cours de génération pour cette espèce"
+        },
+        "assembly": {
+            "label": "En cours d'assemblage",
+            "description": "Toutes les données de séquençage ont été collectées et l'assemblage du génome est en cours"
+        },
+        "submitted": {
+            "label": "Soumis à INSDC",
+            "description": "L'assemblage du génome de cette espèce a été soumis à INSDC et est accessible publiquement sous l'identifiant Bioproject du projet générateur"
+        },
+        "publication": {
+            "label": "Publication disponible",
+            "description": "L'assemblage est associé à une publication avec un DOI ou un identifiant PubMed"
+        }
+    },
+    "fieldLookup": {
+        "placeholder": "Saisir un nom de champ pour vérifier...",
+        "label": "Vérifier l'existence du champ",
+        "valid": "Champ valide",
+        "invalid": "Saisissez un champ valide"
+    },
+    "reportModal": {
+        "title": "Télécharger le rapport",
+        "description": "Sélectionnez plusieurs champs ou saisissez un nouveau champ. Si le champ est présent dans les métadonnées, utilisez le format : 'metadata.champQueVousVoulezSélectionner'",
+        "tip": "Sélectionnez TSV ou JSONL pour une récupération plus rapide",
+        "queryMessage": "Saisissez un champ et vérifiez s'il existe",
+        "addFieldBtn": "Ajouter un champ",
+        "clearFieldBtn": "Effacer"
+    },
+    "chartModal": {
+        "title": "Créer un graphique",
+        "description": "Si le champ fait partie des métadonnées ou est imbriqué, utilisez le format : 'metadata.champQueVousVoulezSélectionner' pour les champs de premier niveau, ou 'metadata.champParent.champImbriqué' pour les champs imbriqués.",
+        "fieldInputLabel": "Champ",
+        "selectLabel": "Type de graphique",
+        "exampleBtn": "Charger un exemple"
+    },
     "buttons": {
         "download": "Télécharger",
         "submit": "Soumettre",
         "view": "Voir",
         "goat": "Rapport GoaT"
     },
-    "insdc": {
-        "title": "Statut INSDC",
-        "biosample": {
-            "label": "Bioéchantillon Soumis",
-            "description": "Au moins un Bioéchantillon INSDC est lié à cet organisme"
-        },
-        "experiment": {
-            "label": "Lectures Soumises",
-            "description": "Au moins une Expérience INSDC est liée à un Bioéchantillon de cet organisme"
-        },
-        "assembly": {
-            "label": "Assemblages Soumis",
-            "description": "Au moins un Assemblage INSDC est lié à un Bioéchantillon de cet organisme"
-        }
-    },
-    "goat": {
-        "title": "Statut GOAT",
-        "collected": {
-            "label": "Échantillon Collecté",
-            "description": "Un échantillon de l'espèce a été collecté par des chercheurs sur le terrain mais n'a pas encore été envoyé à un centre de séquençage"
-        },
-        "acquired": {
-            "label": "Échantillon Acquis",
-            "description": "L'échantillon a été acquis et est en possession du centre de séquençage, mais n'a pas encore été traité"
-        },
-        "generation": {
-            "label": "Génération des Données",
-            "description": "Les données de séquençage sont actuellement en cours de génération pour cette espèce"
-        },
-        "assembly": {
-            "label": "En Cours d'Assemblage",
-            "description": "Toutes les données de séquençage ont été collectées et l'assemblage du génome est en cours"
-        },
-        "submitted": {
-            "label": "Soumis à INSDC",
-            "description": "L'assemblage du génome de l'espèce a été soumis à INSDC et est accessible publiquement sous l'ID du projet Bioproject générateur"
-        },
-        "publication": {
-            "label": "Publication Disponible",
-            "description": "L'assemblage a une publication associée avec un DOI ou un ID PubMed"
-        }
-    },
-    "fieldLookup": {
-        "placeholder": "Entrez le nom du champ pour vérifier...",
-        "label": "Vérifier l'Existence du Champ",
-        "valid": "Champ valide",
-        "invalid": "Entrez un champ valide"
+    "models": {
+        "organisms": "Organismes",
+        "experiments": "Expériences",
+        "assemblies": "Assemblages",
+        "biosamples": "Échantillons biologiques",
+        "local_samples": "Échantillons locaux",
+        "annotations": "Annotations",
+        "reads": "Lectures"
     },
     "language": {
         "english": "Anglais",

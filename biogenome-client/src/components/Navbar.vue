@@ -61,6 +61,11 @@
               API Docs
             </a>
           </VaMenuItem>
+          <VaMenuItem v-if="externalLink">
+            <a :style="{ 'color': colors.textPrimary }" :href="externalLink" target="_blank">
+              Website
+            </a>
+          </VaMenuItem>
         </VaMenu>
         <VaMenu>
           <template #anchor>
@@ -98,6 +103,7 @@ const generalConfigs = ['general', 'ui']
 const { init } = useToast()
 
 const appLogo = config.general.logo
+const externalLink = config.general.externalLink
 const hasGoat = config.general.goat
 const generatedLink = computed(() => appLogo && appLogo.includes('http') ?
   appLogo :

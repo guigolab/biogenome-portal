@@ -30,12 +30,5 @@
             "closeButton": true,
             "hideDefaultActions": true
         }
-    },
-    "colors": {
-        "variables": {
-            "backgroundPrimary": "#ffffff",
-            "secondary": "#000000",
-            "primary": "#9BC53D"
-        }
     }
 }
