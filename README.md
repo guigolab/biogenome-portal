@@ -2,7 +2,7 @@
 
 This project aims to provide a user-friendly interface to show and manage biodiversity genomic metadata.
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10363191.svg)](https://doi.org/10.5281/zenodo.10363191)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.8314305.svg)](https://doi.org/10.5281/zenodo.8314305)
 
 ## 📝 We Value Your Feedback!
 
