@@ -18,16 +18,57 @@ import AdminLayout from './layouts/AdminLayout.vue';
 const route = useRoute();
 
 const settings = inject('appConfig') as AppConfig
+const appLogo = settings.general.logo
 const dashboardDefaultTitle = "BioGenome Portal"
 const { locale } = useI18n()
 const globalStore = useGlobalStore()
 const title = computed<LangOption | string>(() => settings.general.title[locale.value] ?? dashboardDefaultTitle)
 
-onMounted(() => {
+const generatedLink = computed(() => appLogo && appLogo.includes('http') ?
+  appLogo :
+  new URL(`/src/assets/${appLogo}`, import.meta.url).href
+)
+onMounted(async () => {
   document.title = title.value as string
-  if(globalStore.language) locale.value = globalStore.language
+  if(generatedLink.value){
+    const faviconURL = await generateFavicon(generatedLink.value)
+    updateFavicon(faviconURL)
+  }
+  if (globalStore.language) locale.value = globalStore.language
 })
 
+
+
+const updateFavicon = (url: string) => {
+  let link: HTMLLinkElement | null = document.querySelector("link[rel~='icon']");
+  if (!link) {
+    link = document.createElement("link");
+    link.rel = "icon";
+    document.head.appendChild(link);
+  }
+
+  link.href = url;
+};
+
+// Convert an image URL to a base64 favicon (optional resizing)
+const generateFavicon = async (url: string): Promise<string> => {
+  const img = new Image();
+  img.crossOrigin = "anonymous"; // Avoid CORS issues if applicable
+  img.src = url;
+
+  return new Promise((resolve) => {
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = 32;
+      canvas.height = 32;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.drawImage(img, 0, 0, 32, 32);
+        resolve(canvas.toDataURL("image/png"));
+      }
+    };
+  })
+}
 </script>
 <style lang="scss">
 @import 'scss/main.scss';
