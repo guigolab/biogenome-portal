@@ -36,7 +36,7 @@
         </VaCard>
       </div>
     </div>
-    <TaxonRanksCard />
+    <!-- <TaxonRanksCard /> -->
     <div class="row align-center justify-center">
       <div class="flex">
         <h2 style="text-align: center;" class="va-h2">
@@ -155,7 +155,7 @@ import { useItemStore } from '../../stores/items-store';
 import Chart from '../../components/Chart.vue';
 import { useToast } from 'vuestic-ui/web-components';
 import GoaTService from '../../services/GoaTService';
-import TaxonRanksCard from '../../components/TaxonRanksCard.vue';
+// import TaxonRanksCard from '../../components/TaxonRanksCard.vue';
 
 const { t } = useI18n()
 const statsStore = useStatsStore()
