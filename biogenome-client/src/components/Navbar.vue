@@ -1,9 +1,14 @@
 <template>
   <VaNavbar shadowed bordered>
     <template #left>
-      <VaNavbarItem class="image-wrapper">
+      <VaNavbarItem v-if="appLogo" class="image-wrapper">
         <VaImage fit="contain" class="image-h" lazy :src="generatedLink">
         </VaImage>
+      </VaNavbarItem>
+      <VaNavbarItem v-else>
+        <span class="va-h6">
+          {{ title }}
+        </span>
       </VaNavbarItem>
     </template>
     <template #right>
@@ -84,7 +89,7 @@
 <script setup lang="ts">
 import { computed, inject } from 'vue';
 // import LanguageDropdown from './LanguageDropdown.vue'
-import { AppConfig } from '../data/types';
+import { AppConfig, LangOption } from '../data/types';
 import { RouterLink, useRouter } from 'vue-router';
 import { useBreakpoint, useColors, useToast } from 'vuestic-ui';
 import { useI18n } from 'vue-i18n';
@@ -110,6 +115,9 @@ const generatedLink = computed(() => appLogo && appLogo.includes('http') ?
   new URL(`/src/assets/${appLogo}`, import.meta.url).href
 )
 
+const dashboardDefaultTitle = "BioGenome Portal"
+
+const title = computed<LangOption | string>(() => config.general.title[locale.value] as LangOption ?? dashboardDefaultTitle)
 const hideIcon = computed(() => breakpoint.sm || breakpoint.xs)
 const languages = computed(() => config.general.languages as { code: string, name: string }[])
 

@@ -12,7 +12,7 @@ MODEL_LIST = {
     'taxons':TaxonNode
     }
 
-NO_VALUE_KEY= 'No Value'
+NO_VALUE_KEY= 'No Entry'
 
 @cache.memoize(timeout=300)
 def get_stats(model, field, query):

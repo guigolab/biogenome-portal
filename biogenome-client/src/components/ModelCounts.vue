@@ -1,5 +1,5 @@
 <template>
-    <div class="row row-equal">
+    <div class="row row-equal justify-center">
         <div v-for="({ count, icon, color, key }) in mappedCounts" class="flex lg4 md4 sm12 xs12">
             <VaCard :to="{ name: 'model', params: { model: key } }">
                 <VaCardContent>

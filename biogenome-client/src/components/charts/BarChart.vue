@@ -13,7 +13,9 @@ const props = defineProps<{ data: Record<string, number>, label: string, chartId
 
 const chartOptions = computed(() => {
     const total = Object.values(props.data).reduce((acc, val) => acc + val, 0)
-    return getChartOptions('bar', total)
+    let options = getChartOptions('bar', total)
+    options.indexAxis = 'y'
+    return options
 })
 const chartData = computed(() => {
     return processChartData(props.data, props.label)

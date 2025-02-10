@@ -4,7 +4,7 @@ import { base } from '../http-axios'
 
 
 class StatsService {
-  getModelFieldStats(model: DataModels, field: string, query: Record<string, any>) {
+  getModelFieldStats(model: DataModels | 'taxons', field: string, query: Record<string, any>) {
     return base.get(`/stats/${model}/${field}`, { params: query })
   }
 }

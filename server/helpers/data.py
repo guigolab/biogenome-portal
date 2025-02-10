@@ -143,7 +143,7 @@ def create_query(args, q_query):
         if value == 'true':
             value = True
 
-        if value == 'No Value' or ( '__exists' in key and value == False):
+        if value == 'No Entry' or ( '__exists' in key and value == False):
             value = None
 
         if 'metadata.' in key:
@@ -157,7 +157,7 @@ def create_query(args, q_query):
         elif '__in' in key:
             if isinstance(value, str):
                 result = [
-                    None if part.strip() == "No Value" else part.strip()
+                    None if part.strip() == "No Entry" else part.strip()
                     for part in value.split(",")
                 ] 
             elif isinstance(value, list):

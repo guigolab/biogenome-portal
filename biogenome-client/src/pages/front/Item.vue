@@ -20,7 +20,8 @@
                                 title="insdc.title">
                             </SequencingStatusCard>
                         </div>
-                        <div class="flex lg12 md12 sm12 xs12" v-if="hasGoat && detailsObject.goat && detailsObject.goat.status">
+                        <div class="flex lg12 md12 sm12 xs12"
+                            v-if="hasGoat && detailsObject.goat && detailsObject.goat.status">
                             <SequencingStatusCard :current-status="detailsObject.goat.status" :statuses="goatSteps"
                                 :target-list="detailsObject.goat.targetList" title="goat.title">
                             </SequencingStatusCard>
@@ -51,7 +52,8 @@
                                     </VaButton>
                                     <VaButton icon-right="fa-up-right-from-square" preset="primary" block
                                         color="#742061" v-if="detailsObject.jbrowseLink"
-                                        @click="createGenomeBrowserSession"> {{ t('item.genomeBrowserLink') }}</VaButton>
+                                        @click="createGenomeBrowserSession"> {{ t('item.genomeBrowserLink') }}
+                                    </VaButton>
                                 </VaCardActions>
                             </VaCard>
                         </div>
@@ -192,7 +194,7 @@
                                         </div>
                                     </div>
                                 </VaCardContent>
-                                <LeafletMap v-if="detailsObject.coordinates?.length" :selected-countries="[]"
+                                <LeafletMap :key="id" v-if="detailsObject.coordinates?.length" :selected-countries="[]"
                                     :map-type="'points'" :countries="[]" :locations="detailsObject.coordinates" />
                             </VaCard>
                         </div>

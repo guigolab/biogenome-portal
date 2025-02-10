@@ -1,6 +1,27 @@
 <template>
     <div class="map-container">
         <div ref="mapContainer" class="leaflet-map"></div>
+        <VaModal hide-default-actions close-button v-model="showSamples">
+            <h3 class="va-h3">{{ t('items.data.results') }} {{ samples.length }}</h3>
+            <p class="light-paragraph mb-15">
+                Latitude: {{ lat }}; Longitude: {{ lng }}
+            </p>
+            <VaDataTable sticky-header height="400px" :columns="['scientific_name', 'sample_accession']"
+                :items="samples">
+                <template #cell(scientific_name)="{ rowData }">
+                    <VaChip flat
+                        @click="handleRoute({ name: 'item', params: { model: 'organisms', id: rowData.taxid } })">
+                        {{ rowData.scientific_name }}
+                    </VaChip>
+                </template>
+                <template #cell(sample_accession)="{ rowData }">
+                    <VaChip flat
+                        @click="handleRoute({ name: 'item', params: { model: rowData.is_local_sample ? 'local_samples' : 'biosamples', id: rowData.sample_accession } })">
+                        {{ rowData.sample_accession }}
+                    </VaChip>
+                </template>
+            </VaDataTable>
+        </VaModal>
     </div>
 </template>
 <script setup lang="ts">
@@ -8,31 +29,47 @@ import { ref, watch, onMounted, computed } from "vue";
 import L, { Map, TileLayer, Control } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useColors } from "vuestic-ui/web-components";
+import { SampleLocations } from "../data/types";
+import GeoLocationService from "../services/GeoLocationService";
+import { useI18n } from "vue-i18n";
+import { useRouter } from "vue-router";
 
 const { colors } = useColors()
-
+const { t } = useI18n()
 const props = defineProps<{
     mapType: 'cloropleth' | 'points',
-    locations: Record<string,any>[]
-    countries: Record<string,any>[]
-    selectedCountries: Record<string,any>[]
+    locations: Record<string, any>[]
+    countries: Record<string, any>[]
+    selectedCountries: Record<string, any>[]
 }>()
 
 const emits = defineEmits(['countrySelected'])
 // Refs
 const locations = computed(() => props.locations)
 const countries = computed(() => props.countries)
-
+const samples = ref<SampleLocations[]>([])
 const mapContainer = ref<HTMLDivElement | null>(null);
 const map = ref<Map | null>(null);
 const choroplethLayerGroup = ref(L.layerGroup());
 const pointsLayerGroup = ref(L.layerGroup());
-
+const showSamples = ref(false)
+const lat = ref()
+const lng = ref()
+const router = useRouter()
 watch(() => props.selectedCountries, () => {
     if (props.mapType === 'cloropleth') {
         renderChoropleth();
     }
 });
+
+watch(() => props.locations, () => {
+    initMap();
+    if (props.mapType === "cloropleth") {
+        renderChoropleth();
+    } else if (props.mapType === "points") {
+        renderPoints();
+    }
+})
 // Initialize map on mount
 onMounted(() => {
     initMap();
@@ -41,8 +78,20 @@ onMounted(() => {
     } else if (props.mapType === "points") {
         renderPoints();
     }
-    // switchLayerGroup();
 });
+
+function handleRoute(route: any) {
+    router.push(route)
+    showSamples.value = false
+}
+
+async function getSamplesByCoords(latitude: number, longitude: number) {
+    lat.value = latitude
+    lng.value = longitude
+    const q = `${latitude}_${longitude}`
+    const { data } = await GeoLocationService.getLocation(q)
+    samples.value = [...data]
+}
 // Initialize the Leaflet map
 const initMap = () => {
     if (map.value || !mapContainer.value) return;
@@ -158,6 +207,30 @@ const renderPoints = () => {
     locations.value.forEach((item) => {
         const [lng, lat] = item.coordinates;
         const marker = L.circleMarker([lat, lng], { color: getColor.value(item.count), radius: 10 });
+
+        // Add hover event (mouseover)
+        marker.on("mouseover", () => {
+            marker.setStyle({
+                weight: 4, // Increase stroke width
+                color: colors.primary, // Change stroke color (e.g., black)
+                fillOpacity: 1 // Make it more visible
+            });
+        });
+
+        // Remove stroke on mouseout
+        marker.on("mouseout", () => {
+            marker.setStyle({
+                weight: 2, // Reset stroke width
+                color: getColor.value(item.count), // Reset to original color
+                fillOpacity: 0.8 // Reset opacity
+            });
+        });
+
+        // Add click event
+        marker.on("click", async () => {
+            await getSamplesByCoords(lat, lng)
+            showSamples.value = true
+        });
         pointsLayerGroup.value.addLayer(marker);
     });
     map.value.addLayer(pointsLayerGroup.value as any)

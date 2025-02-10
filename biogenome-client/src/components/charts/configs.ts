@@ -24,7 +24,13 @@ export function processChartData(data: Record<string, number>, label: string) {
 
 export function getChartOptions(type: ChartType, total: number) {
     let legend
-    let datalabels
+    let datalabels = {
+        color: '#000000',
+        display: 'auto',
+        font: {
+            size: 14,
+        }
+    }
     let scales
     if (type === 'pie') {
         legend = {
@@ -37,26 +43,19 @@ export function getChartOptions(type: ChartType, total: number) {
                 },
                 usePointStyle: true,
             },
-        },
-            datalabels = {
-                display: 'auto',
-                font: {
-                    size: 18
-                }
-            }
+        }
     }
     else {
         legend = {
             display: false
         }
         scales = {
-            x: { type: 'category' },
-            y: { display: false },
+            y: { type: 'category' },
+            x: { display: false },
         }
     }
     return {
         scales,
-        interaction: { intersect: false, mode: 'index' },
         plugins: {
             legend,
             datalabels,

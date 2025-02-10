@@ -89,8 +89,7 @@ function downloadCanvasAsPNG(canvasId: string, filename: string) {
 
     canvas {
         width: 100%;
-        height: auto;
-        height: 400px;
+        max-height: 400px;
     }
 }
 </style>
