@@ -42,3 +42,51 @@ class SubSamplesApi(Resource):
     def get(self,accession):
         sub_samples = biosamples_service.get_related_sub_samples(accession)
         return Response(sub_samples, mimetype="application/json", status=200)
+
+
+class BioSampleChecklist(Resource):
+    def get(self):
+        resp = biosamples_service.get_biosample_checklist()
+        return Response(json.dumps(resp), mimetype="application/json", status=200)
+
+class BioSampleAuth(Resource):
+
+    def get(self):
+        message = biosamples_service.check_user_is_logged_in(request.cookies)
+        return Response(json.dumps(message), mimetype="application/json", status=200)
+
+    def post(self):
+        data = request.json if request.is_json else request.form
+        return biosamples_service.login_to_ena(data)
+
+
+class BioSamplesSubmit(Resource):
+    @jwt_required()
+    def get(self):
+        response, mimetype = biosamples_service.get_submitted_biosamples(request.args)
+        return Response(response,mimetype=mimetype, status=200)
+
+    @jwt_required()
+    def post(self):
+        data = request.json
+        json_resp, code = biosamples_service.submit_sample(data, request.cookies)
+        return Response(json.dumps(json_resp), mimetype="application/json", status=code)
+
+class BioSampleSubmit(Resource):
+    @jwt_required()
+    def get(self, accession):
+        response = biosamples_service.get_submitted_sample(accession)
+        return Response(response.to_json(),mimetype="application/json", status=200)
+
+    # @jwt_required()
+    # def put(self):
+    #     data = request.json
+    #     json_resp, code = biosamples_service.submit_sample(data, request.cookies)
+    #     return Response(json.dumps(json_resp), mimetype="application/json", status=code)
+
+
+
+
+
+# class BioSampleSubmit(Resource):
+#     def get(self):

@@ -59,6 +59,7 @@ def initialize_routes(api):
 	api.add_resource(organisms_controller.OrganismLineageApi, '/api/organisms/<taxid>/lineage')
 	api.add_resource(organisms_controller.OrganismRelatedDataApi, '/api/organisms/<taxid>/<model>') 
 
+	api.add_resource(organisms_controller.OrganismToDeleteApi, '/api/organism_deletion_requests', '/api/organism_deletion_requests/<taxid>')
 
 	##ASSEMBLIES
 	api.add_resource(assemblies_controller.AssembliesApi, '/api/assemblies')
@@ -80,7 +81,14 @@ def initialize_routes(api):
 	
 	##BIOSAMPLES
 	api.add_resource(biosamples_controller.BioSamplesApi, '/api/biosamples')
-	api.add_resource(biosamples_controller.BioSampleApi, '/api/biosamples/<accession>')
+
+	api.add_resource(biosamples_controller.BioSampleChecklist, '/api/biosamples/checklist')
+	api.add_resource(biosamples_controller.BioSampleAuth, '/api/biosamples/auth')
+
+	api.add_resource(biosamples_controller.BioSamplesSubmit, '/api/biosamples/submit')  # Define first
+	api.add_resource(biosamples_controller.BioSampleSubmit, '/api/biosamples/submit/<accession>')  # Define first
+
+	api.add_resource(biosamples_controller.BioSampleApi, '/api/biosamples/<accession>') 
 	api.add_resource(lookup_controller.BioSampleRelatedDataLookup, '/api/biosamples/<accession>/lookup')
 	api.add_resource(biosamples_controller.ExperimentsByBiosample, '/api/biosamples/<accession>/experiments')
 	api.add_resource(biosamples_controller.AssembliesByBiosample, '/api/biosamples/<accession>/assemblies')
@@ -114,8 +122,11 @@ def initialize_routes(api):
 	##USERS
 	api.add_resource(users_controller.UsersApi, '/api/users')
 	api.add_resource(users_controller.UserApi,'/api/users/<name>')
+	api.add_resource(users_controller.UserLookup,'/api/users/<name>/lookup')
+
 	api.add_resource(users_controller.UserRelatedSpecies,'/api/users/<name>/organisms')
 	api.add_resource(users_controller.UserRelatedSamples,'/api/users/<name>/local_samples')
+	api.add_resource(users_controller.UserSubmittedSamples,'/api/users/<name>/submitted_biosamples')
 
 
 
