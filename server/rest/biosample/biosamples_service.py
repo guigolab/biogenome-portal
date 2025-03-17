@@ -145,7 +145,7 @@ def submit_sample(payload, cookies):
     if validation_response.status_code != 200:
         return validation_response.json(), validation_response.status_code
     ##
-    submission_response = ebi_client.submit_biosample_to_test_env(payload, ena_token)
+    submission_response = ebi_client.submit_biosample_to_ebi(payload, ena_token)
 
     if submission_response.status_code != 201:
         return submission_response.json(), submission_response.status_code
