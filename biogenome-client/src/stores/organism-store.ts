@@ -10,6 +10,7 @@ const initOrganismForm: OrganismForm = {
   image_urls: [] as string[],
   metadata: {} as Record<string, string>,
   publications: [] as Publication[],
+  sub_project: null,
   goat_status: '',
   target_list_status: null,
 }

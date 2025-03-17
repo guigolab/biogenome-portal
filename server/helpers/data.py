@@ -23,6 +23,11 @@ MODEL_MAPPER = {
         'query': query_visitors.biosample_query,
         'tsv_fields': ['accession', 'scientific_name', 'taxid']
     },
+    'submitted_biosamples':{
+        'model': models.BioSampleSubmission,
+        'query': query_visitors.biosample_submission_query,
+        'tsv_fields': ['accession', 'name', 'taxid', 'scientific_name', 'user']
+    },
     'experiments':{
         'model': models.Experiment,
         'query': query_visitors.experiment_query,
@@ -75,7 +80,7 @@ def get_pagination(args):
     return int(args.pop('limit', 10)),  int(args.pop('offset', 0))
 
 def get_sort(args):
-    return args.pop('sort_column', None), args.pop('sort_order', None)
+    return args.pop('sort_column', None), args.pop('sort_order', 'desc')
 
 def get_items(model, immutable_dict):
     try:

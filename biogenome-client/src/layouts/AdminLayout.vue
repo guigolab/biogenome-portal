@@ -1,25 +1,27 @@
 <template>
-    <VaLayout :top="{ fixed: true, order: 3 }">
+    <VaLayout :top="{ fixed: true, order: 3, }" :left="{ fixed: true, absolute: breakpoints.smDown, order: 2, }">
         <template #top>
             <VaNavbar shadowed>
                 <template #left>
-                    {{ userName }}
+                    <VaNavbarItem>
+                        <VaButton preset="secondary" :icon="globalStore.adminSidebar ? 'menu_open' : 'menu'"
+                            @click="globalStore.adminSidebar = !globalStore.adminSidebar" />
+                    </VaNavbarItem>
+                    <VaNavbarItem>
+                        <span class="va-h6">
+                            {{ globalStore.userName }}
+                        </span>
+                    </VaNavbarItem>
                 </template>
                 <template #right>
-                    <VaChip flat :to="'/'">Home</VaChip>
-                    <VaMenu :options="importOptions" @selected="(v: Record<string, any>) => $router.push(v.value)">
-                        <template #anchor>
-                            <VaChip flat>Import</VaChip>
-                        </template>
-                    </VaMenu>
-                    <VaMenu :options="dataOptions" @selected="(v: Record<string, any>) => $router.push(v.value)">
-                        <template #anchor>
-                            <VaChip flat>Data</VaChip>
-                        </template>
-                    </VaMenu>
-                    <VaChip flat @click="logoutUser">Logout</VaChip>
+                    <VaNavbarItem>
+                        <VaButton @click="logoutUser" preset="secondary" icon="logout">Logout</VaButton>
+                    </VaNavbarItem>
                 </template>
             </VaNavbar>
+        </template>
+        <template #left>
+            <CMSSidebar />
         </template>
         <template #content>
             <main>
@@ -31,51 +33,19 @@
     </VaLayout>
 </template>
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
 import { useGlobalStore } from '../stores/global-store'
 import { useRouter } from 'vue-router';
+import { useBreakpoint } from 'vuestic-ui';
+import CMSSidebar from '../components/cms/CMSSidebar.vue';
 
 const router = useRouter()
-const { userName, userRole, logout } = useGlobalStore()
-
-const isAdmin = computed(() => {
-    return userRole === 'Admin'
-})
-
-const uploadOptions = [
-    { text: 'Spreadsheet (samples)', value: { name: 'spreadsheet-upload' }, group: 'Uploads' },
-    { text: 'GoaT report ', value: { name: 'goat-upload' }, group: 'Uploads' },
-]
-
-const adminUploadOpts = [
-    { text: 'Import from INSDC', value: { name: 'insdc-form' }, group: 'INSDC Data' },
-    { text: 'Create Annotation', value: { name: 'create-annotation' }, group: 'Local Data' },
-    { text: 'Create Organism', value: { name: 'create-organism' }, group: 'Local Data' },
-    { text: 'Create User', value: { name: 'create-user' }, group: 'Local Data' },
-]
-
-const importOptions = computed(() => isAdmin.value ? [...uploadOptions, ...adminUploadOpts] : [...uploadOptions])
-
-const defaultDataOpts = [
-    { text: 'Organisms', value: { name: 'cms-items', params: { model: 'organisms' } }, group: 'Local Data' },
-    { text: 'Local Samples', value: { name: 'cms-items', params: { model: 'local_samples' } }, group: 'Local Data' },
-]
-
-const adminDataOptions = [
-    { text: 'Users', value: { name: 'users' }, group: 'Local Data' },
-    { text: 'Annotations', value: { name: 'cms-items', params: { model: 'annotations' } }, group: 'Local Data' },
-    { text: 'Assemblies', value: { name: 'cms-items', params: { model: 'assemblies' } }, group: 'INSDC Data' },
-    { text: 'BioSamples', value: { name: 'cms-items', params: { model: 'biosamples' } }, group: 'INSDC Data' },
-    { text: 'Experiments', value: { name: 'cms-items', params: { model: 'experiments' } }, group: 'INSDC Data' },
-]
-
-const dataOptions = computed(() => isAdmin.value ? [...defaultDataOpts, ...adminDataOptions] : [...defaultDataOpts])
+const globalStore = useGlobalStore()
+const breakpoints = useBreakpoint()
 
 
 async function logoutUser() {
-    await logout()
-    router.push({ 'name': 'login' })
-
+    await globalStore.logout()
+    router.push({ name: 'home' })
 }
 
 </script>

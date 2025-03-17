@@ -29,8 +29,8 @@ export type ItemDetails = {
   metadata?: Record<string, any>
   images?: string[]
   avatar?: string
-  insdcStatus?:string
-  goat?: {status:string,targetList:string}
+  insdcStatus?: string
+  goat?: { status: string, targetList: string }
   publications?: Record<string, any>[]
   vernacularNames?: Record<string, any>[]
 
@@ -89,7 +89,7 @@ export interface PageHeaderConfig {
   title: LangOption,
   description: LangOption
 }
-export type DataModels = 'biosamples' | 'experiments' | 'organisms' | 'annotations' | 'assemblies' | 'local_samples'
+export type DataModels = 'biosamples' | 'experiments' | 'organisms' | 'annotations' | 'assemblies' | 'local_samples' | 'submitted_biosamples'
 export const dataModels: DataModels[] = [
   'biosamples',
   'experiments',
@@ -351,5 +351,24 @@ export type OrganismForm = {
   metadata: Record<string, string>,
   publications: Publication[],
   goat_status: string,
+  sub_project?: string | null,
   target_list_status: 'long_list' | 'family_representative' | 'other_priority' | null,
 }
+
+export type EBISampleCharacteristic = {
+  text?: string;
+  ontologyTerms?: string[];
+  unit?: string;
+};
+
+export type EBISample = {
+  name: string;
+  taxid:string
+  release: string; // ISO 8601 Date string
+  update?: string; // ISO 8601 Date string, system-generated
+  accession?: string; // Required for PUT requests
+  characteristics?: Record<string, EBISampleCharacteristic[]>; // Key-value pair of characteristics
+  externalReferences?: string[]; // List of external references
+  relationships?: string[]; // List of relationships with other samples
+  data?: any[]; // Structured data, required for structured data submission
+};

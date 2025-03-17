@@ -1,24 +1,29 @@
 <template>
   <div>
-    <div class="row justify-center align-center">
-      <div style="text-align: center;" class="flex lg12 md12 sm12 xs12">
-        <Header :title="title" :description="description" description-class="va-text-secondary" title-class="va-h1">
-        </Header>
-      </div>
-    </div>
-    <div class="row justify-center section-mb">
-      <div class="flex">
-        <VaButton :to="{ name: 'tree' }" color="secondary">
-          {{ t('home.taxonomy.exploreBtn') }}
-        </VaButton>
-      </div>
-      <div class="flex" v-if="rootTaxon">
-        <VaButton @click="updateTaxon(rootTaxon)">
-          {{ t('home.taxonomy.viewBtn') }} {{ rootTaxon.name }}
-        </VaButton>
+    <div class="hero-section row align-center">
+      <div class="flex lg12 md12 sm12 xs12">
+        <div class="row justify-center align-center">
+          <div style="text-align: center;" class="flex lg12 md12 sm12 xs12">
+            <Header :title="title" :description="description" description-class="va-text-secondary" title-class="va-h1">
+            </Header>
+          </div>
+        </div>
+        <div class="row justify-center">
+          <div class="flex">
+            <VaButton :to="{ name: 'tree' }" color="secondary">
+              {{ t('home.taxonomy.exploreBtn') }}
+            </VaButton>
+          </div>
+          <div class="flex" v-if="rootTaxon">
+            <VaButton @click="updateTaxon(rootTaxon)">
+              {{ t('home.taxonomy.viewBtn') }} {{ rootTaxon.name }}
+            </VaButton>
+          </div>
+        </div>
       </div>
     </div>
     <VaDivider />
+    <TaxonRanks />
     <div class="row">
       <div class="flex">
         <h2 class="va-h2">
@@ -36,7 +41,6 @@
         </VaCard>
       </div>
     </div>
-    <!-- <TaxonRanksCard /> -->
     <div class="row align-center justify-center">
       <div class="flex">
         <h2 style="text-align: center;" class="va-h2">
@@ -47,7 +51,7 @@
         <TaxonChip />
       </div>
     </div>
-    <ModelCounts class="section-mb" :counts="stats"></ModelCounts>
+    <ModelCounts class="section-mb" :counts="stats" :row-class="'justify-center'"></ModelCounts>
     <div v-if="hasGoat" class="row section-mb">
       <div class="flex lg12 md12 sm12 xs12">
         <div class="row align-center justify-space-between">
@@ -155,7 +159,7 @@ import { useItemStore } from '../../stores/items-store';
 import Chart from '../../components/Chart.vue';
 import { useToast } from 'vuestic-ui/web-components';
 import GoaTService from '../../services/GoaTService';
-// import TaxonRanksCard from '../../components/TaxonRanksCard.vue';
+import TaxonRanks from '../../components/TaxonRanks.vue';
 
 const { t } = useI18n()
 const statsStore = useStatsStore()
@@ -239,5 +243,9 @@ async function downloadGoatReport() {
 <style>
 .section-mb {
   margin-bottom: 3rem !important;
+}
+
+.hero-section {
+  height: min(50vh, 400px);
 }
 </style>

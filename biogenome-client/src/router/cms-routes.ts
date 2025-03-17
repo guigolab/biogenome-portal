@@ -1,4 +1,7 @@
 import { useGlobalStore } from '../stores/global-store'
+import { useSampleStore } from '../stores/sample-store'
+
+
 
 function isAdmin() {
     const { userRole } = useGlobalStore()
@@ -11,11 +14,19 @@ async function isAuthenticated() {
     if (!gStore.isAuthenticated) return { name: 'login' }
 }
 
+async function isENAAuthenticated() {
+    const sampleStore = useSampleStore()
+    await sampleStore.checkUserIsLoggedIn()
+    if (!sampleStore.isAuthenticated) return { name: 'ena-login' }
+}
+
 export const cmsRoutes = [
     {
         path: '/admin',
         name: 'admin',
-        redirect: '/admin/data/organisms',
+        meta: { layout: 'AdminLayout' },
+        beforeEnter: [isAuthenticated],
+        component: () => import('../pages/cms/Dashboard.vue')
     },
     {
         name: 'cms-items',
@@ -55,16 +66,44 @@ export const cmsRoutes = [
         component: () => import('../pages/cms/OrganismForm.vue')
     },
     {
+        name: 'publish-biosample',
+        path: '/admin/publish-biosample',
+        beforeEnter: [isAuthenticated, isENAAuthenticated],
+        meta: { layout: 'AdminLayout' },
+        component: () => import('../pages/cms/ENAUpload.vue')
+    },
+    {
+        name: 'delete-requests',
+        path: '/admin/organisms-to-delete',
+        beforeEnter: [isAuthenticated],
+        meta: { layout: 'AdminLayout' },
+        component: () => import('../pages/cms/OrganismsToDelete.vue')
+    },
+    {
+        name: 'submitted-biosamples',
+        path: '/admin/submitted-biosamples',
+        beforeEnter: [isAuthenticated],
+        meta: { layout: 'AdminLayout' },
+        component: () => import('../pages/cms/SubmittedBiosamples.vue')
+    },
+    {
+        name: 'ena-login',
+        path: '/admin/ena-login',
+        beforeEnter: [isAuthenticated],
+        meta: { layout: 'AdminLayout' },
+        component: () => import('../pages/cms/ENALogin.vue')
+    },
+    {
         name: 'create-user',
         path: '/admin/create-user',
-        beforeEnter: [isAuthenticated,isAdmin],
+        beforeEnter: [isAuthenticated, isAdmin],
         meta: { layout: 'AdminLayout' },
         component: () => import('../pages/cms/UserForm.vue')
     },
     {
         name: 'update-user',
         path: '/admin/update-user/:name',
-        beforeEnter: [isAuthenticated,isAdmin],
+        beforeEnter: [isAuthenticated, isAdmin],
         meta: { layout: 'AdminLayout' },
         props: true,
         component: () => import('../pages/cms/UserForm.vue')
@@ -73,7 +112,7 @@ export const cmsRoutes = [
         name: 'create-annotation',
         path: '/admin/create-annotation',
         meta: { layout: 'AdminLayout' },
-        beforeEnter: [isAuthenticated,isAdmin],
+        beforeEnter: [isAuthenticated, isAdmin],
         component: () => import('../pages/cms/AnnotationForm.vue'),
     },
     {
@@ -81,20 +120,21 @@ export const cmsRoutes = [
         path: '/admin/update-annotation/:name',
         meta: { layout: 'AdminLayout' },
         props: true,
-        beforeEnter: [isAuthenticated,isAdmin],
+        beforeEnter: [isAuthenticated, isAdmin],
         component: () => import('../pages/cms/AnnotationForm.vue'),
     },
     {
         name: 'insdc-form',
         path: '/admin/insdc-form',
         meta: { layout: 'AdminLayout' },
-        beforeEnter: [isAuthenticated,isAdmin],
+        props: true,
+        beforeEnter: [isAuthenticated, isAdmin],
         component: () => import('../pages/cms/INSDCForm.vue'),
     },
     {
         name: 'users',
         path: '/admin/users',
-        beforeEnter: [isAuthenticated,isAdmin],
+        beforeEnter: [isAuthenticated, isAdmin],
         meta: { layout: 'AdminLayout' },
         component: () => import('../pages/cms/Users.vue')
     }

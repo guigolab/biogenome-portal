@@ -2,8 +2,13 @@
   <VaNavbar shadowed bordered>
     <template #left>
       <VaNavbarItem v-if="appLogo" class="image-wrapper">
-        <VaImage fit="contain" class="image-h" lazy :src="generatedLink">
+        <a v-if="externalLink" style="height: 100%;width: 100%;" :href="externalLink" target="_blank">
+          <VaImage fit="contain" class="image-h" lazy :src="generatedLink">
+          </VaImage>
+        </a>
+        <VaImage v-else fit="contain" class="image-h" lazy :src="generatedLink">
         </VaImage>
+
       </VaNavbarItem>
       <VaNavbarItem v-else>
         <span class="va-h6">
@@ -49,11 +54,6 @@
               }}
             </VaButton>
           </template>
-          <VaMenuItem v-if="config.general.cms">
-            <RouterLink :style="{ 'color': colors.textPrimary }" :to="{ name: 'admin' }">
-              Admin
-            </RouterLink>
-          </VaMenuItem>
           <VaMenuItem>
             <a :style="{ 'color': colors.textPrimary }" href="https://github.com/guigolab/biogenome-portal"
               target="_blank">
@@ -63,7 +63,7 @@
           <VaMenuItem>
             <a :style="{ 'color': colors.textPrimary }" href="https://guigolab.github.io/biogenome-portal/"
               target="_blank">
-              API Docs
+              Docs
             </a>
           </VaMenuItem>
           <VaMenuItem v-if="externalLink">
@@ -72,6 +72,10 @@
             </a>
           </VaMenuItem>
         </VaMenu>
+        <VaButton :to="{ name: 'admin' }" preset="secondary" icon="fa-user" color="textPrimary"
+          v-if="config.general.cms">
+          {{ hideIcon ? '' : 'CMS Area' }}
+        </VaButton>
         <VaMenu>
           <template #anchor>
             <VaButton color="textPrimary">{{ locale }}
@@ -129,7 +133,7 @@ const models = computed(() =>
     }
     ))
 
-const settings = ['Login', 'GitHub', 'API Docs']
+const settings = ['Login', 'GitHub', 'Docs']
 //retrieve configured models 
 
 function handleLang(lang: { code: string, name: string }) {

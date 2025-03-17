@@ -94,7 +94,7 @@
               <VaCardContent>
                 <div class="row">
                   <div class="flex lg12 md12 sm12 xs12">
-                    <VaButton block icon="add" @click="addNewAttribute">Add new attribute</VaButton>
+                    <VaButton icon="add" @click="addNewAttribute">Add new attribute</VaButton>
 
                   </div>
                 </div>

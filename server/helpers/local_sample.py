@@ -1,4 +1,76 @@
 from db.models import BrokerSource
+import csv
+import xml.etree.ElementTree as ET
+import re
+from io import StringIO
+
+def parse_ena_checklist(xml_file):
+    """Parses the ENA checklist XML and extracts field definitions."""
+    tree = ET.parse(xml_file)
+    root = tree.getroot()
+    
+    fields = []
+    regex_constraints = {}
+    mandatory_fields = []
+
+    for field_group in root.findall(".//FIELD_GROUP"):
+        for field in field_group.findall("FIELD"):
+            name = field.find("NAME").text.strip()
+            mandatory = field.find("MANDATORY").text.strip().lower()
+            regex_value = field.find(".//REGEX_VALUE")
+
+            fields.append(name)
+
+            if mandatory == "mandatory":
+                mandatory_fields.append(name)
+            
+            if regex_value is not None:
+                regex_constraints[name] = regex_value.text.strip()
+    
+    return fields, mandatory_fields, regex_constraints
+
+
+def generate_tsv_template(xml_file):
+    """Generates a TSV template based on the ENA checklist XML."""
+    fields, _, _ = parse_ena_checklist(xml_file)
+    with StringIO() as writer_file:
+        tsv = csv.writer(writer_file, delimiter='\t')
+        tsv.writerow(fields)  # Write headers
+        tsv.writerow(["" for _ in fields])  
+
+    tsv_file = writer_file.getvalue()
+    filename = "template.tsv"
+    
+    return tsv_file.encode('utf-8'), filename
+
+
+def validate_tsv_against_xml(xml_file, tsv_file):
+    """Validates a TSV file against the ENA checklist XML."""
+    fields, mandatory_fields, regex_constraints = parse_ena_checklist(xml_file)
+
+    # Read TSV file
+    with open(tsv_file, "r") as f:
+        reader = csv.DictReader(f, delimiter="\t")
+        rows = list(reader)
+
+    # Check if all mandatory fields are present
+    missing_fields = [field for field in mandatory_fields if field not in reader.fieldnames]
+    if missing_fields:
+        raise ValueError(f"Missing mandatory fields in TSV: {missing_fields}")
+
+    # Validate each row
+    errors = []
+    for row_idx, row in enumerate(rows, start=1):
+        for field, regex in regex_constraints.items():
+            if field in row and row[field].strip():
+                if not re.match(regex, row[field].strip()):
+                    errors.append(f"Row {row_idx}: Invalid format in '{field}' - {row[field]}")
+
+    if errors:
+        raise ValueError("\n".join(errors))
+
+    print("TSV validation passed successfully!")
+
 
 OPTIONS = ['SKIP','UPDATE']
 

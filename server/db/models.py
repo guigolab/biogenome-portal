@@ -21,10 +21,11 @@ def update_organism_status(sender, document, **kwargs):
     taxid = document.taxid
 
     #update organism links
-    assemblies =  Assembly.objects(taxid=taxid).scalar('accession').count()
-    experiments = Experiment.objects(taxid=taxid).scalar('experiment_accession').count()
-    biosamples = BioSample.objects(taxid=taxid).scalar('accession').count()
-
+    assemblies =  Assembly.objects(taxid=taxid).count()
+    experiments = Experiment.objects(taxid=taxid).count()
+    biosamples = BioSample.objects(taxid=taxid).count()
+    local_samples = LocalSample.objects(taxid=taxid).count()
+    submitted_biosamples = BioSampleSubmission.objects(taxid=taxid).count()
     #update insdc_status
     if assemblies:
         document.insdc_status= INSDCStatus.ASSEMBLIES
@@ -44,6 +45,8 @@ def update_organism_status(sender, document, **kwargs):
             document.goat_status=GoaTStatus.INSDC_SUBMITTED
         elif experiments:
             document.goat_status=GoaTStatus.IN_ASSEMBLY
+        elif local_samples or submitted_biosamples:
+            document.goat_status=GoaTStatus.SAMPLE_COLLECTED
 
         if current_goat_status != document.goat_status:
             update_date = GoaTUpdateDate.objects().first()
@@ -74,6 +77,7 @@ def delete_organism_related_data( sender, document ):
     Experiment.objects(taxid=taxid).delete()
     LocalSample.objects(taxid=taxid).delete()
     BioSample.objects(taxid=taxid).delete()
+    OrganismToDelete.objects(taxid=taxid).delete()
     BioGenomeUser.objects(species=taxid).update(pull__species=taxid)
     taxons = TaxonNode.objects(taxid__in=document.taxon_lineage)
     update_taxons(taxons)
@@ -152,6 +156,12 @@ class Experiment(db.Document):
         'indexes': ['experiment_accession','taxid', 'taxon_lineage']
     }
 
+## Organisms to delete by admin 
+class OrganismToDelete(db.Document):
+    taxid = db.StringField(required=True, unique=True)
+    scientific_name = db.StringField(required=True,unique=True)
+    user = db.StringField(required=True)
+
 class Read(db.Document):
     run_accession = db.StringField(required=True, unique=True)
     experiment_accession = db.StringField(required=True)
@@ -220,7 +230,7 @@ class LocalSample(db.Document):
     created = db.DateTimeField(default=datetime.datetime.now())
     local_id = db.StringField(required=True,unique=True)
     taxon_lineage = db.ListField(db.StringField())
-
+    user = db.StringField()
     last_check = db.DateTimeField()
     location = db.PointField() ##list of longitude, latitude tuples: as it can contain one or more tuples it is not a valid geojson 
     country=db.StringField()
@@ -259,6 +269,12 @@ class BioSample(db.Document):
         'strict': False
     }
 
+class BioSampleSubmission(db.DynamicDocument):
+    taxid = db.StringField(required=True)
+    scientific_name = db.StringField(required=True)
+    user = db.StringField(required=True)
+    characteristics = db.DictField(required=True)
+
 class GenomeAnnotation(db.Document):
     assembly_accession = db.StringField(required=True)
     assembly_name = db.StringField()
@@ -296,6 +312,7 @@ class Organism(db.Document):
     sub_project= db.StringField()
     tolid_prefix = db.StringField()
     links = db.ListField(db.URLField())
+    sub_project = db.StringField()
     common_names= db.ListField(db.EmbeddedDocumentField(CommonName))
     countries = db.ListField(db.StringField())
     insdc_common_name = db.StringField()

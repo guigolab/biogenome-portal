@@ -13,7 +13,7 @@ GOAT_STATUS_IMPORT_MAPPER={
 }
 
 @shared_task(name='goat_upload', ignore_result=False, bind=True)
-def upload_goat_report(self, username, rows):
+def upload_goat_report(self, username, rows, sub_project=None):
     
     errors = []
     self.update_state(state='PROGRESS', meta={'messages': ['Starting job...']})
@@ -59,7 +59,7 @@ def upload_goat_report(self, username, rows):
         publication = data_to_update.get('publications')
         org.target_list_status = data_to_update.get('target_list_status')
         org.goat_status = data_to_update.get('goat_status')
-        
+        org.sub_project = sub_project
         if publication and not any(pub.id == publication.id for pub in org.publications):
             org.publications.append(publication)
 

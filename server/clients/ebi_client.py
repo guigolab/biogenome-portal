@@ -17,6 +17,55 @@ EXPERIMENT_FIELDS = (
     'sample_alias,broker_name,sample_title,nominal_sdev,first_created'
 )
 
+def check_token_is_valid(token):
+    url = "https://www.ebi.ac.uk/biosamples/samples?authProvider=WEBIN"
+    headers = {"Content-Type": "application/json", "Authorization": f"Bearer {token}"}
+    response = requests.get(url, headers=headers)
+    return response.status_code
+
+def login_to_ena(username, password):
+    auth_url = "https://www.ebi.ac.uk/ena/submit/webin/auth/token"
+    auth_payload = {
+        "authRealms": ["ENA"],
+        "username": username,
+        "password": password
+    }
+    headers = {
+        "Accept": "*/*",
+        "Content-Type": "application/json"
+    }
+    response = requests.post(auth_url, json=auth_payload, headers=headers)
+    return response.text, response.status_code
+
+def validate_biosample(payload, token):
+    url = "https://www.ebi.ac.uk/biosamples/validate"
+    headers = {"Content-Type": "application/json", "Authorization": f"Bearer {token}"}
+    response = requests.post(url, json=payload, headers=headers)
+    return response
+
+def submit_biosample_to_test_env(payload, token):
+    url = "https://wwwdev.ebi.ac.uk/biosamples/samples"
+    headers = {"Content-Type": "application/json", "Authorization": f"Bearer {token}"}
+    response = requests.post(url, json=payload, headers=headers)
+    return response
+
+def upadate_biosample_to_test_env(accession, payload, token):
+    url = f"https://wwwdev.ebi.ac.uk/biosamples/samples/{accession}"
+    headers = {"Content-Type": "application/json", "Authorization": f"Bearer {token}"}
+    response = requests.put(url, json=payload, headers=headers)
+    return response
+
+def submit_biosample_to_ebi(payload, token):
+    url = "https://www.ebi.ac.uk/biosamples/samples"
+    headers = {"Content-Type": "application/json", "Authorization": f"Bearer {token}"}
+    response = requests.post(url, json=payload, headers=headers)
+    return response
+
+def upadate_biosample(accession, payload, token):
+    url = f"https://www.ebi.ac.uk/biosamples/samples/{accession}"
+    headers = {"Content-Type": "application/json", "Authorization": f"Bearer {token}"}
+    response = requests.put(url, json=payload, headers=headers)
+    return response
 
 def fetch_experiments_by_bioproject_streaming(project_accession):
     base_url = "https://www.ebi.ac.uk/ena/portal/api/filereport"

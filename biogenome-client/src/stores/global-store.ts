@@ -15,6 +15,7 @@ export const useGlobalStore = defineStore('global', {
       userRole: '',
       userSpecies: [] as string[],
       isAuthenticated: isAuth,
+      adminSidebar:false,
       language: lang,
       error: false,
       message: '',

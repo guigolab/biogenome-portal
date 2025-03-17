@@ -20,8 +20,6 @@ fetchSettings().then(() => {
 
     app.provide('appConfig', configs.value);
 
-
-    console.log(configs.value?.ui)
     if (trackerPath) {
         app.use(VueMatomo, {
             // Configure your matomo server and site by providing
@@ -33,7 +31,6 @@ fetchSettings().then(() => {
     }
 
     app.use(router)
-
     app.use(i18n)
     app.use(createVuestic({ config: { icons: iconsConfig, ...configs.value?.ui } }))
 

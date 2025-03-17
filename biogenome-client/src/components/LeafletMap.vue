@@ -40,7 +40,8 @@ const props = defineProps<{
     mapType: 'cloropleth' | 'points',
     locations: Record<string, any>[]
     countries: Record<string, any>[]
-    selectedCountries: Record<string, any>[]
+    selectedCountries: Record<string, any>[],
+    interactionDisabled?: boolean
 }>()
 
 const emits = defineEmits(['countrySelected'])
@@ -205,6 +206,7 @@ const renderPoints = () => {
     pointsLayerGroup.value.clearLayers();
     map.value?.removeLayer(pointsLayerGroup.value as any)
     locations.value.forEach((item) => {
+        console.log(item)
         const [lng, lat] = item.coordinates;
         const marker = L.circleMarker([lat, lng], { color: getColor.value(item.count), radius: 10 });
 
@@ -226,11 +228,14 @@ const renderPoints = () => {
             });
         });
 
-        // Add click event
-        marker.on("click", async () => {
-            await getSamplesByCoords(lat, lng)
-            showSamples.value = true
-        });
+        if (!props.interactionDisabled) {
+            // Add click event
+            marker.on("click", async () => {
+                await getSamplesByCoords(lat, lng)
+                showSamples.value = true
+            });
+        }
+
         pointsLayerGroup.value.addLayer(marker);
     });
     map.value.addLayer(pointsLayerGroup.value as any)

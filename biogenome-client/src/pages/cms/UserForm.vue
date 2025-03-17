@@ -27,7 +27,7 @@
                             </VaSelect>
                         </div>
                         <div class="flex lg6 md6 sm12 xs12">
-                            <VaInput label="Email (optional)" v-model="user.email"></VaInput>
+                            <VaInput label="Email" v-model="user.email"></VaInput>
 
                         </div>
                     </div>
@@ -142,7 +142,8 @@ const title = "User Form"
 
 const description = computed(() => props.name ? `Edit ${props.name}` : 'Create a new user')
 
-const isValid = computed(() => user.value && user.value.name && user.value.password)
+const isValid = computed(() => user.value && user.value.name && user.value.password && user.value.email)
+
 const filter = ref<string>('')
 const pagination = reactive({
     limit: 10,
@@ -182,7 +183,6 @@ const organisms = ref<Record<string, any>[]>([])
 const filteredOrganisms = computed(() => {
     return organisms.value.filter(({ taxid }) => !userOrganisms.value.map((org) => org.taxid).includes(taxid))
 }
-
 )
 const user = ref<{
     name: string,

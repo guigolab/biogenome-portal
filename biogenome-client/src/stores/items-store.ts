@@ -54,7 +54,7 @@ export const useItemStore = defineStore('item', {
         buildQuery() {
             if (this.searchForm) {
                 const searchFormEntries = Object.entries(this.searchForm)
-                    .filter(([key, value]) => !staticFilters.hasOwnProperty(key) && value);
+                    .filter(([_, value]) => value);
                 return Object.fromEntries(searchFormEntries);
             } else {
                 return {}

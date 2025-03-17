@@ -1,5 +1,12 @@
 <template>
   <Header :title="title" />
+  <!-- 
+    OPTIONS:
+      METADATA FROM CHECKLIST
+        DOWNLOAD TSV TEMPLATE
+      METADATA FROM CUSTOM TEMPLATE
+  
+  -->
   <div v-if="messages.length" class="row">
     <div class="flex lg12 md12 sm12 xs12">
       <VaCard :stripe="messages.length > 0" :stripe-color="isError ? 'danger' : 'success'">
@@ -181,8 +188,9 @@ async function handleSubmit() {
     const axiosError = error as AxiosError
     if (axiosError && axiosError.response && axiosError.response.data) {
       // const data = axiosError.response.data
-      if (axiosError.response.data.message) {
-        messages.value = [...axiosError.response.data.message.split(';')]
+      const data = axiosError.response.data as any
+      if (data.message) {
+        messages.value = [...data.message.split(';')]
       } else if (Array.isArray(axiosError.response.data)) {
         messages.value = [...axiosError.response.data as Record<string, string>[]]
       } else {

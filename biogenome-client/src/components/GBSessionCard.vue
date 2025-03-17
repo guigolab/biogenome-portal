@@ -4,7 +4,7 @@
             <div class="row align-center justify-space-between">
                 <div class="flex">
                     <h2 class="va-h6">{{ assembly.assembly_name }} ({{ assembly.scientific_name
-                        }}) </h2>
+                    }}) </h2>
 
                 </div>
                 <div class="flex">
@@ -14,15 +14,17 @@
             <div class="row align-center">
                 <div style="padding-top: 0;" class="flex">
                     <span class="va-text-secondary">{{ t('genomeBrowser.assembly.accession') }} </span>
-                    <span class="va-text-bold">{{ assembly.accession }}</span>
+                    <VaChip flat :to="{ name: 'item', params: { model: 'assemblies', id: assembly.accession } }">{{
+                        assembly.accession }}</VaChip>
                 </div>
                 <div style="padding-top: 0;" class="flex">
                     <span class="va-text-secondary">{{ t('genomeBrowser.assembly.sampleAccession') }}</span>
-                    <span class="va-text-bold">{{ assembly.sample_accession }}</span>
+                    <VaChip flat :to="{ name: 'item', params: { model: 'biosamples', id: assembly.sample_accession } }">
+                        {{ assembly.sample_accession }}</VaChip>
                 </div>
                 <div style="padding-top: 0;" class="flex">
                     <VaButton preset="primary" @click="showMetadata(assembly)">{{ t('genomeBrowser.assembly.metadata')
-                        }}</VaButton>
+                    }}</VaButton>
                 </div>
             </div>
         </VaCardContent>

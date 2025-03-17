@@ -80,7 +80,6 @@ class AuthService {
   }
   deleteItem(model: DataModels, id: string) {
     return this.submission.delete(`/${model}/${id}`);
-
   }
   importSpreadsheet(formData: FormData) {
     return this.submission.post('/local_samples/upload', formData, {
@@ -146,7 +145,9 @@ class AuthService {
   getUsers(params: Record<string, any>) {
     return this.submission.get('/users', { params });
   }
-
+  getUserRelatedData(name: string) {
+    return this.submission.get(`/users/${name}/lookup`)
+  }
   deleteUser(name: string) {
     return this.submission.delete(`/users/${name}`);
   }
@@ -165,6 +166,18 @@ class AuthService {
 
   getUserSamples(name: string, params: UserParams) {
     return this.submission.get(`/users/${name}/local_samples`, { params });
+  }
+  getUserSubmittedBioSamples(name: string, params: UserParams) {
+    return this.submission.get(`/users/${name}/submitted_biosamples`, { params });
+  }
+  createOrganismToDeleteRequest(taxid: string) {
+    return this.submission.post(`/organism_deletion_requests/${taxid}`)
+  }
+  getOrganismsToDelete(params: Record<string, any>) {
+    return this.submission.get('/organism_deletion_requests', { params })
+  }
+  deleteOrganismsToDeleteRequest(taxid: string) {
+    return this.submission.get(`organism_deletion_requests/${taxid}`)
   }
 }
 

@@ -1,25 +1,15 @@
 <template>
-  <div class="row">
-    <div class="flex lg12 md12 sm12 xs12">
+  <div class="row justify-space-between align-end">
+    <div class="flex">
       <h1 class="va-h1">GoaT Report Upload</h1>
     </div>
+    <div class="flex">
+      <VaButton color="info" @click="showModal = !showModal">Guidelines</VaButton>
+    </div>
   </div>
-
   <div class="row">
     <div class="flex lg12 md12 sm12 xs12">
       <VaCard>
-        <VaCardContent>
-          <div class="row justify-space-between align-center">
-            <div class="flex">
-              <h2 class="va-h6">
-                Upload a goat report
-              </h2>
-              <p class="va-text-secondary">The TSV format must be compliant with <a class="va-link" target="_blank"
-                  href="https://docs.google.com/spreadsheets/d/1eC6jQctRoUaeGWWDbb1qsWs-7ajC462nnJdHK4N3ivw"><b>this
-                    template</b></a></p>
-            </div>
-          </div>
-        </VaCardContent>
         <VaInnerLoading :loading="isLoading">
           <VaForm tag="form" @submit.prevent="handleSubmit">
             <VaCardContent>
@@ -32,14 +22,55 @@
               </div>
             </VaCardContent>
             <VaCardActions>
-              <VaButton block preset="true" :disabled="!tsv" type="submit"> Submit </VaButton>
+              <VaButton :disabled="!tsv" type="submit"> Submit </VaButton>
             </VaCardActions>
           </VaForm>
         </VaInnerLoading>
-
       </VaCard>
     </div>
   </div>
+  <VaModal v-model="showModal">
+    <template #header>
+      <h2 class="va-h3">GoaT Upload Guidelines</h2>
+    </template>
+    <div class="layout va-gutter-1 fluid">
+      <div class="row">
+        <div class="flex lg12 md12 sm12 xs12">
+          <p>
+            Use goat report (in TSV format), to upload organisms in the portal database
+          </p>
+        </div>
+        <div class="flex lg12 md12 sm12 xs12">
+          <p>The TSV format must be compliant with <a class="va-link" target="_blank"
+              href="https://docs.google.com/spreadsheets/d/1eC6jQctRoUaeGWWDbb1qsWs-7ajC462nnJdHK4N3ivw"><b>this
+                template</b></a>. Note that you have to <span class="va-text-danger">delete</span> the <span
+              class="va-text-highlighted">Click here
+              for
+              complete
+              Guidelines text </span> in the
+            TSV template</p>
+        </div>
+      </div>
+      <div class="row">
+        <div class="flex lg12 md12 sm12 xs12">
+          <h4 class="va-h6">
+            About the template header:
+          </h4>
+        </div>
+        <div class="flex lg12 md12 sm12 xs12">
+          <p>Except for the <span class="va-text-bold"> sub_project</span> row, the template header—although required
+            for
+            compatibility with any existing
+            GoaT report—is not actually used in the portal.</p>
+        </div>
+        <div class="flex lg12 md12 sm12 xs12">
+          <p>If you are part of a subproject, enter the subproject name (e.g., principal investigator, entity, or
+            research
+            institution) in the sub_project row. </p>
+        </div>
+      </div>
+    </div>
+  </VaModal>
   <div v-if="messages.length" class="row">
     <div class="flex lg12 md12 sm12 xs12">
       <VaCard :stripe="!!messages.length" :stripe-color="isError ? 'danger' : 'success'">
@@ -62,7 +93,7 @@
 import { onUnmounted, ref } from 'vue'
 import AuthService from '../../services/AuthService'
 import { AxiosError } from 'axios'
-import { useToast, VaFileUpload, VaInnerLoading } from 'vuestic-ui';
+import { useToast } from 'vuestic-ui';
 
 const isLoading = ref(false)
 const messages = ref<Record<string, string>[]>([])
@@ -73,7 +104,7 @@ const pollingInterval = 5000; // Interval in milliseconds (e.g., 5000 ms = 5 sec
 const jobID = ref()
 const uploadState = ref("")
 const { init } = useToast()
-
+const showModal = ref(false)
 
 onUnmounted(() => {
   if (intervalId.value !== null) {
@@ -110,10 +141,13 @@ async function handleSubmit() {
   } catch (error) {
     isError.value = true
     const axiosError = error as AxiosError
-    if (axiosError.response && axiosError.response.data && axiosError.response.data.message) {
-      messages.value = [...axiosError.response.data.message.split(';')]
-    } else if (axiosError.response && axiosError.response.data && Array.isArray(axiosError.response.data)) {
-      messages.value = [...axiosError.response.data as Record<string, string>[]]
+    if (axiosError.response && axiosError.response.data) {
+      const d = axiosError.response.data as any
+      if (d.message) {
+        messages.value = [...d.message.split(';')]
+      } else if (Array.isArray(d)) {
+        messages.value = [...d as Record<string, string>[]]
+      }
     }
     else messages.value = [{ error: axiosError.message }]
     isLoading.value = false

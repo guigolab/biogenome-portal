@@ -1,5 +1,5 @@
 from db.models import  TaxonNode
-from helpers import data as data_helper, taxonomy as taxonomy_helper
+from helpers import data as data_helper
 from werkzeug.exceptions import NotFound
 
 def get_taxons(args):

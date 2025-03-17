@@ -1,16 +1,47 @@
 <template>
   <Header title="Organism form" :description="description" />
-  <div class="row">
-    <div class="flex lg12 md12 sm12 xs12">
-      <TaxidInput v-if="!taxid" />
+  <VaInnerLoading :loading="isLoading">
+    <div class="row">
+      <div class="flex lg12 md12 sm12 xs12">
+        <VaCard>
+          <VaCardContent>
+            <h2 class="va-h6">
+              Organism Selection
+            </h2>
+            <p class="va-text-secondary">
+              Search in the NCBI database and select one organism
+            </p>
+          </VaCardContent>
+          <VaCardContent>
+            <OrganismSelection is-organism-creation v-if="!taxid" @selected="handleSelection" />
+          </VaCardContent>
+        </VaCard>
+      </div>
     </div>
-  </div>
-  <div v-if="organismStore.organismForm.taxid" class="row">
-    <div class="flex lg12 md12 sm12 xs12">
-      <VaInnerLoading :loading="isLoading">
+    <div v-if="organismStore.organismForm.taxid" class="row">
+      <div class="flex lg12 md12 sm12 xs12">
         <div class="row row-equal">
           <div class="flex lg12 md12 sm12 xs12">
             <ImagesInput />
+          </div>
+          <div class="flex lg12 md12 ms12 xs12">
+            <VaCard>
+              <VaCardContent>
+                <h2 class="va-h6">
+                  Sub Project
+                </h2>
+                <p class="va-text-secondary">
+                  Name of the PI or Entity responsible of the organism
+                </p>
+              </VaCardContent>
+              <VaCardContent>
+                <div class="row">
+                  <div class="flex lg12 md12 sm12 xs12">
+                    <VaInput v-model="organismStore.organismForm.sub_project" />
+                  </div>
+                </div>
+              </VaCardContent>
+            </VaCard>
           </div>
           <div class="flex lg12 md12 sm12 xs12">
             <MetadataInput />
@@ -33,16 +64,15 @@
             <VaButton @click="handleSubmit">Submit</VaButton>
           </div>
         </div>
-      </VaInnerLoading>
+      </div>
     </div>
-  </div>
+  </VaInnerLoading>
 
 </template>
 <script setup lang="ts">
 import { computed, inject, onMounted, ref, watch } from 'vue'
 import { useToast } from 'vuestic-ui'
 import { useOrganismStore } from '../../stores/organism-store'
-import TaxidInput from '../../components/cms/TaxidInput.vue'
 import ImagesInput from '../../components/cms/ImagesInput.vue'
 import GoaTInput from '../../components/cms/GoaTInput.vue'
 import MetadataInput from '../../components/cms/MetadataInput.vue'
@@ -54,6 +84,7 @@ import { useRouter } from 'vue-router'
 import { AxiosError } from 'axios'
 import Header from '../../components/cms/Header.vue'
 import ItemService from '../../services/CommonService'
+import OrganismSelection from '../../components/cms/OrganismSelection.vue'
 
 
 const appConfig = inject('appConfig') as AppConfig
@@ -61,6 +92,7 @@ const isLoading = ref(false)
 const props = defineProps<{
   taxid?: string
 }>()
+
 const description = computed(() => props.taxid && organismStore.organismForm.scientific_name ? `Edit ${organismStore.organismForm.scientific_name}` : 'Create a new organism, start by typing the scientific name or the NCBI taxonomic identifier')
 
 const hasGoat = computed(() => appConfig.general.goat)
@@ -72,6 +104,12 @@ const { init } = useToast()
 watch(() => props.taxid, () => {
   resetForm()
 })
+
+function handleSelection(payload: { scientificName: string, taxid: string }) {
+  const { scientificName, taxid } = payload
+  organismStore.organismForm.scientific_name = scientificName
+  organismStore.organismForm.taxid = taxid
+}
 
 onMounted(async () => {
   resetForm()
@@ -108,6 +146,7 @@ onMounted(async () => {
 
 async function handleSubmit() {
   try {
+    isLoading.value = true
     const { metadataList, images, publications, vernacularNames } = organismStore
     organismStore.organismForm.metadata = { ...Object.fromEntries(metadataList.map(({ key, value }) => [key, value])) }
     if (images.length > 0) {
@@ -135,6 +174,8 @@ async function handleSubmit() {
       const { data } = await AuthService.createOrganism(organismStore.organismForm)
       init({ message: 'Organism created!', color: 'success' })
       resetForm()
+      router.push({ name: 'cms-items', params: { model: 'organisms' } })
+
     }
   } catch (error) {
     console.log(error)
@@ -144,7 +185,6 @@ async function handleSubmit() {
   } finally {
     isLoading.value = false
   }
-
 }
 
 function resetForm() {

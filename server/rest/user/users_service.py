@@ -1,4 +1,4 @@
-from db.models import BioGenomeUser,Organism,LocalSample
+from db.models import BioGenomeUser,Organism,LocalSample,BioSampleSubmission
 from db.enums import Roles
 from datetime import timedelta
 from mongoengine.queryset.visitor import Q
@@ -90,6 +90,15 @@ def login_user(payload):
     return response  
 
 
+def lookup_user_data(name):
+    user = get_user(name)
+    organisms = Organism.objects(taxid__in=user.species).count()
+    local_samples = LocalSample.objects(user=name).count()
+    return {
+        'organisms':organisms,
+        'local_samples':local_samples
+    }
+
 ##return all species if admin
 def get_related_species(name, filter=None, offset=0, limit=10):
     user = get_user(name)
@@ -106,6 +115,17 @@ def get_related_species(name, filter=None, offset=0, limit=10):
         organisms = Organism.objects().exclude('id').skip(offset).limit(limit)
     total = organisms.count()
     return data_helper.dump_json({'total':total, 'data': list(organisms.as_pymongo())})
+
+def get_submitted_biosamples(name, filter=None, offset=0, limit=10):
+    user = get_user(name)
+    limit, offset = data_helper.get_pagination({'limit':limit, 'offset':offset})
+    q_query = get_submitted_biosamples_filter(filter)
+    
+    submitted_samples = BioSampleSubmission.objects(user=user.name)
+    if q_query:
+        submitted_samples = submitted_samples.filter(q_query)
+    total = submitted_samples.count()
+    return data_helper.dump_json({'total':total, 'data': list(submitted_samples.exclude('id').skip(offset).limit(limit).as_pymongo())})
 
 def get_related_samples(name, filter=None, offset=0, limit=10):
     user = get_user(name)
@@ -127,6 +147,11 @@ def get_related_samples(name, filter=None, offset=0, limit=10):
 def get_local_samples_filter(filter):
     if filter:
         return (Q(taxid__iexact=filter) | Q(taxid__icontains=filter)) | (Q(local_id__iexact=filter) | Q(local_id__icontains=filter)) |  (Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter))
+
+def get_submitted_biosamples_filter(filter):
+    if filter:
+        return (Q(taxid__iexact=filter) | Q(taxid__icontains=filter)) | (Q(name__iexact=filter) | Q(name__icontains=filter)) |  (Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter))
+
 
 def get_organisms_filter(filter):
     if filter:

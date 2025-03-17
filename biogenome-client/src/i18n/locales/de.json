@@ -20,6 +20,10 @@
         },
         "insdc": {
             "title": "INSDC-Einreichungsstatus"
+        },
+        "targetRanks": {
+            "title": "Gezielte Taxa nach Rang",
+            "description": "Wählen Sie einen Rang aus, um die Anzahl der gezielten Taxa auf dieser Ebene zu sehen"
         }
     },
     "nav": {

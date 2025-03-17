@@ -68,3 +68,15 @@ class UserRelatedSamples(Resource):
     def get(self, name):
         response = users_service.get_related_samples(name)
         return Response(response, mimetype="application/json", status=200)
+
+class UserSubmittedSamples(Resource):
+    @jwt_required()
+    def get(self, name):
+        response = users_service.get_submitted_biosamples(name)
+        return Response(response, mimetype="application/json", status=200)
+
+class UserLookup(Resource):
+    @jwt_required()
+    def get(self, name):
+        response = users_service.lookup_user_data(name)
+        return Response(json.dumps(response), mimetype="application/json", status=200)

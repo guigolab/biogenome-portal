@@ -1,46 +1,42 @@
 <template>
-    <VaCard>
-        <VaCardContent>
-            <div class="row align-center">
-                <div class="flex">
-                    <h3 class="va-h6">Metadata</h3>
-                </div>
-            </div>
-            <div class="row">
-                <div class="flex lg12 md12 sm12 xs12">
-                    <VaInput v-model="filter" placeholder="Type to search metadata" clearable>
-                        <template #append>
-                            <VaButton style="margin-left: 5px;" preset="primary" color="textPrimary"
-                                @click="copyToClipboard" icon="fa-copy">
-                            </VaButton>
-                            <VaButton style="margin-left: 5px;" preset="primary" color="textPrimary"
-                                @click="downloadJsonFile" icon="fa-cloud-download">
+    <div class="row align-center">
+        <div class="flex">
+            <h3 class="va-h6">Metadata</h3>
+        </div>
+    </div>
+    <div class="row">
+        <div class="flex lg12 md12 sm12 xs12">
+            <VaInput v-model="filter" placeholder="Type to search metadata" clearable>
+                <template #append>
+                    <VaButton style="margin-left: 5px;" preset="primary" color="textPrimary" @click="copyToClipboard"
+                        icon="fa-copy">
+                    </VaButton>
+                    <VaButton style="margin-left: 5px;" preset="primary" color="textPrimary" @click="downloadJsonFile"
+                        icon="fa-cloud-download">
 
-                            </VaButton>
-                        </template>
-                    </VaInput>
+                    </VaButton>
+                </template>
+            </VaInput>
+        </div>
+    </div>
+    <VaTreeView style="max-height: 300px;overflow: scroll;" expand-all :nodes="currenNodes" :filter="filter"
+        :filter-method="customFilterMethod">
+        <template #content="node">
+            <div class="flex items-center">
+                <div class="mr-2">
+                    <b v-if="node.label" class="display-6">{{ node.label }}</b>
+                    <div v-if="node.description">
+                        <a :style="{ 'color': colors.primary }" class="mb-0" target="_blank"
+                            v-if="node.description && typeof node.description === 'string' && node.description.includes('http')"
+                            :href="node.description">{{ node.description }}</a>
+                        <p v-else class="mb-0">
+                            {{ node.description }}
+                        </p>
+                    </div>
                 </div>
             </div>
-            <VaTreeView style="max-height: 300px;overflow: scroll;" expand-all :nodes="currenNodes" :filter="filter"
-                :filter-method="customFilterMethod">
-                <template #content="node">
-                    <div class="flex items-center">
-                        <div class="mr-2">
-                            <b v-if="node.label" class="display-6">{{ node.label }}</b>
-                            <div v-if="node.description">
-                                <a :style="{'color': colors.primary}" class="mb-0" target="_blank"
-                                    v-if="node.description && typeof node.description === 'string' && node.description.includes('http')"
-                                    :href="node.description">{{ node.description }}</a>
-                                <p v-else class="mb-0">
-                                    {{ node.description }}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </template>
-            </VaTreeView>
-        </VaCardContent>
-    </VaCard>
+        </template>
+    </VaTreeView>
 </template>
 <script setup lang="ts">
 import { computed, ref } from 'vue';
@@ -56,7 +52,7 @@ const props = defineProps<{
 }>()
 
 
-const {colors} = useColors()
+const { colors } = useColors()
 // Pretty-print JSON
 const formattedJson = computed(() => JSON.stringify(Object.fromEntries(props.metadata), null, 2));
 

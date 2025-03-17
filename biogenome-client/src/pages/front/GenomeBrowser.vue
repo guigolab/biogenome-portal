@@ -6,9 +6,7 @@
                     :description="t('genomeBrowser.description')"></Header>
             </div>
             <div class="flex">
-                <VaIcon @click="showTip = !showTip" color="info" name="fa-circle-question">
-
-                </VaIcon>
+                <VaIcon @click="showTip = !showTip" color="info" name="fa-circle-question" />
             </div>
         </div>
         <div class="row">
@@ -38,10 +36,9 @@
             </h3>
             <p>
                 {{ t('genomeBrowser.assembly.modelDescription') }}
-
             </p>
-
-            <VaChip style="margin-top: 10px;" outline target="_blank" href="https://jbrowse.org/storybook/lgv/main/">JBrowse Docs</VaChip>
+            <VaChip style="margin-top: 10px;" outline target="_blank" href="https://jbrowse.org/storybook/lgv/main/">
+                JBrowse Docs</VaChip>
         </VaModal>
     </div>
 </template>

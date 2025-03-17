@@ -4,6 +4,12 @@ from helpers import local_sample as excel_helper, taxonomy as taxonomy_helper, u
 from jobs import local_samples_upload
 import openpyxl
 import itertools
+import os 
+from io import StringIO
+import csv
+
+
+TEMPLATE_PATH = '/server/templates/local_samples.xml'
 
 def get_local_samples(args):
     return data_helper.get_items('local_samples', args)
@@ -78,3 +84,33 @@ def parse_excel(excel=None, id=None, taxid=None, scientific_name=None, header=1,
     return dict(id=task.id, state=task.state ), 200
 
 
+# def download_template():
+#     if not os.path.exists(TEMPLATE_PATH):
+#         raise NotFound(description="No template found")
+#     return excel_helper.generate_tsv_template(TEMPLATE_PATH)
+    
+# def generate_tsv_reader(report):
+#     try:
+#         decoded_report = report.read().decode('utf-8')
+#         io_report = StringIO(decoded_report)
+#         return csv.DictReader(io_report, delimiter='\t')
+
+#     except UnicodeDecodeError as e:
+#         raise BadRequest(description=f"File decoding error: {e}")
+#     except Exception as e:
+#         raise BadRequest(description=f"Unexpected error: {e}")
+    
+
+# def upload_template(request_files):
+#     if not os.path.exists(TEMPLATE_PATH):
+#         raise NotFound(description="No template found")
+    
+#     tsv_report = request_files.get('samples_report')
+#     if not tsv_report:
+#         raise BadRequest(description="Invalid 'samples_report' provided")
+
+#     file = generate_tsv_reader(tsv_report)
+#     excel_helper.validate_tsv_against_xml(TEMPLATE_PATH, file)
+#     #validate template
+
+#     #upload fields

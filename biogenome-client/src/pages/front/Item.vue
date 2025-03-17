@@ -6,7 +6,7 @@
             <VaBreadcrumbsItem class="va-text-bold" :label="id" />
         </VaBreadcrumbs>
         <div v-if="detailsObject">
-            <div class="row align-center justify-space-between">
+            <div class="row align-center">
                 <div class="flex">
                     <Header :key="id" title-class="va-h1" description-class="va-text-secondary"
                         :title="detailsObject.title" :description="detailsObject.description" />
@@ -15,6 +15,11 @@
             <div class="row">
                 <div class="flex lg4 md4 sm12 xs12">
                     <div class="row">
+                        <div v-if="detailsObject.images?.length" class="flex lg12 md12 sm12 xs12">
+                            <VaCard>
+                                <VaCarousel height="300px" stateful :items="detailsObject.images" />
+                            </VaCard>
+                        </div>
                         <div v-if="detailsObject.insdcStatus" class="flex lg12 md12 sm12 xs12">
                             <SequencingStatusCard :current-status="detailsObject.insdcStatus" :statuses="insdcSteps"
                                 title="insdc.title">
@@ -171,11 +176,15 @@
                                                         <template #expandableRow="{ rowData }">
                                                             <div class="row">
                                                                 <div class="flex lg12 md12 sm12 xs12">
-                                                                    <MetadataTreeCard :id="rowData.run_accession"
-                                                                        :metadata="Object.entries(rowData.metadata)" />
+                                                                    <VaCard>
+                                                                        <VaCardContent>
+                                                                            <MetadataTreeCard
+                                                                                :id="rowData.run_accession"
+                                                                                :metadata="Object.entries(rowData.metadata)" />
+                                                                        </VaCardContent>
+                                                                    </VaCard>
                                                                 </div>
                                                             </div>
-
                                                         </template>
                                                     </VaDataTable>
                                                 </VaCardContent>
@@ -201,7 +210,11 @@
 
                         <div class="flex lg12 md12 sm12 xs12"
                             v-if="detailsObject.metadata && Object.keys(detailsObject.metadata).length">
-                            <MetadataTreeCard :id="id" :metadata="Object.entries(detailsObject.metadata)" />
+                            <VaCard>
+                                <VaCardContent>
+                                    <MetadataTreeCard :id="id" :metadata="Object.entries(detailsObject.metadata)" />
+                                </VaCardContent>
+                            </VaCard>
                         </div>
                     </div>
                 </div>
@@ -221,6 +234,7 @@ import { useGenomeBrowserStore } from '../../stores/genome-browser-store';
 import { useRouter } from 'vue-router';
 import SequencingStatusCard from '../../components/SequencingStatusCard.vue';
 import { useI18n } from 'vue-i18n';
+import { VaCard } from 'vuestic-ui/web-components';
 
 const { t } = useI18n()
 const gBStore = useGenomeBrowserStore()

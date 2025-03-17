@@ -1,20 +1,15 @@
 <template>
-    <Header title="Users" description="Create, Edit or Delete your users"></Header>
+    <div class="row justify-space-between align-end">
+        <div class="flex">
+            <Header title="Users" description="Create, Edit or Delete your users"></Header>
+        </div>
+        <div class="flex">
+            <VaButton icon="fa-plus" :to="{ name: 'create-user' }">New User</VaButton>
+        </div>
+    </div>
     <div class="row">
         <div class="flex lg12 md12 sm12 xs12">
             <VaCard>
-                <VaCardContent>
-                    <div class="row justify-space-between align-center">
-                        <div class="flex">
-                            <h2 class="va-h6">
-                                Users List
-                            </h2>
-                        </div>
-                        <div class="flex">
-                            <VaButton icon="fa-plus" :to="{ name: 'create-user' }">New User</VaButton>
-                        </div>
-                    </div>
-                </VaCardContent>
                 <VaCardContent>
                     <div class="row">
                         <div class="flex lg12 md12 sm12 xs12">
@@ -120,7 +115,6 @@ async function fetchData() {
 async function handlePagination(value: number) {
     pagination.value.offset = value - 1
     await fetchData()
-
 }
 async function handleSubmit() {
     pagination.value = { ...initPagination }

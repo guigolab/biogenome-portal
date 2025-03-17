@@ -27,6 +27,11 @@ def save_coordinates(saved_sample, id_field='accession'):
             latitude = v
         elif 'longitude' in k:
             longitude = v
+        elif k == 'lat':
+            latitude = v
+        elif k == 'lon' or k == 'long':
+            longitude = v
+            
     if latitude and longitude:
         try:
             latitude = latitude.replace(',', '.').replace("'", ".")

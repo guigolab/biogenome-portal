@@ -13,6 +13,9 @@ class BioSampleService {
   getLookupData(accession: string) {
     return base.get(`/biosamples/${accession}/lookup`)
   }
+  getENAChecklist(){
+    return base.get('/biosamples/checklist')
+  }
 }
 
 export default new BioSampleService()

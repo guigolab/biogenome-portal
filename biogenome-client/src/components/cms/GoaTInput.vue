@@ -5,8 +5,7 @@
                 GoaT Sequencing Status
             </h2>
             <p class="va-text-secondary">
-                Create link to images, the images should be open access and ideally deposited in wikimedia or other open
-                sources repositories
+                Insert information about the GoaT sequencing status and the GoaT target list status
             </p>
         </VaCardContent>
         <VaCardContent>
@@ -15,7 +14,7 @@
                     <VaSelect v-model="organismStore.organismForm.goat_status" label="Goat Status" :options="STATUS"
                         :disabled="organismStore.organismForm.goat_status === 'INSDC Submitted' ||
                             organismStore.organismForm.goat_status === 'Publication Available'
-                            ">
+                            " clearable>
                     </VaSelect>
                 </div>
             </div>
@@ -28,7 +27,7 @@
             <div class="row">
                 <div class="flex lg12 md12 sm12 xs12">
                     <VaSelect v-model="organismStore.organismForm.target_list_status" label="Target List Status"
-                        :options="LIST">
+                        :options="LIST" clearable>
                     </VaSelect>
                 </div>
             </div>

@@ -30,7 +30,7 @@ const generatedLink = computed(() => appLogo && appLogo.includes('http') ?
 )
 onMounted(async () => {
   document.title = title.value as string
-  if(generatedLink.value){
+  if (generatedLink.value) {
     const faviconURL = await generateFavicon(generatedLink.value)
     updateFavicon(faviconURL)
   }

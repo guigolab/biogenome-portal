@@ -20,6 +20,10 @@
         },
         "insdc": {
             "title": "Estado de Envío a INSDC"
+        },
+        "targetRanks": {
+            "title": "Taxones Objetivo por Rango",
+            "description": "Selecciona un rango para ver el número de taxones objetivo en ese nivel"
         }
     },
     "nav": {

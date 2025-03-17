@@ -20,7 +20,6 @@ def get_assemblies(args):
 def get_assemblies_from_annotations(args):
     distinct_accessions = GenomeAnnotation.objects().distinct('assembly_accession')
     new_dict = dict(accession__in=list(distinct_accessions) ,**args)
-    print(new_dict)
     return data.get_items('assemblies', new_dict)
 
 def create_assembly_from_accession(accession):

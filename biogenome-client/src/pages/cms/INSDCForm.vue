@@ -8,7 +8,8 @@
                         Import Form
                     </h2>
                     <p class="va-text-secondary">
-                        Type a valid accession to insert into the database, in case of experiment or assembly, the related biosample will also be imported
+                        Type a valid accession to insert into the database, in case of experiment or assembly, the
+                        related biosample will also be imported
                     </p>
                 </VaCardContent>
                 <VaCardContent>
@@ -41,12 +42,17 @@ import Header from '../../components/cms/Header.vue'
 const title = "Import from INSDC"
 const description = "Import BioSamples, Experiments or Assemblies by their respective INSDC Accession"
 
+const props = defineProps<{
+    importModel?: 'biosamples' | 'assemblies' | 'experiments'
+}>()
+
+
 const { init } = useToast()
 
 const isLoading = ref(false)
 const options = ['biosamples', 'assemblies', 'experiments']
 
-const model = ref('biosamples')
+const model = ref(props.importModel ?? 'biosamples')
 
 const input = ref('')
 

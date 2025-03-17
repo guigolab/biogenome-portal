@@ -1,11 +1,6 @@
 from db.models import BioGenomeUser
-from extensions.cache import cache
 
 from flask_jwt_extended import get_jwt
-
-# @cache.memoize(timeout=300)
-# def get_assigned_taxids():
-#     return BioGenomeUser.objects().only('species')
 
 
 def get_species_by_user_name(username):

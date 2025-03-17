@@ -24,9 +24,10 @@ def upload_samples_spreadsheet(self, username, samples, option="SKIP", source=No
     total_samples = 0
 
     self.update_state(state='PROGRESS', meta={'messages': ['Starting job...']})
+    user = BioGenomeUser.objects(name=username).first()
 
     ##MAP SAMPLES INTO DB MODEL
-    mapped_samples = [LocalSample(**s) for s in samples]
+    mapped_samples = [LocalSample(user=user.name, **s) for s in samples]
 
     total_samples = len(mapped_samples)
     pre_existing_samples = LocalSample.objects(local_id__in=[s.local_id for s in mapped_samples])
@@ -71,7 +72,6 @@ def upload_samples_spreadsheet(self, username, samples, option="SKIP", source=No
                 #update lineage
                 data_helper.update_lineage(s, organism)
 
-    user = BioGenomeUser.objects(name=username).first()
 
     user_helper.add_species_to_datamanager([s.taxid for s in new_mapped_samples], user)
 

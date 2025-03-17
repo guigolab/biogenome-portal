@@ -17,6 +17,10 @@
         },
         "insdc": {
             "title": "INSDC Submission Status"
+        },
+        "targetRanks":{
+            "title": "Targeted Taxa by Rank",
+            "description": "Select a rank to see the number of targeted taxa at that level"
         }
     },
     "nav": {

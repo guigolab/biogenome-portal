@@ -20,6 +20,10 @@
         },
         "insdc": {
             "title": "Statut de Soumission INSDC"
+        },
+        "targetRanks": {
+            "title": "Taxons Ciblés par Rang",
+            "description": "Sélectionnez un rang pour voir le nombre de taxons ciblés à ce niveau"
         }
     },
     "nav": {

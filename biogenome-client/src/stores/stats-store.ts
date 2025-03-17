@@ -3,6 +3,7 @@ import LookupService from '../services/LookupService'
 import { DataModels } from '../data/types'
 import TaxonService from '../services/TaxonService'
 import GeoLocationService from '../services/GeoLocationService'
+import AuthService from '../services/AuthService'
 
 
 export const useStatsStore = defineStore('stats', {
@@ -10,6 +11,7 @@ export const useStatsStore = defineStore('stats', {
         return {
             portalStats: [] as { key: DataModels , count: number }[],
             currentStats: [] as { key: DataModels, count: number }[],
+            userStats: [] as { key: DataModels, count: number }[],
             isLoading: true,
         }
     },
@@ -48,9 +50,27 @@ export const useStatsStore = defineStore('stats', {
                 this.isLoading = false
             }
         },
+        async getUserStats(name: string) {
+            try {
+                this.isLoading = true
+
+                const { data } = await AuthService.getUserRelatedData(name)
+                const mappedStats = Object.entries(data as Record<DataModels, number>).map(([k, v]) => {
+                    return { key: k as DataModels, count: v }
+                })
+                this.userStats = [...mappedStats]
+
+            } catch (e) {
+                console.log('Error fetching stats')
+                console.error(e)
+            } finally {
+                this.isLoading = false
+            }
+        },
         resetStore() {
             this.portalStats = []
             this.currentStats = []
+            this.userStats =  []
         }
     },
 })

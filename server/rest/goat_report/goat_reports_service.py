@@ -101,37 +101,32 @@ def generate_tsv_reader(request_files):
     report = request_files.get('goat_report')
     if not report:
         raise BadRequest(description="Invalid 'goat_report' provided")
+
     try:
         decoded_report = report.read().decode('utf-8')
         io_report = StringIO(decoded_report)
-        sliced_data = islice(io_report, ROWS_TO_SKIP, None)
-        return csv.DictReader(sliced_data, delimiter='\t')
+        
+        # Read the first two rows
+        reader = csv.reader(io_report, delimiter='\t')
+        first_row = next(reader, None)
+        second_row = next(reader, None)  # Second row, if it exists
+        
+        # Extract the value of the second column in the second row
+        second_column_value = second_row[1].strip() if second_row and len(second_row) > 1 else None
+        
+        # Skip the first 7 rows and return a DictReader
+        sliced_data = islice(io_report, ROWS_TO_SKIP - 2, None)  # Adjust to compensate for already-read lines
+        return csv.DictReader(sliced_data, delimiter='\t'), second_column_value
+
     except UnicodeDecodeError as e:
         raise BadRequest(description=f"File decoding error: {e}")
     except Exception as e:
         raise BadRequest(description=f"Unexpected error: {e}")
-"""
-FLOW:
+    
 
-GET USER
-GET PROJECT
-
--SUBPROJECT EXISTS
-    USER IN PROJECT
-    NEW SPECIES OR SPECIES IN PROJECT
-    OK
-
--SUBPROJECT DOESNT EXISTS
-    CREATE SUBPROJECT
-    ASSIGN USER AND SPECIES TO SUBPROJECT
-
-SPECIES PRESENT IN THE DB
-    USER OR SUBPROJECT
-
-"""
 def upload_goat_report(request_files):
 
-    tsvreader = generate_tsv_reader(request_files)
+    tsvreader, sub_project = generate_tsv_reader(request_files)
     rows = [row for row in tsvreader]
 
     if errors := validate_fields(rows):
@@ -149,7 +144,7 @@ def upload_goat_report(request_files):
         if taxonomy_errors:
             raise BadRequest(description=f"Taxonomy permission errors: {'; '.join(taxonomy_errors)}")
         
-    task = goat_report_upload.upload_goat_report.delay(user_obj.name, rows)
+    task = goat_report_upload.upload_goat_report.delay(user_obj.name, rows, sub_project)
     return dict(id=task.id, state=task.state), 200
 
 def validate_fields(tsv_reader):

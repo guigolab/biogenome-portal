@@ -3,7 +3,7 @@ from flask import Response, request
 from flask_restful import Resource
 import json
 from flask_jwt_extended import jwt_required
-from wrappers import data_manager, organism_access
+from wrappers import data_manager, organism_access,admin
 
 class OrganismsApi(Resource):
 	def get(self):
@@ -30,7 +30,7 @@ class OrganismApi(Resource):
 		return Response(json.dumps(message),mimetype="application/json", status=200)
 	
 	@jwt_required()
-	@organism_access.organism_access_required()
+	@admin.admin_required()
 	def delete(self,taxid):
 		message = organisms_service.delete_organism(taxid)
 		return Response(json.dumps(message),mimetype="application/json", status=200)
@@ -50,3 +50,23 @@ class UnassignedOrganismsApi(Resource):
 	def get(self):
 		json, mimetype = organisms_service.get_unassigned_organisms(**request.args)
 		return Response(json, mimetype=mimetype, status=200)
+
+class OrganismToDeleteApi(Resource):
+	@jwt_required()
+	def get(self):
+		json, mimetype = organisms_service.get_organisms_to_delete(**request.args)
+		return Response(json, mimetype=mimetype, status=200)
+
+	@jwt_required()
+	@organism_access.organism_access_required()
+	def post(self, taxid):
+		message = organisms_service.create_organism_to_delete(taxid)
+		return Response(json.dumps(message),mimetype="application/json", status=201)
+
+	@jwt_required()
+	@admin.admin_required()
+	def delete(self, taxid):
+		message = organisms_service.delete_organism_to_delete(taxid)
+		return Response(json.dumps(message),mimetype="application/json", status=201)
+
+		## add organism to delete
