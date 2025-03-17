@@ -7,7 +7,7 @@
         </div>
         <VaInnerLoading :loading="statsStore.isLoading">
             <ModelCounts :counts="stats" adminArea />
-            <div class="row">
+            <div v-if="hasENATemplate" class="row">
                 <div class="flex lg12 md12 sm12 xs12">
                     <VaCard>
                         <VaCardContent>
@@ -48,13 +48,14 @@
     </div>
 </template>
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, inject, onMounted, ref } from 'vue';
 import { useGlobalStore } from '../../stores/global-store';
 import Header from '../../components/cms/Header.vue';
 import ModelCounts from '../../components/ModelCounts.vue';
 import { VaInnerLoading } from 'vuestic-ui/web-components';
 import { useStatsStore } from '../../stores/stats-store';
 import EBIService from '../../services/EBIService';
+import { AppConfig } from '../../data/types';
 
 
 const globalStore = useGlobalStore()
@@ -63,10 +64,17 @@ const isAdmin = computed(() => globalStore.userRole === 'Admin')
 const title = computed(() => !isAdmin.value ? 'Your Submissions' : 'Dashboard')
 const stats = computed(() => isAdmin.value ? statsStore.portalStats : statsStore.userStats)
 const submittedBioSamplesCount = ref(0)
+const configs = inject('appConfig') as AppConfig
+
+const hasENATemplate = computed(() => configs.general.enaTemplate)
+
 
 onMounted(async () => {
-    const { data } = await EBIService.getSubmittedBioSamples({ user: globalStore.userName })
-    submittedBioSamplesCount.value = data.total
+    if (hasENATemplate.value) {
+        const { data } = await EBIService.getSubmittedBioSamples({ user: globalStore.userName })
+        submittedBioSamplesCount.value = data.total
+    }
+
 })
 
 </script>

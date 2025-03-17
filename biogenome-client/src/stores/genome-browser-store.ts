@@ -66,7 +66,7 @@ export const useGenomeBrowserStore = defineStore('jbrowse', {
         },
         async fetchAssembly(accession: string) {
             try {
-                const { data } = await AssemblyService.getAssembly(accession);
+                const { data } = await CommonService.getItem('assemblies', accession);
                 this.assembly = { ...data }
             } catch (error) {
                 const axiosError = error as AxiosError<ErrorResponseData>

@@ -77,7 +77,6 @@ def delete_organism_related_data( sender, document ):
     Experiment.objects(taxid=taxid).delete()
     LocalSample.objects(taxid=taxid).delete()
     BioSample.objects(taxid=taxid).delete()
-    OrganismToDelete.objects(taxid=taxid).delete()
     BioGenomeUser.objects(species=taxid).update(pull__species=taxid)
     taxons = TaxonNode.objects(taxid__in=document.taxon_lineage)
     update_taxons(taxons)
@@ -156,11 +155,6 @@ class Experiment(db.Document):
         'indexes': ['experiment_accession','taxid', 'taxon_lineage']
     }
 
-## Organisms to delete by admin 
-class OrganismToDelete(db.Document):
-    taxid = db.StringField(required=True, unique=True)
-    scientific_name = db.StringField(required=True,unique=True)
-    user = db.StringField(required=True)
 
 class Read(db.Document):
     run_accession = db.StringField(required=True, unique=True)
@@ -319,6 +313,7 @@ class Organism(db.Document):
     scientific_name = db.StringField(required=True,unique=True)
     taxid = db.StringField(required= True,unique=True)
     image = db.URLField()
+    pending_deletion = db.BooleanField()
     image_urls = db.ListField(db.URLField())
     taxon_lineage = db.ListField(db.StringField())
     insdc_status = db.EnumField(INSDCStatus)

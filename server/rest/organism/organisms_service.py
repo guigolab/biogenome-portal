@@ -1,5 +1,5 @@
 
-from db.models import CommonName,TaxonNode, Organism, Publication,Assembly,GenomeAnnotation,BioSample,LocalSample,Experiment,BioGenomeUser,OrganismToDelete
+from db.models import CommonName,TaxonNode, Organism, Publication,Assembly,GenomeAnnotation,BioSample,LocalSample,Experiment,BioGenomeUser
 from helpers import taxonomy as taxonomy_helper, user as user_helper, organism as organism_helper, geolocation as geoloc_helper, data as data_helper
 from werkzeug.exceptions import BadRequest, Conflict, NotFound
 import os 
@@ -114,30 +114,20 @@ def get_unassigned_organisms(format='json',filter=None, limit=20, offset=0):
         organisms = organisms.filter(data_helper.query_visitors.organism_query(filter))
     return data_helper.generate_response(format, fields, organisms, limit, offset)
     
-def get_organisms_to_delete(format='json',filter=None,offset=None,limit=None):
-    offset = int(offset)
-    limit = int(limit)
-    fields = ['scientific_name', 'taxid']
-    organisms = OrganismToDelete.objects()
-    if filter:
-        organisms = organisms.filter(data_helper.query_visitors.organism_query(filter))
-    return data_helper.generate_response(format, fields, organisms, limit, offset)
 
 def create_organism_to_delete(taxid):
     organism = get_organism(taxid)
     user = user_helper.get_current_user()
     if not user:
         raise NotFound(description='User Not Found')
-    existing_org_to_delete = OrganismToDelete.objects(taxid=taxid).first()
-    if existing_org_to_delete:
-        raise Conflict(description=f"Request to delete {existing_org_to_delete.scientific_name} already present")
-    new_org_to_del = dict(taxid=taxid, scientific_name=organism.scientific_name, user=user.name)
-    OrganismToDelete(**new_org_to_del).save()
-    return f"Request to delete organism {taxid} successfull"
+    
+    if organism.pending_deletion:
+        raise Conflict(description=f"Request to delete {organism.scientific_name} already present")
+    
+    organism.modify(pending_deletion=True)
+    return f"Request to delete organism {taxid} successfully sent"
 
 def delete_organism_to_delete(taxid):
-    organism_to_delete = OrganismToDelete.objects(taxid=taxid).first()
-    if not organism_to_delete:
-        raise NotFound(description=f'Organism to delete {taxid} not found')
-    organism_to_delete.delete()
+    organism = get_organism(taxid)
+    organism.modify(pending_deletion=False)
     return f"request to delete organism {taxid}, successfully deleted"

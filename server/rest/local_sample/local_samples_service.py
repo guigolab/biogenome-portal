@@ -1,12 +1,10 @@
 from db.models import LocalSample, Organism
+from db.enums import Roles
 from werkzeug.exceptions import NotFound,Unauthorized, BadRequest
 from helpers import local_sample as excel_helper, taxonomy as taxonomy_helper, user as user_helper, organism as organism_helper, data as data_helper
 from jobs import local_samples_upload
 import openpyxl
 import itertools
-import os 
-from io import StringIO
-import csv
 
 
 TEMPLATE_PATH = '/server/templates/local_samples.xml'
@@ -27,7 +25,7 @@ def delete_local_sample(id):
     
     sample_to_delete = get_local_sample(id)
     
-    if user.role.value == 'DataManager' and not sample_to_delete.taxid in user.species:
+    if user.role.value == Roles.DATA_MANAGER.value and not sample_to_delete.taxid in user.species:
         raise Unauthorized(description="User can't delete this sample")
     
     taxid = sample_to_delete.taxid

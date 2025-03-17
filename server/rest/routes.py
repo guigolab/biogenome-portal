@@ -59,7 +59,7 @@ def initialize_routes(api):
 	api.add_resource(organisms_controller.OrganismLineageApi, '/api/organisms/<taxid>/lineage')
 	api.add_resource(organisms_controller.OrganismRelatedDataApi, '/api/organisms/<taxid>/<model>') 
 
-	api.add_resource(organisms_controller.OrganismToDeleteApi, '/api/organism_deletion_requests', '/api/organism_deletion_requests/<taxid>')
+	api.add_resource(organisms_controller.OrganismToDeleteApi, '/api/organism_deletion_requests/<taxid>')
 
 	##ASSEMBLIES
 	api.add_resource(assemblies_controller.AssembliesApi, '/api/assemblies')

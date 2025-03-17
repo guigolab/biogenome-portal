@@ -18,9 +18,7 @@ watchEffect(async () => {
     await taxonomyStore.getChildren(props.taxid)
 })
 
-
 const children = computed(() => taxonomyStore.children)
-
 
 function setTaxon(taxon: TaxonNode) {
     taxonomyStore.currentTaxon = { ...taxon }

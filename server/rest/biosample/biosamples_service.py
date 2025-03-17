@@ -1,4 +1,5 @@
-from db.models import BioSample,Assembly,Experiment,Read,BioSampleSubmission
+from db.models import BioSample,Assembly,Experiment,Read,BioSampleSubmission,Organism
+from db.enums import Roles
 from werkzeug.exceptions import BadRequest, Conflict, NotFound,Unauthorized
 from mongoengine.queryset.visitor import Q
 from helpers import data, organism as organism_helper, biosample as biosample_helper, ena_checklist, user as user_helper
@@ -131,6 +132,13 @@ def submit_sample(payload, cookies):
     if not taxid:
         raise BadRequest(desciption=f"The field taxid is mandatory")
     
+    taxid = str(taxid)
+    ##check user has rights over species
+    existing_organism = Organism.objects(taxid=taxid).first()
+
+    if existing_organism and user.role.value != Roles.DATA_ADMIN.value and taxid not in user.species:
+        raise Unauthorized(description=f"You can't add data related to {existing_organism.scientific_name}")
+    
     ena_token = cookies.get("ena_token")
 
     validation_response = ebi_client.validate_biosample(payload, ena_token)
@@ -142,12 +150,14 @@ def submit_sample(payload, cookies):
     if submission_response.status_code != 201:
         return submission_response.json(), submission_response.status_code
     #get user
-    organism = organism_helper.handle_organism(str(taxid))
+    organism = organism_helper.handle_organism(taxid)
     if not organism:
         raise BadRequest(description=f"Organism {taxid} not found in INSDC")
         
     user_name = user.name
     ## get organisms
+    user_helper.add_species_to_datamanager([taxid], user)
+
     filtered_response = {k:v for k,v in submission_response.json().items() if k not in ['taxId']}
     submitted_sample = BioSampleSubmission(
         user=user_name,

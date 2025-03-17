@@ -1,6 +1,7 @@
 from db.models import LocalSample,BioGenomeUser
 from helpers import organism as organism_helper, user as user_helper, geolocation as geoloc_helper, data as data_helper
-from celery import shared_task
+from celery import shared_task,states
+from celery.exceptions import Ignore
 
 OPTIONS = ['SKIP','UPDATE']
 """
@@ -23,7 +24,7 @@ def upload_samples_spreadsheet(self, username, samples, option="SKIP", source=No
     samples_skipped=0
     total_samples = 0
 
-    self.update_state(state='PROGRESS', meta={'messages': ['Starting job...']})
+    self.update_state(state=states.PENDING, meta={'messages': ['Starting job...']})
     user = BioGenomeUser.objects(name=username).first()
 
     ##MAP SAMPLES INTO DB MODEL
@@ -33,7 +34,7 @@ def upload_samples_spreadsheet(self, username, samples, option="SKIP", source=No
     pre_existing_samples = LocalSample.objects(local_id__in=[s.local_id for s in mapped_samples])
 
     if option == 'UPDATE':
-        self.update_state(state='PROGRESS', meta={'messages': [f'Found a total of new {len(pre_existing_samples)} samples to save']})
+        self.update_state(state=states.PENDING, meta={'messages': [f'Found a total of new {len(pre_existing_samples)} samples to save']})
 
         for existing_sample in pre_existing_samples:
             for s in mapped_samples:
@@ -55,22 +56,30 @@ def upload_samples_spreadsheet(self, username, samples, option="SKIP", source=No
         new_mapped_samples = organism_helper.handle_taxonomic_ids(new_mapped_sample_list)
 
         if new_mapped_samples:
-            self.update_state(state='PROGRESS', meta={'messages': [f'Found a total of new {len(new_mapped_samples)} samples to save']})
-
-            saved_samples = LocalSample.objects.insert(new_mapped_samples)
+            self.update_state(state=states.PENDING, meta={'messages': [f'Found a total of new {len(new_mapped_samples)} samples to save']})
+                
+            for mapped_sample in new_mapped_samples:
+                
+                try:
+                    saved_sample = LocalSample(**mapped_sample).save()
+                    samples_created+=1
+                    geoloc_helper.save_coordinates(saved_sample, 'local_id')
+                    geoloc_helper.update_countries_from_biosample(saved_sample,saved_sample.local_id)
+                    organism = organism_helper.handle_organism(saved_sample.taxid)
+                    data_helper.update_lineage(saved_sample, organism)
+                except Exception as e:
+                    messages = ['Job completed with the following stats',
+                          f'TOTAL SAMPLES: {total_samples}', 
+                          f'SAMPLES CREATED {samples_created}', 
+                          f'SAMPLES UPDATED {samples_updated}',
+                          f'SAMPLES SKIPPED {samples_skipped}' ]
+                    messages.append(f"Error for sample: {mapped_sample['local_id']} of species {mapped_sample['scientific_name']}: {e}")
+                    self.update_state(state='ERROR', meta={'messages':messages})
+                    raise Ignore()       
+                     
+            self.update_state(state=states.PENDING, meta={'messages': [f'A total of {samples_created} new samples have been saved']})
             
-            self.update_state(state='PROGRESS', meta={'messages': [f'A total of {len(saved_samples)} new samples have been saved']})
-            
-            samples_created = len(saved_samples)
-
             samples_skipped = len(new_mapped_samples) - samples_created
-
-            for s in saved_samples:
-                geoloc_helper.save_coordinates(s, 'local_id')
-                geoloc_helper.update_countries_from_biosample(s, s.local_id)
-                organism = organism_helper.handle_organism(s.taxid)
-                #update lineage
-                data_helper.update_lineage(s, organism)
 
 
     user_helper.add_species_to_datamanager([s.taxid for s in new_mapped_samples], user)

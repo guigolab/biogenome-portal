@@ -167,9 +167,6 @@ class AuthService {
   getUserSamples(name: string, params: UserParams) {
     return this.submission.get(`/users/${name}/local_samples`, { params });
   }
-  getUserSubmittedBioSamples(name: string, params: UserParams) {
-    return this.submission.get(`/users/${name}/submitted_biosamples`, { params });
-  }
   createOrganismToDeleteRequest(taxid: string) {
     return this.submission.post(`/organism_deletion_requests/${taxid}`)
   }
@@ -177,7 +174,7 @@ class AuthService {
     return this.submission.get('/organism_deletion_requests', { params })
   }
   deleteOrganismsToDeleteRequest(taxid: string) {
-    return this.submission.get(`organism_deletion_requests/${taxid}`)
+    return this.submission.delete(`organism_deletion_requests/${taxid}`)
   }
 }
 

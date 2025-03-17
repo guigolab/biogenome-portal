@@ -1,7 +1,8 @@
 from db.models import Organism,BioGenomeUser,Publication
 from db.enums import GoaTStatus,PublicationSource
 from helpers import organism as organism_helper, user as user_helper
-from celery import shared_task
+from celery import shared_task,states
+from celery.exceptions import Ignore
 
 GOAT_STATUS_IMPORT_MAPPER={
     "sample_collected":GoaTStatus.SAMPLE_COLLECTED.value,
@@ -15,8 +16,8 @@ GOAT_STATUS_IMPORT_MAPPER={
 @shared_task(name='goat_upload', ignore_result=False, bind=True)
 def upload_goat_report(self, username, rows, sub_project=None):
     
-    errors = []
-    self.update_state(state='PROGRESS', meta={'messages': ['Starting job...']})
+    updated_organisms = []
+    self.update_state(state=states.PENDING, meta={'messages': ['Starting job...']})
 
     taxid_list = [str(row.get('ncbi_taxon_id')) for row in rows]
     existing_taxid_list = Organism.objects(taxid__in=taxid_list).scalar('taxid')
@@ -25,35 +26,33 @@ def upload_goat_report(self, username, rows, sub_project=None):
     valid_rows = list(rows)
     if new_taxid_list:
         print(f"New organisms to save: {len(new_taxid_list)}")
-        self.update_state(state='PROGRESS', meta={'messages': [f'Found a total of {len(new_taxid_list)} new organisms, fetchin them..']})
+        self.update_state(state=states.PENDING, meta={'messages': [f'Found a total of {len(new_taxid_list)} new organisms, fetchin them..']})
 
         created_organisms = organism_helper.create_organisms_from_ena_browser(new_taxid_list)
         if created_organisms:
             print(f"A total of {len(created_organisms)} have been created")
-            self.update_state(state='PROGRESS', meta={'messages': [f"A total of {len(created_organisms)} have been created"]})
+            self.update_state(state=states.PENDING, meta={'messages': [f"A total of {len(created_organisms)} have been created"]})
 
             created_taxid_list = [org.taxid for org in created_organisms]
             missing_taxid_list = [taxid for taxid in new_taxid_list if taxid not in created_taxid_list]
             
             if missing_taxid_list:
                 print(f"A total of {len(missing_taxid_list)} organisms have not been found in INSDC, skipping related data")
-                self.update_state(state='PROGRESS', meta={'messages': [f"A total of {len(missing_taxid_list)} organisms have not been found in INSDC, skipping related data"]})
+                self.update_state(state=states.PENDING, meta={'messages': [f"A total of {len(missing_taxid_list)} organisms have not been found in INSDC, skipping related data"]})
 
                 valid_rows = [row for row in rows if str(row.get('ncbi_taxon_id')) not in missing_taxid_list]
         else:
             print(f"Any organisms found in INSDC")
-            self.update_state(state='PROGRESS', meta={'messages': [f"Any organisms found in INSDC out of {len(new_taxid_list)} organisms found in the TSV"]})
+            self.update_state(state=states.PENDING, meta={'messages': [f"Any organisms found in INSDC out of {len(new_taxid_list)} organisms found in the TSV"]})
 
     rows_map = map_rows(valid_rows)
-
     organisms_to_update = Organism.objects(taxid__in=rows_map.keys())
-    
-    self.update_state(state='PROGRESS', meta={'messages': [f"Updating a total of {len(organisms_to_update)}"]})
+    self.update_state(state=states.PENDING, meta={'messages': [f"Updating a total of {len(organisms_to_update)}"]})
 
     for org in organisms_to_update:
 
 
-        self.update_state(state='PROGRESS', meta={'messages': [f"Updating {org.scientific_name}"]})
+        self.update_state(state=states.PENDING, meta={'messages': [f"Updating {org.scientific_name}"]})
 
         data_to_update = rows_map[org.taxid]
         publication = data_to_update.get('publications')
@@ -62,15 +61,25 @@ def upload_goat_report(self, username, rows, sub_project=None):
         org.sub_project = sub_project
         if publication and not any(pub.id == publication.id for pub in org.publications):
             org.publications.append(publication)
+        try:
+            org.save()
+            updated_organisms.append(org.scientific_name)
+        except Exception as e:
+            messages = []
+            
+            if updated_organisms:
+                messages.append(f"Species saved {' ;'.join(updated_organisms)}")
 
-        org.save()
-
-    self.update_state(state='PROGRESS', meta={'messages': [f'A total of {len(organisms_to_update)} have been updated']})
+            messages.append(f'Error for organism: {org.scientific_name}: {e}')
+            self.update_state(state='ERROR', meta={'messages':messages})
+            raise Ignore()
+        
+    self.update_state(state=states.PENDING, meta={'messages': [f'A total of {len(organisms_to_update)} have been updated']})
     user = BioGenomeUser.objects(name=username).first()
 
     user_helper.add_species_to_datamanager([org.taxid for org in organisms_to_update], user)
 
-    return {'messages': errors}
+    return {'messages': [f"Species saved {' ;'.join(updated_organisms)}"]}
 
 def map_rows(rows):
     rows_map={}

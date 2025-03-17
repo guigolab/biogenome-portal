@@ -1,11 +1,11 @@
 <template>
     <div class="row align-center justify-space-between">
         <div class="flex">
-            <h2 class="va-h2">{{ t('targetRanks.title') }}</h2>
-            <p class="va-text-secondary"> {{ t('targetRanks.description') }} </p>
+            <h2 class="va-h2">{{ t('home.targetRanks.title') }}</h2>
+            <p class="va-text-secondary"> {{ t('home.targetRanks.description') }} </p>
         </div>
     </div>
-    <div class="row">
+    <div style="margin-bottom: 3rem;" class="row">
         <div class="flex lg12 md12 sm12 xs12 va-text-capitalize">
             <VaTabs v-model="currentTab" @update:model-value="handleRankSelection" vertical grow color="textPrimary">
                 <template #tabs>

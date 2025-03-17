@@ -24,6 +24,9 @@ const validTitle = computed(() => {
             return props.title;
         } else if (props.title[computedLocale.value]) {
             return props.title[computedLocale.value];
+        } else {
+            //default to english
+            return props.title.en
         }
     }
     return null;
@@ -35,6 +38,8 @@ const validDescription = computed(() => {
             return props.description;
         } else if (props.description[computedLocale.value]) {
             return props.description[computedLocale.value];
+        } else {
+            return props.description.en
         }
     }
     return null;

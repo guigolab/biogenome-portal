@@ -39,8 +39,13 @@
                             <VaChip size="small" @click="handleClick(rowData)">View</VaChip>
                         </template>
                         <template #cell(delete)="{ rowData }">
-                            <VaChip @click="deleteConfirmation(rowData[currentConfig.idField])" size="small"
-                                color="danger" icon="delete">Delete</VaChip>
+                            <VaChip size="small" color="secondary"
+                                v-if="isOrganisms && !isAdmin && rowData.pending_deletion">
+                                Pending Deletion
+                            </VaChip>
+                            <VaChip v-else @click="deleteConfirmation(rowData[currentConfig.idField])" size="small"
+                                color="danger" icon="delete">{{ isOrganisms && !isAdmin ? 'Send delete request' :
+                                    'Delete' }}</VaChip>
                         </template>
                         <template v-if="currentConfig.editRoute" #cell(edit)="{ rowData }">
                             <VaChip color="secondary" @click="router.push(currentConfig.editRoute(rowData))"
@@ -84,7 +89,6 @@
     </VaModal>
     <VaModal v-model="showDetails" hide-default-actions>
         <h3 class="va-h3">{{ selectedItem[currentConfig.idField] }}</h3>
-
         <MetadataTreeCard :metadata="Object.entries(selectedItem)" :id="selectedItem[currentConfig.idField]" />
     </VaModal>
 </template>
@@ -207,8 +211,8 @@ async function handleDelete() {
         } else {
             await AuthService.deleteItem(props.model, deleteItem.value)
             init({ message: `Successfully deleted`, color: 'success' });
-            await fetchData();
         }
+        await fetchData();
 
     } catch (error) {
         const axiosError = error as AxiosError

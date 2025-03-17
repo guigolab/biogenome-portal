@@ -11,6 +11,7 @@ import os
 
 PROJECT_ACCESSION = os.getenv('PROJECT_ACCESSION')
 
+#TODO: should mirror assemblies -> delete assemblies not present in INSDC anymore
 @shared_task(name='assemblies_import',ignore_result=False)
 def import_assemblies_by_bioproject(project_accession=None):
     if not project_accession:
@@ -23,11 +24,11 @@ def import_assemblies_by_bioproject(project_accession=None):
     if not result or not result.get("reports"):
         raise f"Nothing found for bioproject {project_accession}"
 
-
     new_assembly_accession_list = [ass.get('accession') for ass in result.get("reports")]
 
     #retrieve existing assemblies
     existing_assembly_accession_list = Assembly.objects(accession__in=new_assembly_accession_list).scalar('accession')
+    
     new_assembly_accession_list = [acc for acc in new_assembly_accession_list if acc not in existing_assembly_accession_list]
 
     if not new_assembly_accession_list:

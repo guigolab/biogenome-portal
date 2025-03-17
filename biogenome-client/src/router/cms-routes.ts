@@ -1,8 +1,6 @@
 import { useGlobalStore } from '../stores/global-store'
 import { useSampleStore } from '../stores/sample-store'
 
-
-
 function isAdmin() {
     const { userRole } = useGlobalStore()
     if (userRole !== 'Admin') return { name: 'unauthorized' }
@@ -75,7 +73,7 @@ export const cmsRoutes = [
     {
         name: 'delete-requests',
         path: '/admin/organisms-to-delete',
-        beforeEnter: [isAuthenticated],
+        beforeEnter: [isAuthenticated, isAdmin],
         meta: { layout: 'AdminLayout' },
         component: () => import('../pages/cms/OrganismsToDelete.vue')
     },

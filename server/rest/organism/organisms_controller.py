@@ -52,10 +52,6 @@ class UnassignedOrganismsApi(Resource):
 		return Response(json, mimetype=mimetype, status=200)
 
 class OrganismToDeleteApi(Resource):
-	@jwt_required()
-	def get(self):
-		json, mimetype = organisms_service.get_organisms_to_delete(**request.args)
-		return Response(json, mimetype=mimetype, status=200)
 
 	@jwt_required()
 	@organism_access.organism_access_required()

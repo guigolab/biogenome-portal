@@ -8,7 +8,6 @@ Object.entries(fileNameToLocaleModuleDict)
     const fileNameParts = fileName.split('/')
     const fileNameWithoutPath = fileNameParts[fileNameParts.length - 1]
     const localeName = fileNameWithoutPath.split('.json')[0]
-
     return [localeName, localeModule.default]
   })
   .forEach((localeNameLocaleMessagesTuple) => {
@@ -23,12 +22,6 @@ let locale = browserLanguage.split('-')[0]; // Default to language code, e.g., '
 if (browserLanguage.toLowerCase() === 'es-ct' || browserLanguage.toLocaleLowerCase() === 'ca') {
   locale = 'es-ct';
 }
-// Check if locale is supported; if not, fall back to 'en'
-// const supportedLocales = config.languages.map(l => l.code)
-
-// if (!supportedLocales.includes(locale)) {
-//   locale = 'gb';
-// }
 
 export default createI18n({
   legacy: false,

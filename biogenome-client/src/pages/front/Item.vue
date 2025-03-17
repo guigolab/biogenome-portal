@@ -15,9 +15,9 @@
             <div class="row">
                 <div class="flex lg4 md4 sm12 xs12">
                     <div class="row">
-                        <div v-if="detailsObject.images?.length" class="flex lg12 md12 sm12 xs12">
+                        <div v-if="groupedImages.length" class="flex lg12 md12 sm12 xs12">
                             <VaCard>
-                                <VaCarousel height="300px" stateful :items="detailsObject.images" />
+                                <VaCarousel lazy height="300px" stateful :items="groupedImages" />
                             </VaCard>
                         </div>
                         <div v-if="detailsObject.insdcStatus" class="flex lg12 md12 sm12 xs12">
@@ -235,6 +235,7 @@ import { useRouter } from 'vue-router';
 import SequencingStatusCard from '../../components/SequencingStatusCard.vue';
 import { useI18n } from 'vue-i18n';
 import { VaCard } from 'vuestic-ui/web-components';
+import { getLink, getColumns, getIdKey, convertBytesToMBOrGB, goatSteps, insdcSteps, extendedModels } from '../../composable/itemConfigs';
 
 const { t } = useI18n()
 const gBStore = useGenomeBrowserStore()
@@ -247,24 +248,10 @@ const props = defineProps<{
     model: DataModels
 }>()
 
-const extendedModels = [...dataModels, 'reads']
-const insdcSteps = [
-    { value: 'Biosample Submitted', label: 'insdc.biosample.label', description: 'insdc.biosample.description' },
-    { value: 'Reads Submitted', label: 'insdc.experiment.label', description: 'insdc.experiment.description' },
-    { value: 'Assemblies Submitted', label: 'insdc.assembly.label', description: 'insdc.assembly.description' },
-]
-
-const goatSteps = [
-    { value: 'Sample Collected', label: 'goat.collected.label', description: 'goat.collected.description' },
-    { value: 'Sample Acquired', label: 'goat.acquired.label', description: 'goat.acquired.description' },
-    { value: 'Data Generation', label: 'goat.generation.label', description: 'goat.generation.description' },
-    { value: 'In Assembly', label: 'goat.assembly.label', description: 'goat.assembly.description' },
-    { value: 'INSDC Submitted', label: 'goat.submitted.label', description: 'goat.submitted.description' },
-    { value: 'Publication Available', label: 'goat.publication.label', description: 'goat.publication.description' },
-]
-
 const detailsObject = ref<ItemDetails>()
 const item = computed(() => itemStore.item)
+
+const groupedImages = computed(() => detailsObject.value?.avatar ? [detailsObject.value.avatar, ...detailsObject.value.images ?? []] : [...detailsObject.value?.images ?? []])
 
 const hasRelatedData = computed(() => {
     return detailsObject.value ?
@@ -284,29 +271,7 @@ watch(() => props.id, async () => {
 
 const hasExternalLinks = computed(() => detailsObject.value && (detailsObject.value.ncbiLink || detailsObject.value.enaLink || detailsObject.value.blobtoolkitLink))
 const hasInternalLinks = computed(() => detailsObject.value && (detailsObject.value.speciesLink || detailsObject.value.sampleLink || detailsObject.value.downloadLink || detailsObject.value.jbrowseLink))
-function getColumns(model: DataModels | 'reads') {
-    let columns: string[]
-    if (model === 'reads') {
-        columns = ['run_accession', 'metadata.submitted_bytes', 'actions']
-    } else if (model === 'annotations') {
-        columns = ['name', 'assembly_accession']
-    } else if (model === 'assemblies') {
-        columns = ['accession', 'assembly_name', 'metadata.assembly_info.assembly_level']
-    } else if (model === 'biosamples') {
-        columns = ['accession', 'metadata.tissue', 'metadata.lifestage']
-    } else if (model === 'experiments') {
-        columns = ['experiment_accession', 'sample_accession', 'metadata.experiment_title']
-    } else if (model === 'local_samples') {
-        columns = ['local_id']
-    } else {
-        columns = []
-    }
-    return columns.map((c: string) => { return { key: c, sortable: true, label: mapField(c) } })
-}
 
-const mapField = (key: string) => {
-    return key.split('.').length ? key.split('.')[key.split('.').length - 1] : key
-}
 
 const handleClick = async (event: any, key: DataModels | 'reads') => {
     const { item } = event
@@ -316,47 +281,6 @@ const handleClick = async (event: any, key: DataModels | 'reads') => {
     }
 }
 
-function convertBytesToMBOrGB(submittedBytes: string): string {
-    const byteStrings: string[] = submittedBytes.split(';');
-
-    let result: string = "";
-
-    byteStrings.forEach(byteString => {
-        const bytes: number = parseInt(byteString, 10);
-        const mb: number = bytes / (1024 * 1024);
-        const gb: number = mb / 1024;
-
-        if (gb >= 1) {
-            result += gb.toFixed(2) + ' GB, ';
-        } else {
-            result += mb.toFixed(2) + ' MB, ';
-        }
-    });
-    result = result.slice(0, -2);
-
-    return result;
-}
-function getIdKey(model: DataModels) {
-    if (model === 'annotations') {
-        return 'name'
-    } else if (model === 'assemblies' || model === 'biosamples') {
-        return 'accession'
-    } else if (model === 'experiments') {
-        return 'experiment_accession'
-    } else if (model === 'local_samples') {
-        return 'local_id'
-    } return 'taxid'
-}
-function getLink(publication: Record<string, string>) {
-    switch (publication.source) {
-        case 'DOI':
-            return `https://doi.org/${publication.id}`
-        case 'PubMed ID':
-            return `https://pubmed.ncbi.nlm.nih.gov/${publication.id}`
-        default:
-            return `http://www.ncbi.nlm.nih.gov/pmc/articles/${publication.id}`
-    }
-}
 async function createGenomeBrowserSession() {
 
     if (!item.value) return
@@ -384,6 +308,7 @@ async function createGenomeBrowserSession() {
     router.push({ name: 'jbrowse' })
 
 }
+
 async function getRelatedData(model: DataModels, id: string) {
 
     let relatedData

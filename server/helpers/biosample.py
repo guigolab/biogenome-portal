@@ -45,6 +45,4 @@ def handle_derived_samples(accession):
     for sibling in biosample_siblings:
         if sibling.accession not in existing_siblings:
             handle_biosample_location_data(sibling)
-            sibling.save()
-
-
+            sibling.save()    

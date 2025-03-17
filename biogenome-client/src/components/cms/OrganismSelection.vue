@@ -79,7 +79,7 @@ async function setTaxon(taxon: { sci_name: string, tax_id: string }) {
             unauthorized.value = true
             return
         }
-        if (isDataManager.value && !userSpecies.value.includes(data.data[0].taxid)) {
+        if (isDataManager.value && !userSpecies.value.includes(data.taxid)) {
             init({ message: `The organism ${taxon.sci_name} already exists in the db, but you haven't the rights to modify its data`, color: 'danger' })
             unauthorized.value = true
         } else {

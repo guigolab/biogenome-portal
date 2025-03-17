@@ -42,7 +42,7 @@
                             </VaSidebarItemTitle>
                         </VaSidebarItemContent>
                     </VaSidebarItem>
-                    <VaSidebarItem :to="{ name: 'publish-biosample' }">
+                    <VaSidebarItem v-if="hasENATemplate" :to="{ name: 'publish-biosample' }">
                         <VaSidebarItemContent>
                             <VaSidebarItemTitle>
                                 Publish Sample to EBI
@@ -73,7 +73,7 @@
                     </VaSidebarItem>
                 </template>
                 <template #body>
-                    <VaSidebarItem :to="{ name: 'submitted-biosamples' }">
+                    <VaSidebarItem v-if="hasENATemplate" :to="{ name: 'submitted-biosamples' }">
                         <VaSidebarItemContent>
                             <VaSidebarItemTitle>
                                 BioSamples Submitted to EBI
@@ -117,13 +117,18 @@
     </VaSidebar>
 </template>
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, inject, onMounted } from 'vue'
 import { useGlobalStore } from '../../stores/global-store'
 import { useStatsStore } from '../../stores/stats-store';
+import { AppConfig } from '../../data/types';
 
 const statsStore = useStatsStore()
 const globalStore = useGlobalStore()
 const { userName, userRole } = useGlobalStore()
+
+const configs = inject('appConfig') as AppConfig
+
+const hasENATemplate = computed(() => configs.general.enaTemplate)
 
 const isAdmin = computed(() => {
     return userRole === 'Admin'

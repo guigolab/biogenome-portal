@@ -11,6 +11,7 @@
                     <p>Approve the deletion request or deny it, approving the request will delete the organism and all
                         its related data. This action is irreversible</p>
                 </VaCardContent>
+                <VaDivider style="margin: 0;" />
                 <VaCardContent>
                     <div class="row justify-space-between align-center">
                         <div class="flex lg6 md6">
@@ -54,6 +55,7 @@ import Header from '../../components/cms/Header.vue';
 import { useToast } from 'vuestic-ui';
 import AuthService from '../../services/AuthService';
 import { AxiosError } from 'axios';
+import CommonService from '../../services/CommonService';
 
 const { init } = useToast();
 
@@ -72,7 +74,7 @@ const isLoading = ref(false)
 onMounted(async () => await fetchData())
 
 async function fetchData() {
-    const { data } = await AuthService.getOrganismsToDelete({ filter: filter.value, ...pagination.value })
+    const { data } = await CommonService.getItems('organisms', { pending_deletion: true, filter: filter.value, ...pagination.value })
     items.value = [...data.data]
     total.value = data.total
 }

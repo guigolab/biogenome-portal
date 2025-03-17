@@ -128,7 +128,7 @@ def upload_goat_report(request_files):
 
     tsvreader, sub_project = generate_tsv_reader(request_files)
     rows = [row for row in tsvreader]
-
+    
     if errors := validate_fields(rows):
         raise BadRequest(description=f"Validation errors: {'; '.join(errors)}")
         

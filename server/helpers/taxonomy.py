@@ -1,4 +1,5 @@
 from db.models import TaxonNode,Organism
+from db.enums import Roles
 import os
 
 ROOT_NODE = os.getenv('ROOT_NODE', 1)
@@ -55,7 +56,7 @@ def save_parsed_taxons(parsed_taxons):
         TaxonNode.objects.insert(taxons_to_save)
 
 def check_species_permission(user, existing_taxids):
-    if user.role.value == 'Admin':
+    if user.role.value == Roles.DATA_ADMIN.value:
         return []
 
     return [check_user_permission_for_taxid(user, taxid) for taxid in existing_taxids if taxid not in user.species]

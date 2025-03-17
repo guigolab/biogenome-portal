@@ -212,8 +212,7 @@ def validate_number(number):
 
 def get_task_status(task_id):
     task = AsyncResult(task_id)
-    print(task)
-
+    if not task:
+        raise NotFound(description=f"{task_id} not found")
     if task.result:
         return dict(messages=task.result.get('messages'), state=task.state )
-    raise NotFound(description=f"{task_id} not found")
