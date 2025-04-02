@@ -120,6 +120,9 @@ def import_assemblies_from_accessions(accessions):
         parsed_assembly = parse_assembly_from_ncbi_datasets(ass)
         new_accession = parsed_assembly.accession
 
+        #double check assembly is actually in the given accession list
+        if new_accession not in new_assembly_accession_list:
+            continue
         save_chromosomes(parsed_assembly)
         try:
 
