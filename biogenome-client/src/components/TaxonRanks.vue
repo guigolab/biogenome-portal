@@ -73,6 +73,7 @@ const currentTab = ref()
 const loading = ref(false)
 const taxonomicRanks: TaxonomicRank[] = [
     { rank: "superkingdom", color: "#E57373" },         // Light Red
+    { rank: "domain", color: "#E57373" },         // Light Red
     { rank: "kingdom", color: "#F06292" },        // Pink
     { rank: "phylum", color: "#BA68C8" },         // Purple
     { rank: "subphylum", color: "#9575CD" },      // Light Purple

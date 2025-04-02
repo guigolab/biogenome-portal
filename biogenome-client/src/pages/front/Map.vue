@@ -336,7 +336,7 @@ async function downloaData() {
 }
 
 .leaflet-map {
-    height: 500px;
+    height: 80vh;
     width: 100%;
     z-index: 99;
 }
