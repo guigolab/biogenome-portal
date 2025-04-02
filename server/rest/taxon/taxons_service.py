@@ -2,9 +2,6 @@ from db.models import  TaxonNode
 from helpers import data as data_helper
 from werkzeug.exceptions import NotFound
 
-def get_taxons(args):
-    return data_helper.get_items('taxons', args)
-
 def get_taxon(taxid):
     taxon = TaxonNode.objects(taxid=taxid).first()
     if not taxon:

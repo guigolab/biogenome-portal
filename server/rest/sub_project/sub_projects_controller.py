@@ -49,7 +49,6 @@ class SubProjectRelatedSpecies(Resource):
         ## get related species
         return Response(organisms,mimetype='application/json', status=200)
 
-    
 class SubProjectRelatedUsers(Resource):
     @jwt_required()
     def get(self, name):

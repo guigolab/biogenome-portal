@@ -11,9 +11,6 @@ DATA_REQUIRED_FIELDS = ['name', 'assembly_accession']
 URL_FIELDS = ['gff_gz_location', 'tab_index_location']
 FILES_REQUIRED_FIELDS = ['gzipAnnotation', 'tabixAnnotation']
 
-def get_annotations(args):
-    return data_helper.get_items('annotations', args)
-
 def delete_annotation(name):
     ann_obj = get_annotation(name)
     deleted_name = ann_obj.name

@@ -16,7 +16,7 @@
                 </VaCard>
             </div>
         </div>
-        <div class="row">
+        <div class="row row-equal">
             <div class="flex lg4 md12 sm12 xs12">
                 <ItemsFilterCard :model="model" />
             </div>

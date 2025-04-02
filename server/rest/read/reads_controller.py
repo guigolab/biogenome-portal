@@ -4,11 +4,18 @@ import json
 from . import reads_service
 from flask_jwt_extended import jwt_required
 from wrappers.admin import admin_required
+from helpers import data as data_helper
 
+class ExperimentsQueryApi(Resource):
+    def post(self):
+        data = request.json if request.is_json else request.form
+        resp, mimetype = data_helper.get_items('experiments', data)
+        return Response(resp, mimetype=mimetype, status=200)
+    
 class ExperimentsApi(Resource):
     def get(self):
-        response, mimetype = reads_service.get_reads(request.args)
-        return Response(response, mimetype=mimetype, status=200)
+        resp, mimetype = data_helper.get_items('experiments', request.args)
+        return Response(resp, mimetype=mimetype, status=200)
 
 class ExperimentApi(Resource):
 

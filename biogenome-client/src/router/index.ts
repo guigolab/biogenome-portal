@@ -48,6 +48,11 @@ const defaultRoutes: Array<RouteRecordRaw> = [
     component: () => import('../pages/front/Tree.vue')
   },
   {
+    name: 'map',
+    path: '/map',
+    component: () => import('../pages/front/Map.vue')
+  },
+  {
     name: 'jbrowse',
     path: '/jbrowse',
     component: () => import('../pages/front/GenomeBrowser.vue')

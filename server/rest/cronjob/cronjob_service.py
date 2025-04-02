@@ -17,7 +17,8 @@ JOB_MODELS = {
     },
     'assemblies':{
         'import':assemblies.import_assemblies_by_bioproject,
-        'blob_link':assemblies.add_blob_link
+        'blob_link':assemblies.add_blob_link,
+        'accessions_import': assemblies.import_assemblies_from_accessions,
     },
     'helpers':{
         'handle_orphans':taxonomy.handle_orphan_organisms,
@@ -67,8 +68,4 @@ def get_cronjobs():
             response.append(t)
     return response
 
-def get_current_active_tasks(model,action):
-    task = JOB_MODELS.get(model).get(action)
-    active_tasks = task.app.control.inspect().active()
-    return active_tasks
 

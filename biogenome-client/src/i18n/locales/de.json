@@ -40,6 +40,10 @@
         "title": "Taxonomie-Explorer",
         "description": "Der Taxonomische Baum-Explorer ermöglicht Ihnen die Navigation in der Taxonomie mit einem D3-Hyperbolischen Baum. Zoomen Sie mit dem Mausrad oder dem Trackpad, bewegen Sie sich durch Ziehen und klicken Sie auf Knoten, um Details anzuzeigen. Erkunden Sie nahtlos eine dynamische Ansicht des Baums des Lebens."
     },
+    "map": {
+        "title": "Geografischer Explorer",
+        "description": "Zeichnen Sie ein Gebiet auf der Karte, um Metadaten zu Biosamples, zugehörigen Arten, Assemblies, Experimenten oder Genomanmerkungen zu erkunden und herunterzuladen; verwenden Sie die Schaltflächen oben rechts, um eine Auswahl zu zeichnen oder zu löschen."
+    },
     "taxon": {
         "chip": "Ausgewähltes Taxon: ",
         "searchPlaceholder": "Taxon nach Name oder TaxID suchen",

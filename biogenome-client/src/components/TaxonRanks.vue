@@ -1,6 +1,6 @@
 <template>
-    <div class="row align-center justify-space-between">
-        <div class="flex">
+    <div class="row align-center justify-center">
+        <div style="text-align: center;" class="flex">
             <h2 class="va-h2">{{ t('home.targetRanks.title') }}</h2>
             <p class="va-text-secondary"> {{ t('home.targetRanks.description') }} </p>
         </div>
@@ -21,16 +21,18 @@
                         <VaCardContent>
                             <h3 class="va-h4">{{ currentTab }}</h3>
                         </VaCardContent>
+                        <VaDivider style="margin: 0;" />
                         <VaCardContent>
-                            <VaDataTable height="400px" hoverable clickable @row:click="handleClick" sticky-header
-                                :columns="['name', 'leaves']" :items="taxons">
-                                <template #header(leaves)>
-                                    {{ t('models.organisms') }}
+                            <VaDataTable height="400px" hide-default-header hoverable clickable @row:click="handleClick"
+                                sticky-header :columns="['name']" :items="taxons">
+                                <template #cell(name)="{ rowData }">
+                                    {{ rowData.name }} <VaChip v-if="rowData.leaves" color="textPrimary" flat>{{
+                                        rowData.leaves }}</VaChip>
                                 </template>
                             </VaDataTable>
                         </VaCardContent>
                         <VaCardContent>
-                            <div class="row justify-center">
+                            <div class="row">
                                 <div class="flex">
                                     <VaPagination color="textPrimary" v-model="offset" :page-size="pagination.limit"
                                         :total="total" :visible-pages="3" buttons-preset="primary" rounded gapped

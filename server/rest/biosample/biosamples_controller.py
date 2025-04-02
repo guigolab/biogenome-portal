@@ -4,6 +4,18 @@ import json
 from . import biosamples_service
 from flask_jwt_extended import jwt_required
 from wrappers.admin import admin_required
+from helpers import data as data_helper
+
+class BioSamplesApi(Resource):
+    def get(self):
+        resp, mimetype = data_helper.get_items('biosamples', request.args)
+        return Response(resp,mimetype=mimetype, status=200)
+    
+class BioSamplesQueryApi(Resource):
+    def post(self):
+        data = request.json if request.is_json else request.form
+        resp, mimetype = data_helper.get_items('biosamples', data)
+        return Response(resp, mimetype=mimetype, status=200)
 
 class BioSampleApi(Resource):
     def get(self, accession):
@@ -22,12 +34,7 @@ class BioSampleApi(Resource):
         deleted_accession = biosamples_service.delete_biosample(accession)
         return Response(json.dumps(deleted_accession), mimetype="application/json", status=200)
 
-class BioSamplesApi(Resource):
 
-    def get(self):
-        response, mimetype = biosamples_service.get_biosamples(request.args)
-        return Response(response,mimetype=mimetype, status=200)
-    
 class ExperimentsByBiosample(Resource):
     def get(self, accession):
         experiments = biosamples_service.get_related_experiments(accession)

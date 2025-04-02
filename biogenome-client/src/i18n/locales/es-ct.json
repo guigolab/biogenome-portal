@@ -40,6 +40,10 @@
         "title": "Explorador de Taxonomia",
         "description": "L'Explorador d'Arbre Taxonòmic et permet navegar per la taxonomia amb un Arbre Hiperbòlic D3. Usa la roda del ratolí o el panell tàctil per fer zoom, arrossega per desplaçar-te i fes clic als nodes per veure’n els detalls. Explora fàcilment per obtenir una visió dinàmica de l'arbre de la vida."
     },
+    "map": {
+        "title": "Explorador Geogràfic",
+        "description": "Dibuixa una regió al mapa per explorar i descarregar metadades de biosamples, espècies relacionades, assemblatges, experiments o anotacions genòmiques; utilitza els botons a la part superior dreta per dibuixar o esborrar una selecció."
+    },
     "taxon": {
         "chip": "Tàxon Seleccionat: ",
         "searchPlaceholder": "Cerca un tàxon per nom o taxid",

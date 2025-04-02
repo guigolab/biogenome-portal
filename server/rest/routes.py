@@ -43,6 +43,7 @@ def initialize_routes(api):
 	api.add_resource(sample_locations_controller.LocationFromCoords, '/api/coordinates/<coordinates>')
 
 	api.add_resource(sample_locations_controller.UniqueLocations, '/api/coordinates/frequency')
+	api.add_resource(sample_locations_controller.DownloadRelatedDataApi, '/api/coordinates/frequency/download')
 
 	##SUB_PROJECTS
 	api.add_resource(sub_projects_controller.SubProjectsApi, '/api/sub_projects')
@@ -52,8 +53,8 @@ def initialize_routes(api):
 
 	##ORGANISMS
 	api.add_resource(organisms_controller.OrganismsApi, '/api/organisms')
+	api.add_resource(organisms_controller.OrganismsQueryApi, '/api/organisms/query')
 	api.add_resource(organisms_controller.UnassignedOrganismsApi, '/api/organisms/unassigned')
-
 	api.add_resource(organisms_controller.OrganismApi, '/api/organisms/<taxid>')
 	api.add_resource(lookup_controller.OrganismRelatedDataLookup, '/api/organisms/<taxid>/lookup')
 	api.add_resource(organisms_controller.OrganismLineageApi, '/api/organisms/<taxid>/lineage')
@@ -63,6 +64,9 @@ def initialize_routes(api):
 
 	##ASSEMBLIES
 	api.add_resource(assemblies_controller.AssembliesApi, '/api/assemblies')
+	api.add_resource(assemblies_controller.AssembliesQueryApi, '/api/assemblies/query')
+	api.add_resource(assemblies_controller.AssembliesImportApi, '/api/assemblies/import')
+
 	api.add_resource(assemblies_controller.AssembliesFromAnnotations, '/api/assemblies/from_annotations')
 	api.add_resource(assemblies_controller.AssemblyApi,  '/api/assemblies/<accession>')
 	api.add_resource(lookup_controller.AssemblyRelatedDataLookup,  '/api/assemblies/<accession>/lookup')
@@ -76,11 +80,14 @@ def initialize_routes(api):
 
 	##ANNOTATIONS
 	api.add_resource(annotations_controller.AnnotationsApi, '/api/annotations')
+	api.add_resource(annotations_controller.AnnotationsQueryApi, '/api/annotations/query')
+
 	api.add_resource(annotations_controller.AnnotationApi,  '/api/annotations/<name>')
 	api.add_resource(annotations_controller.StreamAnnotations, '/api/download/<filename>')
 	
 	##BIOSAMPLES
 	api.add_resource(biosamples_controller.BioSamplesApi, '/api/biosamples')
+	api.add_resource(biosamples_controller.BioSamplesQueryApi, '/api/biosamples/query')
 
 	api.add_resource(biosamples_controller.BioSampleChecklist, '/api/biosamples/checklist')
 	api.add_resource(biosamples_controller.BioSampleAuth, '/api/biosamples/auth')
@@ -97,12 +104,16 @@ def initialize_routes(api):
 
 	##LOCAL_SAMPLES
 	api.add_resource(local_samples_controller.LocalSamplesApi, '/api/local_samples')
+	api.add_resource(local_samples_controller.LocalSamplesQueryApi, '/api/local_samples/query')
+
 	api.add_resource(local_samples_controller.LocalSampleUploadApi, '/api/local_samples/upload')
 	api.add_resource(local_samples_controller.LocalSampleApi, '/api/local_samples/<local_id>')
 	
 
 	##EXPERIMENTS AND RELATED READS
 	api.add_resource(reads_controller.ExperimentsApi, '/api/experiments')
+	api.add_resource(reads_controller.ExperimentsQueryApi, '/api/experiments/query')
+
 	api.add_resource(reads_controller.ExperimentApi, '/api/experiments/<accession>')
 	api.add_resource(reads_controller.ReadsByExperiment, '/api/experiments/<accession>/reads')
 
@@ -110,6 +121,8 @@ def initialize_routes(api):
 
 	##TAXONS
 	api.add_resource(taxons_controller.TaxonsApi, '/api/taxons')
+	api.add_resource(taxons_controller.TaxonsQueryApi, '/api/taxons/query')
+
 	api.add_resource(taxons_controller.TaxonApi, '/api/taxons/<taxid>')
 	api.add_resource(lookup_controller.TaxonRelatedDataLookup, '/api/taxons/<taxid>/stats')
 	api.add_resource(taxons_controller.TaxonChildrenApi, '/api/taxons/<taxid>/children')

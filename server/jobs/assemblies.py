@@ -18,7 +18,7 @@ def import_assemblies_by_bioproject(project_accession=None):
         project_accession = PROJECT_ACCESSION
 
     #Collect assembly ids
-    CMD = ["genome","accession", project_accession, "--report","ids_only", "--assembly-source", "GenBank"]
+    CMD = ["genome","accession", project_accession, "--report", "ids_only", "--assembly-source", "GenBank"]
     result = get_data_from_ncbi(CMD)
 
     if not result or not result.get("reports"):
@@ -89,7 +89,75 @@ def import_assemblies_by_bioproject(project_accession=None):
     print(f"Job executed. Saved {saved_assemblies} out of {new_ids_length}")
 
 
+@shared_task(name='accessions_import',ignore_result=False)
+def import_assemblies_from_accessions(accessions):
+    #retrieve existing assemblies
+    existing_assembly_accession_list = Assembly.objects(accession__in=accessions).scalar('accession')
     
+    new_assembly_accession_list = [acc for acc in accessions if acc not in existing_assembly_accession_list]
+
+    if not new_assembly_accession_list:
+        print(f"Any new assembly to save")
+        return
+
+    new_ids_length = len(new_assembly_accession_list) 
+
+    print(f"New assemblies found: {new_ids_length}")
+    #write accessions to file and pass the file to datasets
+    open('assemblies.txt', 'w').write('\n'.join(new_assembly_accession_list))
+    args = ['genome', 'accession', '--inputfile', 'assemblies.txt']
+    datasets_response = get_data_from_ncbi(args)
+    reports = datasets_response.get('reports')
+    if not reports:
+        print(f"No assemblies found in NCBI Datasets")
+        return
+    
+    print(f"Found {len(reports)} assemblies out of {new_ids_length}")
+
+    saved_assemblies = 0
+    for ass in reports:
+
+        parsed_assembly = parse_assembly_from_ncbi_datasets(ass)
+        new_accession = parsed_assembly.accession
+
+        save_chromosomes(parsed_assembly)
+        try:
+
+            print(f"fetching organism {parsed_assembly.taxid} and its related taxons for {new_accession}")
+            organism = handle_organism(parsed_assembly.taxid)
+            
+            if not organism:
+                print(f"Any organism found for taxid: {parsed_assembly.taxid} of assembly {new_accession}")
+                print(f"Skipping assembly {new_accession}..")
+                continue
+
+            print(f"fetching biosample {parsed_assembly.sample_accession} of assembly {new_accession}")
+            biosample = handle_biosample(parsed_assembly.sample_accession)
+
+            if not biosample:
+                print(f"Any biosample found for accession: {parsed_assembly.sample_accession} of assembly {new_accession}")
+                print(f"Skipping assembly {new_accession}..")
+                continue
+
+            print(f"Saving assembly {parsed_assembly.accession}")
+            parsed_assembly.save()
+            saved_assemblies += 1 
+
+            print(f"Updating organism {organism.scientific_name}")
+            organism.save()
+
+            #add lineage
+            update_lineage(parsed_assembly, organism)
+
+        except Exception as e:
+            print(e)
+            print(f"Impossible to save assembly {new_accession}, 'skipping it..")
+            Chromosome.objects(metadata__assembly_accession=new_accession).delete()
+            continue
+
+    print(f"Job executed. Saved {saved_assemblies} out of {new_ids_length}")
+
+
 @shared_task(name='assemblies_blob_link',ignore_result=False)
 def add_blob_link():
     assemblies_accession_list = Assembly.objects(blobtoolkit_id=None).scalar('accession')

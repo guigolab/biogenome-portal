@@ -14,9 +14,6 @@ MODEL_LIST = {
     'experiments':{'model':Experiment, 'id':'experiment_accession'},
     }
 
-def get_organisms(args):
-    return data_helper.get_items('organisms', args)
-
 def get_organism(taxid):
     organism = Organism.objects(taxid=taxid).first()
     if not organism:

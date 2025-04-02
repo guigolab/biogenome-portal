@@ -12,7 +12,7 @@ const { locale } = useI18n()
 const props = defineProps<{
     title: LangOption | string,
     titleClass: string,
-    description: LangOption | string,
+    description?: LangOption | string,
     descriptionClass?: string
 }>()
 

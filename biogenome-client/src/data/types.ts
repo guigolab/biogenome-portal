@@ -348,6 +348,7 @@ export type OrganismForm = {
   common_names: CommonName[],
   image: string,
   image_urls: string[],
+  sequencing_type: string,
   metadata: Record<string, string>,
   publications: Publication[],
   goat_status: string,

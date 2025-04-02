@@ -37,13 +37,17 @@
         "title": "Taxonomy Explorer",
         "description": "The Taxonomic Tree Explorer lets you navigate taxonomy with a D3 Hyperbolic Tree. Zoom with the mouse wheel or trackpad, pan by dragging, and click nodes to view details. Explore seamlessly for a dynamic view of the tree of life."
     },
+    "map": {
+        "title": "Geographic Explorer",
+        "description": "Draw a region on the map to explore and download metadata for biosamples, related species, assemblies, experiments, or genome annotations; use the top-right buttons to draw or clear a selection."
+    },
     "taxon": {
         "chip": "Selected Taxon: ",
         "searchPlaceholder": "Search a taxon by name or taxid",
         "noTaxons": "No taxons found for: ",
         "wikiLink": "Read more",
         "relatedData": "Related Data",
-        "occurrencesMap": "Occurences Map",
+        "occurrencesMap": "Occurrences Map",
         "clearBtn": "Clear Selection",
         "showDetails": "Show Details",
         "hideDetails": "Hide Details"

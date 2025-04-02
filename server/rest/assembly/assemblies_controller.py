@@ -3,13 +3,29 @@ from flask import Response, request
 import json
 from . import assemblies_service
 from flask_jwt_extended import jwt_required
-from wrappers.data_manager import data_manager_required
 from wrappers.admin import admin_required
+from helpers import data as data_helper
 
 class AssembliesApi(Resource):
     def get(self):
-        resp, mimetype = assemblies_service.get_assemblies(request.args)
+        resp, mimetype = data_helper.get_items('assemblies', request.args)
         return Response(resp, mimetype=mimetype, status=200)
+
+class AssembliesQueryApi(Resource):
+    def post(self):
+        data = request.json if request.is_json else request.form
+        resp, mimetype = data_helper.get_items('assemblies', data)
+        return Response(resp, mimetype=mimetype, status=200)
+
+class AssembliesImportApi(Resource):
+    #import assemblies from a list of accessions
+    @admin_required()
+    @jwt_required()
+    def post(self):
+        data = request.json if request.is_json else request.form
+        resp = assemblies_service.trigger_accessions_job(data)
+        return Response(json.dumps(resp), mimetype="application/json", status=200)
+
 
 class AssemblyApi(Resource):
     def get(self,accession):

@@ -4,14 +4,29 @@
             <h3 class="va-h3">{{ selectedTaxon.name }}</h3>
             <TaxonSummary :name="selectedTaxon.name" :rank="selectedTaxon.rank" />
             <VaDivider />
-            <h4 class="va-h6">
-                {{ t('taxon.relatedData') }}
-            </h4>
+            <div class="row">
+                <div class="flex">
+                    <h4 class="va-h6">
+                        {{ t('taxon.relatedData') }}
+                    </h4>
+                </div>
+            </div>
             <ModelList :taxid="selectedTaxon.taxid" />
+            <VaDivider />
             <div v-if="mapStore.hasCoordinates">
-                <h4 class="va-h6">
-                    {{ t('taxon.occurrencesMap') }}
-                </h4>
+                <div class="row justify-space-between align-center">
+                    <div class="flex">
+                        <h4 class="va-h6">
+                            {{ t('taxon.occurrencesMap') }}
+                        </h4>
+                    </div>
+                    <div class="flex">
+                        <VaButton preset="primary" :to="{ name: 'map' }" size="small" color="textPrimary">View
+                        </VaButton>
+
+                    </div>
+                </div>
+
                 <LeafletMap :locations="locations" :countries="[]" :selected-countries="[]" :map-type="'points'" />
             </div>
         </section>

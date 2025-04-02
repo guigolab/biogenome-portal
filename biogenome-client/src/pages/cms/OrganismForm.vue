@@ -43,6 +43,25 @@
               </VaCardContent>
             </VaCard>
           </div>
+          <div class="flex lg12 md12 ms12 xs12">
+            <VaCard>
+              <VaCardContent>
+                <h2 class="va-h6">
+                  Sequencing Type
+                </h2>
+                <p class="va-text-secondary">
+                  Select the sequencing type
+                </p>
+              </VaCardContent>
+              <VaCardContent>
+                <div class="row">
+                  <div class="flex lg12 md12 sm12 xs12">
+                    <VaSelect v-model="organismStore.organismForm.sequencing_type" :options="sequencingOptions"/>
+                  </div>
+                </div>
+              </VaCardContent>
+            </VaCard>
+          </div>
           <div class="flex lg12 md12 sm12 xs12">
             <MetadataInput />
           </div>
@@ -67,7 +86,6 @@
       </div>
     </div>
   </VaInnerLoading>
-
 </template>
 <script setup lang="ts">
 import { computed, inject, onMounted, ref, watch } from 'vue'
@@ -87,6 +105,7 @@ import ItemService from '../../services/CommonService'
 import OrganismSelection from '../../components/cms/OrganismSelection.vue'
 
 
+const sequencingOptions = ['ONT (Long Reads)', 'PACBIO (Long Reads)', 'Illumina (Short Reads)', 'RNAseq (Transcriptomics)', 'Isoseq (Transcriptomics)', 'HIC (Scaffolding)', 'OmniC (Scaffolding)', 'Other']
 const appConfig = inject('appConfig') as AppConfig
 const isLoading = ref(false)
 const props = defineProps<{

@@ -4,12 +4,19 @@ from flask_restful import Resource
 import json
 from flask_jwt_extended import jwt_required
 from wrappers import data_manager, organism_access,admin
+from helpers import data as data_helper
+
+class OrganismsQueryApi(Resource):
+    def post(self):
+        data = request.json if request.is_json else request.form
+        resp, mimetype = data_helper.get_items('organisms', data)
+        return Response(resp, mimetype=mimetype, status=200)
 
 class OrganismsApi(Resource):
 	def get(self):
-		response, mimetype = organisms_service.get_organisms(request.args)
-		return Response(response, mimetype=mimetype, status=200)
-    
+		resp, mimetype = data_helper.get_items('organisms', request.args)
+		return Response(resp, mimetype=mimetype, status=200)
+			
 	@jwt_required()
 	@data_manager.data_manager_required()
 	def post(self):

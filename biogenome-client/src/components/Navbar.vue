@@ -41,6 +41,11 @@
               {{ t('nav.taxExplorer') }}
             </RouterLink>
           </VaMenuItem>
+          <VaMenuItem>
+            <RouterLink :style="{ 'color': colors.textPrimary }" :to="{ name: 'map' }">
+              {{ t('map.title') }}
+            </RouterLink>
+          </VaMenuItem>
           <VaMenuItem v-if="config.models.assemblies">
             <RouterLink :style="{ 'color': colors.textPrimary }" :to="{ name: 'jbrowse' }">
               {{ t('nav.genomeBrowser') }}

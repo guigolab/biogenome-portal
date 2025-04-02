@@ -7,11 +7,6 @@ import openpyxl
 import itertools
 
 
-TEMPLATE_PATH = '/server/templates/local_samples.xml'
-
-def get_local_samples(args):
-    return data_helper.get_items('local_samples', args)
-
 def get_local_sample(id):
     sample = LocalSample.objects(local_id=id).first()
     if not sample:

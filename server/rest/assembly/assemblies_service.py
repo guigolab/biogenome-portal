@@ -2,6 +2,7 @@ from db.models import Assembly, Chromosome, GenomeAnnotation
 from werkzeug.exceptions import BadRequest, Conflict, NotFound
 from clients import ncbi_client, genomehubs_client
 from parsers import assembly
+from jobs import assemblies as assemblies_jobs
 from helpers import data, organism, biosample as biosample_helper, assembly as assembly_helper
 from flask import send_file
 import io
@@ -12,10 +13,6 @@ def get_related_chromosomes(accession):
     if not chromosomes.count():
         chromosomes = Chromosome.objects(accession_version__in=ass.chromosomes)
     return chromosomes.exclude('id')
-
-def get_assemblies(args):
-    return data.get_items('assemblies', args)
-
 
 def get_assemblies_from_annotations(args):
     distinct_accessions = GenomeAnnotation.objects().distinct('assembly_accession')
@@ -121,3 +118,9 @@ def get_chr_aliases_file(accession):
         download_name=f'{assembly_obj.accession}_chr_aliases.tsv'
     )
 
+def trigger_accessions_job(data):
+    accessions = data.get('accessions')
+    if not accessions:
+        raise BadRequest(description=f"Missing accessions")
+    task = assemblies_jobs.import_assemblies_from_accessions.delay(accessions)
+    return dict(id=task.id, state=task.state)

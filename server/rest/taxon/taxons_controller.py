@@ -1,11 +1,18 @@
 from . import taxons_service
 from flask import Response,request
 from flask_restful import Resource
+from helpers import data as data_helper
+
+class TaxonsQueryApi(Resource):
+    def post(self):
+        data = request.json if request.is_json else request.form
+        resp, mimetype = data_helper.get_items('taxons', data)
+        return Response(resp, mimetype=mimetype, status=200)
 
 class TaxonsApi(Resource):
     def get(self):
-        response, mimetype = taxons_service.get_taxons(request.args)
-        return Response(response, mimetype=mimetype, status=200)
+        resp, mimetype = data_helper.get_items('taxons', request.args)
+        return Response(resp, mimetype=mimetype, status=200)
 
 class TaxonApi(Resource):
     def get(self, taxid):

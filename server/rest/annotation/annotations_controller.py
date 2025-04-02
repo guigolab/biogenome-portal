@@ -4,11 +4,18 @@ from . import annotations_service
 import json
 from flask_jwt_extended import jwt_required
 from wrappers.admin import admin_required
+from helpers import data as data_helper
 
+class AnnotationsQueryApi(Resource):
+    def post(self):
+        data = request.json if request.is_json else request.form
+        resp, mimetype = data_helper.get_items('annotations', data)
+        return Response(resp, mimetype=mimetype, status=200)
+    
 class AnnotationsApi(Resource):
     def get(self):
-        response, mimetype = annotations_service.get_annotations(request.args)
-        return Response(response, mimetype=mimetype, status=200)
+        resp, mimetype = data_helper.get_items('annotations', request.args)
+        return Response(resp, mimetype=mimetype, status=200)
 
     @admin_required()
     @jwt_required()

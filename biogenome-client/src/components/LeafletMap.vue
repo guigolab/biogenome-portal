@@ -240,7 +240,6 @@ const renderPoints = () => {
     });
     map.value.addLayer(pointsLayerGroup.value as any)
     map.value.invalidateSize(); // Ensure map renders correctly
-
 };
 
 const getColor = computed(() => props.mapType === 'cloropleth' ? getCloroplethColor : getPointsColor)

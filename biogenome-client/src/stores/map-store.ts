@@ -26,7 +26,7 @@ export const useMapStore = defineStore('map', {
             this.hasCoordinates = false
             try {
                 this.isLoading = true
-                const { data } = await GeoLocationService.getLocationsFrequency(query)
+                const { data } = await GeoLocationService.postLocationsFrequency(query)
                 this.locations = [...data]
                 this.hasCoordinates = this.locations.length > 0
             } catch (e) {

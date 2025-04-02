@@ -13,10 +13,11 @@
         </template>
         <template #right>
             <VaNavbarItem class="navbar-item-slot">
-                <VaButton @click="taxonomyStore.showSidebar = !taxonomyStore.showSidebar" preset="primary" color="textPrimary">
+                <VaButton @click="taxonomyStore.showSidebar = !taxonomyStore.showSidebar" preset="primary"
+                    color="textPrimary">
                     {{ t(detailsBtn) }}</VaButton>
-                <VaButton @click="taxonomyStore.resetTaxon" style="margin-left: 5px;" preset="primary" color="textPrimary"
-                    icon="fa-close">{{ t('taxon.clearBtn') }}
+                <VaButton @click="taxonomyStore.resetTaxon" style="margin-left: 5px;" preset="secondary"
+                    color="textPrimary" icon="fa-close">
                 </VaButton>
             </VaNavbarItem>
         </template>
@@ -29,7 +30,7 @@ import TaxonBreadcrumbs from './TaxonBreadcrumbs.vue';
 import TaxonChildren from './TaxonChildren.vue';
 import { useI18n } from 'vue-i18n';
 
-const {t} = useI18n()
+const { t } = useI18n()
 const props = defineProps<{
     taxid: string,
     leaves: number

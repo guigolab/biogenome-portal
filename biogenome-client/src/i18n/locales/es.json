@@ -40,6 +40,10 @@
         "title": "Explorador de Taxonomía",
         "description": "El Explorador de Árbol Taxonómico te permite navegar por la taxonomía con un Árbol Hiperbólico D3. Usa la rueda del ratón o el panel táctil para hacer zoom, arrastra para desplazarte y haz clic en los nodos para ver detalles. Explora fácilmente para obtener una vista dinámica del árbol de la vida."
     },
+    "map": {
+        "title": "Explorador Geográfico",
+        "description": "Dibuja una región en el mapa para explorar y descargar metadatos de biosamples, especies relacionadas, ensamblajes, experimentos o anotaciones genómicas; utiliza los botones en la parte superior derecha para dibujar o borrar una selección."
+    },
     "taxon": {
         "chip": "Taxón Seleccionado: ",
         "searchPlaceholder": "Busca un taxón por nombre o taxid",

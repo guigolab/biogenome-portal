@@ -121,7 +121,7 @@ def get_items(model, immutable_dict):
     except Exception as e:
         raise BadRequest(description=f"{e}")
 
-def generate_response(format, fields, items, limit, offset):
+def generate_response(format, fields, items, limit=20, offset=0):
     if format == 'tsv':
         return create_tsv(items.as_pymongo(), fields).encode('utf-8'), "text/tab-separated-values"
     elif format == 'jsonl':

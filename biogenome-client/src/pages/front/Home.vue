@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="hero-section row align-center">
+    <div style="padding-bottom: 5rem;padding-top: 5rem;" class="row align-center">
       <div class="flex lg12 md12 sm12 xs12">
         <div class="row justify-center align-center">
           <div style="text-align: center;" class="flex lg12 md12 sm12 xs12">
@@ -24,8 +24,8 @@
     </div>
     <VaDivider />
     <TaxonRanks />
-    <div class="row">
-      <div class="flex">
+    <div class="row justify-center">
+      <div style="text-align: center;" class="flex">
         <h2 class="va-h2">
           {{ t('home.taxonomy.title') }}
         </h2>
@@ -120,6 +120,24 @@
           <VaDivider style="margin: 0;" />
           <VaCardContent>
             <p class="va-text-secondary">{{ t('tree.description') }}</p>
+          </VaCardContent>
+        </VaCard>
+      </div>
+      <div class="flex lg6 md6 sm12 xs12">
+        <VaCard>
+          <VaCardContent>
+            <div class="row justify-space-between align-center">
+              <div class="flex">
+                <h3 class="va-h3">{{ t('map.title') }}</h3>
+              </div>
+              <div class="flex">
+                <VaButton color="textPrimary" :to="{ name: 'map' }">{{ t('buttons.view') }}</VaButton>
+              </div>
+            </div>
+          </VaCardContent>
+          <VaDivider style="margin: 0;" />
+          <VaCardContent>
+            <p class="va-text-secondary">{{ t('map.description') }}</p>
           </VaCardContent>
         </VaCard>
       </div>
@@ -243,9 +261,5 @@ async function downloadGoatReport() {
 <style>
 .section-mb {
   margin-bottom: 3rem !important;
-}
-
-.hero-section {
-  height: min(50vh, 400px);
 }
 </style>
