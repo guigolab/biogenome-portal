@@ -19,6 +19,7 @@ JOB_MODELS = {
         'import':assemblies.import_assemblies_by_bioproject,
         'blob_link':assemblies.add_blob_link,
         'accessions_import': assemblies.import_assemblies_from_accessions,
+        'link_chromosomes': assemblies.link_chromosomes
     },
     'helpers':{
         'handle_orphans':taxonomy.handle_orphan_organisms,

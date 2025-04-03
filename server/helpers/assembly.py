@@ -19,5 +19,6 @@ def save_chromosomes(assembly_obj):
             if new_chromosomes:
                 print(f"Saving a total of {len(new_chromosomes)} chromosomes")
                 Chromosome.objects.insert(new_chromosomes)
+            assembly_obj.chromosomes = [chr.accession_version for chr in chromosomes_to_save]
     else:
         print(f"Chromosomes not found for {accession}")

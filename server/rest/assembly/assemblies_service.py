@@ -92,8 +92,10 @@ def get_chr_aliases_file(accession):
     assembly_obj = get_assembly(accession)
     
     # Query chromosomes based on accession_version
-    chromosomes = Chromosome.objects(accession_version__in=assembly_obj.chromosomes).as_pymongo()
-    
+    chromosomes = Chromosome.objects(metadata__assembly_accession=accession)
+    if not chromosomes.count():
+        chromosomes = Chromosome.objects(accession_version__in=assembly_obj.chromosomes)   
+
     if not chromosomes:
         raise BadRequest(description=f"Assembly {accession} lacks chromosomes")
     
@@ -102,10 +104,10 @@ def get_chr_aliases_file(accession):
     
     # Assuming chromosomes is a list of dictionaries with fields 'name' and 'accession_version'
     for chromosome in chromosomes:
-        name = chromosome.get('metadata', {}).get('chr_name')
+        name = chromosome.metadata.get('chr_name')
         if not name:
-            name = chromosome.get('metadata', {}).get('name')
-        accession_version = chromosome.get('accession_version')
+            name = chromosome.metadata.get('name')
+        accession_version = chromosome.accession_version
         tsv_data.write(f"{name}\t{accession_version}\n")
     
     tsv_data.seek(0)  # Go back to the start of the StringIO object

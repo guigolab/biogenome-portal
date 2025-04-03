@@ -16,8 +16,9 @@
                     <VaSelect :highlightMatchedText="false" @update:model-value="handleSelection" :loading="isLoading"
                         searchable :textBy="(v: Assembly) => `${v.assembly_name} (${v.scientific_name})`"
                         trackBy="accession" @update:search="handleFilter" v-model="selectedAssembly"
-                        :searchPlaceholderText="t('genomeBrowser.assemblies.searchPlaceholder')" :placeholder="t('genomeBrowser.assemblies.placeholder')" :noOptionsText="t('genomeBrowser.assemblies.noOptions')"
-                        :options="assemblies">
+                        :searchPlaceholderText="t('genomeBrowser.assemblies.searchPlaceholder')"
+                        :placeholder="t('genomeBrowser.assemblies.placeholder')"
+                        :noOptionsText="t('genomeBrowser.assemblies.noOptions')" :options="assemblies">
                     </VaSelect>
                 </div>
                 <div v-if="displayAnnotations" class="flex lg12 md12 sm12 xs12">
@@ -25,13 +26,14 @@
                         @update:model-value="fetchAssemblies()"></VaCheckbox>
                 </div>
                 <div v-if="selectedAssembly" class="flex lg12 md12 sm12 xs12">
-                    <VaSelect multiple :placeholder="t('genomeBrowser.assemblies.chromosomesPlaceholder')" :options="chromosomes"
-                        track-by="accession_version" v-model="gBStore.selectedChromosomes"
+                    <VaSelect multiple :placeholder="t('genomeBrowser.assemblies.chromosomesPlaceholder')"
+                        :options="chromosomes" track-by="accession_version" v-model="gBStore.selectedChromosomes"
                         :text-by="(chr: ChromosomeInterface) => `Chromosome ${chr.metadata.chr_name || chr.metadata.name}`">
                     </VaSelect>
                 </div>
                 <div v-if="selectedAssembly && annotations.length" class="flex lg12 md12 sm12 xs12">
-                    <p style="margin-bottom: 5px;" class="va-text-bold">{{ t('genomeBrowser.assemblies.annotationsPlaceholder') }}</p>
+                    <p style="margin-bottom: 5px;" class="va-text-bold">{{
+                        t('genomeBrowser.assemblies.annotationsPlaceholder') }}</p>
                     <VaOptionList v-model="gBStore.selectedAnnotations" :options="annotations" text-by="name"
                         track-by="name">
                     </VaOptionList>
@@ -40,7 +42,7 @@
         </VaCardContent>
         <VaCardActions v-if="selectedAssembly">
             <VaButton @click="addSession">
-                {{t('genomeBrowser.assemblies.createBtn')}}
+                {{ t('genomeBrowser.assemblies.createBtn') }}
             </VaButton>
         </VaCardActions>
     </VaCard>
@@ -58,16 +60,11 @@ const { t } = useI18n()
 const gBStore = useGenomeBrowserStore()
 const statsStore = useStatsStore()
 
-const displayAnnotations = computed(() => statsStore.portalStats.map(({ key }) => key).includes('annotations'))
+const displayAnnotations = computed(() => statsStore.portalStats.filter(({count}) => count > 0).map(({ key }) => key).includes('annotations'))
 
 const isLoading = ref(false)
 
 const taxonomyStore = useTaxonomyStore()
-const currentTaxon = computed(() => taxonomyStore.currentTaxon)
-
-const strippedName = computed(() => currentTaxon.value && currentTaxon.value.name.length > 9 ?
-    currentTaxon.value.name.slice(0, 9) + '..'
-    : currentTaxon.value?.name)
 
 const assemblies = computed(() => gBStore.assemblies)
 const selectedAssembly = ref<Assembly>()
@@ -75,7 +72,6 @@ const chromosomes = computed(() => gBStore.chromosomes)
 const annotations = computed(() => gBStore.annotations)
 
 watch(() => taxonomyStore.currentTaxon, async () => {
-    console.log('Taxon watched')
     gBStore.query.taxon_lineage = taxonomyStore.currentTaxon?.taxid
     gBStore.pagination.limit = 10
     gBStore.pagination.offset = 0

@@ -160,6 +160,16 @@ def import_assemblies_from_accessions(accessions):
 
     print(f"Job executed. Saved {saved_assemblies} out of {new_ids_length}")
 
+##update chromosome list to assemblies
+@shared_task(name='link_chromosomes',ignore_result=False)
+def link_chromosomes():
+    assemblies_accession_list = Assembly.objects(chromosomes__size=0)
+    for assembly in assemblies_accession_list:
+        related_chromosomes = Chromosome.objects(metadata__assembly_accession=assembly.accession).scalar('accession_version')
+        if not related_chromosomes:
+            continue
+        assembly.chromosomes = related_chromosomes
+        assembly.save()
 
 @shared_task(name='assemblies_blob_link',ignore_result=False)
 def add_blob_link():

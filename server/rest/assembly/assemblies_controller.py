@@ -61,3 +61,4 @@ class AssembliesRelatedChromosomesApi(Resource):
     def get(self,accession):
         chromosomes = assemblies_service.get_related_chromosomes(accession)
         return Response(chromosomes.to_json(), mimetype="application/json", status=200)
+
