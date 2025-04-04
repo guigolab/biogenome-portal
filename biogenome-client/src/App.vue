@@ -73,6 +73,13 @@ const generateFavicon = async (url: string): Promise<string> => {
 <style lang="scss">
 @import 'scss/main.scss';
 
+
+@media (min-width: 1536px) {
+  /* Styles for XXL screens and up */
+  .layout {
+    max-width: 1420px;
+  }
+}
 /* Initial state when the element is inserted */
 .slide-enter-from {
   transform: translateY(-100%);

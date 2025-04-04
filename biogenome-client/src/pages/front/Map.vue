@@ -48,7 +48,7 @@
                 <div class="row">
                     <div class="flex lg12 md12 sm12 xs12">
                         <div class="map-container">
-                            <div ref="lMap" class="leaflet-map"></div>
+                            <div ref="lMap" class="leaflet-map-2"></div>
                         </div>
                     </div>
                 </div>
@@ -335,7 +335,7 @@ async function downloaData() {
     z-index: 100;
 }
 
-.leaflet-map {
+.leaflet-map-2 {
     height: 80vh;
     width: 100%;
     z-index: 99;
