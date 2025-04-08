@@ -29,11 +29,11 @@
                             <div class="row align-center">
                                 <div class="flex">
                                     <span class="va-text-bold">Latitude:</span> {{
-                                        loc.coordinates[0] }}
+                                        loc.coordinates[1] }}
                                 </div>
                                 <div class="flex">
                                     <span class="va-text-bold">Longitude:</span> {{
-                                        loc.coordinates[1] }}
+                                        loc.coordinates[0] }}
                                 </div>
                                 <div class="flex">
                                     <VaButton @click="locations.splice(idx, 1)" color="danger">Delete view
@@ -80,7 +80,7 @@ function createMap() {
         taxid: sampleStore.taxid,
         scientific_name: sampleStore.scientificName,
         sample_accession: sampleStore.sampleIdentifier,
-        coordinates: [lat, long],
+        coordinates: [long, lat],
         is_local_sample: true
     }
     locations.value.push(location)
