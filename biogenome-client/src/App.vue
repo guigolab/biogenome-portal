@@ -73,11 +73,17 @@ const generateFavicon = async (url: string): Promise<string> => {
 <style lang="scss">
 @import 'scss/main.scss';
 
-
-@media (min-width: 1536px) {
+@media (min-width: 1600px) {
   /* Styles for XXL screens and up */
   .layout {
-    max-width: 1420px;
+    max-width: 1300px;
+  }
+}
+
+@media (min-width: 1900px) {
+  /* Styles for XXL screens and up */
+  .layout {
+    max-width: 1500px;
   }
 }
 /* Initial state when the element is inserted */
