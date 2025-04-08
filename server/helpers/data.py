@@ -72,6 +72,8 @@ def create_tsv(items, fields):
                 value = get_nested_value(item, k)
             else:
                 value = item.get(k)
+            if isinstance(value, list):
+                value = ','.join(map(str, value))
             new_row.append(value)
         tsv.writerow(new_row)
     return writer_file.getvalue()

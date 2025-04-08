@@ -56,7 +56,7 @@
               <VaCardContent>
                 <div class="row">
                   <div class="flex lg12 md12 sm12 xs12">
-                    <VaSelect v-model="organismStore.organismForm.sequencing_type" :options="sequencingOptions"/>
+                    <VaSelect v-model="organismStore.organismForm.sequencing_type" multiple :options="sequencingOptions"/>
                   </div>
                 </div>
               </VaCardContent>

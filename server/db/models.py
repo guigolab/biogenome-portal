@@ -309,7 +309,7 @@ class Organism(db.Document):
     sub_project = db.StringField()
     common_names= db.ListField(db.EmbeddedDocumentField(CommonName))
     countries = db.ListField(db.StringField())
-    sequencing_type = db.StringField()
+    sequencing_type = db.ListField(db.StringField())
     insdc_common_name = db.StringField()
     scientific_name = db.StringField(required=True,unique=True)
     taxid = db.StringField(required= True,unique=True)

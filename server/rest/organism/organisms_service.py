@@ -79,6 +79,7 @@ def map_organism_data(data,taxid):
 
     organism['metadata'] = filtered_data.get('metadata')
     organism['common_names'] = None
+    organism['sequencing_type'] = filtered_data.get('sequencing_type',[])
     if filtered_data.get('common_names'):
         organism['common_names'] = [CommonName(**c_name) for c_name in filtered_data['common_names'] if 'value' in c_name]
     organism['image_urls'] = filtered_data.get('image_urls')

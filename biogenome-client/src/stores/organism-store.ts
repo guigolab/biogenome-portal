@@ -13,7 +13,7 @@ const initOrganismForm: OrganismForm = {
   sub_project: null,
   goat_status: '',
   target_list_status: null,
-  sequencing_type: ''
+  sequencing_type: [] as string[]
 }
 
 export const useOrganismStore = defineStore('organism', {
