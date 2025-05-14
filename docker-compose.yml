@@ -8,7 +8,7 @@ services:
     env_file:
       - .env
     volumes:
-     - /home/emilior/cbp-data:/data/db
+     - mongodb-data:/var/lib/mongodb-data
      - ./mongo-init.sh:/docker-entrypoint-initdb.d/mongo-init.sh
 
     ports:
@@ -21,7 +21,7 @@ services:
     volumes:
       - ./server:/server
       - /home/emilior/cbp-annotations-data:/annotations_data
-
+      - ./configs:/biogenome-client/src/data/configs
     env_file:
       - .env
     ports:
@@ -29,12 +29,11 @@ services:
     depends_on:
       - redis
 
-  biogenome_cron:
-    build: ./cronjobs
-    container_name: biogenome_cron
-    env_file:
-      - .env
-
+  # biogenome_cron:
+  #   build: ./cronjobs
+  #   container_name: biogenome_cron
+  #   env_file:
+  #     - .env
 
   biogenome_nginx:
     build:
@@ -73,3 +72,4 @@ services:
 volumes:
   app:
   node_modules:
+  mongodb-data:

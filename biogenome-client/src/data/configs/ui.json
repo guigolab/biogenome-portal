@@ -11,14 +11,20 @@
         }
     },
     "components": {
-        "VaButton": {
-            "preset": "primary"
-        },
         "VaInput": {
+            "color": "textPrimary"
+        },
+        "VaTextarea": {
             "color": "textPrimary"
         },
         "VaSelect": {
             "color": "textPrimary"
+        },
+        "VaStepper": {
+            "color": "textPrimary"
+        },
+        "VaChip": {
+            "preset": "primary"
         },
         "VaCheckbox": {
             "color": "textPrimary"
@@ -30,13 +36,5 @@
             "closeButton": true,
             "hideDefaultActions": true
         }
-    },
-    "colors": {
-        "variables": {
-          "primary": "#449dc0",
-          "secondary": "#999880",
-          "backgroundPrimary": "#2c3e50",
-          "textPrimary": "#ffffff"
-        }
-      }
+    }
 }
