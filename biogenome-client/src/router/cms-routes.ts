@@ -1,5 +1,4 @@
 import { useGlobalStore } from '../stores/global-store'
-import { useSampleStore } from '../stores/sample-store'
 
 function isAdmin() {
     const { userRole } = useGlobalStore()
@@ -10,12 +9,6 @@ async function isAuthenticated() {
     const gStore = useGlobalStore()
     await gStore.checkUserIsLoggedIn()
     if (!gStore.isAuthenticated) return { name: 'login' }
-}
-
-async function isENAAuthenticated() {
-    const sampleStore = useSampleStore()
-    await sampleStore.checkUserIsLoggedIn()
-    if (!sampleStore.isAuthenticated) return { name: 'ena-login' }
 }
 
 export const cmsRoutes = [
@@ -66,7 +59,7 @@ export const cmsRoutes = [
     {
         name: 'publish-biosample',
         path: '/admin/publish-biosample',
-        beforeEnter: [isAuthenticated, isENAAuthenticated],
+        beforeEnter: [isAuthenticated],
         meta: { layout: 'AdminLayout' },
         component: () => import('../pages/cms/ENAUpload.vue')
     },
@@ -83,13 +76,6 @@ export const cmsRoutes = [
         beforeEnter: [isAuthenticated],
         meta: { layout: 'AdminLayout' },
         component: () => import('../pages/cms/SubmittedBiosamples.vue')
-    },
-    {
-        name: 'ena-login',
-        path: '/admin/ena-login',
-        beforeEnter: [isAuthenticated],
-        meta: { layout: 'AdminLayout' },
-        component: () => import('../pages/cms/ENALogin.vue')
     },
     {
         name: 'create-user',
@@ -128,6 +114,13 @@ export const cmsRoutes = [
         props: true,
         beforeEnter: [isAuthenticated, isAdmin],
         component: () => import('../pages/cms/INSDCForm.vue'),
+    },
+    {
+        name: 'organisms-with-users',
+        path: '/admin/organisms-with-users',
+        beforeEnter: [isAuthenticated, isAdmin],
+        meta: { layout: 'AdminLayout' },
+        component: () => import('../pages/cms/OrganismsWithUsers.vue')
     },
     {
         name: 'users',

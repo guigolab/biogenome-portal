@@ -1,10 +1,10 @@
 <template>
     <div class="row justify-space-between align-end">
         <div class="flex">
-            <Header title="Submitted BioSamples" description="List of BioSamples submitted to EBI" />
+            <Header title="My BioSamples" description="List of BioSamples submitted to EBI" />
         </div>
         <div class="flex">
-            <VaButton :to="{ name: 'publish-biosample' }">Submit BioSample</VaButton>
+            <VaButton :to="{ name: 'publish-biosample' }">Create BioSample</VaButton>
         </div>
     </div>
     <div class="row justify-center">
@@ -31,8 +31,9 @@
                     <VaDataTable :loading="isLoading" :items="items"
                         :columns="['scientific_name', 'name', 'accession', 'user', 'view']">
                         <template #cell(accession)="{ rowData }">
-                            <VaChip flat :to="{ name: 'item', params: { model: 'biosamples', id: rowData.accession } }">{{
-                                rowData.accession }}</VaChip>
+                            <VaChip flat :to="{ name: 'item', params: { model: 'biosamples', id: rowData.accession } }">
+                                {{
+                                    rowData.accession }}</VaChip>
                         </template>
                         <template #cell(view)="{ rowData }">
                             <VaChip size="small" @click="handleClick(rowData)">View</VaChip>

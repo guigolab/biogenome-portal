@@ -5,7 +5,7 @@ import { ncbi } from '../http-axios';
 class NCBIService {
     getTaxon(taxonId: string) {
         return ncbi.get(
-            `taxonomy/taxon_suggest/${taxonId}`
+            `taxonomy/taxon/${taxonId}`
         );
     }
 }

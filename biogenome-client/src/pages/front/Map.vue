@@ -8,43 +8,40 @@
         </div>
         <div class="row">
             <div class="flex lg12 md12 sm12 xs12">
-                <VaCard>
-                    <VaCardContent>
-                        <div class="row justify-space-between align-center">
-                            <div class="flex lg6 md6 sm12 xs12">
-                                <TaxonSearch />
+                <div class="row justify-space-between align-center">
+                    <div class="flex lg6 md6 sm12 xs12">
+                        <VaCard>
+                            <TaxonSearch />
+                        </VaCard>
+                    </div>
+                    <div class="flex">
+                        <div class="row align-center">
+                            <div v-if="currentTaxon" class="flex">
+                                <TaxonChip />
                             </div>
                             <div class="flex">
-                                <div class="row align-center">
-                                    <div v-if="currentTaxon" class="flex">
-                                        <TaxonChip />
-                                    </div>
-                                    <div class="flex">
-                                        <VaButtonDropdown :disabled="locations.length === 0"
-                                            :close-on-content-click="false" stick-to-edges label="Report"
-                                            color="textPrimary" preset="primary" left-icon icon="fa-file-arrow-down"
-                                            opened-icon="fa-file-arrow-down">
-                                            <div class="layout va-gutter-1 fluid">
-                                                <div class="row">
-                                                    <div class="flex lg12 md12 sm12 xs12">
-                                                        <VaOptionList v-model="selectedModel" type="radio"
-                                                            :options="models" />
-                                                    </div>
-                                                    <div class="flex lg12 md12 sm12 xs12">
-                                                        <VaButton :loading="isLoading" @click="downloaData" block>
-                                                            Download
-                                                        </VaButton>
-                                                    </div>
-                                                </div>
+                                <VaButtonDropdown :disabled="locations.length === 0" :close-on-content-click="false"
+                                    stick-to-edges label="Report" color="textPrimary" preset="primary" left-icon
+                                    icon="fa-file-arrow-down" opened-icon="fa-file-arrow-down">
+                                    <div class="layout va-gutter-1 fluid">
+                                        <div class="row">
+                                            <div class="flex lg12 md12 sm12 xs12">
+                                                <VaOptionList v-model="selectedModel" type="radio" :options="models" />
                                             </div>
-                                        </VaButtonDropdown>
+                                            <div class="flex lg12 md12 sm12 xs12">
+                                                <VaButton :loading="isLoading" @click="downloaData" block>
+                                                    Download
+                                                </VaButton>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-
+                                </VaButtonDropdown>
                             </div>
                         </div>
-                    </VaCardContent>
-                </VaCard>
+
+                    </div>
+                </div>
+
                 <div class="row">
                     <div class="flex lg12 md12 sm12 xs12">
                         <div class="map-container">
@@ -52,6 +49,7 @@
                         </div>
                     </div>
                 </div>
+
             </div>
         </div>
         <VaModal hide-default-actions close-button v-model="showSamples">

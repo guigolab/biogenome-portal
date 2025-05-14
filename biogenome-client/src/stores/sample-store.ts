@@ -58,31 +58,6 @@ export const useSampleStore = defineStore('sample', {
         resetForm() {
             this.characterics = {}
         },
-        async loginToENA(username: string, password: string) {
-            try {
-                const { data } = await EBIService.loginToENA(username, password)
-                this.toast({ color: 'success', message: 'Log in to ENA successfull' })
-                localStorage.setItem(AUTH_KEY, 'true');
-                this.isAuthenticated = true
-            } catch (error) {
-                const axiosError = error as AxiosError
-                const resp = axiosError.response?.data as any
-                this.toast({ color: 'danger', message: resp.message ? resp.message : resp as string })
-                this.isAuthenticated = false
-                localStorage.setItem(AUTH_KEY, 'false')
-            }
-        },
-        async checkUserIsLoggedIn() {
-            if (!this.isAuthenticated) return
-            try {
-                const { data } = await EBIService.checkENACookie()
-                localStorage.setItem(AUTH_KEY, 'true');
-                this.isAuthenticated = true
-            } catch (error) {
-                this.isAuthenticated = false
-                localStorage.setItem(AUTH_KEY, 'false');
-            }
-        },
         mapFormToEBIPayload(checklistFields: { name: string, unit?: string }[]) {
             //convert form to biosamples payload
             return {

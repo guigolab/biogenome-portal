@@ -3,6 +3,9 @@ from mongoengine.queryset.visitor import Q
 def taxonomic_query(filter):
     return (Q(taxid__iexact=filter) | Q(taxid__icontains=filter)) | (Q(scientific_name__iexact=filter) | Q(scientific_name__icontains=filter))
 
+def user_query(filter):
+    return (Q(name__iexact=filter) | Q(name__icontains=filter)) | (Q(email__iexact=filter) | Q(email__icontains=filter))
+
 def taxon_query(filter):
     return (Q(taxid__iexact=filter) | Q(taxid__icontains=filter)) | (Q(name__iexact=filter) | Q(name__icontains=filter))
 
@@ -29,3 +32,4 @@ def sub_project_query(filter):
 
 def biosample_submission_query(filter):
     return taxonomic_query(filter) | (Q(name__iexact=filter) | Q(name__icontains=filter))
+

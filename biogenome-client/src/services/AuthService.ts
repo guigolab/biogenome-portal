@@ -155,7 +155,9 @@ class AuthService {
   getUser(name: string) {
     return this.submission.get(`/users/${name}`);
   }
-
+  // hanldeOrganismToUser(name: string, taxid: string, operation: 'add' | 'remove') {
+  //   return this.submission.patch(`/users/${name}/organisms/${taxid}`, { params: { operation } })
+  // }
   updateUser(name: string, data: FormData) {
     return this.submission.put(`/users/${name}`, data);
   }

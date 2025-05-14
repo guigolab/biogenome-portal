@@ -28,24 +28,10 @@
                             </VaSidebarItemTitle>
                         </VaSidebarItemContent>
                     </VaSidebarItem>
-                    <VaSidebarItem :to="{ name: 'goat-upload' }">
-                        <VaSidebarItemContent>
-                            <VaSidebarItemTitle>
-                                Import GoaT Report
-                            </VaSidebarItemTitle>
-                        </VaSidebarItemContent>
-                    </VaSidebarItem>
-                    <VaSidebarItem :to="{ name: 'spreadsheet-upload' }">
-                        <VaSidebarItemContent>
-                            <VaSidebarItemTitle>
-                                Import Sample Spreadsheet
-                            </VaSidebarItemTitle>
-                        </VaSidebarItemContent>
-                    </VaSidebarItem>
                     <VaSidebarItem v-if="hasENATemplate" :to="{ name: 'publish-biosample' }">
                         <VaSidebarItemContent>
                             <VaSidebarItemTitle>
-                                Publish Sample to EBI
+                                Create New Biosample
                             </VaSidebarItemTitle>
                         </VaSidebarItemContent>
                     </VaSidebarItem>
@@ -65,7 +51,6 @@
                     <VaSidebarItem>
                         <VaSidebarItemContent>
                             <VaIcon name="fa-database" />
-
                             <VaSidebarItemTitle>Data</VaSidebarItemTitle>
                             <VaSpacer />
                             <VaIcon :name="isCollapsed ? 'va-arrow-up' : 'va-arrow-down'" />
@@ -76,7 +61,7 @@
                     <VaSidebarItem v-if="hasENATemplate" :to="{ name: 'submitted-biosamples' }">
                         <VaSidebarItemContent>
                             <VaSidebarItemTitle>
-                                BioSamples Submitted to EBI
+                                {{ isAdmin ? 'Submitted Biosamples' : 'My BioSamples' }}
                             </VaSidebarItemTitle>
                         </VaSidebarItemContent>
                     </VaSidebarItem>
@@ -84,7 +69,7 @@
                         :to="{ name: 'cms-items', params: { model: stat.key } }">
                         <VaSidebarItemContent>
                             <VaSidebarItemTitle>
-                                {{ stat.key.split('_').join(' ') }}
+                                <span v-if="!isAdmin">My</span> {{ stat.key.split('_').join(' ') }}
                             </VaSidebarItemTitle>
                         </VaSidebarItemContent>
                     </VaSidebarItem>
@@ -92,6 +77,13 @@
                         <VaSidebarItemContent>
                             <VaSidebarItemTitle>
                                 Organism Deletion Requests
+                            </VaSidebarItemTitle>
+                        </VaSidebarItemContent>
+                    </VaSidebarItem>
+                    <VaSidebarItem v-if="isAdmin" :to="{ name: 'organisms-with-users' }">
+                        <VaSidebarItemContent>
+                            <VaSidebarItemTitle>
+                                Organisms & Users
                             </VaSidebarItemTitle>
                         </VaSidebarItemContent>
                     </VaSidebarItem>
@@ -146,6 +138,8 @@ async function getLookupData() {
 const stats = computed(() => isAdmin.value ? statsStore.portalStats : statsStore.userStats)
 
 const adminActions = computed(() => isAdmin.value ? [
+    { text: 'Import GoaT Report', value: { name: 'goat-upload' } },
+    { text: 'Import Samples from Spreadsheet', value: { name: 'spreadsheet-upload' } },
     { text: 'Import from INSDC', value: { name: 'insdc-form' } },
     { text: 'Create Annotation', value: { name: 'create-annotation' } },
     { text: 'Create User', value: { name: 'create-user' } },

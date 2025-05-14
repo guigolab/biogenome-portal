@@ -1,95 +1,99 @@
 <template>
   <Header title="Organism form" :description="description" />
   <VaInnerLoading :loading="isLoading">
-    <div class="row">
-      <div class="flex lg12 md12 sm12 xs12">
-        <VaCard>
-          <VaCardContent>
-            <h2 class="va-h6">
-              Organism Selection
-            </h2>
-            <p class="va-text-secondary">
-              Search in the NCBI database and select one organism
-            </p>
-          </VaCardContent>
-          <VaCardContent>
-            <OrganismSelection is-organism-creation v-if="!taxid" @selected="handleSelection" />
-          </VaCardContent>
-        </VaCard>
-      </div>
-    </div>
-    <div v-if="organismStore.organismForm.taxid" class="row">
-      <div class="flex lg12 md12 sm12 xs12">
-        <div class="row row-equal">
-          <div class="flex lg12 md12 sm12 xs12">
-            <ImagesInput />
-          </div>
-          <div class="flex lg12 md12 ms12 xs12">
-            <VaCard>
-              <VaCardContent>
-                <h2 class="va-h6">
-                  Sub Project
-                </h2>
-                <p class="va-text-secondary">
-                  Name of the PI or Entity responsible of the organism
-                </p>
-              </VaCardContent>
-              <VaCardContent>
-                <div class="row">
-                  <div class="flex lg12 md12 sm12 xs12">
-                    <VaInput v-model="organismStore.organismForm.sub_project" />
-                  </div>
-                </div>
-              </VaCardContent>
-            </VaCard>
-          </div>
-          <div class="flex lg12 md12 ms12 xs12">
-            <VaCard>
-              <VaCardContent>
-                <h2 class="va-h6">
-                  Sequencing Type
-                </h2>
-                <p class="va-text-secondary">
-                  Select the sequencing type
-                </p>
-              </VaCardContent>
-              <VaCardContent>
-                <div class="row">
-                  <div class="flex lg12 md12 sm12 xs12">
-                    <VaSelect v-model="organismStore.organismForm.sequencing_type" multiple :options="sequencingOptions"/>
-                  </div>
-                </div>
-              </VaCardContent>
-            </VaCard>
-          </div>
-          <div class="flex lg12 md12 sm12 xs12">
-            <MetadataInput />
-          </div>
-          <div v-if="hasGoat" class="flex lg12 md12 sm12 xs12">
-            <GoaTInput />
-          </div>
-          <div class="flex lg12 md12 sm12 xs12">
-            <PublicationsInput />
-          </div>
-          <div class="flex lg12 md12 sm12 xs12">
-            <LocalNamesInput />
-          </div>
-        </div>
-        <div class="row justify-space-between">
-          <div class="flex">
-            <VaButton @click="resetForm" color="danger">Reset</VaButton>
-          </div>
-          <div class="flex">
-            <VaButton @click="handleSubmit">Submit</VaButton>
-          </div>
+    <VaForm ref="organismForm">
+      <div class="row">
+        <div class="flex lg12 md12 sm12 xs12">
+          <VaCard>
+            <VaCardContent>
+              <h2 class="va-h6">
+                Organism Selection
+              </h2>
+              <p class="va-text-secondary">
+                Search in the NCBI database and select one organism
+              </p>
+            </VaCardContent>
+            <VaCardContent>
+              <OrganismSelection is-organism-creation v-if="!taxid" @selected="handleSelection" />
+            </VaCardContent>
+          </VaCard>
         </div>
       </div>
-    </div>
+      <div v-if="organismStore.organismForm.taxid" class="row">
+        <div class="flex lg12 md12 sm12 xs12">
+          <div class="row row-equal">
+            <div class="flex lg12 md12 sm12 xs12">
+              <ImagesInput />
+            </div>
+            <div class="flex lg12 md12 ms12 xs12">
+              <VaCard>
+                <VaCardContent>
+                  <h2 class="va-h6">
+                    Sub Project, PI or Entity
+                  </h2>
+                  <p class="va-text-secondary">
+                    Name of the PI or Entity responsible of the organism
+                  </p>
+                </VaCardContent>
+                <VaCardContent>
+                  <div class="row">
+                    <div class="flex lg12 md12 sm12 xs12">
+                      <VaInput :rules="[(v: string) => Boolean(v) || 'Field is mandatory']"
+                        v-model="organismStore.organismForm.sub_project" />
+                    </div>
+                  </div>
+                </VaCardContent>
+              </VaCard>
+            </div>
+            <div class="flex lg12 md12 ms12 xs12">
+              <VaCard>
+                <VaCardContent>
+                  <h2 class="va-h6">
+                    Sequencing Type
+                  </h2>
+                  <p class="va-text-secondary">
+                    Select the sequencing type
+                  </p>
+                </VaCardContent>
+                <VaCardContent>
+                  <div class="row">
+                    <div class="flex lg12 md12 sm12 xs12">
+                      <VaSelect v-model="organismStore.organismForm.sequencing_type" multiple
+                        :options="sequencingOptions" />
+                    </div>
+                  </div>
+                </VaCardContent>
+              </VaCard>
+            </div>
+            <div v-if="hasGoat" class="flex lg12 md12 sm12 xs12">
+              <GoaTInput />
+            </div>
+            <div class="flex lg12 md12 sm12 xs12">
+              <MetadataInput />
+            </div>
+            <div class="flex lg12 md12 sm12 xs12">
+              <PublicationsInput />
+            </div>
+            <div class="flex lg12 md12 sm12 xs12">
+              <LocalNamesInput />
+            </div>
+          </div>
+          <div class="row justify-space-between">
+            <div class="flex">
+              <VaButton @click="resetForm" color="danger">Reset</VaButton>
+            </div>
+            <div class="flex">
+              <VaButton @click="handleSubmit">Submit</VaButton>
+            </div>
+          </div>
+        </div>
+      </div>
+    </VaForm>
   </VaInnerLoading>
 </template>
 <script setup lang="ts">
 import { computed, inject, onMounted, ref, watch } from 'vue'
-import { useToast } from 'vuestic-ui'
+import { useForm, useToast } from 'vuestic-ui'
 import { useOrganismStore } from '../../stores/organism-store'
 import ImagesInput from '../../components/cms/ImagesInput.vue'
 import GoaTInput from '../../components/cms/GoaTInput.vue'
@@ -103,6 +107,7 @@ import { AxiosError } from 'axios'
 import Header from '../../components/cms/Header.vue'
 import ItemService from '../../services/CommonService'
 import OrganismSelection from '../../components/cms/OrganismSelection.vue'
+import { color } from 'd3'
 
 
 const sequencingOptions = ['ONT (Long Reads)', 'PACBIO (Long Reads)', 'Illumina (Short Reads)', 'RNAseq (Transcriptomics)', 'Isoseq (Transcriptomics)', 'HIC (Scaffolding)', 'OmniC (Scaffolding)', 'Other']
@@ -111,6 +116,8 @@ const isLoading = ref(false)
 const props = defineProps<{
   taxid?: string
 }>()
+
+const { validate } = useForm('organismForm')
 
 const description = computed(() => props.taxid && organismStore.organismForm.scientific_name ? `Edit ${organismStore.organismForm.scientific_name}` : 'Create a new organism, start by typing the scientific name or the NCBI taxonomic identifier')
 
@@ -164,6 +171,10 @@ onMounted(async () => {
 })
 
 async function handleSubmit() {
+  if (!validate()) {
+    init({ message: 'Fill the required fields', color: 'danger' })
+    return
+  }
   try {
     isLoading.value = true
     const { metadataList, images, publications, vernacularNames } = organismStore

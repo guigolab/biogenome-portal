@@ -9,9 +9,7 @@
         <div style="position: relative;" class="row justify-center">
             <div style="position: absolute;width: max(300px, 50%)" class="flex">
                 <VaCard>
-                    <VaCardContent>
-                        <TaxonSearch />
-                    </VaCardContent>
+                    <TaxonSearch />
                 </VaCard>
             </div>
         </div>
@@ -50,7 +48,7 @@ async function setCurrentTaxon(taxon: TaxonNode) {
 
 /* Tree container, initially hidden */
 .tree-container {
-    flex: 0 0 100%;
+    flex: 0 0 66%;
     /* Occupies 50% of the width */
     overflow: hidden;
     margin: auto;

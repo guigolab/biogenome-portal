@@ -1,7 +1,7 @@
 <template>
     <div class="row">
         <div class="flex lg12 md12 sm12 xs12">
-            <VaCard>
+            <VaCard outlined square>
                 <VaCardContent>
                     <h3 class="va-h5">
                         Coordinates Validation

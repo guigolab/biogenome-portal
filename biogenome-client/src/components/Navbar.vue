@@ -1,5 +1,5 @@
 <template>
-  <VaNavbar shadowed bordered>
+  <VaNavbar>
     <template #left>
       <VaNavbarItem v-if="appLogo" class="image-wrapper">
         <a v-if="externalLink" style="height: 100%;width: 100%;" :href="externalLink" target="_blank">
@@ -16,7 +16,7 @@
         </span>
       </VaNavbarItem>
     </template>
-    <template #right>
+    <template #center>
       <VaNavbarItem>
         <VaButton :to="{ name: 'home' }" preset="secondary" icon="fa-house" color="textPrimary">{{ !hideIcon ?
           t('nav.home') : ''
@@ -77,9 +77,13 @@
             </a>
           </VaMenuItem>
         </VaMenu>
+      </VaNavbarItem>
+    </template>
+    <template #right>
+      <VaNavbarItem>
         <VaButton :to="{ name: 'admin' }" preset="secondary" icon="fa-user" color="textPrimary"
           v-if="config.general.cms">
-          {{ hideIcon ? '' : 'CMS Area' }}
+          {{ btnLabel }}
         </VaButton>
         <VaMenu>
           <template #anchor>
@@ -91,6 +95,7 @@
           </VaMenuItem>
         </VaMenu>
       </VaNavbarItem>
+
     </template>
   </VaNavbar>
 </template>
@@ -104,6 +109,7 @@ import { useBreakpoint, useColors, useToast } from 'vuestic-ui';
 import { useI18n } from 'vue-i18n';
 import GoaTService from '../services/GoaTService';
 import { useGlobalStore } from '../stores/global-store';
+import TaxonSearch from './TaxonSearch.vue';
 
 
 const { colors } = useColors()
@@ -116,6 +122,7 @@ const generalConfigs = ['general', 'ui']
 
 const { init } = useToast()
 
+const btnLabel = computed(() => globalStore.userName ? globalStore.userName : 'Login')
 const appLogo = config.general.logo
 const externalLink = config.general.externalLink
 const hasGoat = config.general.goat

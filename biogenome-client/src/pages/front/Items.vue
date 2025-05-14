@@ -10,17 +10,17 @@
         <div class="row">
             <div class="flex lg12 md12 sm12 xs12">
                 <VaCard>
-                    <VaCardContent>
-                        <TaxonSearch />
-                    </VaCardContent>
+                    <TaxonSearch />
+
                 </VaCard>
+
             </div>
         </div>
         <div class="row row-equal">
-            <div class="flex lg4 md12 sm12 xs12">
+            <div class="flex lg3 md4 sm12 xs12">
                 <ItemsFilterCard :model="model" />
             </div>
-            <div class="flex lg8 md12 sm12 xs12">
+            <div class="flex lg9 md8 sm12 xs12">
                 <!-- <div class="row">
                     <div v-if="mapStore.showCountriesMap" class="flex lg12 md12 sm12 xs12"> -->
                 <div v-if="mapStore.showCountriesMap && model === 'organisms'" class="row">

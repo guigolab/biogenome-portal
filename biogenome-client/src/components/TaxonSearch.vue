@@ -24,7 +24,7 @@ import TaxonService from '../services/TaxonService';
 import { useTaxonomyStore } from '../stores/taxonomy-store';
 import { useI18n } from 'vue-i18n';
 
-const {t} = useI18n()
+const { t } = useI18n()
 const taxons = ref<TaxonNode[]>([])
 const filter = ref()
 const isLoading = ref(false)
@@ -67,7 +67,7 @@ async function updateTaxon(taxon: TaxonNode) {
 </script>
 <style scoped>
 .taxon-input-width {
-    width: 100% !important;
+    min-width: 300px;
     overflow: hidden;
 }
 </style>

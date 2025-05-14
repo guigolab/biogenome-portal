@@ -1,163 +1,112 @@
 <template>
-  <div>
-    <div style="padding-bottom: 5rem;padding-top: 5rem;" class="row align-center">
-      <div class="flex lg12 md12 sm12 xs12">
-        <div class="row justify-center align-center">
-          <div style="text-align: center;" class="flex lg12 md12 sm12 xs12">
-            <Header :title="title" :description="description" description-class="va-text-secondary" title-class="va-h1">
-            </Header>
-          </div>
-        </div>
-        <div class="row justify-center">
-          <div class="flex">
-            <VaButton :to="{ name: 'tree' }" color="secondary">
-              {{ t('home.taxonomy.exploreBtn') }}
-            </VaButton>
-          </div>
-          <div class="flex" v-if="rootTaxon">
-            <VaButton @click="updateTaxon(rootTaxon)">
-              {{ t('home.taxonomy.viewBtn') }} {{ rootTaxon.name }}
-            </VaButton>
-          </div>
+  <div class="row justify-center">
+    <div class="flex lg10 md12 sm12 xs12">
+      <div class="row justify-center align-center">
+        <div style="text-align: center;" class="flex lg12 md12 sm12 xs12">
+          <Header :title="title" :description="description" description-class="va-text-secondary" title-class="va-h1">
+          </Header>
         </div>
       </div>
-    </div>
-    <VaDivider />
-    <TaxonRanks />
-    <div class="row justify-center">
-      <div style="text-align: center;" class="flex">
-        <h2 class="va-h2">
-          {{ t('home.taxonomy.title') }}
-        </h2>
-        <p class="va-text-secondary">{{ t('home.taxonomy.description') }}</p>
-      </div>
-    </div>
-    <div class="row justify-center section-mb">
-      <div class="flex lg12 md12 sm12 xs12">
-        <VaCard>
-          <VaCardContent>
+      <div class="row justify-center">
+        <div class="flex lg6 md6 sm12 xs12">
+          <VaCard>
             <TaxonSearch />
-          </VaCardContent>
-        </VaCard>
-      </div>
-    </div>
-    <div class="row align-center justify-center">
-      <div class="flex">
-        <h2 style="text-align: center;" class="va-h2">
-          {{ t('home.data.title') }}
-        </h2>
-      </div>
-      <div v-if="taxonomyStore.currentTaxon" class="flex">
-        <TaxonChip />
-      </div>
-    </div>
-    <ModelCounts class="section-mb" :counts="stats" :row-class="'justify-center'"></ModelCounts>
-    <div v-if="hasGoat" class="row section-mb">
-      <div class="flex lg12 md12 sm12 xs12">
-        <div class="row align-center justify-space-between">
-          <div class="flex">
-            <h2 class="va-h2">
-              {{ t('home.goat.title') }}
-            </h2>
-          </div>
-          <div v-if="taxonomyStore.currentTaxon" class="flex">
-            <TaxonChip />
-          </div>
-          <div class="flex">
-            <VaButton @click="downloadGoatReport" icon="fa-file-arrow-down">{{ t('buttons.goat') }}</VaButton>
-          </div>
-        </div>
-        <div class="row">
-          <div v-for="chart, index in goatCharts" :key="`${index}-${chart.model}-${chart.field}`" :class="chart.class">
-            <Chart :chart="(chart as InfoBlock)" :index="index" :ignore-query="false" />
-          </div>
+          </VaCard>
         </div>
       </div>
-    </div>
-    <div v-if="insdcStatus" class="row section-mb">
-      <div class="flex lg12 md12 sm12 xs12">
-        <div class="row align-center justify-space-between">
-          <div class="flex">
-            <h2 style="text-align: center;" class="va-h2">
-              {{ t('home.insdc.title') }}
-            </h2>
-          </div>
-          <div v-if="taxonomyStore.currentTaxon" class="flex">
-            <TaxonChip />
-          </div>
+      <div class="row justify-center section-mb">
+        <div class="flex">
+          <VaButton :to="{ name: 'tree' }" color="secondary">
+            {{ t('home.taxonomy.exploreBtn') }}
+          </VaButton>
         </div>
-        <div class="row">
-          <div class="flex lg12 md12 sm12 xs12">
-            <Chart :ignore-query="false"
-              :chart="{ model: 'organisms', field: 'insdc_status', type: 'bar', class: '' }" />
-          </div>
+        <div class="flex" v-if="rootTaxon">
+          <VaButton @click="updateTaxon(rootTaxon)">
+            {{ t('home.taxonomy.viewBtn') }} {{ rootTaxon.name }}
+          </VaButton>
         </div>
       </div>
-    </div>
-
-    <div class="row justify-center">
-      <div class="flex">
-        <h2 style="text-align: center;" class="va-h2">
-          {{ t('home.features.title') }}
-        </h2>
+      <TaxonRanks />
+      <div class="row align-center justify-center">
+        <div class="flex">
+          <h2 style="text-align: center;" class="va-h3">
+            {{ t('home.data.title') }}
+          </h2>
+        </div>
+        <div v-if="taxonomyStore.currentTaxon" class="flex">
+          <TaxonChip />
+        </div>
       </div>
-    </div>
-    <div class="row row-equal justify-center">
-      <div class="flex lg6 md6 sm12 xs12">
-        <VaCard>
-          <VaCardContent>
-            <div class="row justify-space-between align-center">
-              <div class="flex">
-                <h3 class="va-h3">{{ t('tree.title') }}</h3>
-
-              </div>
-              <div class="flex">
-                <VaButton color="textPrimary" :to="{ name: 'tree' }">{{ t('buttons.view') }}</VaButton>
-
-              </div>
+      <ModelCounts class="section-mb" :counts="stats" :row-class="'justify-center'"></ModelCounts>
+      <div v-if="hasGoat || insdcStatus" class="row justify-center">
+        <div v-if="hasGoat" class="flex lg8 md12 sm12 xs12 section-mb">
+          <div class="row align-center justify-center">
+            <div class="flex">
+              <h2 class="va-h3">
+                {{ t('home.goat.title') }}
+              </h2>
             </div>
-          </VaCardContent>
-          <VaDivider style="margin: 0;" />
-          <VaCardContent>
-            <p class="va-text-secondary">{{ t('tree.description') }}</p>
-          </VaCardContent>
-        </VaCard>
-      </div>
-      <div class="flex lg6 md6 sm12 xs12">
-        <VaCard>
-          <VaCardContent>
-            <div class="row justify-space-between align-center">
-              <div class="flex">
-                <h3 class="va-h3">{{ t('map.title') }}</h3>
-              </div>
-              <div class="flex">
-                <VaButton color="textPrimary" :to="{ name: 'map' }">{{ t('buttons.view') }}</VaButton>
-              </div>
+            <div v-if="taxonomyStore.currentTaxon" class="flex">
+              <TaxonChip />
             </div>
-          </VaCardContent>
-          <VaDivider style="margin: 0;" />
-          <VaCardContent>
-            <p class="va-text-secondary">{{ t('map.description') }}</p>
-          </VaCardContent>
-        </VaCard>
-      </div>
-      <div v-if="settings.models.assemblies" class="flex lg6 md6 sm12 xs12">
-        <VaCard>
-          <VaCardContent>
-            <div class="row justify-space-between align-center">
-              <div class="flex">
-                <h3 class="va-h3">{{ t('genomeBrowser.title') }}</h3>
-              </div>
-              <div class="flex">
-                <VaButton color="textPrimary" :to="{ name: 'jbrowse' }">{{ t('buttons.view') }}</VaButton>
-              </div>
+            <div class="flex">
+              <VaButton @click="downloadGoatReport" icon="fa-file">{{ t('buttons.goat') }}</VaButton>
             </div>
-          </VaCardContent>
-          <VaDivider style="margin: 0;" />
-          <VaCardContent>
-            <p class="va-text-secondary">{{ t('genomeBrowser.assembly.modelDescription') }}</p>
-          </VaCardContent>
-        </VaCard>
+          </div>
+          <div class="row row-equal">
+            <div v-for="chart, index in goatCharts" :key="`${index}-${chart.model}-${chart.field}`"
+              :class="chart.class">
+              <Chart :chart="(chart as InfoBlock)" :index="index" :ignore-query="false" />
+            </div>
+          </div>
+        </div>
+        <div v-if="insdcStatus" class="flex lg8 md12 sm12 xs12 section-mb">
+          <div class="row align-center justify-center">
+            <div class="flex">
+              <h2 style="text-align: center;" class="va-h3">
+                {{ t('home.insdc.title') }}
+              </h2>
+            </div>
+            <div v-if="taxonomyStore.currentTaxon" class="flex">
+              <TaxonChip />
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="flex lg12 md12 sm12 xs12">
+              <Chart :ignore-query="false"
+                :chart="{ model: 'organisms', field: 'insdc_status', type: 'bar', class: '' }" />
+            </div>
+          </div>
+
+        </div>
+      </div>
+      <div class="row justify-center">
+        <div class="flex">
+          <h2 style="text-align: center;" class="va-h3">
+            {{ t('home.features.title') }}
+          </h2>
+        </div>
+      </div>
+      <div class="row row-equal justify-center">
+        <div v-for="feat in features" class="flex lg4 md6 sm12 xs12">
+          <VaCard>
+            <VaCardContent>
+              <div class="row justify-space-between align-center">
+                <div class="flex">
+                  <h3 class="va-h5">{{ t(feat.title) }}</h3>
+                </div>
+                <div class="flex">
+                  <VaButton color="textPrimary" :to="feat.route">{{ t('buttons.view') }}</VaButton>
+                </div>
+              </div>
+            </VaCardContent>
+            <VaDivider style="margin: 0;" />
+            <VaCardContent>
+              <p class="va-text-secondary">{{ t(feat.description) }}</p>
+            </VaCardContent>
+          </VaCard>
+        </div>
       </div>
     </div>
   </div>
@@ -204,6 +153,27 @@ const goatCharts = [
     "type": "pie"
   }
 ]
+
+const defaultFeatures = [
+  {
+    title: 'tree.title',
+    description: 'tree.description',
+    route: { name: 'tree' },
+  },
+  {
+    title: 'map.title',
+    description: 'map.description',
+    route: { name: 'map' },
+  }
+]
+
+const jbrowseFeature = {
+  title: 'genomeBrowser.title',
+  route: { name: 'jbrowse' },
+  description: 'genomeBrowser.assembly.modelDescription'
+}
+
+const features = computed(() => settings.models.assemblies ? [jbrowseFeature, ...defaultFeatures] : [...defaultFeatures])
 
 const currentTaxon = computed(() => taxonomyStore.currentTaxon)
 const rootNode = import.meta.env.VITE_ROOT_NODE ?

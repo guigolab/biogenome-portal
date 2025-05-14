@@ -35,7 +35,6 @@ def import_biosamples_from_project_names():
 
             if not fetched_biosamples:
                 break
-
             parsed_biosamples = [biosample_parser.parse_biosample_from_ebi_data(biosample) for biosample in fetched_biosamples]
             existing_accession_list = BioSample.objects(accession__in=[b.accession for b in parsed_biosamples]).scalar('accession')
             new_biosamples = [parsed_b for parsed_b in parsed_biosamples if parsed_b.accession not in existing_accession_list]

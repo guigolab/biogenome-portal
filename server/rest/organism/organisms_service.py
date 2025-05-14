@@ -106,13 +106,154 @@ def get_unassigned_organisms(format='json',filter=None, limit=20, offset=0):
     users_taxids = BioGenomeUser.objects().distinct('species')
     offset = int(offset)
     limit = int(limit)
-    fields = ['scientific_name', 'taxid', "goat_status","target_list_status"]
+    fields = [
+        'scientific_name', 'taxid', 'sub_project',
+        'sequencing_type', 'insdc_status', 'goat_status', 'target_list_status'
+    ]
     organisms = Organism.objects(taxid__not__in=users_taxids)
     if filter:
         organisms = organisms.filter(data_helper.query_visitors.organism_query(filter))
     return data_helper.generate_response(format, fields, organisms, limit, offset)
-    
 
+def get_assigned_organisms(args):
+    query = {**args}
+    fields = [
+        'scientific_name', 'taxid', 'assigned_users', 'sub_project',
+        'sequencing_type', 'insdc_status', 'goat_status', 'target_list_status'
+    ]
+    output_format = query.pop('format', 'json')
+    user_filter = query.pop('name__in', None)
+    organism_filter = query.pop('filter', None)
+
+    selected_users = user_filter.split(',') if user_filter else []
+    users = BioGenomeUser.objects.only('name', 'species')
+
+    organism_to_users = {}
+    taxids = [
+        species_id for user in users if user.name in selected_users 
+        for species_id in user.species
+    ]
+    for user in users:
+        for species_id in user.species:
+            organism_to_users.setdefault(str(species_id), []).append(user.name)
+
+    organism_ids = taxids if taxids else list(organism_to_users.keys())
+    if organism_ids:
+        query['taxid__in'] = organism_ids
+
+    if organism_filter:
+        organism_filter = data_helper.query_visitors.organism_query(organism_filter)
+
+    # Apply pagination and query filters
+    limit, offset = data_helper.get_pagination(query)
+    query, q = data_helper.create_query(query, organism_filter)
+    # Query the organisms
+    organisms = Organism.objects(**query)
+
+    if q:
+        organisms = organisms.filter(q)
+
+    total = organisms.count()
+
+    # Step 5: Build Response Data
+    response_data = [
+        {
+            "assigned_users": organism_to_users.get(str(organism.taxid), []),
+            **organism.to_mongo().to_dict()
+        }
+        for organism in (
+            organisms if output_format in ['tsv', 'jsonl'] 
+            else organisms.skip(offset).limit(limit)
+        )
+    ]
+
+    # Handle different output formats
+    if output_format == 'tsv':
+        return data_helper.create_tsv(response_data, fields).encode('utf-8'), "text/tab-separated-values"
+    elif output_format == 'jsonl':
+        return data_helper.generate_jsonlines(response_data), "application/jsonlines"
+
+    # Return JSON response with pagination
+    response = {
+        "total": total,
+        "data": response_data
+    }
+    return data_helper.dump_json(response), "application/json"
+
+
+def get_organisms_with_user(args):
+    # Build the initial query and retrieve format and filters
+    query = {**args}
+    fields = [
+        'scientific_name', 'taxid', 'users', 'sub_project',
+        'sequencing_type', 'insdc_status', 'goat_status', 'target_list_status'
+    ]
+    
+    # Avoid overwriting built-in 'format'
+    output_format = query.pop('format', 'json')
+    user_filter = query.pop('user__icontains', None)
+    organism_filter = query.pop('filter__icontains', None)
+
+    # Fetch users and build species-to-user mapping
+    species_to_users = {}
+    if user_filter:
+        users = BioGenomeUser.objects(data_helper.query_visitors.user_query(user_filter)).scalar('name', 'species')
+        species_ids = {str(species) for user in users for species in user.species}
+    else:
+        users = BioGenomeUser.scalar.only('name', 'species')
+        for user in users:
+            print(user)
+            for species in user.species:
+                species_str = str(species)
+                if species_str not in species_to_users:
+                    species_to_users[species_str] = []
+                species_to_users[species_str].append(user.name)
+
+    print(species_to_users)
+    # Apply organism filters if specified
+    if organism_filter:
+        organism_filter = data_helper.query_visitors.organism_query(organism_filter)
+
+    # Apply pagination and query filters
+    limit, offset = data_helper.get_pagination(query)
+    query, q = data_helper.create_query(query, organism_filter)
+
+    # Query the organisms
+    organisms = Organism.objects(**query)
+    if q:
+        organisms = organisms.filter(q)
+    if user_filter:
+        organisms = organisms.filter(taxid__in=species_ids)
+
+    # Cache count to avoid redundant database hits
+    total_organisms = organisms.count()
+    print(users)
+    # Build species data
+    if output_format in ['tsv', 'jsonl']:
+        species_data = [
+            {"assigned_users": [user.name for user in users if str(organism.taxid) in user.species], 
+             **organism.to_mongo().to_dict()}
+            for organism in organisms
+        ]
+    else:
+        species_data = [
+            {"assigned_users": species_to_users.get(str(organism.taxid), []), 
+             **organism.to_mongo().to_dict()}
+            for organism in organisms.skip(offset).limit(limit)
+        ]
+
+    # Handle different output formats
+    if output_format == 'tsv':
+        return data_helper.create_tsv(species_data, fields).encode('utf-8'), "text/tab-separated-values"
+    elif output_format == 'jsonl':
+        return data_helper.generate_jsonlines(species_data), "application/jsonlines"
+
+    # Return JSON response with pagination
+    response = {
+        "total": total_organisms,
+        "data": species_data
+    }
+    return data_helper.dump_json(response), "application/json"
 def create_organism_to_delete(taxid):
     organism = get_organism(taxid)
     user = user_helper.get_current_user()

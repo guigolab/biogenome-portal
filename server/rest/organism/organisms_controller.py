@@ -54,9 +54,18 @@ class OrganismLineageApi(Resource):
 		return Response(json.dumps(tree),mimetype="application/json", status=200)
 
 class UnassignedOrganismsApi(Resource):
+	@jwt_required()
+	@admin.admin_required()
 	def get(self):
 		json, mimetype = organisms_service.get_unassigned_organisms(**request.args)
 		return Response(json, mimetype=mimetype, status=200)
+
+class OrganismsWithUser(Resource):
+	@jwt_required()
+	@admin.admin_required()
+	def get(self):
+		resp, mimetype = organisms_service.get_assigned_organisms(request.args)
+		return Response(resp, mimetype=mimetype, status=200)
 
 class OrganismToDeleteApi(Resource):
 

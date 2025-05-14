@@ -9,7 +9,7 @@ import AuthService from '../services/AuthService'
 export const useStatsStore = defineStore('stats', {
     state: () => {
         return {
-            portalStats: [] as { key: DataModels , count: number }[],
+            portalStats: [] as { key: DataModels, count: number }[],
             currentStats: [] as { key: DataModels, count: number }[],
             userStats: [] as { key: DataModels, count: number }[],
             isLoading: true,
@@ -55,7 +55,7 @@ export const useStatsStore = defineStore('stats', {
                 this.isLoading = true
 
                 const { data } = await AuthService.getUserRelatedData(name)
-                const mappedStats = Object.entries(data as Record<DataModels, number>).map(([k, v]) => {
+                const mappedStats = Object.entries(data as Record<DataModels, number>).filter(([k, v]) => Boolean(v)).map(([k, v]) => {
                     return { key: k as DataModels, count: v }
                 })
                 this.userStats = [...mappedStats]
@@ -70,7 +70,7 @@ export const useStatsStore = defineStore('stats', {
         resetStore() {
             this.portalStats = []
             this.currentStats = []
-            this.userStats =  []
+            this.userStats = []
         }
     },
 })

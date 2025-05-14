@@ -1,48 +1,74 @@
 <template>
     <div class="row align-center justify-center">
         <div style="text-align: center;" class="flex">
-            <h2 class="va-h2">{{ t('home.targetRanks.title') }}</h2>
-            <p class="va-text-secondary"> {{ t('home.targetRanks.description') }} </p>
+            <h2 class="va-h3">{{ t('home.targetRanks.title') }}</h2>
         </div>
     </div>
-    <div style="margin-bottom: 3rem;" class="row">
-        <div class="flex lg12 md12 sm12 xs12 va-text-capitalize">
-            <VaTabs v-model="currentTab" @update:model-value="handleRankSelection" vertical grow color="textPrimary">
-                <template #tabs>
-                    <VaTab v-for="tab in mappedRanks" :key="tab.rank" :name="tab.rank">
-                        {{ tab.rank }}
-                        <span style="margin-left: 3px;">
-                            ({{ tab.value }})
-                        </span>
-                    </VaTab>
-                </template>
-                <VaCard>
-                    <VaInnerLoading :loading="loading">
-                        <VaCardContent>
-                            <h3 class="va-h4">{{ currentTab }}</h3>
-                        </VaCardContent>
-                        <VaDivider style="margin: 0;" />
-                        <VaCardContent>
-                            <VaDataTable height="400px" hide-default-header hoverable clickable @row:click="handleClick"
-                                sticky-header :columns="['name']" :items="taxons">
-                                <template #cell(name)="{ rowData }">
-                                    {{ rowData.name }} <VaChip v-if="rowData.leaves" color="textPrimary" flat>{{
-                                        rowData.leaves }}</VaChip>
-                                </template>
-                            </VaDataTable>
-                        </VaCardContent>
-                        <VaCardContent>
-                            <div class="row">
-                                <div class="flex">
-                                    <VaPagination color="textPrimary" v-model="offset" :page-size="pagination.limit"
-                                        :total="total" :visible-pages="3" buttons-preset="primary" rounded gapped
-                                        @update:model-value="handlePagination" />
+    <div class="row justify-center">
+        <div class="flex lg8 md12 sm12 xs12">
+            <div class="row justify-center">
+                <div class="flex" v-for="r in mappedRanks">
+                    <VaButton @click="handleRankSelection(r.rank)" round
+                        :color="selectedRank === r.rank ? 'textPrimary' : r.color">
+                        {{ r.rank }} <VaChip style="margin-left: 3px;" size="small" color="backgroundPrimary">{{ r.value
+                            }}
+                        </VaChip>
+                    </VaButton>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row section-mb justify-center">
+        <div class="flex lg8 md12 sm12 xs12">
+            <VaCard v-if="selectedRank">
+                <VaInnerLoading :loading="loading">
+                    <VaCardContent>
+                        <div class="row justify-space-between">
+                            <div class="flex">
+                                <div class="row align-center">
+                                    <div class="flex">
+                                        <h3 class="va-h5">{{ selectedRank }}</h3>
+
+                                    </div>
+                                    <div class="flex">
+                                        <VaChip color="backgroundPrimary">{{ total }}</VaChip>
+                                    </div>
                                 </div>
+
                             </div>
-                        </VaCardContent>
-                    </VaInnerLoading>
-                </VaCard>
-            </VaTabs>
+                            <div class="flex">
+                                <VaButton preset="secondary" icon="fa-close" color="secondary"
+                                    @click="selectedRank = null"></VaButton>
+                            </div>
+                        </div>
+                    </VaCardContent>
+                    <VaDivider style="margin: 0;" />
+                    <VaDataTable height="400px" hoverable clickable @row:click="handleClick" sticky-header
+                        :columns="['name', 'leaves']" :items="taxons">
+                        <template #header(leaves)>
+                            organisms
+                        </template>
+                    </VaDataTable>
+                    <div class="row justify-center">
+                        <div class="flex">
+                            <VaPagination color="textPrimary" v-model="offset" :page-size="pagination.limit"
+                                :total="total" :visible-pages="3" buttons-preset="primary" rounded gapped
+                                @update:model-value="handlePagination" />
+                        </div>
+                    </div>
+                </VaInnerLoading>
+            </VaCard>
+            <VaCard v-else>
+                <VaCardContent>
+                    <div class="row align-center justify-center" style="min-height: 400px;">
+                        <div class="flex">
+                            <h3 class="va-h5"> {{ t('home.targetRanks.description') }} </h3>
+
+                        </div>
+                    </div>
+
+                </VaCardContent>
+            </VaCard>
         </div>
     </div>
 </template>
@@ -54,10 +80,12 @@ import TaxonService from '../services/TaxonService';
 import { useI18n } from 'vue-i18n';
 import { useTaxonomyStore } from '../stores/taxonomy-store';
 import { useToast } from 'vuestic-ui/web-components';
+import { useRouter } from 'vue-router';
 
 const { t } = useI18n()
 const taxonomyStore = useTaxonomyStore()
 const { init } = useToast()
+const router = useRouter()
 // Define the type for your taxonomic rank legend
 type TaxonomicRank = {
     rank: string;
@@ -69,39 +97,42 @@ const initPagination = {
 }
 const pagination = ref({ ...initPagination })
 const offset = ref(1 + pagination.value.offset)
-const currentTab = ref()
 const loading = ref(false)
 const taxonomicRanks: TaxonomicRank[] = [
-    { rank: "superkingdom", color: "#E57373" },         // Light Red
-    { rank: "domain", color: "#E57373" },         // Light Red
-    { rank: "kingdom", color: "#F06292" },        // Pink
-    { rank: "phylum", color: "#BA68C8" },         // Purple
-    { rank: "subphylum", color: "#9575CD" },      // Light Purple
-    { rank: "class", color: "#7986CB" },          // Light Blue
-    { rank: "subclass", color: "#64B5F6" },       // Sky Blue
-    { rank: "order", color: "#4FC3F7" },          // Cyan
-    { rank: "superorder", color: "#4DD0E1" },     // Light Cyan
-    { rank: "family", color: "#4DB6AC" },         // Teal
-    { rank: "genus", color: "#81C784" },          // Green
-    { rank: "species", color: "#AED581" },        // Light Green
-    { rank: "subspecies", color: "#455A64" },           // Amber
+    { rank: "superkingdom", color: "#EF9A9A" },   // Soft Red
+    { rank: "domain", color: "#F48FB1" },         // Light Pink
+    { rank: "kingdom", color: "#CE93D8" },        // Lavender
+    { rank: "phylum", color: "#B39DDB" },         // Pastel Purple
+    { rank: "subphylum", color: "#9FA8DA" },      // Light Indigo
+    { rank: "class", color: "#90CAF9" },          // Light Blue
+    { rank: "subclass", color: "#81D4FA" },       // Sky Blue
+    { rank: "order", color: "#80DEEA" },          // Pale Cyan
+    { rank: "superorder", color: "#80CBC4" },     // Soft Teal
+    { rank: "family", color: "#A5D6A7" },         // Light Mint Green
+    { rank: "genus", color: "#C5E1A5" },          // Soft Lime
+    { rank: "species", color: "#E6EE9C" },        // Yellow-Green
+    { rank: "subspecies", color: "#CFD8DC" },     // Cool Gray
 ];
 
 const taxons = ref<TaxonNode[]>([])
 const total = ref(0)
 const mappedRanks = ref<Record<string, any>[]>([])
 
+const selectedRank = ref<string | null>(null)
 async function fetchRanks() {
     const { data } = await StatisticsService.getModelFieldStats('taxons', 'rank', {})
-    const keys = Object.keys(data)
-    mappedRanks.value = taxonomicRanks.filter(({ rank }) => keys.includes(rank)).map(({ rank }) => {
-        return { rank, value: data[rank] }
-    })
-    currentTab.value = mappedRanks.value[0].rank
-    await fetchTaxons()
+    const dataKeys = Object.keys(data)
+
+    const filteredEntries = taxonomicRanks.filter(({ rank }) => dataKeys.includes(rank)).map(({ rank, color }) =>
+        ({ rank, color, value: data[rank] })
+    )
+    mappedRanks.value = [...filteredEntries]
+
 }
 
-async function handleRankSelection() {
+async function handleRankSelection(rank: string) {
+
+    selectedRank.value = rank
     pagination.value = {
         ...initPagination
     }
@@ -110,7 +141,7 @@ async function handleRankSelection() {
 }
 
 async function fetchTaxons() {
-    const { data } = await TaxonService.getTaxons({ rank: currentTab.value, sort_column: 'leaves', ...pagination.value })
+    const { data } = await TaxonService.getTaxons({ rank: selectedRank.value, sort_column: 'leaves', ...pagination.value })
     taxons.value = [...data.data]
     total.value = data.total
 }
@@ -133,8 +164,14 @@ onMounted(async () => {
 })
 
 function handleClick(event: any) {
-    taxonomyStore.currentTaxon = { ...event.item }
-    taxonomyStore.showSidebar = true
+    const { item } = event
+    if (!item.leaves) {
+        router.push({ name: 'item', params: { model: 'organisms', id: item.taxid } })
+    } else {
+        taxonomyStore.currentTaxon = { ...event.item }
+        taxonomyStore.showSidebar = true
+    }
+
 }
 
 </script>

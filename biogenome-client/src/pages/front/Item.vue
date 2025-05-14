@@ -31,6 +31,43 @@
                                 :target-list="detailsObject.goat.targetList" title="goat.title">
                             </SequencingStatusCard>
                         </div>
+                        <div class="flex lg12 md12 sm12 xs12" v-if="detailsObject.sub_project">
+                            <VaCard>
+                                <VaCardContent>
+                                    <div class="row align-center">
+                                        <div class="flex">
+                                            <h3 class="va-h6">Sub Project</h3>
+                                        </div>
+                                    </div>
+                                </VaCardContent>
+                                <VaCardContent>
+                                    <div class="row">
+                                        <div class="flex">
+                                            <p class="va-text-bold">{{ detailsObject.sub_project }}</p>
+                                        </div>
+                                    </div>
+                                </VaCardContent>
+                            </VaCard>
+                        </div>
+                        <div class="flex lg12 md12 sm12 xs12" v-if="detailsObject.sequencing_type?.length">
+                            <VaCard>
+                                <VaCardContent>
+                                    <div class="row align-center">
+                                        <div class="flex">
+                                            <h3 class="va-h6">Sequencing Type</h3>
+                                        </div>
+                                    </div>
+                                </VaCardContent>
+                                <VaCardContent>
+                                    <div class="row">
+                                        <div class="flex">
+                                            <p class="va-text-bold">{{ detailsObject.sequencing_type.join(', ') }}</p>
+                                        </div>
+                                    </div>
+                                </VaCardContent>
+                            </VaCard>
+
+                        </div>
                         <div v-if="hasInternalLinks" class="flex lg12 md12 sm12 xs12">
                             <VaCard>
                                 <VaCardContent>
@@ -381,6 +418,8 @@ async function getRelatedData(model: DataModels, id: string) {
                 ncbiLink: `https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=${item.taxid}`,
                 enaLink: `https://www.ebi.ac.uk/ena/browser/view/${id}`,
                 metadata: item.metadata ?? {},
+                sequencing_type: item.sequencing_type,
+                sub_project: item.sub_project,
                 images: item.image_urls,
                 avatar: item.image,
                 insdcStatus: item.insdc_status,

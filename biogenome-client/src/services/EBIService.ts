@@ -26,12 +26,6 @@ ebiSubmission.interceptors.request.use(
 
 class EBIService {
 
-  checkENACookie() {
-    return ebiSubmission.get('/biosamples/auth')
-  }
-  loginToENA(username: string, password: string) {
-    return ebiSubmission.post('/biosamples/auth', { username, password })
-  }
   submitBiosample(payload: EBISample) {
     return ebiSubmission.post('/biosamples/submit', payload)
   }

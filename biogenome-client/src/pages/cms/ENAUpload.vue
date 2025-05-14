@@ -3,10 +3,10 @@
         <div class="row">
             <div class="flex">
                 <h1 class="va-h1">
-                    BioSample submission
+                    BioSample Creation
                 </h1>
                 <p class="va-text-secondary">
-                    Fill the form and submit the biosample to EBI BioSamples
+                    Fill the form and submit the biosample to EBI BioSamples, this biosample will become public and can be referenced by experiments and assemblies published to ENA or NCBI
                 </p>
             </div>
         </div>
@@ -51,13 +51,13 @@
                 <VaModal v-model="sampleStore.showModal" hide-default-actions no-outside-dismiss no-dismiss
                     no-esc-dismiss :close-button="false">
                     <template #header>
-                        <h2 class="va-h3">Sample Successfully Published</h2>
+                        <h2 class="va-h3">BioSample Successfully Published</h2>
                     </template>
                     <p>{{ sampleStore.responseMessage }}</p>
                     <template #footer>
                         <div class="row justify-space-between">
                             <div class="flex">
-                                <VaButton color="secondary" @click="goToSubmittedBioSamples">Go To Submitted BioSamples
+                                <VaButton color="secondary" @click="goToSubmittedBioSamples">Go To My BioSamples
                                 </VaButton>
                             </div>
                             <div class="flex">

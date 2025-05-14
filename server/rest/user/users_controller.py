@@ -63,6 +63,13 @@ class UserRelatedSpecies(Resource):
         response = users_service.get_related_species(name, **request.args)
         return Response(response, mimetype="application/json", status=200)
 
+# class HandleOrganismToUser(Resource):
+#     @jwt_required()
+#     @admin_required()
+#     def patch(self, name, taxid):
+#         response = users_service.manage_species_to_user(name, taxid, **request.args)
+#         return Response(response, mimetype="application/json", status=200)
+
 class UserRelatedSamples(Resource):
     @jwt_required()
     def get(self, name):

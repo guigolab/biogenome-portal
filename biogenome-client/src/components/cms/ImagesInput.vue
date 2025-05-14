@@ -2,7 +2,7 @@
     <VaCard>
         <VaCardContent>
             <h2 class="va-h6">
-                Images (Optional)
+                Images
             </h2>
             <p class="va-text-secondary">
                 Create link to images, the images should be open access and ideally deposited in wikimedia or other open
@@ -12,7 +12,7 @@
         <VaCardContent>
             <div class="row">
                 <div class="flex lg6 md6 sm12 xs12">
-                    <VaInput v-model="organismStore.organismForm.image" label="Main Image">
+                    <VaInput :rules="[(v:string) => Boolean(v) || 'The main image is mandatory']" v-model="organismStore.organismForm.image" label="Main Image">
                         <template #appendInner>
                             <VaIcon color="danger" name="fa-close" @click="removeAvatar" />
                         </template>

@@ -5,14 +5,11 @@ from mongoengine.queryset.visitor import Q
 from helpers import data, organism as organism_helper, biosample as biosample_helper, ena_checklist, user as user_helper
 import xml.etree.ElementTree as ET
 from clients import ebi_client
-from flask import jsonify, make_response
 import os
 
 CHECKLIST_PATH = '/server/templates/checklist.xml'
-
-
-def get_biosamples(args):
-    return data.get_items('biosamples', args)
+WEBIN_USER = os.getenv('WEBIN_USER')
+WEBIN_PWD = os.getenv('WEBIN_PASSWORD')
 
 def get_biosample(accession):
     biosample_obj = BioSample.objects(accession=accession).first()
@@ -76,40 +73,6 @@ def get_biosample_checklist():
     else:
         raise NotFound(description="No template found")
 
-def login_to_ena(payload):
-    username = payload.get('username')
-    pwd = payload.get('password')
-    if not username or not pwd:
-        raise BadRequest(description="username or password are required")
-    token, code = ebi_client.login_to_ena(username, pwd)
-    if code != 200:
-        raise BadRequest(description=f"Invalid Credentials")
-    response = make_response(jsonify({"message": "Login successful"}))
-    response.set_cookie(
-        "ena_token",
-        token,
-        max_age=7200,
-        httponly=True,  # Prevents JavaScript access (XSS protection)
-        secure=True,  # Requires HTTPS
-        samesite="Strict",  # Prevents CSRF attacks
-    )
-    return response
-
-
-def check_user_is_logged_in(cookies):
-    """
-    Checks if the user is logged into ENA by verifying the token stored in the ena_token cookie.
-    """
-    ena_token = cookies.get("ena_token")  # Retrieve ENA token from cookie
-
-    if not ena_token:
-        raise BadRequest(description='Token not found')
-
-    status_code = ebi_client.check_token_is_valid(ena_token)
-    if status_code != 200:
-        raise BadRequest(description='Token not found')
-
-    return 'Valid Token'
 
 def get_submitted_biosamples(args):
     return data.get_items('submitted_biosamples', args)
@@ -120,10 +83,7 @@ def get_submitted_sample(accession):
         raise NotFound(description=f"biosample with accession {accession} not found")
     return sample
 
-def submit_sample(payload, cookies):
-
-    check_user_is_logged_in(cookies)
-
+def submit_sample(payload):
     user = user_helper.get_current_user()
     if not user:
         raise Unauthorized(description=f"You first must log in")
@@ -132,6 +92,12 @@ def submit_sample(payload, cookies):
     if not taxid:
         raise BadRequest(desciption=f"The field taxid is mandatory")
     
+    ena_token = ebi_client.get_webin_token(WEBIN_USER, WEBIN_PWD)
+
+    status_code = ebi_client.check_token_is_valid(ena_token)
+    if status_code != 200:
+        raise BadRequest(description='Token not found')
+
     taxid = str(taxid)
     ##check user has rights over species
     existing_organism = Organism.objects(taxid=taxid).first()
@@ -139,8 +105,6 @@ def submit_sample(payload, cookies):
     if existing_organism and user.role.value != Roles.DATA_ADMIN.value and taxid not in user.species:
         raise Unauthorized(description=f"You can't add data related to {existing_organism.scientific_name}")
     
-    ena_token = cookies.get("ena_token")
-
     validation_response = ebi_client.validate_biosample(payload, ena_token)
     if validation_response.status_code != 200:
         return validation_response.json(), validation_response.status_code

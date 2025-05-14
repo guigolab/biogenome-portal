@@ -12,10 +12,10 @@
         <div class="row">
             <div class="flex lg12 md12 sm12 xs12">
                 <VaCard>
-                    <VaCardContent>
-                        <TaxonSearch />
-                    </VaCardContent>
+                    <TaxonSearch />
+
                 </VaCard>
+
             </div>
         </div>
         <div class="row">

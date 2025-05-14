@@ -1,4 +1,5 @@
 import requests
+from extensions.cache import cache
 import time
 import csv
 
@@ -206,3 +207,23 @@ def fetch_biosamples_from_ebi(url):
         print(e)
     finally:
         return biosamples, url
+    
+@cache.memoize(timeout=3000)
+def get_webin_token(username, password):
+    headers = {
+        "Accept": "*/*",
+        "Content-Type": "application/json"
+    }
+    auth_url = "https://www.ebi.ac.uk/ena/submit/webin/auth/token"
+    auth_payload = {
+        "authRealms": ["ENA"],
+        "username": username,
+        "password": password
+    }
+    try:
+        response = requests.post(auth_url, json=auth_payload, headers=headers)
+        response.raise_for_status()
+        return response.text
+    except Exception as e:
+        raise e
+    

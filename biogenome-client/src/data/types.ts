@@ -13,6 +13,8 @@ export type ItemDetails = {
   description: string,
   ncbiLink?: string
   enaLink?: string
+  sub_project?:string,
+  sequencing_type?:string[]
   blobtoolkitLink?: string
   speciesLink?: Record<string, any>
   sampleLink?: Record<string, any>

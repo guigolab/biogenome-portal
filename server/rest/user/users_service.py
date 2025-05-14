@@ -33,6 +33,19 @@ def check_user(name):
         raise NotFound(description=f"User {name} not found")
     return user
 
+# def manage_species_to_user(name, taxid, operation='add'):
+#     user = check_user(name)
+
+#     organism = Organism.objects(taxid=taxid).first()
+#     if not organism:
+#         raise NotFound(description=f"Organism {taxid} not found")
+    
+#     try:
+#         user.modify(add_to_set__species=str(taxid))
+#     except Exception as e:
+#         raise BadRequest(description=f"{e}")
+#     return f"Species {taxid} correctly assigned to {name}"
+
 def create_user(data):
 
     required_fields = ['name','password','role']

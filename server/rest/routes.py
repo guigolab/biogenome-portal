@@ -55,6 +55,8 @@ def initialize_routes(api):
 	api.add_resource(organisms_controller.OrganismsApi, '/api/organisms')
 	api.add_resource(organisms_controller.OrganismsQueryApi, '/api/organisms/query')
 	api.add_resource(organisms_controller.UnassignedOrganismsApi, '/api/organisms/unassigned')
+	api.add_resource(organisms_controller.OrganismsWithUser, '/api/organisms/with_users')
+
 	api.add_resource(organisms_controller.OrganismApi, '/api/organisms/<taxid>')
 	api.add_resource(lookup_controller.OrganismRelatedDataLookup, '/api/organisms/<taxid>/lookup')
 	api.add_resource(organisms_controller.OrganismLineageApi, '/api/organisms/<taxid>/lineage')
@@ -90,7 +92,6 @@ def initialize_routes(api):
 	api.add_resource(biosamples_controller.BioSamplesQueryApi, '/api/biosamples/query')
 
 	api.add_resource(biosamples_controller.BioSampleChecklist, '/api/biosamples/checklist')
-	api.add_resource(biosamples_controller.BioSampleAuth, '/api/biosamples/auth')
 
 	api.add_resource(biosamples_controller.BioSamplesSubmit, '/api/biosamples/submit')  # Define first
 	api.add_resource(biosamples_controller.BioSampleSubmit, '/api/biosamples/submit/<accession>')  # Define first
@@ -100,7 +101,6 @@ def initialize_routes(api):
 	api.add_resource(biosamples_controller.ExperimentsByBiosample, '/api/biosamples/<accession>/experiments')
 	api.add_resource(biosamples_controller.AssembliesByBiosample, '/api/biosamples/<accession>/assemblies')
 	api.add_resource(biosamples_controller.SubSamplesApi, '/api/biosamples/<accession>/sub_samples')
-
 
 	##LOCAL_SAMPLES
 	api.add_resource(local_samples_controller.LocalSamplesApi, '/api/local_samples')
@@ -117,8 +117,6 @@ def initialize_routes(api):
 	api.add_resource(reads_controller.ExperimentApi, '/api/experiments/<accession>')
 	api.add_resource(reads_controller.ReadsByExperiment, '/api/experiments/<accession>/reads')
 
-	
-
 	##TAXONS
 	api.add_resource(taxons_controller.TaxonsApi, '/api/taxons')
 	api.add_resource(taxons_controller.TaxonsQueryApi, '/api/taxons/query')
@@ -131,13 +129,14 @@ def initialize_routes(api):
 	api.add_resource(taxonomy_controller.RelativeTaxonomyTreeApi, '/api/taxons/<taxid>/lookup') 
 	api.add_resource(taxonomy_controller.TreeApi, '/api/taxons/<taxid>/tree') 
 
-
 	##USERS
 	api.add_resource(users_controller.UsersApi, '/api/users')
 	api.add_resource(users_controller.UserApi,'/api/users/<name>')
 	api.add_resource(users_controller.UserLookup,'/api/users/<name>/lookup')
 
 	api.add_resource(users_controller.UserRelatedSpecies,'/api/users/<name>/organisms')
+	# api.add_resource(users_controller.HandleOrganismToUser,'/api/users/<name>/organisms/<taxid>')
+
 	api.add_resource(users_controller.UserRelatedSamples,'/api/users/<name>/local_samples')
 	api.add_resource(users_controller.UserSubmittedSamples,'/api/users/<name>/submitted_biosamples')
 

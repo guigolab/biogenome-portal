@@ -1,7 +1,7 @@
 <template>
     <div class="row">
         <div class="flex lg12 md12 sm12 xs12">
-            <VaInput v-model="taxonFilter" placeholder="Type a scientific name or a taxid" clearable
+            <VaInput v-model="taxonFilter" placeholder="Type a valid scientific name or a taxid" clearable
                 :messages="['Type a valid taxonomic identifier or a scientific name and click on the search button']"
                 @keyup.enter="search">
                 <template #append>
@@ -13,7 +13,7 @@
         </div>
         <div v-if="taxons.length" class="flex lg12 md12 sm12 xs12">
             <VaSelect placeholder="Confirm organism selection" v-model="selectedTaxon" :options="taxons"
-                @update:model-value="setTaxon" :text-by="(t: any) => `${t.sci_name} (${t.tax_id})`"
+                @update:model-value="setTaxon" :text-by="(t: any) => `${t.organism_name} (${t.tax_id})`"
                 :rules="[(v: any) => !!v || 'Taxon selection is mandatory', (v: any) => !unauthorized || 'You dont have the rights to use this organism']">
             </VaSelect>
         </div>
@@ -56,11 +56,13 @@ async function getTaxons() {
     try {
         taxonSearchLoading.value = true
         const { data } = await NCBIService.getTaxon(taxonFilter.value)
-        if (!data.sci_name_and_ids) {
+        console.log(data)
+        if (!data.taxonomy_nodes.length || data.taxonomy_nodes[0].errors) {
             init({ message: 'Organism not found in NCBI', color: 'danger' })
             return
         }
-        taxons.value = [...data.sci_name_and_ids]
+
+        taxons.value = [...data.taxonomy_nodes.map((node: any) => node.taxonomy)]
     } catch (error) {
         console.log(error)
         const axiosError = error as AxiosError
@@ -70,17 +72,17 @@ async function getTaxons() {
     }
 }
 
-async function setTaxon(taxon: { sci_name: string, tax_id: string }) {
+async function setTaxon(taxon: { organism_name: string, tax_id: string }) {
     //check if the taxon exists in the database and user has access to it
     try {
         const { data } = await CommonService.getItem('organisms', taxon.tax_id)
         if (props.isOrganismCreation) {
-            init({ message: `The organism ${taxon.sci_name} already exists in the db`, color: 'danger' })
+            init({ message: `The organism ${taxon.organism_name} already exists in the db`, color: 'danger' })
             unauthorized.value = true
             return
         }
         if (isDataManager.value && !userSpecies.value.includes(data.taxid)) {
-            init({ message: `The organism ${taxon.sci_name} already exists in the db, but you haven't the rights to modify its data`, color: 'danger' })
+            init({ message: `The organism ${taxon.organism_name} already exists in the db, but you haven't the rights to modify its data`, color: 'danger' })
             unauthorized.value = true
         } else {
             unauthorized.value = false
@@ -96,7 +98,7 @@ async function setTaxon(taxon: { sci_name: string, tax_id: string }) {
         }
     } finally {
         if (!unauthorized.value) {
-            emits('selected', { scientificName: taxon.sci_name, taxid: taxon.tax_id })
+            emits('selected', { scientificName: taxon.organism_name, taxid: taxon.tax_id })
         }
     }
 

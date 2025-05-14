@@ -1,7 +1,7 @@
 <template>
     <div :class="['row', 'row-equal', rowClass]">
         <div v-for="({ count, icon, color, key }) in mappedCounts" class="flex lg4 md4 sm12 xs12">
-            <VaCard :to="{ name: adminArea ? 'cms-items' : 'model', params: { model: key } }">
+            <VaCard :to="{ name: 'model', params: { model: key } }">
                 <VaCardContent>
                     <div class="row align-center">
                         <div class="flex">
@@ -10,8 +10,7 @@
                         </div>
                         <div class="flex">
                             <Counter :duration="2000" :target-value="count" />
-                            <p v-if="!adminArea"> {{ t(`models.${key}`) }}
-
+                            <p>{{ t(`models.${key}`) }}
                             </p>
                         </div>
                     </div>
@@ -38,8 +37,7 @@ const appConfig = inject('appConfig') as AppConfig
 const { t } = useI18n()
 const props = defineProps<{
     counts: Stat[],
-    adminArea?: boolean
-    rowClass?:string
+    rowClass?: string
 }>()
 
 const modelDescriptions = computed(() => Object.fromEntries(Object.entries(appConfig.models).map(([k, { title, description }]) => [k, description]).filter(([k, d]) => d)))
