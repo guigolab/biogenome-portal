@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { EBISample, EBISampleCharacteristic } from '../data/types'
+import { EBISampleCharacteristic } from '../data/types'
 import EBIService from '../services/EBIService';
 import { useToast } from 'vuestic-ui'
 import { AxiosError } from 'axios';
@@ -31,8 +31,6 @@ function getUnit(key: string, fields: { name: string, unit?: string }[]) {
     if (field && field.unit) return field.unit
 }
 
-const AUTH_KEY = 'ena_auth'
-const isAuth = localStorage.getItem(AUTH_KEY) === 'true'
 
 export const useSampleStore = defineStore('sample', {
     state: () => {
@@ -43,12 +41,10 @@ export const useSampleStore = defineStore('sample', {
             scientificName: "",
             sampleIdentifier: "",
             checklist: "",
-            isAuthenticated: isAuth,
             sampleDerivedFrom: "",
             loading: false,
             showModal: false,
             validationErrors: [] as string[],
-            ebiValid: false,
             toast: useToast().init,
             responseMessage: null as null | string
         }
@@ -69,7 +65,6 @@ export const useSampleStore = defineStore('sample', {
             }
         },
         async submitSample(checklistFields: { name: string, unit?: string }[]) {
-            if (!this.isAuthenticated) return
             const characteristics = this.mapFormToEBIPayload(checklistFields)
             window.scrollTo({ top: 0, behavior: 'smooth' });
             try {
