@@ -35,11 +35,11 @@
     },
     "tree": {
         "title": "Taxonomy Explorer",
-        "description": "The Taxonomic Tree Explorer lets you navigate taxonomy with a D3 Hyperbolic Tree. Zoom with the mouse wheel or trackpad, pan by dragging, and click nodes to view details. Explore seamlessly for a dynamic view of the tree of life."
+        "description": "Navigate the tree of life with the Taxonomic Tree Explorer, an interactive D3 hyperbolic tree. Zoom with your mouse or trackpad, pan by dragging, and click nodes to reveal details"
     },
     "map": {
         "title": "Geographic Explorer",
-        "description": "Draw a region on the map to explore and download metadata for biosamples, related species, assemblies, experiments, or genome annotations; use the top-right buttons to draw or clear a selection."
+        "description": "Draw a region on the map to explore and download metadata for biosamples, species, assemblies, experiments, and annotations. Use the map’s top-right controls to draw or clear your selection"
     },
     "taxon": {
         "chip": "Selected Taxon: ",
@@ -50,7 +50,31 @@
         "occurrencesMap": "Occurrences Map",
         "clearBtn": "Clear Selection",
         "showDetails": "Show Details",
-        "hideDetails": "Hide Details"
+        "hideDetails": "Hide Details",
+        "taxonomicTree": "Taxonomic Tree",
+        "dataDistribution": "Data Distribution",
+        "viewMap": "View Map",
+        "quickFilters": "Quick Filters",
+        "biosamples": "BioSamples",
+        "assemblies": "Assemblies",
+        "annotations": "Annotations",
+        "expandAll": "Expand All",
+        "collapseAll": "Collapse All",
+        "children": "Child Taxa",
+        "ancestors": "Ancestors",
+        "noData": "No data available",
+        "loading": "Loading...",
+        "error": "Error loading data",
+        "selectedTaxon": "Selected taxon",
+        "points": "Markers",
+        "heatmap": "Heatmap",
+        "mapCurrentlyViewed": "Viewing in map",
+        "leaves": "Organisms",
+        "ranksDistribution": "Ranks Distribution"
+    },
+    "user": {
+        "dashboard": "Manage Data",
+        "login": "Login"
     },
     "genomeBrowser": {
         "title": "Genome Browser",
@@ -71,14 +95,18 @@
             "metadata": "Show Metadata",
             "chromosomes": "Chromosomes",
             "modalTitle": "About the genome browser",
-            "modelDescription": "The page features the JBrowse 2 Linear Genome Viewer (JBrowse 2), an interactive tool for exploring genome sequences and annotations. Users can navigate along the genome, zoom in on specific regions, and, when available, visualize annotations such as genes and features. The browser also allows downloading FASTA sequences for selected regions, enabling further analysis. If annotations are present, users can inspect gene structures, coding regions, and other genomic features in a clear, interactive format."
-        }
+            "modelDescription": "The page features the JBrowse 2 Linear Genome Viewer (JBrowse 2), an interactive tool for exploring genome sequences and annotations. Users can navigate along the genome, zoom in on specific regions, and, when available, visualize annotations such as genes and features. The browser also allows downloading FASTA sequences for selected regions, enabling further analysis. If annotations are present, users can inspect gene structures, coding regions, and other genomic features in a clear, interactive format.",
+            "annotations": "Annotations"
+        },
+        "addSession": "New Session"
     },
     "items": {
         "countries": {
             "title": "Countries Selection",
             "infoTitle": "How Countries Are Determined",
-            "infoDescription": "The countries displayed are determined based on the sample metadata, if contains a 'country' field, or by checking if the geographical coordinates of samples fall within a country's boundaries. Please note that this process may occasionally result in inaccuracies."
+            "infoDescription": "The countries displayed are determined based on the sample metadata, if contains a 'country' field, or by checking if the geographical coordinates of samples fall within a country's boundaries. Please note that this process may occasionally result in inaccuracies.",
+            "showMap": "Show Map",
+            "showList": "Show List"
         },
         "filters": {
             "title": "Filters",
@@ -116,15 +144,19 @@
         "title": "INSDC Status",
         "biosample": {
             "label": "Biosample Submitted",
-            "description": "At least one INSDC BioSample is linked to this organisms"
+            "description": "At least one INSDC BioSample linked"
         },
         "experiment": {
             "label": "Reads Submitted",
-            "description": "At least one INSDC Experiment is linked to a BioSample related to this organism"
+            "description": "At least one INSDC Experiment linked"
         },
         "assembly": {
             "label": "Assemblies Submitted",
-            "description": "At least one INSDC Assembly is linked to a BioSample related to this organism"
+            "description": "At least one INSDC Assembly linked"
+        },
+        "not_submitted": {
+            "label": "Missing Status",
+            "description": "No INSDC data linked"
         }
     },
     "goat": {
@@ -135,7 +167,7 @@
         },
         "acquired": {
             "label": "Sample Acquired",
-            "description": "A sample for the species has been acquired and is “in house” at the sequencing centre, but has not been processed yet"
+            "description": "A sample for the species has been acquired and is \"in house\" at the sequencing centre, but has not been processed yet"
         },
         "generation": {
             "label": "Data Generation",
@@ -147,11 +179,26 @@
         },
         "submitted": {
             "label": "INSDC Submitted",
-            "description": "The species’ genome assembly has been submitted to INSDC and is openly accessible under the generating project’s Bioproject ID"
+            "description": "The species' genome assembly has been submitted to INSDC and is openly accessible under the generating project's Bioproject ID"
         },
         "publication": {
             "label": "Publication Available",
             "description": "Assembly has an associated publication with a DOI or PubMed ID"
+        },
+        "not_submitted": {
+            "label": "Missing Status",
+            "description": "GoaT status not available"
+        }
+    },
+    "targetListStatus": {
+        "long_list": {
+            "description": "Any species declared as a target for the total scale of the project. For regional projects, this would declare that the species is known to be part of the biota of a region that is the target of this particular project (e.g. for DToL this is all UKSI plus the Irish biota, 72,000 species). For taxonomically-focussed species this would be all the species that are assigned to a particular higher taxon (e.g for VGP the long list is all 70,000 vertebrate species)"
+        },
+        "family_representative": {
+            "description": "The species has been chosen as a family reference species for the organisation or project. These family representatives drive completion of the Earth BioGenome Project’s Phase 1 goals. Species tagged as “family_representative” will also receive a long_list tag on GoaT"
+        },
+        "other_priority": {
+            "description": "A species that has been prioritised by a project for reasons other than being  a family representative. This could include for example species of primary conservation interest, species that are part of pilot projects, species that address goals beyond the EBP Phase 1 family representatives, and other subprojects. Species tagged as “other_priority” will also receive a long_list tag on GoaT."
         }
     },
     "fieldLookup": {
@@ -162,6 +209,7 @@
     },
     "reportModal": {
         "title": "Download Report",
+        "formatLabel": "Format",
         "description": "Select multiple fields or type a new field, if the field is contained in metadata type: 'metadata.fieldYouWantToSelect'",
         "tip": "Select TSV or JSONL for faster retrieval",
         "queryMessage": "Type a field and check if exists",
@@ -179,7 +227,8 @@
         "download": "Download",
         "submit": "Submit",
         "view": "View",
-        "goat": "GoaT Report"
+        "goat": "GoaT Report",
+        "createChart": "Create Chart"
     },
     "models": {
         "organisms": "Organisms",
@@ -196,5 +245,11 @@
         "french": "French",
         "spanish": "Spanish",
         "german": "German"
+    },
+    "taxonsearch": {
+        "description": "Select a taxon to filter all data in the current view"
+    },
+    "taxons": {
+        "resultsFound": "Matching Taxa"
     }
 }

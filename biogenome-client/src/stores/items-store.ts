@@ -16,7 +16,7 @@ export const staticFilters = {
 }
 const initPagination = {
     offset: 0,
-    limit: 10,
+    limit: 20,
 }
 
 export const useItemStore = defineStore('item', {
@@ -67,6 +67,10 @@ export const useItemStore = defineStore('item', {
                 const resettedForm = Object.fromEntries(Object.entries(this.searchForm).filter(([k, v]) => k !== 'taxon_lineage').map(([k, v]) => [k, null]))
                 this.searchForm = { ...this.searchForm, ...resettedForm }
             }
+            this.customFilters = []
+        },
+        removeCustomFilter(filter: ConfigFilter) {
+            this.customFilters = this.customFilters.filter(f => f.key !== filter.key)
         },
         resetPagination() {
             this.pagination = { ...initPagination }
@@ -106,11 +110,12 @@ export const useItemStore = defineStore('item', {
                 this.catchError(err)
             }
         },
-        async handleQuery() {
+        async handleQuery(model: DataModels) {
             this.resetPagination()
-            this.fetchItems()
+            this.resetFilters()
+            this.fetchItems(model)
         },
-        async getFieldFrequencies(model: DataModels, field: string, ignoreQuery: boolean) {
+        async getFieldFrequencies(model: DataModels, field: string, ignoreQuery?: boolean) {
             try {
                 const query = ignoreQuery ? {} : this.buildQuery()
                 const { data } = await StatisticsService.getModelFieldStats(model, field, query)
@@ -118,6 +123,9 @@ export const useItemStore = defineStore('item', {
             } catch (err) {
                 this.catchError(err)
             }
+        },
+        addCustomFilter(filter: ConfigFilter) {
+            this.customFilters.push(filter)
         },
         //incoming model may not correspond to currentModel
         async getFrequencies(model: DataModels, field: string, ignoreQuery: boolean) {
@@ -141,16 +149,14 @@ export const useItemStore = defineStore('item', {
                 this.catchError(err)
             }
         },
-        async fetchItems() {
+        async fetchItems(model: DataModels) {
             // this.initStore(model);  // Ensure store exists
-            if (!this.model) return
             this.isTableLoading = true
-            const { pagination } = this
 
             // Build the query params
-            const params = { ...this.buildQuery(), ...pagination }
+            const params = { ...this.buildQuery(), ...this.pagination }
             try {
-                const { data } = await CommonService.getItems(this.model, params)
+                const { data } = await CommonService.getItems(model, params)
                 this.items = [...data.data]
                 this.total = data.total
             } catch (err) {

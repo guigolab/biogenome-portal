@@ -1,5 +1,5 @@
 <template>
-  <VaNavbar>
+  <VaNavbar class="va-text-capitalize" shadowed bordered :color="navColor">
     <template #left>
       <VaNavbarItem v-if="appLogo" class="image-wrapper">
         <a v-if="externalLink" style="height: 100%;width: 100%;" :href="externalLink" target="_blank">
@@ -8,7 +8,6 @@
         </a>
         <VaImage v-else fit="contain" class="image-h" lazy :src="generatedLink">
         </VaImage>
-
       </VaNavbarItem>
       <VaNavbarItem v-else>
         <span class="va-h6">
@@ -17,114 +16,145 @@
       </VaNavbarItem>
     </template>
     <template #center>
-      <VaNavbarItem>
-        <VaButton :to="{ name: 'home' }" preset="secondary" icon="fa-house" color="textPrimary">{{ !hideIcon ?
-          t('nav.home') : ''
-          }}
+      <VaNavbarItem v-show="!isMobile" class="nav-links">
+        <VaButton :to="{ name: 'home' }" :color="textColor" class="va-text-uppercase"
+          preset="secondary">
+          {{ t('nav.home') }}
         </VaButton>
-        <VaMenu :options="models" :text-by="(item: any) => t(`models.${item.text}`)"
-          @selected="(obj) => router.push({ name: 'model', params: { model: obj.value } })">
+      </VaNavbarItem>
+      <VaNavbarItem v-show="!isMobile" class="nav-links">
+        <VaDropdown placement="bottom-start" v-model="showDataDropdown">
           <template #anchor>
-            <VaButton preset="secondary" icon="fa-database" color="textPrimary">{{ !hideIcon ? t('nav.data') : ''
-              }}
+            <VaButton :color="textColor" class="va-text-uppercase" preset="secondary">
+              {{ t('nav.data') }}
             </VaButton>
           </template>
-        </VaMenu>
-        <VaMenu>
+          <div class="dropdown-content">
+            <div v-for="model in models" :key="model.value" class="dropdown-item"
+              @click="router.push({ name: 'model', params: { model: model.value } })">
+              {{ t(`models.${model.text}`) }}
+            </div>
+          </div>
+        </VaDropdown>
+      </VaNavbarItem>
+      <VaNavbarItem v-show="!isMobile" class="nav-links">
+        <VaDropdown placement="bottom-start" v-model="showToolsDropdown">
           <template #anchor>
-            <VaButton icon="fa-wrench" preset="secondary" color="textPrimary">{{ !hideIcon ? t('nav.tools') : ''
-              }}
+            <VaButton :color="textColor" class="va-text-uppercase" preset="secondary">
+              {{ t('nav.tools') }}
             </VaButton>
           </template>
-          <VaMenuItem>
-            <RouterLink :style="{ 'color': colors.textPrimary }" :to="{ name: 'tree' }">
+          <div class="dropdown-content">
+            <RouterLink :to="{ name: 'tree' }" class="dropdown-item">
               {{ t('nav.taxExplorer') }}
             </RouterLink>
-          </VaMenuItem>
-          <VaMenuItem>
-            <RouterLink :style="{ 'color': colors.textPrimary }" :to="{ name: 'map' }">
+            <RouterLink :to="{ name: 'map' }" class="dropdown-item">
               {{ t('map.title') }}
             </RouterLink>
-          </VaMenuItem>
-          <VaMenuItem v-if="config.models.assemblies">
-            <RouterLink :style="{ 'color': colors.textPrimary }" :to="{ name: 'jbrowse' }">
+            <RouterLink v-if="config.models.assemblies" :to="{ name: 'jbrowse' }" class="dropdown-item">
               {{ t('nav.genomeBrowser') }}
             </RouterLink>
-          </VaMenuItem>
-          <VaMenuItem v-if="hasGoat" @selected="downloadGoatReport"> {{ t('buttons.goat') }}</VaMenuItem>
-        </VaMenu>
-        <VaMenu :options="settings">
+            <div v-if="hasGoat" class="dropdown-item" @click="downloadGoatReport">
+              {{ t('buttons.goat') }}
+            </div>
+          </div>
+        </VaDropdown>
+      </VaNavbarItem>
+      <VaNavbarItem v-show="!isMobile" class="nav-links">
+        <VaDropdown placement="bottom-start" v-model="showSettingsDropdown">
           <template #anchor>
-            <VaButton preset="secondary" icon="fa-cog" color="textPrimary">{{ !hideIcon ? t('nav.settings') : ''
-              }}
+            <VaButton :color="textColor" class="va-text-uppercase" preset="secondary">
+              {{ t('nav.settings') }}
             </VaButton>
           </template>
-          <VaMenuItem>
-            <a :style="{ 'color': colors.textPrimary }" href="https://github.com/guigolab/biogenome-portal"
-              target="_blank">
+          <div class="dropdown-content">
+            <a href="https://github.com/guigolab/biogenome-portal" target="_blank" class="dropdown-item">
               GitHub
             </a>
-          </VaMenuItem>
-          <VaMenuItem>
-            <a :style="{ 'color': colors.textPrimary }" href="https://guigolab.github.io/biogenome-portal/"
-              target="_blank">
+            <a href="https://guigolab.github.io/biogenome-portal/" target="_blank" class="dropdown-item">
               Docs
             </a>
-          </VaMenuItem>
-          <VaMenuItem v-if="externalLink">
-            <a :style="{ 'color': colors.textPrimary }" :href="externalLink" target="_blank">
+            <a v-if="externalLink" :href="externalLink" target="_blank" class="dropdown-item">
               Website
             </a>
-          </VaMenuItem>
-        </VaMenu>
+          </div>
+        </VaDropdown>
       </VaNavbarItem>
     </template>
     <template #right>
-      <VaNavbarItem>
-        <VaButton :to="{ name: 'admin' }" preset="secondary" icon="fa-user" color="textPrimary"
-          v-if="config.general.cms">
-          {{ btnLabel }}
+      <MobileNavbarMenu v-show="isMobile" :mobileDropdown="mobileDropdown" :models="models" :locale="locale"
+        :languages="languages" :config="config" :btnLabel="btnLabel" :externalLink="externalLink" :hasGoat="hasGoat"
+        @update:showMobileMenu="showMobileMenu = $event" @update:mobileDropdown="mobileDropdown = $event"
+        @downloadGoatReport="downloadGoatReport" @handleLang="handleLang" :hasCMS="hasCMS" :textColor="textColor" />
+      <VaNavbarItem v-if="hasCMS" class="nav-links" v-show="!isMobile">
+        <VaButton :to="{ name: 'admin' }" :color="textColor" class="va-text-uppercase" preset="secondary">
+          {{ t(btnLabel) }}
         </VaButton>
-        <VaMenu>
+      </VaNavbarItem>
+      <VaNavbarItem v-show="!isMobile">
+        <VaDropdown placement="bottom-start" v-model="showLangDropdown">
           <template #anchor>
-            <VaButton color="textPrimary">{{ locale }}
+            <VaButton :color="textColor" class="va-text-uppercase" preset="secondary">
+              {{ locale }}
             </VaButton>
           </template>
-          <VaMenuItem @selected="handleLang(lang)" v-for="lang in languages" :key="lang.code">{{
-            t(`language.${lang.name}`) }}
-          </VaMenuItem>
-        </VaMenu>
+          <div class="dropdown-content">
+            <div v-for="lang in languages" :key="lang.code" class="dropdown-item" @click="handleLang(lang)">
+              {{ t(`language.${lang.name}`) }}
+            </div>
+          </div>
+        </VaDropdown>
       </VaNavbarItem>
-
     </template>
   </VaNavbar>
 </template>
 
 <script setup lang="ts">
-import { computed, inject } from 'vue';
-// import LanguageDropdown from './LanguageDropdown.vue'
+import { computed, inject, ref, onMounted, onUnmounted } from 'vue';
 import { AppConfig, LangOption } from '../data/types';
 import { RouterLink, useRouter } from 'vue-router';
 import { useBreakpoint, useColors, useToast } from 'vuestic-ui';
 import { useI18n } from 'vue-i18n';
 import GoaTService from '../services/GoaTService';
 import { useGlobalStore } from '../stores/global-store';
-import TaxonSearch from './TaxonSearch.vue';
+import MobileNavbarMenu from './MobileNavbarMenu.vue';
 
 
-const { colors } = useColors()
 const { t, locale } = useI18n()
 const breakpoint = useBreakpoint()
 const globalStore = useGlobalStore()
+const colors = useColors()
+
+
+const navColor = computed(() => {
+  return colors.colors.nav || 'backgroundPrimary'
+})
+
+const textColor = computed(() => {
+  return colors.colors.navText || 'primary'
+})
+
+onMounted(() => {
+  console.log(colors.colors)
+})
+
 const config = inject('appConfig') as AppConfig
 const router = useRouter()
 const generalConfigs = ['general', 'ui']
 
 const { init } = useToast()
 
-const btnLabel = computed(() => globalStore.userName ? globalStore.userName : 'Login')
+const showDataDropdown = ref(false)
+const showToolsDropdown = ref(false)
+const showSettingsDropdown = ref(false)
+const showLangDropdown = ref(false)
+const showMobileMenu = ref(false)
+const mobileDropdown = ref('')
+
+const btnLabel = computed(() => globalStore.isAuthenticated ? 'user.dashboard' : 'user.login')
 const appLogo = config.general.logo
 const externalLink = config.general.externalLink
+const hasCMS = config.general.cms
 const hasGoat = config.general.goat
 const generatedLink = computed(() => appLogo && appLogo.includes('http') ?
   appLogo :
@@ -134,7 +164,7 @@ const generatedLink = computed(() => appLogo && appLogo.includes('http') ?
 const dashboardDefaultTitle = "BioGenome Portal"
 
 const title = computed<LangOption | string>(() => config.general.title[locale.value] as LangOption ?? dashboardDefaultTitle)
-const hideIcon = computed(() => breakpoint.sm || breakpoint.xs)
+const isMobile = computed(() => breakpoint.mdDown || breakpoint.sm || breakpoint.xs)
 const languages = computed(() => config.general.languages as { code: string, name: string }[])
 
 const models = computed(() =>
@@ -145,13 +175,12 @@ const models = computed(() =>
     }
     ))
 
-const settings = ['Login', 'GitHub', 'Docs']
-//retrieve configured models 
-
 function handleLang(lang: { code: string, name: string }) {
   locale.value = lang.code
   globalStore.changeLang(lang.code)
+  showLangDropdown.value = false
 }
+
 
 async function downloadGoatReport() {
   try {
@@ -159,13 +188,11 @@ async function downloadGoatReport() {
     const data = response.data
     const href = URL.createObjectURL(data);
     let name = 'goat_report.tsv'
-    // create "a" HTML element with href to file & click
     const link = document.createElement('a');
     link.href = href;
-    link.setAttribute('download', name); //or any other extension
+    link.setAttribute('download', name);
     document.body.appendChild(link);
     link.click();
-    // clean up "a" element & remove ObjectURL
     document.body.removeChild(link);
     URL.revokeObjectURL(href);
   } catch (err) {
@@ -173,14 +200,127 @@ async function downloadGoatReport() {
     init({ message: 'Error downloading Goat Report', color: 'danger' })
   }
 }
-</script>
-<style>
-.nav-p {
-  padding-bottom: 10px !important;
-  padding-top: 10px !important;
+
+function updateDropdownPosition(event: MouseEvent, dropdown: HTMLElement) {
+  const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
+  const viewportWidth = window.innerWidth
+  const viewportHeight = window.innerHeight
+  const dropdownWidth = dropdown.offsetWidth
+  const dropdownHeight = dropdown.offsetHeight
+
+  // Calculate initial position
+  let left = rect.left
+  let top = rect.bottom + 8
+
+  // Adjust if dropdown would overflow right edge
+  if (left + dropdownWidth > viewportWidth) {
+    left = viewportWidth - dropdownWidth - 16
+  }
+
+  // Adjust if dropdown would overflow bottom edge
+  if (top + dropdownHeight > viewportHeight) {
+    top = rect.top - dropdownHeight - 8
+  }
+
+  // Ensure dropdown doesn't go off the left edge
+  left = Math.max(16, left)
+
+  // Apply the position
+  dropdown.style.left = `${left}px`
+  dropdown.style.top = `${top}px`
 }
 
-/* Default styles (base) */
+// Add event listeners for dropdown positioning
+onMounted(() => {
+  const dropdowns = document.querySelectorAll('.nav-dropdown')
+  dropdowns.forEach(dropdown => {
+    dropdown.addEventListener('mouseenter', (e) => {
+      const content = dropdown.querySelector('.dropdown-content') as HTMLElement
+      if (content) {
+        updateDropdownPosition(e as MouseEvent, content)
+      }
+    })
+  })
+})
+
+onUnmounted(() => {
+  const dropdowns = document.querySelectorAll('.nav-dropdown')
+  dropdowns.forEach(dropdown => {
+    dropdown.removeEventListener('mouseenter', () => { })
+  })
+})
+</script>
+
+<style lang="scss" scoped>
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  font-weight: 500;
+  padding: 0.5rem;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: var(--va-background-secondary);
+  }
+
+  i {
+    font-size: 1rem;
+  }
+}
+
+.nav-dropdown {
+  position: relative;
+  cursor: pointer;
+}
+
+.dropdown-content {
+  position: fixed;
+  min-width: 200px;
+  padding: 0.5rem;
+  background: var(--va-background-primary);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  margin-top: 0.5rem;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: 0;
+    right: 0;
+    height: 8px;
+  }
+}
+
+.dropdown-item {
+  padding: 0.75rem 1rem;
+  color: var(--va-text-primary);
+  text-decoration: none;
+  display: block;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+
+  &:hover {
+    background-color: var(--va-background-secondary);
+    transform: translateX(4px);
+  }
+
+  &:active {
+    background-color: var(--va-background-tertiary);
+  }
+}
+
 .image-wrapper {
   width: 10rem;
   padding: 0;
@@ -191,42 +331,37 @@ async function downloadGoatReport() {
   width: 100%;
 }
 
-/* Small screens (e.g., smartphones) */
 @media (max-width: 576px) {
   .image-wrapper {
     width: 8rem;
-    /* Adjust width */
   }
 
   .image-h {
     height: 4rem;
-    /* Adjust height */
+  }
+
+  .nav-links {
+    gap: 1rem;
   }
 }
 
-/* Medium screens (e.g., tablets) */
 @media (min-width: 577px) and (max-width: 768px) {
   .image-wrapper {
     width: 9rem;
-    /* Slightly larger for tablets */
   }
 
   .image-h {
     height: 4.5rem;
-    /* Adjust height */
   }
 }
 
-/* Large screens (e.g., desktops) */
 @media (min-width: 769px) and (max-width: 1200px) {
   .image-wrapper {
     width: 10rem;
-    /* Keep the default width for large screens */
   }
 
   .image-h {
     height: 5rem;
-    /* Keep the default height */
   }
 }
 </style>

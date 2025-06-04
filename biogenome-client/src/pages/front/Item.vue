@@ -1,257 +1,268 @@
 <template>
-    <div>
-        <VaBreadcrumbs color="primary">
-            <VaBreadcrumbsItem style="cursor: pointer;" :to="{ name: 'model', params: { model } }"
-                :label="t(`models.${model}`)" />
-            <VaBreadcrumbsItem class="va-text-bold" :label="id" />
-        </VaBreadcrumbs>
-        <div v-if="detailsObject">
-            <div class="row align-center">
-                <div class="flex">
+    <div class="home">
+        <div class="content-section layout fluid va-gutter-5">
+            <VaBreadcrumbs color="primary">
+                <VaBreadcrumbsItem style="cursor: pointer;" :to="{ name: 'model', params: { model } }"
+                    :label="t(`models.${model}`)" />
+                <VaBreadcrumbsItem class="va-text-bold" :label="id" />
+            </VaBreadcrumbs>
+            <div v-if="detailsObject">
+                <div class="section-header">
                     <Header :key="id" title-class="va-h1" description-class="va-text-secondary"
                         :title="detailsObject.title" :description="detailsObject.description" />
                 </div>
-            </div>
-            <div class="row">
-                <div class="flex lg4 md4 sm12 xs12">
-                    <div class="row">
-                        <div v-if="groupedImages.length" class="flex lg12 md12 sm12 xs12">
-                            <VaCard>
-                                <VaCarousel lazy height="300px" stateful :items="groupedImages" />
-                            </VaCard>
-                        </div>
-                        <div v-if="detailsObject.insdcStatus" class="flex lg12 md12 sm12 xs12">
-                            <SequencingStatusCard :current-status="detailsObject.insdcStatus" :statuses="insdcSteps"
-                                title="insdc.title">
-                            </SequencingStatusCard>
-                        </div>
-                        <div class="flex lg12 md12 sm12 xs12"
-                            v-if="hasGoat && detailsObject.goat && detailsObject.goat.status">
-                            <SequencingStatusCard :current-status="detailsObject.goat.status" :statuses="goatSteps"
-                                :target-list="detailsObject.goat.targetList" title="goat.title">
-                            </SequencingStatusCard>
-                        </div>
-                        <div class="flex lg12 md12 sm12 xs12" v-if="detailsObject.sub_project">
-                            <VaCard>
-                                <VaCardContent>
-                                    <div class="row align-center">
-                                        <div class="flex">
-                                            <h3 class="va-h6">Sub Project</h3>
+                <div class="row">
+                    <div class="flex lg4 md4 sm12 xs12">
+                        <div class="row">
+                            <div v-if="groupedImages.length" class="flex lg12 md12 sm12 xs12">
+                                <VaCard class="image-card">
+                                    <VaCarousel lazy height="300px" stateful :items="groupedImages" />
+                                </VaCard>
+                            </div>
+                            <div v-if="detailsObject.insdcStatus" class="flex lg12 md12 sm12 xs12">
+                                <SequencingStatusCard :current-status="detailsObject.insdcStatus"
+                                    :statuses="filteredInsdcStatus" title="insdc.title">
+                                </SequencingStatusCard>
+                            </div>
+                            <div class="flex lg12 md12 sm12 xs12"
+                                v-if="hasGoat && detailsObject.goat && detailsObject.goat.status">
+                                <SequencingStatusCard :current-status="detailsObject.goat.status"
+                                    :statuses="filteredGoatStatus" :target-list="detailsObject.goat.targetList"
+                                    title="goat.title">
+                                </SequencingStatusCard>
+                            </div>
+                            <div class="flex lg12 md12 sm12 xs12" v-if="detailsObject.sub_project">
+                                <VaCard class="data-card">
+                                    <VaCardContent>
+                                        <div class="row align-center">
+                                            <div class="flex">
+                                                <h3 class="va-h6">Sub Project</h3>
+                                            </div>
                                         </div>
-                                    </div>
-                                </VaCardContent>
-                                <VaCardContent>
-                                    <div class="row">
-                                        <div class="flex">
-                                            <p class="va-text-bold">{{ detailsObject.sub_project }}</p>
+                                    </VaCardContent>
+                                    <VaCardContent>
+                                        <div class="row">
+                                            <div class="flex">
+                                                <p class="va-text-bold">{{ detailsObject.sub_project }}</p>
+                                            </div>
                                         </div>
-                                    </div>
-                                </VaCardContent>
-                            </VaCard>
-                        </div>
-                        <div class="flex lg12 md12 sm12 xs12" v-if="detailsObject.sequencing_type?.length">
-                            <VaCard>
-                                <VaCardContent>
-                                    <div class="row align-center">
-                                        <div class="flex">
-                                            <h3 class="va-h6">Sequencing Type</h3>
+                                    </VaCardContent>
+                                </VaCard>
+                            </div>
+                            <div class="flex lg12 md12 sm12 xs12" v-if="detailsObject.sequencing_type?.length">
+                                <VaCard class="data-card">
+                                    <VaCardContent>
+                                        <div class="row align-center">
+                                            <div class="flex">
+                                                <h3 class="va-h6">Sequencing Type</h3>
+                                            </div>
                                         </div>
-                                    </div>
-                                </VaCardContent>
-                                <VaCardContent>
-                                    <div class="row">
-                                        <div class="flex">
-                                            <p class="va-text-bold">{{ detailsObject.sequencing_type.join(', ') }}</p>
+                                    </VaCardContent>
+                                    <VaCardContent>
+                                        <div class="row">
+                                            <div class="flex">
+                                                <p class="va-text-bold">{{ detailsObject.sequencing_type.join(', ') }}
+                                                </p>
+                                            </div>
                                         </div>
-                                    </div>
-                                </VaCardContent>
-                            </VaCard>
-
-                        </div>
-                        <div v-if="hasInternalLinks" class="flex lg12 md12 sm12 xs12">
-                            <VaCard>
-                                <VaCardContent>
-                                    <div class="row align-center">
-                                        <div class="flex">
-                                            <h3 class="va-h6"> {{ t('item.internalLinks') }}</h3>
+                                    </VaCardContent>
+                                </VaCard>
+                            </div>
+                            <div v-if="hasInternalLinks" class="flex lg12 md12 sm12 xs12">
+                                <VaCard class="data-card">
+                                    <VaCardContent>
+                                        <div class="row align-center">
+                                            <div class="flex">
+                                                <h3 class="va-h6"> {{ t('item.internalLinks') }}</h3>
+                                            </div>
                                         </div>
-                                    </div>
-                                </VaCardContent>
-                                <VaCardActions align="stretch" vertical>
-                                    <VaButton color="textPrimary" preset="primary" icon-right="fa-up-right-from-square"
-                                        v-if="detailsObject.downloadLink" :href="detailsObject.downloadLink">
-                                        {{ t('buttons.download') }}</VaButton>
-                                    <VaButton color="textPrimary" preset="primary" icon-right="fa-up-right-from-square"
-                                        v-if="detailsObject.speciesLink" :to="detailsObject.speciesLink">
-                                        {{ item ? item.scientific_name || item.metadata.scientific_name : ""
-                                        }}
-                                    </VaButton>
-                                    <VaButton color="textPrimary" preset="primary" icon-right="fa-up-right-from-square"
-                                        v-if="detailsObject.sampleLink" :to="detailsObject.sampleLink">
-                                        {{ item ? item.sample_accession || item.metadata.sample_accession ||
-                                            item.metadata['sample derived from'] : ""
-                                        }}
-                                    </VaButton>
-                                    <VaButton icon-right="fa-up-right-from-square" preset="primary" block
-                                        color="#742061" v-if="detailsObject.jbrowseLink"
-                                        @click="createGenomeBrowserSession"> {{ t('item.genomeBrowserLink') }}
-                                    </VaButton>
-                                </VaCardActions>
-                            </VaCard>
-                        </div>
-                        <div v-if="hasExternalLinks" class="flex lg12 md12 sm12 xs12">
-                            <VaCard>
-                                <VaCardContent>
-                                    <div class="row align-center">
-                                        <div class="flex">
-                                            <h3 class="va-h6">{{ t('item.externalLinks') }}</h3>
+                                    </VaCardContent>
+                                    <VaCardActions align="stretch" vertical>
+                                        <VaButton preset="primary" icon-right="fa-up-right-from-square"
+                                            v-if="detailsObject.downloadLink" :href="detailsObject.downloadLink">
+                                            {{ t('buttons.download') }}</VaButton>
+                                        <VaButton preset="primary" icon-right="fa-up-right-from-square"
+                                            v-if="detailsObject.speciesLink" :to="detailsObject.speciesLink">
+                                            {{ item ? item.scientific_name || item.metadata.scientific_name : ""
+                                            }}
+                                        </VaButton>
+                                        <VaButton preset="primary" icon-right="fa-up-right-from-square"
+                                            v-if="detailsObject.assemblyLink" :to="detailsObject.assemblyLink">
+                                            {{ item ? item.assembly_name || item.metadata.assembly_name : ""
+                                            }}
+                                        </VaButton>
+                                        <VaButton preset="primary" icon-right="fa-up-right-from-square"
+                                            v-if="detailsObject.sampleLink" :to="detailsObject.sampleLink">
+                                            {{ item ? item.sample_accession || item.metadata.sample_accession ||
+                                                item.metadata['sample derived from'] : ""
+                                            }}
+                                        </VaButton>
+                                        <VaButton icon-right="fa-up-right-from-square" preset="primary" block
+                                            color="#742061" v-if="detailsObject.jbrowseLink"
+                                            @click="createGenomeBrowserSession"> {{ t('item.genomeBrowserLink') }}
+                                        </VaButton>
+                                    </VaCardActions>
+                                </VaCard>
+                            </div>
+                            <div v-if="hasExternalLinks" class="flex lg12 md12 sm12 xs12">
+                                <VaCard class="data-card">
+                                    <VaCardContent>
+                                        <div class="row align-center">
+                                            <div class="flex">
+                                                <h3 class="va-h6">{{ t('item.externalLinks') }}</h3>
+                                            </div>
                                         </div>
-                                    </div>
-                                </VaCardContent>
-                                <VaCardActions align="stretch" vertical>
-                                    <VaButton icon-right="fa-up-right-from-square" color="textPrimary" preset="primary"
-                                        v-if="detailsObject.ncbiLink" :href="detailsObject.ncbiLink" target="_blank">
-                                        NCBI
-                                    </VaButton>
-                                    <VaButton icon-right="fa-up-right-from-square" color="textPrimary" preset="primary"
-                                        v-if="detailsObject.enaLink" :href="detailsObject.enaLink" target="_blank">
-                                        ENA</VaButton>
-                                    <VaButton icon-right="fa-up-right-from-square" color="#9b518a" preset="primary"
-                                        v-if="detailsObject.blobtoolkitLink" :href="detailsObject.blobtoolkitLink"
-                                        target="_blank">
-                                        Blobtoolkit</VaButton>
-                                </VaCardActions>
-                            </VaCard>
-                        </div>
-                        <div v-if="detailsObject.publications?.length" class="flex lg12 md12 sm12 xs12">
-                            <VaCard>
-                                <VaCardContent>
-                                    <div class="row align-center">
-                                        <div class="flex">
-                                            <h3 class="va-h6">{{ t('item.publications') }}</h3>
+                                    </VaCardContent>
+                                    <VaCardActions align="stretch" vertical>
+                                        <VaButton icon-right="fa-up-right-from-square" preset="primary"
+                                            v-if="detailsObject.ncbiLink" :href="detailsObject.ncbiLink"
+                                            target="_blank">
+                                            NCBI
+                                        </VaButton>
+                                        <VaButton icon-right="fa-up-right-from-square" preset="primary"
+                                            v-if="detailsObject.enaLink" :href="detailsObject.enaLink" target="_blank">
+                                            ENA</VaButton>
+                                        <VaButton icon-right="fa-up-right-from-square" color="#9b518a" preset="primary"
+                                            v-if="detailsObject.blobtoolkitLink" :href="detailsObject.blobtoolkitLink"
+                                            target="_blank">
+                                            Blobtoolkit</VaButton>
+                                    </VaCardActions>
+                                </VaCard>
+                            </div>
+                            <div v-if="detailsObject.publications?.length" class="flex lg12 md12 sm12 xs12">
+                                <VaCard class="data-card">
+                                    <VaCardContent>
+                                        <div class="row align-center">
+                                            <div class="flex">
+                                                <h3 class="va-h6">{{ t('item.publications') }}</h3>
+                                            </div>
                                         </div>
-                                    </div>
-                                </VaCardContent>
-                                <VaCardActions align="stretch" vertical>
-                                    <VaButton icon-right="fa-up-right-from-square" preset="primary" color="textPrimary"
-                                        :href="getLink(pub)" target="_blank" v-for="pub in detailsObject.publications"
-                                        :key="pub.id">
-                                        {{ pub.source }}
-                                    </VaButton>
-                                </VaCardActions>
-                            </VaCard>
-                        </div>
-                        <div v-if="detailsObject.vernacularNames?.length" class="flex lg12 md12 sm12 xs12">
-                            <VaCard>
-                                <VaCardContent>
-                                    <div class="row align-center">
-                                        <div class="flex">
-                                            <h3 class="va-h6">{{ t('item.vernacularNames') }}</h3>
+                                    </VaCardContent>
+                                    <VaCardActions align="stretch" vertical>
+                                        <VaButton icon-right="fa-up-right-from-square" preset="primary"
+                                            :href="getLink(pub)" target="_blank"
+                                            v-for="pub in detailsObject.publications" :key="pub.id">
+                                            {{ pub.source }}
+                                        </VaButton>
+                                    </VaCardActions>
+                                </VaCard>
+                            </div>
+                            <div v-if="detailsObject.vernacularNames?.length" class="flex lg12 md12 sm12 xs12">
+                                <VaCard class="data-card">
+                                    <VaCardContent>
+                                        <div class="row align-center">
+                                            <div class="flex">
+                                                <h3 class="va-h6">{{ t('item.vernacularNames') }}</h3>
+                                            </div>
                                         </div>
-                                    </div>
-                                </VaCardContent>
-                                <VaCardContent v-for="n in detailsObject.vernacularNames" :key="n.value">
-                                    <div class="row align-center">
-                                        <div class="flex">
-                                            <p class="va-text-bold">{{ n.value }}</p>
+                                    </VaCardContent>
+                                    <VaCardContent v-for="n in detailsObject.vernacularNames" :key="n.value">
+                                        <div class="row align-center">
+                                            <div class="flex">
+                                                <p class="va-text-bold">{{ n.value }}</p>
+                                            </div>
+                                            <div class="flex">
+                                                <p class="va-text-secondary">{{ n.lang }}</p>
+                                            </div>
+                                            <div class="flex">
+                                                <p class="va-text-secondary">{{ n.locality }}</p>
+                                            </div>
                                         </div>
-                                        <div class="flex">
-                                            <p class="va-text-secondary">{{ n.lang }}</p>
-                                        </div>
-                                        <div class="flex">
-                                            <p class="va-text-secondary">{{ n.locality }}</p>
-                                        </div>
-                                    </div>
-                                </VaCardContent>
-                            </VaCard>
+                                    </VaCardContent>
+                                </VaCard>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="flex lg8 md8 sm12 xs12">
-                    <div class="row">
-                        <div class="flex lg12 md12 sm12 xs12" v-if="detailsObject.chromosomes?.length">
-                            <VaCard>
-                                <VaCardContent>
-                                    <div class="row">
-                                        <div class="flex lg12 md12 sm12 xs12">
-                                            <h3 class="va-h6">{{ t('item.chromosomes') }}</h3>
+                    <div class="flex lg8 md8 sm12 xs12">
+                        <div class="row">
+                            <div class="flex lg12 md12 sm12 xs12" v-if="detailsObject.chromosomes?.length">
+                                <VaCard class="data-card">
+                                    <VaCardContent>
+                                        <div class="row">
+                                            <div class="flex lg12 md12 sm12 xs12">
+                                                <h3 class="va-h6">{{ t('item.chromosomes') }}</h3>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <Chromosomes :chromosomes="detailsObject.chromosomes" :selected-chromosomes="[]"
-                                        :accession="id" />
-                                </VaCardContent>
-                            </VaCard>
-                        </div>
-                        <div v-if="hasRelatedData.length" class="flex lg12 md12 sm12 xs12">
-                            <VaCard v-if="hasRelatedData.length">
-                                <VaCardContent>
-                                    <div class="row align-center">
-                                        <div class="flex">
-                                            <h3 class="va-h6">{{ t('item.data') }}</h3>
+                                        <Chromosomes :chromosomes="detailsObject.chromosomes" :selected-chromosomes="[]"
+                                            :accession="id" />
+                                    </VaCardContent>
+                                </VaCard>
+                            </div>
+                            <div v-if="hasRelatedData.length" class="flex lg12 md12 sm12 xs12">
+                                <VaCard class="data-card">
+                                    <VaCardContent>
+                                        <div class="row align-center">
+                                            <div class="flex">
+                                                <h3 class="va-h6">{{ t('item.data') }}</h3>
+                                            </div>
                                         </div>
-                                    </div>
-                                </VaCardContent>
-                                <VaCardContent>
-                                    <VaCollapse :key="k" v-for="[k, v] in hasRelatedData"
-                                        :header="t(`models.${k}`) + ` (${Array.isArray(v) ? v.length : null})`">
-                                        <template #content>
-                                            <VaCard outlined square>
-                                                <VaCardContent>
-                                                    <VaDataTable
-                                                        @row:click="(event) => handleClick(event, (k as DataModels | 'reads'))"
-                                                        hoverable :items="(Array.isArray(v) ? v : [])"
-                                                        :columns="getColumns(k as DataModels | 'reads')">
-                                                        <template #cell(metadata.submitted_bytes)="{ rowData }">
-                                                            {{ convertBytesToMBOrGB(rowData.metadata.submitted_bytes) }}
-                                                        </template> <template #cell(actions)="{ row, isExpanded }">
-                                                            <VaButton
-                                                                :icon="isExpanded ? 'va-arrow-up' : 'va-arrow-down'"
-                                                                preset="secondary" class="w-full"
-                                                                @click="row.toggleRowDetails()">{{ t('item.details') }}
-                                                            </VaButton>
-                                                        </template>
-                                                        <template #expandableRow="{ rowData }">
-                                                            <div class="row">
-                                                                <div class="flex lg12 md12 sm12 xs12">
-                                                                    <VaCard>
-                                                                        <VaCardContent>
-                                                                            <MetadataTreeCard
-                                                                                :id="rowData.run_accession"
-                                                                                :metadata="Object.entries(rowData.metadata)" />
-                                                                        </VaCardContent>
-                                                                    </VaCard>
+                                    </VaCardContent>
+                                    <VaCardContent>
+                                        <VaCollapse :key="k" v-for="[k, v] in hasRelatedData"
+                                            :header="t(`models.${k}`) + ` (${Array.isArray(v) ? v.length : null})`">
+                                            <template #content>
+                                                <VaCard outlined square>
+                                                    <VaCardContent>
+                                                        <VaDataTable
+                                                            @row:click="(event) => handleClick(event, (k as DataModels | 'reads'))"
+                                                            hoverable :items="(Array.isArray(v) ? v : [])"
+                                                            :columns="getColumns(k as DataModels | 'reads')">
+                                                            <template #cell(metadata.submitted_bytes)="{ rowData }">
+                                                                {{
+                                                                    convertBytesToMBOrGB(rowData.metadata.submitted_bytes)
+                                                                }}
+                                                            </template> <template #cell(actions)="{ row, isExpanded }">
+                                                                <VaButton
+                                                                    :icon="isExpanded ? 'va-arrow-up' : 'va-arrow-down'"
+                                                                    preset="secondary" class="w-full"
+                                                                    @click="row.toggleRowDetails()">{{ t('item.details')
+                                                                    }}
+                                                                </VaButton>
+                                                            </template>
+                                                            <template #expandableRow="{ rowData }">
+                                                                <div class="row">
+                                                                    <div class="flex lg12 md12 sm12 xs12">
+                                                                        <VaCard>
+                                                                            <VaCardContent>
+                                                                                <MetadataTreeCard
+                                                                                    :id="rowData.run_accession"
+                                                                                    :metadata="Object.entries(rowData.metadata)" />
+                                                                            </VaCardContent>
+                                                                        </VaCard>
+                                                                    </div>
                                                                 </div>
-                                                            </div>
-                                                        </template>
-                                                    </VaDataTable>
-                                                </VaCardContent>
-                                            </VaCard>
-                                        </template>
-                                    </VaCollapse>
-                                </VaCardContent>
-                            </VaCard>
-                        </div>
-                        <div v-if="detailsObject.coordinates?.length" class="flex lg12 md12 sm12 xs12">
-                            <VaCard>
-                                <VaCardContent>
-                                    <div class="row align-center">
-                                        <div class="flex">
-                                            <h3 class="va-h6">{{ t('item.coordinates') }}</h3>
+                                                            </template>
+                                                        </VaDataTable>
+                                                    </VaCardContent>
+                                                </VaCard>
+                                            </template>
+                                        </VaCollapse>
+                                    </VaCardContent>
+                                </VaCard>
+                            </div>
+                            <div v-if="detailsObject.coordinates?.length" class="flex lg12 md12 sm12 xs12">
+                                <VaCard class="data-card">
+                                    <VaCardContent>
+                                        <div class="row align-center">
+                                            <div class="flex">
+                                                <h3 class="va-h6">{{ t('item.coordinates') }}</h3>
+                                            </div>
                                         </div>
-                                    </div>
-                                </VaCardContent>
-                                <LeafletMap :key="id" v-if="detailsObject.coordinates?.length" :selected-countries="[]"
-                                    :map-type="'points'" :countries="[]" :locations="detailsObject.coordinates" />
-                            </VaCard>
-                        </div>
+                                    </VaCardContent>
+                                    <LeafletMap :key="id" v-if="detailsObject.coordinates?.length"
+                                        :selected-countries="[]" :map-type="'points'" :countries="[]"
+                                        :locations="detailsObject.coordinates" />
+                                </VaCard>
+                            </div>
 
-                        <div class="flex lg12 md12 sm12 xs12"
-                            v-if="detailsObject.metadata && Object.keys(detailsObject.metadata).length">
-                            <VaCard>
-                                <VaCardContent>
-                                    <MetadataTreeCard :id="id" :metadata="Object.entries(detailsObject.metadata)" />
-                                </VaCardContent>
-                            </VaCard>
+                            <div class="flex lg12 md12 sm12 xs12"
+                                v-if="detailsObject.metadata && Object.keys(detailsObject.metadata).length">
+                                <VaCard class="data-card">
+                                    <VaCardContent>
+                                        <MetadataTreeCard :id="id" :metadata="Object.entries(detailsObject.metadata)" />
+                                    </VaCardContent>
+                                </VaCard>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -261,7 +272,7 @@
 </template>
 <script setup lang="ts">
 import { computed, inject, ref, watch } from 'vue';
-import { Annotation, AppConfig, Assembly, DataModels, ItemDetails, dataModels } from '../../data/types';
+import { Annotation, AppConfig, Assembly, DataModels, ItemDetails, ChromosomeInterface } from '../../data/types';
 import { useItemStore } from '../../stores/items-store';
 import Header from '../../components/Header.vue';
 import MetadataTreeCard from '../../components/MetadataTreeCard.vue';
@@ -285,8 +296,11 @@ const props = defineProps<{
     model: DataModels
 }>()
 
+
 const detailsObject = ref<ItemDetails>()
 const item = computed(() => itemStore.item)
+const filteredInsdcStatus = insdcSteps.filter(step => step.value !== 'No Entry')
+const filteredGoatStatus = goatSteps.filter(step => step.value !== 'No Entry')
 
 const groupedImages = computed(() => detailsObject.value?.avatar ? [detailsObject.value.avatar, ...detailsObject.value.images ?? []] : [...detailsObject.value?.images ?? []])
 
@@ -335,13 +349,14 @@ async function createGenomeBrowserSession() {
     }
 
     //create session
-    const { selectedAnnotations, selectedChromosomes, chromosomes, annotations, assembly } = gBStore
-    const session = mapSession()
-    gBStore.sessions = [{ selectedAnnotations, selectedChromosomes, assembly, chromosomes, annotations, session }]
+    const { chromosomes, annotations, assembly } = gBStore
+    if (!assembly) return
+    const session = mapSession(assembly, annotations, chromosomes)
+    gBStore.sessions = [{ assembly, chromosomes, annotations, session }]
     //reset form
-    gBStore.selectedAnnotations = []
-    gBStore.selectedChromosomes = []
     gBStore.assembly = null
+    gBStore.chromosomes = []
+    gBStore.annotations = []
     router.push({ name: 'jbrowse' })
 
 }
@@ -440,6 +455,7 @@ async function getRelatedData(model: DataModels, id: string) {
                 title: item.name,
                 description: "",
                 jbrowseLink: true,
+                assemblyLink: { name: 'item', params: { model: 'assemblies', id: item.assembly_accession } },
                 speciesLink: { name: 'item', params: { model: 'organisms', id: item.taxid } },
                 metadata: item.metadata,
                 downloadLink: item.gff_gz_location
@@ -450,9 +466,7 @@ async function getRelatedData(model: DataModels, id: string) {
 
 }
 
-function mapSession() {
-    const { selectedAnnotations, selectedChromosomes, assembly } = gBStore
-    if (!assembly) return
+function mapSession(assembly: Assembly, selectedAnnotations: Annotation[], selectedChromosomes: ChromosomeInterface[]) {
 
     const tracks = [
         {
@@ -505,16 +519,22 @@ function mapSession() {
 }
 
 </script>
-<style scoped>
-.fixed-card {
-    position: fixed;
+<style lang="scss" scoped>
+.data-card {
+    background: var(--va-background-secondary);
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-.row-reverse {
-    flex-direction: row-reverse;
+.section-header {
+    margin-bottom: 2rem;
+    margin-top: 2rem;
 }
 
-.column-reverse {
-    flex-direction: column-reverse;
+.image-card {
+    background: var(--va-background-secondary);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 </style>

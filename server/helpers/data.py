@@ -128,6 +128,9 @@ def generate_response(format, fields, items, limit=20, offset=0):
         return create_tsv(items.as_pymongo(), fields).encode('utf-8'), "text/tab-separated-values"
     elif format == 'jsonl':
         return generate_jsonlines(items.as_pymongo()), "application/jsonlines"
+    return generate_json(items, limit, offset)
+
+def generate_json(items, limit=20, offset=0):
     total = items.count()
     response = dict(total=total, data=list(items.skip(offset).limit(limit).as_pymongo()))
     return dump_json(response), "application/json"

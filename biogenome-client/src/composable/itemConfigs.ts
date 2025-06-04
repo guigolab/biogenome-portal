@@ -72,18 +72,86 @@ export function getLink(publication: Record<string, string>) {
 
 
 export const insdcSteps = [
-    { value: 'Biosample Submitted', label: 'insdc.biosample.label', description: 'insdc.biosample.description' },
-    { value: 'Reads Submitted', label: 'insdc.experiment.label', description: 'insdc.experiment.description' },
-    { value: 'Assemblies Submitted', label: 'insdc.assembly.label', description: 'insdc.assembly.description' },
+    {
+        value: 'No Entry',
+        label: 'insdc.not_submitted.label',
+        description: 'insdc.not_submitted.description',
+        icon: 'fa-circle-xmark',
+        color: 'danger'
+    },
+    {
+        value: 'Biosample Submitted',
+        label: 'insdc.biosample.label',
+        description: 'insdc.biosample.description',
+        icon: 'fa-vial',
+        color: 'success'
+    },
+    {
+        value: 'Reads Submitted',
+        label: 'insdc.experiment.label',
+        description: 'insdc.experiment.description',
+        icon: 'fa-folder',
+        color: 'info'
+    },
+    {
+        value: 'Assemblies Submitted',
+        label: 'insdc.assembly.label',
+        description: 'insdc.assembly.description',
+        icon: 'fa-dna',
+        color: 'primary'
+    },
 ]
 
 export const goatSteps = [
-    { value: 'Sample Collected', label: 'goat.collected.label', description: 'goat.collected.description' },
-    { value: 'Sample Acquired', label: 'goat.acquired.label', description: 'goat.acquired.description' },
-    { value: 'Data Generation', label: 'goat.generation.label', description: 'goat.generation.description' },
-    { value: 'In Assembly', label: 'goat.assembly.label', description: 'goat.assembly.description' },
-    { value: 'INSDC Submitted', label: 'goat.submitted.label', description: 'goat.submitted.description' },
-    { value: 'Publication Available', label: 'goat.publication.label', description: 'goat.publication.description' },
+    {
+        value: 'No Entry',
+        label: 'goat.not_submitted.label',
+        description: 'goat.not_submitted.description',
+        icon: 'fa-ban',
+        color: 'danger'
+    },
+    {
+        value: 'Sample Collected',
+        label: 'goat.collected.label',
+        description: 'goat.collected.description',
+        icon: 'fa-flask',
+        color: 'warning'
+    },
+    {
+        value: 'Sample Acquired',
+        label: 'goat.acquired.label',
+        description: 'goat.acquired.description',
+        icon: 'fa-house',
+        color: 'info'
+    },
+    {
+        value: 'Data Generation',
+        label: 'goat.generation.label',
+        description: 'goat.generation.description',
+        icon: 'fa-dna',
+        color: 'primary'
+    },
+    {
+        value: 'In Assembly',
+        label: 'goat.assembly.label',
+        description: 'goat.assembly.description',
+        icon: 'fa-cogs',
+        color: 'secondary'
+    },
+    {
+        value: 'INSDC Submitted',
+        label: 'goat.submitted.label',
+        description: 'goat.submitted.description',
+        icon: 'fa-upload',
+        color: 'success'
+    },
+    {
+        value: 'Publication Available',
+        label: 'goat.publication.label',
+        description: 'goat.publication.description',
+        icon: 'fa-book-open',
+        color: 'success'
+    }
 ]
 
 export const extendedModels = [...dataModels, 'reads']

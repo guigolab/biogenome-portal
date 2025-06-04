@@ -1,5 +1,5 @@
 <template>
-    <VaDateInput style="width: 100%" v-model="model" clearable :format-date="formatDate" :label="label" mode="range" type="month"
+    <VaDateInput style="width: 100%" v-model="model" clearable :format-date="formatDate" mode="range" type="month"
         prevent-overflow :allowed-years="allowedDate" :allowed-months="allowedDate" :allowed-days="allowedDate">
     </VaDateInput>
 </template>
@@ -7,7 +7,6 @@
 import { computed } from 'vue'
 
 const props = defineProps<{
-    label: string,
     value: { start: DateType, end: DateType }
 }>()
 

@@ -1,6 +1,6 @@
 import {base,download} from '../http-axios'
+import { DataModels } from '../data/types'
 
- 
 
 class GeoLocationService {
   getLocations(params:Record<string,any>) {
@@ -20,6 +20,12 @@ class GeoLocationService {
   }
   getRelatedData(data:Record<string,any>){
     return download.post('/coordinates/frequency/download', data)
+  }
+  lookupRelatedData(data:Record<string,any>){
+    return base.post('/coordinates/frequency/lookup', data)
+  }
+  lookupRelatedModelData(data:Record<string,any>, model:DataModels){
+    return base.post(`/coordinates/frequency/lookup/${model}`, data)
   }
 
 }

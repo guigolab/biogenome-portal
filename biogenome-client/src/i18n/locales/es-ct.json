@@ -19,7 +19,7 @@
             "title": "Estat de Genomes en un Arbre"
         },
         "insdc": {
-            "title": "Estat de l’Enviament a INSDC"
+            "title": "Estat de l'Enviament a INSDC"
         },
         "targetRanks": {
             "title": "Taxons Objectiu per Rang",
@@ -38,11 +38,11 @@
     },
     "tree": {
         "title": "Explorador de Taxonomia",
-        "description": "L'Explorador d'Arbre Taxonòmic et permet navegar per la taxonomia amb un Arbre Hiperbòlic D3. Usa la roda del ratolí o el panell tàctil per fer zoom, arrossega per desplaçar-te i fes clic als nodes per veure’n els detalls. Explora fàcilment per obtenir una visió dinàmica de l'arbre de la vida."
+        "description": "Navega per l'arbre de la vida amb l'Explorador d'Arbre Taxonòmic, un arbre hiperbòlic D3 interactiu. Fes zoom amb el ratolí o el panell tàctil, arrossega per desplaçar-te i fes clic als nodes per veure'n els detalls"
     },
     "map": {
         "title": "Explorador Geogràfic",
-        "description": "Dibuixa una regió al mapa per explorar i descarregar metadades de biosamples, espècies relacionades, assemblatges, experiments o anotacions genòmiques; utilitza els botons a la part superior dreta per dibuixar o esborrar una selecció."
+        "description": "Dibuixa una regió al mapa per explorar i descarregar metadades de biomostres, espècies, assemblatges, experiments i anotacions. Utilitza els controls a la part superior dreta del mapa per dibuixar o esborrar la teva selecció"
     },
     "taxon": {
         "chip": "Tàxon Seleccionat: ",
@@ -53,7 +53,13 @@
         "occurrencesMap": "Mapa d'Ocurrències",
         "clearBtn": "Esborra la Selecció",
         "showDetails": "Mostra Detalls",
-        "hideDetails": "Amaga Detalls"
+        "hideDetails": "Amaga Detalls",
+        "selectedTaxon": "Tàxon seleccionat",
+        "points": "Marcadors",
+        "heatmap": "Mapa de calor",
+        "mapCurrentlyViewed": "Veient al mapa",
+        "leaves": "Nombre d'Organismes",
+        "ranksDistribution": "Distribució de Rangos"
     },
     "genomeBrowser": {
         "title": "Navegador del Genoma",
@@ -69,19 +75,23 @@
             "createBtn": "Obrir en el Navegador del Genoma"
         },
         "assembly": {
-            "accession": "Accession de l’Assemblatge: ",
+            "accession": "Accession de l'Assemblatge: ",
             "sampleAccession": "Accession de la Mostra: ",
             "metadata": "Mostra Metadades",
             "chromosomes": "Cromosomes",
             "modalTitle": "Sobre el navegador del genoma",
-            "modelDescription": "Aquesta pàgina presenta el Visor Lineal del Genoma JBrowse 2 (JBrowse 2), una eina interactiva per explorar seqüències i anotacions genòmiques. Els usuaris poden navegar pel genoma, fer zoom en regions específiques i, quan estiguin disponibles, visualitzar anotacions com ara gens i característiques. El navegador també permet descarregar seqüències FASTA de regions seleccionades per a una anàlisi posterior. Si hi ha anotacions disponibles, els usuaris poden inspeccionar estructures gèniques, regions codificants i altres característiques genòmiques de manera clara i interactiva."
-        }
+            "modelDescription": "Aquesta pàgina presenta el Visor Lineal del Genoma JBrowse 2 (JBrowse 2), una eina interactiva per explorar seqüències i anotacions genòmiques. Els usuaris poden navegar pel genoma, fer zoom en regions específiques i, quan estiguin disponibles, visualitzar anotacions com ara gens i característiques. El navegador també permet descarregar seqüències FASTA de regions seleccionades per a una anàlisi posterior. Si hi ha anotacions disponibles, els usuaris poden inspeccionar estructures gèniques, regions codificants i altres característiques genòmiques de manera clara i interactiva.",
+            "annotations": "Anotacions"
+        },
+        "addSession": "Nova Sessió"
     },
     "items": {
         "countries": {
             "title": "Selecció de Països",
             "infoTitle": "Com es Determinen els Països",
-            "infoDescription": "Els països mostrats es determinen a partir de les metadades de la mostra, si contenen un camp 'país', o verificant si les coordenades geogràfiques de les mostres es troben dins dels límits d'un país. Tingues en compte que aquest procés pot ocasionar algunes inexactituds."
+            "infoDescription": "Els països mostrats es determinen a partir de les metadades de la mostra, si contenen un camp 'país', o verificant si les coordenades geogràfiques de les mostres es troben dins dels límits d'un país. Tingues en compte que aquest procés pot ocasionar algunes inexactituds.",
+            "showMap": "Mostra el mapa",
+            "showList": "Mostra la llista"
         },
         "filters": {
             "title": "Filtres",
@@ -119,15 +129,19 @@
         "title": "Estat INSDC",
         "biosample": {
             "label": "Biomostra enviada",
-            "description": "Almenys una biomostra d'INSDC està vinculada a aquest organisme"
+            "description": "Almenys una biomostra d'INSDC vinculada"
         },
         "experiment": {
             "label": "Lectures enviades",
-            "description": "Almenys un experiment d'INSDC està vinculat a una biomostra relacionada amb aquest organisme"
+            "description": "Almenys un experiment d'INSDC vinculat"
         },
         "assembly": {
             "label": "Assemblatges enviats",
-            "description": "Almenys un assemblatge d'INSDC està vinculat a una biomostra relacionada amb aquest organisme"
+            "description": "Almenys un assemblatge d'INSDC vinculat"
+        },
+        "not_submitted": {
+            "label": "Estat Falta",
+            "description": "Sense dades INSDC vinculades"
         }
     },
     "goat": {
@@ -155,6 +169,10 @@
         "publication": {
             "label": "Publicació disponible",
             "description": "L'assemblatge té una publicació associada amb un DOI o un ID de PubMed"
+        },
+        "not_submitted": {
+            "label": "Estat Falta",
+            "description": "Estat GoaT no disponible"
         }
     },
     "fieldLookup": {
@@ -165,6 +183,7 @@
     },
     "reportModal": {
         "title": "Descarregar informe",
+        "formatLabel": "Format",
         "description": "Seleccioneu diversos camps o introduïu-ne un de nou. Si el camp està inclòs en les metadades, utilitzeu el format: 'metadata.campQueVoleuSeleccionar'",
         "tip": "Seleccioneu TSV o JSONL per a una recuperació més ràpida",
         "queryMessage": "Introduïu un camp i verifiqueu si existeix",
@@ -182,7 +201,8 @@
         "download": "Descarregar",
         "submit": "Enviar",
         "view": "Veure",
-        "goat": "Informe GoaT"
+        "goat": "Informe GoaT",
+        "createChart": "Crear Gràfic"
     },
     "models": {
         "organisms": "Organismes",
@@ -199,5 +219,26 @@
         "french": "Francès",
         "spanish": "Castellà",
         "german": "Alemany"
+    },
+    "taxonsearch": {
+        "description": "Seleccioneu un tàxon per filtrar totes les dades a la vista actual"
+    },
+    "taxons": {
+        "resultsFound": "Tàxons Coincidents"
+    },
+    "targetListStatus": {
+        "long_list": {
+            "description": "Qualsevol espècie declarada com a objectiu per a l'escala total del projecte. Per a projectes regionals, això declara que l'espècie forma part de la biota d'una regió objectiu d'aquest projecte (per exemple, per a DToL això inclou tot UKSI més la biota irlandesa, 72.000 espècies). Per a espècies amb enfocament taxonòmic, això inclou totes les espècies assignades a un tàxon superior concret (per exemple, per a VGP la llista llarga són les 70.000 espècies de vertebrats)"
+        },
+        "family_representative": {
+            "description": "L'espècie ha estat escollida com a representant de família per a l'organització o projecte. Aquests representants impulsen la finalització dels objectius de la Fase 1 de l'Earth BioGenome Project. Les espècies etiquetades com a 'family_representative' també rebran l'etiqueta long_list a GoaT"
+        },
+        "other_priority": {
+            "description": "Una espècie prioritzada per un projecte per motius diferents de ser representant de família. Això pot incloure espècies d'interès per a la conservació, espècies en projectes pilot, espècies que aborden objectius més enllà dels representants de família de la Fase 1 d'EBP i altres subprojectes. Les espècies etiquetades com a 'other_priority' també rebran l'etiqueta long_list a GoaT."
+        }
+    },
+    "user": {
+        "dashboard": "Gestiona les Dades",
+        "login": "Inicia Sessió"
     }
 }

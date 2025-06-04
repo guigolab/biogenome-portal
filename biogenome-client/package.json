@@ -44,6 +44,7 @@
     "leaflet": "^1.9.4",
     "leaflet-draw": "^1.0.4",
     "leaflet-map": "^0.2.1",
+    "leaflet.heat": "^0.2.0",
     "leaflet.markercluster": "^1.5.3",
     "pinia": "^2.0.16",
     "react": "^18.2.0",

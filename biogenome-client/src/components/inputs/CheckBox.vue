@@ -1,11 +1,11 @@
 <template>
-    <VaSwitch size="small" v-model="model" :label= "'Has '+ label"></VaSwitch>
+    <VaSwitch size="small" v-model="model" :label= "'Has '+ field"></VaSwitch>
 </template>
 <script setup lang="ts">
 import { computed } from 'vue'
 
 const props = defineProps<{
-    label: string,
+    field: string,
     value: boolean | null
 }>()
 

@@ -14,7 +14,6 @@ def get_taxon_children(taxid):
     return children
 
 def get_ancestors(taxid):
-
     taxon = get_taxon(taxid)
     ancestors = [taxon.to_mongo().to_dict()]
     parent = TaxonNode.objects(children=taxid).exclude('id').first()
@@ -22,5 +21,7 @@ def get_ancestors(taxid):
         ancestors.append(parent.to_mongo().to_dict())
         parent = TaxonNode.objects(children=parent.taxid).exclude('id').first()
     ancestors.reverse()
+    # Filter out the root node (taxid = 1)
+    ancestors = [ancestor for ancestor in ancestors if ancestor['taxid'] != '1']
     return data_helper.dump_json(ancestors)
     

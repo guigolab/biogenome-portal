@@ -1,16 +1,19 @@
 <template>
-    <h4 style="margin: 0;" class="va-h4">
+    <div :class="[customClass]" style="margin: 0;">
         {{ counter }}
-    </h4>
+    </div>
 </template>
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
     targetValue: number,
-    duration: number
-}>()
+    duration: number,
+    customClass?: string
+}>(), {
+    customClass: 'va-h4'
+})
 
 const counter = ref(0)
 

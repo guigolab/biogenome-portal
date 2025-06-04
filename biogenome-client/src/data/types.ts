@@ -1,5 +1,63 @@
 import type { TChartData as ChartData } from 'vue-chartjs/dist/types'
 
+
+// ========================
+// String Query Operators
+// ========================
+export type StringQueryOperator =
+  | 'exact'
+  | 'iexact'
+  | 'contains'
+  | 'icontains'
+  | 'startswith'
+  | 'istartswith'
+  | 'endswith'
+  | 'iendswith'
+  | 'wholeword'
+  | 'iwholeword';
+
+export const stringQueryOperators: Record<StringQueryOperator, string> = {
+  exact: "Exact Match",
+  iexact: "Exact Match (Case Insensitive)",
+  contains: "Contains",
+  icontains: "Contains (Case Insensitive)",
+  startswith: "Starts With",
+  istartswith: "Starts With (Case Insensitive)",
+  endswith: "Ends With",
+  iendswith: "Ends With (Case Insensitive)",
+  wholeword: "Contains Whole Word",
+  iwholeword: "Contains Whole Word (Case Insensitive)",
+};
+
+// ========================
+// Number/Date Query Operators
+// ========================
+export type NumberDateQueryOperator =
+  | 'lt'
+  | 'lte'
+  | 'gt'
+  | 'gte'
+  | 'range';
+
+export const numberDateQueryOperators: Record<NumberDateQueryOperator, string> = {
+  lt: "Less Than",
+  lte: "Less Than or Equal To",
+  gt: "Greater Than",
+  gte: "Greater Than or Equal To",
+  range: "Between (Range)",
+};
+
+// ========================
+// List Query Operators
+// ========================
+export type ListQueryOperator = 'in' | 'nin' | 'all';
+
+export const listQueryOperators: Record<ListQueryOperator, string> = {
+  in: "In List",
+  nin: "Not In List",
+  all: "Contains All Items",
+};
+
 export type ColorThemes = {
   [key: string]: string
 }
@@ -18,6 +76,7 @@ export type ItemDetails = {
   blobtoolkitLink?: string
   speciesLink?: Record<string, any>
   sampleLink?: Record<string, any>
+  assemblyLink?: Record<string, any>
   jbrowseLink?: boolean
   downloadLink?: string
   chromosomes?: ChromosomeInterface[]

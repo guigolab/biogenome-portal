@@ -4,6 +4,6 @@ export const iconMap = {
     experiments: { icon: 'fa-folder', color: 'info' },
     assemblies: { icon: 'fa-dna', color: 'primary' },
     annotations: { icon: 'fa-bars-staggered', color: 'secondary' },
-    organisms: { icon: 'fa-paw', color: 'textPrimary' },
+    organisms: { icon: 'fa-paw', color: 'text-primary' },
     submitted_biosamples: { icon: 'fa-vial', color: 'secondary' }
 }

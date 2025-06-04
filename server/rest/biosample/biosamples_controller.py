@@ -64,6 +64,7 @@ class BioSamplesSubmit(Resource):
 
     @jwt_required()
     def post(self):
+        print(request.json)
         data = request.json if request.is_json else request.form
         json_resp, code = biosamples_service.submit_sample(data)
         return Response(json.dumps(json_resp), mimetype="application/json", status=code)

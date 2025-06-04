@@ -1,107 +1,35 @@
 <template>
     <div>
-        <div class="row">
-            <div class="flex">
-                <Header title-class="va-h1" description-class="va-text-secondary" :title="t('map.title')"
-                    :description="t('map.description')" />
-            </div>
-        </div>
-        <div class="row">
-            <div class="flex lg12 md12 sm12 xs12">
-                <div class="row justify-space-between align-center">
-                    <div class="flex lg6 md6 sm12 xs12">
-                        <VaCard>
-                            <TaxonSearch />
-                        </VaCard>
-                    </div>
-                    <div class="flex">
-                        <div class="row align-center">
-                            <div v-if="currentTaxon" class="flex">
-                                <TaxonChip />
-                            </div>
-                            <div class="flex">
-                                <VaButtonDropdown :disabled="locations.length === 0" :close-on-content-click="false"
-                                    stick-to-edges label="Report" color="textPrimary" preset="primary" left-icon
-                                    icon="fa-file-arrow-down" opened-icon="fa-file-arrow-down">
-                                    <div class="layout va-gutter-1 fluid">
-                                        <div class="row">
-                                            <div class="flex lg12 md12 sm12 xs12">
-                                                <VaOptionList v-model="selectedModel" type="radio" :options="models" />
-                                            </div>
-                                            <div class="flex lg12 md12 sm12 xs12">
-                                                <VaButton :loading="isLoading" @click="downloaData" block>
-                                                    Download
-                                                </VaButton>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </VaButtonDropdown>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="flex lg12 md12 sm12 xs12">
-                        <div class="map-container">
-                            <div ref="lMap" class="leaflet-map-2"></div>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
+        <div class="map-container">
+            <div ref="lMap" class="leaflet-map-2"></div>
+            <MapStatsDropdown v-if="showStatsDropdown" :filtered-counts="filteredCounts" :polygon="polygon"
+                :taxid="currentTaxon?.taxid" @close="showStatsDropdown = false" />
         </div>
         <VaModal hide-default-actions close-button v-model="showSamples">
-            <h3 class="va-h3">{{ t('items.data.results') }} {{ samples.length }}</h3>
-            <p class="light-paragraph mb-15">
-                Latitude: {{ lat }}; Longitude: {{ lng }}
-            </p>
-            <VaDataTable sticky-header height="400px" :columns="['scientific_name', 'sample_accession']"
-                :items="samples">
-                <template #cell(scientific_name)="{ rowData }">
-                    <VaChip flat
-                        @click="handleRoute({ name: 'item', params: { model: 'organisms', id: rowData.taxid } })">
-                        {{ rowData.scientific_name }}
-                    </VaChip>
-                </template>
-                <template #cell(sample_accession)="{ rowData }">
-                    <VaChip flat
-                        @click="handleRoute({ name: 'item', params: { model: rowData.is_local_sample ? 'local_samples' : 'biosamples', id: rowData.sample_accession } })">
-                        {{ rowData.sample_accession }}
-                    </VaChip>
-                </template>
-            </VaDataTable>
+            <SampleListModal :samples="samples" :lat="lat" :lng="lng" @route="handleRoute" />
         </VaModal>
     </div>
 </template>
 
 <script setup lang="ts">
-import { computed, inject, ref, watch } from 'vue'
-import 'leaflet-draw'
+import { computed, inject, ref, watch, shallowRef} from 'vue'
 import L, { Control } from 'leaflet'
 import type { TileLayer } from 'leaflet'
-import Header from '../../components/Header.vue'
-import { useI18n } from 'vue-i18n'
-import TaxonSearch from '../../components/TaxonSearch.vue'
-import { useTaxonomyStore } from '../../stores/taxonomy-store'
-import { useMapStore } from '../../stores/map-store'
+import 'leaflet-draw'
 import 'leaflet/dist/leaflet.css'
 import 'leaflet-draw/dist/leaflet.draw.css'
+import { useTaxonomyStore } from '../../stores/taxonomy-store'
+import { useMapStore } from '../../stores/map-store'
 import GeoLocationService from '../../services/GeoLocationService'
-import TaxonChip from '../../components/TaxonChip.vue'
 import { useColors } from 'vuestic-ui/web-components'
 import { useRouter } from 'vue-router'
-import { AppConfig, DataModels, SampleLocations } from '../../data/types'
-import { useItemStore } from '../../stores/items-store'
-import { RefSymbol } from '@vue/reactivity'
-
+import { AppConfig, SampleLocations } from '../../data/types'
+import SampleListModal from '../../components/SampleListModal.vue'
+import MapStatsDropdown from '../../components/MapStatsDropdown.vue'
 
 const taxonomyStore = useTaxonomyStore()
 const mapStore = useMapStore()
-const itemStore = useItemStore()
 const currentTaxon = computed(() => taxonomyStore.currentTaxon)
-const { t } = useI18n()
 // Replace with your actual locations
 const pointsLayerGroup = ref(L.layerGroup());
 const config = inject('appConfig') as AppConfig
@@ -113,9 +41,9 @@ const models = computed(() =>
             return k
         }
         ))
-const selectedModel = ref<DataModels>('organisms')
-const lMap = ref<HTMLDivElement | null>(null);
-const map = ref<L.Map | null>(null);
+
+const lMap = shallowRef<HTMLDivElement | null>(null);
+const map = shallowRef<L.Map | null>(null);
 let drawnItems: L.FeatureGroup
 let polygonLayer: L.Polygon | null = null
 const locations = ref<Record<string, any>[]>([])
@@ -126,14 +54,22 @@ const lng = ref()
 const router = useRouter()
 const samples = ref<SampleLocations[]>([])
 const polygon = ref<Record<string, any> | null>(null)
-const isLoading = ref(false)
+const counts = ref<Record<string, number>>({})
+const showStatsDropdown = ref(false)
+
+const filteredCounts = computed(() => {
+    return Object.entries(counts.value).filter(([key, value]) => models.value.includes(key) && value > 0).map(([key, value]) => ({ key, value }))
+})
 
 watch(() => [currentTaxon.value, polygon.value], async () => {
     await mapStore.getCoordinates({ taxid: currentTaxon.value?.taxid, polygon: polygon.value })
     locations.value = [...mapStore.locations]
-    if (!map.value) initMap()
+    if(!map.value) {
+        initMap()
+    }
     renderPoints()
-}, { immediate: true })
+    await lookupRelatedData()
+}, { immediate: true, deep: true })
 
 
 function handleRoute(route: any) {
@@ -145,9 +81,11 @@ const renderPoints = () => {
     if (!map.value) return;
     pointsLayerGroup.value.clearLayers();
     map.value?.removeLayer(pointsLayerGroup.value as any)
+    const bounds: [number, number][] = [];
     locations.value.forEach((item) => {
         // console.log(item)
         const [lng, lat] = item.coordinates;
+        bounds.push([lat, lng]);
         const marker = L.circleMarker([lat, lng], { color: getPointsColor(item.count), radius: 10 });
 
         // Add hover event (mouseover)
@@ -178,73 +116,30 @@ const renderPoints = () => {
         pointsLayerGroup.value.addLayer(marker);
     });
     map.value.addLayer(pointsLayerGroup.value as any)
-    map.value.invalidateSize(); // Ensure map renders correctly
+
+    if (bounds.length > 0) {
+        map.value.fitBounds(bounds);
+    }
 };
 
 const initMap = () => {
     if (!lMap.value) return;
 
     map.value = L.map(lMap.value)
-
-    map.value.setView([0, 0], 2);
-
     // Add OpenStreetMap tile layer
     const tileLayer: TileLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        noWrap: true
     });
-    tileLayer.addTo(map.value as any);
+    tileLayer.addTo(map.value);
 
-    var legend = new Control({ position: 'bottomright' });
-
-    legend.onAdd = function (_: any) {
-
-        var div = L.DomUtil.create('div', 'info legend'),
-            grades = [0, 10, 20, 50, 100, 200, 500, 1000],
-            labels = [];
-
-        // loop through our density intervals and generate a label with a colored square for each interval
-        for (var i = 0; i < grades.length; i++) {
-            div.innerHTML +=
-                '<p> <i style="background:' + getPointsColor(grades[i] + 1) + '"></i> ' +
-                grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] : '+') + '</p>';
-        }
-
-        return div;
-    };
-
+    const legend = createLegend()
     legend.addTo(map.value as any);
 
     drawnItems = new L.FeatureGroup()
     map.value.addLayer(drawnItems)
 
-    const drawControl = new L.Control.Draw({
-        position: 'topright',
-
-        draw: {
-            polygon: {
-                allowIntersection: false, // Restricts shapes to simple polygons
-                drawError: {
-                    color: '#e1e100', // Color the shape will turn when intersects
-                    message: '<strong>Oh snap!<strong> you can\'t draw that!' // Message that will show when intersect
-                },
-                shapeOptions: {
-                    color: '#97009c'
-                }
-            },
-            // disable toolbar item by setting it to false
-            polyline: false,
-            circle: false, // Turns off this drawing tool
-            rectangle: false,
-            marker: false,
-            circlemarker: false,
-        },
-        edit: {
-            featureGroup: drawnItems,
-            edit: false,
-            remove: false
-        }
-
-    })
+    const drawControl = createDrawButton()
 
     map.value.addControl(drawControl)
 
@@ -258,40 +153,15 @@ const initMap = () => {
         drawnItems.addLayer(polygonLayer)
         polygon.value = polygonLayer.toGeoJSON().geometry as any
     })
-    const customButton = L.Control.extend({
-        options: {
-            position: 'topright', // 'topleft', 'topright', 'bottomleft', 'bottomright'
-        },
 
-        onAdd: function (map: L.Map) {
-            const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom')
+    // ... existing customButton for reset ...
+    const resetButton = createResetButton()
+    map.value?.addControl(new resetButton())
 
-            container.innerHTML = '<i class="fa fa-trash"></i>' // or any icon/text you want
-            container.title = 'Reset'
+    const statsButton = createStatsButton()
+    map.value?.addControl(new statsButton())
 
-            container.style.backgroundColor = 'white'
-            container.style.width = '34px'
-            container.style.height = '34px'
-            container.style.display = 'flex'
-            container.style.justifyContent = 'center'
-            container.style.alignItems = 'center'
-            container.style.cursor = 'pointer'
-
-            L.DomEvent.disableClickPropagation(container)
-
-            container.onclick = function () {
-                // Your custom logic here
-                drawnItems.clearLayers()
-                if (polygon.value) polygon.value = null
-            }
-
-            return container
-        }
-    })
-
-    map.value?.addControl(new customButton())
-
-};
+}
 
 function getPointsColor(d: number) {
     return d > 1000 ? '#00429d' : // Dark Blue
@@ -304,6 +174,99 @@ function getPointsColor(d: number) {
                                 '#31a354';       // Dark Green
 }
 
+function createLegend() {
+    const legend = new Control({ position: 'bottomright' });
+
+    legend.onAdd = function (_: any) {
+        var div = L.DomUtil.create('div', 'info legend'),
+            grades = [0, 10, 20, 50, 100, 200, 500, 1000],
+            labels = [];
+        for (var i = 0; i < grades.length; i++) {
+            div.innerHTML +=
+                '<p> <i style="background:' + getPointsColor(grades[i] + 1) + '"></i> ' +
+                grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] : '+') + '</p>';
+        }
+        return div;
+    };
+    return legend
+}
+
+function createStatsButton() {
+    return L.Control.extend({
+        options: { position: 'topright' },
+        onAdd: function () {
+            const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom')
+            container.innerHTML = '<i class="fa fa-chart-bar"></i>'
+            container.title = 'Show Stats'
+            container.style.backgroundColor = 'white'
+            container.style.width = '34px'
+            container.style.height = '34px'
+            container.style.display = 'flex'
+            container.style.justifyContent = 'center'
+            container.style.alignItems = 'center'
+            container.style.cursor = 'pointer'
+            L.DomEvent.disableClickPropagation(container)
+            container.onclick = function () {
+                showStatsDropdown.value = !showStatsDropdown.value
+            }
+            return container
+        }
+    })
+}
+
+function createDrawButton() {
+    return new L.Control.Draw({
+        position: 'topright',
+        draw: {
+            polygon: {
+                allowIntersection: false,
+                drawError: {
+                    color: '#e1e100',
+                    message: '<strong>Oh snap!<strong> you can\'t draw that!'
+                },
+                shapeOptions: {
+                    color: '#97009c'
+                }
+            },
+            polyline: false,
+            circle: false,
+            rectangle: false,
+            marker: false,
+            circlemarker: false,
+        },
+        edit: {
+            featureGroup: drawnItems,
+            edit: false,
+            remove: false
+        }
+    })
+}
+
+function createResetButton() {
+    return L.Control.extend({
+        options: {
+            position: 'topright',
+        },
+        onAdd: function (map: L.Map) {
+            const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom')
+            container.innerHTML = '<i class="fa fa-trash"></i>'
+            container.title = 'Reset'
+            container.style.backgroundColor = 'white'
+            container.style.width = '34px'
+            container.style.height = '34px'
+            container.style.display = 'flex'
+            container.style.justifyContent = 'center'
+            container.style.alignItems = 'center'
+            container.style.cursor = 'pointer'
+            L.DomEvent.disableClickPropagation(container)
+            container.onclick = function () {
+                drawnItems.clearLayers()
+                if (polygon.value) polygon.value = null
+            }
+            return container
+        }
+    })
+}
 async function getSamplesByCoords(latitude: number, longitude: number) {
     lat.value = latitude
     lng.value = longitude
@@ -312,30 +275,105 @@ async function getSamplesByCoords(latitude: number, longitude: number) {
     samples.value = [...data]
 }
 
-async function downloaData() {
-    const query = { polygon: polygon.value, taxid: currentTaxon.value?.taxid, model: selectedModel.value }
-    try {
-        isLoading.value = true
-        const { data } = await GeoLocationService.getRelatedData(query)
-        itemStore.downloadFile(selectedModel.value, data, 'tsv')
-    } catch (e) {
-        itemStore.catchError(e)
-    } finally {
-        isLoading.value = false
-    }
-
+async function lookupRelatedData() {
+    const query = { polygon: polygon.value, taxid: currentTaxon.value?.taxid }
+    const { data } = await GeoLocationService.lookupRelatedData(query)
+    counts.value = { ...data }
 }
 
+
 </script>
-<style>
+<style lang="scss" scoped>
 .map-container {
-    position: relative;
-    z-index: 100;
+    height: 80vh;
+    padding: 1rem;
 }
 
 .leaflet-map-2 {
-    height: 80vh;
     width: 100%;
-    z-index: 99;
+    height: 100%;
+}
+
+.custom-sample-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    max-height: 400px;
+    overflow-y: auto;
+    margin-bottom: 1rem;
+}
+
+.sample-list-item {
+    background: var(--va-background-secondary);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+.sample-list-content {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+}
+
+.sample-chip {
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    padding: 0.25rem 1rem;
+    border-radius: 6px;
+    transition: background 0.2s;
+
+    &:hover {
+        background: var(--va-primary-light);
+        color: var(--va-primary);
+    }
+}
+
+.stats-dropdown-card {
+    position: absolute;
+    top: 2.5rem;
+    right: 2.5rem;
+    width: 350px;
+    background: var(--va-background-primary);
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    padding: 1.5rem 1.5rem 1rem 1.5rem;
+    z-index: 3000;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.stats-chips-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.stats-chip {
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 1rem;
+    border-radius: 6px;
+    padding: 0.25rem 1rem;
+    transition: background 0.2s;
+}
+
+.stats-key-value {
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.stats-table-loading {
+    min-height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 </style>

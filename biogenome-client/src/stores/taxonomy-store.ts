@@ -3,6 +3,7 @@ import { DataModels, SearchForm, TaxonNode } from '../data/types'
 import TaxonService from '../services/TaxonService'
 import { AxiosError } from 'axios'
 import { TreeNode, useToast } from 'vuestic-ui'
+import { ref } from 'vue'
 
 const initSearchForm: SearchForm = {
   filter: '',
@@ -18,10 +19,13 @@ const initPagination = {
 
 export const useTaxonomyStore = defineStore('taxonomy', {
   state: () => {
+    const currentTaxon = ref<TaxonNode | null>(null)
+    const showSidebar = ref(false)
+
     return {
       searchForm: { ...initSearchForm },
       pagination: { ...initPagination },
-      currentTaxon: null as TaxonNode | null,
+      currentTaxon,
       rootNode: null as TaxonNode | null,
       taxidQuery: null as string | null,
       taxons: [] as TaxonNode[],
@@ -35,9 +39,9 @@ export const useTaxonomyStore = defineStore('taxonomy', {
       isOutOfBoundaries: false,
       isWikiLoading: false,
       showTree: false,
-      showSidebar: false,
+      showSidebar,
       treeData: null as Record<string, any> | null,
-      init: useToast().init
+      init: useToast().init,
     }
   },
 
@@ -48,7 +52,7 @@ export const useTaxonomyStore = defineStore('taxonomy', {
     resetPagination() {
       this.pagination = { ...initPagination }
     },
-    resetTaxon(){
+    resetTaxon() {
       this.currentTaxon = null
       this.showSidebar = false
     },

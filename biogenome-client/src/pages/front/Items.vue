@@ -1,102 +1,81 @@
 <template>
-    <div>
-        <div class="row">
-            <div class="flex">
-                <Header title-class="va-h1" description-class="va-text-secondary"
-                    :title="(modelConfigs.title as LangOption)"
-                    :description="(modelConfigs.description as LangOption)" />
+    <div class="layout fluid va-gutter-3">
+        <div class="content-section">
+            <div class="filters-section">
+                <ItemFilter :model="model" :has-charts="hasCharts" />
             </div>
-        </div>
-        <div class="row">
-            <div class="flex lg12 md12 sm12 xs12">
-                <VaCard>
-                    <TaxonSearch />
-
-                </VaCard>
-
-            </div>
-        </div>
-        <div class="row row-equal">
-            <div class="flex lg3 md4 sm12 xs12">
-                <ItemsFilterCard :model="model" />
-            </div>
-            <div class="flex lg9 md8 sm12 xs12">
-                <!-- <div class="row">
-                    <div v-if="mapStore.showCountriesMap" class="flex lg12 md12 sm12 xs12"> -->
-                <div v-if="mapStore.showCountriesMap && model === 'organisms'" class="row">
-                    <div class="flex lg12 md12 sm12 xs12">
-                        <VaCard>
-                            <VaCardContent>
-                                <div class="row align-center">
-                                    <div class="flex">
-                                        <h4 class="va-h6">
-                                            {{ t('items.countries.title') }}
-                                        </h4>
-                                    </div>
-                                    <div class="flex">
-                                        <VaIcon @click="showModal = !showModal" color="info" name="fa-circle-question">
-
-                                        </VaIcon>
-                                    </div>
-                                </div>
-                            </VaCardContent>
-                            <VaCardContent>
-                                <LeafletMap :selected-countries="mapStore.selectedCountries"
-                                    :locations="mapStore.locations" :countries="mapStore.countries"
-                                    @country-selected="handleCountry" :map-type="'cloropleth'" />
-                            </VaCardContent>
-                        </VaCard>
-                    </div>
+            <VaCard v-if="itemStore.view === 'table'" class="data-card">
+                <Table :columns="columns" :model="model" />
+            </VaCard>
+            <div v-else class="row">
+                <div v-for="chart, index in charts" :key="`${index}-${chart.model}-${chart.field}`"
+                    :class="chart.class">
+                    <Chart :chart="chart" :index="index" :ignore-query="false" />
                 </div>
-                <ItemsTableCard :class="[mapStore.showCountriesMap && model === 'organisms' ? 'card-custom-h' : '']"
-                    :model="model" />
             </div>
         </div>
-        <VaModal v-model="showModal" ok-text="Ok">
-            <h3 class="va-h3">
-                {{ t('items.countries.infoTitle') }}
-            </h3>
-            <p>
-                {{ t('items.countries.infoDescription') }}
-            </p>
-        </VaModal>
     </div>
 </template>
+
 <script setup lang="ts">
-import { computed, inject, ref } from 'vue'
-import { DataModels, LangOption, AppConfig, ConfigModel } from '../../data/types'
-import Header from '../../components/Header.vue';
-import TaxonSearch from '../../components/TaxonSearch.vue';
-import { useItemStore } from '../../stores/items-store';
-import LeafletMap from '../../components/LeafletMap.vue';
-import { useMapStore } from '../../stores/map-store';
-import ItemsFilterCard from '../../components/ItemsFilterCard.vue';
-import ItemsTableCard from '../../components/ItemsTableCard.vue';
-import { useI18n } from 'vue-i18n';
+import { computed, inject, watch } from 'vue'
+import { DataModels, AppConfig, ConfigModel } from '../../data/types'
+import Chart from '../../components/Chart.vue'
+import Table from '../../components/Table.vue'
+import { useItemStore } from '../../stores/items-store'
+import { useTaxonomyStore } from '../../stores/taxonomy-store'
+import ItemFilter from '../../components/ItemsFilter.vue'
 
-const config = inject('appConfig') as AppConfig
-
-const { t } = useI18n()
 const props = defineProps<{
     model: DataModels
 }>()
 
-const showModal = ref(false)
-const itemStore = useItemStore()
-const mapStore = useMapStore()
-const modelConfigs = computed(() => config.models[props.model] as ConfigModel)
+const config = inject('appConfig') as AppConfig
 
-async function handleCountry(country: { id: string, name: string }) {
-    const existingCountry = mapStore.selectedCountries.find(c => c.id === country.id)
-    if (existingCountry) mapStore.selectedCountries = [...mapStore.selectedCountries.filter(c => c.id !== country.id)]
-    else mapStore.selectedCountries = [...mapStore.selectedCountries, country]
-    itemStore.setSearchFormField('countries__in', mapStore.selectedCountries.map(({ id }) => id).join(','))
-    await itemStore.handleQuery()
-}
+const itemStore = useItemStore()
+const taxonomyStore = useTaxonomyStore()
+
+const modelConfigs = computed(() => config.models[props.model] as ConfigModel)
+const charts = computed(() => modelConfigs.value.charts ?? [])
+const columns = computed(() => modelConfigs.value.columns ?? [])
+const hasCharts = computed(() => charts.value.length > 0)
+
+watch(() => props.model, async (newValue) => {
+    await itemStore.handleQuery(newValue)
+}, { immediate: true })
+
+watch(() => taxonomyStore.currentTaxon, async (newValue) => {
+    itemStore.setSearchFormField('taxon_lineage', newValue?.taxid)
+    await itemStore.fetchItems(props.model)
+})
+
 
 </script>
-<style>
-.card-custom-h {
-    height: fit-content !important;
+
+<style lang="scss" scoped>
+.content-section {
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+.filters-section {
+    margin-bottom: 0.75rem;
+}
+
+.data-card {
+    background: var(--va-background-secondary);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: box-shadow 0.2s, transform 0.2s;
+
+    &:hover {
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.10);
+    }
+}
+
+@media (max-width: 768px) {
+    .filters-section {
+        margin-bottom: 0.5rem;
+    }
 }
 </style>

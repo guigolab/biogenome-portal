@@ -123,7 +123,6 @@ def add_image(taxid, image):
 
 
 def create_query(data):
-    print(data)
     query = Q()
     polygon = data.get('polygon')
     if polygon:

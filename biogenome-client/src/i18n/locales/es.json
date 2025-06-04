@@ -38,11 +38,11 @@
     },
     "tree": {
         "title": "Explorador de Taxonomía",
-        "description": "El Explorador de Árbol Taxonómico te permite navegar por la taxonomía con un Árbol Hiperbólico D3. Usa la rueda del ratón o el panel táctil para hacer zoom, arrastra para desplazarte y haz clic en los nodos para ver detalles. Explora fácilmente para obtener una vista dinámica del árbol de la vida."
+        "description": "Navega por el árbol de la vida con el Explorador de Árbol Taxonómico, un árbol hiperbólico D3 interactivo. Haz zoom con el ratón o el panel táctil, arrastra para desplazarte y haz clic en los nodos para ver detalles"
     },
     "map": {
         "title": "Explorador Geográfico",
-        "description": "Dibuja una región en el mapa para explorar y descargar metadatos de biosamples, especies relacionadas, ensamblajes, experimentos o anotaciones genómicas; utiliza los botones en la parte superior derecha para dibujar o borrar una selección."
+        "description": "Dibuja una región en el mapa para explorar y descargar metadatos de biosamples, especies, ensamblajes, experimentos y anotaciones. Usa los controles en la parte superior derecha del mapa para dibujar o borrar tu selección"
     },
     "taxon": {
         "chip": "Taxón Seleccionado: ",
@@ -53,7 +53,13 @@
         "occurrencesMap": "Mapa de Ocurrencias",
         "clearBtn": "Borrar Selección",
         "showDetails": "Mostrar Detalles",
-        "hideDetails": "Ocultar Detalles"
+        "hideDetails": "Ocultar Detalles",
+        "selectedTaxon": "Taxón seleccionado",
+        "points": "Marcadores",
+        "heatmap": "Mapa de calor",
+        "mapCurrentlyViewed": "Viendo en el mapa",
+        "leaves": "Número de Organismos",
+        "ranksDistribution": "Distribución de Rangos"
     },
     "genomeBrowser": {
         "title": "Navegador del Genoma",
@@ -74,14 +80,18 @@
             "metadata": "Mostrar Metadatos",
             "chromosomes": "Cromosomas",
             "modalTitle": "Sobre el navegador del genoma",
-            "modelDescription": "Esta página presenta el Visor Lineal del Genoma JBrowse 2 (JBrowse 2), una herramienta interactiva para explorar secuencias y anotaciones genómicas. Los usuarios pueden navegar por el genoma, hacer zoom en regiones específicas y, cuando estén disponibles, visualizar anotaciones como genes y características. El navegador también permite descargar secuencias FASTA de regiones seleccionadas para su posterior análisis. Si hay anotaciones disponibles, los usuarios pueden inspeccionar estructuras génicas, regiones codificantes y otras características genómicas de forma clara e interactiva."
-        }
+            "modelDescription": "Esta página presenta el Visor Lineal del Genoma JBrowse 2 (JBrowse 2), una herramienta interactiva para explorar secuencias y anotaciones genómicas. Los usuarios pueden navegar por el genoma, hacer zoom en regiones específicas y, cuando estén disponibles, visualizar anotaciones como genes y características. El navegador también permite descargar secuencias FASTA de regiones seleccionadas para su posterior análisis. Si hay anotaciones disponibles, los usuarios pueden inspeccionar estructuras génicas, regiones codificantes y otras características genómicas de forma clara e interactiva.",
+            "annotations": "Anotaciones"
+        },
+        "addSession": "Nueva Sesión"
     },
     "items": {
         "countries": {
             "title": "Selección de Países",
             "infoTitle": "Cómo se Determinan los Países",
-            "infoDescription": "Los países mostrados se determinan en función de los metadatos de la muestra, si contienen un campo 'país', o verificando si las coordenadas geográficas de las muestras se encuentran dentro de los límites de un país. Ten en cuenta que este proceso puede ocasionalmente resultar en inexactitudes."
+            "infoDescription": "Los países mostrados se determinan en función de los metadatos de la muestra, si contienen un campo 'país', o verificando si las coordenadas geográficas de las muestras se encuentran dentro de los límites de un país. Ten en cuenta que este proceso puede ocasionalmente resultar en inexactitudes.",
+            "showMap": "Mostrar mapa",
+            "showList": "Mostrar lista"
         },
         "filters": {
             "title": "Filtros",
@@ -119,15 +129,19 @@
         "title": "Estado de INSDC",
         "biosample": {
             "label": "Biosample Enviado",
-            "description": "Al menos una BioSample de INSDC está vinculada a este organismo"
+            "description": "Al menos una BioSample de INSDC vinculada"
         },
         "experiment": {
             "label": "Lecturas Enviadas",
-            "description": "Al menos un Experimento INSDC está vinculado a una BioSample relacionada con este organismo"
+            "description": "Al menos un Experimento INSDC vinculado"
         },
         "assembly": {
             "label": "Ensamblajes Enviados",
-            "description": "Al menos un Ensamblaje INSDC está vinculado a una BioSample relacionada con este organismo"
+            "description": "Al menos un Ensamblaje INSDC vinculado"
+        },
+        "not_submitted": {
+            "label": "Estado Faltante",
+            "description": "Sin datos INSDC vinculados"
         }
     },
     "goat": {
@@ -155,6 +169,10 @@
         "publication": {
             "label": "Publicación Disponible",
             "description": "El ensamblaje tiene una publicación asociada con un DOI o un ID de PubMed"
+        },
+        "not_submitted": {
+            "label": "Estado Faltante",
+            "description": "Estado GoaT no disponible"
         }
     },
     "fieldLookup": {
@@ -165,6 +183,7 @@
     },
     "reportModal": {
         "title": "Descargar Informe",
+        "formatLabel": "Formato",
         "description": "Selecciona múltiples campos o escribe un nuevo campo. Si el campo está contenido en los metadatos, usa el formato: 'metadata.campoQueQuieresSeleccionar'",
         "tip": "Selecciona TSV o JSONL para una recuperación más rápida",
         "queryMessage": "Escribe un campo y verifica si existe",
@@ -182,7 +201,8 @@
         "download": "Descargar",
         "submit": "Enviar",
         "view": "Ver",
-        "goat": "Informe GoaT"
+        "goat": "Informe GoaT",
+        "createChart": "Crear Gráfico"
     },
     "models": {
         "organisms": "Organismos",
@@ -199,5 +219,26 @@
         "french": "Francés",
         "spanish": "Español",
         "german": "Alemán"
+    },
+    "taxonsearch": {
+        "description": "Seleccione un taxón para filtrar todos los datos en la vista actual"
+    },
+    "taxons": {
+        "resultsFound": "Taxones Coincidentes"
+    },
+    "targetListStatus": {
+        "long_list": {
+            "description": "Cualquier especie declarada como objetivo para la escala total del proyecto. Para proyectos regionales, esto declara que la especie es parte de la biota de una región objetivo de este proyecto (por ejemplo, para DToL esto incluye todo UKSI más la biota irlandesa, 72,000 especies). Para especies con enfoque taxonómico, esto incluye todas las especies asignadas a un taxón superior particular (por ejemplo, para VGP la lista larga son las 70,000 especies de vertebrados)"
+        },
+        "family_representative": {
+            "description": "La especie ha sido elegida como representante de familia para la organización o proyecto. Estos representantes impulsan la finalización de los objetivos de la Fase 1 del Earth BioGenome Project. Las especies etiquetadas como 'family_representative' también recibirán la etiqueta long_list en GoaT"
+        },
+        "other_priority": {
+            "description": "Una especie priorizada por un proyecto por razones distintas a ser representante de familia. Esto puede incluir especies de interés para la conservación, especies en proyectos piloto, especies que abordan objetivos más allá de los representantes de familia de la Fase 1 de EBP y otros subproyectos. Las especies etiquetadas como 'other_priority' también recibirán la etiqueta long_list en GoaT."
+        }
+    },
+    "user": {
+        "dashboard": "Gestionar Datos",
+        "login": "Iniciar Sesión"
     }
 }

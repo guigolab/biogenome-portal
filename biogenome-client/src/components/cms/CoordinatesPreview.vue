@@ -44,8 +44,7 @@
                         <VaCardContent>
                             <div class="row">
                                 <div class="flex lg12 md12 sm12 xs12">
-                                    <LeafletMap :locations="[loc]" :map-type="'points'" :countries="[]"
-                                        :selected-countries="[]" />
+                                    <LocationsMap :locations="[loc]" />
                                 </div>
                             </div>
                         </VaCardContent>
@@ -58,8 +57,8 @@
 </template>
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import LeafletMap from '../LeafletMap.vue';
 import { useSampleStore } from '../../stores/sample-store';
+import LocationsMap from '../LocationsMap.vue';
 
 const sampleStore = useSampleStore()
 

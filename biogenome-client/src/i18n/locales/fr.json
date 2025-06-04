@@ -38,11 +38,11 @@
     },
     "tree": {
         "title": "Explorateur Taxonomique",
-        "description": "L'Explorateur de l'Arbre Taxonomique vous permet de naviguer dans la taxonomie avec un arbre hyperbolique D3. Zoomez avec la molette de la souris ou le pavé tactile, faites glisser pour vous déplacer et cliquez sur les nœuds pour voir les détails. Explorez facilement pour une vue dynamique de l'arbre de la vie."
+        "description": "Naviguez dans l'arbre de la vie avec l'Explorateur de l'Arbre Taxonomique, un arbre hyperbolique D3 interactif. Zoomez avec la souris ou le pavé tactile, faites glisser pour vous déplacer et cliquez sur les nœuds pour révéler les détails"
     },
     "map": {
         "title": "Explorateur Géographique",
-        "description": "Dessinez une région sur la carte pour explorer et télécharger les métadonnées des biosamples, des espèces associées, des assemblages, des expériences ou des annotations génomiques ; utilisez les boutons en haut à droite pour dessiner ou effacer une sélection."
+        "description": "Dessinez une région sur la carte pour explorer et télécharger les métadonnées des biosamples, espèces, assemblages, expériences et annotations. Utilisez les contrôles en haut à droite de la carte pour dessiner ou effacer votre sélection"
     },
     "taxon": {
         "chip": "Taxon Sélectionné : ",
@@ -53,7 +53,13 @@
         "occurrencesMap": "Carte des Occurrences",
         "clearBtn": "Effacer la Sélection",
         "showDetails": "Afficher les Détails",
-        "hideDetails": "Masquer les Détails"
+        "hideDetails": "Masquer les Détails",
+        "selectedTaxon": "Taxon sélectionné",
+        "points": "Marqueurs",
+        "heatmap": "Carte de chaleur",
+        "mapCurrentlyViewed": "Affichage sur la carte",
+        "leaves": "Nombre d'Organismes",
+        "ranksDistribution": "Distribution des Rangs"
     },
     "genomeBrowser": {
         "title": "Navigateur du Génome",
@@ -74,14 +80,18 @@
             "metadata": "Afficher les Métadonnées",
             "chromosomes": "Chromosomes",
             "modalTitle": "À propos du navigateur du génome",
-            "modelDescription": "Cette page présente le Visionneur Linéaire du Génome JBrowse 2 (JBrowse 2), un outil interactif pour explorer les séquences et annotations génomiques. Les utilisateurs peuvent naviguer le long du génome, zoomer sur des régions spécifiques et, si disponible, visualiser des annotations telles que les gènes et autres caractéristiques. Le navigateur permet également de télécharger des séquences FASTA pour les régions sélectionnées afin d’effectuer des analyses supplémentaires. Si des annotations sont disponibles, les utilisateurs peuvent examiner les structures des gènes, les régions codantes et d'autres caractéristiques génomiques de manière claire et interactive."
-        }
+            "modelDescription": "Cette page présente le Visionneur Linéaire du Génome JBrowse 2 (JBrowse 2), un outil interactif pour explorer les séquences et annotations génomiques. Les utilisateurs peuvent naviguer le long du génome, zoomer sur des régions spécifiques et, si disponible, visualiser des annotations telles que les gènes et autres caractéristiques. Le navigateur permet également de télécharger des séquences FASTA pour les régions sélectionnées afin d'effectuer des analyses supplémentaires. Si des annotations sont disponibles, les utilisateurs peuvent examiner les structures des gènes, les régions codantes et d'autres caractéristiques génomiques de manière claire et interactive.",
+            "annotations": "Annotations"
+        },
+        "addSession": "Nouvelle Session"
     },
     "items": {
         "countries": {
             "title": "Sélection des Pays",
             "infoTitle": "Comment les Pays sont Déterminés",
-            "infoDescription": "Les pays affichés sont déterminés à partir des métadonnées de l'échantillon, s'ils contiennent un champ 'pays', ou en vérifiant si les coordonnées géographiques des échantillons se situent dans les limites d'un pays. Veuillez noter que ce processus peut parfois entraîner des inexactitudes."
+            "infoDescription": "Les pays affichés sont déterminés à partir des métadonnées de l'échantillon, s'ils contiennent un champ 'pays', ou en vérifiant si les coordonnées géographiques des échantillons se situent dans les limites d'un pays. Veuillez noter que ce processus peut parfois entraîner des inexactitudes.",
+            "showMap": "Afficher la carte",
+            "showList": "Afficher la liste"
         },
         "filters": {
             "title": "Filtres",
@@ -93,7 +103,6 @@
             "modalDescription": "Entrez un nom de champ pour vérifier s'il existe dans la base de données. Utilisez la notation par points pour les champs imbriqués, comme",
             "ebpMetricsTitle": "Métriques EBP",
             "ebpMetricsDescription": "Assemblages conformes aux normes de qualité du projet Earth BioGenome",
-            "showMap": "Afficher la carte",
             "hideMap": "Masquer la carte"
         },
         "data": {
@@ -119,15 +128,19 @@
         "title": "Statut INSDC",
         "biosample": {
             "label": "Échantillon biologique soumis",
-            "description": "Au moins un échantillon biologique INSDC est lié à cet organisme"
+            "description": "Au moins un échantillon biologique INSDC lié"
         },
         "experiment": {
             "label": "Lectures soumises",
-            "description": "Au moins une expérience INSDC est liée à un échantillon biologique associé à cet organisme"
+            "description": "Au moins une expérience INSDC liée"
         },
         "assembly": {
             "label": "Assemblages soumis",
-            "description": "Au moins un assemblage INSDC est lié à un échantillon biologique associé à cet organisme"
+            "description": "Au moins un assemblage INSDC lié"
+        },
+        "not_submitted": {
+            "label": "Statut Manquant",
+            "description": "Aucune donnée INSDC liée"
         }
     },
     "goat": {
@@ -155,6 +168,10 @@
         "publication": {
             "label": "Publication disponible",
             "description": "L'assemblage est associé à une publication avec un DOI ou un identifiant PubMed"
+        },
+        "not_submitted": {
+            "label": "Statut Manquant",
+            "description": "Statut GoaT non disponible"
         }
     },
     "fieldLookup": {
@@ -165,6 +182,7 @@
     },
     "reportModal": {
         "title": "Télécharger le rapport",
+        "formatLabel": "Format",
         "description": "Sélectionnez plusieurs champs ou saisissez un nouveau champ. Si le champ est présent dans les métadonnées, utilisez le format : 'metadata.champQueVousVoulezSélectionner'",
         "tip": "Sélectionnez TSV ou JSONL pour une récupération plus rapide",
         "queryMessage": "Saisissez un champ et vérifiez s'il existe",
@@ -182,7 +200,8 @@
         "download": "Télécharger",
         "submit": "Soumettre",
         "view": "Voir",
-        "goat": "Rapport GoaT"
+        "goat": "Rapport GoaT",
+        "createChart": "Créer un graphique"
     },
     "models": {
         "organisms": "Organismes",
@@ -199,5 +218,26 @@
         "french": "Français",
         "spanish": "Espagnol",
         "german": "Allemand"
+    },
+    "taxonsearch": {
+        "description": "Sélectionnez un taxon pour filtrer toutes les données dans la vue actuelle."
+    },
+    "taxons": {
+        "resultsFound": "Taxons Correspondants"
+    },
+    "targetListStatus": {
+        "long_list": {
+            "description": "Toute espèce déclarée comme cible pour l'ensemble du projet. Pour les projets régionaux, cela signifie que l'espèce fait partie de la biote d'une région ciblée par ce projet (par exemple, pour DToL cela inclut tout UKSI plus la biote irlandaise, 72 000 espèces). Pour les espèces à focus taxonomique, cela inclut toutes les espèces assignées à un taxon supérieur particulier (par exemple, pour VGP la longue liste comprend les 70 000 espèces de vertébrés)"
+        },
+        "family_representative": {
+            "description": "L'espèce a été choisie comme espèce de référence familiale pour l'organisation ou le projet. Ces représentants familiaux contribuent à la réalisation des objectifs de la phase 1 du Earth BioGenome Project. Les espèces étiquetées 'family_representative' recevront également l'étiquette long_list sur GoaT"
+        },
+        "other_priority": {
+            "description": "Une espèce priorisée par un projet pour des raisons autres que d'être un représentant familial. Cela peut inclure, par exemple, des espèces d'intérêt pour la conservation, des espèces faisant partie de projets pilotes, des espèces répondant à des objectifs au-delà des représentants familiaux de la phase 1 de l'EBP et d'autres sous-projets. Les espèces étiquetées 'other_priority' recevront également l'étiquette long_list sur GoaT."
+        }
+    },
+    "user": {
+        "dashboard": "Gérer les Données",
+        "login": "Connexion"
     }
 }

@@ -80,12 +80,16 @@ export const useGenomeBrowserStore = defineStore('jbrowse', {
                 this.toast({ message: message, color: 'danger' })
             }
         },
-        async fetchAssembliesFromAnnotations() {
+        async fetchAssembliesFromAnnotations(isPush = false) {
             try {
                 const { filter, taxon_lineage } = this.query
                 const query = { filter, taxon_lineage, ...this.pagination }
                 const { data } = await AssemblyService.getAssembliesFromAnnotations(query);
-                this.assemblies = [...data.data];
+                if (isPush) {
+                    this.assemblies = [...this.assemblies, ...data.data];
+                } else {
+                    this.assemblies = [...data.data];
+                }
                 this.total = data.total
             } catch (error) {
                 const axiosError = error as AxiosError<ErrorResponseData>
@@ -99,10 +103,14 @@ export const useGenomeBrowserStore = defineStore('jbrowse', {
                 this.toast({ message: message, color: 'danger' })
             }
         },
-        async fetchAssemblies() {
+        async fetchAssemblies(isPush = false) {
             try {
                 const { data } = await CommonService.getItems('assemblies', { ...this.query, ...this.pagination });
-                this.assemblies = [...data.data];
+                if (isPush) {
+                    this.assemblies = [...this.assemblies, ...data.data];
+                } else {
+                    this.assemblies = [...data.data];
+                }
                 this.total = data.total
             } catch (error) {
                 const axiosError = error as AxiosError<ErrorResponseData>

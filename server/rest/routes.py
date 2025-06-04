@@ -38,11 +38,12 @@ def initialize_routes(api):
 	##TAXONOMY
 	api.add_resource(taxonomy_controller.RootTreeApi, '/api/tree')
 
-
 	api.add_resource(sample_locations_controller.SampleLocations, '/api/coordinates')
 	api.add_resource(sample_locations_controller.LocationFromCoords, '/api/coordinates/<coordinates>')
 
 	api.add_resource(sample_locations_controller.UniqueLocations, '/api/coordinates/frequency')
+	api.add_resource(sample_locations_controller.LookupRelatedData, '/api/coordinates/frequency/lookup')
+	api.add_resource(sample_locations_controller.GetRelatedModelData, '/api/coordinates/frequency/lookup/<model>')
 	api.add_resource(sample_locations_controller.DownloadRelatedDataApi, '/api/coordinates/frequency/download')
 
 	##SUB_PROJECTS

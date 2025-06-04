@@ -32,5 +32,17 @@ class LocationFromCoords(Resource):
 class DownloadRelatedDataApi(Resource):
     def post(self):
         data = request.json if request.is_json else request.form
-        resp, mimetype= sample_locations_service.download_related_data(data)
+        resp, mimetype= sample_locations_service.get_related_data(data)
+        return Response(resp, mimetype=mimetype, status=200)
+
+class LookupRelatedData(Resource):
+    def post(self):
+        data = request.json if request.is_json else request.form
+        resp = sample_locations_service.lookup_related_data(data)
+        return Response(resp, mimetype="application/json", status=200)
+    
+class GetRelatedModelData(Resource):
+    def post(self, model):
+        data = request.json if request.is_json else request.form
+        resp, mimetype = sample_locations_service.get_related_model_data(data, model)
         return Response(resp, mimetype=mimetype, status=200)
