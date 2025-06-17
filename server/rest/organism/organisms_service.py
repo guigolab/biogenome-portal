@@ -59,13 +59,12 @@ def create_organism(data):
     try:
         organism.update(**organism_data)
         organism.save()
+        if user:
+            user_helper.add_species_to_datamanager([taxid], user)
+        return f"organism {taxid} created" , 201
     except ValidationError as e:
         Organism.objects(taxid=taxid).delete()
         return f"{e}", 400
-    if user:
-        user_helper.add_species_to_datamanager([taxid], user)
-
-    return organism.scientific_name
 
 def map_organism_data(data,taxid):
     organism = dict()
