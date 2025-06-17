@@ -21,8 +21,8 @@ class OrganismsApi(Resource):
 	@data_manager.data_manager_required()
 	def post(self):
 		data = request.json if request.is_json else request.form
-		message = organisms_service.create_organism(data)
-		return Response(json.dumps(message),mimetype="application/json", status=201)
+		message, status = organisms_service.create_organism(data)
+		return Response(json.dumps(message),mimetype="application/json", status=status)
 
 class OrganismApi(Resource):
 	def get(self, taxid):

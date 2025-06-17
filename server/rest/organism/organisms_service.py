@@ -2,6 +2,7 @@
 from db.models import CommonName,TaxonNode, Organism, Publication,Assembly,GenomeAnnotation,BioSample,LocalSample,Experiment,BioGenomeUser
 from helpers import taxonomy as taxonomy_helper, user as user_helper, organism as organism_helper, geolocation as geoloc_helper, data as data_helper
 from werkzeug.exceptions import BadRequest, Conflict, NotFound
+from mongoengine.errors import ValidationError
 import os 
 
 PROJECT_ACCESSION=os.getenv('PROJECT_ACCESSION')
@@ -43,21 +44,24 @@ def update_organism(data, taxid):
 def create_organism(data):
     taxid = data.get('taxid')
     if not taxid:
-        raise BadRequest(description="taxid is mandatory!")
-    
+        return "taxid is mandatory", 400
+    taxid = str(taxid)
     if Organism.objects(taxid=taxid):
-        raise Conflict(description=f"An organisms with taxid {taxid} already exists")
+        return f"An organisms with taxid {taxid} already exists", 400
 
     user = user_helper.get_current_user()
             
     organism = organism_helper.create_organism_and_related_taxons(taxid)
     if not organism:
-        raise BadRequest(description=f"Organisms with taxid {taxid} not found in INSDC")
+        return f"Organisms with taxid {taxid} not found in INSDC", 400
     
     organism_data = map_organism_data(data, taxid)
-    organism.update(**organism_data)
-    organism.save()
-
+    try:
+        organism.update(**organism_data)
+        organism.save()
+    except ValidationError as e:
+        Organism.objects(taxid=taxid).delete()
+        return f"{e}", 400
     if user:
         user_helper.add_species_to_datamanager([taxid], user)
 
