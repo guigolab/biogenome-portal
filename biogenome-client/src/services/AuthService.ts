@@ -1,7 +1,8 @@
 import { AxiosInstance } from 'axios';
 import { submission } from '../http-axios';
 import { DataModels } from '../data/types';
-
+import { useGlobalStore } from '../stores/global-store';
+import router from '../router';
 // Utility function to get a cookie value
 function getCookie(name: string): string | undefined {
   const value = `; ${document.cookie}`;
@@ -24,6 +25,17 @@ submission.interceptors.request.use(
     return Promise.reject(error);
   }
 );
+submission.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      const gStore = useGlobalStore()
+      gStore.setAuth(false)
+      router.push('/login')
+    }
+    return Promise.reject(error)
+  }
+)
 
 // Define data structures for better typing (adjust as needed)
 interface LoginPayload {

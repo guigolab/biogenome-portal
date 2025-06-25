@@ -15,7 +15,7 @@ export const useGlobalStore = defineStore('global', {
       userRole: '',
       userSpecies: [] as string[],
       isAuthenticated: isAuth,
-      adminSidebar:false,
+      adminSidebar: false,
       language: lang,
       error: false,
       message: '',
@@ -28,10 +28,9 @@ export const useGlobalStore = defineStore('global', {
       this.userName = data.name
       this.userRole = data.role
       if (this.userRole !== 'Admin') this.userSpecies = data.species
-      localStorage.setItem(AUTH_KEY, 'true');
-      this.isAuthenticated = true
+      this.setAuth(true)
     },
-    changeLang(lang:string){
+    changeLang(lang: string) {
       this.language = lang
       localStorage.setItem(LANG, lang)
     },
@@ -43,8 +42,7 @@ export const useGlobalStore = defineStore('global', {
       } catch (error) {
         console.log(error)
         this.toast({ message: 'Bad user or password', color: 'danger' })
-        this.isAuthenticated = false
-        localStorage.setItem(AUTH_KEY, 'false');
+        this.setAuth(false)
       }
     },
 
@@ -55,17 +53,21 @@ export const useGlobalStore = defineStore('global', {
         this.mapUser(data)
       } catch (error) {
         console.error(error)
-        localStorage.setItem(AUTH_KEY, 'false');
+        this.setAuth(false)
       }
     },
 
+    setAuth(value: boolean) {
+      this.isAuthenticated = value
+      const stringfiedValue = value ? 'true' : 'false'
+      localStorage.setItem(AUTH_KEY, stringfiedValue)
+    },
     async logout() {
       await AuthService.logout()
       this.userName = ''
       this.userRole = ''
       this.userSpecies = []
-      localStorage.setItem(AUTH_KEY, 'false');
-      this.isAuthenticated = false
+      this.setAuth(false)
     },
   },
 })
