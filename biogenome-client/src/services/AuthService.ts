@@ -25,14 +25,36 @@ submission.interceptors.request.use(
     return Promise.reject(error);
   }
 );
+
+// Track if we're already handling a 401 error to prevent multiple redirects
+let isHandling401 = false
+
 submission.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
+    console.log('Response interceptor error:', error)
+    
+    if (error.response && error.response.status === 401 && !isHandling401) {
+      isHandling401 = true
+      
       const gStore = useGlobalStore()
       gStore.setAuth(false)
-      router.push('/login')
+      
+      // Clear any existing auth data
+      gStore.userName = ''
+      gStore.userRole = ''
+      gStore.userSpecies = []
+      
+      // Only redirect if not already on login page
+      if (router.currentRoute.value.name !== 'login') {
+        router.push('/login').finally(() => {
+          isHandling401 = false
+        })
+      } else {
+        isHandling401 = false
+      }
     }
+    
     return Promise.reject(error)
   }
 )

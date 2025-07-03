@@ -47,14 +47,29 @@ export const useGlobalStore = defineStore('global', {
     },
 
     async checkUserIsLoggedIn() {
-      if (!this.isAuthenticated) return
+      if (!this.isAuthenticated) return false
       try {
         const { data } = await AuthService.check()
         this.mapUser(data)
-      } catch (error) {
-        console.error(error)
+        return true
+      } catch (error: any) {
+        console.error('Authentication check failed:', error)
+        
+        // If it's a 401 error, clear auth state
+        if (error.response && error.response.status === 401) {
+          this.clearAuthState()
+        }
+        
         this.setAuth(false)
+        return false
       }
+    },
+
+    clearAuthState() {
+      this.userName = ''
+      this.userRole = ''
+      this.userSpecies = []
+      this.setAuth(false)
     },
 
     setAuth(value: boolean) {
@@ -63,11 +78,14 @@ export const useGlobalStore = defineStore('global', {
       localStorage.setItem(AUTH_KEY, stringfiedValue)
     },
     async logout() {
-      await AuthService.logout()
-      this.userName = ''
-      this.userRole = ''
-      this.userSpecies = []
-      this.setAuth(false)
+      try {
+        await AuthService.logout()
+      } catch (error) {
+        console.error('Logout error:', error)
+        // Continue with logout even if server call fails
+      } finally {
+        this.clearAuthState()
+      }
     },
   },
 })

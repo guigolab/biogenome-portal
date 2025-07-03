@@ -7,8 +7,22 @@ function isAdmin() {
 
 async function isAuthenticated() {
     const gStore = useGlobalStore()
-    await gStore.checkUserIsLoggedIn()
-    if (!gStore.isAuthenticated) return { name: 'login' }
+    
+    // If not authenticated in state, redirect immediately
+    if (!gStore.isAuthenticated) {
+        return { name: 'login' }
+    }
+    
+    // Check with server to validate session
+    try {
+        const isLoggedIn = await gStore.checkUserIsLoggedIn()
+        if (!isLoggedIn) {
+            return { name: 'login' }
+        }
+    } catch (error) {
+        console.error('Route guard authentication check failed:', error)
+        return { name: 'login' }
+    }
 }
 
 export const cmsRoutes = [
