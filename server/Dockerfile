@@ -1,8 +1,12 @@
-# Use the official Python 3.8 base image
-FROM python:3.8-buster
+# Use the official Python 3.8 base image with a supported Debian version
+FROM python:3.8-slim
 
-# Update package repositories and install necessary tools
-RUN apt-get update && apt-get install -y curl
+# Update package repositories and install necessary tools including build dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    gcc \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
 
 # Download the datasets tool and make it executable
 RUN curl -o datasets 'https://ftp.ncbi.nlm.nih.gov/pub/datasets/command-line/LATEST/linux-amd64/datasets'

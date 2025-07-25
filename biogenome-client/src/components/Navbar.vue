@@ -88,7 +88,7 @@
         @downloadGoatReport="downloadGoatReport" @handleLang="handleLang" :hasCMS="hasCMS" :textColor="textColor" />
       <VaNavbarItem v-if="hasCMS" class="nav-links" v-show="!isMobile">
         <VaButton :to="{ name: 'admin' }" :color="textColor" class="va-text-uppercase" preset="secondary">
-          {{ t(btnLabel) }}
+          {{ btnLabel }}
         </VaButton>
       </VaNavbarItem>
       <VaNavbarItem v-show="!isMobile">
@@ -151,7 +151,7 @@ const showLangDropdown = ref(false)
 const showMobileMenu = ref(false)
 const mobileDropdown = ref('')
 
-const btnLabel = computed(() => globalStore.isAuthenticated ? 'user.dashboard' : 'user.login')
+const btnLabel = computed(() => globalStore.isAuthenticated ? t('user.dashboard') : t('user.login'))
 const appLogo = config.general.logo
 const externalLink = config.general.externalLink
 const hasCMS = config.general.cms
