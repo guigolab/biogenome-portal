@@ -7,19 +7,44 @@
                         Sample Information
                     </h2>
                     <p class="va-text-secondary">
-                        Fill the taxonomic information and the sample identifier
+                        Select the organism and the sample identifier
                     </p>
                 </div>
             </div>
         </VaCardContent>
         <VaCardContent>
-            <OrganismSelection :is-organism-creation="false" @selected="handleSelection" />
-            <p class="va-text-danger va-text-bold" v-if="!sampleStore.scientificName">Organism selection is mandatory!</p>
+            <OrganismSelection v-if="showOrganismSelection" @selected="handleSelection" />
+            <div v-if="sampleStore.scientificName && sampleStore.taxid" class="row">
+                <div class="flex">
+                    <VaCard stripe-color="success" stripe>
+                        <VaCardTitle>
+                            Selected organism
+                        </VaCardTitle>
+                        <VaCardContent>
+                            <h5 class="va-h5">
+                                {{ sampleStore.scientificName }}
+                            </h5>
+                            <p class="va-text-secondary">
+                                {{ sampleStore.taxid }}
+                            </p>
+                        </VaCardContent>
+                        <VaCardActions>
+                            <VaButton size="small" color="warning" @click="resetOrganismSelection">Change organism</VaButton>
+                        </VaCardActions>
+                    </VaCard>
+                </div>
+            </div>
+            <div v-if="!sampleStore.scientificName && !sampleStore.taxid" class="row">
+                <div class="flex">
+                    <p class="va-text-danger va-text-bold">Organism selection is mandatory!</p>
+                </div>
+            </div>
             <div class="row">
                 <div class="flex lg12 md12 sm12 xs12">
-                    <VaInput label="sample identifier"
+                    <VaInput
                         placeholder="Type the sample unique identifier, this will be used internally"
                         v-model="sampleStore.sampleIdentifier"
+                        :messages="['This will be used internally to identify the sample']"
                         :rules="[(v: string) => !!v || 'Sample identifier is mandatory']">
                     </VaInput>
                 </div>
@@ -32,13 +57,26 @@
 <script setup lang="ts">
 import { useSampleStore } from '../../stores/sample-store';
 import OrganismSelection from './OrganismSelection.vue';
+import { ref, onMounted } from 'vue';
 
 const sampleStore = useSampleStore()
+const showOrganismSelection = ref(true)
 
-function handleSelection(payload: { scientificName: string, taxid: string }) {
-    const { scientificName, taxid } = payload
+onMounted(() => {
+    showOrganismSelection.value = true
+})
+
+function resetOrganismSelection() {
+    sampleStore.scientificName = ''
+    sampleStore.taxid = ''
+    showOrganismSelection.value = true
+}
+
+function handleSelection(payload: { scientificName: string, taxId: string }) {
+    const { scientificName, taxId } = payload
     sampleStore.scientificName = scientificName
-    sampleStore.taxid = taxid
+    sampleStore.taxid = taxId
+    showOrganismSelection.value = false
 }
 
 

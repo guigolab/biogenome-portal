@@ -10,7 +10,6 @@ export const base = axios.create({
   },
 })
 
-
 export const download = axios.create({
   baseURL,
   responseType: 'blob'
@@ -23,6 +22,12 @@ export const ncbi = axios.create({
   },
 })
 
+export const ebi = axios.create({
+  baseURL: 'https://www.ebi.ac.uk',
+  headers: {
+    'Content-type': 'application/json',
+  },
+})
 
 export const ebiSubmission = axios.create({
   baseURL,

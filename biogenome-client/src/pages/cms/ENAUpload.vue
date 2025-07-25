@@ -6,7 +6,7 @@
                     BioSample Creation
                 </h1>
                 <p class="va-text-secondary">
-                    Fill the form and submit the biosample to EBI BioSamples, this biosample will become public and can be referenced by experiments and assemblies published to ENA or NCBI
+                    Fill the form and submit the biosample to EBI BioSamples, this biosample will become public and can be referenced by experiments and assemblies published to ENA or NCBI. Note that the portal retrieve the biosamples every weekend, so you biosample will be available in the portal after this time.
                 </p>
             </div>
         </div>

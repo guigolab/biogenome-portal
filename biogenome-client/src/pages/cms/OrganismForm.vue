@@ -1,20 +1,20 @@
 <template>
-  <Header title="Organism form" :description="description" />
+  <Header :title="title" :description="description" />
   <VaInnerLoading :loading="isLoading">
     <VaForm ref="organismForm">
-      <div class="row">
+      <div v-if="!taxid" class="row">
         <div class="flex lg12 md12 sm12 xs12">
           <VaCard>
             <VaCardContent>
               <h2 class="va-h6">
-                Organism Selection
+                Organism Creation
               </h2>
               <p class="va-text-secondary">
-                Search in the NCBI database and select one organism
+                Type a valid organism name or taxid, the organism validation will be performed against the NCBI and/or EBI databases
               </p>
             </VaCardContent>
             <VaCardContent>
-              <OrganismSelection is-organism-creation v-if="!taxid" @selected="handleSelection" />
+              <OrganismSelection @selected="handleSelection" isOrganismCreation/>
             </VaCardContent>
           </VaCard>
         </div>
@@ -92,7 +92,7 @@
   </VaInnerLoading>
 </template>
 <script setup lang="ts">
-import { computed, inject, onMounted, ref, watch } from 'vue'
+import { computed, inject, ref, watch } from 'vue'
 import { useForm, useToast } from 'vuestic-ui'
 import { useOrganismStore } from '../../stores/organism-store'
 import ImagesInput from '../../components/cms/ImagesInput.vue'
@@ -107,7 +107,6 @@ import { AxiosError } from 'axios'
 import Header from '../../components/cms/Header.vue'
 import ItemService from '../../services/CommonService'
 import OrganismSelection from '../../components/cms/OrganismSelection.vue'
-import { color } from 'd3'
 
 
 const sequencingOptions = ['ONT (Long Reads)', 'PACBIO (Long Reads)', 'Illumina (Short Reads)', 'RNAseq (Transcriptomics)', 'Isoseq (Transcriptomics)', 'HIC (Scaffolding)', 'OmniC (Scaffolding)', 'Other']
@@ -118,8 +117,8 @@ const props = defineProps<{
 }>()
 
 const { validate } = useForm('organismForm')
-
-const description = computed(() => props.taxid && organismStore.organismForm.scientific_name ? `Edit ${organismStore.organismForm.scientific_name}` : 'Create a new organism, start by typing the scientific name or the NCBI taxonomic identifier')
+const title = computed(() => props.taxid ? `Edit ${organismStore.organismForm.scientific_name}` : 'Create a new organism')
+const description = computed(() => props.taxid && organismStore.organismForm.scientific_name ? `Editing organism ${organismStore.organismForm.scientific_name}` : 'Create a new organism')
 
 const hasGoat = computed(() => appConfig.general.goat)
 
@@ -127,21 +126,22 @@ const router = useRouter()
 const organismStore = useOrganismStore()
 const { init } = useToast()
 
-watch(() => props.taxid, () => {
-  resetForm()
-})
-
-function handleSelection(payload: { scientificName: string, taxid: string }) {
-  const { scientificName, taxid } = payload
-  organismStore.organismForm.scientific_name = scientificName
-  organismStore.organismForm.taxid = taxid
-}
-
-onMounted(async () => {
+watch(() => props.taxid, async () => {
   resetForm()
   if (props.taxid === undefined) return
+  await getOrganism(props.taxid)
+},{immediate: true})
+
+function handleSelection(payload: { scientificName: string, taxId: string }) {
+  const { scientificName, taxId } = payload
+  organismStore.organismForm.scientific_name = scientificName
+  organismStore.organismForm.taxid = taxId
+}
+
+
+async function getOrganism(taxid: string) {
   try {
-    const { data } = await ItemService.getItem('organisms', props.taxid)
+    const { data } = await ItemService.getItem('organisms', taxid)
 
     const formEntries = Object.entries(data)
       .filter(([k, v]) => Object.keys(organismStore.organismForm).includes(k))
@@ -167,8 +167,15 @@ onMounted(async () => {
 
   } catch (error) {
     console.log(error)
+    const axiosError = error as AxiosError
+    if (axiosError.response?.status === 404) {
+      init({ message: 'Organism not found, please create a new organism', color: 'warning' })
+    } else {
+      init({ message: 'Impossible to get organism', color: 'danger' })
+    }
   }
-})
+
+}
 
 async function handleSubmit() {
   if (!validate()) {

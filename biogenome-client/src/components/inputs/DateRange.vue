@@ -1,6 +1,6 @@
 <template>
     <VaDateInput style="width: 100%" v-model="model" clearable :format-date="formatDate" mode="range" type="month"
-        prevent-overflow :allowed-years="allowedDate" :allowed-months="allowedDate" :allowed-days="allowedDate">
+        prevent-overflow>
     </VaDateInput>
 </template>
 <script setup lang="ts">
@@ -24,13 +24,7 @@ const model = computed({
 })
 
 const formatDate = (date: Date) => date.toISOString().substring(0, 10);
-const allowedDate = (date: Date) => date <= new Date();
 
 const emits = defineEmits(['valueChange'])
-
-// // Helper function to format date values
-// function formatDate(date: Date | undefined) {
-//     return date ? date.toISOString().split('T')[0] : null;
-// }
 
 </script>

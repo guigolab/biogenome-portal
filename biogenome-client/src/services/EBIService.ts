@@ -1,5 +1,5 @@
 import { EBISample } from '../data/types';
-import { ebiSubmission } from '../http-axios';
+import { ebi, ebiSubmission } from '../http-axios';
 
 function getCookie(name: string): string | undefined {
   const value = `; ${document.cookie}`;
@@ -37,6 +37,9 @@ class EBIService {
   }
   updateSubmittedBioSample(accession: string, payload: EBISample) {
     return ebiSubmission.get(`/biosamples/submit/${accession}`, payload)
+  }
+  getTaxon(subPath: string, input: string) {
+    return ebi.get(`/ena/taxonomy/rest/${subPath}/${input}`) 
   }
 }
 
