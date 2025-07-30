@@ -154,22 +154,20 @@ watch(() => props.model, async () => {
 }, { immediate: true })
 
 async function fetchData() {
+    const query = { ...pagination.value, filter: filter.value }
     if (isOrganisms.value && !isAdmin.value) {
-        const { data } = await AuthService.getUserSpecies(gStore.userName, {})
+        const { data } = await AuthService.getUserSpecies(gStore.userName, query)
         items.value = [...data.data]
         total.value = data.total
     }
     else if (props.model === 'local_samples' && !isAdmin.value) {
-        const { data } = await AuthService.getUserSamples(gStore.userName, {})
+        const { data } = await AuthService.getUserSamples(gStore.userName, query)
         items.value = [...data.data]
         total.value = data.total
     }
 
     else {
-        const { data } = await ItemService.getItems(props.model, {
-            ...pagination.value,
-            filter: filter.value,
-        });
+        const { data } = await ItemService.getItems(props.model, query);
         items.value = [...data.data];
         total.value = data.total;
     }
