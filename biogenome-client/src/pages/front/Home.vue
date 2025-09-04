@@ -8,7 +8,6 @@
       <div class="section">
         <ModelCounts :counts="stats" />
       </div>
-
       <div v-if="hasGoat" class="data-card section">
         <div class="goat-header-row">
           <div class="card-header">
@@ -70,21 +69,17 @@
 import { computed, inject, onMounted, ref, watch, onUnmounted, Ref } from 'vue';
 import { useStatsStore } from '../../stores/stats-store';
 import ModelCounts from '../../components/ModelCounts.vue';
-import { AppConfig, InfoBlock, LangOption, TaxonNode } from '../../data/types';
+import { AppConfig, TaxonNode } from '../../data/types';
 import TaxonService from '../../services/TaxonService';
 import { useTaxonomyStore } from '../../stores/taxonomy-store';
 import { useI18n } from 'vue-i18n';
-import TaxonChip from '../../components/TaxonChip.vue';
 import { useItemStore } from '../../stores/items-store';
-import Chart from '../../components/Chart.vue';
 import { useToast } from 'vuestic-ui/web-components';
 import GoaTService from '../../services/GoaTService';
-import TaxonRanks from '../../components/TaxonRanks.vue';
 import { insdcSteps, goatSteps } from '../../composable/itemConfigs';
 import PortalSequencingStatus from '../../components/PortalSequencingStatus.vue';
 import StatisticsService from '../../services/StatisticsService';
 import TargetListStatus from '../../components/TargetListStatus.vue';
-import PieChart from '../../components/charts/PieChart.vue';
 
 const { t } = useI18n()
 const statsStore = useStatsStore()
@@ -124,7 +119,6 @@ const jbrowseFeature = {
 }
 
 const features = computed(() => settings.models.assemblies ? [jbrowseFeature, ...defaultFeatures] : [...defaultFeatures])
-
 const currentTaxon = computed(() => taxonomyStore.currentTaxon)
 const rootNode = import.meta.env.VITE_ROOT_NODE ?
   import.meta.env.VITE_ROOT_NODE : '131567' // default to cellular organism
@@ -221,6 +215,8 @@ watch(() => currentTaxon.value, async () => {
 onMounted(async () => {
   const { data } = await TaxonService.getTaxon(rootNode)
   rootTaxon.value = { ...data }
+  window.addEventListener('scroll', handleScroll);
+  handleScroll();
 })
 
 const isSearchFixed = ref(false);
@@ -235,11 +231,6 @@ function handleScroll() {
 
   isSearchFixed.value = scrollPosition > searchOffset - navbarHeight;
 }
-
-onMounted(() => {
-  window.addEventListener('scroll', handleScroll);
-  handleScroll();
-})
 
 onUnmounted(() => {
   window.removeEventListener('scroll', handleScroll);

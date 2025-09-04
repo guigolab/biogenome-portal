@@ -5,6 +5,7 @@ import mongoengine as db
 import os
 
 GOAT_PROJECT_NAME = os.getenv('GOAT_PROJECT_NAME')
+MANUAL_GOAT_STATUSES = [GoaTStatus.SAMPLE_ACQUIRED, GoaTStatus.DATA_GENERATION, GoaTStatus.IN_ASSEMBLY]
 
 def handler(event):
     """Signal decorator to allow use of callback functions as class decorators."""
@@ -19,41 +20,45 @@ def handler(event):
 @handler(db.pre_save)
 def update_organism_status(sender, document, **kwargs):
     taxid = document.taxid
-
-    #update organism links
     assemblies =  Assembly.objects(taxid=taxid).count()
     experiments = Experiment.objects(taxid=taxid).count()
     biosamples = BioSample.objects(taxid=taxid).count()
     local_samples = LocalSample.objects(taxid=taxid).count()
     submitted_biosamples = BioSampleSubmission.objects(taxid=taxid).count()
     #update insdc_status
-    if assemblies:
-        document.insdc_status= INSDCStatus.ASSEMBLIES
-    elif experiments:
-        document.insdc_status= INSDCStatus.READS
-    elif biosamples:
-        document.insdc_status=INSDCStatus.SAMPLE
-    else:
-        document.insdc_status=None
+    status_candidates = [
+        (bool(assemblies), INSDCStatus.ASSEMBLIES),
+        (bool(experiments), INSDCStatus.READS),
+        (bool(biosamples), INSDCStatus.SAMPLE),
+    ]
+    document.insdc_status = next((status for cond, status in status_candidates if cond), None)
+    
+    if not GOAT_PROJECT_NAME:
+        return
 
-    #update goat status
-    if GOAT_PROJECT_NAME:
-        current_goat_status=document.goat_status
-        if document.publications:
-            document.goat_status = GoaTStatus.PUBLICATION_AVAILABLE
-        elif assemblies:
-            document.goat_status=GoaTStatus.INSDC_SUBMITTED
-        elif experiments:
-            document.goat_status=GoaTStatus.IN_ASSEMBLY
-        elif local_samples or submitted_biosamples:
-            document.goat_status=GoaTStatus.SAMPLE_COLLECTED
+    current_goat_status = document.goat_status
+    new_goat_status = None
 
-        if current_goat_status != document.goat_status:
-            update_date = GoaTUpdateDate.objects().first()
-            if not update_date:
-                GoaTUpdateDate(updated=datetime.datetime.now(),taxid=document.taxid).save()
-            else:
-                update_date.save(updated=datetime.datetime.now(),taxid=document.taxid)
+    # Determine new status by priority
+    status_candidates = [
+        (bool(document.publications), GoaTStatus.PUBLICATION_AVAILABLE),
+        (bool(assemblies), GoaTStatus.INSDC_SUBMITTED),
+        (bool(experiments), GoaTStatus.IN_ASSEMBLY),
+        (bool(local_samples or submitted_biosamples or biosamples), GoaTStatus.SAMPLE_COLLECTED),
+    ]
+    new_goat_status = next((status for cond, status in status_candidates if cond), None)
+
+    if new_goat_status and new_goat_status != current_goat_status and not (new_goat_status == GoaTStatus.SAMPLE_COLLECTED and current_goat_status in MANUAL_GOAT_STATUSES):
+        # Only SAMPLE_COLLECTED should NOT override manual statuses
+        document.goat_status = new_goat_status
+
+    if current_goat_status != document.goat_status:
+        GoaTUpdateDate.objects(taxid=document.taxid).update_one(
+            set__updated=datetime.datetime.now(),
+            set__taxid=document.taxid,
+            upsert=True,
+        )
+        
 
 def trigger_organism_update(taxid):
     organism = Organism.objects(taxid=taxid).first()
@@ -80,7 +85,6 @@ def delete_organism_related_data( sender, document ):
     BioGenomeUser.objects(species=taxid).update(pull__species=taxid)
     taxons = TaxonNode.objects(taxid__in=document.taxon_lineage)
     update_taxons(taxons)
-
 
 @handler(db.post_delete)
 def delete_biosample_related_data(sender, document):
@@ -124,7 +128,6 @@ class TaxonNode(db.Document):
             'taxid', 'children'
         ]
     }
-
 
 class SubProject(db.Document):
     name = db.StringField(required=True, unique=True)
@@ -358,4 +361,14 @@ class OrganismNames(db.Document):
     locality=db.StringField()
     taxid=db.StringField(required=True)
 
-
+class OrganismAuditLog(db.Document):
+    action = db.StringField(required=True) #create, update, delete request, delete approved
+    user = db.StringField(required=True)
+    timestamp = db.DateTimeField(default=datetime.datetime.now())
+    previous_organism = db.DictField()
+    new_organism = db.DictField()
+    taxid = db.StringField(required=True)
+    scientific_name = db.StringField(required=True)
+    meta = {
+        'indexes': ['timestamp', 'taxid', 'scientific_name', 'action', 'user']
+    }

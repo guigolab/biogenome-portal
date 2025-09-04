@@ -35,10 +35,12 @@ def update_organism(data, taxid):
     organism = get_organism(taxid)
 
     organism_data = map_organism_data(data,taxid)
-
-    organism.update(**organism_data)
-    organism.save()
-    
+    for k, v in organism_data.items():
+        setattr(organism, k, v)
+    try:
+        organism.save()
+    except Exception as e:
+        raise BadRequest(description=f"{e}")
     return taxid
 
 def create_organism(data):
@@ -58,7 +60,6 @@ def create_organism(data):
     organism_data = map_organism_data(data, taxid)
     try:
         organism.update(**organism_data)
-        organism.save()
         if user:
             user_helper.add_species_to_datamanager([taxid], user)
         return f"organism {taxid} created" , 201
@@ -257,6 +258,7 @@ def get_organisms_with_user(args):
         "data": species_data
     }
     return data_helper.dump_json(response), "application/json"
+
 def create_organism_to_delete(taxid):
     organism = get_organism(taxid)
     user = user_helper.get_current_user()
