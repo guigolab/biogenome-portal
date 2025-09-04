@@ -104,7 +104,11 @@ def submit_sample(payload):
 
     if existing_organism and user.role.value != Roles.DATA_ADMIN.value and taxid not in user.species:
         raise Unauthorized(description=f"You can't add data related to {existing_organism.scientific_name}")
-    
+        #get user
+    organism = organism_helper.handle_organism(taxid)
+    if not organism:
+        raise BadRequest(description=f"Organism {taxid} not found in INSDC")
+        
     validation_response = ebi_client.validate_biosample(payload, ena_token)
     if validation_response.status_code != 200:
         return validation_response.json(), validation_response.status_code
@@ -113,11 +117,7 @@ def submit_sample(payload):
 
     if submission_response.status_code != 201:
         return submission_response.json(), submission_response.status_code
-    #get user
-    organism = organism_helper.handle_organism(taxid)
-    if not organism:
-        raise BadRequest(description=f"Organism {taxid} not found in INSDC")
-        
+
     user_name = user.name
     ## get organisms
     user_helper.add_species_to_datamanager([taxid], user)
@@ -130,7 +130,7 @@ def submit_sample(payload):
         **filtered_response
     )
     submitted_sample.save()
-
+    organism.save() #update goat status
     return f"{submitted_sample.name} correctly published in biosamples with accession {submitted_sample.accession}", 201
     ## do we need to store the accession??
     ## handle species, update goat status

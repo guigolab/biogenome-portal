@@ -116,7 +116,7 @@ const props = defineProps<{
   taxid?: string
 }>()
 
-const { validate } = useForm('organismForm')
+const { validate, errorMessages,validateAsync } = useForm('organismForm')
 const title = computed(() => props.taxid ? `Edit ${organismStore.organismForm.scientific_name}` : 'Create a new organism')
 const description = computed(() => props.taxid && organismStore.organismForm.scientific_name ? `Editing organism ${organismStore.organismForm.scientific_name}` : 'Create a new organism')
 
@@ -178,7 +178,7 @@ async function getOrganism(taxid: string) {
 }
 
 async function handleSubmit() {
-  if (!validate()) {
+  if (!await validateAsync()) {
     init({ message: 'Fill the required fields', color: 'danger' })
     return
   }

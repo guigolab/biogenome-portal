@@ -33,8 +33,10 @@
 import { ref } from 'vue';
 import { TaxonNode } from '../data/types';
 import { useI18n } from 'vue-i18n';
-
+import { useRouter } from 'vue-router';
 const { t } = useI18n();
+
+const router = useRouter();
 
 const props = defineProps<{
     results: TaxonNode[];
@@ -48,7 +50,11 @@ const emit = defineEmits<{
 const hoveredItem = ref<TaxonNode | null>(null);
 
 function selectItem(item: TaxonNode) {
-    emit('select', item);
+    if(item.leaves === 0) {
+        router.push({name: 'item', params: {model: 'organisms', id: item.taxid.toString()}});
+    } else {
+        emit('select', item);
+    }
 }
 </script>
 

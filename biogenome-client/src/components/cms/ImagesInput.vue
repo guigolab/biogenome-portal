@@ -6,13 +6,13 @@
             </h2>
             <p class="va-text-secondary">
                 Create link to images, the images should be open access and ideally deposited in wikimedia or other open
-                sources repositories
+                sources repositories, to use the correct link right click on the image and select "Copy image link"
             </p>
         </VaCardContent>
         <VaCardContent>
             <div class="row">
                 <div class="flex lg6 md6 sm12 xs12">
-                    <VaInput :rules="[(v:string) => Boolean(v) || 'The main image is mandatory']" v-model="organismStore.organismForm.image" label="Main Image">
+                    <VaInput :rules="[imageRule] " v-model="organismStore.organismForm.image" label="Main Image">
                         <template #appendInner>
                             <VaIcon color="danger" name="fa-close" @click="removeAvatar" />
                         </template>
@@ -26,7 +26,7 @@
         <VaCardContent>
             <div v-for="(img, index) in organismStore.images" :key="index" class="row">
                 <div class="flex lg6 md6 sm12 xs12">
-                    <VaInput v-model="img.value" :label="`Image url ${index + 1}`">
+                    <VaInput v-model="img.value" :rules="[imageRule] " :label="`Image url ${index + 1}`">
                         <template #appendInner>
                             <VaIcon :disabled="!img.value" name="fa-close" color="danger"
                                 @click="organismStore.images.splice(index, 1)" />
@@ -91,5 +91,30 @@ onMounted(() => {
         images.value = [...parsedImages]
     }
 })
+
+const imageOkCache = new Map<string, boolean>()
+
+function isImageUrl(url: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    if (!url) return resolve(false)
+    if(!url.startsWith('http')) return resolve(false)
+    if (imageOkCache.has(url)) return resolve(imageOkCache.get(url)!)
+    const img = new Image()
+    img.onload = () => { imageOkCache.set(url, true); resolve(true) }
+    img.onerror = () => { imageOkCache.set(url, false); resolve(false) }
+    img.src = url
+    //return true if the image is loaded or the url is not valid
+   
+  })
+}
+
+const imageRule = (v: string): Promise<boolean | string> => {
+  return new Promise((resolve) => {
+    if (!v) return resolve('The image url is mandatory')
+    isImageUrl(v)
+      .then((ok) => resolve(ok || 'URL does not load an image'))
+      .catch(() => resolve('URL does not load an image'))
+  })
+}
 
 </script>
