@@ -29,7 +29,7 @@ def create_assembly_from_accession(accession):
 
     assembly_obj = assembly.parse_assembly_from_ncbi_datasets(report)
 
-    assembly_helper.save_chromosomes(assembly_obj)
+    assembly_helper.save_chromosomes_from_stream(assembly_obj)
 
     blobtoolkit_id = get_blobtoolkit_id(accession)
 

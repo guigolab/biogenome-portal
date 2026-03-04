@@ -21,4 +21,13 @@ def get_data_from_ncbi(command):
     else:
         print("Error executing script:", result.stderr)
         return None
-    
+
+def stream_data_from_ncbi(command):
+    CMD = ["datasets", "summary"]
+    CMD.extend(command)
+    result = subprocess.run(CMD, capture_output=True, text=True)
+    if result.returncode == 0:
+        return result.stdout
+    else:
+        print("Error executing script:", result.stderr)
+        return None

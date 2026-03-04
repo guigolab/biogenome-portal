@@ -3,7 +3,7 @@ from clients.genomehubs_client import get_blobtoolkit_id
 from parsers.assembly import parse_assembly_from_ncbi_datasets
 from helpers.organism import handle_organism
 from helpers.biosample import  handle_biosample
-from helpers.assembly import save_chromosomes
+from helpers.assembly import save_chromosomes_from_stream
 from helpers.data import update_lineage
 from db.models import Assembly, Chromosome
 from celery import shared_task
@@ -50,7 +50,7 @@ def import_assemblies_by_bioproject(project_accession=None):
             continue
 
         parsed_assembly = parse_assembly_from_ncbi_datasets(report.get('reports')[0])
-        save_chromosomes(parsed_assembly)
+        save_chromosomes_from_stream(parsed_assembly)
 
         try:
 
@@ -123,7 +123,7 @@ def import_assemblies_from_accessions(accessions):
         #double check assembly is actually in the given accession list
         if new_accession not in new_assembly_accession_list:
             continue
-        save_chromosomes(parsed_assembly)
+        save_chromosomes_from_stream(parsed_assembly)
         try:
 
             print(f"fetching organism {parsed_assembly.taxid} and its related taxons for {new_accession}")
