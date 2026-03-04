@@ -27,7 +27,7 @@ def save_chromosomes(assembly_obj):
 def save_chromosomes_from_stream(assembly_obj):
     accession = assembly_obj.accession
     #if level is not complete or chromosomes we skip it
-    if assembly_obj.assembly_level not in ['Complete Genome', 'Chromosome']:
+    if assembly_obj.metadata.get('assembly_info', {}).get('assembly_level') not in ['Complete Genome', 'Chromosome']:
         return
     try:
         sequences_args = ['genome', 'accession', accession, '--report', 'sequence','--as-json-lines']
