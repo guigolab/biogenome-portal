@@ -42,6 +42,7 @@ const tracks = computed(() => {
             uri: d.tab_index_location,
             locationType: "UriLocation",
           },
+          indexType: d.tab_index_location.endsWith('.csi') ? 'CSI' : 'TBI',
         },
       },
     }
