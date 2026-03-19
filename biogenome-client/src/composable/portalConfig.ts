@@ -33,8 +33,15 @@ export const DEFAULT_VUESTIC_UI_BASE: Record<string, unknown> = {
    },
 }
 
+/** Absolute URL to portal.json (same origin as the app). Avoids URL() quirks with path-only bases. */
 export function portalJsonUrl(): string {
-   return new URL('portal.json', import.meta.env.BASE_URL).href
+   let base = import.meta.env.BASE_URL || '/'
+   if (!base.endsWith('/')) base += '/'
+   const path = `${base}portal.json`
+   if (typeof window !== 'undefined' && window.location?.origin) {
+      return new URL(path, window.location.origin).href
+   }
+   return path
 }
 
 export async function fetchPortalConfig(): Promise<PortalConfig> {

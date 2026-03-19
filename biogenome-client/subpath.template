@@ -8,6 +8,13 @@ server {
 
     listen ${API_PORT};
 
+    # Exact match: never fall through to SPA index.html (try_files) — fixes broken portal.json injection.
+    location = ${BASE_PATH}/portal.json {
+        alias /usr/share/nginx/html/portal.json;
+        default_type application/json;
+        add_header Cache-Control "public, max-age=120";
+    }
+
     location ${BASE_PATH} {
         rewrite ${BASE_PATH}/(.*) /$1 break;
         try_files $uri $uri/ /index.html;

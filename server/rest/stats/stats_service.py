@@ -1,22 +1,35 @@
-from db.models import Assembly,GenomeAnnotation,BioSample,LocalSample,Experiment,Organism,TaxonNode
+import logging
+
+from db.models import (
+    Assembly,
+    BioSample,
+    GenomeAnnotation,
+    LocalSample,
+    Organism,
+    ReadRun,
+    TaxonNode,
+)
 from extensions.cache import cache
 from helpers import data as data_helper
 
-MODEL_LIST = {
-    'assemblies':Assembly,
-    'annotations':GenomeAnnotation,
-    'biosamples':BioSample,
-    'local_samples':LocalSample,
-    'experiments':Experiment,
-    'organisms':Organism,
-    'taxons':TaxonNode
-    }
+logger = logging.getLogger(__name__)
 
-NO_VALUE_KEY= 'No Entry'
+MODEL_LIST = {
+    "assemblies": Assembly,
+    "annotations": GenomeAnnotation,
+    "biosamples": BioSample,
+    "local_samples": LocalSample,
+    "reads": ReadRun,
+    "organisms": Organism,
+    "taxons": TaxonNode,
+}
+
+NO_VALUE_KEY = "No Entry"
+
 
 @cache.memoize(timeout=300)
 def get_stats(model, field, query):
-    # Check if the model exists in MODEL_LIST
+    # Fail fast before parsing query args (404 path is cheaper).
     if model not in MODEL_LIST:
         return {"message": "model not found"}, 404
 
@@ -25,32 +38,34 @@ def get_stats(model, field, query):
     items = db_model.objects(**parsed_query)
     if q_query:
         items = items.filter(q_query)
+
+    pipeline = [
+        {
+            "$project": {
+                "field_value": {
+                    "$ifNull": [f"${field}", f"{NO_VALUE_KEY}"],
+                }
+            }
+        },
+        {"$unwind": "$field_value"},
+        {
+            "$group": {
+                "_id": "$field_value",
+                "count": {"$sum": 1},
+            }
+        },
+    ]
+
     try:
-        pipeline = [
-            {
-                "$project": {
-                    "field_value": {
-                        "$ifNull": [f"${field}", f"{NO_VALUE_KEY}"]
-                    }
-                }
-            },
-            {"$unwind": "$field_value"},
-            {
-                "$group": {
-                    "_id": "$field_value",
-                    "count": {"$sum": 1}
-                }
-            },
-        ]
-
+        # Aggregation ignores the in-memory result cache; skip cache bookkeeping.
+        cursor = items.no_cache().aggregate(pipeline)
         response = {
-            str(doc["_id"]): int(doc["count"])
-            for doc in items.aggregate(pipeline)
+            str(doc["_id"]): int(doc["count"]) for doc in cursor
         }
-
-        sorted_response = {key: value for key, value in sorted(response.items())}
-        return data_helper.dump_json(sorted_response), 200
+        # data_helper.dump_json uses sort_keys=True — same key order as the old
+        # sorted(response.items()) + dump_json, without an extra Python sort.
+        return data_helper.dump_json(response), 200
 
     except Exception as e:
-        print(e)
+        logger.exception("get_stats failed for model=%r field=%r", model, field)
         return {"message": str(e)}, 500

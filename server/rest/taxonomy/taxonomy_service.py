@@ -1,155 +1,170 @@
 from db.models import Organism, TaxonNode
 from helpers import organism as organism_helper, taxonomy as taxonomy_helper
-from werkzeug.exceptions import NotFound
+from werkzeug.exceptions import NotFound, BadRequest
 from flask import Response
 from extensions.cache import cache
+import csv
+import io
 import json
 import os
 
-ROOT_NODE = os.getenv('ROOT_NODE')
+ROOT_NODE = os.getenv("ROOT_NODE")
+
+# Column order for table / TSV / JSONL (JSON uses same field names in each row object).
+ROOT_TREE_COUNT_FIELDS = (
+    "organisms_count",
+    "assemblies_count",
+    "reads_count",
+    "biosamples_count",
+    "local_samples_count",
+    "submitted_biosamples_count",
+    "genome_annotations_count",
+)
+ROOT_TREE_FIELDS = (
+    "taxid",
+    "parent_taxid",
+    "name",
+    "rank",
+    "leaves",
+    *ROOT_TREE_COUNT_FIELDS,
+)
 
 
-def get_root_tree():
-    """
-    Returns flattened taxonomy tree with only leaves as count.
-    Uses parent mapping from children + aggregation (same logic as get_flattened_tree),
-    but exposes only: taxid, parent_taxid, name, rank, leaves.
-    Skips taxons that have ROOT_NODE as children (ancestors above our root).
-    """
+def _root_tree_match_skip() -> dict:
+    """Match all TaxonNode docs under the portal root (exclude ancestors of ROOT_NODE)."""
     if not ROOT_NODE:
         raise NotFound(description="ROOT_NODE not configured")
 
     taxon_coll = TaxonNode._get_collection()
-
-    # Taxons that have ROOT_NODE as children = ancestors above our root; skip them
     skip_taxids = [
         doc["taxid"]
-        for doc in taxon_coll.find(
-            {"children": ROOT_NODE},
-            {"taxid": 1}
-        )
+        for doc in taxon_coll.find({"children": ROOT_NODE}, {"taxid": 1})
     ]
+    return {"taxid": {"$nin": skip_taxids}} if skip_taxids else {}
 
-    # Build parent mapping - stream cursor (no list conversion)
-    parent_by_child = {}
-    match_skip = {"taxid": {"$nin": skip_taxids}} if skip_taxids else {}
-    for doc in taxon_coll.find(match_skip, {"taxid": 1, "children": 1}):
-        parent_taxid = doc["taxid"]
-        for child_taxid in doc.get("children", []):
-            parent_by_child[child_taxid] = parent_taxid
 
-    fields = [
-        "taxid",
-        "parent_taxid",
-        "name",
-        "rank",
-        "leaves",
-    ]
+def _root_tree_aggregate_pipeline(match: dict) -> list:
+    """Single scan: project parent + leaves + denormalized counts (no in-memory parent map)."""
+    proj = {
+        "_id": 0,
+        "taxid": 1,
+        "parent_taxid": "$parent",
+        "name": {"$ifNull": ["$name", ""]},
+        "rank": {"$ifNull": ["$rank", ""]},
+        "leaves": {"$ifNull": ["$leaves", 0]},
+    }
+    for field in ROOT_TREE_COUNT_FIELDS:
+        proj[field] = {"$ifNull": [f"${field}", 0]}
+    return [{"$match": match}, {"$project": proj}]
 
-    pipeline = [
-        {"$match": match_skip},
-        {
-            "$project": {
-                "taxid": 1,
-                "name": 1,
-                "rank": 1,
-                "leaves": {"$ifNull": ["$leaves", 0]},
-                "_id": 0,
-            }
-        },
-    ]
 
-    cache_key = f"cached_flattened_tree_leaves_{ROOT_NODE}"
+def iter_root_tree_documents(batch_size: int = 1000):
+    """
+    Stream TaxonNode rows as dicts (memory-friendly for JSONL/TSV).
+    Uses stored ``parent`` field; run taxonomy backfill if parent_taxid is often null.
+    """
+    match = _root_tree_match_skip()
+    taxon_coll = TaxonNode._get_collection()
+    pipeline = _root_tree_aggregate_pipeline(match)
+    cursor = taxon_coll.aggregate(
+        pipeline,
+        allow_disk_use=True,
+        batch_size=batch_size,
+    )
+    for doc in cursor:
+        yield doc
+
+
+def get_root_tree_table() -> dict:
+    """
+    Cached {fields, rows} for JSON clients. Materializes all rows in memory once per cache window.
+    """
+    cache_key = f"cached_root_tree_table_{ROOT_NODE}_v3"
     cached = cache.get(cache_key)
     if cached is not None:
-        return Response(json.dumps(cached), mimetype="application/json")
+        return cached
 
+    fields = list(ROOT_TREE_FIELDS)
     rows = []
-    for doc in taxon_coll.aggregate(pipeline):
-        taxid = doc["taxid"]
-        rows.append([
-            taxid,
-            parent_by_child.get(taxid),
-            doc.get("name", ""),
-            doc.get("rank", ""),
-            doc.get("leaves", 0),
-        ])
+    for doc in iter_root_tree_documents():
+        rows.append([doc.get(f) for f in fields])
+
     result = {"fields": fields, "rows": rows}
     cache.set(cache_key, result, timeout=3600)
-    return Response(json.dumps(result), mimetype="application/json")
+    return result
 
 
-def create_tree(taxid):
-    node = TaxonNode.objects(taxid=taxid).exclude('id').first()
-    if not node:
-        raise NotFound(description=f"Taxon {taxid} not found")
-    tree = taxonomy_helper.dfs_generator_iterative(node)
-    return tree
+def stream_root_tree_jsonl():
+    """Generator of NDJSON lines (no full-tree buffer)."""
+    for doc in iter_root_tree_documents():
+        yield json.dumps(doc, ensure_ascii=False) + "\n"
 
-def generate_tree(data):
-    taxids = data['taxids']
-    organisms = Organism.objects(taxid__in=taxids)
-    root = TaxonNode.objects(taxid= data['root']).first()
-    #get root node
-    lineages = [org.taxon_lineage for org in organisms]
-    result = set().union(*lineages)
-    tree = taxonomy_helper.dfs_generator_from_taxid_list(root, result)
-    return tree
+
+def stream_root_tree_tsv():
+    """Generator of TSV chunks (header first); uses csv for safe escaping."""
+    output = io.StringIO()
+    writer = csv.writer(output, delimiter="\t", lineterminator="\n")
+    writer.writerow(ROOT_TREE_FIELDS)
+    yield output.getvalue()
+    output.seek(0)
+    output.truncate(0)
+
+    for doc in iter_root_tree_documents():
+        row = []
+        for f in ROOT_TREE_FIELDS:
+            val = doc.get(f)
+            row.append("" if val is None else val)
+        writer.writerow(row)
+        yield output.getvalue()
+        output.seek(0)
+        output.truncate(0)
+
+
+def root_tree_response(fmt: str) -> Response:
+    """
+    Build a Flask response for the root taxonomy table.
+    fmt: 'json' | 'jsonl' | 'tsv'
+    """
+    f = (fmt or "json").strip().lower()
+    if f == "json":
+        payload = get_root_tree_table()
+        return Response(
+            json.dumps(payload),
+            mimetype="application/json",
+        )
+    if f == "jsonl":
+        return Response(
+            stream_root_tree_jsonl(),
+            mimetype="application/x-ndjson",
+            headers={"X-Content-Type-Options": "nosniff"},
+        )
+    if f in ("tsv", "tab"):
+        return Response(
+            stream_root_tree_tsv(),
+            mimetype="text/tab-separated-values; charset=utf-8",
+            headers={"X-Content-Type-Options": "nosniff"},
+        )
+    raise BadRequest(
+        description="Invalid format; use format=json, format=jsonl, or format=tsv"
+    )
 
 def get_closest_taxon(taxid):
-    
-    taxon = TaxonNode.objects(taxid=taxid).exclude('id').first()
-    
+
+    taxon = TaxonNode.objects(taxid=taxid).exclude("id").first()
+
     if taxon:
         return taxon, 200
-    
+
     organism, parsed_taxons = organism_helper.retrieve_taxonomic_info(taxid)
     if not organism:
         return f"Taxon with taxid {taxid} not found in INSDC", 400
-    
-    existing_taxons = TaxonNode.objects(taxid__in=[node.taxid for node in parsed_taxons]).exclude('id')
-    
+
+    existing_taxons = TaxonNode.objects(
+        taxid__in=[node.taxid for node in parsed_taxons]
+    ).exclude("id")
+
     for node in parsed_taxons:
-        taxid = node.get('taxId')
+        taxid = node.get("taxId")
         for ex_taxon in existing_taxons:
             if taxid == ex_taxon.taxid:
                 return ex_taxon, 200
-
-        
-
-def detect_cycle(graph):
-    """
-    Detects a cycle in a directed graph.
-    :param graph: A dictionary where keys are node names and values are lists of child node names.
-    :return: A tuple (has_cycle, cycle_nodes). has_cycle is True if a cycle is detected, False otherwise.
-             cycle_nodes is a list of nodes involved in the cycle if one is detected, empty otherwise.
-    """
-    def dfs(node, visited, rec_stack):
-        visited.add(node)
-        rec_stack.add(node)
-        
-        for child in graph.get(node, []):
-            if child not in visited:
-                if dfs(child, visited, rec_stack):
-                    return True
-            elif child in rec_stack:
-                cycle_nodes.append(child)
-                return True
-        
-        rec_stack.remove(node)
-        return False
-    
-    visited = set()
-    rec_stack = set()
-    cycle_nodes = []
-    
-    for node in graph:
-        if node not in visited:
-            if dfs(node, visited, rec_stack):
-                cycle_nodes.append(node)
-                return True, cycle_nodes
-    
-    return False, []
-
-
-

@@ -1,7 +1,6 @@
 import requests
 from extensions.cache import cache
 import time
-import csv
 
 
 EXPERIMENT_FIELDS = (
@@ -68,7 +67,11 @@ def upadate_biosample(accession, payload, token):
     response = requests.put(url, json=payload, headers=headers)
     return response
 
-def fetch_experiments_by_bioproject_streaming(project_accession):
+def fetch_experiments_by_bioproject_streaming(project_accession, output_file):
+    """
+    Stream the ENA read_run filereport response to a file and return its path.
+    Use iter_content to write chunks as they arrive (memory-efficient for large responses).
+    """
     base_url = "https://www.ebi.ac.uk/ena/portal/api/filereport"
     params = {
         "result": "read_run",
@@ -82,15 +85,15 @@ def fetch_experiments_by_bioproject_streaming(project_accession):
         response = requests.get(base_url, params=params, stream=True)
         response.raise_for_status()
 
-        # Initialize a reader for the streamed response content
-        lines = (line.decode('utf-8') for line in response.iter_lines())
-        reader = csv.DictReader(lines, delimiter='\t')
-
-        for row in reader:
-            yield row
+        with open(output_file, "wb") as f:
+            for chunk in response.iter_content(chunk_size=8192):
+                if chunk:
+                    f.write(chunk)
+        return output_file
     except Exception as e:
         print(f"Error occurred while fetching experiments for {project_accession}")
         print(e)
+        return None
 
 
 def get_taxon_from_ena_browser(taxon_id):
@@ -207,7 +210,25 @@ def fetch_biosamples_from_ebi(url):
         print(e)
     finally:
         return biosamples, url
-    
+
+def get_xml_from_ena_browser(accessions, path_to_gzipped_xml_file):
+    """
+    Get XML from ENA browser and store it in a file, via post request up to 10k accessions at a time
+    """
+    payload = {"accessions": accessions, "download": True, "gzip": True}
+    try:
+        with requests.post(f"https://www.ebi.ac.uk/ena/browser/api/xml", json=payload, stream=True) as response:
+            response.raise_for_status()
+            with open(path_to_gzipped_xml_file, "wb") as f:
+                for chunk in response.iter_content(chunk_size=1024 * 1024):
+                    if chunk:
+                        f.write(chunk)
+        return True
+    except Exception as e:
+        print(f"Error occurred while fetching XML from ENA browser")
+        print(e)
+        return None
+
 @cache.memoize(timeout=3000)
 def get_webin_token(username, password):
     headers = {

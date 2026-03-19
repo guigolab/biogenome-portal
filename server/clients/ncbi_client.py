@@ -31,3 +31,25 @@ def stream_data_from_ncbi(command):
     else:
         print("Error executing script:", result.stderr)
         return None
+
+
+def query_datasets_to_file(command, output_path):
+    """
+    Run the datasets CLI and write the response directly to a file.
+    Streams stdout to the file without loading the full response into memory.
+    """
+    CMD = ["datasets", "summary"]
+    CMD.extend(command)
+    with open(output_path, "w", encoding="utf-8") as f:
+        result = subprocess.run(
+            CMD,
+            stdout=f,
+            stderr=subprocess.PIPE,
+            text=True,
+            encoding="utf-8",
+        )
+    if result.returncode == 0:
+        return output_path
+    if result.stderr:
+        print("Error executing datasets CLI:", result.stderr)
+    return None

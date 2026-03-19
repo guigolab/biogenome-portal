@@ -1,4 +1,4 @@
-from flask import Flask,Response
+from flask import Flask
 from flask_cors import CORS
 from flask_jwt_extended import exceptions
 from config import BaseConfig
@@ -11,9 +11,9 @@ from tendo.singleton import SingleInstance
 from flask_mongoengine import MongoEngine
 from datetime import datetime,timedelta,timezone
 import os
-import json
 from extensions import cache
 from jobs import celery_init_app
+from helpers.celery_beat_schedule import load_beat_schedule_from_json_file
 
 app = Flask(__name__)
 
@@ -22,11 +22,14 @@ app = Flask(__name__)
 app.config.from_object(BaseConfig)
 app.config["JWT_TOKEN_LOCATION"] = ["cookies"]
 
+# Periodic tasks for Celery Beat: loaded from JSON (see CELERY_BEAT_SCHEDULE_FILE / volume in compose).
+beat_schedule = load_beat_schedule_from_json_file(BaseConfig.CELERY_BEAT_SCHEDULE_FILE)
 app.config.from_mapping(
     CELERY=dict(
         broker_url=BaseConfig.CELERY_BROKER_URL,
         result_backend=BaseConfig.CELERY_RESULT_BACKEND,
         task_ignore_result=True,
+        beat_schedule=beat_schedule,
     ),
 )
 app.config["JWT_COOKIE_SAMESITE"] = "None"

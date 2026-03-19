@@ -2,20 +2,6 @@ from . import taxonomy_service
 from flask import Response,request
 from flask_restful import Resource
 from extensions.cache import cache
-from flask_jwt_extended import jwt_required
-from jobs import taxonomy
-import json
-
-class TreeApi(Resource):
-    @cache.cached(timeout=300)
-    def get(self, taxid):
-        tree = taxonomy_service.create_tree(taxid)
-        return Response(json.dumps(tree), mimetype="application/json", status=200)
-
-    def post(self):
-        data = request.json if request.is_json else request.form
-        tree = taxonomy_service.generate_tree(data)
-        return Response(json.dumps(tree), mimetype="application/json", status=200)
 
 class RelativeTaxonomyTreeApi(Resource):
     @cache.cached(timeout=300)
@@ -25,9 +11,6 @@ class RelativeTaxonomyTreeApi(Resource):
 
 class RootTreeApi(Resource):
     def get(self):
-        return taxonomy_service.get_root_tree()
-
-class GenerateTreeApi(Resource):
-    @jwt_required()
-    def post(self):
-        taxonomy.compute_tree()
+        # ?format=json | jsonl | tsv  (default json). jsonl/tsv stream from MongoDB without caching.
+        fmt = request.args.get("format", "json")
+        return taxonomy_service.root_tree_response(fmt)

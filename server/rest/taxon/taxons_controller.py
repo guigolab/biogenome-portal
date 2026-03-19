@@ -1,22 +1,15 @@
-from . import taxons_service
-from flask import Response,request
+from flask import Response
 from flask_restful import Resource
-from helpers import data as data_helper
 
-class TaxonsQueryApi(Resource):
-    def post(self):
-        data = request.json if request.is_json else request.form
-        resp, mimetype = data_helper.get_items('taxons', data)
-        return Response(resp, mimetype=mimetype, status=200)
+from db.models import TaxonNode
+from rest.common.service_utils import get_or_404
 
-class TaxonsApi(Resource):
-    def get(self):
-        resp, mimetype = data_helper.get_items('taxons', request.args)
-        return Response(resp, mimetype=mimetype, status=200)
+from . import taxons_service
+
 
 class TaxonApi(Resource):
     def get(self, taxid):
-        taxon = taxons_service.get_taxon(taxid)
+        taxon = get_or_404(TaxonNode, f"Taxon {taxid} not found!", taxid=taxid)
         return Response(taxon.to_json(), mimetype="application/json", status=200)
 
 class TaxonChildrenApi(Resource):

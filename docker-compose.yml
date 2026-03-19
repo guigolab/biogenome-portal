@@ -20,6 +20,8 @@ services:
     restart: always
     volumes:
       - ./server:/server
+      # Inject Celery Beat schedule JSON (defaults to repo file; set CELERY_BEAT_SCHEDULE_HOST in .env to override)
+      - ${CELERY_BEAT_SCHEDULE_HOST:-./server/celery_beat_schedule.json}:/server/celery_beat_schedule.json:ro
       - /home/emilior/cbp-annotations-data:/annotations_data
       - ./configs:/biogenome-client/src/data/configs
     env_file:
@@ -29,11 +31,7 @@ services:
     depends_on:
       - redis
 
-  # biogenome_cron:
-  #   build: ./cronjobs
-  #   container_name: biogenome_cron
-  #   env_file:
-  #     - .env
+  # Replaced by celery_beat; schedule: server/celery_beat_schedule.json (volume below).
 
   biogenome_nginx:
     build:
@@ -58,6 +56,7 @@ services:
     restart: always
     volumes:
       - ./server:/server
+      - ${CELERY_BEAT_SCHEDULE_HOST:-./server/celery_beat_schedule.json}:/server/celery_beat_schedule.json:ro
     env_file:
       - .env
     depends_on:
@@ -65,6 +64,19 @@ services:
       - biogenome_mongo_dev_env
       - redis
 
+  celery_beat:
+    build: ./server
+    command: celery --app app.celery_app beat --loglevel=info
+    restart: always
+    volumes:
+      - ./server:/server
+      - ${CELERY_BEAT_SCHEDULE_HOST:-./server/celery_beat_schedule.json}:/server/celery_beat_schedule.json:ro
+    env_file:
+      - .env
+    depends_on:
+      - biogenome_server
+      - biogenome_mongo_dev_env
+      - redis
 
   redis:
     image: "redis:alpine"

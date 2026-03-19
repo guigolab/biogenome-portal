@@ -1,9 +1,11 @@
 from db.models import GenomeAnnotation, Assembly
-from helpers import data as data_helper, organism as organism_helper
+from helpers import organism as organism_helper
+from helpers.taxon_organism_sync import sync_organism_status_and_taxon_counts
 from mongoengine.errors import ValidationError
-from werkzeug.exceptions import BadRequest, Conflict, NotFound
+from werkzeug.exceptions import BadRequest, Conflict
 from flask import send_from_directory
 import os
+from rest.common.service_utils import get_or_404
 
 ANNOTATIONS_DATA_PATH = '/server/annotations_data'
 BASE_PATH = os.getenv('BASE_PATH')
@@ -38,10 +40,7 @@ def check_annotation_exists(annotation_name):
         raise Conflict(description=f"{annotation_name} already exists")
 
 def get_assembly(assembly_accession):
-    assembly_obj = Assembly.objects(accession=assembly_accession).first()
-    if not assembly_obj:
-        raise NotFound(description=f"Assembly {assembly_accession} not found")
-    return assembly_obj
+    return get_or_404(Assembly, f"Assembly {assembly_accession} not found", accession=assembly_accession)
 
 def extract_metadata(data):
     metadata_dict = {}
@@ -95,12 +94,17 @@ def create_annotation(request):
     assembly_obj = get_assembly(assembly_accession)
 
     taxid = assembly_obj.taxid
+    organism_obj = organism_helper.handle_organism(taxid)
+    if not organism_obj:
+        raise BadRequest(description=f"Organism {taxid} not found")
+    lineage = assembly_obj.taxon_lineage or organism_obj.taxon_lineage or []
     # Extract metadata
     valid_data = extract_metadata(data)
     valid_data.update({
         'scientific_name': assembly_obj.scientific_name,
         'taxid': taxid,
-        'assembly_name': assembly_obj.assembly_name
+        'assembly_name': assembly_obj.assembly_name,
+        'taxon_lineage': list(lineage),
     })
 
     # Handle file saving
@@ -110,11 +114,9 @@ def create_annotation(request):
         # Check URL fields if no files are provided
         check_required_fields(FILES_REQUIRED_FIELDS, valid_data)
 
-    # Save annotation
+    # Save annotation (lineage preset so one post_save sync covers status + taxon counts)
     try:
         new_genome_annotation = GenomeAnnotation(**valid_data).save()
-        organism_obj = organism_helper.handle_organism(new_genome_annotation.taxid)
-        data_helper.update_lineage(new_genome_annotation, organism_obj)
 
     except ValidationError as e:
         raise BadRequest(description=f"{e.to_dict()}")
@@ -122,15 +124,17 @@ def create_annotation(request):
     return new_genome_annotation.name
 
 def get_annotation(name):
-    ann_obj = GenomeAnnotation.objects(name=name).first()
-    if not ann_obj:
-        raise NotFound(description=f"Annotation {name} not found")
-    return ann_obj
+    return get_or_404(GenomeAnnotation, f"Annotation {name} not found", name=name)
 
 def update_annotation(name, data):
     ann_obj = get_annotation(name)
     valid_data = extract_metadata(data)
     ann_obj.update(**valid_data)
+    ann_obj.reload()
+    sync_organism_status_and_taxon_counts(
+        ann_obj.taxid,
+        list(ann_obj.taxon_lineage) if ann_obj.taxon_lineage else None,
+    )
     return name
 
 def stream_annotation(filename):

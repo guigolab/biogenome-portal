@@ -4,7 +4,7 @@ MODELS=[
     'biosamples',
     'annotations',
     'assemblies',
-    'experiments',
+    'reads',
     'organisms',
     'local_samples'
 ]

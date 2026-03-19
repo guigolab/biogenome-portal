@@ -1,4 +1,4 @@
-from db.models import BioSample,Assembly,Experiment,Read,BioSampleSubmission,Organism
+from db.models import BioSample, Assembly, BioSampleSubmission, Organism, ReadRun
 from db.enums import Roles
 from werkzeug.exceptions import BadRequest, Conflict, NotFound,Unauthorized
 from mongoengine.queryset.visitor import Q
@@ -6,16 +6,14 @@ from helpers import data, organism as organism_helper, biosample as biosample_he
 import xml.etree.ElementTree as ET
 from clients import ebi_client
 import os
+from rest.common.service_utils import get_or_404
 
 CHECKLIST_PATH = '/server/templates/checklist.xml'
 WEBIN_USER = os.getenv('WEBIN_USER')
 WEBIN_PWD = os.getenv('WEBIN_PASSWORD')
 
 def get_biosample(accession):
-    biosample_obj = BioSample.objects(accession=accession).first()
-    if not biosample_obj:
-        raise NotFound(description=f"BioSample {accession} not found!")
-    return biosample_obj
+    return get_or_404(BioSample, f"BioSample {accession} not found!", accession=accession)
 
 def create_biosample_from_accession(accession):
     if BioSample.objects(accession=accession).first():
@@ -30,38 +28,56 @@ def create_biosample_from_accession(accession):
     if not organism_obj:
         raise BadRequest(description=f"Organism {biosample_obj.taxid} not found in INSDC")
 
-    organism_obj.save()
-    
+    # BioSample save (handle_biosample) already ran post_save sync for status/counts
+
     return accession
 
 def delete_biosample(accession):
     biosample_to_delete = get_biosample(accession)
-    #delete siblings
-    BioSample.objects(__raw__ = {'metadata.sample derived from' : accession}).delete()
+    # Derived samples are not removed by BioSample post_delete; delete them first.
+    BioSample.objects(__raw__={"metadata.sample derived from": accession}).delete()
 
-    Assembly.objects(sample_accession=accession).delete()
-
-    experiments = Experiment.objects(sample_accession=accession).scalar('experiment_accession')
-    Read.objects(experiment_accession__in=experiments).delete()
-    Experiment.objects(sample_accession=accession).delete()
-    
-    organism_obj = organism_helper.handle_organism(biosample_to_delete.taxid)
     biosample_to_delete.delete()
-    organism_obj.save()
+    # post_delete removes assemblies/read runs/coords for this accession + syncs organism/taxonomy
+
     return accession
 
-def get_related_experiments(accession):
-    related_exp_query = Q(sample_accession=accession) | Q(metadata__sample_accession=accession)
-    experiments = Experiment.objects(related_exp_query).exclude('id', 'created').to_json()
-    return experiments
+def get_related_reads(accession, args):
+    get_biosample(accession)
+    related_query = Q(sample_accession=accession) | Q(metadata__sample_accession=accession)
+    reads = ReadRun.objects(related_query).exclude("id", "created")
+    fields = ['run_accession', 'experiment_accession', 'sample_accession', 'taxid', 'scientific_name']
+    return data.get_related_items(
+        reads,
+        args,
+        fields=fields,
+        allowed_fields=fields + ['metadata', 'taxon_lineage'],
+        default_sort_column='run_accession',
+    )
 
-def get_related_assemblies(accession):
+def get_related_assemblies(accession, args):
+    get_biosample(accession)
     assemblies = Assembly.objects(sample_accession=accession).exclude('id', 'created')
-    return assemblies.to_json()
+    fields = ['accession', 'assembly_name', 'sample_accession', 'taxid', 'scientific_name']
+    return data.get_related_items(
+        assemblies,
+        args,
+        fields=fields,
+        allowed_fields=fields + ['metadata', 'taxon_lineage'],
+        default_sort_column='accession',
+    )
 
-def get_related_sub_samples(accession):
+def get_related_sub_samples(accession, args):
+    get_biosample(accession)
     sub_samples = BioSample.objects(__raw__ = {'metadata.sample derived from' : accession}).exclude('id','created')
-    return sub_samples.to_json()
+    fields = ['accession', 'scientific_name', 'taxid']
+    return data.get_related_items(
+        sub_samples,
+        args,
+        fields=fields,
+        allowed_fields=fields + ['metadata', 'taxon_lineage'],
+        default_sort_column='accession',
+    )
 
 
 def get_biosample_checklist():
@@ -78,10 +94,11 @@ def get_submitted_biosamples(args):
     return data.get_items('submitted_biosamples', args)
 
 def get_submitted_sample(accession):
-    sample = BioSampleSubmission.objects(accession=accession).first()
-    if not sample:
-        raise NotFound(description=f"biosample with accession {accession} not found")
-    return sample
+    return get_or_404(
+        BioSampleSubmission,
+        f"biosample with accession {accession} not found",
+        accession=accession,
+    )
 
 def submit_sample(payload):
     user = user_helper.get_current_user()
@@ -130,7 +147,7 @@ def submit_sample(payload):
         **filtered_response
     )
     submitted_sample.save()
-    organism.save() #update goat status
+    # BioSampleSubmission post_save refreshes organism GoaT-related aggregates
     return f"{submitted_sample.name} correctly published in biosamples with accession {submitted_sample.accession}", 201
     ## do we need to store the accession??
     ## handle species, update goat status

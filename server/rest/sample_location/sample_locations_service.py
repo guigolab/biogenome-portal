@@ -1,8 +1,8 @@
-from db.models import SampleCoordinates,Organism,Experiment,BioSample,Assembly,GenomeAnnotation,LocalSample
+from db.models import SampleCoordinates, Organism, ReadRun, BioSample, Assembly, GenomeAnnotation, LocalSample
 from helpers import geolocation, data as data_helper
 from werkzeug.exceptions import BadRequest
 
-MODELS = ['organisms', 'biosamples', 'experiments', 'assemblies', 'local_samples', 'annotations']
+MODELS = ['organisms', 'biosamples', 'reads', 'assemblies', 'local_samples', 'annotations']
 
 MODEL_MAP = {
     'organisms': {
@@ -29,11 +29,11 @@ MODEL_MAP = {
         'count_query': lambda ids: Assembly.objects(sample_accession__in=ids).count(),
         'fields': ['accession', 'assembly_name', 'sample_accession', 'taxid', 'scientific_name', 'metadata.assembly_info.assembly_level']
     },
-    'experiments': {
+    'reads': {
         'field': 'sample_accession',
-        'queryset': lambda ids: Experiment.objects(sample_accession__in=ids),
-        'count_query': lambda ids: Experiment.objects(sample_accession__in=ids).count(),
-        'fields': ['experiment_accession', 'sample_accession', 'taxid', 'scientific_name']
+        'queryset': lambda ids: ReadRun.objects(sample_accession__in=ids),
+        'count_query': lambda ids: ReadRun.objects(sample_accession__in=ids).count(),
+        'fields': ['run_accession', 'experiment_accession', 'sample_accession', 'taxid', 'scientific_name']
     },
     'annotations': {
         'field': 'sample_accession',

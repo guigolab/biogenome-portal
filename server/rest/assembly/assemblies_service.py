@@ -1,18 +1,26 @@
 from db.models import Assembly, Chromosome, GenomeAnnotation
-from werkzeug.exceptions import BadRequest, Conflict, NotFound
+from werkzeug.exceptions import BadRequest, Conflict
 from clients import ncbi_client, genomehubs_client
 from parsers import assembly
 from jobs import assemblies as assemblies_jobs
 from helpers import data, organism, biosample as biosample_helper, assembly as assembly_helper
-from flask import send_file
-import io
+from flask import Response
+from rest.common.service_utils import get_or_404
 
-def get_related_chromosomes(accession):
+def get_related_chromosomes(accession, args):
     ass = get_assembly(accession)
     chromosomes = Chromosome.objects(metadata__assembly_accession=accession)
     if not chromosomes.count():
         chromosomes = Chromosome.objects(accession_version__in=ass.chromosomes)
-    return chromosomes.exclude('id')
+    chromosomes = chromosomes.exclude('id')
+    fields = ['name', 'accession_version']
+    return data.get_related_items(
+        chromosomes,
+        args,
+        fields=fields,
+        allowed_fields=fields + ['metadata', 'taxid'],
+        default_sort_column='accession_version',
+    )
 
 def get_assemblies_from_annotations(args):
     distinct_accessions = GenomeAnnotation.objects().distinct('assembly_accession')
@@ -46,7 +54,7 @@ def create_assembly_from_accession(accession):
         raise BadRequest(description=f"BioSample {assembly_obj.sample_accession} not found in INSDC")
 
     assembly_obj.save()
-    organism_obj.save()
+    # Organism status + TaxonNode counts: Assembly post_save -> taxon_organism_sync
 
     return accession
 
@@ -64,29 +72,28 @@ def fetch_assembly_report(accession):
 
 
 def get_assembly(assembly_accession):
-    assembly_obj = Assembly.objects(accession=assembly_accession).first()
-    if not assembly_obj:
-        raise NotFound(description=f"Assembly {assembly_accession} not found")
-    return assembly_obj
+    return get_or_404(Assembly, f"Assembly {assembly_accession} not found", accession=assembly_accession)
 
 def delete_assembly(accession):
 
     assembly_obj = get_assembly(accession)
-    
-    Chromosome.objects(accession_version__in=assembly_obj.chromosomes).delete()
-    GenomeAnnotation.objects(assembly_accession=accession).delete()
     assembly_obj.delete()
-
-    organism_obj = organism.handle_organism(assembly_obj.taxid)
-    if organism_obj:
-        organism_obj.save()
+    # Cascades: chromosomes, annotations, organism/taxon refresh (models post_delete)
 
     return accession
 
 
-def get_related_annotations(accession):
+def get_related_annotations(accession, args):
     get_assembly(accession)
-    return GenomeAnnotation.objects(assembly_accession=accession).exclude('id','created').to_json()
+    annotations = GenomeAnnotation.objects(assembly_accession=accession).exclude('id','created')
+    fields = ['name', 'scientific_name', 'taxid', 'assembly_accession']
+    return data.get_related_items(
+        annotations,
+        args,
+        fields=fields,
+        allowed_fields=fields + ['metadata', 'taxon_lineage'],
+        default_sort_column='name',
+    )
 
 def get_chr_aliases_file(accession):
     assembly_obj = get_assembly(accession)
@@ -98,27 +105,18 @@ def get_chr_aliases_file(accession):
 
     if not chromosomes:
         raise BadRequest(description=f"Assembly {accession} lacks chromosomes")
-    
-    # Prepare the TSV data
-    tsv_data = io.StringIO()
-    
-    # Assuming chromosomes is a list of dictionaries with fields 'name' and 'accession_version'
-    for chromosome in chromosomes:
-        name = chromosome.metadata.get('chr_name')
-        if not name:
-            name = chromosome.metadata.get('name')
-        accession_version = chromosome.accession_version
-        tsv_data.write(f"{name}\t{accession_version}\n")
-    
-    tsv_data.seek(0)  # Go back to the start of the StringIO object
-    
-    # Send the TSV as a downloadable file
-    return send_file(
-        io.BytesIO(tsv_data.getvalue().encode('utf-8')),  # Convert StringIO to bytes
-        mimetype='text/tab-separated-values',
-        as_attachment=True,
-        download_name=f'{assembly_obj.accession}_chr_aliases.tsv'
+
+    def stream_aliases():
+        for chromosome in chromosomes.no_cache().only('metadata.chr_name', 'metadata.name', 'accession_version'):
+            name = chromosome.metadata.get('chr_name') or chromosome.metadata.get('name') or ''
+            accession_version = chromosome.accession_version or ''
+            yield f"{name}\t{accession_version}\n".encode('utf-8')
+
+    response = Response(stream_aliases(), mimetype='text/tab-separated-values', status=200)
+    response.headers['Content-Disposition'] = (
+        f'attachment; filename={assembly_obj.accession}_chr_aliases.tsv'
     )
+    return response
 
 def trigger_accessions_job(data):
     accessions = data.get('accessions')

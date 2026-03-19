@@ -176,14 +176,19 @@
    const kicker = computed(
       () => (settings.general?.kicker?.[computedLocale.value] as LangOption) ?? dashboardDefaultKicker,
    )
-   const mappedCounts = computed(() =>
-      statsStore.portalStats
-         .filter(({ key, count }) => count > 0 && Object.keys(modelTitles.value).includes(key))
-         .map(({ key, count }) => {
-            const { icon, color } = iconMap[key]
-            return { key, count, icon, color }
-         }),
-   )
+   /** One pill per model in portal config; count from root taxon stats (0 while loading or empty DB). */
+   const mappedCounts = computed(() => {
+      const countByKey = Object.fromEntries(statsStore.portalStats.map((s) => [s.key, s.count]))
+      return Object.keys(modelTitles.value).map((key) => {
+         const meta = iconMap[key] ?? { icon: 'fa-database', color: 'primary' }
+         return {
+            key,
+            count: countByKey[key] ?? 0,
+            icon: meta.icon,
+            color: meta.color,
+         }
+      })
+   })
 
    const dataExplorerFeature = {
       title: 'home.dataExplorerFeature.title',
