@@ -1,348 +1,338 @@
 <template>
-  <div class="rank-bar-row">
-    <div class="rank-desc-bold">{{ t('taxon.ranksDistribution') }}</div>
-    <div class="rank-hierarchy">
-      <TransitionGroup name="slide-x-group" tag="div" class="rank-chips-group">
-        <div class="rank-chip-wrapper" v-for="(r, idx) in mappedRanks" :key="r.rank">
-          <VaDropdown stick-to-edges>
-            <template #anchor>
-              <VaChip
-                @click="handleRankSelection(r.rank)"
-                color="backgroundElement"
-              >
-                {{ r.rank }} <span class="va-text-bold ml-2">{{ r.value }}</span>
-              </VaChip>
-              <div v-if="idx < mappedRanks.length - 1" class="rank-connector">
-                <svg width="40" height="8"><line x1="0" y1="4" x2="40" y2="4" stroke="#ccc" stroke-width="2" /></svg>
-              </div>
-            </template>
-            <VaCard style="width: 300px;">
-              <VaCardContent >
-                <div class="row justify-space-between align-center">
-                  <div class="flex">
-                    <h3 class="va-h5">{{ r.rank }}</h3>
+   <div class="taxon-ranks-section">
+      <h2 class="section__title">{{ t('home.targetRanks.title') }}</h2>
+      <p class="section__description va-text-secondary">
+         {{ t('home.targetRanks.description') }}
+      </p>
+
+      <div v-if="loading" class="section__loading">{{ t('loading') }}</div>
+      <div v-else-if="error" class="section__error">{{ t('error') }}</div>
+
+      <ul v-else-if="mappedRanks.length" class="ranks-list" role="list">
+         <li v-for="r in mappedRanks" :key="r.rank" class="ranks-list__item" :style="{ '--rank-color': r.color }">
+            <VaCollapse
+               v-model="openState[r.rank]"
+               :header="headerContent(r)"
+               class="ranks-list__collapse"
+               @update:model-value="onPanelToggle(r.rank, $event)"
+            >
+               <div class="ranks-list__panel-content">
+                  <div class="ranks-list__scroller">
+                     <VaInfiniteScroll
+                        v-if="loadedRanks.has(r.rank)"
+                        :key="r.rank"
+                        :disabled="allLoadedByRank[r.rank] || loadingByRank[r.rank]"
+                        :load="() => loadMore(r.rank)"
+                        :offset="100"
+                     >
+                        <div
+                           v-for="item in taxonsByRank[r.rank] || []"
+                           :key="item.taxid"
+                           class="ranks-list__taxon-item"
+                           role="button"
+                           tabindex="0"
+                           @click="handleTaxonClick(item)"
+                           @keydown.enter="handleTaxonClick(item)"
+                        >
+                           <span class="ranks-list__taxon-name">{{ item.name }}</span>
+                           <VaChip v-if="item.leaves != null && item.leaves > 0" size="small" color="backgroundPrimary">
+                              {{ item.leaves }}
+                           </VaChip>
+                        </div>
+                        <div v-if="loadingByRank[r.rank]" class="ranks-list__loading-more">
+                           <VaInnerLoading :loading="true" />
+                        </div>
+                     </VaInfiniteScroll>
+                     <div v-else-if="loadingByRank[r.rank]" class="ranks-list__loading-more">
+                        {{ t('loading') }}
+                     </div>
+                     <div
+                        v-else-if="loadedRanks.has(r.rank) && !taxonsByRank[r.rank]?.length"
+                        class="ranks-list__empty va-text-secondary"
+                     >
+                        {{ t('noData') }}
+                     </div>
                   </div>
-                  <div class="flex">
-                    <VaChip color="backgroundPrimary">{{ r.value }}</VaChip>
-                  </div>
-                </div>
-              </VaCardContent>
-              <VaDivider style="margin: 0;" />
-              <VaCardContent>
-                <div class="taxon-list-scroller">
-                  <VaInfiniteScroll
-                    v-if="taxons.length"
-                    :disabled="allLoaded || isFetchingMore"
-                    :load="fetchMoreTaxons"
-                    @onLoad="fetchMoreTaxons"
-                    :offset="100"
-                  >
-                    <template #default>
-                      <div v-for="item in taxons" :key="item.taxid" class="taxon-list-item" @click="handleClick({ item })">
-                        <span class="taxon-name">{{ item.name }}</span>
-                        <VaChip color="backgroundPrimary">{{ item.leaves }}</VaChip>
-                      </div>
-                      <div v-if="isFetchingMore" class="infinite-loading-indicator">
-                        <VaInnerLoading :loading="true" />
-                      </div>
-                    </template>
-                  </VaInfiniteScroll>
-                  <div v-else class="no-items">{{ t('noData') }}</div>
-                </div>
-              </VaCardContent>
-            </VaCard>
-          </VaDropdown>
-        </div>
-      </TransitionGroup>
-    </div>
-  </div>
+               </div>
+            </VaCollapse>
+         </li>
+      </ul>
+
+      <p v-else class="section__empty va-text-secondary">{{ t('noData') }}</p>
+   </div>
 </template>
+
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
-import StatisticsService from '../services/StatisticsService';
-import { TaxonNode } from '../data/types';
-import TaxonService from '../services/TaxonService';
-import { useI18n } from 'vue-i18n';
-import { useTaxonomyStore } from '../stores/taxonomy-store';
-import { useToast } from 'vuestic-ui/web-components';
-import { useRouter } from 'vue-router';
+   import { onMounted, ref, reactive } from 'vue'
+   import { useRouter } from 'vue-router'
+   import StatisticsService from '../services/StatisticsService'
+   import TaxonService from '../services/TaxonService'
+   import { useI18n } from 'vue-i18n'
+   import { useToast } from 'vuestic-ui'
+   import { useRankPalette } from '../composable/useRankPalette'
+   import { useTaxonomyStore } from '../stores/taxonomy-store'
+   import type { TaxonNode } from '../data/types'
 
-const { t } = useI18n()
-const taxonomyStore = useTaxonomyStore()
-const { init } = useToast()
-const router = useRouter()
-// Define the type for your taxonomic rank legend
-type TaxonomicRank = {
-    rank: string;
-    color: string;
-};
-const initPagination = {
-    offset: 0,
-    limit:10,
-}
-const pagination = ref({ ...initPagination })
-const loading = ref(false)
-const taxonomicRanks: TaxonomicRank[] = [
-    { rank: "superkingdom", color: "#EF9A9A" },   // Soft Red
-    { rank: "domain", color: "#F48FB1" },         // Light Pink
-    { rank: "kingdom", color: "#CE93D8" },        // Lavender
-    { rank: "phylum", color: "#B39DDB" },         // Pastel Purple
-    { rank: "subphylum", color: "#9FA8DA" },      // Light Indigo
-    { rank: "class", color: "#90CAF9" },          // Light Blue
-    { rank: "subclass", color: "#81D4FA" },       // Sky Blue
-    { rank: "order", color: "#80DEEA" },          // Pale Cyan
-    { rank: "superorder", color: "#80CBC4" },     // Soft Teal
-    { rank: "family", color: "#A5D6A7" },         // Light Mint Green
-    { rank: "genus", color: "#C5E1A5" },          // Soft Lime
-    { rank: "species", color: "#E6EE9C" },        // Yellow-Green
-    { rank: "subspecies", color: "#CFD8DC" },     // Cool Gray
-];
+   const { t } = useI18n()
+   const { init } = useToast()
+   const router = useRouter()
+   const taxonomyStore = useTaxonomyStore()
+   const { rankPalette } = useRankPalette()
 
-const taxons = ref<TaxonNode[]>([])
-const total = ref(0)
-const mappedRanks = ref<Record<string, any>[]>([])
+   const PAGE_SIZE = 20
 
-const selectedRank = ref<string | null>(null)
-const isFetchingMore = ref(false)
-const allLoaded = ref(false)
+   const loading = ref(false)
+   const error = ref<unknown>(null)
+   const mappedRanks = ref<{ rank: string; color: string; value: number }[]>([])
+   const openState = reactive<Record<string, boolean>>({})
 
-async function fetchRanks() {
-    const { data } = await StatisticsService.getModelFieldStats('taxons', 'rank', {})
-    const dataKeys = Object.keys(data)
+   const taxonsByRank = reactive<Record<string, TaxonNode[]>>({})
+   const loadingByRank = reactive<Record<string, boolean>>({})
+   const allLoadedByRank = reactive<Record<string, boolean>>({})
+   const offsetByRank = reactive<Record<string, number>>({})
+   const totalByRank = reactive<Record<string, number>>({})
+   const loadedRanks = ref<Set<string>>(new Set())
 
-    const filteredEntries = taxonomicRanks.filter(({ rank }) => dataKeys.includes(rank)).map(({ rank, color }) =>
-        ({ rank, color, value: data[rank] })
-    )
-    mappedRanks.value = [...filteredEntries]
+   function headerContent(r: { rank: string; color: string; value: number }) {
+      return `${formatRankLabel(r.rank)} (${formatCount(r.value)})`
+   }
 
-}
+   async function fetchRanks() {
+      const { data } = await StatisticsService.getModelFieldStats('taxons', 'rank', {})
+      const dataKeys = Object.keys(data)
+      mappedRanks.value = rankPalette.value
+         .filter(({ rank }) => dataKeys.includes(rank))
+         .map(({ rank, color }) => ({
+            rank,
+            color,
+            value: data[rank],
+         }))
+      mappedRanks.value.forEach((r) => {
+         if (!(r.rank in openState)) openState[r.rank] = false
+      })
+   }
 
-async function handleRankSelection(rank: string) {
-    selectedRank.value = rank
-    pagination.value = { ...initPagination }
-    taxons.value = []
-    allLoaded.value = false
-    await fetchTaxons()
-    setTimeout(() => {
-        const scroller = document.querySelector('.taxon-list-scroller')
-        if (scroller) scroller.scrollTop = 0
-    }, 0)
-}
+   async function fetchTaxons(rank: string, append = false) {
+      if (loadingByRank[rank] && !append) return
+      loadingByRank[rank] = true
+      try {
+         const offset = append ? offsetByRank[rank] ?? 0 : 0
+         const { data } = await TaxonService.getTaxons({
+            rank,
+            sort_column: 'leaves',
+            sort_order: 'desc',
+            offset,
+            limit: PAGE_SIZE,
+         })
+         const list = (data?.data ?? data) as TaxonNode[]
+         const total = (data as { total?: number })?.total ?? list.length
+         if (!append) {
+            taxonsByRank[rank] = [...list]
+            offsetByRank[rank] = list.length
+         } else {
+            taxonsByRank[rank] = [...(taxonsByRank[rank] || []), ...list]
+            offsetByRank[rank] = (offsetByRank[rank] ?? 0) + list.length
+         }
+         totalByRank[rank] = total
+         allLoadedByRank[rank] = (taxonsByRank[rank]?.length ?? 0) >= total
+      } catch (e) {
+         console.error(e)
+      } finally {
+         loadingByRank[rank] = false
+      }
+   }
 
-async function fetchTaxons() {
-    loading.value = true
-    try {
-        const { data } = await TaxonService.getTaxons({ rank: selectedRank.value, sort_column: 'leaves', ...pagination.value })
-        taxons.value = [...data.data]
-        total.value = data.total
-        allLoaded.value = taxons.value.length >= data.total
-    } finally {
-        loading.value = false
-    }
-}
+   function onPanelToggle(rank: string, isOpen: boolean) {
+      if (isOpen && !loadedRanks.value.has(rank)) {
+         loadedRanks.value = new Set([...loadedRanks.value, rank])
+         fetchTaxons(rank)
+      }
+   }
 
-async function fetchMoreTaxons() {
-    if (loading.value || isFetchingMore.value || allLoaded.value) return
-    isFetchingMore.value = true
-    try {
-        pagination.value.offset += pagination.value.limit
-        const { data } = await TaxonService.getTaxons({ rank: selectedRank.value, sort_column: 'leaves', ...pagination.value })
-        taxons.value = [...taxons.value, ...data.data]
-        allLoaded.value = taxons.value.length >= data.total
-    } finally {
-        isFetchingMore.value = false
-    }
-}
+   function loadMore(rank: string) {
+      if (allLoadedByRank[rank] || loadingByRank[rank]) return
+      fetchTaxons(rank, true)
+   }
 
-onMounted(async () => {
-    try {
-        loading.value = true
-        await fetchRanks()
-    } catch (err) {
-        init({ message: 'Error fetching data, check the console..', color: 'danger' })
-        console.error(err)
-    } finally {
-        loading.value = false
-    }
-})
+   async function handleTaxonClick(item: TaxonNode) {
+      try {
+         await taxonomyStore.setCurrentTaxon({
+            name: item.name ?? '',
+            rank: item.rank ?? '',
+            taxid: item.taxid,
+         } as TaxonNode)
+         taxonomyStore.showSidebar = true
+         router.push({ name: 'model', params: { model: 'organisms' } })
+      } catch (err) {
+         init({ message: 'Error selecting taxon', color: 'danger' })
+         console.error(err)
+      }
+   }
 
-function handleClick(event: any) {
-    const { item } = event
-    if (!item.leaves) {
-        router.push({ name: 'item', params: { model: 'organisms', id: item.taxid } })
-    } else {
-        taxonomyStore.currentTaxon = { ...event.item }
-        taxonomyStore.showSidebar = true
-    }
+   function formatRankLabel(rank: string): string {
+      return rank.charAt(0).toUpperCase() + rank.slice(1).replace(/_/g, ' ')
+   }
 
-}
+   function formatCount(n: number): string {
+      return n.toLocaleString()
+   }
 
+   onMounted(async () => {
+      try {
+         loading.value = true
+         error.value = null
+         await fetchRanks()
+      } catch (err) {
+         error.value = err
+         init({ message: 'Error fetching rank counts', color: 'danger' })
+         console.error(err)
+      } finally {
+         loading.value = false
+      }
+   })
 </script>
 
 <style lang="scss" scoped>
-.ml-2 {
-    margin-left: 0.5rem;
-}
-.rank-bar-row {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-    width: 100%;
-}
-.rank-desc-bold {
-    font-weight: bold;
-    font-size: 1rem;
-    white-space: nowrap;
-    flex-shrink: 0;
-    padding-left: 0.5rem;
-}
-.rank-hierarchy {
-    flex: 1 1 0;
-    min-width: 0;
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 0.5rem;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    white-space: nowrap;
-    padding: 0.5rem;
-    scrollbar-width: thin;
-    scrollbar-color: var(--va-background-primary) transparent;
-    width: 100%;
-}
-.rank-hierarchy::-webkit-scrollbar {
-    height: 6px;
-    background: transparent;
-}
-.rank-hierarchy::-webkit-scrollbar-thumb {
-    background: var(--va-background-primary);
-    border-radius: 4px;
-}
-.rank-chip-wrapper {
-    display: flex;
-    align-items: center;
-}
-.rank-chip {
-    font-size: 1rem;
-    transition: box-shadow 0.2s, background 0.2s;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-    &.selected {
-        box-shadow: 0 0 0 2px var(--va-primary);
-        background: var(--va-background-element);
-    }
-}
-.rank-connector {
-    display: flex;
-    align-items: center;
-    margin: 0 0.25rem;
-}
-.taxon-list-scroller {
-    max-height: 250px;
-    min-height: 120px;
-    overflow-y: auto;
-    position: relative;
-    scrollbar-width: thin;
-    -ms-overflow-style: none;
-    scroll-behavior: smooth;
+   .taxon-ranks-section {
+      width: 100%;
+   }
 
-    &::-webkit-scrollbar {
-        width: 6px;
-    }
+   .section__title {
+      text-align: center;
+      margin: 0 0 0.5rem 0;
+      font-size: 1.5rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--va-text-primary);
+   }
 
-    &::-webkit-scrollbar-track {
-        background: var(--va-background-primary);
-        border-radius: 3px;
-    }
+   .section__description {
+      margin: 0 0 1.75rem 0;
+      font-size: 0.9375rem;
+      line-height: 1.5;
+      text-align: center;
+      max-width: 520px;
+      margin-left: auto;
+      margin-right: auto;
+   }
 
-    &::-webkit-scrollbar-thumb {
-        background: var(--va-background-border);
-        border-radius: 3px;
+   .section__empty {
+      text-align: center;
+      padding: 1.5rem 0;
+      margin: 0;
+   }
 
-        &:hover {
-            background: var(--va-primary);
-        }
-    }
-}
-.taxon-list-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.4rem 0.75rem;
-    margin-bottom: 0.25rem;
-    background: var(--va-background-secondary);
-    border-radius: 8px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-    cursor: pointer;
-    transition: background 0.15s, box-shadow 0.15s, transform 0.15s;
-    font-size: 0.97rem;
-    min-height: 36px;
-    &:hover {
-        background: var(--va-background-element);
-        color: var(--va-primary);
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        transform: translateY(-2px) scale(1.01);
-    }
-}
-.taxon-name {
-    font-weight: 500;
-    font-size: 1rem;
-}
-.no-items {
-    text-align: center;
-    color: var(--va-secondary);
-    margin: 2rem 0;
-}
-.fade-slide-enter-active, .fade-slide-leave-active {
-    transition: all 0.3s cubic-bezier(.4,0,.2,1);
-}
-.fade-slide-enter-from {
-    opacity: 0;
-    transform: translateY(10px);
-}
-.fade-slide-leave-to {
-    opacity: 0;
-    transform: translateY(-10px);
-}
-@media (max-width: 768px) {
-    .rank-hierarchy {
-        flex-direction: row;
-        gap: 0.25rem;
-        align-items: flex-start;
-    }
-    .rank-connector {
-        transform: rotate(90deg);
-        margin: 0.25rem 0;
-    }
-}
-.infinite-loading-indicator {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 0.5rem 0;
-}
-.all-loaded-indicator {
-    font-size: 0.95rem;
-    color: var(--va-secondary);
-}
-.rank-chips-group {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-.slide-x-group-enter-active {
-    transition: all 0.5s cubic-bezier(.4,0,.2,1);
-}
-.slide-x-group-enter-from {
-    opacity: 0;
-    transform: translateX(-40px);
-}
-.slide-x-group-leave-active {
-    transition: all 0.3s cubic-bezier(.4,0,.2,1);
-    position: absolute;
-}
-.slide-x-group-leave-to {
-    opacity: 0;
-    transform: translateX(40px);
-}
+   .ranks-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.375rem;
+      padding-top: 0.25rem;
+      border-top: 1px solid var(--va-background-border, rgba(0, 0, 0, 0.06));
+   }
+
+   .ranks-list__item {
+      display: flex;
+      flex-direction: column;
+      border-radius: 8px;
+      background: var(--va-background-primary);
+      border: 1px solid var(--va-background-border, rgba(0, 0, 0, 0.06));
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+      transition: background 0.15s ease, box-shadow 0.15s ease;
+
+      &:hover {
+         background: var(--va-background-element);
+         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+      }
+   }
+
+   .ranks-list__collapse {
+      width: 100%;
+      border-radius: 8px;
+   }
+
+   .ranks-list__collapse :deep(.va-collapse__header) {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.5rem 0.75rem;
+
+      &::before {
+         content: '';
+         width: 4px;
+         height: 1.25rem;
+         border-radius: 2px;
+         background: var(--rank-color);
+         flex-shrink: 0;
+      }
+   }
+
+   .ranks-list__collapse :deep(.va-collapse__header-content) {
+      flex: 1;
+      font-size: 0.9375rem;
+      font-weight: 500;
+      color: var(--va-text-primary);
+   }
+
+   .ranks-list__panel-content {
+      padding: 0.25rem 0.75rem 0.5rem;
+      border-top: 1px solid var(--va-background-border, rgba(0, 0, 0, 0.06));
+   }
+
+   .ranks-list__scroller {
+      max-height: 220px;
+      overflow-y: auto;
+   }
+
+   .ranks-list__taxon-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.35rem 0.5rem;
+      margin-bottom: 0.2rem;
+      background: var(--va-background-secondary);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.8125rem;
+      transition: background 0.15s;
+
+      &:hover {
+         background: var(--va-background-element, rgba(0, 0, 0, 0.04));
+      }
+   }
+
+   .ranks-list__taxon-name {
+      font-weight: 500;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+   }
+
+   .ranks-list__loading-more {
+      display: flex;
+      justify-content: center;
+      padding: 0.5rem;
+      font-size: 0.75rem;
+      color: var(--va-text-secondary);
+   }
+
+   .ranks-list__empty {
+      font-size: 0.8125rem;
+      padding: 0.75rem;
+      text-align: center;
+   }
+
+   @media (max-width: 768px) {
+      .ranks-list__collapse :deep(.va-collapse__header) {
+         padding: 0.4rem 0.625rem;
+      }
+
+      .ranks-list__label,
+      .ranks-list__count {
+         font-size: 0.875rem;
+      }
+   }
 </style>

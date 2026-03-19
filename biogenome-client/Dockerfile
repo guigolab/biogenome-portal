@@ -1,4 +1,4 @@
-FROM node:17 as build-stage
+FROM node:17 AS build-stage
 
 ARG ROOT_NODE
 ARG MATOMO_URL 
@@ -13,8 +13,6 @@ COPY package*.json ./
 RUN npm install --legacy-peer-deps
 
 COPY . .
-
-COPY ./ducd node_modules/ducd 
 
 ENV VITE_ROOT_NODE=${ROOT_NODE}
 ENV VITE_BASE_PATH=${BASE_PATH}

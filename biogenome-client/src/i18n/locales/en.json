@@ -1,255 +1,377 @@
 {
-    "home": {
-        "taxonomy": {
-            "title": "Filter by Taxonomy",
-            "description": "Search and select a taxon to see its details",
-            "exploreBtn": "Explore Taxonomy",
-            "viewBtn": "View"
-        },
-        "data": {
-            "title": "Explore by Data"
-        },
-        "features": {
-            "title": "Features"
-        },
-        "goat": {
-            "title": "Genomes on a Tree Status"
-        },
-        "insdc": {
-            "title": "INSDC Submission Status"
-        },
-        "targetRanks":{
-            "title": "Targeted Taxa by Rank",
-            "description": "Select a rank to see the number of targeted taxa at that level"
-        }
-    },
-    "nav": {
-        "taxExplorer": "Taxonomy Explorer",
-        "genomeBrowser": "Genome Browser",
-        "login": "Login",
-        "docs": "API Docs",
-        "data": "Data",
-        "tools": "Tools",
-        "settings": "Resources",
-        "home": "Home"
-    },
-    "tree": {
-        "title": "Taxonomy Explorer",
-        "description": "Navigate the tree of life with the Taxonomic Tree Explorer, an interactive D3 hyperbolic tree. Zoom with your mouse or trackpad, pan by dragging, and click nodes to reveal details"
-    },
-    "map": {
-        "title": "Geographic Explorer",
-        "description": "Draw a region on the map to explore and download metadata for biosamples, species, assemblies, experiments, and annotations. Use the map’s top-right controls to draw or clear your selection"
-    },
-    "taxon": {
-        "chip": "Selected Taxon: ",
-        "searchPlaceholder": "Search a taxon by name or taxid",
-        "noTaxons": "No taxons found for: ",
-        "wikiLink": "Read more",
-        "relatedData": "Related Data",
-        "occurrencesMap": "Occurrences Map",
-        "clearBtn": "Clear Selection",
-        "showDetails": "Show Details",
-        "hideDetails": "Hide Details",
-        "taxonomicTree": "Taxonomic Tree",
-        "dataDistribution": "Data Distribution",
-        "viewMap": "View Map",
-        "quickFilters": "Quick Filters",
-        "biosamples": "BioSamples",
-        "assemblies": "Assemblies",
-        "annotations": "Annotations",
-        "expandAll": "Expand All",
-        "collapseAll": "Collapse All",
-        "children": "Child Taxa",
-        "ancestors": "Ancestors",
-        "noData": "No data available",
-        "loading": "Loading...",
-        "error": "Error loading data",
-        "selectedTaxon": "Selected taxon",
-        "points": "Markers",
-        "heatmap": "Heatmap",
-        "mapCurrentlyViewed": "Viewing in map",
-        "leaves": "Organisms",
-        "ranksDistribution": "Ranks Distribution"
-    },
-    "user": {
-        "dashboard": "Manage Data",
-        "login": "Login"
-    },
-    "genomeBrowser": {
-        "title": "Genome Browser",
-        "description": "Select an assembly to view in the genome browser",
-        "assemblies": {
-            "title": "Add New Genome Browser Session",
-            "placeholder": "Search by species or assembly name",
-            "searchPlaceholder": "Type here to search",
-            "noOptions": "No assemblies match the search criteria",
-            "withAnnotations": "Filter assemblies with annotations",
-            "chromosomesPlaceholder": "Select chromosomes (optional)",
-            "annotationsPlaceholder": "Select annotations (optional)",
-            "createBtn": "Open in Genome Browser"
-        },
-        "assembly": {
-            "accession": "Assembly Accession: ",
-            "sampleAccession": "Sample Accession: ",
-            "metadata": "Show Metadata",
-            "chromosomes": "Chromosomes",
-            "modalTitle": "About the genome browser",
-            "modelDescription": "The page features the JBrowse 2 Linear Genome Viewer (JBrowse 2), an interactive tool for exploring genome sequences and annotations. Users can navigate along the genome, zoom in on specific regions, and, when available, visualize annotations such as genes and features. The browser also allows downloading FASTA sequences for selected regions, enabling further analysis. If annotations are present, users can inspect gene structures, coding regions, and other genomic features in a clear, interactive format.",
-            "annotations": "Annotations"
-        },
-        "addSession": "New Session"
-    },
-    "items": {
-        "countries": {
-            "title": "Countries Selection",
-            "infoTitle": "How Countries Are Determined",
-            "infoDescription": "The countries displayed are determined based on the sample metadata, if contains a 'country' field, or by checking if the geographical coordinates of samples fall within a country's boundaries. Please note that this process may occasionally result in inaccuracies.",
-            "showMap": "Show Map",
-            "showList": "Show List"
-        },
-        "filters": {
-            "title": "Filters",
-            "clearBtn": "Clear Filters",
-            "selectLabel": "Filter Type",
-            "addBtn": "Add Custom Filter",
-            "createBtn": "Create Filter",
-            "modalTitle": "Filter Creation",
-            "modalDescription": "Enter a field name to check if it exists in the database. Use dot notation for nested fields, such as",
-            "ebpMetricsTitle": "EBP Metrics",
-            "ebpMetricsDescription": "Assemblies compliant with the Earth BioGenome Project quality standards",
-            "showMap":"Show Map",
-            "hideMap": "Hide Map"
-        },
-        "data": {
-            "results": "Results: ",
-            "reportBtn": "Report",
-            "chartBtn": "Chart"
-        }
-    },
-    "item": {
-        "internalLinks": "Internal Links",
-        "externalLinks": "External Links",
-        "genomeBrowserLink": "View in Genome Browser",
-        "publications": "Related Publications",
-        "vernacularNames": "Vernacular Names",
-        "chromosomes": "Chromosomes",
-        "data": "Related Data",
-        "details": "View Details",
-        "coordinates": "Geographical Locations",
-        "status": "Sequencing Status: ",
-        "targetList": "Target List Status: "
-    },
-    "insdc": {
-        "title": "INSDC Status",
-        "biosample": {
-            "label": "Biosample Submitted",
-            "description": "At least one INSDC BioSample linked"
-        },
-        "experiment": {
-            "label": "Reads Submitted",
-            "description": "At least one INSDC Experiment linked"
-        },
-        "assembly": {
-            "label": "Assemblies Submitted",
-            "description": "At least one INSDC Assembly linked"
-        },
-        "not_submitted": {
-            "label": "Missing Status",
-            "description": "No INSDC data linked"
-        }
-    },
-    "goat": {
-        "title": "GOAT Status",
-        "collected": {
-            "label": "Sample Collected",
-            "description": "A sample for the species has been collected by field workers but has not yet been sent to a sequencing center"
-        },
-        "acquired": {
-            "label": "Sample Acquired",
-            "description": "A sample for the species has been acquired and is \"in house\" at the sequencing centre, but has not been processed yet"
-        },
-        "generation": {
-            "label": "Data Generation",
-            "description": "Sequencing data are currently being generated for the species"
-        },
-        "assembly": {
-            "label": "In Assembly",
-            "description": "All sequencing and related data have been collected and genome assembly is in process"
-        },
-        "submitted": {
-            "label": "INSDC Submitted",
-            "description": "The species' genome assembly has been submitted to INSDC and is openly accessible under the generating project's Bioproject ID"
-        },
-        "publication": {
-            "label": "Publication Available",
-            "description": "Assembly has an associated publication with a DOI or PubMed ID"
-        },
-        "not_submitted": {
-            "label": "Missing Status",
-            "description": "GoaT status not available"
-        }
-    },
-    "targetListStatus": {
-        "long_list": {
-            "description": "Any species declared as a target for the total scale of the project. For regional projects, this would declare that the species is known to be part of the biota of a region that is the target of this particular project (e.g. for DToL this is all UKSI plus the Irish biota, 72,000 species). For taxonomically-focussed species this would be all the species that are assigned to a particular higher taxon (e.g for VGP the long list is all 70,000 vertebrate species)"
-        },
-        "family_representative": {
-            "description": "The species has been chosen as a family reference species for the organisation or project. These family representatives drive completion of the Earth BioGenome Project’s Phase 1 goals. Species tagged as “family_representative” will also receive a long_list tag on GoaT"
-        },
-        "other_priority": {
-            "description": "A species that has been prioritised by a project for reasons other than being  a family representative. This could include for example species of primary conservation interest, species that are part of pilot projects, species that address goals beyond the EBP Phase 1 family representatives, and other subprojects. Species tagged as “other_priority” will also receive a long_list tag on GoaT."
-        }
-    },
-    "fieldLookup": {
-        "placeholder": "Enter field name to verify...",
-        "label": "Check Field Existence",
-        "valid": "Valid field",
-        "invalid": "Type a valid field"
-    },
-    "reportModal": {
-        "title": "Download Report",
-        "formatLabel": "Format",
-        "description": "Select multiple fields or type a new field, if the field is contained in metadata type: 'metadata.fieldYouWantToSelect'",
-        "tip": "Select TSV or JSONL for faster retrieval",
-        "queryMessage": "Type a field and check if exists",
-        "addFieldBtn": "Add Field",
-        "clearFieldBtn": "Clear"
-    },
-    "chartModal": {
-        "title": "Create chart",
-        "description": "If the field is part of metadata or is nested, use the format: 'metadata.fieldYouWantToSelect' for top-level fields, or 'metadata.parentField.nestedField' for nested fields.",
-        "fieldInputLabel": "Field",
-        "selectLabel": "Chart type",
-        "exampleBtn": "Load Example"
-    },
-    "buttons": {
-        "download": "Download",
-        "submit": "Submit",
-        "view": "View",
-        "goat": "GoaT Report",
-        "createChart": "Create Chart"
-    },
-    "models": {
-        "organisms": "Organisms",
-        "experiments": "Experiments",
-        "assemblies": "Assemblies",
-        "biosamples": "BioSamples",
-        "local_samples": "Local Samples",
-        "annotations": "Annotations",
-        "reads": "Reads"
-    },
-    "language": {
-        "english": "English",
-        "catalan": "Catalan",
-        "french": "French",
-        "spanish": "Spanish",
-        "german": "German"
-    },
-    "taxonsearch": {
-        "description": "Select a taxon to filter all data in the current view"
-    },
-    "taxons": {
-        "resultsFound": "Matching Taxa"
-    }
+   "home": {
+      "taxonomy": {
+         "title": "Filter by Taxonomy",
+         "description": "Search and select a taxon to see its details",
+         "exploreBtn": "Explore Taxonomy",
+         "viewBtn": "View"
+      },
+      "features": {
+         "title": "Features",
+         "subtitle": "Explore data and tools available in this portal"
+      },
+      "hero": {
+         "kicker": "Research portal",
+         "statsLabel": "Data at a glance"
+      },
+      "cta1": "Browse Data",
+      "cta2": "Explore Taxonomy",
+      "taxExplorerFeature": {
+         "title": "Taxonomy Explorer",
+         "description": "Navigate the tree of life with an interactive D3 hyperbolic tree"
+      },
+      "mapExplorerFeature": {
+         "title": "Map Explorer",
+         "description": "Explore the geographic locations of organisms and samples"
+      },
+      "genomeBrowserFeature": {
+         "title": "Genome Browser",
+         "description": "View genomes and annotations in an interactive genome browser"
+      },
+      "dataExplorerFeature": {
+         "title": "Data Explorer",
+         "description": "Browse organisms, assemblies, biosamples, annotations and more by taxonomy"
+      },
+      "goat": {
+         "kicker": "Sequencing Status",
+         "subtitle": "Distribution of organisms at a specific sequencing (GOAT) stage"
+      },
+      "insdc": {
+         "kicker": "Submission Status",
+         "subtitle": "Distribution of organisms at a specific INSDC submission stage"
+      },
+      "data": {
+         "kicker": "Taxonomy"
+      },
+      "statusTotal": "{count} organisms",
+      "targetRanks": {
+         "title": "Distribution of Taxa by Rank",
+         "description": "Distribution of taxa by rank across the taxonomy"
+      }
+   },
+   "nav": {
+      "taxExplorer": "Taxonomy Explorer",
+      "genomeBrowser": "Genome Browser",
+      "login": "Login",
+      "docs": "API Docs",
+      "data": "Data",
+      "tools": "Tools",
+      "settings": "Resources",
+      "home": "Home"
+   },
+   "tree": {
+      "kicker": "Tree of Life",
+      "title": "Taxonomy Explorer",
+      "description": "Navigate the tree of life with an interactive D3 hyperbolic tree. Zoom with your mouse or trackpad, pan by dragging, and click nodes to reveal details",
+      "selectedTaxon": "Selected taxon",
+      "browseData": "Browse data for this taxon",
+      "viewOnMap": "View on map",
+      "noTaxonSelected": "Click a circle in the tree to explore taxa and browse related data",
+      "packHint": "Scroll to zoom · Drag to pan · Click to select",
+      "loading": "Loading tree...",
+      "leaves": "organisms",
+      "rank": "Rank",
+      "loadError": "Unable to load tree data",
+      "noData": "No tree data available",
+      "taxId": "Tax ID",
+      "ancestors": "Ancestors",
+      "resetView": "Reset view",
+      "legendGroup": "Group",
+      "legendSpecies": "Species",
+      "legendSelected": "Selected"
+   },
+   "map": {
+      "title": "Geographic Explorer",
+      "description": "Draw a region on the map to explore and download metadata for biosamples, species, assemblies, read runs, and annotations. Use the map’s top-right controls to draw or clear your selection"
+   },
+   "data": {
+      "title": "Data",
+      "description": "Explore and filter data by taxonomy and model.",
+      "filteredBy": "Filtered by",
+      "allTaxa": "All taxa",
+      "noMatches": "No matches for this taxon.",
+      "taxonomyTree": "Taxonomy",
+      "hideTree": "Hide tree",
+      "showTree": "Show tree",
+      "go": "Go",
+      "filterByRank": "Rank",
+      "allRanks": "All ranks",
+      "treeHint": "Expandable tree. Click row to select taxon; use the control to expand/collapse.",
+      "clearSelection": "Clear selection",
+      "treeAriaLabel": "Taxonomy tree with {count} nodes. Use arrow keys to move, Enter to select.",
+      "treeAriaLabelByRank": "Taxonomy by {rank}: {count} nodes.",
+      "organisms": "Organisms",
+      "expandAll": "Expand all",
+      "collapseAll": "Collapse all",
+      "relevantRanksOnly": "Show only relevant ranks",
+      "rankDistribution": "Rank distribution",
+      "thisIsRoot": "This is the root of the taxonomy.",
+      "rankLabel": "Rank",
+      "organismSameRecord": "This is an organism and corresponds to the same record in the Organisms table.",
+      "taxonFilterDescription": "Browse data for this taxon and its descendants.",
+      "exploreTaxonomyVisual": "Explore taxonomy (visual)",
+      "rankColors": "Rank colors",
+      "ranks": {
+         "domain": "Domain",
+         "kingdom": "Kingdom",
+         "phylum": "Phylum",
+         "subphylum": "Subphylum",
+         "class": "Class",
+         "subclass": "Subclass",
+         "order": "Order",
+         "superorder": "Superorder",
+         "family": "Family",
+         "genus": "Genus",
+         "species": "Species",
+         "subspecies": "Subspecies"
+      }
+   },
+   "taxon": {
+      "chip": "Selected Taxon: ",
+      "searchPlaceholder": "Search a taxon by name or taxid",
+      "noTaxons": "No taxons found for: ",
+      "wikiLink": "Read more",
+      "relatedData": "Related Data",
+      "occurrencesMap": "Occurrences Map",
+      "clearBtn": "Clear Selection",
+      "showDetails": "Show Details",
+      "hideDetails": "Hide Details",
+      "taxonomicTree": "Taxonomic Tree",
+      "dataDistribution": "Data Distribution",
+      "viewMap": "View Map",
+      "quickFilters": "Quick Filters",
+      "biosamples": "BioSamples",
+      "assemblies": "Assemblies",
+      "annotations": "Annotations",
+      "expandAll": "Expand All",
+      "collapseAll": "Collapse All",
+      "children": "Child Taxa",
+      "ancestors": "Ancestors",
+      "noData": "No data available",
+      "loading": "Loading...",
+      "error": "Error loading data",
+      "selectedTaxon": "Selected taxon",
+      "points": "Markers",
+      "heatmap": "Heatmap",
+      "mapCurrentlyViewed": "Viewing in map",
+      "leaves": "Organisms",
+      "ranksDistribution": "Ranks Distribution"
+   },
+   "user": {
+      "dashboard": "Manage Data",
+      "login": "Login"
+   },
+   "genomeBrowser": {
+      "title": "Genome Browser",
+      "description": "Browse genome assemblies and annotations. Select an assembly from the left panel to view it in the genome browser.",
+      "empty": {
+         "title": "No assembly selected",
+         "selectAssembly": "Select an assembly from the left panel to view it in the genome browser. Use the search box to filter by species or assembly name, then click an assembly to load it.",
+         "hint": "Results appear in the list below. Click an assembly to load the viewer."
+      },
+      "loadingAssemblies": "Loading assemblies…",
+      "loadingAssembly": "Loading assembly and annotations…",
+      "noAssemblies": "No assemblies match your search. Try a different term or clear the search.",
+      "noAnnotations": "No annotations available for this assembly.",
+      "relatedAnnotations": "Related annotations",
+      "viewDetails": "View details",
+      "assemblies": {
+         "title": "Add New Genome Browser Session",
+         "placeholder": "Search by species or assembly name",
+         "searchHint": "Results update as you type.",
+         "searchPlaceholder": "Type here to search",
+         "noOptions": "No assemblies match the search criteria",
+         "withAnnotations": "Filter assemblies with annotations",
+         "chromosomesPlaceholder": "Select chromosomes (optional)",
+         "annotationsPlaceholder": "Select annotations (optional)",
+         "createBtn": "Open in Genome Browser"
+      },
+      "assembly": {
+         "accession": "Assembly Accession: ",
+         "sampleAccession": "Sample Accession: ",
+         "metadata": "Show Metadata",
+         "chromosomes": "Chromosomes",
+         "modalTitle": "About the genome browser",
+         "modelDescription": "The page features the JBrowse 2 Linear Genome Viewer (JBrowse 2), an interactive tool for exploring genome sequences and annotations. Users can navigate along the genome, zoom in on specific regions, and, when available, visualize annotations such as genes and features. The browser also allows downloading FASTA sequences for selected regions, enabling further analysis. If annotations are present, users can inspect gene structures, coding regions, and other genomic features in a clear, interactive format.",
+         "annotations": "Annotations"
+      },
+      "addSession": "New Session"
+   },
+   "items": {
+      "countries": {
+         "title": "Countries Selection",
+         "infoTitle": "How Countries Are Determined",
+         "infoDescription": "The countries displayed are determined based on the sample metadata, if contains a 'country' field, or by checking if the geographical coordinates of samples fall within a country's boundaries. Please note that this process may occasionally result in inaccuracies.",
+         "showMap": "Show Map",
+         "showList": "Show List"
+      },
+      "filters": {
+         "title": "Filters",
+         "has": "Has",
+         "clearBtn": "Clear Filters",
+         "searchPlaceholder": "Search by scientific name or {identifier}",
+         "searchIdentifiers": {
+            "annotation": "annotation name/accession",
+            "assembly": "assembly accession",
+            "biosample": "biosample accession",
+            "experiment": "experiment accession",
+            "localSample": "local sample id",
+            "organism": "taxid or ToLID prefix",
+            "submittedBiosample": "submission name/accession"
+         },
+         "selectLabel": "Filter Type",
+         "addBtn": "Add Custom Filter",
+         "createBtn": "Create Filter",
+         "modalTitle": "Filter Creation",
+         "modalDescription": "Enter a field name to check if it exists in the database. Use dot notation for nested fields, such as",
+         "ebpMetricsTitle": "EBP Metrics",
+         "ebpMetricsDescription": "Assemblies compliant with the Earth BioGenome Project quality standards",
+         "showMap": "Show Map",
+         "hideMap": "Hide Map"
+      },
+      "data": {
+         "results": "Results: ",
+         "reportBtn": "Report",
+         "chartBtn": "Chart",
+         "exportBtn": "Export",
+         "exportKicker": "Export",
+         "noResultsTitle": "No results",
+         "noResultsMessage": "No records match your query. Try adjusting filters or search.",
+         "noDataSubmitted": "No data submitted"
+      }
+   },
+   "item": {
+      "internalLinks": "Internal Links",
+      "externalLinks": "External Links",
+      "genomeBrowserLink": "View in Genome Browser",
+      "publications": "Related Publications",
+      "vernacularNames": "Vernacular Names",
+      "chromosomes": "Chromosomes",
+      "data": "Related Data",
+      "details": "View Details",
+      "coordinates": "Geographical Locations",
+      "status": "Sequencing Status: ",
+      "targetList": "Target List Status: ",
+      "metadata": "Metadata"
+   },
+   "insdc": {
+      "title": "INSDC Status",
+      "biosample": {
+         "label": "Biosample Submitted",
+         "description": "At least one INSDC BioSample linked"
+      },
+      "experiment": {
+         "label": "Reads Submitted",
+         "description": "At least one INSDC Experiment linked"
+      },
+      "assembly": {
+         "label": "Assemblies Submitted",
+         "description": "At least one INSDC Assembly linked"
+      },
+      "not_submitted": {
+         "label": "Missing Status",
+         "description": "No INSDC data linked"
+      }
+   },
+   "goat": {
+      "title": "GOAT Status",
+      "collected": {
+         "label": "Sample Collected",
+         "description": "A sample for the species has been collected by field workers but has not yet been sent to a sequencing center"
+      },
+      "acquired": {
+         "label": "Sample Acquired",
+         "description": "A sample for the species has been acquired and is \"in house\" at the sequencing centre, but has not been processed yet"
+      },
+      "generation": {
+         "label": "Data Generation",
+         "description": "Sequencing data are currently being generated for the species"
+      },
+      "assembly": {
+         "label": "In Assembly",
+         "description": "All sequencing and related data have been collected and genome assembly is in process"
+      },
+      "submitted": {
+         "label": "INSDC Submitted",
+         "description": "The species' genome assembly has been submitted to INSDC and is openly accessible under the generating project's Bioproject ID"
+      },
+      "publication": {
+         "label": "Publication Available",
+         "description": "Assembly has an associated publication with a DOI or PubMed ID"
+      },
+      "not_submitted": {
+         "label": "Missing Status",
+         "description": "GoaT status not available"
+      }
+   },
+   "targetListStatus": {
+      "long_list": {
+         "description": "Any species declared as a target for the total scale of the project. For regional projects, this would declare that the species is known to be part of the biota of a region that is the target of this particular project (e.g. for DToL this is all UKSI plus the Irish biota, 72,000 species). For taxonomically-focussed species this would be all the species that are assigned to a particular higher taxon (e.g for VGP the long list is all 70,000 vertebrate species)"
+      },
+      "family_representative": {
+         "description": "The species has been chosen as a family reference species for the organisation or project. These family representatives drive completion of the Earth BioGenome Project’s Phase 1 goals. Species tagged as “family_representative” will also receive a long_list tag on GoaT"
+      },
+      "other_priority": {
+         "description": "A species that has been prioritised by a project for reasons other than being  a family representative. This could include for example species of primary conservation interest, species that are part of pilot projects, species that address goals beyond the EBP Phase 1 family representatives, and other subprojects. Species tagged as “other_priority” will also receive a long_list tag on GoaT."
+      }
+   },
+   "fieldLookup": {
+      "placeholder": "Enter field name to verify...",
+      "label": "Check Field Existence",
+      "valid": "Valid field",
+      "invalid": "Type a valid field"
+   },
+   "reportModal": {
+      "title": "Download Report",
+      "formatLabel": "Format",
+      "description": "Select multiple fields or type a new field, if the field is contained in metadata type: 'metadata.fieldYouWantToSelect'",
+      "tip": "Select TSV or JSONL for faster retrieval",
+      "queryMessage": "Type a field and check if exists",
+      "addFieldBtn": "Add Field",
+      "clearFieldBtn": "Clear",
+      "downloadSummary": "Downloading"
+   },
+   "chartModal": {
+      "title": "Create chart",
+      "description": "If the field is part of metadata or is nested, use the format: 'metadata.fieldYouWantToSelect' for top-level fields, or 'metadata.parentField.nestedField' for nested fields.",
+      "fieldInputLabel": "Field",
+      "selectLabel": "Chart type",
+      "exampleBtn": "Load Example"
+   },
+   "exportModal": {
+      "title": "Export data",
+      "report": "Report (TSV/JSON)",
+      "chart": "Chart",
+      "itemsAs": "items as",
+      "downloadSummary": "Downloading"
+   },
+   "buttons": {
+      "actions": "Actions",
+      "download": "Download",
+      "submit": "Submit",
+      "view": "View",
+      "goat": "GoaT Report",
+      "createChart": "Create Chart"
+   },
+   "models": {
+      "organisms": "Organisms",
+      "assemblies": "Assemblies",
+      "biosamples": "BioSamples",
+      "local_samples": "Local Samples",
+      "annotations": "Annotations",
+      "reads": "Reads"
+   },
+   "language": {
+      "english": "English",
+      "catalan": "Catalan",
+      "french": "French",
+      "spanish": "Spanish",
+      "german": "German"
+   },
+   "taxonsearch": {
+      "description": "Select a taxon to filter all data in the current view"
+   },
+   "taxons": {
+      "resultsFound": "Matching Taxa"
+   }
 }

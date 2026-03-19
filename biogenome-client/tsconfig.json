@@ -1,35 +1,28 @@
 {
-  "compilerOptions": {
-    "noEmit": true,
-    "target": "esnext",
-    "useDefineForClassFields": true,
-    "module": "esnext",
-    "moduleResolution": "node",
-    "strict": true,
-    "jsx": "preserve",
-    "sourceMap": true,
-    "resolveJsonModule": true,
-    "esModuleInterop": true,
-    "lib": [
-      "esnext",
-      "dom"
-    ],
-    "skipLibCheck": true,
-    "types": [
-      "vite/client"
-    ],
-    "allowJs": true
-  },
-  "include": [
-    "node_modules/.vuestic/*.d.ts",
-    "src/**/*",
-    "src/**/*.ts",
-    "src/**/*.d.ts",
-    "src/**/*.vue",
-    "vite.config.ts",
-    "vuestic-ui"
-  ],
-  "exclude": [
-    "node_modules/**/*"
-  ]
+   "compilerOptions": {
+      "noEmit": true,
+      "target": "esnext",
+      "useDefineForClassFields": true,
+      "module": "esnext",
+      "moduleResolution": "node",
+      "strict": true,
+      "jsx": "preserve",
+      "sourceMap": true,
+      "resolveJsonModule": true,
+      "esModuleInterop": true,
+      "lib": ["esnext", "dom"],
+      "skipLibCheck": true,
+      "types": ["vite/client"],
+      "allowJs": true
+   },
+   "include": [
+      "node_modules/.vuestic/*.d.ts",
+      "src/**/*",
+      "src/**/*.ts",
+      "src/**/*.d.ts",
+      "src/**/*.vue",
+      "vite.config.ts",
+      "vuestic-ui"
+   ],
+   "exclude": ["node_modules/**/*"]
 }

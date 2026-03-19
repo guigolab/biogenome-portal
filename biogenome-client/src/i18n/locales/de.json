@@ -1,244 +1,282 @@
 {
-    "home": {
-        "taxonomy": {
-            "title": "Nach Taxonomie filtern",
-            "description": "Suchen und wählen Sie ein Taxon aus, um dessen Details zu sehen",
-            "exploreBtn": "Taxonomie erkunden",
-            "viewBtn": "Ansehen"
-        },
-        "data": {
-            "title": "Nach Daten erkunden"
-        },
-        "features": {
-            "title": "Funktionen"
-        },
-        "stats": {
-            "title": ""
-        },
-        "goat": {
-            "title": "Status von Genomen auf einem Baum"
-        },
-        "insdc": {
-            "title": "INSDC-Einreichungsstatus"
-        },
-        "targetRanks": {
-            "title": "Gezielte Taxa nach Rang",
-            "description": "Wählen Sie einen Rang aus, um die Anzahl der gezielten Taxa auf dieser Ebene zu sehen"
-        }
-    },
-    "nav": {
-        "taxExplorer": "Taxonomie-Explorer",
-        "genomeBrowser": "Genom-Browser",
-        "login": "Anmelden",
-        "docs": "API-Dokumentation",
-        "data": "Daten",
-        "tools": "Werkzeuge",
-        "settings": "Ressourcen",
-        "home": "Startseite"
-    },
-    "tree": {
-        "title": "Taxonomie-Explorer",
-        "description": "Navigieren Sie im Baum des Lebens mit dem Taxonomischen Baum-Explorer, einem interaktiven D3-Hyperbolischen Baum. Zoomen Sie mit der Maus oder dem Trackpad, bewegen Sie sich durch Ziehen und klicken Sie auf Knoten, um Details anzuzeigen"
-    },
-    "map": {
-        "title": "Geografischer Explorer",
-        "description": "Zeichnen Sie ein Gebiet auf der Karte, um Metadaten zu Biosamples, Arten, Assemblierungen, Experimenten und Annotationen zu erkunden und herunterzuladen. Verwenden Sie die Steuerelemente oben rechts auf der Karte, um Ihre Auswahl zu zeichnen oder zu löschen"
-    },
-    "taxon": {
-        "chip": "Ausgewähltes Taxon: ",
-        "searchPlaceholder": "Taxon nach Name oder TaxID suchen",
-        "noTaxons": "Keine Taxa gefunden für: ",
-        "wikiLink": "Mehr erfahren",
-        "relatedData": "Verwandte Daten",
-        "occurrencesMap": "Vorkommenskarte",
-        "clearBtn": "Auswahl löschen",
-        "showDetails": "Details anzeigen",
-        "hideDetails": "Details ausblenden",
-        "selectedTaxon": "Ausgewähltes Taxon",
-        "points": "Markierungen",
-        "heatmap": "Heatmap",
-        "mapCurrentlyViewed": "In Karte anzeigen",
-        "leaves": "Anzahl der Organismen",
-        "ranksDistribution": "Rangverteilung"
-    },
-    "genomeBrowser": {
-        "title": "Genom-Browser",
-        "description": "Wählen Sie eine Assemblierung zur Anzeige im Genom-Browser aus",
-        "assemblies": {
-            "title": "Neue Genom-Browser-Sitzung hinzufügen",
-            "placeholder": "Nach Art oder Assemblierungsname suchen",
-            "searchPlaceholder": "Hier tippen, um zu suchen",
-            "noOptions": "Keine Assemblierungen entsprechen den Suchkriterien",
-            "withAnnotations": "Assemblierungen mit Annotationen filtern",
-            "chromosomesPlaceholder": "Chromosomen auswählen (optional)",
-            "annotationsPlaceholder": "Annotationen auswählen (optional)",
-            "createBtn": "Im Genom-Browser öffnen"
-        },
-        "assembly": {
-            "accession": "Assemblierungsnummer: ",
-            "sampleAccession": "Probennummer: ",
-            "metadata": "Metadaten anzeigen",
-            "chromosomes": "Chromosomen",
-            "modalTitle": "Über den Genom-Browser",
-            "modelDescription": "Diese Seite enthält den JBrowse 2 Linearen Genom-Viewer (JBrowse 2), ein interaktives Tool zur Erforschung von Genomsequenzen und Annotationen. Benutzer können sich durch das Genom bewegen, in spezifische Regionen zoomen und, falls verfügbar, Annotationen wie Gene und Merkmale visualisieren. Der Browser ermöglicht außerdem das Herunterladen von FASTA-Sequenzen für ausgewählte Regionen zur weiteren Analyse. Wenn Annotationen vorhanden sind, können Benutzer Genstrukturen, kodierende Regionen und andere genomische Merkmale auf klare und interaktive Weise untersuchen.",
-            "annotations": "Annotationen"
-        },
-        "addSession": "Neue Sitzung"
-    },
-    "items": {
-        "countries": {
-            "title": "Länderauswahl",
-            "infoTitle": "Wie Länder bestimmt werden",
-            "infoDescription": "Die angezeigten Länder werden basierend auf den Metadaten der Probe bestimmt, falls sie ein Feld 'Land' enthält, oder durch Überprüfung, ob die geografischen Koordinaten der Proben innerhalb der Landesgrenzen liegen. Bitte beachten Sie, dass dieser Prozess gelegentlich zu Ungenauigkeiten führen kann.",
-            "showMap": "Karte anzeigen",
-            "showList": "Liste anzeigen"
-        },
-        "filters": {
-            "title": "Filter",
-            "clearBtn": "Filter löschen",
-            "selectLabel": "Filtertyp",
-            "addBtn": "Benutzerdefinierten Filter hinzufügen",
-            "createBtn": "Filter erstellen",
-            "modalTitle": "Filtererstellung",
-            "modalDescription": "Geben Sie einen Feldnamen ein, um zu überprüfen, ob er in der Datenbank existiert. Verwenden Sie Punktnotation für verschachtelte Felder, z. B.",
-            "ebpMetricsTitle": "EBP-Metriken",
-            "ebpMetricsDescription": "Assemblierungen, die den Qualitätsstandards des Earth BioGenome Project entsprechen",
-            "showMap": "Karte anzeigen",
-            "hideMap": "Karte ausblenden"
-        },
-        "data": {
-            "results": "Ergebnisse: ",
-            "reportBtn": "Bericht",
-            "chartBtn": "Diagramm"
-        }
-    },
-    "item": {
-        "internalLinks": "Interne Links",
-        "externalLinks": "Externe Links",
-        "genomeBrowserLink": "Im Genom-Browser anzeigen",
-        "publications": "Verwandte Publikationen",
-        "vernacularNames": "Trivialnamen",
-        "chromosomes": "Chromosomen",
-        "data": "Verwandte Daten",
-        "details": "Details anzeigen",
-        "coordinates": "Geografische Standorte",
-        "status": "Sequenzierungsstatus: ",
-        "targetList": "Zielstatusliste: "
-    },
-    "user": {
-        "dashboard": "Daten verwalten",
-        "login": "Anmelden"
-    },
-    "insdc": {
-        "title": "INSDC-Status",
-        "biosample": {
-            "label": "BioProbe eingereicht",
-            "description": "Mindestens eine INSDC-BioProbe verknüpft"
-        },
-        "experiment": {
-            "label": "Reads eingereicht",
-            "description": "Mindestens ein INSDC-Experiment verknüpft"
-        },
-        "assembly": {
-            "label": "Assemblierungen eingereicht",
-            "description": "Mindestens eine INSDC-Assemblierung verknüpft"
-        },
-        "not_submitted": {
-            "label": "Fehlender Status",
-            "description": "Keine INSDC-Daten verknüpft"
-        }
-    },
-    "goat": {
-        "title": "GOAT-Status",
-        "collected": {
-            "label": "Probe gesammelt",
-            "description": "Eine Probe der Art wurde von Feldforschern gesammelt, aber noch nicht an ein Sequenzierungszentrum gesendet"
-        },
-        "acquired": {
-            "label": "Probe erworben",
-            "description": "Eine Probe der Art wurde erworben und befindet sich im Sequenzierungszentrum, wurde aber noch nicht verarbeitet"
-        },
-        "generation": {
-            "label": "Datengenerierung",
-            "description": "Sequenzierungsdaten werden derzeit für die Art generiert"
-        },
-        "assembly": {
-            "label": "In Assemblierung",
-            "description": "Alle Sequenzierungs- und zugehörigen Daten wurden gesammelt und die Genomassemblierung ist im Gange"
-        },
-        "submitted": {
-            "label": "Bei INSDC eingereicht",
-            "description": "Die Genomassemblierung der Art wurde bei INSDC eingereicht und ist unter der Bioproject-ID des Erzeugerprojekts öffentlich zugänglich"
-        },
-        "publication": {
-            "label": "Publikation verfügbar",
-            "description": "Die Assemblierung hat eine zugehörige Publikation mit einer DOI oder PubMed-ID"
-        },
-        "not_submitted": {
-            "label": "Fehlender Status",
-            "description": "GoaT-Status nicht verfügbar"
-        }
-    },
-    "fieldLookup": {
-        "placeholder": "Feldnamen eingeben, um zu überprüfen...",
-        "label": "Feldexistenz überprüfen",
-        "valid": "Gültiges Feld",
-        "invalid": "Geben Sie ein gültiges Feld ein"
-    },
-    "reportModal": {
-        "title": "Bericht herunterladen",
-        "formatLabel": "Format",
-        "description": "Wählen Sie mehrere Felder aus oder geben Sie ein neues Feld ein. Falls das Feld in den Metadaten enthalten ist, verwenden Sie das Format: 'metadata.FeldDasSieWählenMöchten'",
-        "tip": "Wählen Sie TSV oder JSONL für eine schnellere Abfrage",
-        "queryMessage": "Geben Sie ein Feld ein und prüfen Sie, ob es existiert",
-        "addFieldBtn": "Feld hinzufügen",
-        "clearFieldBtn": "Löschen"
-    },
-    "chartModal": {
-        "title": "Diagramm erstellen",
-        "description": "Falls das Feld Teil der Metadaten oder verschachtelt ist, verwenden Sie das Format: 'metadata.FeldDasSieWählenMöchten' für oberste Felder oder 'metadata.ÜbergeordnetesFeld.VerschachteltesFeld' für verschachtelte Felder.",
-        "fieldInputLabel": "Feld",
-        "selectLabel": "Diagrammtyp",
-        "exampleBtn": "Beispiel laden"
-    },
-    "buttons": {
-        "download": "Herunterladen",
-        "submit": "Absenden",
-        "view": "Ansehen",
-        "goat": "GoaT-Bericht",
-        "createChart": "Diagramm erstellen"
-    },
-    "models": {
-        "organisms": "Organismen",
-        "experiments": "Experimente",
-        "assemblies": "Assemblierungen",
-        "biosamples": "BioProben",
-        "local_samples": "Lokale Proben",
-        "annotations": "Annotationen",
-        "reads": "Sequenzierte Reads"
-    },
-    "language": {
-        "english": "Englisch",
-        "catalan": "Katalanisch",
-        "french": "Französisch",
-        "spanish": "Spanisch",
-        "german": "Deutsch"
-    },
-    "taxonsearch": {
-        "description": "Wählen Sie ein Taxon aus, um alle Daten in der aktuellen Ansicht zu filtern"
-    },
-    "taxons": {
-        "resultsFound": "Passende Taxa"
-    },
-    "targetListStatus": {
-        "long_list": {
-            "description": "Jede Art, die als Ziel für das gesamte Projekt erklärt wurde. Für regionale Projekte bedeutet dies, dass die Art Teil der Biota einer Region ist, die Ziel dieses Projekts ist (z. B. für DToL umfasst dies das gesamte UKSI plus die irische Biota, 72.000 Arten). Für taxonomisch fokussierte Arten umfasst dies alle Arten, die einem bestimmten höheren Taxon zugeordnet sind (z. B. für VGP umfasst die Long List alle 70.000 Wirbeltierarten)"
-        },
-        "family_representative": {
-            "description": "Die Art wurde als Familienreferenzart für die Organisation oder das Projekt ausgewählt. Diese Familienvertreter treiben die Erreichung der Ziele der Phase 1 des Earth BioGenome Project voran. Arten mit dem Tag 'family_representative' erhalten auch das Tag long_list auf GoaT"
-        },
-        "other_priority": {
-            "description": "Eine Art, die von einem Projekt aus anderen Gründen als der Familienvertretung priorisiert wurde. Dies kann beispielsweise Arten von besonderem Naturschutzinteresse, Arten in Pilotprojekten, Arten, die Ziele über die EBP-Phase-1-Familienvertreter hinaus ansprechen, und andere Teilprojekte umfassen. Arten mit dem Tag 'other_priority' erhalten ebenfalls das Tag long_list auf GoaT."
-        }
-    }
+   "home": {
+      "taxonomy": {
+         "title": "Nach Taxonomie filtern",
+         "description": "Suchen und wählen Sie ein Taxon aus, um dessen Details zu sehen",
+         "exploreBtn": "Taxonomie erkunden",
+         "viewBtn": "Ansehen"
+      },
+      "features": {
+         "title": "Funktionen",
+         "subtitle": "Daten und Tools in diesem Portal erkunden"
+      },
+      "hero": {
+         "kicker": "Forschungsportal",
+         "statsLabel": "Daten auf einen Blick"
+      },
+      "cta1": "Daten erkunden",
+      "cta2": "Taxonomie erkunden",
+      "taxExplorerFeature": {
+         "title": "Taxonomie-Explorer",
+         "description": "Navigieren Sie im Baum des Lebens mit dem Taxonomischen Baum-Explorer, einem interaktiven D3-Hyperbolischen Baum."
+      },
+      "mapExplorerFeature": {
+         "title": "Geografischer Explorer",
+         "description": "Erkunden Sie die geografischen Standorte von Organismen und Proben"
+      },
+      "genomeBrowserFeature": {
+         "title": "Genom-Browser",
+         "description": "Sehen Sie Genome und Annotationen in einem interaktiven Genom-Browser"
+      },
+      "dataExplorerFeature": {
+         "title": "Daten-Explorer",
+         "description": "Organismen, Assemblies, Biosamples, Annotationen und mehr nach Taxonomie durchsuchen"
+      },
+      "goat": {
+         "title": "Status von Genomen auf einem Baum",
+         "kicker": "GOAT-Status",
+         "subtitle": "Verteilung der Organismen über die Sequenzierungsstufen"
+      },
+      "insdc": {
+         "title": "INSDC-Einreichungsstatus",
+         "kicker": "INSDC-Status",
+         "subtitle": "Verteilung der Organismen über die Einreichungsstufen"
+      },
+      "status": {
+         "kicker": "Sequenzierungsstatus",
+         "subtitle": "Verteilung der Organismen über die Sequenzierungsstufen"
+      },
+      "data": {
+         "kicker": "Taxonomie"
+      },
+      "statusTotal": "{count} Organismen",
+      "targetRanks": {
+         "title": "Verteilung der Taxa nach Rang",
+         "description": "Verteilung der Taxa nach Rang über die Taxonomie"
+      }
+   },
+   "nav": {
+      "taxExplorer": "Taxonomie-Explorer",
+      "genomeBrowser": "Genom-Browser",
+      "login": "Anmelden",
+      "docs": "API-Dokumentation",
+      "data": "Daten",
+      "tools": "Werkzeuge",
+      "settings": "Ressourcen",
+      "home": "Startseite"
+   },
+   "tree": {
+      "title": "Taxonomie-Explorer",
+      "description": "Navigieren Sie im Baum des Lebens mit dem Taxonomischen Baum-Explorer, einem interaktiven D3-Hyperbolischen Baum. Zoomen Sie mit der Maus oder dem Trackpad, bewegen Sie sich durch Ziehen und klicken Sie auf Knoten, um Details anzuzeigen",
+      "selectedTaxon": "Ausgewählter Taxon",
+      "browseData": "Daten für diesen Taxon durchsuchen",
+      "viewOnMap": "Auf Karte anzeigen",
+      "noTaxonSelected": "Klicken Sie auf einen Knoten im Baum, um Taxondetails und zugehörige Daten anzuzeigen"
+   },
+   "map": {
+      "title": "Geografischer Explorer",
+      "description": "Zeichnen Sie ein Gebiet auf der Karte, um Metadaten zu Biosamples, Arten, Assemblierungen, Experimenten und Annotationen zu erkunden und herunterzuladen. Verwenden Sie die Steuerelemente oben rechts auf der Karte, um Ihre Auswahl zu zeichnen oder zu löschen"
+   },
+   "data": {
+      "exploreTaxonomyVisual": "Taxonomie visuell erkunden"
+   },
+   "taxon": {
+      "chip": "Ausgewähltes Taxon: ",
+      "searchPlaceholder": "Taxon nach Name oder TaxID suchen",
+      "noTaxons": "Keine Taxa gefunden für: ",
+      "wikiLink": "Mehr erfahren",
+      "relatedData": "Verwandte Daten",
+      "occurrencesMap": "Vorkommenskarte",
+      "clearBtn": "Auswahl löschen",
+      "showDetails": "Details anzeigen",
+      "hideDetails": "Details ausblenden",
+      "selectedTaxon": "Ausgewähltes Taxon",
+      "points": "Markierungen",
+      "heatmap": "Heatmap",
+      "mapCurrentlyViewed": "In Karte anzeigen",
+      "leaves": "Anzahl der Organismen",
+      "ranksDistribution": "Rangverteilung"
+   },
+   "genomeBrowser": {
+      "title": "Genom-Browser",
+      "description": "Wählen Sie eine Assemblierung zur Anzeige im Genom-Browser aus",
+      "assemblies": {
+         "title": "Neue Genom-Browser-Sitzung hinzufügen",
+         "placeholder": "Nach Art oder Assemblierungsname suchen",
+         "searchPlaceholder": "Hier tippen, um zu suchen",
+         "noOptions": "Keine Assemblierungen entsprechen den Suchkriterien",
+         "withAnnotations": "Assemblierungen mit Annotationen filtern",
+         "chromosomesPlaceholder": "Chromosomen auswählen (optional)",
+         "annotationsPlaceholder": "Annotationen auswählen (optional)",
+         "createBtn": "Im Genom-Browser öffnen"
+      },
+      "assembly": {
+         "accession": "Assemblierungsnummer: ",
+         "sampleAccession": "Probennummer: ",
+         "metadata": "Metadaten anzeigen",
+         "chromosomes": "Chromosomen",
+         "modalTitle": "Über den Genom-Browser",
+         "modelDescription": "Diese Seite enthält den JBrowse 2 Linearen Genom-Viewer (JBrowse 2), ein interaktives Tool zur Erforschung von Genomsequenzen und Annotationen. Benutzer können sich durch das Genom bewegen, in spezifische Regionen zoomen und, falls verfügbar, Annotationen wie Gene und Merkmale visualisieren. Der Browser ermöglicht außerdem das Herunterladen von FASTA-Sequenzen für ausgewählte Regionen zur weiteren Analyse. Wenn Annotationen vorhanden sind, können Benutzer Genstrukturen, kodierende Regionen und andere genomische Merkmale auf klare und interaktive Weise untersuchen.",
+         "annotations": "Annotationen"
+      },
+      "addSession": "Neue Sitzung"
+   },
+   "items": {
+      "countries": {
+         "title": "Länderauswahl",
+         "infoTitle": "Wie Länder bestimmt werden",
+         "infoDescription": "Die angezeigten Länder werden basierend auf den Metadaten der Probe bestimmt, falls sie ein Feld 'Land' enthält, oder durch Überprüfung, ob die geografischen Koordinaten der Proben innerhalb der Landesgrenzen liegen. Bitte beachten Sie, dass dieser Prozess gelegentlich zu Ungenauigkeiten führen kann.",
+         "showMap": "Karte anzeigen",
+         "showList": "Liste anzeigen"
+      },
+      "filters": {
+         "title": "Filter",
+         "clearBtn": "Filter löschen",
+         "selectLabel": "Filtertyp",
+         "addBtn": "Benutzerdefinierten Filter hinzufügen",
+         "createBtn": "Filter erstellen",
+         "modalTitle": "Filtererstellung",
+         "modalDescription": "Geben Sie einen Feldnamen ein, um zu überprüfen, ob er in der Datenbank existiert. Verwenden Sie Punktnotation für verschachtelte Felder, z. B.",
+         "ebpMetricsTitle": "EBP-Metriken",
+         "ebpMetricsDescription": "Assemblierungen, die den Qualitätsstandards des Earth BioGenome Project entsprechen",
+         "showMap": "Karte anzeigen",
+         "hideMap": "Karte ausblenden"
+      },
+      "data": {
+         "results": "Ergebnisse: ",
+         "reportBtn": "Bericht",
+         "chartBtn": "Diagramm",
+         "noResultsTitle": "Keine Ergebnisse",
+         "noResultsMessage": "Keine Datensätze entsprechen Ihrer Anfrage. Versuchen Sie, Filter oder Suche anzupassen.",
+         "noDataSubmitted": "Keine Daten eingereicht"
+      }
+   },
+   "item": {
+      "internalLinks": "Interne Links",
+      "externalLinks": "Externe Links",
+      "genomeBrowserLink": "Im Genom-Browser anzeigen",
+      "publications": "Verwandte Publikationen",
+      "vernacularNames": "Trivialnamen",
+      "chromosomes": "Chromosomen",
+      "data": "Verwandte Daten",
+      "details": "Details anzeigen",
+      "coordinates": "Geografische Standorte",
+      "status": "Sequenzierungsstatus: ",
+      "targetList": "Zielstatusliste: "
+   },
+   "user": {
+      "dashboard": "Daten verwalten",
+      "login": "Anmelden"
+   },
+   "insdc": {
+      "title": "INSDC-Status",
+      "biosample": {
+         "label": "BioProbe eingereicht",
+         "description": "Mindestens eine INSDC-BioProbe verknüpft"
+      },
+      "experiment": {
+         "label": "Reads eingereicht",
+         "description": "Mindestens ein INSDC-Experiment verknüpft"
+      },
+      "assembly": {
+         "label": "Assemblierungen eingereicht",
+         "description": "Mindestens eine INSDC-Assemblierung verknüpft"
+      },
+      "not_submitted": {
+         "label": "Fehlender Status",
+         "description": "Keine INSDC-Daten verknüpft"
+      }
+   },
+   "goat": {
+      "title": "GOAT-Status",
+      "collected": {
+         "label": "Probe gesammelt",
+         "description": "Eine Probe der Art wurde von Feldforschern gesammelt, aber noch nicht an ein Sequenzierungszentrum gesendet"
+      },
+      "acquired": {
+         "label": "Probe erworben",
+         "description": "Eine Probe der Art wurde erworben und befindet sich im Sequenzierungszentrum, wurde aber noch nicht verarbeitet"
+      },
+      "generation": {
+         "label": "Datengenerierung",
+         "description": "Sequenzierungsdaten werden derzeit für die Art generiert"
+      },
+      "assembly": {
+         "label": "In Assemblierung",
+         "description": "Alle Sequenzierungs- und zugehörigen Daten wurden gesammelt und die Genomassemblierung ist im Gange"
+      },
+      "submitted": {
+         "label": "Bei INSDC eingereicht",
+         "description": "Die Genomassemblierung der Art wurde bei INSDC eingereicht und ist unter der Bioproject-ID des Erzeugerprojekts öffentlich zugänglich"
+      },
+      "publication": {
+         "label": "Publikation verfügbar",
+         "description": "Die Assemblierung hat eine zugehörige Publikation mit einer DOI oder PubMed-ID"
+      },
+      "not_submitted": {
+         "label": "Fehlender Status",
+         "description": "GoaT-Status nicht verfügbar"
+      }
+   },
+   "fieldLookup": {
+      "placeholder": "Feldnamen eingeben, um zu überprüfen...",
+      "label": "Feldexistenz überprüfen",
+      "valid": "Gültiges Feld",
+      "invalid": "Geben Sie ein gültiges Feld ein"
+   },
+   "reportModal": {
+      "title": "Bericht herunterladen",
+      "formatLabel": "Format",
+      "description": "Wählen Sie mehrere Felder aus oder geben Sie ein neues Feld ein. Falls das Feld in den Metadaten enthalten ist, verwenden Sie das Format: 'metadata.FeldDasSieWählenMöchten'",
+      "tip": "Wählen Sie TSV oder JSONL für eine schnellere Abfrage",
+      "queryMessage": "Geben Sie ein Feld ein und prüfen Sie, ob es existiert",
+      "addFieldBtn": "Feld hinzufügen",
+      "clearFieldBtn": "Löschen"
+   },
+   "chartModal": {
+      "title": "Diagramm erstellen",
+      "description": "Falls das Feld Teil der Metadaten oder verschachtelt ist, verwenden Sie das Format: 'metadata.FeldDasSieWählenMöchten' für oberste Felder oder 'metadata.ÜbergeordnetesFeld.VerschachteltesFeld' für verschachtelte Felder.",
+      "fieldInputLabel": "Feld",
+      "selectLabel": "Diagrammtyp",
+      "exampleBtn": "Beispiel laden"
+   },
+   "buttons": {
+      "download": "Herunterladen",
+      "submit": "Absenden",
+      "view": "Ansehen",
+      "goat": "GoaT-Bericht",
+      "createChart": "Diagramm erstellen"
+   },
+   "models": {
+      "organisms": "Organismen",
+      "assemblies": "Assemblierungen",
+      "biosamples": "BioProben",
+      "local_samples": "Lokale Proben",
+      "annotations": "Annotationen",
+      "reads": "Sequenzierte Reads"
+   },
+   "language": {
+      "english": "Englisch",
+      "catalan": "Katalanisch",
+      "french": "Französisch",
+      "spanish": "Spanisch",
+      "german": "Deutsch"
+   },
+   "taxonsearch": {
+      "description": "Wählen Sie ein Taxon aus, um alle Daten in der aktuellen Ansicht zu filtern"
+   },
+   "taxons": {
+      "resultsFound": "Passende Taxa"
+   },
+   "targetListStatus": {
+      "long_list": {
+         "description": "Jede Art, die als Ziel für das gesamte Projekt erklärt wurde. Für regionale Projekte bedeutet dies, dass die Art Teil der Biota einer Region ist, die Ziel dieses Projekts ist (z. B. für DToL umfasst dies das gesamte UKSI plus die irische Biota, 72.000 Arten). Für taxonomisch fokussierte Arten umfasst dies alle Arten, die einem bestimmten höheren Taxon zugeordnet sind (z. B. für VGP umfasst die Long List alle 70.000 Wirbeltierarten)"
+      },
+      "family_representative": {
+         "description": "Die Art wurde als Familienreferenzart für die Organisation oder das Projekt ausgewählt. Diese Familienvertreter treiben die Erreichung der Ziele der Phase 1 des Earth BioGenome Project voran. Arten mit dem Tag 'family_representative' erhalten auch das Tag long_list auf GoaT"
+      },
+      "other_priority": {
+         "description": "Eine Art, die von einem Projekt aus anderen Gründen als der Familienvertretung priorisiert wurde. Dies kann beispielsweise Arten von besonderem Naturschutzinteresse, Arten in Pilotprojekten, Arten, die Ziele über die EBP-Phase-1-Familienvertreter hinaus ansprechen, und andere Teilprojekte umfassen. Arten mit dem Tag 'other_priority' erhalten ebenfalls das Tag long_list auf GoaT."
+      }
+   }
 }

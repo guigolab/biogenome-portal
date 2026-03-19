@@ -1,197 +1,186 @@
 <template>
-        <div style="overflow: scroll;">
-        <div class="steps-container">
-            <VaStepper
-              :vertical="isMobile"
-              controls-hidden
-              :steps="reactiveSteps"
-              class="org-status-stepper"
-            >
-              <template v-for="(step, i) in reactiveSteps" :key="step.label" #[`step-button-${i}`]>
-                <div class="step-content">
-                    <VaCard 
-                        style="max-width: 300px; transition: transform 0.2s ease, box-shadow 0.2s ease;"
-                        class="status-card"
-                        @mouseenter="$event.currentTarget.style.transform = 'translateY(-2px)'"
-                        @mouseleave="$event.currentTarget.style.transform = 'translateY(0)'"
-                    >
-                        <VaCardContent class="pa-4">
-                            <div class="row align-center justify-space-between">
-                                <div class="flex">
-                                    <div class="row align-center">
-                                        <div v-if="step.icon" class="flex">
-                                            <VaButton  size="large" :color="step.color" :icon="step.icon" preset="primary">
+   <div class="portal-sequencing-status">
+      <p class="status-total" aria-live="polite">
+         {{ t('home.statusTotal', { count: total.toLocaleString() }) }}
+      </p>
 
-                                            </VaButton>
-                                        </div>
-                                        <div class="flex">
-                                            <Counter 
-                                                :target-value="step.count" 
-                                                :duration="1000"
-                                                custom-class="va-h4"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="flex flex-column">
-                                    <h3 class="va-h6">{{ t(step.label) }}</h3>
-                                    <p class="va-text-secondary text-sm">{{ t(step.description) }}</p>
-                                </div>
-                            </div>
-                        </VaCardContent>
-                    </VaCard>
-                </div>
-              </template>
-            </VaStepper>
-            </div>
-        </div>
-  </template>
-  
-  <script setup lang="ts">
-  import { computed, ref, onUnmounted } from 'vue';
-  import { useI18n } from 'vue-i18n';
-  import Counter from './Counter.vue';
-  const { t } = useI18n();
-  
-  const props = defineProps<{
-    steps: {
-      label: string,
-      description: string,
-      value: string,
-      count: number,
-      icon?: string,
-      color?: string
-    }[],
-  }>();
-  
-  // Add computed property for reactive steps
-  const reactiveSteps = computed(() => props.steps.map(step => ({
-    ...step,
-    count: step.count
-  })));
+      <!-- Stacked distribution bar: proportion at a glance -->
+      <div class="status-bar" role="img" :aria-label="barAriaLabel">
+         <div
+            v-for="step in steps"
+            :key="step.label"
+            class="status-bar__segment"
+            :class="{ 'status-bar__segment--zero': step.count === 0 }"
+            :style="{
+               width: total ? `${(step.count / total) * 100}%` : '0%',
+               backgroundColor: getStepColor(step.color),
+            }"
+            :title="t(step.label) + ': ' + step.count"
+         />
+      </div>
 
-  // Responsive: vertical on mobile, horizontal on desktop
-  const isMobile = ref(window.innerWidth <= 768);
+      <!-- Legend: exact counts + definitions on hover -->
+      <ul class="status-legend" role="list">
+         <li v-for="step in steps" :key="step.label" class="status-legend__item">
+            <VaPopover placement="top" trigger="hover" :message="t(step.description)" class="status-legend__popover">
+               <div class="status-legend__row">
+                  <span
+                     class="status-legend__swatch"
+                     :style="{ backgroundColor: getStepColor(step.color) }"
+                     aria-hidden="true"
+                  />
+                  <VaIcon
+                     :name="step.icon"
+                     size="small"
+                     :color="(step.color || 'primary') as string"
+                     class="status-legend__icon"
+                  />
+                  <span class="status-legend__label">{{ t(step.label) }}</span>
+                  <span class="status-legend__count" aria-label="count">
+                     {{ step.count.toLocaleString() }}
+                  </span>
+                  <span class="status-legend__pct va-text-secondary">
+                     ({{ formatPercentage(step.count, total) }}%)
+                  </span>
+               </div>
+            </VaPopover>
+         </li>
+      </ul>
+   </div>
+</template>
 
-  // Use a debounced resize handler for better performance
-  let resizeTimeout: number;
-  window.addEventListener('resize', () => {
-    clearTimeout(resizeTimeout);
-    resizeTimeout = window.setTimeout(() => {
-      isMobile.value = window.innerWidth <= 768;
-    }, 100);
-  });
+<script setup lang="ts">
+   import { computed, inject } from 'vue'
+   import { useI18n } from 'vue-i18n'
+   import type { AppConfig } from '../data/types'
 
-  // Clean up event listener
-  onUnmounted(() => {
-    window.removeEventListener('resize', () => {});
-    clearTimeout(resizeTimeout);
-  });
+   const { t } = useI18n()
+   const appConfig = inject<AppConfig | null>('appConfig', null)
 
-  </script>
-  
-  <style lang="scss" scoped>
-  .pa-4 {
-    padding: 0.5rem;
-  }
-
-  .org-status-stepper {
-    display: flex;
-    flex-direction: row;
-    align-items: stretch;
-  }
-
-  .org-status-stepper .step-content {
-    display: flex;
-    align-items: stretch;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-    height: 100%;
-  }
-
-  .count-chip {
-    margin-left: 0.5rem;
-  }
-
-  @media (max-width: 768px) {
-    .org-status-stepper {
-      flex-direction: column;
-      align-items: center;
-      width: 100%;
-    }
-
-    .org-status-stepper .step-content {
-      flex-direction: column;
-      align-items: center;
-      gap: 0.25rem;
-      width: 100%;
-    }
-
-    .status-card {
-      width: 100%;
-      max-width: 300px;
-    }
-  }
-
-  .status-card {
-    background: var(--va-background-primary);
-    border: 1px solid var(--va-background-border);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .status-card .va-card__content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .status-card .row {
-    flex: 1;
-  }
-
-  .status-card:hover {
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  }
-
-  .text-sm {
-    font-size: 0.875rem;
-    line-height: 1.4;
-  }
-
-  .steps-container {
-    overflow-x: auto;
-    width: max-content;
-    padding: 1rem 2rem;
-    margin: 0 auto;
-    scrollbar-width: thin;
-    -ms-overflow-style: none;
-    scroll-behavior: smooth;
-
-    &::-webkit-scrollbar {
-      height: 6px;
-    }
-
-    &::-webkit-scrollbar-track {
-      background: var(--va-background-element);
-      border-radius: 3px;
-    }
-
-    &::-webkit-scrollbar-thumb {
-      background: var(--va-background-border);
-      border-radius: 3px;
-
-      &:hover {
-        background: var(--va-primary);
+   function getStepColor(colorKey: string | undefined): string {
+      const key = colorKey || 'primary'
+      const vars = appConfig?.ui?.colors?.variables
+      if (vars && key in vars && typeof vars[key] === 'string') {
+         return vars[key] as string
       }
-    }
+      return `var(--va-${key})`
+   }
 
-    @media (max-width: 768px) {
+   const props = defineProps<{
+      steps: {
+         label: string
+         description: string
+         value: string
+         count: number
+         icon?: string
+         color?: string
+      }[]
+   }>()
+
+   const total = computed(() => props.steps.reduce((acc, step) => acc + step.count, 0))
+
+   const barAriaLabel = computed(() => props.steps.map((s) => `${t(s.label)}: ${s.count}`).join(', '))
+
+   function formatPercentage(count: number, total: number) {
+      if (total === 0) return 0
+      return Number(((count / total) * 100).toFixed(1))
+   }
+</script>
+
+<style lang="scss" scoped>
+   .portal-sequencing-status {
       width: 100%;
-      overflow-x: visible;
-      padding: 1rem 0.5rem;
-    }
-  }
-  </style>
+      max-width: 640px;
+      margin: 0 auto;
+   }
+
+   .status-total {
+      margin: 0 0 0.75rem 0;
+      font-size: 0.9375rem;
+      font-weight: 600;
+      color: var(--va-text-primary);
+   }
+
+   .status-bar {
+      display: flex;
+      width: 100%;
+      height: 0.75rem;
+      border-radius: 9999px;
+      overflow: hidden;
+      background: var(--va-background-element);
+      margin-bottom: 1.25rem;
+   }
+
+   .status-bar__segment {
+      min-width: 2px;
+      transition: width 0.3s ease;
+   }
+
+   .status-bar__segment--zero {
+      min-width: 0;
+      overflow: hidden;
+   }
+
+   .status-legend {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.375rem;
+   }
+
+   .status-legend__item {
+      margin: 0;
+   }
+
+   .status-legend__popover {
+      display: block;
+   }
+
+   .status-legend__row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.35rem 0.5rem;
+      border-radius: 6px;
+      cursor: help;
+      transition: background 0.15s ease;
+   }
+
+   .status-legend__row:hover {
+      background: var(--va-background-element);
+   }
+
+   .status-legend__swatch {
+      width: 0.625rem;
+      height: 0.625rem;
+      border-radius: 50%;
+      flex-shrink: 0;
+   }
+
+   .status-legend__icon {
+      flex-shrink: 0;
+      opacity: 0.9;
+   }
+
+   .status-legend__label {
+      flex: 1;
+      font-size: 0.875rem;
+      color: var(--va-text-primary);
+   }
+
+   .status-legend__count {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--va-text-primary);
+      min-width: 2.5rem;
+      text-align: right;
+   }
+
+   .status-legend__pct {
+      font-size: 0.8125rem;
+      min-width: 3.5rem;
+      text-align: right;
+   }
+</style>

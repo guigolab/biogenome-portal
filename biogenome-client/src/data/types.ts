@@ -1,136 +1,165 @@
 import type { TChartData as ChartData } from 'vue-chartjs/dist/types'
 
-
 // ========================
 // String Query Operators
 // ========================
 export type StringQueryOperator =
-  | 'exact'
-  | 'iexact'
-  | 'contains'
-  | 'icontains'
-  | 'startswith'
-  | 'istartswith'
-  | 'endswith'
-  | 'iendswith'
-  | 'wholeword'
-  | 'iwholeword';
+   | 'exact'
+   | 'iexact'
+   | 'contains'
+   | 'icontains'
+   | 'startswith'
+   | 'istartswith'
+   | 'endswith'
+   | 'iendswith'
+   | 'wholeword'
+   | 'iwholeword'
 
 export const stringQueryOperators: Record<StringQueryOperator, string> = {
-  exact: "Exact Match",
-  iexact: "Exact Match (Case Insensitive)",
-  contains: "Contains",
-  icontains: "Contains (Case Insensitive)",
-  startswith: "Starts With",
-  istartswith: "Starts With (Case Insensitive)",
-  endswith: "Ends With",
-  iendswith: "Ends With (Case Insensitive)",
-  wholeword: "Contains Whole Word",
-  iwholeword: "Contains Whole Word (Case Insensitive)",
-};
+   exact: 'Exact Match',
+   iexact: 'Exact Match (Case Insensitive)',
+   contains: 'Contains',
+   icontains: 'Contains (Case Insensitive)',
+   startswith: 'Starts With',
+   istartswith: 'Starts With (Case Insensitive)',
+   endswith: 'Ends With',
+   iendswith: 'Ends With (Case Insensitive)',
+   wholeword: 'Contains Whole Word',
+   iwholeword: 'Contains Whole Word (Case Insensitive)',
+}
 
 // ========================
 // Number/Date Query Operators
 // ========================
-export type NumberDateQueryOperator =
-  | 'lt'
-  | 'lte'
-  | 'gt'
-  | 'gte'
-  | 'range';
+export type NumberDateQueryOperator = 'lt' | 'lte' | 'gt' | 'gte' | 'range'
 
 export const numberDateQueryOperators: Record<NumberDateQueryOperator, string> = {
-  lt: "Less Than",
-  lte: "Less Than or Equal To",
-  gt: "Greater Than",
-  gte: "Greater Than or Equal To",
-  range: "Between (Range)",
-};
+   lt: 'Less Than',
+   lte: 'Less Than or Equal To',
+   gt: 'Greater Than',
+   gte: 'Greater Than or Equal To',
+   range: 'Between (Range)',
+}
 
 // ========================
 // List Query Operators
 // ========================
-export type ListQueryOperator = 'in' | 'nin' | 'all';
+export type ListQueryOperator = 'in' | 'nin' | 'all'
 
 export const listQueryOperators: Record<ListQueryOperator, string> = {
-  in: "In List",
-  nin: "Not In List",
-  all: "Contains All Items",
-};
+   in: 'In List',
+   nin: 'Not In List',
+   all: 'Contains All Items',
+}
 
 export type ColorThemes = {
-  [key: string]: string
+   [key: string]: string
 }
 // Define the type for filters and columns objects
 export interface ConfigType {
-  [key: string]: any[]; // Adjust the type of values if necessary
+   [key: string]: any[] // Adjust the type of values if necessary
 }
 
 export type ItemDetails = {
-  title: string,
-  description: string,
-  ncbiLink?: string
-  enaLink?: string
-  sub_project?:string,
-  sequencing_type?:string[]
-  blobtoolkitLink?: string
-  speciesLink?: Record<string, any>
-  sampleLink?: Record<string, any>
-  assemblyLink?: Record<string, any>
-  jbrowseLink?: boolean
-  downloadLink?: string
-  chromosomes?: ChromosomeInterface[]
-  annotations?: Annotation[]
-  experiments?: Record<string, any>[]
-  reads?: Record<string, any>
-  biosamples?: Record<string, any>[]
-  local_samples?: Record<string, any>[]
-  assemblies?: Record<string, any>[]
-  coordinates?: Record<string, any>[]
-  metadata?: Record<string, any>
-  images?: string[]
-  avatar?: string
-  insdcStatus?: string
-  goat?: { status: string, targetList: string }
-  publications?: Record<string, any>[]
-  vernacularNames?: Record<string, any>[]
+   title: string
+   description: string
+   ncbiLink?: string
+   enaLink?: string
+   sub_project?: string
+   sequencing_type?: string[]
+   blobtoolkitLink?: string
+   speciesLink?: Record<string, any>
+   sampleLink?: Record<string, any>
+   assemblyLink?: Record<string, any>
+   jbrowseLink?: boolean
+   downloadLink?: string
+   chromosomes?: ChromosomeInterface[]
+   annotations?: Annotation[]
+   reads?: Record<string, any>[]
+   biosamples?: Record<string, any>[]
+   local_samples?: Record<string, any>[]
+   assemblies?: Record<string, any>[]
+   coordinates?: Record<string, any>[]
+   metadata?: Record<string, any>
+   images?: string[]
+   avatar?: string
+   insdcStatus?: string
+   goat?: { status: string; targetList: string }
+   publications?: Record<string, any>[]
+   vernacularNames?: Record<string, any>[]
+}
 
+export type ChartType = 'pie' | 'dateline' | 'bar'
+
+/** Wire format for `portal.json` (served as static JSON). */
+export interface PortalTheme {
+   colors: {
+      threshold?: number
+      variables: Record<string, string>
+   }
+}
+
+export type PortalChartConfig = {
+   field: string
+   type: ChartType
+   size: number
+}
+
+export type PortalConfig = {
+   general: Record<string, any>
+   theme?: PortalTheme
+   models: Partial<Record<DataModels, ConfigModelWire>>
+}
+
+/** Model entry as stored in portal.json (charts omit `model`; optional legacy fields). */
+export type ConfigModelWire = {
+   label?: Record<string, string>
+   title?: Record<string, string>
+   description?: Record<string, string>
+   filters?: ConfigFilter[]
+   columns?: string[]
+   charts?: Array<{
+      field: string
+      type: ChartType
+      size?: number
+      model?: string
+   }>
 }
 
 export interface AppConfig {
-  general: Record<string, any>
-  ui: Record<string, any>
-  models: Record<DataModels, ConfigModel>
+   general: Record<string, any>
+   ui: Record<string, any>
+   models: Partial<Record<DataModels, ConfigModel>>
 }
 
 export type ConfigModel = {
-  title?: Record<string, any>
-  description?: Record<string, any>
-  label?: Record<string, any>
-  filters?: ConfigFilter[]
-  columns?: string[]
-  charts?: InfoBlock[]
+   label: Record<string, string>
+   title?: Record<string, string>
+   description?: Record<string, string>
+   filters?: ConfigFilter[]
+   columns?: string[]
+   charts?: PortalChartConfig[]
 }
 
 export type Pages = DataModels | 'dashboard'
 
 export type Frequency = {
-  model: DataModels,
-  field: string,
-  data: Record<string, number>
+   model: DataModels
+   field: string
+   data: Record<string, number>
 }
 
 export interface ChoroplethData {
-  countryName: string;
-  countryId: string;
-  occurrences: number;
-  geojson: GeoJSON.Feature;
+   countryName: string
+   countryId: string
+   occurrences: number
+   geojson: GeoJSON.Feature
 }
 
 export type CoordinatesFrequency = {
-  coordinates: [number, number],
-  count: number,
-  images: string[]
+   coordinates: [number, number]
+   count: number
+   images: string[]
 }
 export type TLineChartData = ChartData<'line'>
 export type TBarChartData = ChartData<'bar'>
@@ -138,299 +167,315 @@ export type TBubbleChartData = ChartData<'bubble'>
 export type TDoughnutChartData = ChartData<'doughnut'>
 export type TPieChartData = ChartData<'pie'>
 export interface ErrorResponseData {
-  message?: string; // Optional, because not all error responses may contain a message
+   message?: string // Optional, because not all error responses may contain a message
 }
 export type TChartData = TLineChartData | TBarChartData | TBubbleChartData | TDoughnutChartData | TPieChartData
 
 export type LangOption = Record<'es-ct' | 'en', string>
 
-export type ComponentType = 'biosample' | 'organism' | 'assembly' | 'localSample' | 'experiment' | 'annotation';
+export type ComponentType = 'biosample' | 'organism' | 'assembly' | 'localSample' | 'readRun' | 'annotation'
 
 export interface PageHeaderConfig {
-  title: LangOption,
-  description: LangOption
+   title: LangOption
+   description: LangOption
 }
-export type DataModels = 'biosamples' | 'experiments' | 'organisms' | 'annotations' | 'assemblies' | 'local_samples' | 'submitted_biosamples'
+export type DataModels =
+   | 'biosamples'
+   | 'reads'
+   | 'organisms'
+   | 'annotations'
+   | 'assemblies'
+   | 'local_samples'
+   | 'submitted_biosamples'
 export const dataModels: DataModels[] = [
-  'biosamples',
-  'experiments',
-  'organisms',
-  'annotations',
-  'assemblies',
-  'local_samples',
-];
+   'biosamples',
+   'reads',
+   'organisms',
+   'annotations',
+   'assemblies',
+   'local_samples',
+]
 export type Stat = {
-  key: DataModels,
-  count: number,
-  icon?: string
-  color?: string
+   key: DataModels
+   count: number
+   icon?: string
+   color?: string
 }
 
-export type Model = 'biosamples' | 'experiments' | 'organisms' | 'annotations' | 'assemblies' | 'users' | 'local_samples'
+export type Model =
+   | 'biosamples'
+   | 'reads'
+   | 'organisms'
+   | 'annotations'
+   | 'assemblies'
+   | 'users'
+   | 'local_samples'
 export type ColumnShow = {
-  show: boolean,
-  value: string
+   show: boolean
+   value: string
 }
 export type Metatada = {
-  key: string
-  value: string
+   key: string
+   value: string
 }
 
 export type DataCounts = {
-  coordinates: number;
-  assemblies: number;
-  assembly: number;
-  experiments: number;
-  local_samples: number;
-  annotations: number;
-  chromosomes: number;
-  sub_samples: number;
-};
-
+   coordinates: number
+   assemblies: number
+   assembly: number
+   reads: number
+   local_samples: number
+   annotations: number
+   chromosomes: number
+   sub_samples: number
+}
 
 export type DateRange = {
-  start: Date | null
-  end: Date | null
+   start: Date | null
+   end: Date | null
 }
 export type Filter = {
-  label?: string
-  placeholder?: string
-  type: 'input' | 'select' | 'date' | 'checkbox'
-  options?: Record<string, number>
-  key: string
+   label?: string
+   placeholder?: string
+   type: 'input' | 'select' | 'date' | 'checkbox'
+   options?: Record<string, number>
+   key: string
 }
 
 export interface SearchForm {
-  filter: string
-  sort_column: string
-  sort_order: string
-  start_date?: string
-  end_date?: string
-  rank?: string
+   filter: string
+   sort_column: string
+   sort_order: string
+   start_date?: string
+   end_date?: string
+   rank?: string
 }
 
 export interface ConfigFilter {
-  key: string
-  type: 'date' | 'select' | 'input' | 'checkbox'
+   key: string
+   type: 'date' | 'select' | 'checkbox' | 'input'
 }
 export interface OrganismSearchForm extends SearchForm {
-  insdc_status: string
-  goat_status: string
-  parent_taxid: string
-  target_list_status: string
-  country?: string
+   insdc_status: string
+   goat_status: string
+   parent_taxid: string
+   target_list_status: string
+   country?: string
 }
 
 export type StatusSearchForm = {
-  goat_status: string
-  target_list_status: string
-  filter: string
+   goat_status: string
+   target_list_status: string
+   filter: string
 }
 
 export type BioSampleSearchForm = SearchForm
 
 export interface ReadSearchForm extends SearchForm {
-  center: string
+   center: string
 }
 export interface AssemblySearchForm extends SearchForm {
-  assembly_level: string
-  submitter: string
-  blobtoolkit: boolean
+   assembly_level: string
+   submitter: string
+   blobtoolkit: boolean
 }
 
 export type LocalSampleSearchForm = SearchForm
 
 export type ModelSearchForm = OrganismSearchForm | AssemblySearchForm | ReadSearchForm | BioSampleSearchForm
 
-
-
 export type BreadCrumb = {
-  name: string
-  path: Record<string, any>
-  active: boolean
+   name: string
+   path: Record<string, any>
+   active: boolean
 }
 
 export type TaxonNode = {
-  name: string
-  rank: string
-  taxid: string,
-  children?: string[],
-  leaves?: number
+   name: string
+   rank: string
+   taxid: string
+   children?: string[]
+   leaves?: number
+   parent?: string
+   organisms_count?: number
+   assemblies_count?: number
+   reads_count?: number
+   biosamples_count?: number
+   local_samples_count?: number
+   submitted_biosamples_count?: number
+   genome_annotations_count?: number
 }
 
 export type Publication = {
-  source: 'DOI' | 'PubMed ID' | 'PubMed CentralID' | ''
-  id: string
+   source: 'DOI' | 'PubMed ID' | 'PubMed CentralID' | ''
+   id: string
 }
 
 export type CommonName = {
-  value: string
-  locality: string
-  lang: string
+   value: string
+   locality: string
+   lang: string
 }
 
 export type Contributor = {
-  contributions: number
-  name: string
+   contributions: number
+   name: string
 }
 
 type Chromosome = {
-  name: string
-  size: number
+   name: string
+   size: number
 }
 
 export type Adapter = {
-  type: 'RefGetAdapter'
-  sequenceData: Record<string, Chromosome>
+   type: 'RefGetAdapter'
+   sequenceData: Record<string, Chromosome>
 }
 
 type Sequence = {
-  type: 'ReferenceSequenceTrack'
-  trackId: string
-  name: string
-  adapter: Adapter
+   type: 'ReferenceSequenceTrack'
+   trackId: string
+   name: string
+   adapter: Adapter
 }
 
 export type AssemblyAdapter = {
-  name: string
-  sequence: Sequence
-  refNameAliases?: Record<string, any>
+   name: string
+   sequence: Sequence
+   refNameAliases?: Record<string, any>
 }
 
 export type HighLightedMetatada = {
-  key: string
-  color: string
+   key: string
+   color: string
 }
 
 export type ModelConfig = {
-  title?: Record<string, string>
-  description?: Record<string, string>
+   title?: Record<string, string>
+   description?: Record<string, string>
 }
 
-export type ChartType = 'pie' | 'dateline' | 'bar'
-export type InfoBlock = {
-  field: string,
-  model: string,
-  title?: Record<string, string>,
-  label?: Record<string, string>,
-  type: ChartType
-  class: string
-  color?: string
+/** Chart block passed to `Chart.vue` (model comes from the page via prop). */
+export type InfoBlock = PortalChartConfig & {
+   /** @deprecated Prefer `model` prop on Chart; kept for older portal files. */
+   model?: string
+   title?: Record<string, string>
+   label?: Record<string, string>
+   class?: string
+   color?: string
 }
 
 export interface Assembly {
-  accession: string,
-  assembly_name: string,
-  scientific_name: string,
-  taxid: string,
-  sample_accession: string,
-  blobtoolkit_id?: string
-  chromosomes: Record<string, any>[],
-  metadata: Record<string, any>,
-  has_chromosomes_aliases: boolean
+   accession: string
+   assembly_name: string
+   scientific_name: string
+   taxid: string
+   sample_accession: string
+   blobtoolkit_id?: string
+   chromosomes: Record<string, any>[]
+   metadata: Record<string, any>
+   has_chromosomes_aliases: boolean
 }
 export interface Annotation {
-  assembly_accession: string,
-  assembly_name: string,
-  scientific_name: string,
-  taxid: string,
-  name: string,
-  gff_gz_location: string
-  tab_index_location: string,
-  metadata: Record<string, any>,
+   assembly_accession: string
+   assembly_name: string
+   scientific_name: string
+   taxid: string
+   name: string
+   gff_gz_location: string
+   tab_index_location: string
+   metadata: Record<string, any>
 }
 
 export interface TrackData {
-  name: string;
-  gff_gz_location: string;
-  tab_index_location: string;
-  metadata: Record<string, any>
-
+   name: string
+   gff_gz_location: string
+   tab_index_location: string
+   metadata: Record<string, any>
 }
 export interface BioSample {
-  accession: string
-  scientific_name: string
-  taxid: string
-  assemblies: string[]
-  experiments: string[]
-  metadata: Record<string, any>
+   accession: string
+   scientific_name: string
+   taxid: string
+   assemblies: string[]
+   experiments: string[]
+   metadata: Record<string, any>
 }
 
 export interface ChromosomeInterface {
-  accession_version: string
-  metadata: Record<string, any>
+   accession_version: string
+   metadata: Record<string, any>
 }
 export interface Details {
-  title: string,
-  description?: string
-  button1?: {
-    route: Record<string, any>
-    label: string
-  },
-  button2?: {
-    route: Record<string, any>
-    label: string
-  },
-  ncbiPath?: string,
-  ebiPath?: string,
-  blobtoolkit?: string,
+   title: string
+   description?: string
+   button1?: {
+      route: Record<string, any>
+      label: string
+   }
+   button2?: {
+      route: Record<string, any>
+      label: string
+   }
+   ncbiPath?: string
+   ebiPath?: string
+   blobtoolkit?: string
 }
 
 export interface OrganismLocations {
-  taxid: string
-  scientific_name: string
-  coordinates: Record<number, number>[]
-  image?: string
+   taxid: string
+   scientific_name: string
+   coordinates: Record<number, number>[]
+   image?: string
 }
 
-
 export interface SampleLocations {
-  taxid: string
-  scientific_name: string
-  sample_accession: string
-  coordinates: {
-    coordinates: [number, number]
-  }
-  is_local_sample: boolean
-  image?: string
+   taxid: string
+   scientific_name: string
+   sample_accession: string
+   coordinates: {
+      coordinates: [number, number]
+   }
+   is_local_sample: boolean
+   image?: string
 }
 
 export interface OrganismCoordinates {
-  latitude: number
-  longitude: number
-  id: string,
-  taxid: string
-  image?: string
+   latitude: number
+   longitude: number
+   id: string
+   taxid: string
+   image?: string
 }
 
 export type OrganismForm = {
-  taxid: string | null,
-  scientific_name: string | null,
-  common_names: CommonName[],
-  image: string,
-  image_urls: string[],
-  sequencing_type: string[],
-  metadata: Record<string, string>,
-  publications: Publication[],
-  goat_status: string,
-  sub_project?: string | null,
-  target_list_status: 'long_list' | 'family_representative' | 'other_priority' | null,
+   taxid: string | null
+   scientific_name: string | null
+   common_names: CommonName[]
+   image: string
+   image_urls: string[]
+   sequencing_type: string[]
+   metadata: Record<string, string>
+   publications: Publication[]
+   goat_status: string
+   sub_project?: string | null
+   target_list_status: 'long_list' | 'family_representative' | 'other_priority' | null
 }
 
 export type EBISampleCharacteristic = {
-  text?: string;
-  ontologyTerms?: string[];
-  unit?: string;
-};
+   text?: string
+   ontologyTerms?: string[]
+   unit?: string
+}
 
 export type EBISample = {
-  name: string;
-  taxid:string
-  release: string; // ISO 8601 Date string
-  update?: string; // ISO 8601 Date string, system-generated
-  accession?: string; // Required for PUT requests
-  characteristics?: Record<string, EBISampleCharacteristic[]>; // Key-value pair of characteristics
-  externalReferences?: string[]; // List of external references
-  relationships?: string[]; // List of relationships with other samples
-  data?: any[]; // Structured data, required for structured data submission
-};
+   name: string
+   taxid: string
+   release: string // ISO 8601 Date string
+   update?: string // ISO 8601 Date string, system-generated
+   accession?: string // Required for PUT requests
+   characteristics?: Record<string, EBISampleCharacteristic[]> // Key-value pair of characteristics
+   externalReferences?: string[] // List of external references
+   relationships?: string[] // List of relationships with other samples
+   data?: any[] // Structured data, required for structured data submission
+}

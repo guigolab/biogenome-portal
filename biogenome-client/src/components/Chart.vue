@@ -1,180 +1,204 @@
 <template>
-    <VaCard class="data-card" v-if="freq">
-        <VaCardContent class="chart-header">
-            <div class="row align-center justify-space-between">
-                <div class="chart-title">
-                    <p class="va-text-bold">{{ chartTitle }}</p>
-                    <p class="chart-subtitle">{{ t(`models.${chart.model}`) }}</p>
-                </div>
-                <div class="flex">
-                    <VaButton 
-                        color="primary" 
-                        size="small"
-                        class="download-btn"
-                        @click="downloadCanvasAsPNG(`${chart.model}.${chart.field}`, `${chart.type}.png`)"
-                    >
-                        <VaIcon name="fa-file-arrow-down" class="mr-2" />
-                        {{ t('buttons.download') }}
-                    </VaButton>
-                </div>
-            </div>
-        </VaCardContent>
-        <VaCardContent class="chart-content">
-            <component 
-                class="va-chart" 
-                :key="`${chart.model}.${chart.field}`" 
-                :is="chartComponents[chart.type]"
-                :data="{ ...freq }" 
-                :chart-id="`${chart.model}.${chart.field}`" 
-                :label="t(`models.${chart.model}`)" 
-            />
-        </VaCardContent>
-    </VaCard>
+   <div v-if="freq" class="data-chart-card">
+      <header class="data-chart-card__header">
+         <div class="data-chart-card__title-block">
+            <p class="data-chart-card__kicker">{{ t(`models.${chartModel}`) }}</p>
+            <h3 class="data-chart-card__title">{{ chartTitle }}</h3>
+         </div>
+         <button
+            type="button"
+            class="data-chart-card__download-btn"
+            @click="downloadCanvasAsPNG(`${chartModel}.${chart.field}`, `${chart.type}.png`)"
+         >
+            <VaIcon name="fa-file-arrow-down" size="small" />
+            {{ t('buttons.download') }}
+         </button>
+      </header>
+      <div class="data-chart-card__content">
+         <component
+            class="data-chart-card__chart"
+            :key="`${chartModel}.${chart.field}`"
+            :is="chartComponents[chart.type]"
+            :data="{ ...freq }"
+            :chart-id="`${chartModel}.${chart.field}`"
+            :label="t(`models.${chartModel}`)"
+         />
+      </div>
+   </div>
 </template>
 <script setup lang="ts">
-import { useI18n } from 'vue-i18n';
-import { DataModels, InfoBlock } from '../data/types';
-import DateLineChart from './charts/DateLineChart.vue'
-import PieChart from './charts/PieChart.vue'
-import BarChart from './charts/BarChart.vue'
-import { computed, ref, watch } from 'vue';
-import { useItemStore } from '../stores/items-store';
+   import { useI18n } from 'vue-i18n'
+   import { DataModels, InfoBlock } from '../data/types'
+   import DateLineChart from './charts/DateLineChart.vue'
+   import PieChart from './charts/PieChart.vue'
+   import BarChart from './charts/BarChart.vue'
+   import { computed, ref, watch } from 'vue'
+   import { useItemStore } from '../stores/items-store'
 
-const itemStore = useItemStore()
+   const itemStore = useItemStore()
 
-const props = defineProps<{
-    chart: InfoBlock,
-    ignoreQuery: boolean
-}>()
+   const props = defineProps<{
+      chart: InfoBlock
+      /** Current data model tab; overrides deprecated `chart.model` in JSON. */
+      model?: DataModels
+      ignoreQuery: boolean
+   }>()
 
-const chartComponents = {
-    'pie': PieChart,
-    'bar': BarChart,
-    'dateline': DateLineChart
-}
+   const chartModel = computed<DataModels>(
+      () => (props.model ?? (props.chart.model as DataModels)) as DataModels,
+   )
 
-const { t } = useI18n()
+   const chartComponents = {
+      pie: PieChart,
+      bar: BarChart,
+      dateline: DateLineChart,
+   }
 
-const freq = ref<Record<string, number>>({})
+   const { t } = useI18n()
 
-watch(() => itemStore.searchForm, async () => {
-    const f = await itemStore.getFieldFrequencies(props.chart.model as DataModels, props.chart.field, props.ignoreQuery)
-    freq.value = { ...f }
-}, { immediate: true, deep: true })
+   const freq = ref<Record<string, number>>({})
 
-const chartTitle = computed(() => {
-    const { field, model } = props.chart;
-    let key = field.includes('metadata.') ? field.split('.').pop() : field.replace('_', ' ');
-    return key ? key.charAt(0).toUpperCase() + key.slice(1) : field;
-});
+   watch(
+      () => ({
+         searchForm: itemStore.searchForm,
+         model: chartModel.value,
+         field: props.chart.field,
+         ignoreQuery: props.ignoreQuery,
+      }),
+      async () => {
+         const f = await itemStore.getFieldFrequencies(
+            chartModel.value,
+            props.chart.field,
+            props.ignoreQuery,
+         )
+         freq.value = { ...f }
+      },
+      { immediate: true, deep: true },
+   )
 
-function downloadCanvasAsPNG(canvasId: string, filename: string) {
-    // Get the canvas element
-    const canvas = document.getElementById(canvasId) as HTMLCanvasElement;
+   const chartTitle = computed(() => {
+      const { field } = props.chart
+      let key = field.includes('metadata.') ? field.split('.').pop() : field.replace('_', ' ')
+      return key ? key.charAt(0).toUpperCase() + key.slice(1) : field
+   })
 
-    // Ensure the canvas exists
-    if (!canvas) {
-        console.error('Canvas element not found!');
-        return;
-    }
-    // Convert canvas to data URL
-    const dataURL = canvas.toDataURL('image/png');
+   function downloadCanvasAsPNG(canvasId: string, filename: string) {
+      // Get the canvas element
+      const canvas = document.getElementById(canvasId) as HTMLCanvasElement
 
-    // Create a download link
-    const link = document.createElement('a');
-    link.href = dataURL;
-    link.download = filename;
+      // Ensure the canvas exists
+      if (!canvas) {
+         console.error('Canvas element not found!')
+         return
+      }
+      // Convert canvas to data URL
+      const dataURL = canvas.toDataURL('image/png')
 
-    // Trigger the download by simulating a click
-    link.click();
-}
+      // Create a download link
+      const link = document.createElement('a')
+      link.href = dataURL
+      link.download = filename
+
+      // Trigger the download by simulating a click
+      link.click()
+   }
 </script>
 <style lang="scss" scoped>
-.data-card {
-    background: var(--va-background-secondary);
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    transition: box-shadow 0.2s, transform 0.2s;
-    
-    &:hover {
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.10);
-    }
-}
+   .data-chart-card {
+      background: var(--va-background-primary);
+      border: 1px solid var(--va-background-border, rgba(0, 0, 0, 0.06));
+      border-radius: 8px;
+      overflow: hidden;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
 
-.chart-header {
-    padding: 1rem 1.5rem;
-    background: var(--va-background-secondary);
-    border-bottom: 1px solid var(--va-background-border);
-}
+      &:hover {
+         border-color: rgba(0, 0, 0, 0.09);
+         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      }
+   }
 
-.chart-content {
-    padding: 1.5rem;
-    height: 400px;
-    display: flex;
-    align-items: center;
-}
+   .data-chart-card__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.875rem 1.25rem;
+      background: var(--va-background-element);
+      border-bottom: 1px solid var(--va-background-border, rgba(0, 0, 0, 0.06));
+   }
 
-.download-btn {
-    font-weight: 500;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    border-radius: 6px;
+   .data-chart-card__title-block {
+      min-width: 0;
+      flex: 1;
+   }
 
-    &:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
+   .data-chart-card__kicker {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--va-text-secondary);
+      margin: 0 0 0.25rem 0;
+      line-height: 1.3;
+   }
 
-    &:active {
-        box-shadow: 0 0 0 2px var(--va-primary);
-    }
-}
+   .data-chart-card__title {
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      margin: 0;
+      color: var(--va-text-primary);
+      line-height: 1.3;
+   }
 
-.va-chart {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+   .data-chart-card__download-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 0.75rem;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      border-radius: 6px;
+      border: 1px solid var(--va-background-border, rgba(0, 0, 0, 0.09));
+      background: var(--va-background-primary);
+      color: var(--va-text-secondary);
+      cursor: pointer;
+      transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+      flex-shrink: 0;
 
-    >* {
-        height: 100%;
-        width: 100%;
-    }
+      &:hover {
+         background: var(--va-background-element);
+         border-color: var(--va-primary);
+         color: var(--va-primary);
+         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+      }
+   }
 
-    canvas {
-        width: 100%;
-        height: 100%;
-        max-height: 400px;
-        object-fit: contain;
-    }
-}
+   .data-chart-card__content {
+      padding: 1rem 1.25rem;
+      height: 400px;
+      display: flex;
+      align-items: center;
+      background: var(--va-background-primary);
+   }
 
-.mr-2 {
-    margin-right: 0.5rem;
-}
+   .data-chart-card__chart {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
 
-.chart-title {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
+      > * {
+         height: 100%;
+         width: 100%;
+      }
 
-    p {
-        margin: 0;
-        line-height: 1.2;
-    }
-
-    .va-text-bold {
-        font-size: 1.1rem;
-        color: var(--va-text-primary);
-    }
-
-    .chart-subtitle {
-        font-size: 0.9rem;
-        color: var(--va-text-secondary);
-        font-weight: 500;
-    }
-}
+      canvas {
+         width: 100%;
+         height: 100%;
+         max-height: 400px;
+         object-fit: contain;
+      }
+   }
 </style>
