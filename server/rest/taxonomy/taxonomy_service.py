@@ -1,42 +1,82 @@
 from db.models import Organism, TaxonNode
 from helpers import organism as organism_helper, taxonomy as taxonomy_helper
 from werkzeug.exceptions import NotFound
-from flask import Response, send_file
+from flask import Response
 from extensions.cache import cache
 import json
 import os
 
 ROOT_NODE = os.getenv('ROOT_NODE')
 
+
 def get_root_tree():
-    node = TaxonNode.objects(taxid=ROOT_NODE).first()
-    if not node:
-        raise NotFound(description=f"{ROOT_NODE} not found!")
-    
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    static_dir = os.path.join(current_dir, '../../static')
-    file_path = os.path.join(static_dir, 'tree.json')
-    
-    if os.path.isfile(file_path):
-        return send_file(file_path, mimetype='application/json')
-    
-    cached_tree = cache.get('cached_tree_data')
-    
-    if cached_tree is None:
-        # If not cached, compute the tree
-        node = TaxonNode.objects(taxid=ROOT_NODE).first()
-        if not node:
-            raise NotFound(description=f"Taxon {ROOT_NODE} not found!")
-        
-        # Generate the tree (this is the expensive operation)
-        tree = taxonomy_helper.dfs_generator_iterative(node)
-        
-        # Cache the tree data
-        cache.set('cached_tree_data', tree, timeout=3600)
-    else:
-        # Use the cached tree data
-        tree = cached_tree
-    return Response(json.dumps(tree), mimetype='application/json')
+    """
+    Returns flattened taxonomy tree with only leaves as count.
+    Uses parent mapping from children + aggregation (same logic as get_flattened_tree),
+    but exposes only: taxid, parent_taxid, name, rank, leaves.
+    Skips taxons that have ROOT_NODE as children (ancestors above our root).
+    """
+    if not ROOT_NODE:
+        raise NotFound(description="ROOT_NODE not configured")
+
+    taxon_coll = TaxonNode._get_collection()
+
+    # Taxons that have ROOT_NODE as children = ancestors above our root; skip them
+    skip_taxids = [
+        doc["taxid"]
+        for doc in taxon_coll.find(
+            {"children": ROOT_NODE},
+            {"taxid": 1}
+        )
+    ]
+
+    # Build parent mapping - stream cursor (no list conversion)
+    parent_by_child = {}
+    match_skip = {"taxid": {"$nin": skip_taxids}} if skip_taxids else {}
+    for doc in taxon_coll.find(match_skip, {"taxid": 1, "children": 1}):
+        parent_taxid = doc["taxid"]
+        for child_taxid in doc.get("children", []):
+            parent_by_child[child_taxid] = parent_taxid
+
+    fields = [
+        "taxid",
+        "parent_taxid",
+        "name",
+        "rank",
+        "leaves",
+    ]
+
+    pipeline = [
+        {"$match": match_skip},
+        {
+            "$project": {
+                "taxid": 1,
+                "name": 1,
+                "rank": 1,
+                "leaves": {"$ifNull": ["$leaves", 0]},
+                "_id": 0,
+            }
+        },
+    ]
+
+    cache_key = f"cached_flattened_tree_leaves_{ROOT_NODE}"
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return Response(json.dumps(cached), mimetype="application/json")
+
+    rows = []
+    for doc in taxon_coll.aggregate(pipeline):
+        taxid = doc["taxid"]
+        rows.append([
+            taxid,
+            parent_by_child.get(taxid),
+            doc.get("name", ""),
+            doc.get("rank", ""),
+            doc.get("leaves", 0),
+        ])
+    result = {"fields": fields, "rows": rows}
+    cache.set(cache_key, result, timeout=3600)
+    return Response(json.dumps(result), mimetype="application/json")
 
 
 def create_tree(taxid):
