@@ -1,4 +1,4 @@
-from db.models import BioSample
+from db.model import BioSample
 from lxml import etree
 
 

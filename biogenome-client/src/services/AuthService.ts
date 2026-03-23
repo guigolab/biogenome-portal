@@ -140,6 +140,10 @@ class AuthService {
       return this.submission.put(`/annotations/${name}`, formData)
    }
 
+   lookupPublication(source: string, id: string) {
+      return this.submission.get('/publications/lookup', { params: { source, id } })
+   }
+
    importAssembly(accession: string) {
       return this.submission.post(`/assemblies/${accession}`)
    }
@@ -148,32 +152,11 @@ class AuthService {
       return this.submission.post(`/biosamples/${accession}`)
    }
    importRead(accession: string) {
-      return this.submission.post(`/reads/import/${accession}`)
+      return this.submission.post(`/reads/${accession}`)
    }
 
    createUser(data: FormData) {
       return this.submission.post('/users', data)
-   }
-   getSubProjects(params: Record<string, any>) {
-      return this.submission.get('/sub_projects', { params })
-   }
-   createSubProject(data: FormData) {
-      return this.submission.post('/sub_projects', data)
-   }
-   getSubProject(name: string) {
-      return this.submission.get(`/sub_projects/${name}`)
-   }
-   updateSubProject(name: string) {
-      return this.submission.put(`/sub_projects/${name}`)
-   }
-   updateSubProjectSpecies(name: string) {
-      return this.submission.put(`/sub_projects/${name}/species`)
-   }
-   updateSubProjectUsers(name: string) {
-      return this.submission.put(`/sub_projects/${name}/users`)
-   }
-   deletSubProject(name: string) {
-      return this.submission.delete(`/sub_projects/${name}`)
    }
    getUsers(params: Record<string, any>) {
       return this.submission.get('/users', { params })
@@ -193,6 +176,10 @@ class AuthService {
    // }
    updateUser(name: string, data: FormData) {
       return this.submission.put(`/users/${name}`, data)
+   }
+
+   updateSelf(name: string, data: { email?: string; password?: string }) {
+      return this.submission.patch(`/users/${name}`, data)
    }
 
    getUserSpecies(name: string, params: UserParams) {

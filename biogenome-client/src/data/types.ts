@@ -105,10 +105,59 @@ export type PortalChartConfig = {
    size: number
 }
 
+/** IDs for configurable form steps (always-present steps are not listed here). */
+export type ConfigurableStepId = 'goatStatus' | 'piOrEntity' | 'images'
+
+/** All step IDs used in the organism form stepper. */
+export type OrganismFormStepId =
+   | 'selectOrganism'
+   | 'goatStatus'
+   | 'sequencingAndSubproject'
+   | 'piOrEntity'
+   | 'images'
+   | 'publications'
+   | 'vernacularNames'
+   | 'extraMetadata'
+   | 'reviewSubmit'
+
+/** Single configurable step entry in `portal.json` under `cms.organisms.form.steps`. */
+export type CmsOrganismFormStepWire = {
+   id: ConfigurableStepId
+   required?: boolean
+   enabled?: boolean
+}
+
+/** Resolved step definition used at runtime by the stepper. */
+export type OrganismFormStepDef = {
+   id: OrganismFormStepId
+   title: Record<string, string>
+   description: Record<string, string>
+   required: boolean
+   enabled: boolean
+   /** Always-present steps are not configurable via portal.json. */
+   fixed: boolean
+}
+
+/** CMS form config for organisms as stored in `portal.json`. */
+export type CmsOrganismFormWire = {
+   steps?: CmsOrganismFormStepWire[]
+}
+
+/** CMS organisms config block in `portal.json`. */
+export type CmsOrganismsWire = {
+   form?: CmsOrganismFormWire
+}
+
+/** Top-level `cms` key in `portal.json` (optional – backwards compatible). */
+export type PortalCmsWire = {
+   organisms?: CmsOrganismsWire
+}
+
 export type PortalConfig = {
    general: Record<string, any>
    theme?: PortalTheme
    models: Partial<Record<DataModels, ConfigModelWire>>
+   cms?: PortalCmsWire
 }
 
 /** Model entry as stored in portal.json (charts omit `model`; optional legacy fields). */
@@ -130,6 +179,7 @@ export interface AppConfig {
    general: Record<string, any>
    ui: Record<string, any>
    models: Partial<Record<DataModels, ConfigModel>>
+   organismFormSteps: OrganismFormStepDef[]
 }
 
 export type ConfigModel = {
@@ -302,7 +352,6 @@ export type TaxonNode = {
    reads_count?: number
    biosamples_count?: number
    local_samples_count?: number
-   submitted_biosamples_count?: number
    genome_annotations_count?: number
 }
 

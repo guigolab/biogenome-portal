@@ -1,4 +1,4 @@
-from db.models import Organism
+from db.model import Organism
 from clients import tolid_client
 from db.enums import GoaTStatus
 

@@ -55,3 +55,9 @@ class CronJobStatus(Enum):
     PENDING = 'PENDING'
     DONE = 'DONE'
 
+
+class ExternalImageSource(Enum):
+    INATURALIST = 'inaturalist'
+    WIKIMEDIA_COMMONS = 'wikimedia_commons'
+    GBIF = 'gbif'
+

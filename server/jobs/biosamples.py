@@ -6,23 +6,15 @@ from celery import shared_task
 from mongoengine.errors import NotUniqueError, ValidationError
 
 from clients import ebi_client
-from db.models import BioSample
-from helpers.biosample import (
-    handle_biosample_location_data,
-    handle_derived_samples,
-)
-from helpers.data import create_batches, update_lineage
-from helpers.geolocation import update_geolocations
-from helpers.import_organism_guard import (
-    delete_rows_without_organism,
-    surviving_taxids_after_cleanup,
-)
-from helpers.organism import (
+from db.model import BioSample
+
+from helpers.data import create_batches
+from jobs.organisms import fetch_tolid_prefixes_task
+from jobs.support.organism_catalog_sync import (
     handle_full_taxonomy_from_taxids,
-    handle_organism,
-    reload_organisms_and_update_deps,
+    reload_prune_denorm_after_taxonomy_import,
 )
-from helpers.taxon_organism_sync import sync_many_taxids
+from jobs.support.geolocation_batch import update_geolocations
 from parsers import biosample as biosample_parser
 
 logger = logging.getLogger(__name__)
@@ -42,30 +34,6 @@ def _parse_biosample_safe(raw_sample, context: str):
         logger.warning("Skipping unparsable biosample %s (%s): %s", acc, context, e)
         return None
 
-
-def _collect_parent_accessions_from_derived_samples():
-    """
-    Unique parent accessions referenced by 'sample derived from', without loading full documents.
-    """
-    qs = (
-        BioSample.objects(
-            __raw__={"metadata.sample derived from": {"$exists": True}}
-        )
-        .only("metadata")
-        .batch_size(500)
-    )
-    parents = set()
-    for doc in qs:
-        try:
-            meta = doc.metadata or {}
-            parent = meta.get("sample derived from")
-            if parent:
-                parents.add(parent)
-        except (TypeError, AttributeError):
-            continue
-    return parents
-
-
 def _existing_accessions_batch(accessions):
     """Return a set of accessions that already exist, querying in chunks."""
     existing = set()
@@ -83,83 +51,12 @@ def _scalar_taxids_for_accessions(accessions):
     return taxids
 
 
-def _update_geolocations_batched(accessions):
-    for batch in create_batches(list(accessions), ACCESSION_BATCH_SIZE):
-        update_geolocations(batch)
-
-
-def _fetch_and_persist_parent_biosample(parent_accession: str) -> bool:
-    """
-    Fetch a parent biosample from EBI, save, and run location / derived / lineage hooks.
-    Returns True if persisted successfully.
-    """
-    try:
-        biosample_response = ebi_client.get_sample_from_biosamples(parent_accession)
-    except Exception as e:
-        logger.exception(
-            "EBI request failed for parent biosample %s: %s", parent_accession, e
-        )
-        return False
-
-    if not biosample_response:
-        logger.warning(
-            "No data returned from EBI BioSamples API for parent %s; skipping",
-            parent_accession,
-        )
-        return False
-
-    biosample_obj = _parse_biosample_safe(
-        biosample_response, context="parent fetch"
-    )
-    if not biosample_obj:
-        return False
-
-    try:
-        biosample_obj.save()
-    except (NotUniqueError, ValidationError) as e:
-        logger.info(
-            "Parent %s not saved (duplicate or validation): %s",
-            parent_accession,
-            e,
-        )
-        return False
-    except Exception:
-        logger.exception("Unexpected error saving parent biosample %s", parent_accession)
-        return False
-
-    try:
-        handle_biosample_location_data(biosample_obj)
-    except Exception:
-        logger.exception(
-            "handle_biosample_location_data failed for parent %s", parent_accession
-        )
-
-    try:
-        handle_derived_samples(biosample_obj.accession)
-    except Exception:
-        logger.exception(
-            "handle_derived_samples failed for parent %s", parent_accession
-        )
-
-    try:
-        organism = handle_organism(biosample_obj.taxid)
-        if organism:
-            update_lineage(biosample_obj, organism, skip_sync=True)
-    except Exception:
-        logger.exception(
-            "Organism/lineage update failed for parent %s (taxid=%s)",
-            parent_accession,
-            getattr(biosample_obj, "taxid", None),
-        )
-
-    return True
-
-
 @shared_task(name="biosamples_import", ignore_result=False)
 def import_biosamples_from_project_names():
     """
-    Import biosamples for all comma-separated PROJECTS from EBI, then refresh taxonomy,
-    geolocation, and missing parent samples referenced by 'sample derived from'.
+    Pipeline phases:
+    1) primary model (BioSample), 3) taxonomy bootstrap,
+    4) related updates (prune/finalize, geolocation, async ToLID).
     """
     projects_env = os.getenv("PROJECTS")
     if not projects_env or not projects_env.strip():
@@ -173,7 +70,6 @@ def import_biosamples_from_project_names():
         "inserted": 0,
         "parse_skipped": 0,
         "fetch_errors": 0,
-        "parents_resolved": 0,
         "orphan_biosamples_removed": 0,
     }
 
@@ -244,7 +140,6 @@ def import_biosamples_from_project_names():
                                 "Failed saving biosample %s", doc.accession
                             )
                 else:
-                    sync_many_taxids(b.taxid for b in new_biosamples)
                     saved_accessions.extend(b.accession for b in new_biosamples)
                     stats["inserted"] += len(new_biosamples)
 
@@ -265,9 +160,12 @@ def import_biosamples_from_project_names():
         saved_organism_taxids = handle_full_taxonomy_from_taxids(
             biosample_taxids, TMP_DIR
         )
-        reload_organisms_and_update_deps(saved_organism_taxids)
-        removed = delete_rows_without_organism(
-            BioSample, "accession", saved_accessions
+        removed = reload_prune_denorm_after_taxonomy_import(
+            BioSample,
+            "accession",
+            saved_accessions,
+            saved_organism_taxids,
+            merge_context="biosample_import",
         )
         stats["orphan_biosamples_removed"] += removed
         if removed:
@@ -275,12 +173,9 @@ def import_biosamples_from_project_names():
                 "Removed %s biosample(s) with no Organism after taxonomy import",
                 removed,
             )
-        surviving = surviving_taxids_after_cleanup(
-            BioSample, "accession", saved_accessions
-        )
-        if surviving:
-            sync_many_taxids(surviving)
-        _update_geolocations_batched(saved_accessions)
+        if saved_organism_taxids:
+            fetch_tolid_prefixes_task.delay(list(saved_organism_taxids))
+        update_geolocations(saved_accessions)
     except Exception:
         logger.exception(
             "Post-import taxonomy/geolocation failed after inserting %d biosamples",
@@ -288,88 +183,4 @@ def import_biosamples_from_project_names():
         )
         raise
 
-    # Parents referenced by derived samples: only fetch each missing parent once.
-    try:
-        parent_accessions = _collect_parent_accessions_from_derived_samples()
-    except Exception:
-        logger.exception("Failed listing biosamples with 'sample derived from'")
-        raise
-
-    if not parent_accessions:
-        logger.info("No sibling-derived parent accessions to map")
-        return stats
-
-    logger.info(
-        "Found %d unique parent accessions from derived-sample metadata",
-        len(parent_accessions),
-    )
-
-    existing_parents = _existing_accessions_batch(parent_accessions)
-    missing_parents = sorted(parent_accessions - existing_parents)
-
-    for parent_accession in missing_parents:
-        if _fetch_and_persist_parent_biosample(parent_accession):
-            stats["parents_resolved"] += 1
-
-    logger.info("Biosamples import finished: %s", stats)
-    return stats
-
-
-@shared_task(name="biosamples_parents", ignore_result=False)
-def get_biosample_parents():
-    """
-    Cron: fetch and persist parent biosamples referenced by ``sample derived from``
-    metadata when the parent document is missing locally.
-    """
-    stats = {"parents_resolved": 0, "missing_parents_checked": 0}
-    try:
-        parent_accessions = _collect_parent_accessions_from_derived_samples()
-    except Exception:
-        logger.exception("Failed listing biosamples with 'sample derived from'")
-        raise
-
-    if not parent_accessions:
-        logger.info("No parent accessions referenced by derived samples")
-        return stats
-
-    existing_parents = _existing_accessions_batch(parent_accessions)
-    missing_parents = sorted(parent_accessions - existing_parents)
-    stats["missing_parents_checked"] = len(missing_parents)
-
-    for parent_accession in missing_parents:
-        if _fetch_and_persist_parent_biosample(parent_accession):
-            stats["parents_resolved"] += 1
-
-    logger.info("get_biosample_parents finished: %s", stats)
-    return stats
-
-
-@shared_task(name="biosamples_derived_from", ignore_result=False)
-def get_biosamples_derived_from_parent():
-    """
-    Cron: for each parent accession referenced by derived samples, sync child
-    biosamples from EBI (``get_samples_derived_from``).
-    """
-    stats = {"parents_processed": 0, "errors": 0}
-    try:
-        parent_accessions = _collect_parent_accessions_from_derived_samples()
-    except Exception:
-        logger.exception("Failed listing biosamples with 'sample derived from'")
-        raise
-
-    if not parent_accessions:
-        logger.info("No parent accessions for derived-from sync")
-        return stats
-
-    for parent_accession in sorted(parent_accessions):
-        try:
-            handle_derived_samples(parent_accession)
-            stats["parents_processed"] += 1
-        except Exception:
-            stats["errors"] += 1
-            logger.exception(
-                "handle_derived_samples failed for parent %s", parent_accession
-            )
-
-    logger.info("get_biosamples_derived_from_parent finished: %s", stats)
     return stats

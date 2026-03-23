@@ -1,48 +1,33 @@
 import logging
 import os
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Any, Dict, Iterable, List, Optional, Set
 
 from celery import shared_task
 
-from clients.genomehubs_client import get_blobtoolkit_id
 from clients.ncbi_client import query_datasets_to_file
-from db.models import Assembly, Chromosome
-from helpers.assembly import handle_assemblies_from_jsonl_file
-from helpers.biosample import handle_biosamples_from_accessions
+from db.model import Assembly, BioSample, Organism
 from helpers.data import create_batches
-from helpers.geolocation import update_geolocations
-from helpers.import_organism_guard import (
+from helpers.job_paths import ensure_parent_dir, safe_remove_file
+from jobs.support.organism_catalog_sync import (
     delete_rows_without_organism,
-    surviving_taxids_after_cleanup,
-)
-from helpers.organism import (
+    finalize_organism_catalog_for_taxids,
     handle_full_taxonomy_from_taxids,
-    reload_organisms_and_update_deps,
 )
-from helpers.taxon_organism_sync import sync_many_taxids
+from jobs.support.assembly_jsonl import (
+    bulk_link_blobtoolkit_for_assembly_accessions,
+    collect_sample_accessions_for_taxids,
+    collect_taxids_from_assembly_rows,
+    merge_assembly_jsonl_rows_from_paths,
+    persist_assembly_import_payload,
+)
+from jobs.support.biosample_bulk import handle_biosamples_from_accessions
+from jobs.support.geolocation_batch import update_geolocations
 from jobs.organisms import fetch_tolid_prefixes_task
 
 logger = logging.getLogger(__name__)
 
 PROJECT_ACCESSION = os.getenv("PROJECT_ACCESSION")
 TMP_DIR = os.getenv("TMP_DIR", "/tmp")
-
-
-def _safe_remove(path: Optional[str]) -> None:
-    """Remove a file if it exists; log and continue on failure."""
-    if not path:
-        return
-    try:
-        if os.path.isfile(path):
-            os.remove(path)
-    except OSError as exc:
-        logger.warning("Could not remove temp file %s: %s", path, exc)
-
-
-def _ensure_parent_dir(file_path: str) -> None:
-    parent = os.path.dirname(file_path)
-    if parent:
-        os.makedirs(parent, exist_ok=True)
 
 
 def _write_accession_batch(path: str, batch: List[str]) -> None:
@@ -53,15 +38,133 @@ def _write_accession_batch(path: str, batch: List[str]) -> None:
             f.write("\n")
 
 
+def _run_assembly_import_pipeline(
+    jsonl_paths: List[str],
+    *,
+    context_label: str,
+) -> Dict[str, Any]:
+    """
+    Shared flow (bioproject + accession list imports):
+
+    1. Primary model: parse/persist assemblies (+ chromosomes).
+    2. Secondary model: fetch linked biosamples when present.
+    3. Taxonomy bootstrap: create/fetch organisms for touched taxids.
+    4. Related updates: prune, finalize, geolocation, async ToLID, BlobToolKit.
+    """
+    if not jsonl_paths:
+        return {
+            "saved_assembly_accessions": [],
+            "saved_biosample_accessions": [],
+            "saved_organism_taxids": [],
+            "blobtoolkit_updated": 0,
+            "blobtoolkit_no_hit": 0,
+            "blobtoolkit_api_errors": 0,
+            "status": "no_jsonl",
+        }
+
+    new_rows, assemblies_to_update = merge_assembly_jsonl_rows_from_paths(jsonl_paths)
+    if not new_rows and not assemblies_to_update:
+        raise RuntimeError(
+            f"{context_label}: JSONL contained no usable assembly rows (empty or invalid)."
+        )
+
+    all_taxids = collect_taxids_from_assembly_rows(new_rows, assemblies_to_update)
+    if not all_taxids:
+        logger.warning("%s: no taxids found in assembly JSONL rows.", context_label)
+
+    saved_organism_taxids = handle_full_taxonomy_from_taxids(list(all_taxids), TMP_DIR)
+
+    # Species that have an Organism among JSONL taxids (string-normalised). Gates assembly writes.
+    taxids_with_organism: Set[str] = {
+        str(t) for t in Organism.objects(taxid__in=list(all_taxids)).scalar("taxid") if t
+    }
+
+    assembly_biosample_accessions = collect_sample_accessions_for_taxids(
+        new_rows, assemblies_to_update, taxids_with_organism
+    )
+
+    newly_fetched_biosample_accessions: List[str] = []
+    if assembly_biosample_accessions:
+        newly_fetched_biosample_accessions = handle_biosamples_from_accessions(
+            assembly_biosample_accessions, TMP_DIR
+        )
+
+    saved_assembly_accessions = persist_assembly_import_payload(
+        new_rows,
+        assemblies_to_update,
+        taxids_with_organism=taxids_with_organism,
+    )
+
+    if not saved_assembly_accessions:
+        logger.warning(
+            "%s: no new assemblies were inserted (gates or empty result).",
+            context_label,
+        )
+
+    # Remove bad rows before lineage reload so we do not bulk-update documents we are about to delete.
+    if saved_assembly_accessions:
+        removed_assemblies = delete_rows_without_organism(
+            Assembly, "accession", saved_assembly_accessions
+        )
+        if removed_assemblies:
+            logger.info(
+                "%s: removed %s assembly/assemblies with no Organism after import",
+                context_label,
+                removed_assemblies,
+            )
+
+    if newly_fetched_biosample_accessions:
+        delete_rows_without_organism(
+            BioSample, "accession", newly_fetched_biosample_accessions
+        )
+
+    # Simplicity-first: refresh only species taxids on surviving saved assemblies.
+    species_to_refresh = sorted(
+        {
+            str(t)
+            for t in Assembly.objects(accession__in=saved_assembly_accessions).scalar("taxid")
+            if t is not None and str(t).strip()
+        }
+    )
+
+    if species_to_refresh:
+        finalize_organism_catalog_for_taxids(species_to_refresh, copy_lineages=True)
+
+    if newly_fetched_biosample_accessions:
+        update_geolocations(newly_fetched_biosample_accessions)
+
+    if saved_organism_taxids:
+        fetch_tolid_prefixes_task.delay(list(saved_organism_taxids))
+
+    blob_stats = {
+        "blobtoolkit_updated": 0,
+        "blobtoolkit_no_hit": 0,
+        "blobtoolkit_api_errors": 0,
+    }
+    if saved_assembly_accessions:
+        still_present = list(
+            Assembly.objects(
+                accession__in=saved_assembly_accessions,
+                blobtoolkit_id=None,
+            ).scalar("accession")
+        )
+        if still_present:
+            blob_stats = bulk_link_blobtoolkit_for_assembly_accessions(still_present)
+
+    return {
+        "saved_assembly_accessions": saved_assembly_accessions,
+        "saved_biosample_accessions": newly_fetched_biosample_accessions,
+        "saved_organism_taxids": saved_organism_taxids,
+        "status": "ok",
+        **blob_stats,
+    }
+
+
 @shared_task(name="assemblies_import", ignore_result=False)
 def import_assemblies_by_bioproject(project_accession: Optional[str] = None) -> Dict[str, Any]:
     """
-    STEPS:
-    1. Collect assemblies from NCBI Datasets
-    2. Collect taxids from assemblies
-    3. Fetch organisms from ENA browser -> save organisms and taxons
-    4. Fetch biosamples from ENA browser -> save biosamples
-    5. Update assemblies with new information and save only those with valid organisms and biosamples
+    Download project JSONL, then run ``_run_assembly_import_pipeline`` (organisms → biosamples
+    → gated assembly/chromosome persistence → lineage reload → denorm sync).
     """
     if not project_accession:
         project_accession = PROJECT_ACCESSION
@@ -71,14 +174,13 @@ def import_assemblies_by_bioproject(project_accession: Optional[str] = None) -> 
         )
 
     jsonl_file_path = os.path.join(TMP_DIR, f"{project_accession}.jsonl")
-    _ensure_parent_dir(jsonl_file_path)
+    ensure_parent_dir(jsonl_file_path)
 
     try:
         cmd = [
             "genome",
             "accession",
             project_accession,
-            "--report",
             "--assembly-source",
             "GenBank",
             "--as-json-lines",
@@ -90,60 +192,26 @@ def import_assemblies_by_bioproject(project_accession: Optional[str] = None) -> 
                 "(check project accession and datasets installation)."
             )
 
-        saved_assembly_accessions = handle_assemblies_from_jsonl_file(jsonl_file_path)
-        if not saved_assembly_accessions:
-            raise RuntimeError(
-                f"No new assemblies were persisted for bioproject {project_accession!r}."
-            )
-
-        biosample_accessions = Assembly.objects(
-            accession__in=saved_assembly_accessions
-        ).scalar("sample_accession")
-        saved_biosample_accessions = handle_biosamples_from_accessions(
-            biosample_accessions, TMP_DIR
+        result = _run_assembly_import_pipeline(
+            [jsonl_file_path],
+            context_label=f"bioproject {project_accession}",
         )
-
-        assembly_taxids = Assembly.objects(
-            accession__in=saved_assembly_accessions
-        ).scalar("taxid")
-        saved_organism_taxids = handle_full_taxonomy_from_taxids(
-            assembly_taxids, TMP_DIR, fetch_tolid_prefixes_sync=False
-        )
-
-        reload_organisms_and_update_deps(saved_organism_taxids)
-        removed = delete_rows_without_organism(
-            Assembly, "accession", saved_assembly_accessions
-        )
-        if removed:
-            logger.info(
-                "Removed %s assembly/assemblies with no Organism after taxonomy import",
-                removed,
-            )
-        surviving = surviving_taxids_after_cleanup(
-            Assembly, "accession", saved_assembly_accessions
-        )
-        if surviving:
-            sync_many_taxids(surviving)
-        update_geolocations(saved_biosample_accessions)
-
-        if saved_organism_taxids:
-            fetch_tolid_prefixes_task.delay(list(saved_organism_taxids))
 
         logger.info(
-            "Bioproject %s import finished: %s assemblies, biosamples/geolocation updated.",
+            "Bioproject %s import finished: %s new assemblies inserted, biosamples/geolocation updated.",
             project_accession,
-            len(saved_assembly_accessions),
+            len(result["saved_assembly_accessions"]),
         )
         return {
             "project_accession": project_accession,
-            "assemblies_saved": len(saved_assembly_accessions),
-            "status": "ok",
+            "assemblies_saved": len(result["saved_assembly_accessions"]),
+            "status": result["status"],
         }
     except Exception:
         logger.exception("import_assemblies_by_bioproject failed for %s", project_accession)
         raise
     finally:
-        _safe_remove(jsonl_file_path)
+        safe_remove_file(jsonl_file_path)
 
 
 @shared_task(name="accessions_import", ignore_result=False)
@@ -153,13 +221,16 @@ def import_assemblies_from_accessions(
     if not accessions:
         raise ValueError("No accessions provided")
 
-    accessions_list = list(accessions)
-    logger.info("Assemblies to fetch: %s", len(accessions_list))
+    # Collapse duplicates (same as reads: many jobs pass redundant accessions); merge also
+    # dedupes per JSONL, but this avoids duplicate datasets calls and duplicate JSONL rows.
+    accessions_list = list(
+        dict.fromkeys(str(a).strip() for a in accessions if a and str(a).strip())
+    )
+    logger.info("Assemblies to fetch: %s (unique)", len(accessions_list))
 
     batches = create_batches(accessions_list, 1000)
     temp_paths: List[str] = []
     output_files_paths: List[str] = []
-    saved_accessions: List[str] = []
 
     try:
         for idx, batch in enumerate(batches):
@@ -170,7 +241,7 @@ def import_assemblies_from_accessions(
                 TMP_DIR, f"assemblies_{idx}_{len(batch)}.jsonl"
             )
             temp_paths.extend([assembly_input_file, assembly_output_file])
-            _ensure_parent_dir(assembly_input_file)
+            ensure_parent_dir(assembly_input_file)
 
             try:
                 _write_accession_batch(assembly_input_file, batch)
@@ -201,128 +272,34 @@ def import_assemblies_from_accessions(
                 continue
             output_files_paths.append(output_path)
 
-        for jsonl_file_path in output_files_paths:
-            try:
-                new_assembly_accessions = handle_assemblies_from_jsonl_file(
-                    jsonl_file_path
-                )
-            except Exception:
-                logger.exception(
-                    "handle_assemblies_from_jsonl_file failed for %s", jsonl_file_path
-                )
-                raise
-            if not new_assembly_accessions:
-                logger.warning("No new assemblies found for batch file %s", jsonl_file_path)
-                continue
-            saved_accessions.extend(new_assembly_accessions)
-
-        if not saved_accessions:
+        if not output_files_paths:
             logger.warning(
-                "import_assemblies_from_accessions: no assemblies saved from %s batches.",
+                "import_assemblies_from_accessions: no JSONL produced from %s batches.",
                 len(batches),
             )
+            return {
+                "batches": len(batches),
+                "assemblies_saved": 0,
+                "status": "no_output",
+            }
 
-        biosample_accessions = Assembly.objects(
-            accession__in=saved_accessions
-        ).scalar("sample_accession")
-        saved_biosample_accessions = handle_biosamples_from_accessions(
-            biosample_accessions, TMP_DIR
+        result = _run_assembly_import_pipeline(
+            output_files_paths,
+            context_label="accessions_import",
         )
-
-        assembly_taxids = Assembly.objects(accession__in=saved_accessions).scalar(
-            "taxid"
-        )
-        saved_organism_taxids = handle_full_taxonomy_from_taxids(
-            assembly_taxids, TMP_DIR, fetch_tolid_prefixes_sync=False
-        )
-
-        reload_organisms_and_update_deps(saved_organism_taxids)
-        removed = delete_rows_without_organism(Assembly, "accession", saved_accessions)
-        if removed:
-            logger.info(
-                "Removed %s assembly/assemblies with no Organism after taxonomy import",
-                removed,
-            )
-        surviving = surviving_taxids_after_cleanup(
-            Assembly, "accession", saved_accessions
-        )
-        if surviving:
-            sync_many_taxids(surviving)
-        update_geolocations(saved_biosample_accessions)
-
-        if saved_organism_taxids:
-            fetch_tolid_prefixes_task.delay(list(saved_organism_taxids))
 
         logger.info(
-            "Accession import finished: %s assemblies saved.", len(saved_accessions)
+            "Accession import finished: %s new assemblies inserted.",
+            len(result["saved_assembly_accessions"]),
         )
         return {
             "batches": len(batches),
-            "assemblies_saved": len(saved_accessions),
-            "status": "ok",
+            "assemblies_saved": len(result["saved_assembly_accessions"]),
+            "status": result["status"],
         }
     except Exception:
         logger.exception("import_assemblies_from_accessions failed")
         raise
     finally:
         for path in temp_paths:
-            _safe_remove(path)
-
-
-## update chromosome list to assemblies
-@shared_task(name="link_chromosomes", ignore_result=False)
-def link_chromosomes() -> Dict[str, int]:
-    linked = 0
-    errors = 0
-    assemblies_accession_list = Assembly.objects(chromosomes__size=0)
-    for assembly in assemblies_accession_list:
-        try:
-            related_chromosomes = Chromosome.objects(
-                metadata__assembly_accession=assembly.accession
-            ).scalar("accession_version")
-            if not related_chromosomes:
-                continue
-            assembly.chromosomes = related_chromosomes
-            assembly.save()
-            linked += 1
-        except Exception:
-            errors += 1
-            logger.exception(
-                "link_chromosomes: failed for assembly %s", getattr(assembly, "accession", "?")
-            )
-    if errors:
-        logger.warning("link_chromosomes completed with %s error(s), %s linked.", errors, linked)
-    else:
-        logger.info("link_chromosomes: linked chromosomes for %s assemblies.", linked)
-    return {"linked": linked, "errors": errors}
-
-
-@shared_task(name="assemblies_blob_link", ignore_result=False)
-def add_blob_link() -> Dict[str, int]:
-    updated = 0
-    errors = 0
-    assemblies_accession_list = Assembly.objects(blobtoolkit_id=None).scalar("accession")
-    for acc in assemblies_accession_list:
-        try:
-            response = get_blobtoolkit_id(acc)
-            first = response[0] if response else None
-            names = first.get("names") if isinstance(first, dict) else None
-            if not names:
-                continue
-            ass = Assembly.objects(accession=acc).first()
-            if ass is None:
-                logger.warning("add_blob_link: assembly %s not found in DB", acc)
-                continue
-            ass.blobtoolkit_id = names[0]
-            ass.save()
-            updated += 1
-        except Exception:
-            errors += 1
-            logger.exception("add_blob_link: failed for accession %s", acc)
-    if errors:
-        logger.warning(
-            "add_blob_link completed with %s error(s), %s updated.", errors, updated
-        )
-    else:
-        logger.info("add_blob_link: set blobtoolkit_id for %s assemblies.", updated)
-    return {"updated": updated, "errors": errors}
+            safe_remove_file(path)

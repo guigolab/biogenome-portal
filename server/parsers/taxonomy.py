@@ -1,4 +1,4 @@
-from db.models import TaxonNode
+from db.model import TaxonNode
 from lxml import etree
 
 

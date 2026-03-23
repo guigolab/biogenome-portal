@@ -1,12 +1,6 @@
-from db.models import BioGenomeUser
+from db.model import BioGenomeUser
 from db.enums import Roles
 from flask_jwt_extended import get_jwt
-
-def get_species_by_user_name(username):
-    user_object = BioGenomeUser.objects(name=username).first()
-    if user_object:
-        return user_object.species
-    return []
 
 def get_current_user():
     claims = get_jwt()

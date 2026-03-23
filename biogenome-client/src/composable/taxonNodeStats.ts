@@ -8,7 +8,6 @@ const TAXON_COUNT_TO_MODEL: { field: string; key: DataModels }[] = [
    { field: 'biosamples_count', key: 'biosamples' },
    { field: 'local_samples_count', key: 'local_samples' },
    { field: 'genome_annotations_count', key: 'annotations' },
-   { field: 'submitted_biosamples_count', key: 'submitted_biosamples' },
 ]
 
 export type PortalStatRow = { key: DataModels; count: number }

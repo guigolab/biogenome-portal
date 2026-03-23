@@ -6,9 +6,9 @@ from typing import Any, Dict, List, Optional
 
 from celery import shared_task
 
-from db.models import Organism  # noqa: F401 — loads signal handlers via db.signals
-from helpers.organism import fetch_tolid_prefixes
-from helpers.taxon_organism_sync import sync_many_taxids
+from db.model import Organism
+from jobs.support.tolid_prefixes import fetch_tolid_prefixes
+from jobs.support.organism_catalog_sync import finalize_organism_catalog_for_taxids
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ def backfill_organism_related_counts(batch_size: int = 1000) -> Dict[str, Any]:
     """
     Recompute and persist denormalized related-data counters/statuses on Organism.
 
-    Uses ``sync_many_taxids`` (batched Organism.save → pre_save/post_save + TaxonNode counts).
+    Uses ``jobs.support.organism_catalog_sync.finalize_organism_catalog_for_taxids``.
     """
     taxids = [str(t) for t in Organism.objects().scalar("taxid") if t]
     if not taxids:
@@ -55,7 +55,7 @@ def backfill_organism_related_counts(batch_size: int = 1000) -> Dict[str, Any]:
     batch_size = max(int(batch_size), 1)
     for i in range(0, total, batch_size):
         batch = taxids[i : i + batch_size]
-        sync_many_taxids(batch)
+        finalize_organism_catalog_for_taxids(batch, copy_lineages=False)
         processed += len(batch)
         logger.info(
             "organisms.backfill_related_counts: processed %s/%s",

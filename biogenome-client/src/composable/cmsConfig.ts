@@ -14,7 +14,6 @@ export const config: Record<DataModels, Config> = {
       description: 'Edit or delete genome annotations',
       idField: 'name',
       columns: ['name', 'scientific_name', 'assembly_name', 'view', 'edit', 'delete'],
-      editRoute: (rowData: any) => ({ name: 'update-annotation', params: { name: rowData.name } }),
    },
    assemblies: {
       title: 'Assemblies',

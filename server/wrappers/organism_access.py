@@ -3,7 +3,7 @@ from flask_jwt_extended import verify_jwt_in_request
 from functools import wraps
 from flask import Response
 import json
-from db.models import BioGenomeUser
+from db.model import BioGenomeUser
 
 def organism_access_required():
     def wrapper(fn):

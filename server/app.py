@@ -4,9 +4,10 @@ from flask_jwt_extended import exceptions
 from config import BaseConfig
 from werkzeug.exceptions import Unauthorized
 
-from rest import initialize_api
+from routes import initialize_api
 from flask_jwt_extended import JWTManager,get_jwt, create_access_token, get_jwt_identity, set_access_cookies
-from db.models import BioGenomeUser, CronJob,Roles
+from db.enums import Roles
+from db.model import BioGenomeUser, Assembly, BioSample, Chromosome, Experiment, GenomeAnnotation, LocalSample, Organism, Read, ReadRun, SampleCoordinates, TaxonNode
 from tendo.singleton import SingleInstance
 from flask_mongoengine import MongoEngine
 from datetime import datetime,timedelta,timezone
@@ -79,14 +80,22 @@ password = os.getenv('DB_PASS')
 
 try:
     FIRST_START = SingleInstance()
+    #drop collections
+    # if os.getenv('DEV') == 'true':
+    #     Assembly.drop_collection()
+    #     BioSample.drop_collection()
+    #     Chromosome.drop_collection()
+    #     ReadRun.drop_collection()
+    #     GenomeAnnotation.drop_collection()
+    #     LocalSample.drop_collection()
+    #     Organism.drop_collection()
+    #     SampleCoordinates.drop_collection()
+    #     TaxonNode.drop_collection()
+
     ##create root user if does not exist
     user = BioGenomeUser.objects(name = username).first()
     if not user:
         BioGenomeUser(name = username, password = password, role= Roles.DATA_ADMIN).save()
-
-    cronjobs = CronJob.objects().count()
-    if cronjobs:
-        CronJob.drop_collection()
 
 except:
     pass

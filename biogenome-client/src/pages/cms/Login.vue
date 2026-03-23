@@ -4,14 +4,20 @@
          <div class="flex lg6 md6 sm12 xs12">
             <h1 class="va-h1">Login</h1>
             <VaCard>
-               <VaForm tag="form" @submit.prevent="handleSubmit">
+               <VaForm tag="form" id="portal-login-form" autocomplete="on" @submit.prevent="handleSubmit">
                   <VaCardContent>
                      <div class="row">
                         <div class="flex lg12 md12 sm12 xs12">
-                           <VaInput v-model="name" label="username"> </VaInput>
+                           <VaInput v-model="name" label="username" name="login-username" autocomplete="username" />
                         </div>
                         <div class="flex lg12 md12 sm12 xs12">
-                           <VaInput v-model="password" label="password" :type="inputType">
+                           <VaInput
+                              v-model="password"
+                              label="password"
+                              :type="inputType"
+                              name="login-password"
+                              autocomplete="current-password"
+                           >
                               <template #appendInner>
                                  <VaIcon
                                     :name="inputType === 'password' ? 'visibility' : 'visibility_off'"

@@ -1,17 +1,18 @@
-import json
+from __future__ import annotations
+
 import logging
 import os
+import tempfile
+from typing import Any, Dict, Optional
 
 from celery import shared_task
 from pymongo import UpdateOne
 
-from db.models import (
-    Assembly,
-    BioSample,
-    ReadRun,
-    LocalSample,
+from helpers.rest_catalog_sync import cascade_delete_organism
+from jobs.support.organism_catalog_sync import finalize_organism_catalog_for_taxids
+from jobs.support.taxonomy_refresh import run_taxonomy_refresh
+from db.model import (
     Organism,
-    SampleCoordinates,
     TaxonNode,
 )
 from helpers import taxonomy as taxonomy_helper
@@ -24,37 +25,33 @@ ROOT_NODE = os.getenv("ROOT_NODE")
 # Batch bulk_write / count refreshes to bound memory and BSON op size.
 PARENT_BACKFILL_BULK_SIZE = int(os.getenv("TAXON_PARENT_BACKFILL_BULK", "1000"))
 COUNTS_REFRESH_BATCH = int(os.getenv("TAXON_COUNTS_REFRESH_BATCH", "3000"))
-UNSET_LEAVES_BULK_SIZE = int(os.getenv("TAXON_UNSET_LEAVES_BULK", "2000"))
+# Batched $unset of legacy TaxonNode fields (also honors deprecated TAXON_UNSET_LEAVES_BULK).
+UNSET_TAXON_LEGACY_FIELDS_BULK_SIZE = int(
+    os.getenv(
+        "TAXON_UNSET_LEGACY_FIELDS_BULK",
+        os.getenv("TAXON_UNSET_LEAVES_BULK", "2000"),
+    )
+)
+
+_TAXON_NODE_LEGACY_FIELDS_UNSET = {"leaves": "", "submitted_biosamples_count": ""}
+
+_TAXON_NODE_HAS_LEGACY_FIELD_QUERY = {
+    "$or": [
+        {"leaves": {"$exists": True}},
+        {"submitted_biosamples_count": {"$exists": True}},
+    ],
+}
 
 @shared_task(name='helpers_handle_orphans', ignore_result=False)
 def handle_orphan_organisms():
-    orphans = Organism.objects(insdc_status=None)
-    for orphan in orphans:
-        orphan.save()
-        if not orphan.insdc_status:
-            orphan.delete()
-
-@shared_task(name='helpers_add_lineage', ignore_result=False)
-def add_lineage():
-    organism = None
-    coordinates = SampleCoordinates.objects()
-    for coord in coordinates:
-        taxid = coord.taxid
-        if not organism or organism.taxid != taxid:
-            organism = Organism.objects(taxid=taxid).first()
-            if not organism: 
-                continue
-        coord.update(lineage=organism.taxon_lineage)
-    for model in [Assembly, ReadRun, BioSample, LocalSample]:
-        objects = model.objects()
-        for obj in objects:
-            taxid = obj.taxid
-            if not organism or organism.taxid != taxid:
-                organism = Organism.objects(taxid=taxid).first()
-                if not organism: 
-                    continue
-            obj.update(taxon_lineage=organism.taxon_lineage)
-
+    orphans = list(Organism.objects(insdc_status=None))
+    taxids = [str(o.taxid) for o in orphans if o.taxid]
+    if taxids:
+        finalize_organism_catalog_for_taxids(taxids, copy_lineages=False)
+    for tid in taxids:
+        org = Organism.objects(taxid=tid).first()
+        if org and not org.insdc_status:
+            cascade_delete_organism(org)
 
 def _build_child_to_parent_taxid_map():
     """
@@ -101,11 +98,11 @@ def backfill_taxon_parents_and_refresh_counts(
     Backfill TaxonNode.parent (parent taxid) for nodes where it is missing, using the
     inverse of the `children` edges already stored on taxon documents.
 
-    Then refreshes TaxonNode.leaves and denormalized resource counts via
-    bulk_refresh_taxon_node_leaves / update_taxon_node_counts_for_taxids.
+    Then refreshes denormalized TaxonNode resource counts via
+    ``update_taxon_node_counts_for_taxids``.
 
-    :param refresh_all_counts: If True (default), recompute leaves + counts for every
-        taxon node. If False, only nodes that received a new parent are refreshed.
+    :param refresh_all_counts: If True (default), recompute counts for every taxon node.
+        If False, only nodes that received a new parent are refreshed.
     """
     child_to_parent = _build_child_to_parent_taxid_map()
     coll = TaxonNode._get_collection()
@@ -160,14 +157,13 @@ def backfill_taxon_parents_and_refresh_counts(
 
     refreshed = 0
     for batch in create_batches(to_refresh, COUNTS_REFRESH_BATCH):
-        taxonomy_helper.bulk_refresh_taxon_node_leaves(batch, chunk_size=COUNTS_REFRESH_BATCH)
         taxonomy_helper.update_taxon_node_counts_for_taxids(
             batch, chunk_size=COUNTS_REFRESH_BATCH
         )
         refreshed += len(batch)
 
     logger.info(
-        "Refreshed leaves and counts for %d taxon id(s) (scope=%s)",
+        "Refreshed TaxonNode counts for %d taxon id(s) (scope=%s)",
         refreshed,
         "all" if refresh_all_counts else "updated",
     )
@@ -179,37 +175,49 @@ def backfill_taxon_parents_and_refresh_counts(
     }
 
 
-@shared_task(name="helpers_unset_taxon_node_leaves", ignore_result=False)
-def unset_taxon_node_leaves_field():
+@shared_task(name="helpers_unset_taxon_node_legacy_fields", ignore_result=False)
+def unset_taxon_node_legacy_fields():
     """
-    Remove the legacy `leaves` field from TaxonNode documents (MongoDB $unset).
+    Remove legacy TaxonNode fields via MongoDB ``$unset``:
 
-    Use after the API and refresh logic rely on `organisms_count` instead of `leaves`.
-    Does not touch other collections (e.g. BioProject also has a `leaves` field).
+    - ``leaves`` (superseded by aggregate counts / ``organisms_count`` in API logic).
+    - ``submitted_biosamples_count`` (legacy denormalized counter).
+
+    Only touches the ``TaxonNode`` collection (not e.g. BioProject ``leaves``).
     """
     coll = TaxonNode._get_collection()
-    remaining = coll.count_documents({"leaves": {"$exists": True}})
-    if remaining == 0:
-        logger.info("TaxonNode: no documents with `leaves`; nothing to do")
-        return {"unset_batches": 0, "documents_updated": 0, "had_leaves": 0}
+    matched = coll.count_documents(_TAXON_NODE_HAS_LEGACY_FIELD_QUERY)
+    if matched == 0:
+        logger.info(
+            "TaxonNode: no documents with `leaves` or `submitted_biosamples_count`; nothing to do"
+        )
+        return {
+            "unset_batches": 0,
+            "documents_updated": 0,
+            "matched_initially": 0,
+            "remaining_with_leaves": 0,
+            "remaining_submitted_biosamples_count": 0,
+        }
 
     batches = 0
     documents_updated = 0
     cursor = coll.find(
-        {"leaves": {"$exists": True}},
+        _TAXON_NODE_HAS_LEGACY_FIELD_QUERY,
         {"_id": 1},
-        batch_size=UNSET_LEAVES_BULK_SIZE,
+        batch_size=UNSET_TAXON_LEGACY_FIELDS_BULK_SIZE,
     )
     ops: list = []
     for doc in cursor:
-        ops.append(UpdateOne({"_id": doc["_id"]}, {"$unset": {"leaves": ""}}))
-        if len(ops) >= UNSET_LEAVES_BULK_SIZE:
+        ops.append(
+            UpdateOne({"_id": doc["_id"]}, {"$unset": _TAXON_NODE_LEGACY_FIELDS_UNSET})
+        )
+        if len(ops) >= UNSET_TAXON_LEGACY_FIELDS_BULK_SIZE:
             coll.bulk_write(ops, ordered=False)
             documents_updated += len(ops)
             batches += 1
             ops.clear()
             logger.info(
-                "TaxonNode: unset `leaves` batch %d (%d document(s) this run so far)",
+                "TaxonNode: unset legacy fields batch %d (%d document(s) this run so far)",
                 batches,
                 documents_updated,
             )
@@ -218,17 +226,36 @@ def unset_taxon_node_leaves_field():
         documents_updated += len(ops)
         batches += 1
 
-    still = coll.count_documents({"leaves": {"$exists": True}})
+    still_leaves = coll.count_documents({"leaves": {"$exists": True}})
+    still_submitted = coll.count_documents(
+        {"submitted_biosamples_count": {"$exists": True}}
+    )
     logger.info(
-        "TaxonNode: finished unsetting `leaves` (%d batch(es), %d update(s)); %d still had field (should be 0)",
+        "TaxonNode: finished unsetting legacy fields (%d batch(es), %d update(s)); "
+        "remaining leaves=%d, submitted_biosamples_count=%d (both should be 0)",
         batches,
         documents_updated,
-        still,
+        still_leaves,
+        still_submitted,
     )
     return {
         "unset_batches": batches,
         "documents_updated": documents_updated,
-        "had_leaves": remaining,
-        "remaining_with_leaves": still,
+        "matched_initially": matched,
+        "remaining_with_leaves": still_leaves,
+        "remaining_submitted_biosamples_count": still_submitted,
     }
+
+
+@shared_task(name="helpers_refresh_taxonomy", ignore_result=False)
+def refresh_taxonomy_recurrent(tmp_dir: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Re-fetch taxonomy from ENA for all organisms and taxons, detect changes,
+    update organisms and related models (Assembly, BioSample, LocalSample,
+    ReadRun, GenomeAnnotation, SampleCoordinates), refresh TaxonNode
+    relationships and counts.
+    """
+    if tmp_dir is None:
+        tmp_dir = os.getenv("TMP_DIR", tempfile.gettempdir())
+    return run_taxonomy_refresh(tmp_dir)
 

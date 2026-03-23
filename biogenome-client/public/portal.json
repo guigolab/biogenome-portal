@@ -30,6 +30,29 @@
          }
       }
    },
+   "cms": {
+      "organisms": {
+         "form": {
+            "steps": [
+               {
+                  "id": "goatStatus",
+                  "required": true,
+                  "enabled": true
+               },
+               {
+                  "id": "piOrEntity",
+                  "required": true,
+                  "enabled": true
+               },
+               {
+                  "id": "images",
+                  "required": false,
+                  "enabled": true
+               }
+            ]
+         }
+      }
+   },
    "models": {
       "organisms": {
          "label": { "en": "Organisms", "es-ct": "Organismes" },

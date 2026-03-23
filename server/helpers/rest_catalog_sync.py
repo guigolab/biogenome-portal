@@ -1,0 +1,247 @@
+"""
+REST-triggered catalog sync and cascading deletes (replaces removed MongoEngine signals).
+
+Call these helpers from REST services (and from other code paths such as Celery tasks) after
+catalog writes or when performing deletes that used to rely on ``post_delete`` handlers.
+
+**Breaking change:** Any code that still calls ``.save()`` or ``.delete()`` on catalog models
+without invoking the appropriate function here will not refresh Organism denormalized fields,
+TaxonNode aggregates, or run cascade deletes until it is updated.
+
+Celery tasks and maintenance scripts that delete catalog rows directly should call the
+relevant cascade helper (e.g. ``cascade_delete_experiment`` when removing a legacy
+``Experiment`` document) instead of bare ``.delete()`` where parity with the old signal
+handlers matters. Read-level data lives in ``ReadRun``.
+"""
+
+from __future__ import annotations
+
+import datetime
+from typing import Any, Iterable, Optional, Union
+
+from db.constants import GOAT_PROJECT_NAME
+from db.model import (
+    Assembly,
+    BioGenomeUser,
+    BioSample,
+    Chromosome,
+    GenomeAnnotation,
+    GoaTUpdateDate,
+    LocalSample,
+    Organism,
+    Read,
+    ReadRun,
+    SampleCoordinates,
+    TaxonNode,
+)
+
+from helpers import taxonomy as taxonomy_helper
+from helpers.organism_denorm_pure import (
+    MergeContext,
+    RelatedCounts,
+    derive_organism_denorm,
+)
+
+
+def fetch_related_counts(taxid: str) -> RelatedCounts:
+    return RelatedCounts(
+        assemblies=Assembly.objects(taxid=taxid).count(),
+        reads=ReadRun.objects(taxid=taxid).count(),
+        biosamples=BioSample.objects(taxid=taxid).count(),
+        local_samples=LocalSample.objects(taxid=taxid).count(),
+        genome_annotations=GenomeAnnotation.objects(taxid=taxid).count(),
+    )
+
+
+def _touch_goat_update_date(taxid: str, when: datetime.datetime) -> None:
+    """Persist GoaT last-updated timestamp."""
+    GoaTUpdateDate.objects(taxid=taxid).update_one(
+        set__updated=when,
+        set__taxid=taxid,
+        upsert=True,
+    )
+
+
+def refresh_organism_status_fields(
+    document: Any,
+    counts: RelatedCounts,
+    *,
+    goat_project_name: Optional[str],
+    now: Optional[datetime.datetime] = None,
+    apply_goat_inference: bool = True,
+    merge_context: MergeContext = "default",
+) -> None:
+    """
+    Mutate document (Organism) in place before ``save()``.
+
+    When ``apply_goat_inference`` is False, counts and ``insdc_status`` still update;
+    GoaT inference is skipped. Inference also does nothing when ``goat_project_name``
+    is unset (no ``GOAT_PROJECT_NAME`` env).
+    """
+    derived = derive_organism_denorm(
+        counts,
+        current_goat_status=getattr(document, "goat_status", None),
+        has_publications=bool(getattr(document, "publications", None)),
+        goat_project_name=goat_project_name,
+        apply_goat_inference=apply_goat_inference,
+        merge_context=merge_context,
+    )
+    document.assemblies_count = derived.assemblies_count
+    document.reads_count = derived.reads_count
+    document.biosamples_count = derived.biosamples_count
+    document.local_samples_count = derived.local_samples_count
+    document.genome_annotations_count = derived.genome_annotations_count
+    document.insdc_status = derived.insdc_status
+    if derived.update_goat_field and derived.goat_status is not None:
+        document.goat_status = derived.goat_status
+    if derived.touch_goat_update_date:
+        when = now or datetime.datetime.now()
+        _touch_goat_update_date(document.taxid, when)
+
+
+def refresh_taxon_counts_for_taxid_lineage(
+    taxid: str, lineage_fallback: Optional[Iterable[str]] = None
+) -> None:
+    """Recompute TaxonNode aggregates for this taxid and ancestors; prefer DB lineage."""
+    tid = str(taxid)
+    org = Organism.objects(taxid=tid).only("taxon_lineage").first()
+    lineage = (org.taxon_lineage if org and org.taxon_lineage else None) or lineage_fallback
+    taxonomy_helper.refresh_taxon_counts_for_lineage(tid, lineage)
+
+
+def reconcile_taxon_lineage_after_organism_delete(taxon_nodes) -> None:
+    """
+    After the last Organism for a branch is removed: refresh TaxonNode counts and
+    prune nodes with zero organisms_count.
+    """
+    nodes = list(taxon_nodes)
+    if not nodes:
+        return
+
+    tax_ids = sorted({str(n.taxid) for n in nodes if getattr(n, "taxid", None)})
+    if not tax_ids:
+        return
+
+    taxonomy_helper.update_taxon_node_counts_for_taxids(tax_ids)
+
+    for node in TaxonNode.objects(taxid__in=tax_ids):
+        if (node.organisms_count or 0) != 0:
+            continue
+        TaxonNode.objects(children=node.taxid).update(pull__children=node.taxid)
+        node.delete()
+
+
+def refresh_organism_status_for_taxid(
+    taxid: Union[str, int],
+    *,
+    apply_goat_inference: bool = True,
+    merge_context: MergeContext = "default",
+) -> None:
+    """Recompute INSDC/GoaT-related fields and counters on the species Organism document."""
+    tid = str(taxid)
+    organism = Organism.objects(taxid=tid).first()
+    if not organism:
+        return
+    counts = fetch_related_counts(tid)
+    refresh_organism_status_fields(
+        organism,
+        counts,
+        goat_project_name=GOAT_PROJECT_NAME,
+        apply_goat_inference=apply_goat_inference,
+        merge_context=merge_context,
+    )
+    organism.save()
+
+
+def refresh_taxon_counts_for_species(
+    taxid: Union[str, int, None],
+    taxon_lineage_fallback: Optional[Iterable[str]] = None,
+) -> None:
+    """Recompute TaxonNode aggregates for this taxid and ancestors."""
+    if taxid is None:
+        return
+    refresh_taxon_counts_for_taxid_lineage(str(taxid), taxon_lineage_fallback)
+
+
+def sync_species_after_catalog_change(
+    taxid: Union[str, int, None],
+    taxon_lineage_fallback: Optional[Iterable[str]] = None,
+    *,
+    apply_goat_inference: bool = True,
+    merge_context: MergeContext = "default",
+) -> None:
+    """
+    After a catalog row is created, updated, or deleted: refresh that species' Organism
+    (denormalized counts + status) and TaxonNode roll-ups.
+    """
+    if taxid is None:
+        return
+    tid = str(taxid)
+    refresh_organism_status_for_taxid(
+        tid,
+        apply_goat_inference=apply_goat_inference,
+        merge_context=merge_context,
+    )
+    refresh_taxon_counts_for_species(tid, taxon_lineage_fallback)
+
+
+def cascade_delete_assembly(assembly) -> None:
+    taxid = assembly.taxid
+    taxon_lineage = getattr(assembly, "taxon_lineage", None)
+    accession = assembly.accession
+    chromosomes = assembly.chromosomes
+    assembly.delete()
+    if chromosomes:
+        Chromosome.objects(accession_version__in=chromosomes).delete()
+    GenomeAnnotation._get_collection().delete_many({"assembly_accession": accession})
+    sync_species_after_catalog_change(taxid, taxon_lineage)
+
+
+def cascade_delete_biosample(biosample) -> None:
+    taxid = biosample.taxid
+    taxon_lineage = biosample.taxon_lineage
+    accession = biosample.accession
+    biosample.delete()
+    Assembly.objects(sample_accession=accession).delete()
+    SampleCoordinates.objects(sample_accession=accession).delete()
+    ReadRun.objects(sample_accession=accession).delete()
+    sync_species_after_catalog_change(taxid, taxon_lineage)
+
+
+def cascade_delete_local_sample(local_sample) -> None:
+    taxid = local_sample.taxid
+    taxon_lineage = local_sample.taxon_lineage
+    local_id = local_sample.local_id
+    local_sample.delete()
+    SampleCoordinates.objects(sample_accession=local_id).delete()
+    sync_species_after_catalog_change(taxid, taxon_lineage)
+
+
+def cascade_delete_organism(organism) -> None:
+    taxid = str(organism.taxid)
+    lineage = list(organism.taxon_lineage) if organism.taxon_lineage else []
+    organism.delete()
+    assemblies = Assembly.objects(taxid=taxid)
+    #delete related chromosomes
+    for assembly in assemblies:
+        Chromosome.objects(accession_version__in=assembly.chromosomes).delete()
+    Assembly.objects(taxid=taxid).delete()
+
+    GenomeAnnotation.objects(taxid=taxid).delete()
+    ReadRun.objects(taxid=taxid).delete()
+    LocalSample.objects(taxid=taxid).delete()
+    BioSample.objects(taxid=taxid).delete()
+    BioGenomeUser.objects(species=taxid).update(pull__species=taxid)
+    taxons = TaxonNode.objects(taxid__in=lineage)
+    reconcile_taxon_lineage_after_organism_delete(taxons)
+
+
+def cascade_delete_experiment(experiment) -> None:
+    """Delete the Experiment document, dependent Read rows, and refresh species aggregates."""
+    taxid = experiment.taxid
+    taxon_lineage = getattr(experiment, "taxon_lineage", None)
+    exp_acc = experiment.experiment_accession
+    experiment.delete()
+    if exp_acc:
+        Read.objects(experiment_accession=exp_acc).delete()
+    sync_species_after_catalog_change(taxid, taxon_lineage)

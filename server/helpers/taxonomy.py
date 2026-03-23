@@ -1,16 +1,38 @@
-from db.documents import (
+from db.model import (
     Assembly,
     BioSample,
-    BioSampleSubmission,
     GenomeAnnotation,
     LocalSample,
     Organism,
     ReadRun,
     TaxonNode,
 )
-from db.enums import Roles
-from typing import Any, Dict, Iterable, List
+from typing import Any, Dict, Iterable, List, Optional, Set, Union
 from pymongo import UpdateOne
+
+
+def _taxid_match_values(chunk: List[str]) -> List[Union[str, int]]:
+    """
+    Catalog docs may store ``taxid`` as BSON string or int; numeric IDs need both in ``$in``.
+    """
+    out: List[Union[str, int]] = []
+    seen_str: Set[str] = set()
+    seen_int: Set[int] = set()
+    for v in chunk:
+        s = str(v).strip() if v is not None else ""
+        if not s or s in seen_str:
+            continue
+        seen_str.add(s)
+        out.append(s)
+        if s.isdigit():
+            try:
+                n = int(s)
+                if n not in seen_int:
+                    seen_int.add(n)
+                    out.append(n)
+            except ValueError:
+                pass
+    return out
 
 
 def _organism_counts_by_lineage_taxids(tax_ids: List[str], chunk_size: int) -> Dict[str, int]:
@@ -23,10 +45,11 @@ def _organism_counts_by_lineage_taxids(tax_ids: List[str], chunk_size: int) -> D
 
     for i in range(0, len(tax_ids), chunk_size):
         chunk = tax_ids[i : i + chunk_size]
+        expanded = _taxid_match_values(chunk)
         pipeline = [
-            {"$match": {"taxon_lineage": {"$in": chunk}}},
+            {"$match": {"taxon_lineage": {"$in": expanded}}},
             {"$unwind": "$taxon_lineage"},
-            {"$match": {"taxon_lineage": {"$in": chunk}}},
+            {"$match": {"taxon_lineage": {"$in": expanded}}},
             {
                 "$group": {
                     "_id": {"$toString": "$taxon_lineage"},
@@ -35,7 +58,8 @@ def _organism_counts_by_lineage_taxids(tax_ids: List[str], chunk_size: int) -> D
             },
         ]
         for row in org_coll.aggregate(pipeline):
-            counts[str(row["_id"])] = row["cnt"]
+            k = str(row["_id"])
+            counts[k] = counts.get(k, 0) + int(row["cnt"])
     return counts
 
 
@@ -49,106 +73,70 @@ def _counts_grouped_by_taxid_field(
     out: Dict[str, int] = {}
     for i in range(0, len(tax_ids), chunk_size):
         chunk = tax_ids[i : i + chunk_size]
+        expanded = _taxid_match_values(chunk)
         pipeline = [
-            {"$match": {field: {"$in": chunk}}},
+            {"$match": {field: {"$in": expanded}}},
             {"$group": {"_id": f"${field}", "cnt": {"$sum": 1}}},
         ]
         for row in collection.aggregate(pipeline):
             if row["_id"] is not None:
-                out[str(row["_id"])] = row["cnt"]
+                k = str(row["_id"])
+                out[k] = out.get(k, 0) + int(row["cnt"])
     return out
 
 
-def bulk_refresh_taxon_node_leaves(
-    taxids: Iterable[str],
-    chunk_size: int = 3000,
-) -> None:
+def _resource_counts_by_lineage_taxids(
+    collection: Any,
+    tax_ids: List[str],
+    chunk_size: int,
+) -> Dict[str, int]:
     """
-    Recompute TaxonNode.leaves in bulk: for each taxid, set leaves to the number of
-    Organism documents whose taxon_lineage contains that taxid.
+    For each taxid T, count catalog documents that roll up to T on the taxon tree:
 
-    Uses one aggregation scan per chunk of taxids (bounded $in size) plus a single
-    bulk_write to TaxonNode — avoids N per-taxon count queries.
-
-    Call after inserting organisms/taxa so tree counts stay consistent with
-    count_leaves() / update_taxon_hierarchy().
+    - Documents with ``taxon_lineage`` containing T (same unwind pattern as
+      ``_organism_counts_by_lineage_taxids``), so ancestor nodes get non-zero
+      assemblies / reads / biosamples / etc.
+    - Documents with missing or empty ``taxon_lineage`` but ``taxid`` in the
+      chunk (legacy or pre-reload rows), counted once on their species taxid.
     """
-    tax_ids: List[str] = sorted({str(t) for t in taxids if t is not None})
-    if not tax_ids:
-        return
+    counts: Dict[str, int] = {}
+    for i in range(0, len(tax_ids), chunk_size):
+        chunk = tax_ids[i : i + chunk_size]
+        expanded = _taxid_match_values(chunk)
+        lineage_pipeline = [
+            {"$match": {"taxon_lineage": {"$in": expanded}}},
+            {"$unwind": "$taxon_lineage"},
+            {"$match": {"taxon_lineage": {"$in": expanded}}},
+            {
+                "$group": {
+                    "_id": {"$toString": "$taxon_lineage"},
+                    "cnt": {"$sum": 1},
+                }
+            },
+        ]
+        for row in collection.aggregate(lineage_pipeline):
+            if row["_id"] is not None:
+                tid = str(row["_id"])
+                counts[tid] = counts.get(tid, 0) + int(row["cnt"])
 
-    counts = _organism_counts_by_lineage_taxids(tax_ids, chunk_size)
-
-    node_coll = TaxonNode._get_collection()
-    ops: List[UpdateOne] = [
-        UpdateOne(
-            {"taxid": tid},
-            {"$set": {"leaves": counts.get(tid, 0)}},
-        )
-        for tid in tax_ids
-    ]
-    if ops:
-        node_coll.bulk_write(ops, ordered=False)
-
-def save_taxons_and_update_hierachy(parsed_taxons, organism_obj):
-    save_parsed_taxons(parsed_taxons)
-    ordered_nodes = get_and_order_saved_taxon_nodes(organism_obj)
-    update_taxon_hierarchy(ordered_nodes)
-    
-
-def save_parsed_taxons(parsed_taxons):
-    existing_taxids = TaxonNode.objects(taxid__in=[t.taxid for t in parsed_taxons]).scalar('taxid')
-    taxons_to_save = [taxon for taxon in parsed_taxons if taxon.taxid not in existing_taxids]
-    if taxons_to_save:
-        TaxonNode.objects.insert(taxons_to_save)
-
-def check_species_permission(user, existing_taxids):
-    if user.role.value == Roles.DATA_ADMIN.value:
-        return []
-
-    return [check_user_permission_for_taxid(user, taxid) for taxid in existing_taxids if taxid not in user.species]
-
-
-def check_user_permission_for_taxid(user, taxid):
-    if taxid not in user.species:
-        return f"The organism {taxid} already exists in the db and you don't have the rights to modify it!"
-    return None
-
-def get_and_order_saved_taxon_nodes(organism_obj):
-    taxon_lineage = organism_obj.taxon_lineage
-    # Retrieve the taxon nodes from the database
-    taxon_nodes = TaxonNode.objects(taxid__in=taxon_lineage)
-    
-    # Create a dictionary for quick lookup
-    taxon_node_dict = {node.taxid: node for node in taxon_nodes}
-    
-    # Order the taxon nodes based on the taxon_lineage
-    ordered_taxon_list = [taxon_node_dict[taxid] for taxid in taxon_lineage if taxid in taxon_node_dict]
-
-    return ordered_taxon_list
-
-def get_ordered_taxons(taxids):
-    """
-    Reload taxons from database and return them ordered by lineage from species to root
-    """
-    reloaded_taxons = TaxonNode.objects(taxid__in=taxids)
-    taxon_map = {t.taxid: t for t in reloaded_taxons}
-    # Filter out any taxids that weren't found in the database
-    return [taxon_map[t] for t in taxids if t in taxon_map]
-
-
-def update_taxon_hierarchy(ordered_nodes):
-    for index in range(len(ordered_nodes) - 1):
-        child_taxon = ordered_nodes[index]
-        father_taxon = ordered_nodes[index + 1]
-        leaves = count_leaves(father_taxon)
-        father_taxon.modify(add_to_set__children=child_taxon.taxid, leaves=leaves)
-        child_taxon.modify(parent=father_taxon.taxid)
-
-
-def count_leaves(father_taxon):
-    """Number of organisms that include this taxid anywhere in taxon_lineage."""
-    return Organism.objects(taxon_lineage=father_taxon.taxid).count()
+        no_lineage_pipeline = [
+            {
+                "$match": {
+                    "taxid": {"$in": expanded},
+                    "$or": [
+                        {"taxon_lineage": {"$exists": False}},
+                        {"taxon_lineage": None},
+                        {"taxon_lineage": []},
+                    ],
+                }
+            },
+            {"$group": {"_id": {"$toString": "$taxid"}, "cnt": {"$sum": 1}}},
+        ]
+        for row in collection.aggregate(no_lineage_pipeline):
+            if row["_id"] is not None:
+                tid = str(row["_id"])
+                counts[tid] = counts.get(tid, 0) + int(row["cnt"])
+    return counts
 
 
 def _bulk_set_taxon_counts(tax_ids: List[str], chunk_size: int = 3000) -> None:
@@ -157,14 +145,21 @@ def _bulk_set_taxon_counts(tax_ids: List[str], chunk_size: int = 3000) -> None:
         return
 
     org_by_tid = _organism_counts_by_lineage_taxids(tax_ids, chunk_size)
-    asm_by_tid = _counts_grouped_by_taxid_field(Assembly._get_collection(), tax_ids, chunk_size)
-    reads_by_tid = _counts_grouped_by_taxid_field(ReadRun._get_collection(), tax_ids, chunk_size)
-    bio_by_tid = _counts_grouped_by_taxid_field(BioSample._get_collection(), tax_ids, chunk_size)
-    local_by_tid = _counts_grouped_by_taxid_field(LocalSample._get_collection(), tax_ids, chunk_size)
-    sub_by_tid = _counts_grouped_by_taxid_field(
-        BioSampleSubmission._get_collection(), tax_ids, chunk_size
+    asm_by_tid = _resource_counts_by_lineage_taxids(
+        Assembly._get_collection(), tax_ids, chunk_size
     )
-    ga_by_tid = _counts_grouped_by_taxid_field(GenomeAnnotation._get_collection(), tax_ids, chunk_size)
+    reads_by_tid = _resource_counts_by_lineage_taxids(
+        ReadRun._get_collection(), tax_ids, chunk_size
+    )
+    bio_by_tid = _resource_counts_by_lineage_taxids(
+        BioSample._get_collection(), tax_ids, chunk_size
+    )
+    local_by_tid = _resource_counts_by_lineage_taxids(
+        LocalSample._get_collection(), tax_ids, chunk_size
+    )
+    ga_by_tid = _resource_counts_by_lineage_taxids(
+        GenomeAnnotation._get_collection(), tax_ids, chunk_size
+    )
 
     node_coll = TaxonNode._get_collection()
     ops: List[UpdateOne] = [
@@ -177,7 +172,6 @@ def _bulk_set_taxon_counts(tax_ids: List[str], chunk_size: int = 3000) -> None:
                     "reads_count": reads_by_tid.get(tid, 0),
                     "biosamples_count": bio_by_tid.get(tid, 0),
                     "local_samples_count": local_by_tid.get(tid, 0),
-                    "submitted_biosamples_count": sub_by_tid.get(tid, 0),
                     "genome_annotations_count": ga_by_tid.get(tid, 0),
                 }
             },
@@ -201,21 +195,20 @@ def update_taxon_node_counts_for_taxids(
     _bulk_set_taxon_counts(ids, chunk_size)
 
 
-def update_taxon_nodes_counts(
-    taxon_nodes: Iterable[Any],
-    chunk_size: int = 3000,
+def refresh_taxon_counts_for_lineage(
+    primary_taxid: Optional[str],
+    taxon_lineage: Optional[Iterable[str]],
 ) -> None:
     """
-    Refresh denormalized counts on TaxonNode documents.
-
-    Replaces 8N count queries + N modify() with:
-    - a few aggregation pipelines (chunked $in) over each collection
-    - one unordered bulk_write for all nodes
-
-    Only taxids are materialized from taxon_nodes; counts are merged in memory as
-    small dicts (one int per taxid per metric), not full cursors.
+    Recompute TaxonNode aggregate fields for the species taxid and every ancestor taxid
+    in ``taxon_lineage``. Call after CRUD on resources tied to an organism lineage so tree
+    stats stay aligned with ``TaxonNode`` count fields.
     """
-    tax_ids: List[str] = sorted(
-        {str(n.taxid) for n in taxon_nodes if getattr(n, "taxid", None) is not None}
-    )
-    _bulk_set_taxon_counts(tax_ids, chunk_size)
+    keys: List[str] = []
+    if primary_taxid is not None and str(primary_taxid).strip():
+        keys.append(str(primary_taxid))
+    if taxon_lineage is not None:
+        keys.extend(str(t) for t in taxon_lineage if t is not None)
+    update_taxon_node_counts_for_taxids(keys)
+
+

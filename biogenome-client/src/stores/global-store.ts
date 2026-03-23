@@ -13,9 +13,9 @@ export const useGlobalStore = defineStore('global', {
          isSidebarVisible: true,
          userName: '',
          userRole: '',
+         userEmail: '',
          userSpecies: [] as string[],
          isAuthenticated: isAuth,
-         adminSidebar: false,
          language: lang,
          error: false,
          message: '',
@@ -26,6 +26,7 @@ export const useGlobalStore = defineStore('global', {
       mapUser(data: Record<string, any>) {
          this.userName = data.name
          this.userRole = data.role
+         this.userEmail = data.email ?? ''
          if (this.userRole !== 'Admin') this.userSpecies = data.species
          this.setAuth(true)
       },
@@ -67,6 +68,7 @@ export const useGlobalStore = defineStore('global', {
       clearAuthState() {
          this.userName = ''
          this.userRole = ''
+         this.userEmail = ''
          this.userSpecies = []
          this.setAuth(false)
       },

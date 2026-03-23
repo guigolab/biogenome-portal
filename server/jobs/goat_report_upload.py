@@ -1,29 +1,31 @@
+from __future__ import annotations
+
 import logging
 import os
 
-from db.models import Organism, BioGenomeUser, Publication
-from db.enums import GoaTStatus, PublicationSource
-from helpers import organism as organism_helper, user as user_helper
-from helpers.goat_report import (
+from celery import shared_task, states
+
+from db.constants import GOAT_PROJECT_NAME
+from db.model import BioGenomeUser, Organism
+from helpers import user as user_helper
+from helpers.upload_temp import safe_unlink
+from jobs.organisms import fetch_tolid_prefixes_task
+from jobs.support.organism_catalog_sync import (
+    bulk_apply_goat_report_updates,
+    finalize_organism_catalog_for_taxids,
+    import_missing_organisms_for_taxids,
+    species_upload_permission_errors,
+)
+from jobs.support.goat_report_file import (
     is_allowed_goat_upload_path,
     load_goat_report_rows_from_path,
-    safe_unlink,
+    map_rows,
+    validate_goat_report_rows,
 )
-from celery import shared_task, states
-from celery.exceptions import Ignore
 
 logger = logging.getLogger(__name__)
 
 TMP_DIR = os.getenv("TMP_DIR", "/tmp")
-
-GOAT_STATUS_IMPORT_MAPPER = {
-    "sample_collected": GoaTStatus.SAMPLE_COLLECTED.value,
-    "sample_acquired": GoaTStatus.SAMPLE_ACQUIRED.value,
-    "data_generation": GoaTStatus.DATA_GENERATION.value,
-    "in_assembly": GoaTStatus.IN_ASSEMBLY.value,
-    "insdc_submitted": GoaTStatus.INSDC_SUBMITTED.value,
-    "publication_available": GoaTStatus.PUBLICATION_AVAILABLE.value,
-}
 
 
 @shared_task(name="goat_upload", ignore_result=False, bind=True)
@@ -32,33 +34,50 @@ def upload_goat_report(self, username, report_path, sub_project=None):
     Process a GoaT report file saved under TMP_DIR by the REST upload handler.
     ``report_path`` keeps Celery/Redis payloads small; the file is removed when done.
     """
-    updated_organisms = []
     self.update_state(state=states.PENDING, meta={"messages": ["Starting job..."]})
 
     if not is_allowed_goat_upload_path(report_path, TMP_DIR):
-        self.update_state(
-            state="FAILURE",
-            meta={"messages": ["Invalid or missing report file path."]},
-        )
-        # Do not unlink: path failed safety checks and may not be our temp file.
-        return {"messages": ["Invalid or missing report file path."]}
+        raise ValueError("Invalid or missing report file path.")
+
+    if not GOAT_PROJECT_NAME:
+        raise ValueError("GOAT_PROJECT_NAME is not configured.")
+
+    def _raise_errors(errors: list[str], prefix: str | None = None) -> None:
+        parts = [e for e in errors if e]
+        if prefix:
+            parts.insert(0, prefix)
+        raise ValueError("\n".join(parts))
 
     try:
         rows, sub_from_file = load_goat_report_rows_from_path(report_path)
         if sub_project is None:
             sub_project = sub_from_file
-    except Exception as e:
-        self.update_state(
-            state="FAILURE",
-            meta={"messages": [f"Could not read report file: {e}"]},
-        )
+
+        validation_errors = validate_goat_report_rows(rows)
+        if validation_errors:
+            _raise_errors(validation_errors, "Validation errors:")
+
+        user = BioGenomeUser.objects(name=username).first()
+        if not user:
+            raise ValueError("User not found")
+
+        taxids_in_file = [
+            str(row.get("ncbi_taxon_id"))
+            for row in rows
+            if row.get("ncbi_taxon_id") not in (None, "")
+        ]
+        perm_errors = species_upload_permission_errors(user, taxids_in_file)
+        if perm_errors:
+            _raise_errors(perm_errors, "Taxonomy permission errors:")
+
+    except Exception:
+        logger.exception("Could not read or validate GoaT report file")
         raise
     finally:
         safe_unlink(report_path)
 
-    # Stable order, unique taxids — avoids oversized $in and duplicate ENA work
-    taxid_list = []
-    seen = set()
+    taxid_list: list[str] = []
+    seen: set[str] = set()
     for row in rows:
         tid = row.get("ncbi_taxon_id")
         if tid is None or tid == "":
@@ -77,9 +96,12 @@ def upload_goat_report(self, username, report_path, sub_project=None):
 
     existing_taxid_list = Organism.objects(taxid__in=taxid_list).scalar("taxid")
     existing_set = set(existing_taxid_list)
-    new_taxid_list = [taxid for taxid in taxid_list if taxid not in existing_set]
+    new_taxid_list = [t for t in taxid_list if t not in existing_set]
 
     valid_rows = list(rows)
+    missing_taxids: list[str] = []
+    saved_organism_taxids: list[str] = []
+
     if new_taxid_list:
         logger.info("New organisms to save: %s", len(new_taxid_list))
         self.update_state(
@@ -90,39 +112,49 @@ def upload_goat_report(self, username, report_path, sub_project=None):
                 ]
             },
         )
-        # Streaming XML + bulk inserts; tolid sync skipped (old path did not fetch tolid)
-        saved_taxids = organism_helper.handle_full_taxonomy_from_taxids(
-            new_taxid_list, TMP_DIR, fetch_tolid_prefixes_sync=False
-        )
-        saved_set = set(saved_taxids)
-        if saved_taxids:
-            logger.info("Created %s new organism(s) from INSDC/ENA", len(saved_taxids))
+        try:
+            import_result = import_missing_organisms_for_taxids(
+                new_taxid_list,
+                TMP_DIR,
+                reload_organism_dependencies=True,
+            )
+        except Exception:
+            logger.exception("GoaT upload: taxonomy import failed for new taxids")
+            raise
+
+        saved_organism_taxids = import_result.saved_organism_taxids
+        if saved_organism_taxids:
+            logger.info("Created %s new organism(s) from INSDC/ENA", len(saved_organism_taxids))
             self.update_state(
                 state=states.PENDING,
-                meta={"messages": [f"Created {len(saved_taxids)} new organisms from INSDC/ENA."]},
+                meta={
+                    "messages": [
+                        f"Created {len(saved_organism_taxids)} new organisms from INSDC/ENA."
+                    ]
+                },
             )
 
-            missing_taxid_list = [taxid for taxid in new_taxid_list if taxid not in saved_set]
-            if missing_taxid_list:
-                logger.info(
-                    "%s organism(s) not found in INSDC; skipping related rows",
-                    len(missing_taxid_list),
-                )
-                self.update_state(
-                    state=states.PENDING,
-                    meta={
-                        "messages": [
-                            f"{len(missing_taxid_list)} taxa not found in INSDC; skipping those rows."
-                        ]
-                    },
-                )
-                missing_set = set(missing_taxid_list)
-                valid_rows = [
-                    row
-                    for row in rows
-                    if str(row.get("ncbi_taxon_id") or "") not in missing_set
-                ]
-        else:
+        if import_result.missing_taxids:
+            missing_taxids = [str(t) for t in import_result.missing_taxids if t]
+            missing_set = set(missing_taxids)
+            logger.info(
+                "%s organism(s) not found in INSDC; skipping related rows",
+                len(missing_set),
+            )
+            self.update_state(
+                state=states.PENDING,
+                meta={
+                    "messages": [
+                        f"{len(missing_set)} taxa not found in INSDC; skipping those rows."
+                    ]
+                },
+            )
+            valid_rows = [
+                row
+                for row in rows
+                if str(row.get("ncbi_taxon_id") or "") not in missing_set
+            ]
+        elif not saved_organism_taxids and new_taxid_list:
             logger.warning("No organisms returned from ENA for new taxids")
             self.update_state(
                 state=states.PENDING,
@@ -135,94 +167,69 @@ def upload_goat_report(self, username, report_path, sub_project=None):
 
     rows_map = map_rows(valid_rows)
     if not rows_map:
-        return {"messages": ["No mappable rows after filtering."]}
+        return {
+            "messages": ["No mappable rows after filtering."],
+            "summary": {
+                "records_total": len(rows),
+                "records_saved": 0,
+                "records_skipped_or_not_found": len(rows),
+                "created_organisms": len(saved_organism_taxids),
+            },
+            "saved_taxids": [],
+            "created_taxids": saved_organism_taxids,
+            "skipped_or_not_found_taxids": missing_taxids,
+            "errors": [],
+        }
 
     taxids_to_update = list(rows_map.keys())
     self.update_state(
         state=states.PENDING,
-        meta={"messages": [f"Loading {len(taxids_to_update)} organisms for update..."]},
+        meta={"messages": [f"Bulk-updating {len(taxids_to_update)} organisms..."]},
     )
 
-    organisms_by_taxid = {
-        o.taxid: o for o in Organism.objects(taxid__in=taxids_to_update)
-    }
+    try:
+        updated_organisms, taxids_updated = bulk_apply_goat_report_updates(
+            rows_map, sub_project
+        )
+    except Exception:
+        logger.exception("GoaT bulk organism update failed")
+        raise
 
-    total = len(taxids_to_update)
-    progress_every = max(1, min(100, total // 20 or 1))
-
-    for i, taxid in enumerate(taxids_to_update):
-        org = organisms_by_taxid.get(taxid)
-        if not org:
-            continue
-
-        if i % progress_every == 0:
-            self.update_state(
-                state=states.PENDING,
-                meta={
-                    "messages": [
-                        f"Updating organisms ({i + 1}/{total}) — current: {org.scientific_name}"
-                    ]
-                },
-            )
-
-        data_to_update = rows_map[taxid]
-        publication = data_to_update.get("publications")
-        org.target_list_status = data_to_update.get("target_list_status")
-        org.goat_status = data_to_update.get("goat_status")
-        org.sub_project = sub_project
-        if publication and not any(pub.id == publication.id for pub in (org.publications or [])):
-            if org.publications is None:
-                org.publications = []
-            org.publications.append(publication)
-        try:
-            org.save()
-            updated_organisms.append(org.scientific_name)
-        except Exception as e:
-            messages = []
-            if updated_organisms:
-                messages.append(f"Species saved {' ;'.join(updated_organisms)}")
-            messages.append(f"Error for organism: {org.scientific_name}: {e}")
-            self.update_state(state="ERROR", meta={"messages": messages})
-            raise Ignore()
+    sync_taxids = sorted(set(taxids_updated) | {str(t) for t in saved_organism_taxids if t})
+    if sync_taxids:
+        finalize_organism_catalog_for_taxids(
+            sync_taxids,
+            copy_lineages=False,
+            apply_goat_inference=False,
+        )
+    if saved_organism_taxids:
+        fetch_tolid_prefixes_task.delay(list(saved_organism_taxids))
 
     self.update_state(
         state=states.PENDING,
-        meta={"messages": [f"Finished updating {len(updated_organisms)} organisms."]},
+        meta={
+            "messages": [
+                f"Finished updating {len(updated_organisms)} organisms (bulk write + species sync)."
+            ]
+        },
     )
-    user = BioGenomeUser.objects(name=username).first()
-    # Same as original: only taxids that actually exist on Organism documents
-    user_helper.add_species_to_datamanager(list(organisms_by_taxid.keys()), user)
 
-    return {"messages": [f"Species saved {' ;'.join(updated_organisms)}"]}
+    organisms_for_user = Organism.objects(taxid__in=list(rows_map.keys())).scalar("taxid")
+    user_helper.add_species_to_datamanager([str(t) for t in organisms_for_user if t], user)
 
-
-def map_rows(rows):
-    rows_map = {}
-    for row in rows:
-        tid = row.get("ncbi_taxon_id")
-        if tid is None or tid == "":
-            continue
-        taxid = str(tid)
-        entry = {}
-        seq_status = row.get("sequencing_status")
-        if seq_status and seq_status in GOAT_STATUS_IMPORT_MAPPER:
-            entry["goat_status"] = GOAT_STATUS_IMPORT_MAPPER[seq_status]
-        entry["target_list_status"] = row.get("target_list_status")
-
-        if row.get("publication_id"):
-            entry["publications"] = map_publication(row.get("publication_id"))
-
-        rows_map[taxid] = entry
-    return rows_map
-
-
-def map_publication(pub):
-    publication_to_save = Publication()
-    if "/" in pub:
-        publication_to_save.source = PublicationSource.DOI
-    elif "PMC" in pub:
-        publication_to_save.source = PublicationSource.PMCID
-    else:
-        publication_to_save.source = PublicationSource.PMID
-    publication_to_save.id = pub
-    return publication_to_save
+    records_saved = len(updated_organisms)
+    records_total = len(rows)
+    records_skipped_or_not_found = max(records_total - records_saved, 0)
+    return {
+        "messages": [f"Saved {records_saved} organism record(s)."],
+        "summary": {
+            "records_total": records_total,
+            "records_saved": records_saved,
+            "records_skipped_or_not_found": records_skipped_or_not_found,
+            "created_organisms": len(saved_organism_taxids),
+        },
+        "saved_taxids": [str(t) for t in taxids_updated if t],
+        "created_taxids": [str(t) for t in saved_organism_taxids if t],
+        "skipped_or_not_found_taxids": missing_taxids,
+        "errors": [],
+    }

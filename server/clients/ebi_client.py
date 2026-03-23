@@ -2,6 +2,10 @@ import requests
 from extensions.cache import cache
 import time
 
+# (connect timeout, read timeout) for taxonomy and portal calls
+_REQUEST_TIMEOUT = (5, 30)
+ENA_TAXONOMY_REST_TAX_ID_URL = "https://www.ebi.ac.uk/ena/taxonomy/rest/tax-id"
+
 
 EXPERIMENT_FIELDS = (
     'study_accession,secondary_study_accession,sample_accession,'
@@ -96,14 +100,45 @@ def fetch_experiments_by_bioproject_streaming(project_accession, output_file):
         return None
 
 
-def get_taxon_from_ena_browser(taxon_id):
-    data=None
+def get_taxon_from_ena_taxonomy_rest(taxon_id):
+    """
+    ENA Taxonomy REST (JSON), e.g. https://www.ebi.ac.uk/ena/taxonomy/rest/tax-id/9606
+    Returns parsed dict or None if not found / error.
+    """
+    tid = str(taxon_id).strip()
+    if not tid:
+        return None
     try:
-        response = requests.get(f"https://www.ebi.ac.uk/ena/browser/api/xml/{taxon_id}") ## 
+        response = requests.get(
+            f"{ENA_TAXONOMY_REST_TAX_ID_URL}/{tid}",
+            headers={"Accept": "application/json"},
+            timeout=_REQUEST_TIMEOUT,
+        )
+        if response.status_code == 404:
+            return None
+        response.raise_for_status()
+        data = response.json()
+        return data if isinstance(data, dict) else None
+    except Exception as e:
+        print(f"Error occurred while fetching ENA taxonomy REST for {tid}")
+        print(e)
+        return None
+
+
+def get_taxon_from_ena_browser(taxon_id):
+    data = None
+    tid = str(taxon_id).strip()
+    if not tid:
+        return None
+    try:
+        response = requests.get(
+            f"https://www.ebi.ac.uk/ena/browser/api/xml/{tid}",
+            timeout=_REQUEST_TIMEOUT,
+        )
         response.raise_for_status()
         data = response.content
     except Exception as e:
-        print(f"Error occurred while fetchin {taxon_id}")
+        print(f"Error occurred while fetchin {tid}")
         print(e)
     finally:
         return data
@@ -125,8 +160,15 @@ def get_objects_from_ena_browser(accessions):
 
 def get_taxon_from_ena_portal(taxon_id):
     data = None
+    tid = str(taxon_id).strip()
+    if not tid:
+        return None
     try:
-        response = requests.get(f"https://www.ebi.ac.uk/ena/portal/api/filereport?result=taxon&accession={taxon_id}&fields=tax_lineage,scientific_name,common_name,genbank_common_name,rank&limit=10&format=json")
+        response = requests.get(
+            f"https://www.ebi.ac.uk/ena/portal/api/filereport?result=taxon&accession={tid}"
+            f"&fields=tax_lineage,scientific_name,common_name,genbank_common_name,rank&limit=10&format=json",
+            timeout=_REQUEST_TIMEOUT,
+        )
         response.raise_for_status()
         data = response.json()
     except Exception as e:

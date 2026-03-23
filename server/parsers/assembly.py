@@ -1,4 +1,4 @@
-from db.models import Assembly
+from db.model import Assembly
 
 def parse_assembly_from_ncbi_datasets(assembly):
     organism = assembly.get('organism', {})

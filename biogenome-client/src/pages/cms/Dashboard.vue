@@ -1,169 +1,200 @@
 <template>
-   <div>
-      <div class="row">
-         <div class="flex">
-            <Header :title="title" />
-         </div>
-      </div>
-      <VaInnerLoading :loading="statsStore.isLoading">
-         <div class="row row-equal">
-            <div class="flex flex-grow" v-for="{ icon, color, key, count } in mappedCounts" :key="key">
-               <VaCard>
-                  <VaCardContent>
-                     <div class="row justify-space-between align-center">
-                        <div class="flex">
-                           <div class="row align-center">
-                              <div class="flex">
-                                 <VaButton size="large" :color="color" :icon="icon" preset="primary"> </VaButton>
-                              </div>
-                              <div class="flex">
-                                 <h3 class="va-h5">My {{ key }}</h3>
-                                 <p class="va-text-secondary">List of assigned {{ key }}</p>
-                              </div>
-                           </div>
-                        </div>
-                        <div class="flex">
-                           <VaButton size="small" :color="color" preset="primary" round
-                              >{{ count }} {{ key }}
-                           </VaButton>
-                        </div>
-                     </div>
-                  </VaCardContent>
-                  <VaCardContent>
-                     <div class="row justify-space-between">
-                        <div class="flex">
-                           <VaButton
-                              :to="{ name: 'cms-items', params: { model: key } }"
-                              color="textPrimary"
-                              preset="secondary"
-                              icon-right="fa-arrow-right"
-                              >View
-                           </VaButton>
-                        </div>
-                        <div v-if="key === 'organisms'" class="flex">
-                           <VaButton :to="{ name: 'create-organism' }" icon="fa-plus" preset="primary"
-                              >New Organism</VaButton
-                           >
-                        </div>
-                        <div v-else-if="key === 'annotations'" class="flex">
-                           <VaButton :to="{ name: 'create-annotation' }" icon="fa-plus" preset="primary"
-                              >New Annotation</VaButton
-                           >
-                        </div>
-                     </div>
-                  </VaCardContent>
-               </VaCard>
-            </div>
-            <div v-if="submittedBioSamplesCount" class="flex flex-grow">
-               <VaCard>
-                  <VaCardContent>
-                     <div class="row justify-space-between align-center">
-                        <div class="flex">
-                           <div class="row align-center">
-                              <div class="flex">
-                                 <VaButton size="large" color="success" icon="fa-vial" preset="primary"> </VaButton>
-                              </div>
-                              <div class="flex">
-                                 <h3 class="va-h5">My EBI BioSamples</h3>
-                                 <p class="va-text-secondary">List of your BioSamples published to EBI</p>
-                              </div>
-                           </div>
-                        </div>
-                        <div class="flex">
-                           <VaButton size="small" color="success" preset="primary" round
-                              >{{ submittedBioSamplesCount }} BioSamples
-                           </VaButton>
-                        </div>
-                     </div>
-                  </VaCardContent>
-                  <VaCardContent>
-                     <div class="row justify-space-between">
-                        <div class="flex">
-                           <VaButton
-                              block
-                              :to="{ name: 'submitted-biosamples' }"
-                              color="textPrimary"
-                              preset="secondary"
-                              icon-right="fa-arrow-right"
-                              >View
-                           </VaButton>
-                        </div>
-                        <div class="flex">
-                           <VaButton preset="primary" icon="fa-plus" :to="{ name: 'publish-biosample' }">
-                              New BioSample
-                           </VaButton>
-                        </div>
-                     </div>
-                  </VaCardContent>
-               </VaCard>
-            </div>
-            <div class="flex lg4 md6 sm12 xs12" v-if="!submittedBioSamplesCount && !stats.length">
-               <VaCard>
-                  <VaCardContent>
-                     <div class="row">
-                        <div class="flex">
-                           <h3 class="va-h5">No Data Available</h3>
-                           <p class="va-text-secondary">
-                              It looks like there are no items created yet. Use the buttons below to quickly add new
-                              objects and get started. Choose from different types to begin building your data.
-                           </p>
-                        </div>
-                     </div>
-                  </VaCardContent>
-                  <VaCardContent>
-                     <div class="row">
-                        <div class="flex">
-                           <VaButton :to="{ name: 'create-organism' }" icon="fa-plus" preset="primary"
-                              >New Organism</VaButton
-                           >
-                        </div>
-                        <div class="flex">
-                           <VaButton preset="primary" icon="fa-plus" :to="{ name: 'publish-biosample' }">
-                              New EBI BioSample
-                           </VaButton>
-                        </div>
-                     </div>
-                  </VaCardContent>
-               </VaCard>
+   <div class="cms-dashboard">
+      <!-- Page header -->
+      <header class="cms-dashboard__header">
+         <div class="cms-dashboard__header-text">
+            <div class="cms-page-header">
+               <h1 class="cms-page-header__title">{{ pageTitle }}</h1>
+               <p class="cms-page-header__desc">{{ pageLead }}</p>
             </div>
          </div>
-      </VaInnerLoading>
+         <div class="cms-dashboard__header-actions">
+            <CmsBtn :to="{ name: 'create-organism' }" icon="fa-plus" variant="primary">
+               Create Organism
+            </CmsBtn>
+            <CmsBtn
+               v-if="hasENATemplate"
+               :to="{ name: 'publish-biosample' }"
+               icon="fa-vial"
+               variant="primary"
+            >
+               Submit Biosample
+            </CmsBtn>
+
+            <!-- Import dropdown -->
+            <VaDropdown
+               placement="bottom-end"
+               :close-on-content-click="true"
+               teleport="#cms-admin-dropdown-portal"
+            >
+               <template #anchor>
+                  <button type="button" class="cms-dash-dd-btn">
+                     <VaIcon name="fa-file-import" size="small" class="cms-dash-dd-btn__icon" />
+                     Import
+                     <svg class="cms-dash-dd-btn__chevron" viewBox="0 0 10 6" fill="none" aria-hidden="true">
+                        <path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                     </svg>
+                  </button>
+               </template>
+               <VaDropdownContent>
+                  <nav class="cms-dash-dd-menu" aria-label="Import menu">
+                     <button
+                        v-if="isAdmin"
+                        type="button"
+                        class="cms-dash-dd-item"
+                        @click="openDrawerInsdc()"
+                     >
+                        <VaIcon name="fa-cloud-arrow-down" size="small" class="cms-dash-dd-item__icon" />
+                        Import from INSDC
+                     </button>
+                     <button type="button" class="cms-dash-dd-item" @click="drawer.open({ panel: 'goat' })">
+                        <VaIcon name="fa-file-arrow-up" size="small" class="cms-dash-dd-item__icon" />
+                        Import GoaT report
+                     </button>
+                     <button type="button" class="cms-dash-dd-item" @click="drawer.open({ panel: 'spreadsheet' })">
+                        <VaIcon name="fa-table" size="small" class="cms-dash-dd-item__icon" />
+                        Import from spreadsheet
+                     </button>
+                  </nav>
+               </VaDropdownContent>
+            </VaDropdown>
+
+            <!-- Create dropdown (admin-only entries per route guards) -->
+            <VaDropdown
+               v-if="isAdmin"
+               placement="bottom-end"
+               :close-on-content-click="true"
+               teleport="#cms-admin-dropdown-portal"
+            >
+               <template #anchor>
+                  <button type="button" class="cms-dash-dd-btn">
+                     <VaIcon name="fa-plus" size="small" class="cms-dash-dd-btn__icon" />
+                     Create
+                     <svg class="cms-dash-dd-btn__chevron" viewBox="0 0 10 6" fill="none" aria-hidden="true">
+                        <path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                     </svg>
+                  </button>
+               </template>
+               <VaDropdownContent>
+                  <nav class="cms-dash-dd-menu" aria-label="Create menu">
+                     <button type="button" class="cms-dash-dd-item" @click="drawer.open({ panel: 'annotation' })">
+                        <VaIcon name="fa-bars-staggered" size="small" class="cms-dash-dd-item__icon" />
+                        Create annotation
+                     </button>
+                     <button type="button" class="cms-dash-dd-item" @click="drawer.open({ panel: 'user' })">
+                        <VaIcon name="fa-user-plus" size="small" class="cms-dash-dd-item__icon" />
+                        Create user
+                     </button>
+                  </nav>
+               </VaDropdownContent>
+            </VaDropdown>
+         </div>
+      </header>
+
+      <!-- === KPI + organism status strip (admins only) ================== -->
+      <DashboardStatStrip v-if="isAdmin" :raw-stats="rawStats" :is-admin="isAdmin" />
+
+      <!-- === DataManager view =========================================== -->
+      <template v-if="!isAdmin">
+         <!-- With ENA template: left column = species + biosamples, right = sankey -->
+         <template v-if="hasENATemplate">
+            <div class="cms-dashboard__grid cms-dashboard__grid--sankey">
+               <div class="cms-dashboard__main">
+                  <SpeciesOverviewModule />
+                  <SubmittedBiosamplesModule />
+               </div>
+               <div class="cms-dashboard__aside cms-dashboard__aside--sankey">
+                  <SpeciesBiosampleSankeyModule />
+               </div>
+            </div>
+         </template>
+         <!-- Without ENA template: only species overview, full width -->
+         <template v-else>
+            <SpeciesOverviewModule />
+         </template>
+      </template>
+
+      <!-- === Admin view ================================================= -->
+      <template v-else>
+         <div class="cms-dashboard__grid">
+            <!-- Left: primary data columns -->
+            <div class="cms-dashboard__main">
+               <SpeciesOverviewModule />
+               <SubmittedBiosamplesModule />
+               <RecordModelsModule
+                  v-if="nonOrganismStats.length"
+                  :stats="nonOrganismStats"
+               />
+            </div>
+            <!-- Right: management columns -->
+            <div class="cms-dashboard__aside">
+               <UsersModule />
+               <DeleteRequestsModule />
+            </div>
+         </div>
+      </template>
+
+      <CmsDashboardFormDrawer />
    </div>
 </template>
+
 <script setup lang="ts">
-   import { computed, inject, onMounted, ref } from 'vue'
+   import { computed, inject, onMounted } from 'vue'
    import { useGlobalStore } from '../../stores/global-store'
-   import Header from '../../components/cms/Header.vue'
-   import { VaInnerLoading } from 'vuestic-ui/web-components'
    import { useStatsStore } from '../../stores/stats-store'
-   import EBIService from '../../services/EBIService'
-   import { AppConfig } from '../../data/types'
+   import { useCmsDashboardDrawerStore } from '../../stores/cms-dashboard-drawer-store'
    import { iconMap } from '../../composable/useIconMap'
+   import type { AppConfig } from '../../data/types'
+   import SpeciesOverviewModule from '../../components/cms/dashboard/SpeciesOverviewModule.vue'
+   import SubmittedBiosamplesModule from '../../components/cms/dashboard/SubmittedBiosamplesModule.vue'
+   import RecordModelsModule from '../../components/cms/dashboard/RecordModelsModule.vue'
+   import SpeciesBiosampleSankeyModule from '../../components/cms/dashboard/SpeciesBiosampleSankeyModule.vue'
+   import DeleteRequestsModule from '../../components/cms/dashboard/DeleteRequestsModule.vue'
+   import UsersModule from '../../components/cms/dashboard/UsersModule.vue'
+   import DashboardStatStrip from '../../components/cms/dashboard/DashboardStatStrip.vue'
+   import CmsDashboardFormDrawer from '../../components/cms/dashboard/CmsDashboardFormDrawer.vue'
+   import CmsBtn from '../../components/cms/ui/CmsBtn.vue'
 
    const globalStore = useGlobalStore()
    const statsStore = useStatsStore()
-   const isAdmin = computed(() => globalStore.userRole === 'Admin')
-   const title = computed(() => (!isAdmin.value ? 'My Data' : 'Dashboard'))
-   const stats = computed(() => (isAdmin.value ? statsStore.portalStats : statsStore.userStats))
-
-   const mappedCounts = computed(() =>
-      stats.value
-         .filter(({ key, count }) => count > 0 || key === 'organisms')
-         .map(({ key, count }) => {
-            const { icon, color } = iconMap[key]
-            return { key, count, icon, color }
-         }),
-   )
-
-   const submittedBioSamplesCount = ref(0)
+   const drawer = useCmsDashboardDrawerStore()
    const configs = inject('appConfig') as AppConfig
 
-   const hasENATemplate = computed(() => configs.general.enaTemplate)
+   const isAdmin = computed(() => globalStore.userRole === 'Admin')
+   const hasENATemplate = computed(() => configs?.general?.enaTemplate)
+   const pageTitle = computed(() => (isAdmin.value ? 'Dashboard' : 'My Data'))
+   const pageLead = computed(() =>
+      isAdmin.value
+         ? 'Portal-wide overview of species, curators, submitted data, and pending requests.'
+         : 'Your assigned species, submitted biosamples, and their relationships at a glance.',
+   )
+
+   const rawStats = computed(() => (isAdmin.value ? statsStore.portalStats : statsStore.userStats))
+
+   const nonOrganismStats = computed(() =>
+      rawStats.value
+         .filter(({ key }) => key !== 'organisms')
+         .map(({ key, count }) => ({
+            key,
+            count,
+            ...(iconMap[key] ?? { icon: 'fa-folder', color: 'primary' }),
+         })),
+   )
+
+   function openDrawerInsdc(model?: string) {
+      drawer.open({
+         panel: 'insdc',
+         insdcImportModel: model,
+      })
+   }
 
    onMounted(async () => {
-      if (hasENATemplate.value) {
-         const { data } = await EBIService.getSubmittedBioSamples({ user: globalStore.userName })
-         submittedBioSamplesCount.value = data.total
+      if (!rawStats.value.length) {
+         if (isAdmin.value) {
+            await statsStore.getPortalStats()
+         } else {
+            await statsStore.getUserStats(globalStore.userName)
+         }
       }
    })
 </script>
