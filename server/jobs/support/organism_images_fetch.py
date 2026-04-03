@@ -2,12 +2,11 @@
 Fetch attributed species images from iNaturalist, Wikimedia Commons, and GBIF.
 
 Respects a conservative license allowlist and skips organisms that already have
-enough ``attributed_images`` (see task / env ``ORGANISM_IMAGE_MIN_COUNT``).
+enough ``images`` (see task / env ``ORGANISM_IMAGE_MIN_COUNT``).
 """
 
 from __future__ import annotations
 
-import hashlib
 import logging
 import os
 import re
@@ -17,8 +16,7 @@ from urllib.parse import quote, unquote
 
 import requests
 
-from db.embedded_docs import OrganismAttributedImage
-from db.enums import ExternalImageSource
+from db.embedded_docs import OrganismImage
 from db.model import Organism
 
 logger = logging.getLogger(__name__)
@@ -144,9 +142,8 @@ def _fetch_inat_images(
     scientific_name: str,
     need: int,
     existing_urls: Set[str],
-    existing_keys: Set[Tuple[str, str]],
-) -> List[OrganismAttributedImage]:
-    out: List[OrganismAttributedImage] = []
+) -> List[OrganismImage]:
+    out: List[OrganismImage] = []
     target = canonical_binomial(scientific_name)
     if not target:
         return out
@@ -166,14 +163,12 @@ def _fetch_inat_images(
     r.raise_for_status()
     data = r.json()
     taxon_id = None
-    verified_name = None
     for t in data.get("results") or []:
         if (t.get("rank") or "").lower() != "species":
             continue
         if canonical_binomial(t.get("name") or "") != target:
             continue
         taxon_id = t.get("id")
-        verified_name = t.get("name")
         break
     if not taxon_id:
         return out
@@ -220,21 +215,16 @@ def _fetch_inat_images(
             url = _inat_photo_large_url(ph.get("url") or "", ph.get("id"))
             if not url or not url.startswith("http"):
                 continue
-            ext_id = f"inat:{obs.get('id')}-{ph.get('id')}"
-            if url in existing_urls or (ExternalImageSource.INATURALIST.value, ext_id) in existing_keys:
+            if url in existing_urls:
                 continue
             existing_urls.add(url)
-            existing_keys.add((ExternalImageSource.INATURALIST.value, ext_id))
             out.append(
-                OrganismAttributedImage(
+                OrganismImage(
                     url=url,
                     author=author,
-                    source=ExternalImageSource.INATURALIST,
                     license=label,
                     license_url=lic_url,
                     source_record_url=obs_uri or None,
-                    external_id=ext_id,
-                    verified_taxon_name=verified_name,
                 )
             )
     return out
@@ -254,9 +244,8 @@ def _fetch_commons_images(
     scientific_name: str,
     need: int,
     existing_urls: Set[str],
-    existing_keys: Set[Tuple[str, str]],
-) -> List[OrganismAttributedImage]:
-    out: List[OrganismAttributedImage] = []
+) -> List[OrganismImage]:
+    out: List[OrganismImage] = []
     binomial_norm = canonical_binomial(scientific_name)
     if not binomial_norm:
         return out
@@ -328,25 +317,19 @@ def _fetch_commons_images(
             if not lic_url and lic_url_meta:
                 lic_url = lic_url_meta.strip() or None
 
-            page_id = str(page.get("pageid") or "")
-            ext_id = f"commons:{page_id}" if page_id else f"commons:{quote(title)}"
             wiki_title = title.replace(" ", "_")
             file_page = "https://commons.wikimedia.org/wiki/" + quote(wiki_title, safe="/():'!%")
 
-            if url in existing_urls or (ExternalImageSource.WIKIMEDIA_COMMONS.value, ext_id) in existing_keys:
+            if url in existing_urls:
                 continue
             existing_urls.add(url)
-            existing_keys.add((ExternalImageSource.WIKIMEDIA_COMMONS.value, ext_id))
             out.append(
-                OrganismAttributedImage(
+                OrganismImage(
                     url=url,
                     author=artist,
-                    source=ExternalImageSource.WIKIMEDIA_COMMONS,
                     license=label,
                     license_url=lic_url,
                     source_record_url=file_page,
-                    external_id=ext_id,
-                    verified_taxon_name=scientific_name.strip(),
                 )
             )
     return out
@@ -357,9 +340,8 @@ def _fetch_gbif_images(
     scientific_name: str,
     need: int,
     existing_urls: Set[str],
-    existing_keys: Set[Tuple[str, str]],
-) -> List[OrganismAttributedImage]:
-    out: List[OrganismAttributedImage] = []
+) -> List[OrganismImage]:
+    out: List[OrganismImage] = []
     target = canonical_binomial(scientific_name)
     if not target:
         return out
@@ -384,8 +366,6 @@ def _fetch_gbif_images(
     usage_key = match.get("usageKey")
     if not usage_key:
         return out
-    verified = match.get("canonicalName") or match.get("scientificName")
-
     _throttle()
     r2 = session.get(
         f"{GBIF_API}/occurrence/search",
@@ -417,38 +397,45 @@ def _fetch_gbif_images(
             if not allowed:
                 continue
             label, lic_url = allowed
-            url_fingerprint = hashlib.sha256(str(url).encode("utf-8")).hexdigest()[:24]
-            ext_id = f"gbif:{occ_key}:{url_fingerprint}"
             record_url = f"https://www.gbif.org/occurrence/{occ_key}" if occ_key else None
-            if url in existing_urls or (ExternalImageSource.GBIF.value, ext_id) in existing_keys:
+            if url in existing_urls:
                 continue
             existing_urls.add(url)
-            existing_keys.add((ExternalImageSource.GBIF.value, ext_id))
             creator = (media.get("creator") or "").strip() or None
             out.append(
-                OrganismAttributedImage(
+                OrganismImage(
                     url=url,
                     author=creator,
-                    source=ExternalImageSource.GBIF,
                     license=label,
                     license_url=lic_url,
                     source_record_url=record_url,
-                    external_id=ext_id,
-                    verified_taxon_name=verified,
                 )
             )
     return out
 
 
-def _collect_existing_sets(organism: Organism) -> Tuple[Set[str], Set[Tuple[str, str]]]:
+def _collect_existing_sets(organism: Organism) -> Set[str]:
     urls: Set[str] = set()
-    keys: Set[Tuple[str, str]] = set()
-    for img in organism.attributed_images or []:
+    for img in organism.images or []:
         if img.url:
             urls.add(img.url)
-        if img.source and img.external_id:
-            keys.add((img.source.value, img.external_id))
-    return urls, keys
+    return urls
+
+
+def _dedupe_images_keep_last(images: List[OrganismImage]) -> List[OrganismImage]:
+    """Deduplicate by URL while preserving the last occurrence of each URL."""
+    seen: Set[str] = set()
+    deduped_reversed: List[OrganismImage] = []
+    for img in reversed(images):
+        if not img.url:
+            deduped_reversed.append(img)
+            continue
+        if img.url in seen:
+            continue
+        seen.add(img.url)
+        deduped_reversed.append(img)
+    deduped_reversed.reverse()
+    return deduped_reversed
 
 
 def fetch_images_for_organism(
@@ -457,35 +444,38 @@ def fetch_images_for_organism(
     min_images: int,
 ) -> int:
     """
-    Append up to ``min_images`` total attributed images (existing + new).
+    Append up to ``min_images`` total images (existing + new).
     Returns number of new images appended.
     """
-    existing = list(organism.attributed_images or [])
+    existing = _dedupe_images_keep_last(list(organism.images or []))
+    if existing != list(organism.images or []):
+        organism.images = existing
+        organism.save()
     if len(existing) >= min_images:
         return 0
     need = min_images - len(existing)
     scientific_name = organism.scientific_name or ""
-    existing_urls, existing_keys = _collect_existing_sets(organism)
-    new_docs: List[OrganismAttributedImage] = []
+    existing_urls = _collect_existing_sets(organism)
+    new_docs: List[OrganismImage] = []
 
     new_docs.extend(
-        _fetch_inat_images(session, scientific_name, need, existing_urls, existing_keys)
+        _fetch_inat_images(session, scientific_name, need, existing_urls)
     )
     need = min_images - len(existing) - len(new_docs)
     if need > 0:
         new_docs.extend(
-            _fetch_commons_images(session, scientific_name, need, existing_urls, existing_keys)
+            _fetch_commons_images(session, scientific_name, need, existing_urls)
         )
     need = min_images - len(existing) - len(new_docs)
     if need > 0:
         new_docs.extend(
-            _fetch_gbif_images(session, scientific_name, need, existing_urls, existing_keys)
+            _fetch_gbif_images(session, scientific_name, need, existing_urls)
         )
 
     if not new_docs:
         return 0
 
-    organism.attributed_images = existing + new_docs
+    organism.images = _dedupe_images_keep_last(existing + new_docs)
     organism.save()
     return len(new_docs)
 
@@ -496,7 +486,7 @@ def run_external_image_backfill(
     max_organisms: Optional[int] = None,
 ) -> Dict[str, Any]:
     """
-    For each organism with fewer than ``min_images`` attributed images, fetch from
+    For each organism with fewer than ``min_images`` images, fetch from
     iNaturalist → Commons → GBIF until the quota is met or sources are exhausted.
     """
     min_c = int(min_images) if min_images is not None else int(
@@ -523,7 +513,11 @@ def run_external_image_backfill(
         if max_c and processed >= max_c:
             break
         processed += 1
-        if len(org.attributed_images or []) >= min_c:
+        normalized_images = _dedupe_images_keep_last(list(org.images or []))
+        if normalized_images != list(org.images or []):
+            org.images = normalized_images
+            org.save()
+        if len(org.images or []) >= min_c:
             skipped_full += 1
             continue
         try:

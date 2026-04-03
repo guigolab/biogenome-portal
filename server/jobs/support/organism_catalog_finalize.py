@@ -27,6 +27,7 @@ from db.model import (
     ReadRun,
     TaxonNode,
 )
+from helpers import taxonomy as taxonomy_helper
 from helpers.organism_denorm_pure import (
     MergeContext,
     RelatedCounts,
@@ -331,22 +332,27 @@ def bulk_copy_organism_lineages_to_catalog(
         return
 
     orgs = list(
-        Organism.objects(taxid__in=unique_taxids).only("taxid", "taxon_lineage")
+        Organism.objects(taxid__in=unique_taxids).only(
+            "taxid", "taxon_lineage", "scientific_name"
+        )
     )
     if not orgs:
         return
+
+    n_ensured = taxonomy_helper.ensure_taxon_nodes_for_organisms_lineages(orgs)
+    if n_ensured:
+        logger.info(
+            "Inserted %d TaxonNode row(s) so organism lineages are fully linkable "
+            "(placeholders use rank=other until taxonomy refresh)",
+            n_ensured,
+        )
 
     all_lineage_taxids: Set[str] = set()
     for o in orgs:
         if o.taxon_lineage:
             all_lineage_taxids.update(str(x) for x in o.taxon_lineage if x is not None)
 
-    taxon_map: Dict[str, Any] = {}
-    if all_lineage_taxids:
-        taxon_map = {
-            str(n.taxid): n
-            for n in TaxonNode.objects(taxid__in=list(all_lineage_taxids))
-        }
+    taxon_map = taxonomy_helper.taxon_node_map_for_taxids(all_lineage_taxids)
 
     _bulk_update_taxonnode_edges_from_organism_lineages(orgs, taxon_map)
     _bulk_set_catalog_taxon_lineage_for_species(orgs)
@@ -697,6 +703,7 @@ def reload_prune_denorm_after_taxonomy_import(
     saved_organism_taxids: Iterable[Any],
     *,
     merge_context: Optional[MergeContext] = None,
+    apply_goat_inference: bool = True,
 ) -> int:
     """
     Read/biosample import tail: lineage copy for touched taxids, optional ReadRun backfill,
@@ -732,14 +739,13 @@ def reload_prune_denorm_after_taxonomy_import(
         surviving,
     )
     if sync_taxids:
+        fin_kwargs: Dict[str, Any] = {
+            "copy_lineages": False,
+            "apply_goat_inference": apply_goat_inference,
+        }
         if merge_context is not None:
-            finalize_organism_catalog_for_taxids(
-                sync_taxids,
-                copy_lineages=False,
-                merge_context=merge_context,
-            )
-        else:
-            finalize_organism_catalog_for_taxids(sync_taxids, copy_lineages=False)
+            fin_kwargs["merge_context"] = merge_context
+        finalize_organism_catalog_for_taxids(sync_taxids, **fin_kwargs)
 
     if batch_taxids:
         touched = existing_organism_taxids(batch_taxids)

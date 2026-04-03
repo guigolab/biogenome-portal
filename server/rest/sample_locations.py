@@ -10,7 +10,6 @@ class SampleLocations(Resource):
     
     def post(self):
         data = request.json if request.is_json else request.form
-        print(data)
         resp = sample_locations.post_sample_locations(data)
         return Response(json.dumps(resp), mimetype="application/json", status=200)
 

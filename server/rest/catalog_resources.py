@@ -15,6 +15,7 @@ from typing import Set
 from flask import request
 from flask_jwt_extended import get_jwt, verify_jwt_in_request
 from flask_restful import Resource
+from werkzeug.exceptions import BadRequest
 from werkzeug.exceptions import MethodNotAllowed
 
 from helpers.resource_mixins import (
@@ -52,8 +53,11 @@ class CatalogListApi(Resource):
             if denied is not None:
                 return denied
             data = read_payload()
-            message, status = organisms.create_organism(data)
-            return json_message(message, status=status)
+            try:
+                created_taxid = organisms.create_organism(data)
+                return json_message("Organism created", status=201, taxid=created_taxid)
+            except BadRequest as e:
+                return json_message(e.description or "Invalid organism payload", status=400)
 
         if catalog_key == "annotations":
             denied = _require_roles({"Admin"}, "Admins only!")

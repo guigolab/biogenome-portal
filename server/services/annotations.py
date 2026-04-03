@@ -99,7 +99,9 @@ def create_annotation(request):
     if files:
         save_files(files, valid_data, assembly_accession, annotation_name, request)
     else:
-        require_keys(valid_data, FILES_REQUIRED_FIELDS, what="annotation")
+        # URL-based create (no upload): model requires gff_gz_location + tab_index_location
+        if not (valid_data.get("gff_gz_location") and valid_data.get("tab_index_location")):
+            require_keys(valid_data, FILES_REQUIRED_FIELDS, what="annotation")
 
     try:
         new_genome_annotation = GenomeAnnotation(**valid_data).save()

@@ -6,7 +6,13 @@ import datetime
 
 import mongoengine as db
 
-from .embedded_docs import CommonName, OrganismAttributedImage, Publication
+from .embedded_docs import (
+    CommonName,
+    OrganismImage,
+    OrganismLineageRankLabels,
+    OrganismRedList,
+    Publication,
+)
 from .enums import (
     BrokerSource,
     GoaTStatus,
@@ -188,8 +194,9 @@ class Organism(db.Document):
     image = db.URLField()
     pending_deletion = db.BooleanField()
     image_urls = db.ListField(db.URLField())
-    attributed_images = db.ListField(db.EmbeddedDocumentField(OrganismAttributedImage))
+    images = db.ListField(db.EmbeddedDocumentField(OrganismImage))
     taxon_lineage = db.ListField(db.StringField())
+    lineage_rank_labels = db.EmbeddedDocumentField(OrganismLineageRankLabels)
     insdc_status = db.EnumField(INSDCStatus)
     goat_status = db.EnumField(GoaTStatus)
     target_list_status = db.EnumField(TargetListStatus)
@@ -198,6 +205,7 @@ class Organism(db.Document):
     biosamples_count = db.IntField()
     local_samples_count = db.IntField()
     genome_annotations_count = db.IntField()
+    iucn_redlist = db.EmbeddedDocumentField(OrganismRedList)
     meta = {
         "indexes": [
             "scientific_name",
@@ -205,6 +213,13 @@ class Organism(db.Document):
             "tolid_prefix",
             "taxid",
             "taxon_lineage",
+            "lineage_rank_labels.kingdom",
+            "lineage_rank_labels.phylum",
+            "lineage_rank_labels.class_name",
+            "lineage_rank_labels.order",
+            "lineage_rank_labels.family",
+            "lineage_rank_labels.genus",
+            "iucn_redlist.category",
         ],
         "strict": False,
     }

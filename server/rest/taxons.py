@@ -7,11 +7,20 @@ from extensions.cache import cache
 from helpers.resource_mixins import (
     document_json_response,
     documents_json_response,
+    dump_json,
     json_message,
 )
 from helpers.service_utils import get_or_404
 
 from services import taxons
+
+
+class RootTaxonApi(Resource):
+    """GET /taxons/root — configured portal root (``ROOT_NODE``); same JSON shape as ``/taxons/<taxid>``."""
+
+    def get(self):
+        taxon = taxons.get_root_taxon()
+        return document_json_response(taxon)
 
 
 class TaxonApi(Resource):
@@ -46,3 +55,21 @@ class RootTreeApi(Resource):
         # ?format=json | jsonl | tsv  (default json). jsonl/tsv stream from MongoDB without caching.
         fmt = request.args.get("format", "json")
         return taxons.root_tree_response(fmt)
+
+
+class SubTreeApi(Resource):
+    def get(self, taxid, rank_level):
+        # ?format=json | jsonl | tsv  (default json)
+        fmt = request.args.get("format", "json")
+        return taxons.subtree_tree_response(fmt, taxid, rank_level)
+
+
+class SubTreeLookupApi(Resource):
+    @cache.cached(timeout=300)
+    def get(self, taxid, rank_level):
+        payload = taxons.get_subtree_lookup(taxid, rank_level)
+        return Response(
+            dump_json(payload),
+            mimetype="application/json",
+            status=200,
+        )

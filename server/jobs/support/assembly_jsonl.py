@@ -268,24 +268,48 @@ def collect_sample_accessions_for_taxids(
     return ordered
 
 
+def collect_sample_accessions_from_assembly_rows(
+    new_rows: List[Dict[str, Any]],
+    assemblies_to_update: Dict[str, Dict[str, Any]],
+) -> List[str]:
+    """Biosample accessions from any row with a non-empty taxid (used before organism exists)."""
+    seen: Set[str] = set()
+    ordered: List[str] = []
+    for row in list(new_rows) + list(assemblies_to_update.values()):
+        tid = _taxid_from_assembly_dict(row)
+        if not tid:
+            continue
+        sa = _sample_accession_from_assembly_dict(row)
+        if sa and sa not in seen:
+            seen.add(sa)
+            ordered.append(sa)
+    return ordered
+
+
 def persist_assembly_import_payload(
     new_rows: List[Dict[str, Any]],
     assemblies_to_update: Dict[str, Dict[str, Any]],
     *,
-    taxids_with_organism: Set[str],
+    taxids_with_organism: Optional[Set[str]] = None,
 ) -> List[str]:
     """
     Insert new assemblies, update existing metadata, and fetch chromosomes for new accessions.
 
-    Rows are skipped unless the taxon exists in ``taxids_with_organism``. Missing or
-    unfetched biosamples do not block assembly persistence.
+    When ``taxids_with_organism`` is set, rows are skipped unless the taxon exists in that set.
+    When ``None`` (primary-first ingest), any row with a non-empty taxid is persisted; orphans
+    are removed after taxonomy bootstrap. Missing or unfetched biosamples do not block assembly
+    persistence.
 
     Returns accessions **newly inserted** in this run (for downstream cleanup / chromosomes).
     """
 
     def allowed(assembly_dict: Dict[str, Any]) -> bool:
         tid = _taxid_from_assembly_dict(assembly_dict)
-        return bool(tid) and tid in taxids_with_organism
+        if not tid:
+            return False
+        if taxids_with_organism is None:
+            return True
+        return tid in taxids_with_organism
 
     for acc, assembly in assemblies_to_update.items():
         if not allowed(assembly):

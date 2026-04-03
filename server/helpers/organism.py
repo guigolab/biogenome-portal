@@ -10,6 +10,10 @@ from pymongo import UpdateOne
 
 from clients import ebi_client, ncbi_client
 from db.model import Organism, TaxonNode
+from helpers.taxonomy import (
+    _taxid_match_values,
+    ensure_taxon_nodes_for_organisms_lineages,
+)
 from parsers import organism as organism_parser
 from parsers import taxonomy as taxonomy_parser
 
@@ -59,7 +63,12 @@ def _save_parsed_taxons_and_lineage_edges(parsed_taxons, organism_obj) -> None:
         return
 
     parsed_ids = [str(t.taxid) for t in parsed_taxons]
-    existing = set(TaxonNode.objects(taxid__in=parsed_ids).scalar("taxid"))
+    expanded_parsed = _taxid_match_values(parsed_ids)
+    existing = {
+        str(x).strip()
+        for x in TaxonNode.objects(taxid__in=expanded_parsed).scalar("taxid")
+        if x is not None
+    }
     to_insert = [t for t in parsed_taxons if str(t.taxid) not in existing]
     if to_insert:
         TaxonNode.objects.insert(to_insert)
@@ -68,8 +77,15 @@ def _save_parsed_taxons_and_lineage_edges(parsed_taxons, organism_obj) -> None:
     if len(lineage) < 2:
         return
 
+    ensure_taxon_nodes_for_organisms_lineages([organism_obj])
+
     lineage_ids = [str(x) for x in lineage if x is not None]
-    present = set(TaxonNode.objects(taxid__in=lineage_ids).scalar("taxid"))
+    expanded_lineage = _taxid_match_values(lineage_ids)
+    present = {
+        str(x).strip()
+        for x in TaxonNode.objects(taxid__in=expanded_lineage).scalar("taxid")
+        if x is not None
+    }
     coll = TaxonNode._get_collection()
     ops: List[UpdateOne] = []
     for i in range(len(lineage_ids) - 1):

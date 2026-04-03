@@ -2,7 +2,16 @@ import logging
 import os
 from typing import Dict, List, Optional
 
-from jobs import annotrieve, assemblies, biosamples, organism_images, organisms, reads, taxonomy
+from jobs import (
+    annotrieve,
+    assemblies,
+    biosamples,
+    catalog_ingest_tasks,
+    organism_images,
+    organisms,
+    reads,
+    taxonomy,
+)
 from werkzeug.exceptions import BadRequest, NotFound
 
 logger = logging.getLogger(__name__)
@@ -25,15 +34,23 @@ JOB_MODELS = {
     },
     'helpers': {
         'backfill_taxon_parents': taxonomy.backfill_taxon_parents_and_refresh_counts,
+        'backfill_organism_lineage_rank_labels': taxonomy.backfill_organism_lineage_rank_labels,
+        'backfill_organism_lineage_rank_labels_for_taxids': taxonomy.backfill_organism_lineage_rank_labels_for_taxids,
+        'catalog_ingest_taxonomy_bootstrap': catalog_ingest_tasks.catalog_ingest_taxonomy_bootstrap_task,
+        'catalog_ingest_reload_prune_finalize': catalog_ingest_tasks.catalog_ingest_reload_prune_finalize_task,
+        'enrich_organisms_post_taxonomy': taxonomy.enrich_organisms_post_taxonomy,
         'unset_taxon_node_legacy_fields': taxonomy.unset_taxon_node_legacy_fields,
         'refresh_taxonomy': taxonomy.refresh_taxonomy_recurrent,
     },
     'organisms': {
         'fetch_tolid_prefixes': organisms.fetch_tolid_prefixes_task,
         'fetch_external_images': organism_images.fetch_external_images_task,
+        'fetch_iucn_redlist': organisms.fetch_iucn_redlist_task,
+        'backfill_iucn_redlist': organisms.backfill_iucn_redlist_task,
     },
     'annotations': {
         'import': annotrieve.import_annotations_from_annotrieve,
+        'import_for_assembly_accessions': annotrieve.import_annotations_for_assembly_accessions,
     },
 
 }

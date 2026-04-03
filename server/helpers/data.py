@@ -1,4 +1,6 @@
 from mongoengine.queryset.visitor import Q
+import json
+from typing import List, Optional
 from werkzeug.exceptions import BadRequest
 from db.model import (
     Assembly,
@@ -8,8 +10,10 @@ from db.model import (
     LocalSample,
     Organism,
     ReadRun,
+    SampleCoordinates,
     TaxonNode,
 )
+from helpers import geolocation as geolocation_helper
 from helpers.rest_catalog_sync import sync_species_after_catalog_change
 from . import query_visitors
 
@@ -85,13 +89,206 @@ CATALOG_MODEL_KEYS = frozenset(MODEL_MAPPER.keys()) - frozenset(
 )
 
 
+def _insdc_counts_any_q(raw: str) -> Optional[Q]:
+    """
+    OR-combine count predicates for GET /organisms (portal status UI).
+
+    Comma-separated codes: bio, reads, asm, ann, none
+    (biosamples_count>0, reads_count>0, assemblies_count>0,
+    genome_annotations_count>0, or none of those).
+    """
+    parts = [p.strip().lower() for p in raw.split(",") if p.strip()]
+    if not parts:
+        return None
+    clauses: List[Q] = []
+    for p in parts:
+        if p == "bio":
+            clauses.append(Q(biosamples_count__gt=0))
+        elif p == "reads":
+            clauses.append(Q(reads_count__gt=0))
+        elif p == "asm":
+            clauses.append(Q(assemblies_count__gt=0))
+        elif p == "ann":
+            clauses.append(Q(genome_annotations_count__gt=0))
+        elif p == "none":
+            has_any = (
+                Q(biosamples_count__gt=0)
+                | Q(reads_count__gt=0)
+                | Q(assemblies_count__gt=0)
+                | Q(genome_annotations_count__gt=0)
+            )
+            clauses.append(~has_any)
+    if not clauses:
+        return None
+    combined = clauses[0]
+    for c in clauses[1:]:
+        combined |= c
+    return combined
+
+
+def _truthy_query_flag(value) -> bool:
+    if value is None or value is False:
+        return False
+    if isinstance(value, str):
+        return value.strip().lower() in ("1", "true", "yes", "on")
+    return bool(value)
+
+
+def _catalog_params_as_plain_dict(immutable_dict):
+    """Flask ``request.args`` / MultiDict → flat dict so all query keys reach catalog filters."""
+    if immutable_dict is None:
+        return {}
+    if hasattr(immutable_dict, "to_dict"):
+        return immutable_dict.to_dict(flat=True)
+    return dict(immutable_dict)
+
+
+def _geojson_polygon_or_none(geo):
+    """
+    Return geo only if it is a usable Polygon / MultiPolygon for ``geo_within``.
+    Rejects {}, GeometryCollection, etc., which would otherwise skip geo match and match all samples.
+    """
+    if not geo or not isinstance(geo, dict):
+        return None
+    t = geo.get("type")
+    coords = geo.get("coordinates")
+    if t not in ("Polygon", "MultiPolygon"):
+        return None
+    if not isinstance(coords, list) or len(coords) == 0:
+        return None
+    if t == "Polygon":
+        ring0 = coords[0] if coords else None
+        if not isinstance(ring0, list) or len(ring0) < 3:
+            return None
+    return geo
+
+
+def _match_dict_from_organism_queryset(items):
+    try:
+        q = items._query
+    except Exception:
+        return {}
+    if not q:
+        return {}
+    if isinstance(q, dict):
+        return dict(q)
+    return dict(q)
+
+
+def _taxids_with_sample_locations_for_organism_match(org_match: dict):
+    """
+    Taxids of organisms matching ``org_match`` that have at least one SampleCoordinates row.
+    Uses $lookup (no giant distinct $in list).
+    """
+    org_coll = Organism._get_collection()
+    sc_name = SampleCoordinates._get_collection().name
+    pipeline = [
+        {"$match": org_match},
+        {
+            "$lookup": {
+                "from": sc_name,
+                "localField": "taxid",
+                "foreignField": "taxid",
+                "as": "_sc",
+            }
+        },
+        {"$match": {"_sc": {"$ne": []}}},
+        {"$project": {"taxid": 1, "_id": 0}},
+    ]
+    out = []
+    seen = set()
+    for doc in org_coll.aggregate(pipeline, allowDiskUse=True):
+        t = doc.get("taxid")
+        if t is None:
+            continue
+        s = str(t).strip()
+        if not s or s in seen:
+            continue
+        seen.add(s)
+        out.append(s)
+    return out
+
+
+def organism_queryset_for_map_filters(immutable_dict):
+    """
+    Organism queryset for catalog map / frequency: same filters as GET /organisms
+    (taxon_lineage, text filter, polygon → sample taxids, insdc_counts_any, etc.)
+    without pagination, sort, format, or field projection.
+    """
+    mapper = MODEL_MAPPER["organisms"]
+    args = dict(_catalog_params_as_plain_dict(immutable_dict))
+
+    filter = args.pop("filter", None)
+    q_query = mapper.get("query")(filter) if filter else None
+
+    for k in ("limit", "offset", "format", "fields", "sort_column", "sort_order"):
+        args.pop(k, None)
+
+    insdc_counts_any_raw = args.pop("insdc_counts_any", None)
+
+    has_sample_locations = _truthy_query_flag(args.pop("has_sample_locations", None))
+
+    polygon_geo = None
+    raw_poly = args.pop("polygon", None)
+    if raw_poly:
+        if isinstance(raw_poly, str):
+            try:
+                polygon_geo = json.loads(raw_poly)
+            except (json.JSONDecodeError, TypeError):
+                raise BadRequest(description="polygon must be valid JSON geometry")
+        elif isinstance(raw_poly, dict):
+            polygon_geo = raw_poly
+
+    polygon_geo = _geojson_polygon_or_none(polygon_geo)
+
+    query, q_query = create_query(args, q_query)
+
+    items = Organism.objects(**query)
+
+    if q_query:
+        items = items.filter(q_query)
+
+    if insdc_counts_any_raw:
+        icq = _insdc_counts_any_q(str(insdc_counts_any_raw))
+        if icq is not None:
+            items = items.filter(icq)
+
+    # Map polygon filter: coordinates live on SampleCoordinates, not Organism.
+    if polygon_geo is not None:
+        geo_args = {"polygon": polygon_geo}
+        taxon_lineage = args.get("taxon_lineage")
+        if taxon_lineage:
+            geo_args["taxid"] = taxon_lineage
+        sample_q = geolocation_helper.create_query(geo_args)
+        taxids = [
+            str(t)
+            for t in SampleCoordinates.objects(sample_q).distinct("taxid")
+            if t is not None and str(t).strip()
+        ]
+        if not taxids:
+            items = items.filter(taxid="__no_samples_in_map_selection__")
+        else:
+            items = items.filter(taxid__in=taxids)
+
+    elif has_sample_locations:
+        org_match = _match_dict_from_organism_queryset(items)
+        taxids = _taxids_with_sample_locations_for_organism_match(org_match)
+        if not taxids:
+            items = items.filter(taxid="__no_samples_in_map_selection__")
+        else:
+            items = items.filter(taxid__in=taxids)
+
+    return items
+
+
 def get_items(model, immutable_dict):
     from helpers import resource_mixins as rm
 
     try:
         mapper = MODEL_MAPPER.get(model)
 
-        args = dict(**immutable_dict)
+        params = _catalog_params_as_plain_dict(immutable_dict)
+        args = dict(params)
 
         filter = args.pop("filter", None)
 
@@ -112,12 +309,15 @@ def get_items(model, immutable_dict):
                 selected_fields, mapper.get("selectable_fields")
             )
 
-        query, q_query = create_query(args, q_query)
+        if model == "organisms":
+            items = organism_queryset_for_map_filters(params)
+        else:
+            query, q_query = create_query(args, q_query)
 
-        items = mapper.get("model").objects(**query)
+            items = mapper.get("model").objects(**query)
 
-        if q_query:
-            items = items.filter(q_query)
+            if q_query:
+                items = items.filter(q_query)
 
         if sort_column and sort_order:
             sort = "-" + sort_column if sort_order == "desc" else sort_column
@@ -193,7 +393,7 @@ def create_query(args, q_query):
         if value == "No Entry" or ("__exists" in key and value is False):
             value = None
 
-        if "metadata." in key:
+        if "." in key:
             key = key.replace(".", "__")
 
         # Handle greater than/less than conditions

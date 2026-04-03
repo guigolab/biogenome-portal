@@ -1,3 +1,4 @@
+import json
 import logging
 
 from db.model import (
@@ -16,16 +17,6 @@ from werkzeug.exceptions import BadRequest
 logger = logging.getLogger(__name__)
 
 MODELS = ['organisms', 'biosamples', 'reads', 'assemblies', 'local_samples', 'annotations']
-
-_UNIQUE_LOCATIONS_PIPELINE = [
-    {
-        "$group": {
-            "_id": "$coordinates",
-            "count": {"$sum": 1},
-            "images": {"$push": "$image"},
-        }
-    },
-]
 
 MODEL_MAP = {
     'organisms': {
@@ -88,17 +79,131 @@ def post_sample_locations(data):
         raise BadRequest(description=str(e))
 
 
+def _frequency_request_dict(filter_args):
+    """Normalize GET args, JSON body, or form into a plain dict for geo + organism filters."""
+    if filter_args is None:
+        return {}
+    if isinstance(filter_args, dict):
+        d = dict(filter_args)
+    else:
+        d = filter_args.to_dict(flat=True)
+    poly = d.get("polygon")
+    if isinstance(poly, str) and poly.strip().startswith("{"):
+        try:
+            d["polygon"] = json.loads(poly)
+        except (json.JSONDecodeError, TypeError):
+            pass
+    return d
+
+
+def _organism_lookup_match_from_qs(items):
+    """MongoDB $match body for a $lookup subpipeline on the organism collection."""
+    try:
+        q = items._query
+    except Exception:
+        return {}
+    if not q:
+        return {}
+    if isinstance(q, dict):
+        return dict(q)
+    return dict(q)
+
+
 def _aggregate_unique_locations(filter_args):
-    query = geolocation.create_query(filter_args)
-    coords = SampleCoordinates.objects(query).exclude("id")
-    return [
-        dict(
-            coordinates=doc["_id"]["coordinates"],
-            count=doc["count"],
-            images=doc["images"],
-        )
-        for doc in coords.aggregate(_UNIQUE_LOCATIONS_PIPELINE)
-    ]
+    """
+    Per coordinate, count distinct sample taxids whose organism matches the same catalog
+    filters as GET /organisms (via $lookup), after SampleCoordinates geo/text filters.
+    """
+    from helpers import data as data_helper
+
+    data = _frequency_request_dict(filter_args)
+
+    if data.get("taxon_lineage") and not data.get("taxid"):
+        data = dict(data)
+        data["taxid"] = data["taxon_lineage"]
+
+    sample_q = geolocation.create_query(data)
+    try:
+        org_items = data_helper.organism_queryset_for_map_filters(data)
+    except BadRequest:
+        raise
+    except Exception as e:
+        logger.exception("_aggregate_unique_locations organism filter failed: %s", e)
+        raise BadRequest(description=str(e))
+
+    sc_coll = SampleCoordinates._get_collection()
+    org_coll = Organism._get_collection()
+
+    sample_qs = SampleCoordinates.objects(sample_q)
+    try:
+        sample_match = dict(sample_qs._query) if sample_qs._query else {}
+    except Exception:
+        sample_match = {}
+
+    org_match = _organism_lookup_match_from_qs(org_items)
+
+    expr = {
+        "$eq": [
+            {"$toString": "$taxid"},
+            {"$toString": "$$tid"},
+        ]
+    }
+    if org_match:
+        inner_match = {"$and": [{"$expr": expr}, org_match]}
+    else:
+        inner_match = {"$expr": expr}
+
+    pipeline = []
+    if sample_match:
+        pipeline.append({"$match": sample_match})
+
+    pipeline.extend(
+        [
+            {
+                "$lookup": {
+                    "from": org_coll.name,
+                    "let": {"tid": "$taxid"},
+                    "pipeline": [{"$match": inner_match}],
+                    "as": "_org_hit",
+                }
+            },
+            {"$match": {"_org_hit": {"$ne": []}}},
+            {"$group": {"_id": "$coordinates", "taxids": {"$addToSet": "$taxid"}}},
+            {
+                "$project": {
+                    "_id": 0,
+                    "coord": "$_id",
+                    "taxids": "$taxids",
+                    "count": {"$size": "$taxids"},
+                }
+            },
+        ]
+    )
+
+    out = []
+    for doc in sc_coll.aggregate(pipeline, allowDiskUse=True):
+        coord = doc.get("coord")
+        count = doc.get("count", 0)
+        raw_taxids = doc.get("taxids") or []
+        taxids = [
+            str(t).strip()
+            for t in raw_taxids
+            if t is not None and str(t).strip()
+        ]
+        if isinstance(coord, dict) and coord.get("type") == "Point":
+            coords = coord.get("coordinates")
+        elif isinstance(coord, (list, tuple)) and len(coord) >= 2:
+            coords = list(coord)
+        else:
+            continue
+        if not coords or len(coords) < 2:
+            continue
+        row = {"coordinates": coords, "count": int(count)}
+        if taxids:
+            row["taxids"] = taxids
+        out.append(row)
+
+    return out
 
 
 def get_unique_sample_locations(args):

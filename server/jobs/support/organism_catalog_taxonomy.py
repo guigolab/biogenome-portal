@@ -64,6 +64,16 @@ def parse_taxons_and_organisms_from_ena_browser(xml_path: str) -> Tuple[List[Org
                     taxon_lineage=[taxid],
                 )
 
+                # 1:1 Organism ↔ TaxonNode at the organism taxid (tree leaf). Lineage children are
+                # ancestors only; the primary <taxon> element was previously omitted from inserts.
+                if taxid not in taxons_dict:
+                    raw_rank = (elem.get("rank") or "").strip().lower() or "species"
+                    taxons_dict[taxid] = TaxonNode(
+                        taxid=taxid,
+                        name=elem.get("scientificName") or "",
+                        rank=raw_rank,
+                    )
+
                 lineage_elem = elem.find("lineage")
                 if lineage_elem is not None:
                     for lt in lineage_elem.findall("taxon"):
@@ -223,6 +233,9 @@ def handle_full_taxonomy_from_taxids(
     which runs :func:`helpers.organism.retrieve_taxonomic_info` (ENA browser → ENA portal
     → NCBI → ENA Taxonomy REST + browser).
 
+    After bulk Organism insert, runs :func:`bulk_copy_organism_lineages_to_catalog` for
+    that batch so every lineage taxon is linked (``parent`` / ``children``) immediately.
+
     This helper does not run denormalization and does not schedule/fetch ToLID.
     """
     saved_taxids: List[str] = []
@@ -280,6 +293,20 @@ def handle_full_taxonomy_from_taxids(
                 )
 
         _insert_new_taxon_nodes_from_dict(taxons_dict)
+
+        if bulk_inserted and unique_orgs:
+            batch_species_tids = [
+                str(o.taxid).strip()
+                for o in unique_orgs
+                if o.taxid is not None and str(o.taxid).strip()
+            ]
+            if batch_species_tids:
+                # Lazy import avoids circular import (finalize imports this module).
+                from jobs.support.organism_catalog_finalize import (
+                    bulk_copy_organism_lineages_to_catalog,
+                )
+
+                bulk_copy_organism_lineages_to_catalog(batch_species_tids)
 
         _fallback_create_organisms_for_taxids(missing_from_bulk, saved_taxids)
 

@@ -12,16 +12,44 @@ class Publication(db.EmbeddedDocument):
     source = db.EnumField(PublicationSource)
     id = db.StringField()
 
-
-class OrganismAttributedImage(db.EmbeddedDocument):
-    """Species image from an external provider with attribution for license compliance."""
-
+class OrganismImage(db.EmbeddedDocument):
     url = db.URLField(required=True)
     author = db.StringField()
-    source = db.EnumField(ExternalImageSource, required=True)
+    source_record_url = db.URLField(required=True)
     license = db.StringField(required=True)
     license_url = db.URLField()
-    source_record_url = db.URLField()
-    external_id = db.StringField()
-    verified_taxon_name = db.StringField()
-    fetched_at = db.DateTimeField(default=datetime.datetime.utcnow)
+
+
+class OrganismLineageRankLabels(db.EmbeddedDocument):
+    """
+    Scientific names at major ranks along the organism's ``taxon_lineage`` (taxids).
+
+    Populated from :class:`~db.model.TaxonNode` rows; keys align with NCBI-style ranks.
+    ``class_name`` stores the taxon name for rank ``class`` (``class`` is reserved in Python).
+    """
+    kingdom = db.StringField()
+    phylum = db.StringField()
+    class_name = db.StringField()
+    order = db.StringField()
+    family = db.StringField()
+    genus = db.StringField()
+
+
+class OrganismRedList(db.EmbeddedDocument):
+    """
+    Cached IUCN Red List assessment snapshot (API v4).
+
+    ``habitats`` / ``threats`` preserve API list items; ``narratives`` holds text from
+    ``documentation`` and string fields under ``supplementary_info`` (truncated for size).
+    """
+
+    not_found = db.BooleanField(default=False)
+    category = db.StringField()
+    population_trend = db.StringField()
+    assessment_date = db.StringField()
+    published_year = db.StringField()
+    habitats = db.ListField(db.DictField())
+    threats = db.ListField(db.DictField())
+    narratives = db.DictField()
+    fetched_at = db.DateTimeField()
+    source_api_version = db.StringField(default="v4")

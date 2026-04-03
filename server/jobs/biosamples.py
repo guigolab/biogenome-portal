@@ -9,10 +9,10 @@ from clients import ebi_client
 from db.model import BioSample
 
 from helpers.data import create_batches
-from jobs.organisms import fetch_tolid_prefixes_task
-from jobs.support.organism_catalog_sync import (
-    handle_full_taxonomy_from_taxids,
-    reload_prune_denorm_after_taxonomy_import,
+from jobs.taxonomy import enrich_organisms_post_taxonomy
+from jobs.support.catalog_ingest_pipeline import (
+    reload_prune_denorm_after_primary_import,
+    run_phase2_taxonomy_bootstrap,
 )
 from jobs.support.geolocation_batch import update_geolocations
 from parsers import biosample as biosample_parser
@@ -157,15 +157,14 @@ def import_biosamples_from_project_names():
     try:
         biosample_taxids = _scalar_taxids_for_accessions(saved_accessions)
         biosample_taxids = [t for t in biosample_taxids if t]
-        saved_organism_taxids = handle_full_taxonomy_from_taxids(
-            biosample_taxids, TMP_DIR
-        )
-        removed = reload_prune_denorm_after_taxonomy_import(
+        saved_organism_taxids = run_phase2_taxonomy_bootstrap(biosample_taxids, TMP_DIR)
+        removed = reload_prune_denorm_after_primary_import(
             BioSample,
             "accession",
             saved_accessions,
             saved_organism_taxids,
             merge_context="biosample_import",
+            apply_goat_inference=True,
         )
         stats["orphan_biosamples_removed"] += removed
         if removed:
@@ -174,7 +173,7 @@ def import_biosamples_from_project_names():
                 removed,
             )
         if saved_organism_taxids:
-            fetch_tolid_prefixes_task.delay(list(saved_organism_taxids))
+            enrich_organisms_post_taxonomy.delay(list(saved_organism_taxids))
         update_geolocations(saved_accessions)
     except Exception:
         logger.exception(

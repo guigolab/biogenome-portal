@@ -7,11 +7,11 @@ from celery import shared_task
 from clients import ebi_client
 from db.model import Experiment, Read, ReadRun
 from helpers.job_paths import ensure_parent_dir, safe_remove_file
-from jobs.organisms import fetch_tolid_prefixes_task
+from jobs.taxonomy import enrich_organisms_post_taxonomy
 from jobs.support.biosample_bulk import handle_biosamples_from_accessions
-from jobs.support.organism_catalog_sync import (
-    handle_full_taxonomy_from_taxids,
-    reload_prune_denorm_after_taxonomy_import,
+from jobs.support.catalog_ingest_pipeline import (
+    reload_prune_denorm_after_primary_import,
+    run_phase2_taxonomy_bootstrap,
 )
 from jobs.support.geolocation_batch import update_geolocations
 from jobs.support.readrun_ena_tsv import ingest_readruns_from_ena_tsv
@@ -68,13 +68,14 @@ def get_reads_from_bioproject_accession(
         )
 
         taxids = ReadRun.objects(run_accession__in=new_read_accessions).scalar("taxid")
-        saved_organism_taxids = handle_full_taxonomy_from_taxids(taxids, TMP_DIR)
+        saved_organism_taxids = run_phase2_taxonomy_bootstrap(taxids, TMP_DIR)
 
-        removed = reload_prune_denorm_after_taxonomy_import(
+        removed = reload_prune_denorm_after_primary_import(
             ReadRun,
             "run_accession",
             new_read_accessions or None,
             saved_organism_taxids,
+            apply_goat_inference=True,
         )
         if removed:
             logger.info(
@@ -83,7 +84,7 @@ def get_reads_from_bioproject_accession(
             )
 
         if saved_organism_taxids:
-            fetch_tolid_prefixes_task.delay(list(saved_organism_taxids))
+            enrich_organisms_post_taxonomy.delay(list(saved_organism_taxids))
 
         update_geolocations(saved_biosample_accessions)
 

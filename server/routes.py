@@ -60,6 +60,8 @@ def _rows():
         (stats.FieldStatsApi, "/api/stats/<model>/<field>"),
         # --- Taxonomy tree ---
         (taxons.RootTreeApi, "/api/tree"),
+        (taxons.SubTreeApi, "/api/tree/<taxid>/<rank_level>"),
+        (taxons.SubTreeLookupApi, "/api/tree/<taxid>/<rank_level>/lookup"),
         # --- Sample locations / coordinates ---
         (sample_locations.SampleLocations, "/api/coordinates"),
         (sample_locations.LocationFromCoords, "/api/coordinates/<coordinates>"),
@@ -105,7 +107,8 @@ def _rows():
         (local_samples.LocalSampleApi, "/api/local_samples/<local_id>"),
         # --- Read runs (INSDC): same URL shape as assemblies (POST = ENA filereport import) ---
         (reads.ReadApi, "/api/reads/<accession>"),
-        # --- Taxons ---
+        # --- Taxons (``/taxons/root`` before ``<taxid>`` so ``root`` is not captured as id) ---
+        (taxons.RootTaxonApi, "/api/taxons/root"),
         (taxons.TaxonApi, "/api/taxons/<taxid>"),
         (taxons.TaxonChildrenApi, "/api/taxons/<taxid>/children"),
         (taxons.TaxonAncestoresApi, "/api/taxons/<taxid>/ancestors"),

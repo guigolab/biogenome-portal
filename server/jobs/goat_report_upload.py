@@ -9,10 +9,10 @@ from db.constants import GOAT_PROJECT_NAME
 from db.model import BioGenomeUser, Organism
 from helpers import user as user_helper
 from helpers.upload_temp import safe_unlink
-from jobs.organisms import fetch_tolid_prefixes_task
+from jobs.taxonomy import enrich_organisms_post_taxonomy
+from jobs.support.catalog_ingest_pipeline import finalize_touched_species_catalog
 from jobs.support.organism_catalog_sync import (
     bulk_apply_goat_report_updates,
-    finalize_organism_catalog_for_taxids,
     import_missing_organisms_for_taxids,
     species_upload_permission_errors,
 )
@@ -197,13 +197,13 @@ def upload_goat_report(self, username, report_path, sub_project=None):
 
     sync_taxids = sorted(set(taxids_updated) | {str(t) for t in saved_organism_taxids if t})
     if sync_taxids:
-        finalize_organism_catalog_for_taxids(
+        finalize_touched_species_catalog(
             sync_taxids,
             copy_lineages=False,
-            apply_goat_inference=False,
+            apply_goat_inference=bool(GOAT_PROJECT_NAME),
         )
     if saved_organism_taxids:
-        fetch_tolid_prefixes_task.delay(list(saved_organism_taxids))
+        enrich_organisms_post_taxonomy.delay(list(saved_organism_taxids))
 
     self.update_state(
         state=states.PENDING,

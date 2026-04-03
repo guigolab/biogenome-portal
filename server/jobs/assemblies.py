@@ -5,29 +5,39 @@ from typing import Any, Dict, Iterable, List, Optional, Set
 from celery import shared_task
 
 from clients.ncbi_client import query_datasets_to_file
-from db.model import Assembly, BioSample, Organism
+from db.model import Assembly, BioSample
 from helpers.data import create_batches
 from helpers.job_paths import ensure_parent_dir, safe_remove_file
-from jobs.support.organism_catalog_sync import (
-    delete_rows_without_organism,
-    finalize_organism_catalog_for_taxids,
-    handle_full_taxonomy_from_taxids,
-)
+from jobs.support.organism_catalog_sync import delete_rows_without_organism
 from jobs.support.assembly_jsonl import (
     bulk_link_blobtoolkit_for_assembly_accessions,
-    collect_sample_accessions_for_taxids,
+    collect_sample_accessions_from_assembly_rows,
     collect_taxids_from_assembly_rows,
     merge_assembly_jsonl_rows_from_paths,
     persist_assembly_import_payload,
 )
+from jobs.support.catalog_ingest_pipeline import (
+    finalize_touched_species_catalog,
+    run_phase2_taxonomy_bootstrap,
+)
 from jobs.support.biosample_bulk import handle_biosamples_from_accessions
 from jobs.support.geolocation_batch import update_geolocations
-from jobs.organisms import fetch_tolid_prefixes_task
+from jobs.support.ingest_job_utils import (
+    dedupe_nonempty_strs,
+    maybe_enqueue_enrich_organisms,
+    scalar_taxids_batched,
+)
 
 logger = logging.getLogger(__name__)
 
 PROJECT_ACCESSION = os.getenv("PROJECT_ACCESSION")
 TMP_DIR = os.getenv("TMP_DIR", "/tmp")
+
+
+def _assembly_import_triggers_annotrieve() -> bool:
+    """When true (default), enqueue Annotrieve annotation upsert after new assemblies."""
+    v = os.getenv("ASSEMBLY_IMPORT_TRIGGER_ANNOTRIEVE", "1").strip().lower()
+    return v not in ("0", "false", "no", "off")
 
 
 def _write_accession_batch(path: str, batch: List[str]) -> None:
@@ -49,7 +59,8 @@ def _run_assembly_import_pipeline(
     1. Primary model: parse/persist assemblies (+ chromosomes).
     2. Secondary model: fetch linked biosamples when present.
     3. Taxonomy bootstrap: create/fetch organisms for touched taxids.
-    4. Related updates: prune, finalize, geolocation, async ToLID, BlobToolKit.
+    4. Prune catalog rows without Organism (cascade chromosomes / related).
+    5. Finalize denorm for all touched species; geolocation; enrichment; BlobToolKit.
     """
     if not jsonl_paths:
         return {
@@ -72,15 +83,8 @@ def _run_assembly_import_pipeline(
     if not all_taxids:
         logger.warning("%s: no taxids found in assembly JSONL rows.", context_label)
 
-    saved_organism_taxids = handle_full_taxonomy_from_taxids(list(all_taxids), TMP_DIR)
-
-    # Species that have an Organism among JSONL taxids (string-normalised). Gates assembly writes.
-    taxids_with_organism: Set[str] = {
-        str(t) for t in Organism.objects(taxid__in=list(all_taxids)).scalar("taxid") if t
-    }
-
-    assembly_biosample_accessions = collect_sample_accessions_for_taxids(
-        new_rows, assemblies_to_update, taxids_with_organism
+    assembly_biosample_accessions = collect_sample_accessions_from_assembly_rows(
+        new_rows, assemblies_to_update
     )
 
     newly_fetched_biosample_accessions: List[str] = []
@@ -92,8 +96,10 @@ def _run_assembly_import_pipeline(
     saved_assembly_accessions = persist_assembly_import_payload(
         new_rows,
         assemblies_to_update,
-        taxids_with_organism=taxids_with_organism,
+        taxids_with_organism=None,
     )
+
+    saved_organism_taxids = run_phase2_taxonomy_bootstrap(list(all_taxids), TMP_DIR)
 
     if not saved_assembly_accessions:
         logger.warning(
@@ -118,23 +124,30 @@ def _run_assembly_import_pipeline(
             BioSample, "accession", newly_fetched_biosample_accessions
         )
 
-    # Simplicity-first: refresh only species taxids on surviving saved assemblies.
+    species_from_assemblies: Set[str] = {
+        str(t)
+        for t in Assembly.objects(accession__in=saved_assembly_accessions).scalar("taxid")
+        if t is not None and str(t).strip()
+    }
+    species_from_biosamples: Set[str] = scalar_taxids_batched(
+        BioSample,
+        "accession",
+        newly_fetched_biosample_accessions,
+        batch_size=5000,
+    )
     species_to_refresh = sorted(
-        {
-            str(t)
-            for t in Assembly.objects(accession__in=saved_assembly_accessions).scalar("taxid")
-            if t is not None and str(t).strip()
-        }
+        species_from_assemblies
+        | species_from_biosamples
+        | {str(t) for t in saved_organism_taxids if t}
     )
 
     if species_to_refresh:
-        finalize_organism_catalog_for_taxids(species_to_refresh, copy_lineages=True)
+        finalize_touched_species_catalog(species_to_refresh, copy_lineages=True)
 
     if newly_fetched_biosample_accessions:
         update_geolocations(newly_fetched_biosample_accessions)
 
-    if saved_organism_taxids:
-        fetch_tolid_prefixes_task.delay(list(saved_organism_taxids))
+    maybe_enqueue_enrich_organisms(saved_organism_taxids)
 
     blob_stats = {
         "blobtoolkit_updated": 0,
@@ -151,6 +164,16 @@ def _run_assembly_import_pipeline(
         if still_present:
             blob_stats = bulk_link_blobtoolkit_for_assembly_accessions(still_present)
 
+    if (
+        _assembly_import_triggers_annotrieve()
+        and saved_assembly_accessions
+    ):
+        from jobs.annotrieve import import_annotations_for_assembly_accessions
+
+        import_annotations_for_assembly_accessions.delay(
+            list(saved_assembly_accessions)
+        )
+
     return {
         "saved_assembly_accessions": saved_assembly_accessions,
         "saved_biosample_accessions": newly_fetched_biosample_accessions,
@@ -163,8 +186,8 @@ def _run_assembly_import_pipeline(
 @shared_task(name="assemblies_import", ignore_result=False)
 def import_assemblies_by_bioproject(project_accession: Optional[str] = None) -> Dict[str, Any]:
     """
-    Download project JSONL, then run ``_run_assembly_import_pipeline`` (organisms → biosamples
-    → gated assembly/chromosome persistence → lineage reload → denorm sync).
+    Download project JSONL, then run ``_run_assembly_import_pipeline`` (assemblies → biosamples
+    → taxonomy → orphan prune with cascades → finalize all touched species → geolocation / enrich).
     """
     if not project_accession:
         project_accession = PROJECT_ACCESSION
@@ -223,9 +246,7 @@ def import_assemblies_from_accessions(
 
     # Collapse duplicates (same as reads: many jobs pass redundant accessions); merge also
     # dedupes per JSONL, but this avoids duplicate datasets calls and duplicate JSONL rows.
-    accessions_list = list(
-        dict.fromkeys(str(a).strip() for a in accessions if a and str(a).strip())
-    )
+    accessions_list = dedupe_nonempty_strs(accessions)
     logger.info("Assemblies to fetch: %s (unique)", len(accessions_list))
 
     batches = create_batches(accessions_list, 1000)

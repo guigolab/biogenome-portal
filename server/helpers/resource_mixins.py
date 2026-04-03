@@ -1,4 +1,5 @@
 import csv
+import datetime
 import json
 import logging
 from io import StringIO
@@ -94,18 +95,101 @@ def get_nested_value(dictionary, keys):
         return " "
 
 
+def _format_tsv_scalar(value):
+    """Single cell value for TSV (no tabs/newlines in output)."""
+    if value is None:
+        return ""
+    if isinstance(value, str):
+        return value.replace("\t", " ").replace("\n", " ").replace("\r", " ")
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, (int, float)):
+        return str(value)
+    if isinstance(value, datetime.datetime):
+        return value.isoformat()
+    if isinstance(value, dict):
+        return json.dumps(value, separators=(",", ":"), default=str).replace("\t", " ")
+    return str(value).replace("\t", " ").replace("\n", " ").replace("\r", " ")
+
+
+def _format_publications_tsv(raw):
+    if not raw:
+        return ""
+    parts = []
+    for p in raw:
+        if not isinstance(p, dict):
+            continue
+        src = p.get("source")
+        pid = p.get("id", "")
+        if src is None and not pid:
+            continue
+        parts.append(f"{src}:{pid}" if src is not None else str(pid))
+    return "; ".join(parts)
+
+
+def _format_images_tsv(raw):
+    if not raw:
+        return ""
+    parts = []
+    for img in raw:
+        if not isinstance(img, dict):
+            continue
+        url = (img.get("url") or "").strip()
+        if not url:
+            continue
+        lic = (img.get("license") or "").strip()
+        parts.append(f"{url} [{lic}]" if lic else url)
+    return " | ".join(parts)
+
+
+def _format_common_names_tsv(raw):
+    if not raw:
+        return ""
+    parts = []
+    for c in raw:
+        if not isinstance(c, dict):
+            continue
+        val = (c.get("value") or "").strip()
+        if not val:
+            continue
+        lang = c.get("lang")
+        loc = c.get("locality")
+        bits = [val]
+        if lang:
+            bits.append(str(lang))
+        if loc:
+            bits.append(str(loc))
+        parts.append(" / ".join(bits) if len(bits) > 1 else val)
+    return "; ".join(parts)
+
+
+def _resolve_tsv_cell(item, field_key):
+    """Resolve one TSV column from a catalog row dict (PyMongo-style)."""
+    if "." in field_key:
+        value = get_nested_value(item, field_key)
+        if value == " ":
+            value = None
+        return _format_tsv_scalar(value)
+
+    value = item.get(field_key)
+    if field_key == "publications":
+        return _format_publications_tsv(value)
+    if field_key == "images":
+        return _format_images_tsv(value)
+    if field_key == "common_names":
+        return _format_common_names_tsv(value)
+
+    if isinstance(value, list):
+        if value and isinstance(value[0], dict):
+            return _format_tsv_scalar(value)
+        return ",".join(_format_tsv_scalar(x) for x in value)
+
+    return _format_tsv_scalar(value)
+
+
 def _tsv_row_from_item(item, fields):
     """Build a single TSV row (list of values) from an item and field names."""
-    new_row = []
-    for k in fields:
-        if "metadata." in k:
-            value = get_nested_value(item, k)
-        else:
-            value = item.get(k)
-        if isinstance(value, list):
-            value = ",".join(map(str, value))
-        new_row.append(value)
-    return new_row
+    return [_resolve_tsv_cell(item, k) for k in fields]
 
 
 def create_tsv(items, fields):

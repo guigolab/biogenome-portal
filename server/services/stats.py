@@ -36,18 +36,28 @@ def get_stats(model, field, query):
     if q_query:
         items = items.filter(q_query)
 
+    # Normalize scalar vs array so $unwind is reliable for embedded dot paths (e.g. iucn_redlist.category).
     pipeline = [
         {
-            "$project": {
-                "field_value": {
-                    "$ifNull": [f"${field}", f"{NO_VALUE_KEY}"],
+            "$set": {
+                "_fv": {"$ifNull": [f"${field}", NO_VALUE_KEY]},
+            }
+        },
+        {
+            "$set": {
+                "_fv_list": {
+                    "$cond": {
+                        "if": {"$isArray": "$_fv"},
+                        "then": "$_fv",
+                        "else": ["$_fv"],
+                    }
                 }
             }
         },
-        {"$unwind": "$field_value"},
+        {"$unwind": "$_fv_list"},
         {
             "$group": {
-                "_id": "$field_value",
+                "_id": "$_fv_list",
                 "count": {"$sum": 1},
             }
         },

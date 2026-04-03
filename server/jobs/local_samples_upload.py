@@ -9,9 +9,9 @@ from celery import shared_task, states
 from db.model import BioGenomeUser, LocalSample, Organism
 from helpers import data as data_helper, geolocation as geoloc_helper, user as user_helper
 from helpers.upload_temp import safe_unlink
-from jobs.organisms import fetch_tolid_prefixes_task
+from jobs.taxonomy import enrich_organisms_post_taxonomy
+from jobs.support.catalog_ingest_pipeline import finalize_touched_species_catalog
 from jobs.support.organism_catalog_sync import (
-    finalize_organism_catalog_for_taxids,
     import_missing_organisms_for_taxids,
     species_upload_permission_errors,
 )
@@ -249,12 +249,13 @@ def upload_samples_spreadsheet(
             )
 
     if taxids_to_sync:
-        finalize_organism_catalog_for_taxids(
+        finalize_touched_species_catalog(
             sorted(taxids_to_sync),
             copy_lineages=False,
+            apply_goat_inference=True,
         )
     if saved_organism_taxids_from_ena:
-        fetch_tolid_prefixes_task.delay(saved_organism_taxids_from_ena)
+        enrich_organisms_post_taxonomy.delay(list(saved_organism_taxids_from_ena))
 
     if created_taxids_for_user:
         user_helper.add_species_to_datamanager(created_taxids_for_user, user)

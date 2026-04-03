@@ -10,8 +10,13 @@ from __future__ import annotations
 
 from typing import Any, Iterable, List, Optional, Set, Type, TypeVar
 
-from db.model import Organism
+from db.model import Assembly, BioSample, LocalSample, Organism
 from helpers.data import create_batches
+from helpers.rest_catalog_sync import (
+    cascade_delete_assembly,
+    cascade_delete_biosample,
+    cascade_delete_local_sample,
+)
 
 TDoc = TypeVar("TDoc")
 
@@ -71,7 +76,27 @@ def delete_rows_without_organism(
             tid = getattr(d, "taxid", None)
             if tid is None or str(tid) not in valid:
                 bad_ids.append(getattr(d, id_field))
-        if bad_ids:
+        if not bad_ids:
+            continue
+        if model is Assembly:
+            for bid in bad_ids:
+                ass = model.objects(**{id_field: bid}).first()
+                if ass:
+                    cascade_delete_assembly(ass, sync_species=False)
+            deleted += len(bad_ids)
+        elif model is BioSample:
+            for bid in bad_ids:
+                doc = model.objects(**{id_field: bid}).first()
+                if doc:
+                    cascade_delete_biosample(doc, sync_species=False)
+            deleted += len(bad_ids)
+        elif model is LocalSample:
+            for bid in bad_ids:
+                doc = model.objects(**{id_field: bid}).first()
+                if doc:
+                    cascade_delete_local_sample(doc, sync_species=False)
+            deleted += len(bad_ids)
+        else:
             model.objects(**{f"{id_field}__in": bad_ids}).delete()
             deleted += len(bad_ids)
 

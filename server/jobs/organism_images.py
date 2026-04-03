@@ -6,9 +6,10 @@ import logging
 from typing import Any, Dict, List, Optional
 
 from celery import shared_task
+from mongoengine.queryset.visitor import Q
 
 from jobs.support.organism_images_fetch import run_external_image_backfill
-
+from db.model import Organism, TargetListStatus
 logger = logging.getLogger(__name__)
 
 
@@ -19,7 +20,7 @@ def fetch_external_images_task(
     max_organisms: Optional[int] = None,
 ) -> Dict[str, Any]:
     """
-    Backfill ``Organism.attributed_images`` from iNaturalist, then Wikimedia Commons,
+    Backfill ``Organism.images`` from iNaturalist, then Wikimedia Commons,
     then GBIF. Skips organisms that already have at least ``min_images`` entries.
 
     Optional kwargs (e.g. via POST /api/cronjob/organisms/fetch_external_images body):
@@ -31,6 +32,9 @@ def fetch_external_images_task(
         min_images,
         max_organisms,
     )
+    #overwrite organisms with null target list status
+    q = Q(target_list_status="") | Q(target_list_status=None) | Q(target_list_status="")
+    Organism.objects(q).update(set__target_list_status=TargetListStatus.OTHER_PRIORITY)
     try:
         result = run_external_image_backfill(
             taxids=taxids,

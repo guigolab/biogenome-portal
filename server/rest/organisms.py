@@ -3,6 +3,7 @@ from flask import Response, request
 from flask_restful import Resource
 import json
 from flask_jwt_extended import jwt_required
+from werkzeug.exceptions import BadRequest
 from wrappers import organism_access, admin
 from db.model import Organism
 from helpers.resource_mixins import document_json_response, json_message, read_payload
@@ -17,9 +18,22 @@ class OrganismApi(Resource):
 	@jwt_required()
 	@organism_access.organism_access_required()
 	def put(self,taxid):
-		data = read_payload(request)
-		message = organisms.update_organism(data,taxid)
-		return json_message("Organism updated", status=200, taxid=message)
+		try:
+			data = read_payload(request)
+			message = organisms.update_organism(data,taxid)
+			return json_message("Organism updated", status=200, taxid=message)
+		except BadRequest as e:
+			return json_message(e.description or "Invalid request", status=400, taxid=taxid)
+
+	@jwt_required()
+	@organism_access.organism_access_required()
+	def patch(self, taxid):
+		try:
+			data = read_payload(request)
+			updated_taxid, field = organisms.patch_organism(data, taxid)
+			return json_message("Organism field updated", status=200, taxid=updated_taxid, field=field)
+		except BadRequest as e:
+			return json_message(e.description or "Invalid request", status=400, taxid=taxid)
 	
 	@jwt_required()
 	@admin.admin_required()

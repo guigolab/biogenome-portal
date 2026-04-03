@@ -185,47 +185,57 @@ def sync_species_after_catalog_change(
     refresh_taxon_counts_for_species(tid, taxon_lineage_fallback)
 
 
-def cascade_delete_assembly(assembly) -> None:
-    taxid = assembly.taxid
-    taxon_lineage = getattr(assembly, "taxon_lineage", None)
+def delete_assembly_document_and_dependents(assembly) -> None:
+    """
+    Remove one assembly row and its chromosome + genome annotation dependents.
+
+    Used by cascade deletes and bulk orphan cleanup (often with ``sync_species=False``).
+    """
     accession = assembly.accession
     chromosomes = assembly.chromosomes
     assembly.delete()
     if chromosomes:
         Chromosome.objects(accession_version__in=chromosomes).delete()
     GenomeAnnotation._get_collection().delete_many({"assembly_accession": accession})
-    sync_species_after_catalog_change(taxid, taxon_lineage)
 
 
-def cascade_delete_biosample(biosample) -> None:
+def cascade_delete_assembly(assembly, *, sync_species: bool = True) -> None:
+    taxid = assembly.taxid
+    taxon_lineage = getattr(assembly, "taxon_lineage", None)
+    delete_assembly_document_and_dependents(assembly)
+    if sync_species:
+        sync_species_after_catalog_change(taxid, taxon_lineage)
+
+
+def cascade_delete_biosample(biosample, *, sync_species: bool = True) -> None:
     taxid = biosample.taxid
     taxon_lineage = biosample.taxon_lineage
     accession = biosample.accession
     biosample.delete()
-    Assembly.objects(sample_accession=accession).delete()
+    for ass in list(Assembly.objects(sample_accession=accession)):
+        delete_assembly_document_and_dependents(ass)
     SampleCoordinates.objects(sample_accession=accession).delete()
     ReadRun.objects(sample_accession=accession).delete()
-    sync_species_after_catalog_change(taxid, taxon_lineage)
+    if sync_species:
+        sync_species_after_catalog_change(taxid, taxon_lineage)
 
 
-def cascade_delete_local_sample(local_sample) -> None:
+def cascade_delete_local_sample(local_sample, *, sync_species: bool = True) -> None:
     taxid = local_sample.taxid
     taxon_lineage = local_sample.taxon_lineage
     local_id = local_sample.local_id
     local_sample.delete()
     SampleCoordinates.objects(sample_accession=local_id).delete()
-    sync_species_after_catalog_change(taxid, taxon_lineage)
+    if sync_species:
+        sync_species_after_catalog_change(taxid, taxon_lineage)
 
 
 def cascade_delete_organism(organism) -> None:
     taxid = str(organism.taxid)
     lineage = list(organism.taxon_lineage) if organism.taxon_lineage else []
     organism.delete()
-    assemblies = Assembly.objects(taxid=taxid)
-    #delete related chromosomes
-    for assembly in assemblies:
-        Chromosome.objects(accession_version__in=assembly.chromosomes).delete()
-    Assembly.objects(taxid=taxid).delete()
+    for assembly in list(Assembly.objects(taxid=taxid)):
+        delete_assembly_document_and_dependents(assembly)
 
     GenomeAnnotation.objects(taxid=taxid).delete()
     ReadRun.objects(taxid=taxid).delete()
