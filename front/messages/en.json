@@ -1,0 +1,69 @@
+{
+   "nav": {
+      "home": "Home",
+      "map": "Map Explorer",
+      "taxonomy": "Taxonomy",
+      "species": "Species",
+      "status": "Status Tracker",
+      "menu": "Open navigation menu"
+   },
+   "home": {
+      "hero": {
+         "stats": {
+            "speciesTracked": "Species Tracked",
+            "genomesAvailable": "Genomes Available",
+            "biosamples": "Biosamples",
+            "sequencingRuns": "Sequencing Runs"
+         }
+      },
+      "features": {
+         "title": "Explore Our Tools",
+         "subtitle": "Multiple ways to discover and analyze biodiversity genomics data"
+      },
+      "mapFeature": {
+         "title": "Map Explorer",
+         "description": "Explore species distributions across the globe with interactive mapping tools"
+      },
+      "taxonomyFeature": {
+         "title": "Taxonomy Browser",
+         "description": "Navigate the tree of life with our interactive radial taxonomy visualization"
+      },
+      "speciesFeature": {
+         "title": "Species Database",
+         "description": "Browse and search our comprehensive species database with detailed genomic data"
+      },
+      "statusFeature": {
+         "title": "Sequencing Status",
+         "description": "Track the progress of genome sequencing projects across all species"
+      },
+      "emptyStats": "No aggregate counts for these metrics yet.",
+      "cta": {
+         "exploreSpecies": "Explore Species",
+         "exploreMap": "Explore Map",
+         "browseTaxonomy": "Browse Taxonomy",
+         "viewSpecies": "View All Species"
+      },
+      "footer": "BioGenome Portal — Advancing biodiversity research through genomics",
+      "closing": {
+         "title": "Start Exploring",
+         "description": "Dive into the world of biodiversity genomics and discover the genetic secrets of life on Earth."
+      }
+   },
+   "models": {
+      "organisms": "Organisms",
+      "assemblies": "Assemblies",
+      "biosamples": "BioSamples",
+      "local_samples": "Local Samples",
+      "annotations": "Annotations",
+      "reads": "Reads",
+      "submitted_biosamples": "Submitted BioSamples"
+   },
+   "language": {
+      "english": "English",
+      "catalan": "Catalan"
+   },
+   "common": {
+      "loading": "Loading…",
+      "error": "Something went wrong"
+   }
+}

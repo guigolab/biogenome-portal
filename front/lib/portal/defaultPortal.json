@@ -1,0 +1,55 @@
+{
+   "general": {
+      "title": {
+         "en": "BioGenome Portal",
+         "cat": "Portal BioGenome"
+      },
+      "description": {
+         "en": "The Biogenome portal app provides a user friendly way to explore biodiversity genomics",
+         "cat": "El portal Biogenome ofereix una manera amigable d'explorar la genòmica de la biodiversitat"
+      },
+      "cms": true,
+      "goat": true,
+      "insdcStatus": false,
+      "map": true,
+      "languages": ["en", "cat"],
+      "apiBase": "/api",
+      "rootTaxid": "131567",
+      "featuredTaxids": []
+   },
+   "theme": {
+      "appearance": "system",
+      "colors": {
+         "primary": "#22c55e",
+         "secondary": "#3b82f6",
+         "accent": "#2dd4bf"
+      }
+   },
+   "cms": {
+      "organisms": {
+         "requiredSteps": ["goatStatus", "piOrEntity"]
+      }
+   },
+   "models": {
+      "organisms": {
+         "label": { "en": "Organisms", "cat": "Organismes" },
+         "description": {
+            "en": "List of organisms currently targeted by the CBP",
+            "cat": "Llista d'organismes actualment objectiu del CBP"
+         },
+         "filters": [],
+         "columns": ["image", "insdc_common_name"],
+         "charts": []
+      },
+      "local_samples": {
+         "label": { "en": "Local samples", "cat": "Mostres locals" },
+         "description": {
+            "en": "Locally registered samples",
+            "cat": "Mostres registrades localment"
+         },
+         "filters": [],
+         "columns": ["local_id"],
+         "charts": []
+      }
+   }
+}

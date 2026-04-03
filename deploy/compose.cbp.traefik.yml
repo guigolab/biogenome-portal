@@ -1,0 +1,125 @@
+# CBP production-style stack: Traefik routes /api → Flask and everything else → Next (no nginx).
+# Prerequisites: external Docker network `biogenome` (same as your Traefik stack).
+#
+# Required in .env (or environment) when deploying:
+#   PORTAL_NEXT_IMAGE=<account>.dkr.ecr.<region>.amazonaws.com/<repo>:portal_next
+#
+# portal.json is mounted into Next public/ so GET /portal.json is served by the app.
+# Optional: PORTAL_LOGO_HOST → bind-mount to /app/public/portal-logo.svg (navbar).
+
+services:
+  cbp_mongo:
+    image: mongo:6.0
+    container_name: "${DB_HOST}"
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - /data/cbp-data:/data/db
+      - ./mongo-init.sh:/docker-entrypoint-initdb.d/mongo-init.sh
+    ports:
+      - "27016:${DB_PORT}"
+    networks:
+      - biogenome
+
+  cbp_server:
+    image: 566365074765.dkr.ecr.eu-central-1.amazonaws.com/biogenome_registry:biogenome_back
+    restart: always
+    depends_on:
+      - cbp_redis
+    volumes:
+      - ${ANNOTATIONS_PATH}:/server/annotations_data
+      - ./templates:/server/templates
+      - cbp_shared_tmp:/app/tmp
+    env_file:
+      - .env
+    networks:
+      - biogenome
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=biogenome"
+      # API — higher priority than cbp_ui
+      - "traefik.http.routers.cbp_api.rule=(Host(`dades.biogenoma.cat`) || Host(`data.biogenoma.cat`) || Host(`dades.biogenoma.org`) || Host(`data.biogenoma.org`)) && PathPrefix(`/api`)"
+      - "traefik.http.routers.cbp_api.priority=100"
+      - "traefik.http.routers.cbp_api.entrypoints=web_https"
+      - "traefik.http.routers.cbp_api.tls=true"
+      - "traefik.http.routers.cbp_api.tls.certResolver=letsencrypt"
+      - "traefik.http.routers.cbp_api.tls.domains[0].main=dades.biogenoma.cat"
+      - "traefik.http.routers.cbp_api.tls.domains[0].sans=data.biogenoma.cat,dades.biogenoma.org,data.biogenoma.org"
+      - "traefik.http.routers.cbp_api.service=cbp_api"
+      - "traefik.http.services.cbp_api.loadbalancer.server.port=5000"
+
+  cbp_next:
+    image: ${PORTAL_NEXT_IMAGE:?set PORTAL_NEXT_IMAGE to your ECR Next image, e.g. .../biogenome_registry:portal_next}
+    restart: always
+    expose:
+      - "3000"
+    volumes:
+      - ./portal.json:/app/public/portal.json:ro
+      - /home/emilior/bgp-configs/biogenome-portal-cbp/CBPLogo.png:/app/public/portal-logo.svg:ro
+      # Optional: same as legacy nginx hero-map mount
+      # - ./hero-map.geojson:/app/public/hero-map.geojson:ro
+    environment:
+      - NODE_ENV=production
+    networks:
+      - biogenome
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=biogenome"
+      - "traefik.http.routers.cbp_ui.rule=Host(`dades.biogenoma.cat`) || Host(`data.biogenoma.cat`) || Host(`dades.biogenoma.org`) || Host(`data.biogenoma.org`)"
+      - "traefik.http.routers.cbp_ui.priority=10"
+      - "traefik.http.routers.cbp_ui.entrypoints=web_https"
+      - "traefik.http.routers.cbp_ui.tls=true"
+      - "traefik.http.routers.cbp_ui.tls.certResolver=letsencrypt"
+      - "traefik.http.routers.cbp_ui.tls.domains[0].main=dades.biogenoma.cat"
+      - "traefik.http.routers.cbp_ui.tls.domains[0].sans=data.biogenoma.cat,dades.biogenoma.org,data.biogenoma.org"
+      - "traefik.http.routers.cbp_ui.service=cbp_ui"
+      - "traefik.http.services.cbp_ui.loadbalancer.server.port=3000"
+
+  cbp_celery:
+    image: 566365074765.dkr.ecr.eu-central-1.amazonaws.com/biogenome_registry:biogenome_back
+    command: celery --app app.celery_app worker --loglevel=info --autoscale=1,1
+    restart: always
+    volumes:
+      - cbp_shared_tmp:/app/tmp
+    env_file:
+      - .env
+    depends_on:
+      - cbp_server
+      - cbp_mongo
+      - cbp_redis
+    networks:
+      - biogenome
+
+  cbp_celery_beat:
+    image: 566365074765.dkr.ecr.eu-central-1.amazonaws.com/biogenome_registry:biogenome_back
+    command: celery --app app.celery_app beat --loglevel=info
+    restart: always
+    volumes:
+      - ./celery_beat_schedule.json:/app/celery_beat_schedule.json:ro
+      - cbp_shared_tmp:/app/tmp
+    env_file:
+      - .env
+    depends_on:
+      - cbp_server
+      - cbp_celery
+      - cbp_mongo
+      - cbp_redis
+    networks:
+      - biogenome
+
+  cbp_redis:
+    image: redis:alpine
+    restart: always
+    expose:
+      - "6379"
+    networks:
+      - biogenome
+
+volumes:
+  cbp_shared_tmp:
+
+networks:
+  biogenome:
+    external: true
+    name: biogenome

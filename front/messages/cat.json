@@ -1,0 +1,69 @@
+{
+   "nav": {
+      "home": "Inici",
+      "map": "Explorador de mapa",
+      "taxonomy": "Taxonomia",
+      "species": "Espècies",
+      "status": "Estat de seqüenciació",
+      "menu": "Obrir el menú de navegació"
+   },
+   "home": {
+      "hero": {
+         "stats": {
+            "speciesTracked": "Espècies seguides",
+            "genomesAvailable": "Genomes disponibles",
+            "biosamples": "BioSamples",
+            "sequencingRuns": "Execucions de seqüenciació"
+         }
+      },
+      "features": {
+         "title": "Exploreu les nostres eines",
+         "subtitle": "Diverses maneres de descobrir i analitzar dades de genòmica de la biodiversitat"
+      },
+      "mapFeature": {
+         "title": "Explorador de mapa",
+         "description": "Exploreu distribucions d'espècies arreu del món amb eines de mapa interactives"
+      },
+      "taxonomyFeature": {
+         "title": "Navegador de taxonomia",
+         "description": "Navegueu per l'arbre de la vida amb la visualització radial interactiva"
+      },
+      "speciesFeature": {
+         "title": "Base de dades d'espècies",
+         "description": "Cerqueu i exploreu la base d'espècies amb dades genòmiques detallades"
+      },
+      "statusFeature": {
+         "title": "Estat de seqüenciació",
+         "description": "Seguiment del progrés dels projectes de seqüenciació del genoma"
+      },
+      "emptyStats": "Encara no hi ha recomptes agregats per a aquestes mètriques.",
+      "cta": {
+         "exploreSpecies": "Explora espècies",
+         "exploreMap": "Explora el mapa",
+         "browseTaxonomy": "Explora la taxonomia",
+         "viewSpecies": "Veure totes les espècies"
+      },
+      "footer": "Portal BioGenome — Recerca en biodiversitat a través de la genòmica",
+      "closing": {
+         "title": "Comenceu a explorar",
+         "description": "Endinseu-vos en el món de la genòmica de la biodiversitat."
+      }
+   },
+   "models": {
+      "organisms": "Organismes",
+      "assemblies": "Assemblatges",
+      "biosamples": "BioSamples",
+      "local_samples": "Mostres locals",
+      "annotations": "Anotacions",
+      "reads": "Lectures",
+      "submitted_biosamples": "BioSamples enviades"
+   },
+   "language": {
+      "english": "Anglès",
+      "catalan": "Català"
+   },
+   "common": {
+      "loading": "S'està carregant…",
+      "error": "S'ha produït un error"
+   }
+}
