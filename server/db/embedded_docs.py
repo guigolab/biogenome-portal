@@ -39,8 +39,12 @@ class OrganismRedList(db.EmbeddedDocument):
     """
     Cached IUCN Red List assessment snapshot (API v4).
 
-    ``habitats`` / ``threats`` preserve API list items; ``narratives`` holds text from
-    ``documentation`` and string fields under ``supplementary_info`` (truncated for size).
+    - ``habitats`` / ``threats``: structured rows from the assessment payload (and optional
+      fallbacks derived from ``documentation`` prose when the API omits top-level lists).
+      Typical row shape: ``{"code": "...", "description": {"en": "..."}, ...}``.
+    - ``narratives``: string (and some scalar) fields from ``documentation`` and
+      ``supplementary_info`` (truncated for size). Keys may overlap thematically with the
+      lists above; lists are preferred for structured UI.
     """
 
     not_found = db.BooleanField(default=False)

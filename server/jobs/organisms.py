@@ -10,6 +10,7 @@ from db.model import Organism
 from jobs.support.iucn_redlist_fetch import (
     run_iucn_backfill_missing,
     run_iucn_fetch_for_taxids,
+    run_iucn_redlist_reconcile_from_narratives,
 )
 from jobs.support.tolid_prefixes import fetch_tolid_prefixes
 from jobs.support.organism_catalog_sync import finalize_organism_catalog_for_taxids
@@ -130,4 +131,27 @@ def backfill_iucn_redlist_task(
         logger.exception("organisms.backfill_iucn_redlist failed")
         raise
     logger.info("organisms.backfill_iucn_redlist: finished %s", result)
+    return result
+
+
+@shared_task(name="organisms.reconcile_iucn_redlist_lists", ignore_result=False)
+def reconcile_iucn_redlist_lists_task(max_organisms: int = 500) -> Dict[str, Any]:
+    """
+    Backfill empty ``habitats`` / ``threats`` embedded lists from ``narratives`` strings.
+
+    No IUCN HTTP calls. POST body example::
+        {"kwargs": {"max_organisms": 1000}}
+    """
+    logger.info(
+        "organisms.reconcile_iucn_redlist_lists: starting max_organisms=%s",
+        max_organisms,
+    )
+    try:
+        result = run_iucn_redlist_reconcile_from_narratives(
+            max_organisms=int(max_organisms),
+        )
+    except Exception:
+        logger.exception("organisms.reconcile_iucn_redlist_lists failed")
+        raise
+    logger.info("organisms.reconcile_iucn_redlist_lists: finished %s", result)
     return result

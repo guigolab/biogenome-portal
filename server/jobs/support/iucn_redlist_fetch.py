@@ -21,6 +21,7 @@ Conservative pacing (overridable via env):
 from __future__ import annotations
 
 import email.utils
+import json
 import logging
 import os
 import random
@@ -304,6 +305,138 @@ def _as_dict_list(value: Any) -> List[Dict[str, Any]]:
     return [x for x in value if isinstance(x, dict)]
 
 
+def _json_safe(value: Any, max_depth: int = 14) -> Any:
+    """Recursively coerce assessment fragments to BSON/JSON-friendly values."""
+    if max_depth < 0:
+        return None
+    if value is None or isinstance(value, (bool, int, float, str)):
+        return value
+    if isinstance(value, datetime):
+        return value.astimezone(timezone.utc).isoformat()
+    try:
+        from bson import ObjectId  # type: ignore
+
+        if isinstance(value, ObjectId):
+            return str(value)
+    except ImportError:
+        pass
+    if isinstance(value, dict):
+        return {str(k): _json_safe(v, max_depth - 1) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_json_safe(v, max_depth - 1) for v in value]
+    return str(value)
+
+
+def _fingerprint_habitat_or_threat(d: Dict[str, Any]) -> str:
+    code = str(d.get("code") or "").strip()
+    season = str(d.get("season") or "").strip()
+    timing = str(d.get("timing") or "").strip()
+    desc = d.get("description")
+    blob = ""
+    if isinstance(desc, str):
+        blob = desc.strip()[:500]
+    elif isinstance(desc, dict):
+        en = desc.get("en")
+        if isinstance(en, str):
+            blob = en.strip()[:500]
+    ias = str(d.get("ias") or "").strip()
+    return f"{code}|{season}|{timing}|{ias}|{blob}"
+
+
+def _extend_unique_dicts(target: List[Dict[str, Any]], items: List[Dict[str, Any]]) -> None:
+    seen = {_fingerprint_habitat_or_threat(x) for x in target}
+    for d in items:
+        fp = _fingerprint_habitat_or_threat(d)
+        if fp in seen and fp != "|":
+            continue
+        seen.add(fp)
+        target.append(d)
+
+
+def _gather_habitat_dicts(assessment: Dict[str, Any]) -> List[Dict[str, Any]]:
+    out: List[Dict[str, Any]] = []
+    _extend_unique_dicts(out, _as_dict_list(assessment.get("habitats")))
+    _extend_unique_dicts(out, _as_dict_list(assessment.get("habitat")))
+    eco = assessment.get("ecology")
+    if isinstance(eco, dict):
+        _extend_unique_dicts(out, _as_dict_list(eco.get("habitats")))
+        _extend_unique_dicts(out, _as_dict_list(eco.get("habitat")))
+    inner = assessment.get("assessment")
+    if isinstance(inner, dict):
+        _extend_unique_dicts(out, _as_dict_list(inner.get("habitats")))
+        _extend_unique_dicts(out, _as_dict_list(inner.get("habitat")))
+    return out
+
+
+def _gather_threat_dicts(assessment: Dict[str, Any]) -> List[Dict[str, Any]]:
+    out: List[Dict[str, Any]] = []
+    _extend_unique_dicts(out, _as_dict_list(assessment.get("threats")))
+    _extend_unique_dicts(out, _as_dict_list(assessment.get("threat")))
+    inner = assessment.get("assessment")
+    if isinstance(inner, dict):
+        _extend_unique_dicts(out, _as_dict_list(inner.get("threats")))
+        _extend_unique_dicts(out, _as_dict_list(inner.get("threat")))
+    cons = assessment.get("conservation_actions_needed")
+    if isinstance(cons, dict):
+        _extend_unique_dicts(out, _as_dict_list(cons.get("threats")))
+    return out
+
+
+def _synthetic_row_from_prose(text: str, *, kind: str) -> Dict[str, Any]:
+    t = (text or "").strip()
+    if not t:
+        return {}
+    cap = 16000
+    if len(t) > cap:
+        t = t[:cap]
+    return {
+        "description": {"en": t},
+        "source": "documentation_prose",
+        "kind": kind,
+    }
+
+
+def _documentation_dict(assessment: Dict[str, Any]) -> Dict[str, Any]:
+    doc = assessment.get("documentation")
+    return doc if isinstance(doc, dict) else {}
+
+
+def _merge_structured_from_documentation(
+    assessment: Dict[str, Any],
+    habitats: List[Dict[str, Any]],
+    threats: List[Dict[str, Any]],
+) -> None:
+    """
+    When the v4 assessment omits top-level ``habitats`` / ``threats`` but embeds structured
+    lists or long-form strings under ``documentation``, copy them into the list fields.
+    """
+    doc = _documentation_dict(assessment)
+    if not doc:
+        return
+
+    if not habitats:
+        for key in ("habitats", "habitat"):
+            raw = doc.get(key)
+            if isinstance(raw, list) and raw:
+                _extend_unique_dicts(habitats, _as_dict_list(raw))
+            elif isinstance(raw, str) and raw.strip():
+                syn = _synthetic_row_from_prose(raw, kind="habitats")
+                if syn.get("description"):
+                    habitats.append(syn)
+                break
+
+    if not threats:
+        for key in ("threats", "threat"):
+            raw = doc.get(key)
+            if isinstance(raw, list) and raw:
+                _extend_unique_dicts(threats, _as_dict_list(raw))
+            elif isinstance(raw, str) and raw.strip():
+                syn = _synthetic_row_from_prose(raw, kind="threats")
+                if syn.get("description"):
+                    threats.append(syn)
+                break
+
+
 def _narratives_from_assessment(assessment: Dict[str, Any]) -> Dict[str, Any]:
     out: Dict[str, Any] = {}
     doc = assessment.get("documentation")
@@ -314,19 +447,37 @@ def _narratives_from_assessment(assessment: Dict[str, Any]) -> Dict[str, Any]:
             out["documentation"] = doc.strip()
     elif isinstance(doc, dict):
         for key, val in doc.items():
+            sk = str(key)
             if isinstance(val, str) and val.strip():
                 cap = min(8000, _DOC_MAX) if _DOC_MAX > 0 else 8000
-                out[str(key)] = val.strip()[:cap] if cap else val.strip()
+                out[sk] = val.strip()[:cap] if cap else val.strip()
+            elif isinstance(val, (int, float, bool)):
+                out[sk] = val
+            elif isinstance(val, list):
+                try:
+                    raw = json.dumps(val, default=str)[:4000]
+                    if raw:
+                        out[sk] = raw
+                except (TypeError, ValueError):
+                    pass
 
     sup = assessment.get("supplementary_info")
     if isinstance(sup, dict):
         for key, val in sup.items():
+            sk = f"supplementary_{key}"
             if isinstance(val, str) and val.strip():
-                out[f"supplementary_{key}"] = val.strip()[:8000]
+                out[sk] = val.strip()[:8000]
             elif isinstance(val, (int, float, bool)):
-                out[f"supplementary_{key}"] = val
+                out[sk] = val
+            elif isinstance(val, list):
+                try:
+                    raw = json.dumps(val, default=str)[:4000]
+                    if raw:
+                        out[sk] = raw
+                except (TypeError, ValueError):
+                    pass
 
-    return out
+    return {k: _json_safe(v) for k, v in out.items()}
 
 
 def fetch_iucn_assessment_for_name(
@@ -378,8 +529,16 @@ def _assessment_to_embedded(
             source_api_version="v4",
         )
 
-    habitats = _as_dict_list(assessment.get("habitats"))
-    threats = _as_dict_list(assessment.get("threats"))
+    habitats = _gather_habitat_dicts(assessment)
+    threats = _gather_threat_dicts(assessment)
+    _merge_structured_from_documentation(assessment, habitats, threats)
+
+    habitats_safe = [
+        x for x in (_json_safe(h) for h in habitats) if isinstance(x, dict) and x
+    ]
+    threats_safe = [
+        x for x in (_json_safe(h) for h in threats) if isinstance(x, dict) and x
+    ]
     narratives = _narratives_from_assessment(assessment)
 
     return OrganismRedList(
@@ -388,8 +547,8 @@ def _assessment_to_embedded(
         population_trend=_scalar_str(assessment.get("population_trend")),
         assessment_date=_scalar_str(assessment.get("assessment_date")),
         published_year=_scalar_str(assessment.get("year_published")),
-        habitats=habitats,
-        threats=threats,
+        habitats=habitats_safe,
+        threats=threats_safe,
         narratives=narratives,
         fetched_at=now,
         source_api_version="v4",
@@ -541,4 +700,67 @@ def run_iucn_backfill_missing(
         "errors": errors,
         "max_organisms": max_organisms,
         "force": force,
+    }
+
+
+def run_iucn_redlist_reconcile_from_narratives(
+    *,
+    max_organisms: int = 500,
+) -> Dict[str, Any]:
+    """
+    For organisms that already have ``iucn_redlist`` but empty ``habitats`` / ``threats`` lists,
+    populate those lists from the matching string keys in ``narratives`` (legacy / API quirks).
+
+    Does not call the IUCN HTTP API. Safe to run in batches.
+    """
+    max_organisms = max(int(max_organisms), 1)
+    scanned = updated = 0
+    q = (
+        Organism.objects(iucn_redlist__ne=None)
+        .filter(iucn_redlist__not_found=False)
+        .only("id", "taxid", "iucn_redlist")
+        .order_by("taxid")
+    )
+    for org in q.limit(max_organisms):
+        scanned += 1
+        rl = org.iucn_redlist
+        if rl is None or rl.not_found:
+            continue
+        nar = rl.narratives if isinstance(rl.narratives, dict) else {}
+        changed = False
+
+        if not rl.habitats:
+            hb = nar.get("habitats")
+            if isinstance(hb, str) and hb.strip():
+                row = _synthetic_row_from_prose(hb, kind="habitats")
+                if row.get("description"):
+                    safe = _json_safe(row)
+                    if isinstance(safe, dict):
+                        rl.habitats = [safe]
+                        changed = True
+
+        if not rl.threats:
+            th = nar.get("threats")
+            if isinstance(th, str) and th.strip():
+                row = _synthetic_row_from_prose(th, kind="threats")
+                if row.get("description"):
+                    safe = _json_safe(row)
+                    if isinstance(safe, dict):
+                        rl.threats = [safe]
+                        changed = True
+
+        if changed:
+            try:
+                org.save()
+                updated += 1
+            except Exception:
+                logger.exception(
+                    "IUCN reconcile save failed for taxid %s", getattr(org, "taxid", "?")
+                )
+
+    return {
+        "status": "ok",
+        "scanned": scanned,
+        "updated": updated,
+        "max_organisms": max_organisms,
     }

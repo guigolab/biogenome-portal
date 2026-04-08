@@ -23,6 +23,9 @@ logger = logging.getLogger(__name__)
 
 # Organism lineage_rank_labels backfill: batch size for bulk_write.
 ORGANISM_LINEAGE_LABELS_BATCH = int(os.getenv("ORGANISM_LINEAGE_LABELS_BATCH", "400"))
+FETCH_IUCN= os.getenv("FETCH_IUCN", "true")
+FETCH_IMAGES = os.getenv("FETCH_IMAGES", "true")
+FETCH_TOLID_PREFIXES = os.getenv("FETCH_TOLID_PREFIXES", "true")
 
 # Map TaxonNode.rank (lowercase) -> OrganismLineageRankLabels field name in MongoDB.
 _LINEAGE_RANK_TO_LABEL_KEY = {
@@ -544,10 +547,10 @@ def enrich_organisms_post_taxonomy(
     """
     Queue sequential enrichment for newly relevant species taxids:
 
-    1. IUCN Red List fetch
+    1. IUCN Red List fetch (optional)
     2. ``lineage_rank_labels`` from :class:`~db.model.TaxonNode``
-    3. External images when the organism has fewer than ``min_images`` (default 1)
-    4. ToLID prefix resolution (last; rate-limited)
+    3. External images when the organism has fewer than ``min_images`` (default 1) (optional)
+    4. ToLID prefix resolution (last; rate-limited) (optional)
 
     Replaces firing ``organisms.fetch_tolid_prefixes`` alone after bulk imports.
     """
@@ -563,11 +566,20 @@ def enrich_organisms_post_taxonomy(
     from jobs.organisms import fetch_iucn_redlist_task, fetch_tolid_prefixes_task
 
     n = len(tid_list)
+    tasks = [backfill_organism_lineage_rank_labels_for_taxids.si(tid_list)]
+    steps = ["lineage_rank_labels"]
+    if FETCH_IUCN == "true":
+        tasks.append(fetch_iucn_redlist_task.si(tid_list, bool(iucn_force)))
+        steps.append("iucn_redlist")
+    if FETCH_IMAGES == "true":
+        tasks.append(fetch_external_images_task.si(taxids=tid_list, min_images=1, max_organisms=n))
+        steps.append("external_images")
+    if FETCH_TOLID_PREFIXES == "true":
+        tasks.append(fetch_tolid_prefixes_task.si(tid_list))
+        steps.append("tolid_prefixes")
+
     async_result = chain(
-        fetch_iucn_redlist_task.si(tid_list, bool(iucn_force)),
-        backfill_organism_lineage_rank_labels_for_taxids.si(tid_list),
-        fetch_external_images_task.si(taxids=tid_list, min_images=1, max_organisms=n),
-        fetch_tolid_prefixes_task.si(tid_list),
+        *tasks
     ).apply_async()
 
     logger.info(
@@ -579,7 +591,7 @@ def enrich_organisms_post_taxonomy(
         "status": "queued",
         "taxids": n,
         "chain_task_id": async_result.id,
-        "steps": ["iucn_redlist", "lineage_rank_labels", "external_images", "tolid_prefixes"],
+        "steps": steps,
     }
 
 

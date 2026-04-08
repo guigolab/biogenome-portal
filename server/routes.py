@@ -33,6 +33,7 @@ def _rows():
         annotations,
         assemblies,
         biosamples,
+        jbrowse,
         cronjobs,
         goat_reports,
         local_samples,
@@ -62,6 +63,9 @@ def _rows():
         (taxons.RootTreeApi, "/api/tree"),
         (taxons.SubTreeApi, "/api/tree/<taxid>/<rank_level>"),
         (taxons.SubTreeLookupApi, "/api/tree/<taxid>/<rank_level>/lookup"),
+        # --- JBrowse genome browser ---
+        (jbrowse.JBrowseSessionsApi, "/api/jbrowse/sessions"),
+        (jbrowse.JBrowseAssemblyContextApi, "/api/jbrowse/assemblies/<accession>/context"),
         # --- Sample locations / coordinates ---
         (sample_locations.SampleLocations, "/api/coordinates"),
         (sample_locations.LocationFromCoords, "/api/coordinates/<coordinates>"),
