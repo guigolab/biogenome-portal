@@ -7,6 +7,7 @@ import { InsdcImportPanel } from '@/components/cms/drawer/insdc-import-panel'
 import { SpreadsheetUploadPanel } from '@/components/cms/drawer/spreadsheet-upload-panel'
 import { UserFormPanel } from '@/components/cms/drawer/user-form-panel'
 import { useCmsDrawerStore, type CmsDashboardDrawerPanel } from '@/stores/cms-drawer-store'
+import { cn } from '@/lib/utils'
 
 const PANEL_COPY: Record<CmsDashboardDrawerPanel, { title: string; description: string }> = {
    insdc: {
@@ -58,17 +59,34 @@ export function CmsDashboardDrawer() {
 
    return (
       <Sheet open={isOpen} onOpenChange={(open) => !open && close()}>
-         <SheetContent className={`flex w-full flex-col gap-4 overflow-y-auto ${sheetWidth(panel)}`}>
-            <SheetHeader className="text-left">
-               <SheetTitle>{title}</SheetTitle>
-               {meta ? <SheetDescription>{meta.description}</SheetDescription> : null}
-            </SheetHeader>
+         <SheetContent
+            className={cn(
+               'flex h-full min-h-0 w-full flex-col gap-0 overflow-hidden p-0',
+               sheetWidth(panel),
+            )}
+            onOpenAutoFocus={(e) => {
+               if (panel === 'user') {
+                  e.preventDefault()
+                  requestAnimationFrame(() => {
+                     document.getElementById('cms-user-name')?.focus()
+                  })
+               }
+            }}
+         >
+            <div className="flex min-h-0 flex-1 flex-col px-4 pb-6 pt-4">
+               <SheetHeader className="shrink-0 space-y-1 border-b border-border/80 px-0 pb-3 text-left">
+                  <SheetTitle>{title}</SheetTitle>
+                  {meta ? <SheetDescription>{meta.description}</SheetDescription> : null}
+               </SheetHeader>
 
-            {panel === 'insdc' ? <InsdcImportPanel presetModel={insdcImportModel} /> : null}
-            {panel === 'goat' ? <GoatUploadPanel /> : null}
-            {panel === 'spreadsheet' ? <SpreadsheetUploadPanel /> : null}
-            {panel === 'user' ? <UserFormPanel editName={userName} /> : null}
-            {panel === 'annotation' ? <AnnotationFormPanel editName={annotationName} /> : null}
+               <div className="min-h-0 flex-1 overflow-y-auto pt-4">
+                  {panel === 'insdc' ? <InsdcImportPanel presetModel={insdcImportModel} /> : null}
+                  {panel === 'goat' ? <GoatUploadPanel /> : null}
+                  {panel === 'spreadsheet' ? <SpreadsheetUploadPanel /> : null}
+                  {panel === 'user' ? <UserFormPanel editName={userName} /> : null}
+                  {panel === 'annotation' ? <AnnotationFormPanel editName={annotationName} /> : null}
+               </div>
+            </div>
          </SheetContent>
       </Sheet>
    )

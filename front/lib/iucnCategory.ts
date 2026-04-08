@@ -3,6 +3,14 @@ import { cn } from '@/lib/utils'
 /** Matches server ``stats.NO_VALUE_KEY`` for missing IUCN category in field stats. */
 export const IUCN_STATS_NO_ENTRY = 'No Entry'
 
+/** True when field stats only bucket missing IUCN (no real categories to filter by). */
+export function iucnFieldStatsOnlyNoEntry(stats: Record<string, number> | null): boolean {
+   if (stats == null) return false
+   const keys = Object.keys(stats)
+   if (keys.length === 0) return true
+   return keys.length === 1 && keys[0] === IUCN_STATS_NO_ENTRY
+}
+
 const IUCN_LABELS: Record<string, string> = {
    EX: 'Extinct',
    EW: 'Extinct in the Wild',

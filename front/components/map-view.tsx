@@ -1,15 +1,18 @@
 'use client'
 
 import { useTheme } from 'next-themes'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import 'leaflet-draw/dist/leaflet.draw.css'
 import 'leaflet-draw'
 
 import type { GeoJsonGeometry, LocationFrequencyPoint } from '@/lib/api/coordinates'
-import { usePortalConfig } from '@/contexts/portal-context'
-import { getPortalAppearance } from '@/lib/portal'
+import {
+   leafletMarkerPalettesFromRoot,
+   type LeafletCircleMarkerStyle,
+} from '@/lib/portal/brandColorsFromDocument'
+import { useAppearanceStore } from '@/stores/appearance-store'
 
 export type MapViewProps = {
    points: LocationFrequencyPoint[]
@@ -42,30 +45,6 @@ const CARTO_TILE_OPTIONS = {
 const CARTO_DARK = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
 const CARTO_LIGHT = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
 
-const DEFAULT_MARKER = {
-   radius: 8,
-   color: '#38bdf8',
-   fillColor: '#38bdf8',
-   fillOpacity: 0.45,
-   weight: 1,
-} as const
-
-const SELECTED_MARKER = {
-   radius: 11,
-   color: '#fbbf24',
-   fillColor: '#f59e0b',
-   fillOpacity: 0.85,
-   weight: 2,
-} as const
-
-const HOVER_MARKER = {
-   radius: 10,
-   color: '#c4b5fd',
-   fillColor: '#7c3aed',
-   fillOpacity: 0.72,
-   weight: 2,
-} as const
-
 function sameFrequencyCoord(
    a: { lng: number; lat: number },
    b: { lng: number; lat: number },
@@ -96,18 +75,25 @@ export function MapView({
    onMapBackgroundClickRef.current = onMapBackgroundClick
    const [mounted, setMounted] = useState(false)
    const { resolvedTheme } = useTheme()
-   const { raw: portalRaw } = usePortalConfig()
+   const appearance = useAppearanceStore((s) => s.appearance)
    const tileLayerRef = useRef<L.TileLayer | null>(null)
+   const [markerStyles, setMarkerStyles] = useState<{
+      default: LeafletCircleMarkerStyle
+      selected: LeafletCircleMarkerStyle
+      hover: LeafletCircleMarkerStyle
+   } | null>(null)
 
-   /** Portal `theme.appearance` wins for light/dark; `system` (or fetch pending) uses next-themes. */
+   useLayoutEffect(() => {
+      if (typeof document === 'undefined') return
+      setMarkerStyles(leafletMarkerPalettesFromRoot(document.documentElement))
+   }, [resolvedTheme, appearance])
+
+   /** Persisted appearance wins for light/dark; `system` uses next-themes. */
    const basemapDark = useMemo(() => {
-      if (portalRaw) {
-         const a = getPortalAppearance(portalRaw)
-         if (a === 'light') return false
-         if (a === 'dark') return true
-      }
+      if (appearance === 'light') return false
+      if (appearance === 'dark') return true
       return resolvedTheme === 'dark'
-   }, [portalRaw, resolvedTheme])
+   }, [appearance, resolvedTheme])
 
    useEffect(() => {
       setMounted(true)
@@ -180,7 +166,7 @@ export function MapView({
       }
    }, [mounted])
 
-   // Basemap: portal.json appearance when fixed light/dark; otherwise next-themes (system)
+   // Basemap: persisted appearance when fixed light/dark; otherwise next-themes (system)
    useEffect(() => {
       const map = mapInstanceRef.current
       if (!map) return
@@ -221,7 +207,8 @@ export function MapView({
             !selected &&
             hoverFrequencyPoint != null &&
             sameFrequencyCoord(hoverFrequencyPoint, { lng, lat })
-         const style = selected ? SELECTED_MARKER : hovered ? HOVER_MARKER : DEFAULT_MARKER
+         const palette = markerStyles ?? leafletMarkerPalettesFromRoot(document.documentElement)
+         const style = selected ? palette.selected : hovered ? palette.hover : palette.default
          const marker = L.circleMarker([lat, lng], { ...style })
          marker.bindTooltip(String(item.count.toLocaleString()))
          marker.on('click', (e: L.LeafletMouseEvent) => {
@@ -240,7 +227,7 @@ export function MapView({
             map.fitBounds(L.latLngBounds(bounds), { padding: [24, 24], maxZoom: 12 })
          }
       }
-   }, [points, selectedFrequencyPoint, hoverFrequencyPoint])
+   }, [points, selectedFrequencyPoint, hoverFrequencyPoint, markerStyles])
 
    // Pan to selected organism (first coordinate not available here — parent passes lat/lng)
    useEffect(() => {

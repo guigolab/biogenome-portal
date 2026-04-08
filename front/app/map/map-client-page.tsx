@@ -1,9 +1,8 @@
 'use client'
 
-import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Download, Loader2, MapPin, Search, VectorSquare, X } from 'lucide-react'
+import { Download, Loader2, MapPin, Search, VectorSquare } from 'lucide-react'
 
 import { MapView } from '@/components/map-view'
 import { SpeciesCard } from '@/components/species-card'
@@ -18,9 +17,7 @@ import {
    type PostLocationsFrequencyBody,
 } from '@/lib/api/coordinates'
 import { fetchOrganisms } from '@/lib/api/organisms'
-import { iucnRedListBadge } from '@/lib/iucnCategory'
-import { INSDC_STATUS_LABELS } from '@/lib/organismStatusLabels'
-import { cn } from '@/lib/utils'
+import { useLocale } from '@/contexts/locale-context'
 
 const PAGE_SIZE = 21
 
@@ -65,18 +62,6 @@ type IucnFilter = 'all' | 'LC' | 'NT' | 'VU' | 'EN' | 'CR'
 function getTaxid(row: Record<string, unknown>): string {
    const t = row.taxid
    return t != null ? String(t) : ''
-}
-
-function getScientificName(row: Record<string, unknown>): string {
-   const s = row.scientific_name
-   if (typeof s === 'string' && s.trim()) return s.trim()
-   return getTaxid(row) || '—'
-}
-
-function getCommonName(row: Record<string, unknown>): string {
-   const cnVal = row.insdc_common_name
-   if (typeof cnVal === 'string' && cnVal.trim()) return cnVal.trim()
-   return ''
 }
 
 /** Primary map coordinate from organism GeoJSON Point or legacy shape. */
@@ -125,6 +110,7 @@ function frequencyMapPointForOrganism(
 }
 
 export default function MapClientPage() {
+   const { t } = useLocale()
    const searchParams = useSearchParams()
    const taxidFromUrl = searchParams.get('taxid')?.trim() || ''
 
@@ -149,7 +135,6 @@ export default function MapClientPage() {
    itemsRef.current = items
    totalRef.current = total
 
-   const [selectedOrganism, setSelectedOrganism] = useState<Record<string, unknown> | null>(null)
    const [selectedLatLng, setSelectedLatLng] = useState<{ lat: number; lng: number } | null>(null)
 
    const [searchQuery, setSearchQuery] = useState('')
@@ -256,7 +241,7 @@ export default function MapClientPage() {
          setLocations(data)
       } catch (e) {
          setLocations([])
-         setLocationsError(e instanceof Error ? e.message : 'Failed to load map locations')
+         setLocationsError(e instanceof Error ? e.message : t('map.errors.loadLocations'))
       } finally {
          setLocationsLoading(false)
       }
@@ -283,7 +268,7 @@ export default function MapClientPage() {
             if (!cancelled) {
                setItems([])
                setTotal(0)
-               setListError(e instanceof Error ? e.message : 'Failed to load organisms')
+               setListError(e instanceof Error ? e.message : t('map.errors.loadOrganisms'))
             }
          } finally {
             if (!cancelled) setListLoading(false)
@@ -307,7 +292,7 @@ export default function MapClientPage() {
          setTotal(t)
          setItems((prev) => [...prev, ...data])
       } catch (e) {
-         setListError(e instanceof Error ? e.message : 'Failed to load organisms')
+         setListError(e instanceof Error ? e.message : t('map.errors.loadOrganisms'))
       } finally {
          loadMoreInFlightRef.current = false
          setListLoadingMore(false)
@@ -351,17 +336,10 @@ export default function MapClientPage() {
       }
       setCoordinateFilter(next)
       setActivePolygon(null)
-      setSelectedOrganism(null)
       setSelectedLatLng({ lat, lng })
    }, [])
 
    const conservationStatuses: IucnFilter[] = ['LC', 'NT', 'VU', 'EN', 'CR']
-
-   const insdcLabel = (row: Record<string, unknown>): string | null => {
-      const v = row.insdc_status
-      if (typeof v !== 'string' || !v.trim()) return null
-      return INSDC_STATUS_LABELS[v] ?? v
-   }
 
    return (
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background">
@@ -393,33 +371,26 @@ export default function MapClientPage() {
                </div>
 
                <div className="absolute bottom-4 left-4 z-[1000] max-w-[min(100%,240px)] space-y-2 rounded-lg border border-border bg-card/95 p-3 text-xs backdrop-blur">
-                  <div className="font-medium">Sample locations</div>
+                  <div className="font-medium">{t('map.legend.sampleLocations')}</div>
                   <div className="flex items-center gap-2">
-                     <span
-                        className="h-3 w-3 shrink-0 rounded-full border border-sky-300/80"
-                        style={{ backgroundColor: 'rgba(56, 189, 248, 0.45)' }}
-                     />
-                     <span className="text-muted-foreground">Location (tooltip)</span>
+                     <span className="h-3 w-3 shrink-0 rounded-full border border-primary/80 bg-primary/45" />
+                     <span className="text-muted-foreground">{t('map.legend.locationTooltip')}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                     <span
-                        className="h-3 w-3 shrink-0 rounded-full border border-violet-400/80"
-                        style={{ backgroundColor: 'rgba(124, 58, 237, 0.72)' }}
-                     />
-                     <span className="text-muted-foreground">List hover</span>
+                     <span className="h-3 w-3 shrink-0 rounded-full border border-secondary/80 bg-secondary/72" />
+                     <span className="text-muted-foreground">{t('map.legend.listHover')}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                     <span
-                        className="h-3 w-3 shrink-0 rounded-full border border-amber-400/90"
-                        style={{ backgroundColor: 'rgba(245, 158, 11, 0.85)' }}
-                     />
-                     <span className="text-muted-foreground">Selected point</span>
+                     <span className="h-3 w-3 shrink-0 rounded-full border border-accent/90 bg-accent/85" />
+                     <span className="text-muted-foreground">{t('map.legend.selectedPoint')}</span>
                   </div>
                   {taxidFromUrl ? (
-                     <div className="text-muted-foreground">Taxon filter: {taxidFromUrl}</div>
+                     <div className="text-muted-foreground">
+                        {t('map.legend.taxonFilter')}: {taxidFromUrl}
+                     </div>
                   ) : null}
                   <p className="text-[10px] leading-snug text-muted-foreground">
-                     Clear sample-location filter: click the map (tiles), or click the selected marker again.
+                     {t('map.legend.clearSampleLocationHint')}
                   </p>
                </div>
             </div>
@@ -430,12 +401,12 @@ export default function MapClientPage() {
                      <div className="flex flex-col gap-2">
                         {coordinateFilter ? (
                            <div
-                              className="flex items-center justify-between gap-2 rounded-lg border border-amber-500/35 bg-amber-500/10 px-3 py-2.5 dark:border-amber-500/25 dark:bg-amber-500/15"
+                              className="flex items-center justify-between gap-2 rounded-lg border border-accent/35 bg-accent/10 px-3 py-2.5 dark:border-accent/25 dark:bg-accent/15"
                               role="status"
                            >
                               <span className="flex min-w-0 items-center gap-2 text-sm font-medium leading-snug">
-                                 <MapPin className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden />
-                                 <span>Sample location filter active</span>
+                                 <MapPin className="h-4 w-4 shrink-0 text-accent" aria-hidden />
+                                 <span>{t('map.filters.sampleLocationActive')}</span>
                               </span>
                               <Button
                                  type="button"
@@ -444,21 +415,21 @@ export default function MapClientPage() {
                                  className="h-8 shrink-0 border-border/80 bg-background/80 text-xs"
                                  onClick={clearSampleLocationFilter}
                               >
-                                 Remove
+                                 {t('map.actions.remove')}
                               </Button>
                            </div>
                         ) : null}
                         {activePolygon ? (
                            <div
-                              className="flex items-center justify-between gap-2 rounded-lg border border-sky-500/35 bg-sky-500/10 px-3 py-2.5 dark:border-sky-500/25 dark:bg-sky-500/15"
+                              className="flex items-center justify-between gap-2 rounded-lg border border-primary/35 bg-primary/10 px-3 py-2.5 dark:border-primary/25 dark:bg-primary/15"
                               role="status"
                            >
                               <span className="flex min-w-0 items-center gap-2 text-sm font-medium leading-snug">
                                  <VectorSquare
-                                    className="h-4 w-4 shrink-0 text-sky-600 dark:text-sky-400"
+                                    className="h-4 w-4 shrink-0 text-primary"
                                     aria-hidden
                                  />
-                                 <span>Drawn map area filter active</span>
+                                 <span>{t('map.filters.drawnAreaActive')}</span>
                               </span>
                               <Button
                                  type="button"
@@ -467,7 +438,7 @@ export default function MapClientPage() {
                                  className="h-8 shrink-0 border-border/80 bg-background/80 text-xs"
                                  onClick={clearMapAreaFilter}
                               >
-                                 Remove
+                                 {t('map.actions.remove')}
                               </Button>
                            </div>
                         ) : null}
@@ -476,7 +447,7 @@ export default function MapClientPage() {
 
                   {!coordinateFilter && !activePolygon ? (
                      <p className="text-[11px] leading-snug text-muted-foreground">
-                        Click a marker or draw a rectangle or polygon on the map to filter this list.
+                        {t('map.hints.useMapToFilter')}
                      </p>
                   ) : null}
                </div>
@@ -485,7 +456,7 @@ export default function MapClientPage() {
                   <div className="relative">
                      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                      <Input
-                        placeholder="Search name, taxon, accession…"
+                        placeholder={t('map.searchPlaceholder')}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="pl-9"
@@ -493,14 +464,14 @@ export default function MapClientPage() {
                   </div>
 
                   <div className="space-y-2">
-                     <div className="text-xs text-muted-foreground">IUCN Red List</div>
+                     <div className="text-xs text-muted-foreground">{t('map.iucnLabel')}</div>
                      <div className="flex flex-wrap gap-1.5">
                         <Badge
                            variant={statusFilter === 'all' ? 'default' : 'outline'}
                            className="cursor-pointer"
                            onClick={() => setStatusFilter('all')}
                         >
-                           All
+                           {t('common.all')}
                         </Badge>
                         {conservationStatuses.map((status) => (
                            <Badge
@@ -519,7 +490,7 @@ export default function MapClientPage() {
                <div className="flex min-h-0 min-w-0 flex-1 basis-0 flex-col overflow-hidden">
                   <div className="border-border shrink-0 border-b px-4 pt-4 pb-3">
                      <div className="flex items-center justify-between gap-2">
-                        <h3 className="text-sm font-medium">Species list</h3>
+                        <h3 className="text-sm font-medium">{t('map.speciesListTitle')}</h3>
                         <Badge variant="secondary">
                            {listLoading ? '…' : total.toLocaleString()}
                         </Badge>
@@ -535,11 +506,11 @@ export default function MapClientPage() {
                      ) : listLoading && items.length === 0 ? (
                         <div className="text-muted-foreground flex items-center gap-2 py-8 text-sm">
                            <Loader2 className="h-4 w-4 animate-spin" />
-                           Loading species…
+                           {t('map.loadingSpecies')}
                         </div>
                      ) : items.length === 0 ? (
                         <p className="text-muted-foreground text-sm">
-                           No organisms match the current filters.
+                           {t('map.emptyFiltered')}
                         </p>
                      ) : (
                         <>
@@ -549,29 +520,10 @@ export default function MapClientPage() {
                                  return (
                                     <div
                                        key={tid || JSON.stringify(row)}
-                                       role="button"
-                                       tabIndex={0}
                                        onMouseEnter={() => {
                                           setListHoverMapPoint(frequencyMapPointForOrganism(row, locations))
                                        }}
                                        onMouseLeave={() => setListHoverMapPoint(null)}
-                                       onClick={() => {
-                                          setSelectedOrganism(row)
-                                          setSelectedLatLng(organismPrimaryCoordinate(row))
-                                       }}
-                                       onKeyDown={(e) => {
-                                          if (e.key === 'Enter' || e.key === ' ') {
-                                             e.preventDefault()
-                                             setSelectedOrganism(row)
-                                             setSelectedLatLng(organismPrimaryCoordinate(row))
-                                          }
-                                       }}
-                                       className={cn(
-                                          'cursor-pointer transition-all',
-                                          selectedOrganism && getTaxid(selectedOrganism) === tid && tid
-                                             ? 'rounded-lg ring-2 ring-primary'
-                                             : '',
-                                       )}
                                     >
                                        <SpeciesCard organism={row} compact compactVariant="comfortable" />
                                     </div>
@@ -588,7 +540,7 @@ export default function MapClientPage() {
                                     <Loader2 className="text-muted-foreground h-5 w-5 animate-spin" />
                                  ) : (
                                     <span className="text-muted-foreground/70 text-[10px]">
-                                       Scroll for more
+                                       {t('common.scrollForMore')}
                                     </span>
                                  )}
                               </div>
@@ -606,71 +558,17 @@ export default function MapClientPage() {
                         onClick={() => setExportSheetOpen(true)}
                      >
                         <Download className="h-4 w-4" />
-                        Export TSV
+                        {t('common.exportTsv')}
                      </Button>
                      {items.length > 0 && total > 0 ? (
                         <p className="text-muted-foreground text-center text-[10px]">
-                           Showing {items.length.toLocaleString()} of {total.toLocaleString()}
-                           {items.length < total ? ' · scroll the list to load more' : null}
+                           {t('common.showing')} {items.length.toLocaleString()} {t('common.of')}{' '}
+                           {total.toLocaleString()}
+                           {items.length < total ? ` · ${t('common.scrollToLoadMore')}` : null}
                         </p>
                      ) : null}
                   </div>
                </div>
-
-               {selectedOrganism ? (
-                  <div className="shrink-0 border-t border-border bg-secondary/50 p-4">
-                     <div className="mb-3 flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                           <h3 className="font-semibold leading-tight">{getScientificName(selectedOrganism)}</h3>
-                           {getCommonName(selectedOrganism) ? (
-                              <p className="text-sm text-muted-foreground">{getCommonName(selectedOrganism)}</p>
-                           ) : null}
-                        </div>
-                        <Button
-                           variant="ghost"
-                           size="icon"
-                           className="h-8 w-8 shrink-0"
-                           onClick={() => {
-                              setSelectedOrganism(null)
-                              setSelectedLatLng(null)
-                           }}
-                        >
-                           <X className="h-4 w-4" />
-                        </Button>
-                     </div>
-
-                     <div className="mb-3 flex flex-wrap items-center gap-2">
-                        {(() => {
-                           const info = iucnRedListBadge(selectedOrganism)
-                           if (!info) return null
-                           return (
-                              <Badge className={cn('text-xs', info.className)} title={info.title}>
-                                 {info.code}
-                              </Badge>
-                           )
-                        })()}
-                        {insdcLabel(selectedOrganism) ? (
-                           <Badge variant="secondary" className="text-xs">
-                              {insdcLabel(selectedOrganism)}
-                           </Badge>
-                        ) : null}
-                     </div>
-
-                     {organismPrimaryCoordinate(selectedOrganism) ? (
-                        <div className="mb-3 flex items-center gap-2 rounded-md bg-card p-2 text-xs text-muted-foreground">
-                           <MapPin className="h-4 w-4 shrink-0 text-chart-3" />
-                           <span>
-                              {organismPrimaryCoordinate(selectedOrganism)!.lat.toFixed(4)},{' '}
-                              {organismPrimaryCoordinate(selectedOrganism)!.lng.toFixed(4)}
-                           </span>
-                        </div>
-                     ) : null}
-
-                     <Button asChild className="w-full">
-                        <Link href={`/species/${getTaxid(selectedOrganism)}`}>View full details</Link>
-                     </Button>
-                  </div>
-               ) : null}
             </aside>
          </div>
 

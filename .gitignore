@@ -8,3 +8,4 @@ node_modules
 docker-compose-DEV.yml
 .venv
 .cursor
+.next

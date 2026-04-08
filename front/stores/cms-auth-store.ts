@@ -2,7 +2,8 @@
 
 import { create } from 'zustand'
 
-const AUTH_KEY = 'auth'
+/** Non-security UX hint (tab-scoped): last successful CMS login in this tab. */
+export const CMS_LOGIN_HINT_KEY = 'cms_login_hint'
 
 export type CmsSessionUser = {
    name: string
@@ -12,6 +13,7 @@ export type CmsSessionUser = {
 }
 
 type CmsAuthState = {
+   /** True only after `mapUser` from a verified session or login response — never from storage. */
    isAuthenticated: boolean
    userName: string
    userRole: string
@@ -22,13 +24,8 @@ type CmsAuthState = {
    setAuth: (value: boolean) => void
 }
 
-function readAuthHint(): boolean {
-   if (typeof localStorage === 'undefined') return false
-   return localStorage.getItem(AUTH_KEY) === 'true'
-}
-
 export const useCmsAuthStore = create<CmsAuthState>((set) => ({
-   isAuthenticated: typeof window !== 'undefined' ? readAuthHint() : false,
+   isAuthenticated: false,
    userName: '',
    userRole: '',
    userEmail: '',
@@ -46,8 +43,8 @@ export const useCmsAuthStore = create<CmsAuthState>((set) => ({
          userSpecies: species,
          isAuthenticated: true,
       })
-      if (typeof localStorage !== 'undefined') {
-         localStorage.setItem(AUTH_KEY, 'true')
+      if (typeof sessionStorage !== 'undefined') {
+         sessionStorage.setItem(CMS_LOGIN_HINT_KEY, '1')
       }
    },
 
@@ -59,15 +56,12 @@ export const useCmsAuthStore = create<CmsAuthState>((set) => ({
          userSpecies: [],
          isAuthenticated: false,
       })
-      if (typeof localStorage !== 'undefined') {
-         localStorage.setItem(AUTH_KEY, 'false')
+      if (typeof sessionStorage !== 'undefined') {
+         sessionStorage.removeItem(CMS_LOGIN_HINT_KEY)
       }
    },
 
    setAuth(value: boolean) {
       set({ isAuthenticated: value })
-      if (typeof localStorage !== 'undefined') {
-         localStorage.setItem(AUTH_KEY, value ? 'true' : 'false')
-      }
    },
 }))

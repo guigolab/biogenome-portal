@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { Dna, Home, LayoutDashboard, LogOut, Pencil, User } from 'lucide-react'
+import { Dna, FlaskConical, Home, LayoutDashboard, LogOut, Pencil, User } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import {

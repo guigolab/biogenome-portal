@@ -2,13 +2,12 @@
 
 import type { ReactNode } from 'react'
 
+import { AppearanceThemeSync } from '@/components/appearance-theme-sync'
 import { ThemeProvider } from '@/components/theme-provider'
-import { usePortalConfig } from '@/contexts/portal-context'
-import { getPortalAppearance } from '@/lib/portal'
+import { useAppearanceStore } from '@/stores/appearance-store'
 
 export function AppThemeProvider({ children }: { children: ReactNode }) {
-   const { raw } = usePortalConfig()
-   const appearance = raw ? getPortalAppearance(raw) : 'system'
+   const appearance = useAppearanceStore((s) => s.appearance)
    const forcedTheme = appearance === 'light' || appearance === 'dark' ? appearance : undefined
 
    return (
@@ -19,6 +18,7 @@ export function AppThemeProvider({ children }: { children: ReactNode }) {
          enableSystem={appearance === 'system'}
          disableTransitionOnChange
       >
+         <AppearanceThemeSync />
          {children}
       </ThemeProvider>
    )

@@ -1,8 +1,6 @@
 import { getApiBase } from '@/lib/api/taxon'
 import { getCookie } from '@/lib/cms/cookie'
 
-const AUTH_STORAGE_KEY = 'auth'
-
 let handling401 = false
 let on401: (() => void) | null = null
 
@@ -51,7 +49,6 @@ export async function cmsFetch(path: string, init: CmsFetchOptions = {}): Promis
       if (!handling401) {
          handling401 = true
          try {
-            localStorage.setItem(AUTH_STORAGE_KEY, 'false')
             on401?.()
             if (!window.location.pathname.endsWith('/login')) {
                window.location.href = loginPath()

@@ -89,6 +89,42 @@ export async function cmsUpdateUser(name: string, data: Record<string, unknown>)
    return res.json().catch(() => ({}))
 }
 
+/** Add a species taxid to a Data Manager’s `species` list (admin workflow). */
+export async function cmsAssignSpeciesToUser(userName: string, taxid: string) {
+   const u = await cmsGetUser(userName)
+   const role = String(u.role ?? '')
+   if (role !== 'DataManager') {
+      throw new Error('Only Data Manager accounts can be assigned species.')
+   }
+   const existing = Array.isArray(u.species) ? u.species.map(String) : []
+   const tid = String(taxid)
+   if (existing.includes(tid)) return
+   const species = [...existing, tid]
+   await cmsUpdateUser(userName, {
+      name: String(u.name ?? userName),
+      role: 'DataManager',
+      email: String(u.email ?? ''),
+      species,
+   })
+}
+
+/** Remove a species taxid from a Data Manager’s `species` list. */
+export async function cmsUnassignSpeciesFromUser(userName: string, taxid: string) {
+   const u = await cmsGetUser(userName)
+   const role = String(u.role ?? '')
+   if (role !== 'DataManager') {
+      throw new Error('Only Data Manager accounts hold species assignments.')
+   }
+   const tid = String(taxid)
+   const species = (Array.isArray(u.species) ? u.species.map(String) : []).filter((t) => t !== tid)
+   await cmsUpdateUser(userName, {
+      name: String(u.name ?? userName),
+      role: 'DataManager',
+      email: String(u.email ?? ''),
+      species,
+   })
+}
+
 export async function cmsGetUserRelatedData(name: string) {
    return cmsFetchJson<Partial<Record<DataModels, number>>>(
       `/users/${encodeURIComponent(name)}/lookup`,
@@ -384,5 +420,12 @@ export async function cmsGetSubmittedBioSamples(params: Record<string, string | 
    }
    return cmsFetchJson<{ data?: Record<string, unknown>[]; total?: number }>(
       `/biosamples/submit?${sp.toString()}`,
+   )
+}
+
+/** GET /biosamples/submit/:accession — full submitted biosample document (characteristics, metadata). */
+export async function cmsGetSubmittedBioSample(accession: string) {
+   return cmsFetchJson<Record<string, unknown>>(
+      `/biosamples/submit/${encodeURIComponent(accession)}`,
    )
 }

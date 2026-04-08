@@ -1,6 +1,7 @@
 import type { LucideIcon } from 'lucide-react'
 import {
    Database,
+   FileCode2,
    FlaskConical,
    Layers,
    List,
@@ -13,7 +14,7 @@ import type { DataModels } from '@/lib/portal/types'
 
 /**
  * Lucide icons aligned with the home stats strip (Vue `iconMap` / catalog models).
- * organisms → list, assemblies → database, biosamples → flask, reads → microscope.
+ * organisms → list, assemblies → database, biosamples → flask, annotations → file-code, reads → microscope.
  */
 export const modelLucideMap: Partial<Record<DataModels, LucideIcon>> = {
    organisms: List,
@@ -21,7 +22,7 @@ export const modelLucideMap: Partial<Record<DataModels, LucideIcon>> = {
    biosamples: FlaskConical,
    reads: Microscope,
    local_samples: MapPin,
-   annotations: Layers,
+   annotations: FileCode2,
    submitted_biosamples: FlaskConical,
 }
 

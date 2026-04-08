@@ -28,6 +28,11 @@
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
+  --chart-6: oklch(0.702 0.15 200.5);
+  --chart-7: oklch(0.58 0.2 310);
+  --chart-8: oklch(0.72 0.14 145);
+  --chart-9: oklch(0.62 0.18 25);
+  --chart-10: oklch(0.55 0.12 250);
   --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
@@ -37,6 +42,16 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* GoaT pipeline tracker (semantic aliases; stage hex colors stay inline) */
+  --color-text-primary: var(--foreground);
+  --color-text-secondary: var(--muted-foreground);
+  --color-background-primary: var(--background);
+  --color-background-secondary: var(--secondary);
+  --color-border-tertiary: var(--border);
+  --color-border-secondary: color-mix(in oklch, var(--foreground) 22%, var(--border));
+  --color-border-primary: var(--foreground);
+  --border-radius-lg: var(--radius-lg, var(--radius));
 }
 
 .dark {
@@ -64,6 +79,11 @@
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
+  --chart-6: oklch(0.72 0.16 200);
+  --chart-7: oklch(0.68 0.22 290);
+  --chart-8: oklch(0.75 0.14 150);
+  --chart-9: oklch(0.7 0.2 35);
+  --chart-10: oklch(0.6 0.14 240);
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.488 0.243 264.376);
@@ -72,6 +92,15 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(0.269 0 0);
   --sidebar-ring: oklch(0.439 0 0);
+
+  --color-text-primary: var(--foreground);
+  --color-text-secondary: var(--muted-foreground);
+  --color-background-primary: var(--background);
+  --color-background-secondary: var(--secondary);
+  --color-border-tertiary: var(--border);
+  --color-border-secondary: color-mix(in oklch, var(--foreground) 28%, var(--border));
+  --color-border-primary: var(--foreground);
+  --border-radius-lg: var(--radius-lg, var(--radius));
 }
 
 @theme inline {
@@ -101,6 +130,11 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+  --color-chart-6: var(--chart-6);
+  --color-chart-7: var(--chart-7);
+  --color-chart-8: var(--chart-8);
+  --color-chart-9: var(--chart-9);
+  --color-chart-10: var(--chart-10);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -122,4 +156,9 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Leaflet: Tailwind preflight can constrain SVGs; paths/circleMarkers need full intrinsic size */
+.leaflet-container svg {
+  max-width: none !important;
 }

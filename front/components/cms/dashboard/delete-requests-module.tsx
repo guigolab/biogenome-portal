@@ -26,11 +26,13 @@ import {
    TableRow,
 } from '@/components/ui/table'
 import { extractApiMessage } from '@/lib/cms/extract-api-message'
+import type { DashboardModuleVariant } from '@/components/cms/dashboard/dashboard-module-variant'
 import { cmsDeleteDeletionRequest, cmsDeleteItem, cmsGetItems } from '@/lib/cms/services/auth'
+import { cn } from '@/lib/utils'
 
 const LIMIT = 7
 
-export function DeleteRequestsModule() {
+export function DeleteRequestsModule({ variant = 'standalone' }: { variant?: DashboardModuleVariant }) {
    const [items, setItems] = useState<Record<string, unknown>[]>([])
    const [total, setTotal] = useState(0)
    const [loading, setLoading] = useState(true)
@@ -101,19 +103,39 @@ export function DeleteRequestsModule() {
       }
    }
 
+   const embedded = variant === 'tabPanel'
+
    return (
       <>
-         <Card className="border-border/80 border-destructive/20 shadow-sm">
-            <CardHeader>
-               <div className="flex items-center justify-between gap-2">
-                  <CardTitle>Deletion requests</CardTitle>
-                  {total > 0 ? (
-                     <span className="rounded-full bg-destructive px-2 py-0.5 text-xs font-bold text-destructive-foreground">
-                        {total}
-                     </span>
-                  ) : null}
-               </div>
-               <CardDescription>Approve or deny curator deletion requests.</CardDescription>
+         <Card
+            className={cn(
+               'border-border/80 border-destructive/20 shadow-sm',
+               embedded && 'rounded-xl border bg-card',
+            )}
+         >
+            <CardHeader className={cn(embedded && 'pb-2')}>
+               {embedded ? (
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                     <p className="text-sm text-muted-foreground">Approve or deny curator deletion requests.</p>
+                     {total > 0 ? (
+                        <span className="rounded-full bg-destructive px-2 py-0.5 text-xs font-bold text-destructive-foreground">
+                           {total}
+                        </span>
+                     ) : null}
+                  </div>
+               ) : (
+                  <>
+                     <div className="flex items-center justify-between gap-2">
+                        <CardTitle>Deletion requests</CardTitle>
+                        {total > 0 ? (
+                           <span className="rounded-full bg-destructive px-2 py-0.5 text-xs font-bold text-destructive-foreground">
+                              {total}
+                           </span>
+                        ) : null}
+                     </div>
+                     <CardDescription>Approve or deny curator deletion requests.</CardDescription>
+                  </>
+               )}
             </CardHeader>
             <CardContent className="space-y-4">
                <Input

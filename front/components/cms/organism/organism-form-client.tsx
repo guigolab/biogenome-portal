@@ -303,13 +303,20 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
                </div>
                <div className="flex flex-wrap gap-2">
                   {!isEditMode ? (
-                     <Button variant="outline" size="sm" onClick={() => setShowChangeModal(true)}>
-                        Change organism
-                     </Button>
+                     <>
+                        <Button variant="outline" size="sm" onClick={() => setShowChangeModal(true)}>
+                           Change organism
+                        </Button>
+                        <Button
+                           variant="destructive"
+                           size="sm"
+                           onClick={() => setShowResetModal(true)}
+                           disabled={submitting}
+                        >
+                           Reset
+                        </Button>
+                     </>
                   ) : null}
-                  <Button variant="destructive" size="sm" onClick={() => setShowResetModal(true)} disabled={submitting}>
-                     Reset
-                  </Button>
                </div>
             </div>
          )}
@@ -461,7 +468,7 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
 
                {sid === 'piOrEntity' && (
                   <div>
-                     <Label htmlFor="subproj">Sub-project / entity</Label>
+                     <Label htmlFor="subproj">Sub-project, PI or entity</Label>
                      <Input
                         id="subproj"
                         value={organismForm.sub_project ?? ''}

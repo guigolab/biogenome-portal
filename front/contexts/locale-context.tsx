@@ -13,13 +13,21 @@ import {
 import { localeToHtmlLang, persistLocale, resolveLocale } from '@/lib/i18n/locale'
 
 import cat from '@/messages/cat.json'
+import de from '@/messages/de.json'
 import en from '@/messages/en.json'
+import es from '@/messages/es.json'
+import fr from '@/messages/fr.json'
+import it from '@/messages/it.json'
 
 type MessageDict = typeof en
 
 const bundles: Record<string, MessageDict> = {
    en: en as MessageDict,
    cat: cat as MessageDict,
+   es: es as MessageDict,
+   de: de as MessageDict,
+   it: it as MessageDict,
+   fr: fr as MessageDict,
 }
 
 function getNested(obj: unknown, path: string): string | undefined {

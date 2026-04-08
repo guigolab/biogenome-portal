@@ -63,11 +63,12 @@ function formatBases(n: number | undefined): string {
   return `${Math.round(n)} bp`
 }
 
-function assemblyFromDoc(row: Record<string, unknown>) {
+export function assemblyFromDoc(row: Record<string, unknown>) {
   const accession = str(row.accession)
   const meta = row.metadata
   const m = meta && typeof meta === 'object' ? (meta as Record<string, unknown>) : {}
   const info = (m.assembly_info as Record<string, unknown> | undefined) ?? {}
+  const stats = (m.assembly_stats as Record<string, unknown> | undefined) ?? {}
   const levelRaw = info.assembly_level
   const assemblyLevel = levelRaw != null ? str(levelRaw) : '—'
   const totalLen = num(info.total_sequence_length as number | string | undefined)
@@ -78,7 +79,7 @@ function assemblyFromDoc(row: Record<string, unknown>) {
     gcContent = `${((gcCount / totalLen) * 100).toFixed(1)}`
   }
   const n50raw =
-    info.contig_n50 ?? info.scaffold_n50 ?? info.chromosome_n50 ?? info.molecule_n50
+    stats.contig_n50 ?? stats.scaffold_n50 ?? stats.chromosome_n50 ?? stats.molecule_n50
   const n50 = n50raw != null ? formatBases(num(n50raw as number | string)) : '—'
   const created = row.created
   let submissionDate = '—'
@@ -100,7 +101,7 @@ function assemblyFromDoc(row: Record<string, unknown>) {
   }
 }
 
-function biosampleFromDoc(row: Record<string, unknown>) {
+export function biosampleFromDoc(row: Record<string, unknown>) {
   const accession = str(row.accession)
   const meta = row.metadata
   const md = meta && typeof meta === 'object' ? (meta as Record<string, string>) : {}
@@ -130,7 +131,7 @@ function biosampleFromDoc(row: Record<string, unknown>) {
   }
 }
 
-function readRunFromDoc(row: Record<string, unknown>) {
+export function readRunFromDoc(row: Record<string, unknown>) {
   const accession = str(row.run_accession)
   const meta = row.metadata
   const md = meta && typeof meta === 'object' ? (meta as Record<string, unknown>) : {}

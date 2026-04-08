@@ -1,12 +1,16 @@
 'use client'
 
 import { useTheme } from 'next-themes'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
-import { usePortalConfig } from '@/contexts/portal-context'
-import { getPortalAppearance } from '@/lib/portal'
+import {
+   leafletMarkerPalettesFromRoot,
+   type LeafletCircleMarkerStyle,
+} from '@/lib/portal/brandColorsFromDocument'
+import { useAppearanceStore } from '@/stores/appearance-store'
+import { cn } from '@/lib/utils'
 
 export type SpeciesMapPoint = { lat: number; lng: number }
 
@@ -17,18 +21,19 @@ const CARTO_TILE_OPTIONS = {
    attribution: CARTO_ATTRIBUTION,
    subdomains: 'abcd' as const,
    maxZoom: 20,
-}
+} as const
 
 const CARTO_DARK = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
 const CARTO_LIGHT = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
 
-const MARKER = {
-   radius: 7,
-   color: '#0ea5e9',
-   fillColor: '#38bdf8',
-   fillOpacity: 0.55,
-   weight: 1,
-} as const
+function toFiniteNumber(v: unknown): number {
+   if (typeof v === 'number' && Number.isFinite(v)) return v
+   if (typeof v === 'string' && v.trim() !== '') {
+      const n = Number(v)
+      if (Number.isFinite(n)) return n
+   }
+   return NaN
+}
 
 type SpeciesLocationsMapProps = {
    points: SpeciesMapPoint[]
@@ -42,85 +47,148 @@ export function SpeciesLocationsMap({ points, className }: SpeciesLocationsMapPr
    const tileLayerRef = useRef<L.TileLayer | null>(null)
    const lastFitKeyRef = useRef<string>('')
    const [mounted, setMounted] = useState(false)
+   const [mapReady, setMapReady] = useState(false)
    const { resolvedTheme } = useTheme()
-   const { raw: portalRaw } = usePortalConfig()
+   const appearance = useAppearanceStore((s) => s.appearance)
+   const [markerStyle, setMarkerStyle] = useState<LeafletCircleMarkerStyle | null>(null)
+
+   useLayoutEffect(() => {
+      if (typeof document === 'undefined') return
+      const { default: d } = leafletMarkerPalettesFromRoot(document.documentElement)
+      setMarkerStyle({
+         ...d,
+         fillOpacity: 0.85,
+         weight: 2,
+      })
+   }, [resolvedTheme, appearance])
 
    const basemapDark = useMemo(() => {
-      if (portalRaw) {
-         const a = getPortalAppearance(portalRaw)
-         if (a === 'light') return false
-         if (a === 'dark') return true
-      }
+      if (appearance === 'light') return false
+      if (appearance === 'dark') return true
       return resolvedTheme === 'dark'
-   }, [portalRaw, resolvedTheme])
+   }, [appearance, resolvedTheme])
 
    useEffect(() => {
       setMounted(true)
    }, [])
 
+   // Create map once: basemap first, then feature group (reliable pane stacking).
    useEffect(() => {
       if (!mounted || !mapRef.current || mapInstanceRef.current) return
 
-      const map = L.map(mapRef.current, {
+      const el = mapRef.current
+      const map = L.map(el, {
          center: [20, 0],
          zoom: 2,
          minZoom: 2,
          maxZoom: 16,
          zoomControl: true,
+         preferCanvas: false,
       })
+
+      const url = basemapDark ? CARTO_DARK : CARTO_LIGHT
+      const tiles = L.tileLayer(url, CARTO_TILE_OPTIONS)
+      tiles.addTo(map)
+      tileLayerRef.current = tiles
+
       const fg = L.featureGroup().addTo(map)
       layerRef.current = fg
       mapInstanceRef.current = map
 
+      const invalidate = () => {
+         map.invalidateSize({ animate: false })
+      }
+      requestAnimationFrame(() => {
+         invalidate()
+         map.whenReady(() => {
+            invalidate()
+            requestAnimationFrame(invalidate)
+         })
+      })
+      const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(() => invalidate()) : null
+      ro?.observe(el)
+
+      setMapReady(true)
+
       return () => {
+         ro?.disconnect()
+         setMapReady(false)
          tileLayerRef.current = null
          map.remove()
          mapInstanceRef.current = null
          layerRef.current = null
       }
+      // basemapDark: initial tiles only; theme swaps in next effect
+      // eslint-disable-next-line react-hooks/exhaustive-deps -- init once; theme handled below
    }, [mounted])
 
+   // Swap basemap when theme / persisted appearance changes
    useEffect(() => {
       const map = mapInstanceRef.current
-      if (!map) return
+      if (!map || !mapReady) return
       const url = basemapDark ? CARTO_DARK : CARTO_LIGHT
       const prev = tileLayerRef.current
       if (prev && map.hasLayer(prev)) map.removeLayer(prev)
       const layer = L.tileLayer(url, CARTO_TILE_OPTIONS)
       layer.addTo(map)
       tileLayerRef.current = layer
-   }, [mounted, basemapDark])
+   }, [mapReady, basemapDark])
 
    useEffect(() => {
       const map = mapInstanceRef.current
       const fg = layerRef.current
-      if (!map || !fg) return
+      if (!map || !fg || !mapReady) return
 
       fg.clearLayers()
       const bounds: L.LatLng[] = []
-      for (const p of points) {
-         if (!Number.isFinite(p.lat) || !Number.isFinite(p.lng)) continue
-         bounds.push(L.latLng(p.lat, p.lng))
-         L.circleMarker([p.lat, p.lng], { ...MARKER }).addTo(fg)
+      const baseStyle: LeafletCircleMarkerStyle = markerStyle ?? {
+         ...leafletMarkerPalettesFromRoot(document.documentElement).default,
+         fillOpacity: 0.85,
+         weight: 2,
       }
 
-      if (bounds.length > 0) {
-         const key = bounds.map((ll) => `${ll.lat},${ll.lng}`).join('|')
-         if (key !== lastFitKeyRef.current) {
-            lastFitKeyRef.current = key
-            map.fitBounds(L.latLngBounds(bounds), { padding: [28, 28], maxZoom: 12 })
+      for (const raw of points) {
+         const lat = toFiniteNumber(raw.lat)
+         const lng = toFiniteNumber(raw.lng)
+         if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue
+         bounds.push(L.latLng(lat, lng))
+         L.circleMarker([lat, lng], { ...baseStyle, interactive: true }).addTo(fg)
+      }
+
+      const scheduleFit = () => {
+         map.invalidateSize({ animate: false })
+         if (bounds.length > 0) {
+            const key = bounds.map((ll) => `${ll.lat},${ll.lng}`).join('|')
+            if (key !== lastFitKeyRef.current) {
+               lastFitKeyRef.current = key
+               try {
+                  map.fitBounds(L.latLngBounds(bounds), { padding: [32, 32], maxZoom: 14 })
+               } catch {
+                  map.setView(bounds[0], 8)
+               }
+            }
+         }
+         if (fg.getLayers().length > 0) {
+            fg.bringToFront()
          }
       }
-   }, [points])
+
+      requestAnimationFrame(() => {
+         scheduleFit()
+         requestAnimationFrame(scheduleFit)
+      })
+      const t = window.setTimeout(scheduleFit, 120)
+
+      return () => window.clearTimeout(t)
+   }, [points, mapReady, markerStyle])
+
+   const loadingClass =
+      className ??
+      'flex h-[280px] w-full items-center justify-center rounded-lg border border-border bg-card'
 
    if (!mounted) {
       return (
-         <div
-            className={
-               className ??
-               'flex h-[280px] w-full items-center justify-center rounded-lg border border-border bg-card'
-            }
-         >
+         <div className={loadingClass}>
             <span className="text-sm text-muted-foreground">Loading map…</span>
          </div>
       )
@@ -129,7 +197,11 @@ export function SpeciesLocationsMap({ points, className }: SpeciesLocationsMapPr
    return (
       <div
          ref={mapRef}
-         className={className ?? 'h-[280px] w-full rounded-lg border border-border overflow-hidden z-0'}
+         className={cn(
+            'relative z-[1] w-full rounded-lg border border-border bg-muted/30',
+            '[&_.leaflet-container]:h-full [&_.leaflet-container]:w-full [&_.leaflet-container]:min-h-[200px]',
+            className ?? 'h-[280px]',
+         )}
       />
    )
 }

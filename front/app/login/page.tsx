@@ -1,22 +1,21 @@
 'use client'
 
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
-import { Dna, Eye, EyeOff, Loader2 } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Eye, EyeOff, Loader2 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { usePortalConfig } from '@/contexts/portal-context'
-import { cmsLogin } from '@/lib/cms/services/auth'
+import { cmsCheckSession, cmsLogin } from '@/lib/cms/services/auth'
 import { useCmsAuthStore } from '@/stores/cms-auth-store'
 import { toast } from 'sonner'
 
 export default function LoginPage() {
    const router = useRouter()
-   const { config } = usePortalConfig()
+   const { config, loading: portalLoading } = usePortalConfig()
    const mapUser = useCmsAuthStore((s) => s.mapUser)
 
    const contactEmail =
@@ -26,6 +25,33 @@ export default function LoginPage() {
    const [password, setPassword] = useState('')
    const [showPassword, setShowPassword] = useState(false)
    const [submitting, setSubmitting] = useState(false)
+   /** Until portal is ready and session probe finishes (or fails), avoid flashing the form. */
+   const [sessionBusy, setSessionBusy] = useState(true)
+
+   useEffect(() => {
+      if (portalLoading) return
+      const cms = config?.general?.cms === true
+      if (!cms) {
+         router.replace('/')
+         return
+      }
+      let alive = true
+      ;(async () => {
+         try {
+            const user = await cmsCheckSession()
+            if (!alive) return
+            mapUser(user)
+            router.replace('/admin')
+            router.refresh()
+         } catch {
+            if (!alive) return
+            setSessionBusy(false)
+         }
+      })()
+      return () => {
+         alive = false
+      }
+   }, [portalLoading, config, router, mapUser])
 
    async function onSubmit(e: React.FormEvent) {
       e.preventDefault()
@@ -44,18 +70,17 @@ export default function LoginPage() {
       }
    }
 
+   if (portalLoading || sessionBusy) {
+      return (
+         <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-background">
+            <Loader2 className="h-10 w-10 animate-spin text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">Checking session…</p>
+         </div>
+      )
+   }
+
    return (
       <div className="flex min-h-screen flex-col bg-background">
-         <header className="border-b border-border bg-background/95 backdrop-blur">
-            <div className="container mx-auto flex h-16 items-center px-4">
-               <Link href="/" className="flex items-center gap-2 text-lg font-semibold tracking-tight">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-                     <Dna className="h-5 w-5 text-primary-foreground" />
-                  </div>
-                  Sign in
-               </Link>
-            </div>
-         </header>
 
          <div className="flex flex-1 items-center justify-center p-6">
             <Card className="w-full max-w-md shadow-md">
@@ -64,6 +89,7 @@ export default function LoginPage() {
                   <CardDescription>Use your portal curator or admin account.</CardDescription>
                </CardHeader>
                <CardContent>
+                  {/* Standard login field names for browser password managers; keep distinct from CMS user form (`cms_user_*`). */}
                   <form className="grid gap-4" onSubmit={onSubmit} autoComplete="on">
                      <div className="grid gap-2">
                         <Label htmlFor="login-username">Username</Label>

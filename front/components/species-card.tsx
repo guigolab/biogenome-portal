@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { Fragment } from 'react'
+import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { organismImageUrls } from '@/lib/organismImages'
 import { iucnRedListBadge } from '@/lib/iucnCategory'
@@ -7,6 +8,7 @@ import {
    lineageRankPillsFromOrganism,
    RANK_GROUP_LINEAGE_TEXT,
    SPECIES_RANK_GROUPS,
+   type LineageRankPill,
 } from '@/lib/taxonRankFilter'
 import { Database, Dna, FlaskConical, Leaf, PlayCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -14,8 +16,9 @@ import { cn } from '@/lib/utils'
 export interface SpeciesCardProps {
    organism: Record<string, unknown>
    compact?: boolean
-   /** Slightly larger compact layout (e.g. map sidebar). */
    compactVariant?: 'default' | 'comfortable'
+   /** Grid: family/genus emphasis or truncated full lineage. Ignored when `compact`. */
+   lineageMode?: 'full' | 'summary'
 }
 
 function getTaxid(row: Record<string, unknown>): string {
@@ -44,6 +47,14 @@ function getCommonName(row: Record<string, unknown>): string {
    return ''
 }
 
+function getKingdomLabel(row: Record<string, unknown>): string | null {
+   const raw = row.lineage_rank_labels
+   if (!raw || typeof raw !== 'object') return null
+   const k = (raw as Record<string, unknown>).kingdom
+   if (typeof k !== 'string' || !k.trim()) return null
+   return k.trim()
+}
+
 function lineageRankGroupLabel(styleKey: string): string {
    return SPECIES_RANK_GROUPS.find((g) => g.id === styleKey)?.label ?? styleKey
 }
@@ -52,15 +63,35 @@ function LineageRankText({
    organism,
    compact = false,
    compactComfortable = false,
+   lineageMode = 'full',
 }: {
    organism: Record<string, unknown>
    compact?: boolean
    compactComfortable?: boolean
+   lineageMode?: 'full' | 'summary'
 }) {
-   const pills = lineageRankPillsFromOrganism(organism)
-   if (pills.length === 0) return null
+   const fullPills = lineageRankPillsFromOrganism(organism)
+   if (fullPills.length === 0) return null
 
-   const lineageTitle = pills
+   let displayPills: LineageRankPill[]
+   let mutedLineage = false
+   let lineClampOne = false
+
+   if (!compact && lineageMode === 'summary') {
+      const summaryOnly = fullPills.filter((p) => p.apiField === 'family' || p.apiField === 'genus')
+      if (summaryOnly.length > 0) {
+         displayPills = summaryOnly
+         mutedLineage = true
+      } else {
+         displayPills = fullPills
+         mutedLineage = true
+         lineClampOne = true
+      }
+   } else {
+      displayPills = fullPills
+   }
+
+   const lineageTitle = fullPills
       .map((p) => `${lineageRankGroupLabel(p.styleKey)}: ${p.name}`)
       .join(' · ')
 
@@ -70,11 +101,13 @@ function LineageRankText({
             'min-w-0 text-left leading-snug',
             compact && !compactComfortable && 'mt-1 text-[9px] leading-3',
             compact && compactComfortable && 'mt-1.5 text-[10px] leading-snug',
-            !compact && 'mt-1.5 text-[10px] leading-snug sm:text-[11px]',
+            !compact && !mutedLineage && 'mt-1.5 text-[10px] leading-snug sm:text-[11px]',
+            !compact && mutedLineage && 'mt-1.5 text-[10px] leading-snug sm:text-[11px] text-muted-foreground',
+            lineClampOne && 'line-clamp-1',
          )}
          title={lineageTitle}
       >
-         {pills.map((p, i) => {
+         {displayPills.map((p, i) => {
             const colors = RANK_GROUP_LINEAGE_TEXT[p.styleKey] ?? RANK_GROUP_LINEAGE_TEXT.phylum
             const rankLabel = lineageRankGroupLabel(p.styleKey)
             return (
@@ -84,7 +117,15 @@ function LineageRankText({
                         {' · '}
                      </span>
                   ) : null}
-                  <span className={cn('font-medium break-words', colors.name)} title={`${rankLabel}: ${p.name}`}>
+                  <span
+                     className={cn(
+                        'break-words',
+                        mutedLineage ? 'font-normal' : 'font-medium',
+                        !mutedLineage && colors.name,
+                        mutedLineage && 'text-muted-foreground',
+                     )}
+                     title={`${rankLabel}: ${p.name}`}
+                  >
                      {p.name}
                   </span>
                </Fragment>
@@ -108,12 +149,14 @@ export function SpeciesCard({
    organism,
    compact = false,
    compactVariant = 'default',
+   lineageMode = 'full',
 }: SpeciesCardProps) {
    const comfy = compact && compactVariant === 'comfortable'
    const taxid = getTaxid(organism)
    const href = taxid ? `/species/${encodeURIComponent(taxid)}` : '#'
    const scientificName = getScientificName(organism)
    const commonName = getCommonName(organism)
+   const kingdomLabel = getKingdomLabel(organism)
    const primaryImage = organismImageUrls(organism)[0] ?? null
 
    const assemblies = num(organism, 'assemblies_count')
@@ -145,7 +188,6 @@ export function SpeciesCard({
                      'group-hover:dark:brightness-[0.96] group-hover:dark:saturate-[0.98]',
                   )}
                />
-               {/* Uniform scrim in dark mode so bright photos don’t glare against the shell */}
                <div
                   className="pointer-events-none absolute inset-0 hidden bg-black/15 dark:block"
                   aria-hidden
@@ -164,8 +206,8 @@ export function SpeciesCard({
 
    if (compact) {
       return (
-         <Link href={href}>
-            <Card className="group hover:border-primary/50 transition-colors cursor-pointer p-0 gap-0 py-0">
+         <Link href={href} className="block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
+            <Card className="group h-full cursor-pointer p-0 gap-0 py-0 transition-shadow hover:border-primary/50 hover:shadow-sm">
                <CardContent className={cn(comfy ? 'p-3.5' : 'p-3')}>
                   <div className={cn('flex items-start', comfy ? 'gap-3' : 'gap-2.5')}>
                      {media}
@@ -180,7 +222,7 @@ export function SpeciesCard({
                               >
                                  {scientificName}
                               </h3>
-                              {commonName && (
+                              {commonName ? (
                                  <p
                                     className={cn(
                                        'text-muted-foreground truncate',
@@ -189,10 +231,10 @@ export function SpeciesCard({
                                  >
                                     {commonName}
                                  </p>
-                              )}
+                              ) : null}
                            </div>
                            <div className="flex shrink-0 flex-wrap justify-end gap-1">
-                              {iucnBadge && (
+                              {iucnBadge ? (
                                  <span
                                     className={cn(
                                        'inline-flex max-w-[9rem] truncate rounded-md font-semibold border',
@@ -203,7 +245,7 @@ export function SpeciesCard({
                                  >
                                     IUCN {iucnBadge.code}
                                  </span>
-                              )}
+                              ) : null}
                            </div>
                         </div>
                         <LineageRankText organism={organism} compact compactComfortable={comfy} />
@@ -216,59 +258,73 @@ export function SpeciesCard({
    }
 
    return (
-      <Link href={href}>
-         <Card className="group hover:border-primary/50 transition-all cursor-pointer h-full flex flex-col overflow-hidden p-0 gap-0 py-0 shadow-sm">
+      <Link
+         href={href}
+         className="block h-full rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+      >
+         <Card className="group flex h-full min-h-[280px] cursor-pointer flex-col overflow-hidden p-0 gap-0 py-0 shadow-sm transition-[box-shadow,border-color] hover:border-primary/50 hover:shadow-md">
             {media}
-            <CardContent className="flex flex-col flex-1 p-3 sm:p-4">
-               <div className="flex items-start justify-between gap-2 mb-2">
-                  <div className="min-w-0 flex-1">
-                     <h3 className="font-semibold text-sm leading-snug line-clamp-2 group-hover:text-primary transition-colors">
-                        {scientificName}
-                     </h3>
-                     {commonName && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{commonName}</p>}
+            <CardContent className="flex min-h-0 flex-1 flex-col p-3 sm:p-4">
+               <div className="flex min-h-[5rem] flex-col gap-1.5">
+                  <div className="flex items-start justify-between gap-2">
+                     <div className="min-w-0 flex-1 space-y-0.5">
+                        <h3 className="text-base font-bold leading-snug line-clamp-2 text-foreground group-hover:text-primary transition-colors sm:text-lg">
+                           {scientificName}
+                        </h3>
+                        {commonName ? (
+                           <p className="text-sm text-muted-foreground line-clamp-2">{commonName}</p>
+                        ) : null}
+                        {kingdomLabel ? (
+                           <Badge variant="secondary" className="mt-1 max-w-full truncate text-[10px] font-normal">
+                              {kingdomLabel}
+                           </Badge>
+                        ) : null}
+                     </div>
+                     <div className="flex shrink-0 flex-col items-end gap-1">
+                        {iucnBadge ? (
+                           <span
+                              className={cn(
+                                 'inline-flex max-w-[10rem] truncate rounded-md px-1.5 py-0.5 text-[10px] font-semibold border',
+                                 iucnBadge.className,
+                              )}
+                              title={iucnBadge.title}
+                           >
+                              IUCN {iucnBadge.code}
+                           </span>
+                        ) : null}
+                     </div>
                   </div>
-                  <div className="flex shrink-0 flex-col items-end gap-1">
-                     {iucnBadge && (
-                        <span
-                           className={cn(
-                              'inline-flex max-w-[10rem] truncate rounded-md px-1.5 py-0.5 text-[10px] font-semibold border',
-                              iucnBadge.className,
-                           )}
-                           title={iucnBadge.title}
-                        >
-                           IUCN {iucnBadge.code}
-                        </span>
-                     )}
+
+                  <div className="min-h-[2.5rem] flex-1">
+                     <LineageRankText organism={organism} lineageMode={lineageMode} />
                   </div>
                </div>
 
-               <LineageRankText organism={organism} />
-
-               <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 pt-2 mt-auto border-t border-border text-[11px] text-muted-foreground">
-                  {assemblies > 0 && (
+               <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-0.5 border-t border-border pt-2 text-[11px] text-muted-foreground">
+                  {assemblies > 0 ? (
                      <span className="flex items-center gap-1">
-                        <Dna className="h-3 w-3 shrink-0" />
+                        <Dna className="h-3 w-3 shrink-0" aria-hidden />
                         {assemblies} genomes
                      </span>
-                  )}
-                  {biosamples > 0 && (
+                  ) : null}
+                  {biosamples > 0 ? (
                      <span className="flex items-center gap-1">
-                        <FlaskConical className="h-3 w-3 shrink-0" />
+                        <FlaskConical className="h-3 w-3 shrink-0" aria-hidden />
                         {biosamples} samples
                      </span>
-                  )}
-                  {reads > 0 && (
+                  ) : null}
+                  {reads > 0 ? (
                      <span className="flex items-center gap-1">
-                        <PlayCircle className="h-3 w-3 shrink-0" />
+                        <PlayCircle className="h-3 w-3 shrink-0" aria-hidden />
                         {reads} runs
                      </span>
-                  )}
-                  {annotations > 0 && (
+                  ) : null}
+                  {annotations > 0 ? (
                      <span className="flex items-center gap-1">
-                        <Database className="h-3 w-3 shrink-0" />
+                        <Database className="h-3 w-3 shrink-0" aria-hidden />
                         {annotations} annotations
                      </span>
-                  )}
+                  ) : null}
                </div>
             </CardContent>
          </Card>

@@ -146,6 +146,12 @@ export function useEnaUploadStepper(
       return runtimeSteps.filter((s) => s.required && s.kind !== 'reviewSubmit').every((s) => s.complete)
    }, [runtimeSteps])
 
+   const isNextBlocked = useMemo(() => {
+      const next = activeIndex + 1
+      if (next >= runtimeSteps.length) return true
+      return !canNavigateTo(next)
+   }, [activeIndex, runtimeSteps, canNavigateTo])
+
    return {
       steps,
       runtimeSteps,
@@ -157,5 +163,6 @@ export function useEnaUploadStepper(
       goPrev,
       resetStepper,
       canSubmit,
+      isNextBlocked,
    }
 }

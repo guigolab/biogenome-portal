@@ -163,6 +163,45 @@ export type ParsedSampleLocation = {
    isLocalSample: boolean
 }
 
+/** Coerce BSON / JSON number wrappers to finite numbers. */
+function coordNum(v: unknown): number {
+   if (typeof v === 'number' && Number.isFinite(v)) return v
+   if (v && typeof v === 'object') {
+      const o = v as Record<string, unknown>
+      const d = o.$numberDouble ?? o.$numberDecimal
+      if (typeof d === 'string' || typeof d === 'number') {
+         const n = Number(d)
+         if (Number.isFinite(n)) return n
+      }
+      const l = o.$numberLong
+      if (typeof l === 'string' || typeof l === 'number') {
+         const n = Number(l)
+         if (Number.isFinite(n)) return n
+      }
+   }
+   if (typeof v === 'string' && v.trim() !== '') {
+      const n = Number(v)
+      if (Number.isFinite(n)) return n
+   }
+   return NaN
+}
+
+/**
+ * Interpret a coordinate pair as lng/lat (GeoJSON / MongoDB) with fallback when ``type`` is missing.
+ */
+function lngLatFromPair(a: number, b: number, typeRaw: unknown): { lng: number; lat: number } | null {
+   const t = typeof typeRaw === 'string' ? typeRaw.toLowerCase() : ''
+   if (t === 'point') {
+      return { lng: a, lat: b }
+   }
+   const geoOk = Math.abs(a) <= 180 && Math.abs(b) <= 90
+   const swapOk = Math.abs(b) <= 180 && Math.abs(a) <= 90
+   if (geoOk && !swapOk) return { lng: a, lat: b }
+   if (swapOk && !geoOk) return { lng: b, lat: a }
+   if (geoOk && swapOk) return { lng: a, lat: b }
+   return null
+}
+
 /** GeoJSON Point on a SampleCoordinates document (``coordinates`` field). */
 export function parseSampleLocationRow(row: Record<string, unknown>): ParsedSampleLocation | null {
    const loc = row.coordinates
@@ -170,14 +209,14 @@ export function parseSampleLocationRow(row: Record<string, unknown>): ParsedSamp
    const o = loc as Record<string, unknown>
    const coords = o.coordinates
    if (!Array.isArray(coords) || coords.length < 2) return null
-   const a = Number(coords[0])
-   const b = Number(coords[1])
+   const a = coordNum(coords[0])
+   const b = coordNum(coords[1])
    if (!Number.isFinite(a) || !Number.isFinite(b)) return null
-   const lat = o.type === 'Point' ? b : a
-   const lng = o.type === 'Point' ? a : b
+   const pair = lngLatFromPair(a, b, o.type)
+   if (!pair) return null
    return {
-      lat,
-      lng,
+      lat: pair.lat,
+      lng: pair.lng,
       sampleAccession: String(row.sample_accession ?? '').trim() || '—',
       isLocalSample: row.is_local_sample === true,
    }

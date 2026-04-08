@@ -7,10 +7,18 @@ import type {
    GeneralConfig,
    OrganismFormStepDef,
    OrganismFormStepId,
+   PortalCatalogModelWire,
    PortalChartConfig,
    PortalConfig,
+   PortalFooterWire,
+   PortalModelsWire,
 } from './types'
-import { defaultInsdcCatalogModels } from './catalogModelsDefaults'
+import {
+   defaultInsdcCatalogModels,
+   defaultLocalSamplesCatalogWire,
+   defaultOrganismCatalogWire,
+   INSDC_CODE_ONLY_CATALOG_MODEL_KEYS,
+} from './catalogModelsDefaults'
 import { dataModels } from './types'
 
 export const DEFAULT_VUESTIC_UI_BASE: Record<string, unknown> = {
@@ -83,6 +91,7 @@ export function portalJsonUrl(): string {
 export async function fetchPortalConfig(): Promise<PortalConfig> {
    const res = await fetch(portalJsonUrl(), {
       credentials: 'same-origin',
+      cache: 'no-store',
    })
    if (!res.ok) {
       throw new Error(`portal.json: ${res.status} ${res.statusText}`)
@@ -176,15 +185,89 @@ export type NormalizeModelsOptions = {
    insdcStatus?: boolean
 }
 
+function isStringArray(value: unknown): value is string[] {
+   return Array.isArray(value) && value.every((x) => typeof x === 'string')
+}
+
+function resolveFiltersFromPortal(
+   portal: PortalCatalogModelWire['filters'],
+   base: ConfigFilter[],
+): ConfigFilter[] {
+   if (portal === undefined) return [...base]
+   if (portal.length === 0) return []
+   if (isStringArray(portal)) {
+      const baseByKey = new Map(base.map((f) => [f.key, f]))
+      return portal.map((key) => baseByKey.get(key) ?? { key, type: 'select' as const })
+   }
+   return [...portal]
+}
+
+function resolveChartsFromPortal(
+   portal: PortalCatalogModelWire['charts'],
+   base: NonNullable<ConfigModelWire['charts']>,
+): NonNullable<ConfigModelWire['charts']> {
+   if (portal === undefined) return [...base]
+   if (portal.length === 0) return []
+   if (isStringArray(portal)) {
+      const baseByField = new Map(base.map((c) => [c.field, c]))
+      return portal.map((field) => {
+         const b = baseByField.get(field)
+         if (b) return { ...b }
+         return { field, type: 'bar' as const, size: defaultChartSize('bar') }
+      })
+   }
+   return portal.map((c) => ({
+      field: c.field,
+      type: c.type ?? 'bar',
+      size: c.size ?? defaultChartSize(c.type ?? 'bar'),
+      ...(c.model !== undefined ? { model: c.model } : {}),
+   }))
+}
+
+function mergeOverridableCatalogModel(base: ConfigModelWire, portal: PortalCatalogModelWire | undefined): ConfigModelWire {
+   if (!portal) return { ...base }
+   const filters = resolveFiltersFromPortal(portal.filters, base.filters ?? [])
+   const charts = resolveChartsFromPortal(portal.charts, base.charts ?? [])
+   const columns = portal.columns !== undefined ? [...portal.columns] : [...(base.columns ?? [])]
+   return {
+      ...base,
+      label: portal.label ?? portal.title ?? base.label,
+      title: portal.title ?? base.title,
+      description: portal.description ?? base.description,
+      ...(portal.icon !== undefined ? { icon: portal.icon } : {}),
+      filters,
+      columns,
+      charts,
+   }
+}
+
 export function normalizeModelsForApp(
-   models: PortalConfig['models'],
+   models: PortalModelsWire | undefined,
    options: NormalizeModelsOptions = {},
 ): Partial<Record<DataModels, ConfigModel>> {
    const { goatEnabled = false, insdcStatus = false } = options
-   const mergedWire: PortalConfig['models'] = {
-      ...defaultInsdcCatalogModels,
-      ...models,
+   const imported = models ?? {}
+
+   const mergedWire: Partial<Record<DataModels, ConfigModelWire>> = {}
+   for (const key of INSDC_CODE_ONLY_CATALOG_MODEL_KEYS) {
+      mergedWire[key] = { ...defaultInsdcCatalogModels[key] }
    }
+   mergedWire.annotations = { ...defaultInsdcCatalogModels.annotations }
+
+   let organismsWire: ConfigModelWire = { ...defaultOrganismCatalogWire }
+   if (insdcStatus) {
+      organismsWire = injectInsdcOrganismModel(organismsWire)
+   }
+   if (goatEnabled) {
+      organismsWire = injectGoatOrganismModel(organismsWire)
+   }
+   mergedWire.organisms = organismsWire
+
+   mergedWire.local_samples = mergeOverridableCatalogModel(
+      defaultLocalSamplesCatalogWire,
+      imported.local_samples,
+   )
+
    const out: Partial<Record<DataModels, ConfigModel>> = {}
    for (const key of dataModels) {
       let raw = mergedWire[key]
@@ -232,9 +315,9 @@ const STEP_DEFAULTS: Record<
       fixed: false,
    },
    sequencingAndSubproject: {
-      title: { en: 'Sequencing & sub-project' },
+      title: { en: 'Sequencing' },
       description: { en: 'Sequencing technologies planned or completed, and the sub-project code.' },
-      required: true,
+      required: false,
       fixed: true,
    },
    piOrEntity: {
@@ -364,7 +447,9 @@ export function normalizePortalConfig(
    } as Record<string, unknown>
 
    const general = migrateEsCtKeysToCat(raw.general ?? {}) as GeneralConfig
-   const models = migrateEsCtKeysToCat(raw.models ?? {}) as PortalConfig['models']
+   const models = migrateEsCtKeysToCat(raw.models ?? {}) as PortalModelsWire
+   const footerRaw = migrateEsCtKeysToCat(raw.footer ?? {}) as PortalFooterWire
+   const footer = normalizeFooterWire(footerRaw)
    const goatEnabled = general.goat === true
    const insdcStatus = general.insdcStatus === true
    return {
@@ -374,16 +459,39 @@ export function normalizePortalConfig(
          languages: normalizeGeneralLanguages(general.languages),
       },
       ui: normalizeColors(uiRaw),
-      models: normalizeModelsForApp(models ?? {}, { goatEnabled, insdcStatus }),
+      models: normalizeModelsForApp(models ?? {}, {
+         goatEnabled,
+         insdcStatus,
+      }),
       organismFormSteps: resolveOrganismFormSteps(raw),
+      ...(footer ? { footer } : {}),
    }
 }
 
-export function getPortalAppearance(raw: PortalConfig): 'light' | 'dark' | 'system' {
-   const fromTheme = raw.theme?.appearance
-   const g = raw.general as { appearance?: string }
-   const fromGeneral = g?.appearance
-   const v = fromTheme ?? fromGeneral ?? 'system'
-   if (v === 'light' || v === 'dark' || v === 'system') return v
-   return 'system'
+function normalizeFooterWire(raw: PortalFooterWire): PortalFooterWire | undefined {
+   const logoUrl =
+      typeof raw.logoUrl === 'string' && raw.logoUrl.trim() ? raw.logoUrl.trim() : undefined
+   const hasCopy = raw.copyright && Object.keys(raw.copyright).length > 0
+   const hasTag = raw.tagline && Object.keys(raw.tagline).length > 0
+   if (!hasCopy && !hasTag && !logoUrl) return undefined
+   return {
+      ...(hasCopy ? { copyright: raw.copyright } : {}),
+      ...(hasTag ? { tagline: raw.tagline } : {}),
+      ...(logoUrl ? { logoUrl } : {}),
+   }
+}
+
+export type PortalAppearanceMode = 'light' | 'dark' | 'system'
+
+/**
+ * Effective light/dark for embedded UIs (JBrowse, map basemaps) from persisted appearance and next-themes.
+ * `light` / `dark` lock the mode; `system` follows `resolvedTheme` from next-themes (OS preference).
+ */
+export function resolvePortalUiMode(
+   appearance: PortalAppearanceMode,
+   resolvedTheme: string | undefined,
+): 'light' | 'dark' {
+   if (appearance === 'light') return 'light'
+   if (appearance === 'dark') return 'dark'
+   return resolvedTheme === 'dark' ? 'dark' : 'light'
 }

@@ -19,52 +19,55 @@ export const SPECIES_RANK_GROUPS: RankGroupDef[] = [
    { id: 'genus', label: 'Genus', apiRankParam: { key: 'rank', value: 'genus' } },
 ]
 
-/** Tailwind classes for rank toggle buttons: inactive vs selected. */
+/**
+ * Rank toggle chrome: rotate portal `primary` / `secondary` / `accent`, with a second
+ * “soft” intensity (lighter border/background) so six ranks stay distinct without fixed hues.
+ */
 export const RANK_GROUP_TOGGLE_STYLES: Record<
    string,
    { ring: string; active: string; inactive: string; badge: string }
 > = {
    domain_kingdom: {
-      ring: 'ring-violet-500/80',
-      active: 'border-violet-500 bg-violet-500/15 text-violet-950 dark:text-violet-100',
+      ring: 'ring-primary/80',
+      active: 'border-primary bg-primary/15 text-primary',
       inactive:
-         'border-violet-200/80 bg-violet-500/5 text-violet-900 hover:bg-violet-500/10 dark:border-violet-500/30 dark:text-violet-100',
-      badge: 'bg-violet-600/20 text-violet-900 dark:text-violet-100',
+         'border-primary/40 bg-primary/[0.06] text-foreground hover:bg-primary/10 dark:border-primary/35',
+      badge: 'bg-primary/20 text-primary',
    },
    phylum: {
-      ring: 'ring-cyan-500/80',
-      active: 'border-cyan-500 bg-cyan-500/15 text-cyan-950 dark:text-cyan-100',
+      ring: 'ring-secondary/80',
+      active: 'border-secondary bg-secondary/15 text-secondary',
       inactive:
-         'border-cyan-200/80 bg-cyan-500/5 text-cyan-900 hover:bg-cyan-500/10 dark:border-cyan-500/30 dark:text-cyan-100',
-      badge: 'bg-cyan-600/20 text-cyan-900 dark:text-cyan-100',
+         'border-secondary/40 bg-secondary/[0.06] text-foreground hover:bg-secondary/10 dark:border-secondary/35',
+      badge: 'bg-secondary/20 text-secondary',
    },
    class: {
-      ring: 'ring-blue-500/80',
-      active: 'border-blue-500 bg-blue-500/15 text-blue-950 dark:text-blue-100',
+      ring: 'ring-accent/80',
+      active: 'border-accent bg-accent/15 text-accent',
       inactive:
-         'border-blue-200/80 bg-blue-500/5 text-blue-900 hover:bg-blue-500/10 dark:border-blue-500/30 dark:text-blue-100',
-      badge: 'bg-blue-600/20 text-blue-900 dark:text-blue-100',
+         'border-accent/40 bg-accent/[0.06] text-foreground hover:bg-accent/10 dark:border-accent/35',
+      badge: 'bg-accent/20 text-accent',
    },
    order: {
-      ring: 'ring-amber-500/80',
-      active: 'border-amber-500 bg-amber-500/15 text-amber-950 dark:text-amber-100',
+      ring: 'ring-primary/55',
+      active: 'border-primary/90 bg-primary/10 text-primary',
       inactive:
-         'border-amber-200/80 bg-amber-500/5 text-amber-900 hover:bg-amber-500/10 dark:border-amber-500/30 dark:text-amber-100',
-      badge: 'bg-amber-600/20 text-amber-900 dark:text-amber-100',
+         'border-primary/30 bg-primary/[0.04] text-foreground/95 hover:bg-primary/[0.08] dark:border-primary/25',
+      badge: 'bg-primary/15 text-primary',
    },
    family: {
-      ring: 'ring-rose-500/80',
-      active: 'border-rose-500 bg-rose-500/15 text-rose-950 dark:text-rose-100',
+      ring: 'ring-secondary/55',
+      active: 'border-secondary/90 bg-secondary/10 text-secondary',
       inactive:
-         'border-rose-200/80 bg-rose-500/5 text-rose-900 hover:bg-rose-500/10 dark:border-rose-500/30 dark:text-rose-100',
-      badge: 'bg-rose-600/20 text-rose-900 dark:text-rose-100',
+         'border-secondary/30 bg-secondary/[0.04] text-foreground/95 hover:bg-secondary/[0.08] dark:border-secondary/25',
+      badge: 'bg-secondary/15 text-secondary',
    },
    genus: {
-      ring: 'ring-emerald-500/80',
-      active: 'border-emerald-500 bg-emerald-500/15 text-emerald-950 dark:text-emerald-100',
+      ring: 'ring-accent/55',
+      active: 'border-accent/90 bg-accent/10 text-accent',
       inactive:
-         'border-emerald-200/80 bg-emerald-500/5 text-emerald-900 hover:bg-emerald-500/10 dark:border-emerald-500/30 dark:text-emerald-100',
-      badge: 'bg-emerald-600/20 text-emerald-900 dark:text-emerald-100',
+         'border-accent/30 bg-accent/[0.04] text-foreground/95 hover:bg-accent/[0.08] dark:border-accent/25',
+      badge: 'bg-accent/15 text-accent',
    },
 }
 
@@ -74,28 +77,28 @@ export const RANK_GROUP_TOGGLE_STYLES: Record<
  */
 export const RANK_GROUP_LINEAGE_TEXT: Record<string, { label: string; name: string }> = {
    domain_kingdom: {
-      label: 'text-violet-600 dark:text-violet-400',
-      name: 'text-violet-950 dark:text-violet-100',
+      label: 'text-primary/70',
+      name: 'text-primary',
    },
    phylum: {
-      label: 'text-cyan-600 dark:text-cyan-400',
-      name: 'text-cyan-950 dark:text-cyan-100',
+      label: 'text-secondary/70',
+      name: 'text-secondary',
    },
    class: {
-      label: 'text-blue-600 dark:text-blue-400',
-      name: 'text-blue-950 dark:text-blue-100',
+      label: 'text-accent/70',
+      name: 'text-accent',
    },
    order: {
-      label: 'text-amber-700 dark:text-amber-400',
-      name: 'text-amber-950 dark:text-amber-100',
+      label: 'text-primary/60',
+      name: 'text-primary/90',
    },
    family: {
-      label: 'text-rose-600 dark:text-rose-400',
-      name: 'text-rose-950 dark:text-rose-100',
+      label: 'text-secondary/60',
+      name: 'text-secondary/90',
    },
    genus: {
-      label: 'text-emerald-600 dark:text-emerald-400',
-      name: 'text-emerald-950 dark:text-emerald-100',
+      label: 'text-accent/60',
+      name: 'text-accent/90',
    },
 }
 

@@ -18,14 +18,22 @@ import {
    TableRow,
 } from '@/components/ui/table'
 import { buildSpeciesBiosampleGraph } from '@/lib/cms/species-biosample-graph'
+import type { DashboardModuleVariant } from '@/components/cms/dashboard/dashboard-module-variant'
 import { cmsGetSubmittedBioSamples, cmsGetUserSpecies } from '@/lib/cms/services/auth'
+import { cn } from '@/lib/utils'
 import { useCmsAuthStore } from '@/stores/cms-auth-store'
 
 function truncate(str: string, len: number) {
    return str.length > len ? `${str.slice(0, len - 1)}…` : str
 }
 
-export function SpeciesBiosampleSankeyModule({ hasEnaTemplate }: { hasEnaTemplate: boolean }) {
+export function SpeciesBiosampleSankeyModule({
+   hasEnaTemplate,
+   variant = 'standalone',
+}: {
+   hasEnaTemplate: boolean
+   variant?: DashboardModuleVariant
+}) {
    const userName = useCmsAuthStore((s) => s.userName)
    const [organisms, setOrganisms] = useState<Record<string, unknown>[]>([])
    const [biosamples, setBiosamples] = useState<Record<string, unknown>[]>([])
@@ -198,14 +206,29 @@ export function SpeciesBiosampleSankeyModule({ hasEnaTemplate }: { hasEnaTemplat
       return () => ro.disconnect()
    }, [renderSankey])
 
+   const embedded = variant === 'tabPanel'
+
    return (
-      <Card className="flex min-h-0 flex-1 flex-col border-border/80 shadow-sm">
-         <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-               <GitBranch className="h-5 w-5 text-muted-foreground" />
-               Species ↔ submitted biosamples
-            </CardTitle>
-            <CardDescription>Assigned species linked to EBI biosamples you submitted.</CardDescription>
+      <Card
+         className={cn(
+            'flex min-h-0 flex-1 flex-col border-border/80 shadow-sm',
+            embedded && 'min-h-[480px] rounded-xl border bg-card lg:min-h-[560px]',
+         )}
+      >
+         <CardHeader className={cn(embedded && 'pb-2')}>
+            {embedded ? (
+               <p className="text-sm text-muted-foreground">
+                  Relationship between your assigned species and EBI biosamples you have submitted.
+               </p>
+            ) : (
+               <>
+                  <CardTitle className="flex items-center gap-2">
+                     <GitBranch className="h-5 w-5 text-muted-foreground" />
+                     Species ↔ submitted biosamples
+                  </CardTitle>
+                  <CardDescription>Assigned species linked to EBI biosamples you submitted.</CardDescription>
+               </>
+            )}
          </CardHeader>
          <CardContent className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
             {loading ? (

@@ -11,23 +11,23 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { useLocale } from '@/contexts/locale-context'
 
-const localeLabels: Record<string, string> = {
-   en: 'English',
-   cat: 'Català',
-   es: 'Español',
-   fr: 'Français',
-   de: 'Deutsch',
-}
-
 export function LanguageSwitcher() {
    const { locale, setLocale, allowedLocales, t } = useLocale()
+   const localeLabels: Record<string, string> = {
+      en: t('language.english'),
+      cat: t('language.catalan'),
+      es: t('language.spanish'),
+      fr: t('language.french'),
+      de: t('language.german'),
+      it: t('language.italian'),
+   }
 
    if (allowedLocales.length <= 1) return null
 
    return (
       <DropdownMenu>
          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-9 w-9" aria-label={t('language.english')}>
+            <Button variant="ghost" size="icon" className="h-9 w-9" aria-label={t('nav.menu')}>
                <Languages className="h-4 w-4" />
             </Button>
          </DropdownMenuTrigger>

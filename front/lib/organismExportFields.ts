@@ -52,6 +52,15 @@ export const ORGANISM_EXPORT_FIELD_GROUPS: { id: string; label: string; fields: 
       fields: [{ key: 'images', label: 'Images (URLs + license, mapped)' }],
    },
    {
+      id: 'goat',
+      label: 'GoaT & lists',
+      fields: [
+         { key: 'goat_status', label: 'GoaT sequencing status' },
+         { key: 'target_list_status', label: 'Target list status' },
+         { key: 'insdc_status', label: 'INSDC submission status' },
+      ],
+   },
+   {
       id: 'iucn',
       label: 'IUCN Red List',
       fields: [

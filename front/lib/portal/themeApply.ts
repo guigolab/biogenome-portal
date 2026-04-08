@@ -26,7 +26,7 @@ function foregroundForBackground(hex: string): string {
  * Brand hex for shadcn tokens: prefer literal `portal.json` `theme.colors` so UI matches the file.
  * `normalizeUiColors` desaturates heavily for legacy Vuestic-style variables — those look “untinted” on buttons.
  */
-function pickBrandHexes(
+export function pickBrandHexes(
    config: AppConfig,
    raw: PortalConfig | null | undefined,
 ): { primary: string; secondary: string; accent: string } {
@@ -71,6 +71,18 @@ function applyBrandHexesToRoot(
    root.style.setProperty('--chart-1', primaryOklch)
    root.style.setProperty('--chart-2', accentOklch)
    root.style.setProperty('--chart-3', secondaryOklch)
+   root.style.setProperty(
+      '--chart-4',
+      `color-mix(in oklch, ${primaryOklch} 55%, ${accentOklch})`,
+   )
+   root.style.setProperty(
+      '--chart-5',
+      `color-mix(in oklch, ${secondaryOklch} 50%, ${accentOklch})`,
+   )
+   root.style.setProperty(
+      '--chart-6',
+      `color-mix(in oklch, ${primaryOklch} 50%, ${secondaryOklch})`,
+   )
    root.style.setProperty('--sidebar-primary', primaryOklch)
    root.style.setProperty('--sidebar-primary-foreground', foregroundForBackground(primary))
    root.style.setProperty('--sidebar-ring', primaryOklch)
@@ -97,6 +109,9 @@ export function portalThemeStyleProps(
       ['--chart-1' as string]: primaryOklch,
       ['--chart-2' as string]: accentOklch,
       ['--chart-3' as string]: secondaryOklch,
+      ['--chart-4' as string]: `color-mix(in oklch, ${primaryOklch} 55%, ${accentOklch})`,
+      ['--chart-5' as string]: `color-mix(in oklch, ${secondaryOklch} 50%, ${accentOklch})`,
+      ['--chart-6' as string]: `color-mix(in oklch, ${primaryOklch} 50%, ${secondaryOklch})`,
       ['--sidebar-primary' as string]: primaryOklch,
       ['--sidebar-primary-foreground' as string]: foregroundForBackground(primary),
       ['--sidebar-ring' as string]: primaryOklch,
@@ -131,6 +146,9 @@ export function clearPortalThemeInlineStyles(root: HTMLElement): void {
       '--chart-1',
       '--chart-2',
       '--chart-3',
+      '--chart-4',
+      '--chart-5',
+      '--chart-6',
       '--sidebar-primary',
       '--sidebar-primary-foreground',
       '--sidebar-ring',

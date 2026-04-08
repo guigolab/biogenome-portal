@@ -19,13 +19,15 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { extractApiMessage } from '@/lib/cms/extract-api-message'
+import type { DashboardModuleVariant } from '@/components/cms/dashboard/dashboard-module-variant'
 import { cmsDeleteUser, cmsGetUsers } from '@/lib/cms/services/auth'
+import { cn } from '@/lib/utils'
 import { useCmsAuthStore } from '@/stores/cms-auth-store'
 import { useCmsDrawerStore } from '@/stores/cms-drawer-store'
 
 const LIMIT = 8
 
-export function UsersModule() {
+export function UsersModule({ variant = 'standalone' }: { variant?: DashboardModuleVariant }) {
    const currentName = useCmsAuthStore((s) => s.userName)
    const openDrawer = useCmsDrawerStore((s) => s.open)
 
@@ -96,14 +98,27 @@ export function UsersModule() {
       }
    }
 
+   const embedded = variant === 'tabPanel'
+
    return (
       <>
-         <Card className="border-border/80 shadow-sm">
-            <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-               <div>
-                  <CardTitle>Users</CardTitle>
-                  <CardDescription>Curator accounts — create, edit, or remove.</CardDescription>
-               </div>
+         <Card className={cn('border-border/80 shadow-sm', embedded && 'rounded-xl border bg-card')}>
+            <CardHeader
+               className={cn(
+                  'flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between',
+                  embedded && 'pb-2',
+               )}
+            >
+               {embedded ? (
+                  <p className="text-sm text-muted-foreground">
+                     Curator accounts — create, edit, or remove.
+                  </p>
+               ) : (
+                  <div>
+                     <CardTitle>Users</CardTitle>
+                     <CardDescription>Curator accounts — create, edit, or remove.</CardDescription>
+                  </div>
+               )}
                <Button size="sm" className="gap-2" onClick={() => openDrawer({ panel: 'user' })}>
                   <UserPlus className="h-4 w-4" />
                   New user

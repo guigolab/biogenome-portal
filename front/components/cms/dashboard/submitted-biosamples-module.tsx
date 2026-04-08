@@ -16,12 +16,21 @@ import {
    TableRow,
 } from '@/components/ui/table'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import type { DashboardModuleVariant } from '@/components/cms/dashboard/dashboard-module-variant'
+import { SubmittedBiosampleDetailDialog } from '@/components/cms/dashboard/submitted-biosample-detail-dialog'
 import { cmsGetSubmittedBioSamples } from '@/lib/cms/services/auth'
+import { cn } from '@/lib/utils'
 import { useCmsAuthStore } from '@/stores/cms-auth-store'
 
 const LIMIT = 6
 
-export function SubmittedBiosamplesModule({ hasEnaTemplate }: { hasEnaTemplate: boolean }) {
+export function SubmittedBiosamplesModule({
+   hasEnaTemplate,
+   variant = 'standalone',
+}: {
+   hasEnaTemplate: boolean
+   variant?: DashboardModuleVariant
+}) {
    const userName = useCmsAuthStore((s) => s.userName)
    const isAdmin = useCmsAuthStore((s) => s.userRole === 'Admin')
 
@@ -32,6 +41,7 @@ export function SubmittedBiosamplesModule({ hasEnaTemplate }: { hasEnaTemplate: 
    const [filter, setFilter] = useState('')
    const [page, setPage] = useState(1)
    const [viewMode, setViewMode] = useState<'filtered' | 'all'>(isAdmin ? 'all' : 'filtered')
+   const [detailAccession, setDetailAccession] = useState<string | null>(null)
 
    useEffect(() => {
       const t = setTimeout(() => {
@@ -65,17 +75,37 @@ export function SubmittedBiosamplesModule({ hasEnaTemplate }: { hasEnaTemplate: 
       void fetchData()
    }, [fetchData])
 
+   const embedded = variant === 'tabPanel'
+
    return (
-      <Card className="border-border/80 shadow-sm">
-         <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-               <CardTitle>{isAdmin ? 'Submitted biosamples' : 'My EBI biosamples'}</CardTitle>
-               <CardDescription>
-                  {isAdmin ? 'All biosamples submitted to EBI.' : 'Your submissions to EBI BioSamples.'}
-               </CardDescription>
-            </div>
+      <Card
+         className={cn(
+            'border-border/80 shadow-sm',
+            embedded && 'rounded-xl border bg-card',
+         )}
+      >
+         <CardHeader
+            className={cn(
+               'flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between',
+               embedded && 'pb-2',
+            )}
+         >
+            {embedded ? (
+               <p className="text-sm text-muted-foreground">
+                  {isAdmin
+                     ? 'All biosamples submitted to EBI across curators. Use Mine / All to change scope.'
+                     : 'Biosamples you have submitted to EBI BioSamples.'}
+               </p>
+            ) : (
+               <div>
+                  <CardTitle>{isAdmin ? 'Submitted biosamples' : 'My EBI biosamples'}</CardTitle>
+                  <CardDescription>
+                     {isAdmin ? 'All biosamples submitted to EBI.' : 'Your submissions to EBI BioSamples.'}
+                  </CardDescription>
+               </div>
+            )}
             {hasEnaTemplate ? (
-               <Button size="sm" asChild className="gap-2">
+               <Button size="sm" asChild className={cn('gap-2', embedded && 'shrink-0')}>
                   <Link href="/admin/publish-biosample">
                      <Plus className="h-4 w-4" />
                      Submit
@@ -84,7 +114,13 @@ export function SubmittedBiosamplesModule({ hasEnaTemplate }: { hasEnaTemplate: 
             ) : null}
          </CardHeader>
          <CardContent className="space-y-4">
-            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+            <div
+               className={cn(
+                  'flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center',
+                  embedded &&
+                     'rounded-xl border border-border bg-card p-3 sm:p-4 dark:bg-card/60',
+               )}
+            >
                <Input
                   placeholder="Filter by name or accession…"
                   value={filterDraft}
@@ -133,8 +169,25 @@ export function SubmittedBiosamplesModule({ hasEnaTemplate }: { hasEnaTemplate: 
                         </TableRow>
                      </TableHeader>
                      <TableBody>
-                        {items.map((item) => (
-                           <TableRow key={String(item.accession ?? item.name)}>
+                        {items.map((item) => {
+                           const acc = item.accession != null ? String(item.accession) : ''
+                           return (
+                              <TableRow
+                                 key={String(item.accession ?? item.name)}
+                                 className={cn(acc && 'cursor-pointer hover:bg-muted/50')}
+                                 tabIndex={acc ? 0 : undefined}
+                                 aria-label={acc ? `View details for biosample ${acc}` : undefined}
+                                 onClick={() => {
+                                    if (acc) setDetailAccession(acc)
+                                 }}
+                                 onKeyDown={(e) => {
+                                    if (!acc) return
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                       e.preventDefault()
+                                       setDetailAccession(acc)
+                                    }
+                                 }}
+                              >
                               <TableCell className="italic">
                                  {String(item.scientific_name ?? '—')}
                               </TableCell>
@@ -148,6 +201,7 @@ export function SubmittedBiosamplesModule({ hasEnaTemplate }: { hasEnaTemplate: 
                                        target="_blank"
                                        rel="noreferrer"
                                        className="text-primary underline-offset-4 hover:underline"
+                                       onClick={(e) => e.stopPropagation()}
                                     >
                                        {String(item.accession)}
                                     </a>
@@ -161,7 +215,8 @@ export function SubmittedBiosamplesModule({ hasEnaTemplate }: { hasEnaTemplate: 
                                  </TableCell>
                               ) : null}
                            </TableRow>
-                        ))}
+                           )
+                        })}
                      </TableBody>
                   </Table>
                </div>
@@ -187,6 +242,13 @@ export function SubmittedBiosamplesModule({ hasEnaTemplate }: { hasEnaTemplate: 
                </div>
             ) : null}
          </CardContent>
+         <SubmittedBiosampleDetailDialog
+            accession={detailAccession}
+            open={detailAccession != null}
+            onOpenChange={(o) => {
+               if (!o) setDetailAccession(null)
+            }}
+         />
       </Card>
    )
 }

@@ -1,12 +1,14 @@
 'use client'
 
 import { useTheme } from 'next-themes'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import * as d3 from 'd3'
 import { Network } from 'lucide-react'
 
 import { TaxonomyNodeTooltip } from '@/components/taxonomy/taxonomy-node-tooltip'
 import type { NodeClickEvent } from '@/components/taxonomy/taxonomy-types'
+import { useLocale } from '@/contexts/locale-context'
+import { resolveCssVarToRgb } from '@/lib/portal/brandColorsFromDocument'
 import { BRANCH_PALETTE_DARK, BRANCH_PALETTE_LIGHT } from '@/lib/taxonomy/treeBranchPalette'
 import type { FlatTreeNode } from '@/lib/taxonomy/treeTableTypes'
 
@@ -45,6 +47,10 @@ export type D3RadialTreeProps = {
     * (Vue TreeOfLifeRadialTree parity). Omit or keep stable to skip transition on unrelated updates.
     */
    layoutTransitionKey?: string | null
+   /** Resolved leaf label color (e.g. from `getComputedStyle` `--foreground`). */
+   leafLabelFill?: string | null
+   /** Leaf label color when hovered / highlighted. */
+   leafLabelFillHover?: string | null
 }
 
 export function D3RadialTree({
@@ -56,7 +62,10 @@ export function D3RadialTree({
    showCanvasDomainLegend = true,
    controlledShowLabels = false,
    layoutTransitionKey = null,
+   leafLabelFill = null,
+   leafLabelFillHover = null,
 }: D3RadialTreeProps) {
+   const { t } = useLocale()
    const canvasRef = useRef<HTMLCanvasElement>(null)
    const containerRef = useRef<HTMLDivElement>(null)
    const [hoveredNode, setHoveredNode] = useState<d3.HierarchyNode<FlatTreeNode> | null>(null)
@@ -78,6 +87,23 @@ export function D3RadialTree({
    const [containerSize, setContainerSize] = useState({ width: 0, height: 0 })
    const { resolvedTheme } = useTheme()
    const isDark = resolvedTheme === 'dark'
+   const [canvasTheme, setCanvasTheme] = useState({
+      highlight: 'rgb(234, 88, 12)',
+      defaultLink: 'rgb(100, 116, 139)',
+      legendText: 'rgb(30, 41, 59)',
+      labelDefault: 'rgb(10, 10, 10)',
+   })
+
+   useLayoutEffect(() => {
+      if (typeof document === 'undefined') return
+      const root = document.documentElement
+      setCanvasTheme({
+         highlight: resolveCssVarToRgb(root, '--primary'),
+         defaultLink: resolveCssVarToRgb(root, '--muted-foreground'),
+         legendText: resolveCssVarToRgb(root, '--foreground'),
+         labelDefault: resolveCssVarToRgb(root, '--foreground'),
+      })
+   }, [resolvedTheme])
    const onNodeClickRef = useRef(onNodeClick)
    onNodeClickRef.current = onNodeClick
 
@@ -271,10 +297,8 @@ export function D3RadialTree({
                ctx.arc(0, 0, startRadius, startAngle, endAngle, endAngle < startAngle)
             ctx.lineTo(ex, ey)
             ctx.strokeStyle = isHighlighted
-               ? isDark
-                  ? '#fbbf24'
-                  : '#f59e0b'
-               : ((target as unknown as { color: string }).color || (isDark ? '#64748b' : '#475569'))
+               ? canvasTheme.highlight
+               : ((target as unknown as { color: string }).color || canvasTheme.defaultLink)
             ctx.lineWidth = isHighlighted ? 2 : 1.5
             ctx.globalAlpha = opts.alpha
             ctx.stroke()
@@ -295,14 +319,12 @@ export function D3RadialTree({
             ctx.beginPath()
             ctx.arc(x, y, isHovered ? radius + 1.5 : radius, 0, 2 * Math.PI)
             ctx.fillStyle = isHovered
-               ? isDark
-                  ? '#fbbf24'
-                  : '#f59e0b'
-               : ((node as unknown as { color: string }).color || (isDark ? '#64748b' : '#475569'))
+               ? canvasTheme.highlight
+               : ((node as unknown as { color: string }).color || canvasTheme.defaultLink)
             ctx.globalAlpha = (isHovered ? 1 : isHighlighted ? 0.9 : 0.75) * opts.alpha
             ctx.fill()
             if (isHovered) {
-               ctx.strokeStyle = isDark ? '#fbbf24' : '#f59e0b'
+               ctx.strokeStyle = canvasTheme.highlight
                ctx.lineWidth = 1.5
                ctx.globalAlpha = 0.9 * opts.alpha
                ctx.stroke()
@@ -328,13 +350,15 @@ export function D3RadialTree({
                   ctx.textAlign = 'start'
                }
                ctx.textBaseline = 'middle'
-               ctx.fillStyle = (isHovered
-                  ? isDark
-                     ? '#fbbf24'
-                     : '#f59e0b'
-                  : isDark
-                    ? '#e2e8f0'
-                    : '#1e293b') as string
+               const defaultLabel =
+                  leafLabelFill && leafLabelFill.trim() !== ''
+                     ? leafLabelFill
+                     : canvasTheme.labelDefault
+               const hoverLabel =
+                  leafLabelFillHover && leafLabelFillHover.trim() !== ''
+                     ? leafLabelFillHover
+                     : canvasTheme.highlight
+               ctx.fillStyle = (isHovered ? hoverLabel : defaultLabel) as string
                ctx.font = isHovered
                   ? 'bold 10px system-ui, -apple-system, sans-serif'
                   : '10px system-ui, -apple-system, sans-serif'
@@ -362,7 +386,7 @@ export function D3RadialTree({
             ctx.font = 'bold 13px system-ui, -apple-system, sans-serif'
             ctx.textAlign = 'left'
             ctx.textBaseline = 'top'
-            ctx.fillStyle = (isDark ? '#e2e8f0' : '#1e293b') as string
+            ctx.fillStyle = canvasTheme.legendText
             ctx.fillText(`Children of ${rootName}`, 0, 0)
             ctx.font = '12px system-ui, -apple-system, sans-serif'
             ctx.textBaseline = 'middle'
@@ -375,7 +399,7 @@ export function D3RadialTree({
                ctx.arc(x + 8, y, 6, 0, 2 * Math.PI)
                ctx.fillStyle = item.color
                ctx.fill()
-               ctx.fillStyle = (isDark ? '#e2e8f0' : '#1e293b') as string
+               ctx.fillStyle = canvasTheme.legendText
                ctx.fillText(item.name, x + 20, y)
             })
             ctx.restore()
@@ -516,6 +540,9 @@ export function D3RadialTree({
       highlightTaxid,
       containerSize,
       layoutTransitionKey,
+      leafLabelFill,
+      leafLabelFillHover,
+      canvasTheme,
    ])
 
    if (loading) {
@@ -523,7 +550,7 @@ export function D3RadialTree({
          <div className="absolute inset-0 flex min-h-0 items-center justify-center">
             <div className="flex flex-col items-center gap-4">
                <div className="border-muted border-t-primary h-8 w-8 animate-spin rounded-full border-2" />
-               <p className="text-muted-foreground text-sm">Loading tree data…</p>
+               <p className="text-muted-foreground text-sm">{t('taxonomy.tree.loadingTreeData')}</p>
             </div>
          </div>
       )
@@ -537,7 +564,7 @@ export function D3RadialTree({
                   <Network className="text-destructive h-8 w-8" />
                </div>
                <div>
-                  <p className="text-foreground mb-1 font-medium">Unable to load tree data</p>
+                  <p className="text-foreground mb-1 font-medium">{t('taxonomy.tree.unableToLoad')}</p>
                   <p className="text-muted-foreground text-sm">{error}</p>
                </div>
             </div>
@@ -548,7 +575,7 @@ export function D3RadialTree({
    if (!hierarchy) {
       return (
          <div className="text-muted-foreground absolute inset-0 flex min-h-0 items-center justify-center p-4 text-sm">
-            No taxonomy tree
+            {t('taxonomy.tree.noTree')}
          </div>
       )
    }
@@ -559,7 +586,7 @@ export function D3RadialTree({
             <canvas
                ref={canvasRef}
                className="absolute inset-0 block h-full w-full touch-none"
-               aria-label="Taxonomy radial tree"
+               aria-label={t('taxonomy.tree.ariaLabel')}
             />
             {hoveredNode && tooltipPos && (
                <TaxonomyNodeTooltip

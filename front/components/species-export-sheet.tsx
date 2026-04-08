@@ -18,6 +18,7 @@ import {
    SheetHeader,
    SheetTitle,
 } from '@/components/ui/sheet'
+import { useLocale } from '@/contexts/locale-context'
 import { downloadOrganismsTsv } from '@/lib/api/organisms'
 import {
    ORGANISM_DEFAULT_EXPORT_FIELDS,
@@ -62,6 +63,7 @@ export function SpeciesExportSheet({
    exportParams,
    totalCount,
 }: SpeciesExportSheetProps) {
+   const { t } = useLocale()
    const [selected, setSelected] = useState<Set<string>>(
       () => new Set(ORGANISM_DEFAULT_EXPORT_FIELDS.map((f) => f.key)),
    )
@@ -119,11 +121,9 @@ export function SpeciesExportSheet({
             className={cn('flex w-full flex-col gap-0 border-l p-0 sm:max-w-md')}
          >
             <SheetHeader className="border-b border-border p-4 text-left">
-               <SheetTitle>Export TSV</SheetTitle>
+               <SheetTitle>{t('speciesExport.title')}</SheetTitle>
                <SheetDescription>
-                  Download organisms matching your current filters as a tab-separated file (same scope as the list,
-                  not limited to the visible page). List and embedded fields are flattened to readable text on the
-                  server.
+                  {t('speciesExport.description')}
                </SheetDescription>
             </SheetHeader>
 
@@ -136,7 +136,7 @@ export function SpeciesExportSheet({
                         size="sm"
                         className="w-full justify-between font-normal"
                      >
-                        <span>Add field</span>
+                        <span>{t('speciesExport.addField')}</span>
                         <ChevronDown
                            className={cn('h-4 w-4 transition-transform', addFieldOpen && 'rotate-180')}
                         />
@@ -144,8 +144,7 @@ export function SpeciesExportSheet({
                   </CollapsibleTrigger>
                   <CollapsibleContent className="pt-2 space-y-2">
                      <p className="text-xs text-muted-foreground">
-                        Enter a MongoEngine field name (e.g. <code className="rounded bg-muted px-1">metadata</code> or{' '}
-                        <code className="rounded bg-muted px-1">metadata.project</code>).
+                        {t('speciesExport.mongoFieldHint')}
                      </p>
                      <div className="flex gap-2">
                         <Input
@@ -161,7 +160,7 @@ export function SpeciesExportSheet({
                            }}
                         />
                         <Button type="button" size="sm" className="shrink-0" onClick={addCustomField}>
-                           Add
+                           {t('common.add')}
                         </Button>
                      </div>
                   </CollapsibleContent>
@@ -169,7 +168,7 @@ export function SpeciesExportSheet({
 
                <div className="space-y-3 rounded-lg border border-border p-3">
                   <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                     Columns
+                     {t('speciesExport.columns')}
                   </p>
                   <div className="space-y-2">
                      {ORGANISM_DEFAULT_EXPORT_FIELDS.map(({ key, label }) => (
@@ -216,7 +215,7 @@ export function SpeciesExportSheet({
 
                   {customKeys.length > 0 ? (
                      <div className="border-t border-border pt-3 space-y-2">
-                        <Label className="text-xs text-muted-foreground">Custom</Label>
+                        <Label className="text-xs text-muted-foreground">{t('speciesExport.custom')}</Label>
                         {customKeys.map((key) => (
                            <label
                               key={key}
@@ -234,9 +233,9 @@ export function SpeciesExportSheet({
                </div>
 
                <p className="text-sm text-muted-foreground">
-                  Export scope:{' '}
+                  {t('speciesExport.exportScope')}{' '}
                   <span className="font-medium text-foreground">{totalCount.toLocaleString()}</span> organism
-                  {totalCount === 1 ? '' : 's'} with current filters.
+                  {totalCount === 1 ? '' : 's'} {t('speciesExport.withCurrentFilters')}
                </p>
 
                {exportError ? (
@@ -256,12 +255,12 @@ export function SpeciesExportSheet({
                   {exporting ? (
                      <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Preparing download…
+                        {t('speciesExport.preparingDownload')}
                      </>
                   ) : (
                      <>
                         <Download className="mr-2 h-4 w-4" />
-                        Download TSV
+                        {t('speciesExport.downloadTsv')}
                      </>
                   )}
                </Button>

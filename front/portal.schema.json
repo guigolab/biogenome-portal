@@ -1,0 +1,236 @@
+{
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "$id": "portal.schema.json",
+   "title": "BioGenome portal configuration",
+   "type": "object",
+   "required": ["general"],
+   "additionalProperties": false,
+   "properties": {
+      "$schema": {
+         "type": "string",
+         "description": "Optional pointer to this schema (for editor validation)."
+      },
+      "general": {
+         "type": "object",
+         "description": "Portal-wide settings (branding, feature flags, languages). The removed `showCountries` key is not supported.",
+         "additionalProperties": true,
+         "properties": {
+            "title": { "$ref": "#/$defs/i18nStrings" },
+            "description": { "$ref": "#/$defs/i18nStrings" },
+            "titleHighlight": {
+               "description": "Substring matched inside the localized title (first occurrence, case-insensitive); rendered with the portal primary color on the home page.",
+               "allOf": [{ "$ref": "#/$defs/i18nStrings" }]
+            },
+            "cms": { "type": "boolean" },
+            "goat": { "type": "boolean", "description": "Enable GoaT pipeline / target-list filters, columns, charts, and home GOAT status." },
+            "insdcStatus": {
+               "type": "boolean",
+               "description": "Enable INSDC status filters, columns, charts, and home INSDC status section when true."
+            },
+            "map": {
+               "type": "boolean",
+               "description": "Enable the geographic explorer route and actions. Defaults to true when omitted."
+            },
+            "languages": {
+               "type": "array",
+               "items": { "type": "string" }
+            },
+            "featuredTaxids": {
+               "type": "array",
+               "description": "NCBI taxids to highlight on the home page (featured taxa cards).",
+               "items": { "type": "string", "pattern": "^[0-9]+$" }
+            },
+            "apiBase": {
+               "type": "string",
+               "minLength": 1,
+               "description": "Next.js front: REST API prefix — absolute URL or same-origin path (e.g. /api, /bgp/api). Trailing slash ignored."
+            },
+            "rootTaxid": {
+               "type": "string",
+               "pattern": "^[0-9]+$",
+               "description": "Next.js front: default root NCBI taxid for UI fallbacks; prefer GET /taxons/root when online."
+            }
+         }
+      },
+      "theme": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": ["colors"],
+         "properties": {
+            "colors": {
+               "type": "object",
+               "additionalProperties": false,
+               "required": ["primary", "secondary"],
+               "properties": {
+                  "primary": { "type": "string", "minLength": 1 },
+                  "secondary": { "type": "string", "minLength": 1 },
+                  "accent": {
+                     "type": "string",
+                     "minLength": 1,
+                     "description": "Optional accent color (defaults to secondary when omitted)."
+                  },
+                  "variables": {
+                     "type": "object",
+                     "description": "Legacy: prefer flat primary/secondary on colors.",
+                     "additionalProperties": { "type": "string" }
+                  }
+               }
+            }
+         }
+      },
+      "cms": {
+         "type": "object",
+         "description": "CMS-only options (organism form step requirements, etc.).",
+         "additionalProperties": false,
+         "properties": {
+            "organisms": {
+               "type": "object",
+               "additionalProperties": false,
+               "properties": {
+                  "requiredSteps": {
+                     "type": "array",
+                     "description": "Organism form step IDs that are mandatory; other steps use built-in defaults.",
+                     "items": { "$ref": "#/$defs/organismFormStepId" }
+                  },
+                  "steps": {
+                     "type": "array",
+                     "description": "Deprecated: prefer requiredSteps. Legacy per-step overrides (enabled is ignored at runtime).",
+                     "items": { "$ref": "#/$defs/cmsOrganismFormStepWire" }
+                  },
+                  "form": {
+                     "type": "object",
+                     "description": "Deprecated: prefer top-level requiredSteps / steps under organisms.",
+                     "additionalProperties": false,
+                     "properties": {
+                        "requiredSteps": {
+                           "type": "array",
+                           "items": { "$ref": "#/$defs/organismFormStepId" }
+                        },
+                        "steps": {
+                           "type": "array",
+                           "items": { "$ref": "#/$defs/cmsOrganismFormStepWire" }
+                        }
+                     }
+                  }
+               }
+            }
+         }
+      },
+      "models": {
+         "type": "object",
+         "description": "Optional catalog overrides. Only `local_samples` may be configured; other catalog models use built-in defaults.",
+         "additionalProperties": false,
+         "properties": {
+            "local_samples": { "$ref": "#/$defs/model" }
+         }
+      },
+      "footer": {
+         "type": "object",
+         "description": "Home page footer: optional logo path and i18n lines.",
+         "additionalProperties": false,
+         "properties": {
+            "logoUrl": {
+               "type": "string",
+               "minLength": 1,
+               "description": "Public URL path to the footer logo (e.g. /portal-logo.svg). Omit to hide the logo."
+            },
+            "copyright": { "$ref": "#/$defs/i18nStrings" },
+            "tagline": {
+               "description": "Optional secondary line below copyright.",
+               "allOf": [{ "$ref": "#/$defs/i18nStrings" }]
+            }
+         }
+      }
+   },
+   "$defs": {
+      "organismFormStepId": {
+         "type": "string",
+         "enum": [
+            "selectOrganism",
+            "goatStatus",
+            "sequencingAndSubproject",
+            "piOrEntity",
+            "images",
+            "publications",
+            "vernacularNames",
+            "extraMetadata",
+            "reviewSubmit"
+         ]
+      },
+      "cmsOrganismFormStepWire": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": ["id"],
+         "properties": {
+            "id": {
+               "type": "string",
+               "enum": ["goatStatus", "piOrEntity", "images"]
+            },
+            "required": { "type": "boolean" },
+            "enabled": { "type": "boolean" }
+         }
+      },
+      "i18nStrings": {
+         "type": "object",
+         "minProperties": 1,
+         "additionalProperties": { "type": "string" }
+      },
+      "filter": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": ["key", "type"],
+         "properties": {
+            "key": { "type": "string", "minLength": 1 },
+            "type": {
+               "type": "string",
+               "enum": ["select", "date", "checkbox"]
+            }
+         }
+      },
+      "chart": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": ["field", "type"],
+         "properties": {
+            "field": { "type": "string", "minLength": 1 },
+            "type": {
+               "type": "string",
+               "enum": ["bar", "pie", "dateline"]
+            },
+            "size": {
+               "type": "integer",
+               "minimum": 1,
+               "maximum": 4,
+               "description": "Optional in JSON; defaults are applied when normalizing config."
+            },
+            "model": { "type": "string" }
+         }
+      },
+      "model": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": ["label"],
+         "properties": {
+            "label": { "$ref": "#/$defs/i18nStrings" },
+            "title": {
+               "$ref": "#/$defs/i18nStrings",
+               "description": "Deprecated: use label."
+            },
+            "description": { "$ref": "#/$defs/i18nStrings" },
+            "icon": { "type": "string" },
+            "filters": {
+               "type": "array",
+               "items": { "$ref": "#/$defs/filter" }
+            },
+            "columns": {
+               "type": "array",
+               "items": { "type": "string", "minLength": 1 }
+            },
+            "charts": {
+               "type": "array",
+               "items": { "$ref": "#/$defs/chart" }
+            }
+         }
+      }
+   }
+}

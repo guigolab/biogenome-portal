@@ -53,3 +53,66 @@ export async function fetchTaxon(taxid: string): Promise<Record<string, unknown>
    }
    return res.json() as Promise<Record<string, unknown>>
 }
+
+/** GET /taxons/:taxid/children — JSON array of TaxonNode documents. */
+export async function fetchTaxonChildren(taxid: string): Promise<Record<string, unknown>[]> {
+   const base = getApiBase()
+   const url = `${base}/taxons/${encodeURIComponent(taxid)}/children`
+   const res = await fetch(url, {
+      credentials: 'include',
+      headers: { Accept: 'application/json' },
+   })
+   if (!res.ok) {
+      throw new Error(`taxons/${taxid}/children: ${res.status} ${res.statusText}`)
+   }
+   const json = (await res.json()) as unknown
+   return Array.isArray(json) ? (json as Record<string, unknown>[]) : []
+}
+
+/** Minimal taxon shape for compact tree / UI (from TaxonNode JSON). */
+export type TaxonRecord = {
+   taxid: string
+   scientific_name?: string
+   name?: string
+   rank?: string
+   organisms_count: number
+   assemblies_count: number
+   annotations_count: number
+}
+
+export function taxonRecordFromApi(doc: Record<string, unknown>): TaxonRecord {
+   const taxid = String(doc.taxid ?? '')
+   const scientific_name =
+      typeof doc.scientific_name === 'string'
+         ? doc.scientific_name
+         : typeof doc.name === 'string'
+           ? doc.name
+           : undefined
+   return {
+      taxid,
+      scientific_name,
+      name: typeof doc.name === 'string' ? doc.name : undefined,
+      rank: typeof doc.rank === 'string' ? doc.rank : undefined,
+      organisms_count: typeof doc.organisms_count === 'number' ? doc.organisms_count : 0,
+      assemblies_count: typeof doc.assemblies_count === 'number' ? doc.assemblies_count : 0,
+      annotations_count: typeof doc.annotations_count === 'number' ? doc.annotations_count : 0,
+   }
+}
+
+/** GET /taxons/:taxid/ancestors — root-to-tip lineage (TaxonNode JSON array). */
+export async function fetchTaxonAncestors(
+   taxid: string,
+): Promise<Record<string, unknown>[]> {
+   const base = getApiBase()
+   const url = `${base}/taxons/${encodeURIComponent(taxid)}/ancestors`
+   const res = await fetch(url, {
+      credentials: 'include',
+      headers: { Accept: 'application/json' },
+      cache: 'no-store',
+   })
+   if (!res.ok) {
+      return []
+   }
+   const json = (await res.json()) as unknown
+   return Array.isArray(json) ? (json as Record<string, unknown>[]) : []
+}

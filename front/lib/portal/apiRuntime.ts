@@ -54,3 +54,27 @@ export function resolveApiBaseForFetch(raw: string): string {
    }
    return path
 }
+
+/**
+ * Resolve `general.apiBase` to an absolute origin for Edge / middleware `fetch`, where `window` is undefined.
+ * Prefer `INTERNAL_FETCH_ORIGIN` (Docker service URL) so the probe reaches Flask; otherwise use the request origin.
+ */
+export function resolveApiBaseForMiddleware(raw: string, requestOrigin: string): string {
+   const trimmed = raw.replace(/\/$/, '')
+   if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      return trimmed
+   }
+   const path = trimmed.startsWith('/') ? trimmed : `/${trimmed}`
+   const internalOrigin = (
+      process.env.INTERNAL_FETCH_ORIGIN ?? process.env.INTERNAL_API_ORIGIN ?? ''
+   ).trim()
+   if (internalOrigin) {
+      let suffix = path
+      const bp = (process.env.NEXT_PUBLIC_BASE_PATH ?? '').replace(/\/$/, '')
+      if (bp && suffix.startsWith(`${bp}/`)) {
+         suffix = suffix.slice(bp.length)
+      }
+      return `${internalOrigin.replace(/\/$/, '')}${suffix}`.replace(/\/$/, '')
+   }
+   return new URL(path, requestOrigin).href.replace(/\/$/, '')
+}

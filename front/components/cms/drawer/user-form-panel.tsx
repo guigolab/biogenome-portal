@@ -190,17 +190,30 @@ export function UserFormPanel({ editName }: { editName?: string | null }) {
       )
    }
 
+   const passwordAutoComplete =
+      editName && isAdminEditingDataManager && showPassword ? 'off' : 'new-password'
+
    return (
-      <div className="space-y-6">
+      <form
+         className="space-y-6"
+         autoComplete="off"
+         onSubmit={(e) => {
+            e.preventDefault()
+            void handleSubmit()
+         }}
+      >
          <div className="grid gap-3 sm:grid-cols-2">
             <div className="sm:col-span-2">
-               <Label htmlFor="u-name">Username</Label>
+               <Label htmlFor="cms-user-name">Username</Label>
                <Input
-                  id="u-name"
+                  id="cms-user-name"
+                  name="cms_user_name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   disabled={!!editName}
                   autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="off"
                />
             </div>
             {editName && isAdminEditingDataManager && !showPassword ? (
@@ -212,13 +225,16 @@ export function UserFormPanel({ editName }: { editName?: string | null }) {
                </div>
             ) : (
                <div className="sm:col-span-2">
-                  <Label htmlFor="u-pass">Password {editName && isAdminEditingDataManager ? '(optional if unchanged)' : ''}</Label>
+                  <Label htmlFor="cms-user-password">Password {editName && isAdminEditingDataManager ? '(optional if unchanged)' : ''}</Label>
                   <Input
-                     id="u-pass"
+                     id="cms-user-password"
+                     name="cms_user_password"
                      type="password"
                      value={password}
                      onChange={(e) => setPassword(e.target.value)}
-                     autoComplete="new-password"
+                     autoComplete={passwordAutoComplete}
+                     data-1p-ignore
+                     data-lpignore="true"
                   />
                   {editName && isAdminEditingDataManager && showPassword ? (
                      <Button
@@ -236,13 +252,14 @@ export function UserFormPanel({ editName }: { editName?: string | null }) {
                </div>
             )}
             <div className="sm:col-span-2">
-               <Label htmlFor="u-email">Email</Label>
+               <Label htmlFor="cms-user-email">Email</Label>
                <Input
-                  id="u-email"
+                  id="cms-user-email"
+                  name="cms_user_email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  autoComplete="email"
+                  autoComplete="off"
                />
             </div>
             <div className="sm:col-span-2">
@@ -273,6 +290,11 @@ export function UserFormPanel({ editName }: { editName?: string | null }) {
                      placeholder="Search name or taxid…"
                      value={searchFilter}
                      onChange={(e) => setSearchFilter(e.target.value)}
+                     onKeyDown={(e) => {
+                        if (e.key === 'Enter') e.preventDefault()
+                     }}
+                     name="cms_user_species_search"
+                     autoComplete="off"
                   />
                   <ScrollArea className="h-48 rounded-md border border-border">
                      {searchLoading ? (
@@ -329,7 +351,16 @@ export function UserFormPanel({ editName }: { editName?: string | null }) {
 
                <div className="flex min-h-0 flex-col gap-2">
                   <span className="text-sm font-medium">Assigned ({assigned.length})</span>
-                  <Input placeholder="Filter assigned…" value={assignedFilter} onChange={(e) => setAssignedFilter(e.target.value)} />
+                  <Input
+                     placeholder="Filter assigned…"
+                     value={assignedFilter}
+                     onChange={(e) => setAssignedFilter(e.target.value)}
+                     onKeyDown={(e) => {
+                        if (e.key === 'Enter') e.preventDefault()
+                     }}
+                     name="cms_user_assigned_filter"
+                     autoComplete="off"
+                  />
                   <ScrollArea className="h-48 rounded-md border border-border">
                      {filteredAssigned.length === 0 ? (
                         <p className="p-3 text-center text-xs text-muted-foreground">No species.</p>
@@ -357,10 +388,11 @@ export function UserFormPanel({ editName }: { editName?: string | null }) {
             <Button type="button" variant="secondary" onClick={close}>
                Cancel
             </Button>
-            <Button type="button" disabled={submitting} onClick={() => void handleSubmit()}>
+            <Button type="submit" disabled={submitting}>
                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : editName ? 'Save' : 'Create user'}
             </Button>
          </div>
-      </div>
+      </form>
    )
 }
+

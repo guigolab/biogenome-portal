@@ -15,10 +15,13 @@
       "languages": ["en", "cat"],
       "apiBase": "/api",
       "rootTaxid": "131567",
-      "featuredTaxids": []
+      "featuredTaxids": [],
+      "titleHighlight": {
+         "en": "BioGenome",
+         "cat": "BioGenome"
+      }
    },
    "theme": {
-      "appearance": "system",
       "colors": {
          "primary": "#22c55e",
          "secondary": "#3b82f6",
@@ -31,16 +34,6 @@
       }
    },
    "models": {
-      "organisms": {
-         "label": { "en": "Organisms", "cat": "Organismes" },
-         "description": {
-            "en": "List of organisms currently targeted by the CBP",
-            "cat": "Llista d'organismes actualment objectiu del CBP"
-         },
-         "filters": [],
-         "columns": ["image", "insdc_common_name"],
-         "charts": []
-      },
       "local_samples": {
          "label": { "en": "Local samples", "cat": "Mostres locals" },
          "description": {
@@ -50,6 +43,17 @@
          "filters": [],
          "columns": ["local_id"],
          "charts": []
+      }
+   },
+   "footer": {
+      "logoUrl": "/portal-logo.svg",
+      "copyright": {
+         "en": "© BioGenome Portal",
+         "cat": "© Portal BioGenome"
+      },
+      "tagline": {
+         "en": "Exploring biodiversity through genomics",
+         "cat": "Explorant la biodiversitat a través de la genòmica"
       }
    }
 }

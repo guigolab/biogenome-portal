@@ -1,12 +1,11 @@
 'use client'
 
 import Link from 'next/link'
-import { FlaskConical, Plus, Upload } from 'lucide-react'
+import { FlaskConical, LayoutGrid, Plus, Trash2, Upload, Users } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
-import { DashboardStatStrip } from '@/components/cms/dashboard/dashboard-stat-strip'
+import { AdminDashboardStats } from '@/components/cms/dashboard/admin-dashboard-stats'
 import { DeleteRequestsModule } from '@/components/cms/dashboard/delete-requests-module'
-import { RecordModelsModule } from '@/components/cms/dashboard/record-models-module'
 import { SpeciesBiosampleSankeyModule } from '@/components/cms/dashboard/species-biosample-sankey-module'
 import { SpeciesOverviewModule } from '@/components/cms/dashboard/species-overview-module'
 import { SubmittedBiosamplesModule } from '@/components/cms/dashboard/submitted-biosamples-module'
@@ -18,6 +17,7 @@ import {
    DropdownMenuItem,
    DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { usePortalConfig } from '@/contexts/portal-context'
 import { fetchTaxon, getRootTaxid } from '@/lib/api/taxon'
 import { cmsGetUserRelatedData } from '@/lib/cms/services/auth'
@@ -26,6 +26,9 @@ import type { PortalStatRow } from '@/lib/portal/taxonNodeStats'
 import { taxonNodeToPortalStats } from '@/lib/portal/taxonNodeStats'
 import { useCmsAuthStore } from '@/stores/cms-auth-store'
 import { useCmsDrawerStore } from '@/stores/cms-drawer-store'
+
+/** Keeps tab panels from collapsing when switching tabs (avoids jarring scroll jumps). */
+const DASHBOARD_TAB_PANEL_CLASS = 'mt-0 min-h-[min(72vh,52rem)] outline-none'
 
 export function AdminDashboardClient() {
    const { config } = usePortalConfig()
@@ -91,14 +94,12 @@ export function AdminDashboardClient() {
                      Create species
                   </Link>
                </Button>
-               {enaTemplate ? (
-                  <Button asChild size="sm" variant="secondary" className="gap-2">
-                     <Link href="/admin/publish-biosample">
-                        <FlaskConical className="h-4 w-4" />
-                        Submit biosample
-                     </Link>
-                  </Button>
-               ) : null}
+               <Button asChild size="sm" variant="secondary" className="gap-2">
+                  <Link href="/admin/publish-biosample">
+                     <FlaskConical className="h-4 w-4" />
+                     Submit biosample
+                  </Link>
+               </Button>
                {isAdmin ? (
                   <>
                      <DropdownMenu>
@@ -143,38 +144,67 @@ export function AdminDashboardClient() {
             </div>
          </div>
 
-         {isAdmin && !statsLoading ? <DashboardStatStrip rawStats={rawStats} /> : null}
+         {isAdmin && !statsLoading ? <AdminDashboardStats rawStats={rawStats} /> : null}
          {isAdmin && statsLoading ? (
-            <div className="h-24 animate-pulse rounded-lg bg-muted/60" aria-hidden />
+            <div className="h-32 animate-pulse rounded-xl bg-muted/60" aria-hidden />
          ) : null}
 
-         {!isAdmin && enaTemplate ? (
-            <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-               <div className="space-y-6">
-                  <SpeciesOverviewModule />
-                  <SubmittedBiosamplesModule hasEnaTemplate={enaTemplate} />
-               </div>
-               <div className="flex min-h-[420px] flex-col lg:min-h-0">
-                  <SpeciesBiosampleSankeyModule hasEnaTemplate={enaTemplate} />
-               </div>
-            </div>
-         ) : !isAdmin ? (
-            <div className="space-y-6">
-               <SpeciesOverviewModule />
-               {enaTemplate ? <SubmittedBiosamplesModule hasEnaTemplate={enaTemplate} /> : null}
-            </div>
+         {isAdmin ? (
+            <Tabs defaultValue="species" className="gap-4">
+               <TabsList className="h-auto w-full flex-wrap justify-start gap-1 rounded-xl bg-muted/80 p-1 sm:w-auto">
+                  <TabsTrigger value="species" className="gap-1.5 rounded-lg px-3 py-2">
+                     <LayoutGrid className="h-4 w-4" />
+                     Species
+                  </TabsTrigger>
+                  <TabsTrigger value="biosamples" className="gap-1.5 rounded-lg px-3 py-2">
+                     <FlaskConical className="h-4 w-4" />
+                     Biosamples
+                  </TabsTrigger>
+                  <TabsTrigger value="users" className="gap-1.5 rounded-lg px-3 py-2">
+                     <Users className="h-4 w-4" />
+                     Users
+                  </TabsTrigger>
+                  <TabsTrigger value="deletions" className="gap-1.5 rounded-lg px-3 py-2">
+                     <Trash2 className="h-4 w-4" />
+                     Pending deletions
+                  </TabsTrigger>
+               </TabsList>
+               <TabsContent value="species" className={DASHBOARD_TAB_PANEL_CLASS}>
+                  <SpeciesOverviewModule variant="tabPanel" />
+               </TabsContent>
+               <TabsContent value="biosamples" className={DASHBOARD_TAB_PANEL_CLASS}>
+                  <SubmittedBiosamplesModule hasEnaTemplate={enaTemplate} variant="tabPanel" />
+               </TabsContent>
+               <TabsContent value="users" className={DASHBOARD_TAB_PANEL_CLASS}>
+                  <UsersModule variant="tabPanel" />
+               </TabsContent>
+               <TabsContent value="deletions" className={DASHBOARD_TAB_PANEL_CLASS}>
+                  <DeleteRequestsModule variant="tabPanel" />
+               </TabsContent>
+            </Tabs>
          ) : (
-            <div className="grid gap-6 xl:grid-cols-[1fr_340px]">
-               <div className="space-y-6">
-                  <SpeciesOverviewModule />
-                  <SubmittedBiosamplesModule hasEnaTemplate={enaTemplate} />
-                  <RecordModelsModule stats={rawStats} />
-               </div>
-               <div className="space-y-6">
-                  <UsersModule />
-                  <DeleteRequestsModule />
-               </div>
-            </div>
+            <Tabs defaultValue="species" className="gap-4">
+               <TabsList className="h-auto w-full flex-wrap justify-start gap-1 rounded-xl bg-muted/80 p-1 sm:w-auto">
+                  <TabsTrigger value="species" className="gap-1.5 rounded-lg px-3 py-2">
+                     Species
+                  </TabsTrigger>
+                  <TabsTrigger value="biosamples" className="gap-1.5 rounded-lg px-3 py-2">
+                     Biosamples
+                  </TabsTrigger>
+                  <TabsTrigger value="sankey" className="gap-1.5 rounded-lg px-3 py-2">
+                     Species ↔ biosamples
+                  </TabsTrigger>
+               </TabsList>
+               <TabsContent value="species" className={DASHBOARD_TAB_PANEL_CLASS}>
+                  <SpeciesOverviewModule variant="tabPanel" />
+               </TabsContent>
+               <TabsContent value="biosamples" className={DASHBOARD_TAB_PANEL_CLASS}>
+                  <SubmittedBiosamplesModule hasEnaTemplate={enaTemplate} variant="tabPanel" />
+               </TabsContent>
+               <TabsContent value="sankey" className={DASHBOARD_TAB_PANEL_CLASS}>
+                  <SpeciesBiosampleSankeyModule hasEnaTemplate={enaTemplate} variant="tabPanel" />
+               </TabsContent>
+            </Tabs>
          )}
       </div>
    )

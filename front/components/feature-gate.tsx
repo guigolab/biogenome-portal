@@ -4,9 +4,9 @@ import { useRouter } from 'next/navigation'
 import { useEffect, type ReactNode } from 'react'
 
 import { usePortalConfig } from '@/contexts/portal-context'
-import { showMap, showProgress } from '@/lib/portal'
+import { showGoatStatusPage, showMap } from '@/lib/portal'
 
-type GateFeature = 'progress' | 'map'
+type GateFeature = 'progress' | 'map' | 'goatStatus'
 
 export function FeatureGate({ feature, children }: { feature: GateFeature; children: ReactNode }) {
    const { config, loading } = usePortalConfig()
@@ -14,7 +14,7 @@ export function FeatureGate({ feature, children }: { feature: GateFeature; child
 
    useEffect(() => {
       if (loading || !config) return
-      if (feature === 'progress' && !showProgress(config)) {
+      if (feature === 'goatStatus' && !showGoatStatusPage(config)) {
          router.replace('/')
       }
       if (feature === 'map' && !showMap(config)) {
@@ -32,7 +32,7 @@ export function FeatureGate({ feature, children }: { feature: GateFeature; child
       )
    }
 
-   if (feature === 'progress' && !showProgress(config)) return null
+   if (feature === 'goatStatus' && !showGoatStatusPage(config)) return null
    if (feature === 'map' && !showMap(config)) return null
 
    return <div className="flex min-h-0 min-w-0 flex-1 flex-col">{children}</div>

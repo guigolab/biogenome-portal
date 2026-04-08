@@ -93,6 +93,16 @@ export async function fetchOrganismRelated(
    model: OrganismRelatedModel,
    params?: { limit?: number; offset?: number },
 ): Promise<Record<string, unknown>[]> {
+   const { data } = await fetchOrganismRelatedWithTotal(taxid, model, params)
+   return data
+}
+
+/** Related catalog rows plus total count (for species detail tabs / pagination). */
+export async function fetchOrganismRelatedWithTotal(
+   taxid: string,
+   model: OrganismRelatedModel,
+   params?: { limit?: number; offset?: number },
+): Promise<{ data: Record<string, unknown>[]; total: number }> {
    const base = getApiBase()
    const limit = params?.limit ?? 200
    const offset = params?.offset ?? 0
@@ -109,8 +119,7 @@ export async function fetchOrganismRelated(
       throw new Error(`organisms/${taxid}/${model}: ${res.status} ${res.statusText}`)
    }
    const json = (await res.json()) as { total?: number; data?: unknown }
-   if (!Array.isArray(json.data)) {
-      return []
-   }
-   return json.data as Record<string, unknown>[]
+   const data = Array.isArray(json.data) ? (json.data as Record<string, unknown>[]) : []
+   const total = typeof json.total === 'number' && Number.isFinite(json.total) ? json.total : data.length
+   return { data, total }
 }

@@ -3,8 +3,9 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useMemo, useState } from 'react'
-import { BarChart3, Dna, Globe, List, Menu, TreePine } from 'lucide-react'
+import { Dna, Menu } from 'lucide-react'
 
+import { AppearanceSwitcher } from '@/components/appearance-switcher'
 import { LanguageSwitcher } from '@/components/language-switcher'
 import { Button } from '@/components/ui/button'
 import {
@@ -16,7 +17,12 @@ import {
 import { useLocale } from '@/contexts/locale-context'
 import { usePortalConfig } from '@/contexts/portal-context'
 import { pickLocalized } from '@/lib/i18n/pickLocalized'
-import { showMap, showProgress } from '@/lib/portal'
+import {
+   navRouteIcons,
+   showCmsLoginNav,
+   showGoatStatusPage,
+   showMap,
+} from '@/lib/portal'
 import { cn } from '@/lib/utils'
 
 const LOGO_PUBLIC_PATH = '/portal-logo.svg'
@@ -32,18 +38,34 @@ export function Navigation() {
    }, [])
    const { locale, t } = useLocale()
 
-   const general = config?.general as { title?: Record<string, string> } | undefined
+   const general = config?.general as
+      | {
+           title?: Record<string, string>
+           externalLink?: string
+        }
+      | undefined
    const brand = pickLocalized(general?.title, locale, 'BioGenome')
+   const externalLink = general?.externalLink?.trim()
 
    const mapOn = config ? showMap(config) : true
-   const progressOn = config ? showProgress(config) : false
+   const goatStatusNav = config ? showGoatStatusPage(config) : false
+   const cmsLoginOn = config ? showCmsLoginNav(config) : false
 
    const navItems = [
-      { href: '/', label: t('nav.home'), icon: Dna },
-      ...(mapOn ? [{ href: '/map', label: t('nav.map'), icon: Globe }] : []),
-      { href: '/taxonomy', label: t('nav.taxonomy'), icon: TreePine },
-      { href: '/species', label: t('nav.species'), icon: List },
-      ...(progressOn ? [{ href: '/status', label: t('nav.status'), icon: BarChart3 }] : []),
+      { href: '/', label: t('nav.home'), icon: navRouteIcons.home },
+      ...(mapOn ? [{ href: '/map', label: t('nav.map'), icon: navRouteIcons.map }] : []),
+      { href: '/taxonomy', label: t('nav.taxonomy'), icon: navRouteIcons.taxonomy },
+      { href: '/species', label: t('nav.species'), icon: navRouteIcons.species },
+      { href: '/catalog', label: t('nav.catalog'), icon: navRouteIcons.catalog },
+      {
+         href: '/genome-browser',
+         label: t('nav.genomeBrowser'),
+         icon: navRouteIcons.genomeBrowser,
+      },
+      ...(goatStatusNav ? [{ href: '/status', label: t('nav.status'), icon: navRouteIcons.status }] : []),
+      ...(cmsLoginOn
+         ? [{ href: '/login', label: t('nav.login'), icon: navRouteIcons.login }]
+         : []),
    ]
 
    const linkClass = (isActive: boolean) =>
@@ -56,37 +78,69 @@ export function Navigation() {
 
    return (
       <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-         <div className="container px-4">
-            <div className="flex h-16 w-full min-w-0 items-center justify-between gap-2 sm:gap-4">
-               <Link
-                  href="/"
-                  className="flex min-w-0 max-w-[min(100%,calc(100%-5.5rem))] flex-1 items-center gap-2 sm:gap-3 md:max-w-none md:flex-none"
-               >
-                  {logoFailed ? (
-                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary sm:h-10 sm:w-10">
-                        <Dna className="h-4 w-4 text-primary-foreground sm:h-5 sm:w-5" />
-                     </div>
-                  ) : (
-                     <span className="box-border inline-flex shrink-0 items-center py-1.5 pl-0 pr-1 sm:py-2 sm:px-1.5">
-                        <img
-                           src={logoSrc}
-                           alt=""
-                           decoding="async"
-                           className="max-h-9 w-auto max-w-[min(12rem,38vw)] object-contain object-left sm:max-h-12 sm:max-w-[min(20rem,55vw)] md:max-w-[min(20rem,70vw)]"
-                           onError={() => setLogoFailed(true)}
-                        />
-                     </span>
-                  )}
-                  <span
-                     className="min-w-0 truncate text-base font-semibold tracking-tight sm:text-lg max-md:max-w-[min(9.5rem,34vw)] md:max-w-[min(18rem,28vw)] lg:max-w-md xl:max-w-xl 2xl:max-w-none"
-                     title={brand}
+         <div className="w-full px-4">
+            <div className="flex h-16 w-full min-w-0 items-center justify-between gap-3 sm:gap-4">
+               {externalLink ? (
+                  <a
+                     href={externalLink}
+                     target="_blank"
+                     rel="noreferrer"
+                     className="flex min-w-0 shrink items-center gap-2 sm:gap-3"
                   >
-                     {brand}
-                  </span>
-               </Link>
+                     {logoFailed ? (
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary sm:h-10 sm:w-10">
+                           <Dna className="h-4 w-4 text-primary-foreground sm:h-5 sm:w-5" />
+                        </div>
+                     ) : (
+                        <span className="box-border inline-flex shrink-0 items-center py-1.5 pl-0 pr-1 sm:py-2 sm:px-1.5">
+                           <img
+                              src={logoSrc}
+                              alt={brand}
+                              decoding="async"
+                              className="max-h-9 w-auto max-w-[min(12rem,38vw)] object-contain object-left sm:max-h-12 sm:max-w-[min(20rem,55vw)] md:max-w-[min(20rem,70vw)]"
+                              onError={() => setLogoFailed(true)}
+                           />
+                        </span>
+                     )}
+                     {logoFailed ? (
+                        <span
+                           className="min-w-0 truncate text-base font-semibold tracking-tight sm:text-lg max-md:max-w-[min(9.5rem,34vw)] md:max-w-[min(18rem,28vw)] lg:max-w-md xl:max-w-xl 2xl:max-w-none"
+                           title={brand}
+                        >
+                           {brand}
+                        </span>
+                     ) : null}
+                  </a>
+               ) : (
+                  <Link href="/" className="flex min-w-0 shrink items-center gap-2 sm:gap-3">
+                     {logoFailed ? (
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary sm:h-10 sm:w-10">
+                           <Dna className="h-4 w-4 text-primary-foreground sm:h-5 sm:w-5" />
+                        </div>
+                     ) : (
+                        <span className="box-border inline-flex shrink-0 items-center py-1.5 pl-0 pr-1 sm:py-2 sm:px-1.5">
+                           <img
+                              src={logoSrc}
+                              alt={brand}
+                              decoding="async"
+                              className="max-h-9 w-auto max-w-[min(12rem,38vw)] object-contain object-left sm:max-h-12 sm:max-w-[min(20rem,55vw)] md:max-w-[min(20rem,70vw)]"
+                              onError={() => setLogoFailed(true)}
+                           />
+                        </span>
+                     )}
+                     {logoFailed ? (
+                        <span
+                           className="min-w-0 truncate text-base font-semibold tracking-tight sm:text-lg max-md:max-w-[min(9.5rem,34vw)] md:max-w-[min(18rem,28vw)] lg:max-w-md xl:max-w-xl 2xl:max-w-none"
+                           title={brand}
+                        >
+                           {brand}
+                        </span>
+                     ) : null}
+                  </Link>
+               )}
 
                <div className="hidden shrink-0 items-center gap-2 md:flex">
-                  <nav className="flex flex-wrap items-center justify-end gap-1 lg:gap-1">
+                  <nav className="flex flex-wrap items-center gap-1">
                      {navItems.map((item) => {
                         const Icon = item.icon
                         const isActive = pathname === item.href
@@ -98,10 +152,12 @@ export function Navigation() {
                         )
                      })}
                   </nav>
+                  <AppearanceSwitcher />
                   <LanguageSwitcher />
                </div>
 
                <div className="flex shrink-0 items-center gap-1 md:hidden">
+                  <AppearanceSwitcher />
                   <LanguageSwitcher />
                   <DropdownMenu>
                      <DropdownMenuTrigger asChild>
