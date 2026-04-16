@@ -35,7 +35,7 @@ export {
    type BrandCssVarName,
    type LeafletCircleMarkerStyle,
 } from './brandColorsFromDocument'
-export { showCmsLoginNav, showGoatStatusPage, showMap } from './portalFeatures'
+export { showCmsLoginNav, showCountriesUi, showGoatStatusPage, showMap } from './portalFeatures'
 export { navRouteIcons, type NavRouteIconKey } from './navRouteIcons'
 
 import defaultPortal from './defaultPortal.json'

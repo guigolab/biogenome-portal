@@ -11,11 +11,9 @@ import {
 } from '@/components/ui/select'
 import { useLocale } from '@/contexts/locale-context'
 import { cn } from '@/lib/utils'
-import { SPECIES_SORT_MODES, type SpeciesSortMode } from '@/lib/speciesListSort'
+import type { SpeciesSortMode } from '@/lib/speciesListSort'
 import * as TooltipPrimitive from '@radix-ui/react-tooltip'
-import { Download, Grid3X3, LayoutList } from 'lucide-react'
-
-const SORT_MODES = SPECIES_SORT_MODES
+import { Download } from 'lucide-react'
 
 function Tip({
    children,
@@ -43,115 +41,159 @@ function Tip({
    )
 }
 
-export type ViewMode = 'grid' | 'list'
-
-export type SpeciesListResultsBarProps = {
+export type SpeciesListResultsStatusProps = {
    loading: boolean
    itemsLength: number
    total: number
    filtersActive: boolean
+   listRefreshing: boolean
+   className?: string
+}
+
+export type SpeciesListSortExportControlsProps = {
    sortMode: SpeciesSortMode
+   sortModes: SpeciesSortMode[]
    onSortModeChange: (mode: SpeciesSortMode) => void
-   viewMode: ViewMode
-   onViewModeChange: (mode: ViewMode) => void
    onExportClick: () => void
 }
 
-export function SpeciesListResultsBar({
+function SpeciesListSortExportControls({
+   sortMode,
+   sortModes,
+   onSortModeChange,
+   onExportClick,
+}: SpeciesListSortExportControlsProps) {
+   const { t } = useLocale()
+   const sortLabels = (m: SpeciesSortMode): string => {
+      switch (m) {
+         case 'alpha':
+            return t('speciesList.sort.alpha')
+         case 'recent':
+            return t('speciesList.sort.recent')
+         case 'samples':
+            return t('speciesList.sort.samples')
+         case 'reads':
+            return t('speciesList.sort.reads')
+         case 'assemblies':
+            return t('speciesList.sort.assemblies')
+         case 'annotations':
+            return t('speciesList.sort.annotations')
+      }
+   }
+
+   return (
+      <div className="flex shrink-0 flex-nowrap items-center justify-end gap-2 sm:gap-3">
+         <Select value={sortMode} onValueChange={(v) => onSortModeChange(v as SpeciesSortMode)}>
+            <SelectTrigger
+               className="h-9 w-[min(100%,11rem)] sm:min-w-[12rem] sm:w-[min(100%,16rem)]"
+               aria-label={t('speciesList.sortSpeciesList')}
+            >
+               <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+               {sortModes.map((m) => (
+                  <SelectItem key={m} value={m}>
+                     {sortLabels(m)}
+                  </SelectItem>
+               ))}
+            </SelectContent>
+         </Select>
+
+         <Tip label={t('speciesList.downloadDataTsv')}>
+            <Button
+               type="button"
+               variant="outline"
+               size="sm"
+               className="h-9 gap-1.5 px-3"
+               onClick={onExportClick}
+               aria-label={t('speciesList.downloadDataTsv')}
+            >
+               <Download className="h-4 w-4 shrink-0" aria-hidden />
+               <span className="hidden sm:inline">{t('common.exportTsv')}</span>
+            </Button>
+         </Tip>
+      </div>
+   )
+}
+
+export type SpeciesListResultsSummaryProps = Omit<SpeciesListResultsStatusProps, 'className'> &
+   SpeciesListSortExportControlsProps
+
+/** Single row: counts (left) · sort + export (right). */
+export function SpeciesListResultsSummary({
    loading,
    itemsLength,
    total,
    filtersActive,
+   listRefreshing,
    sortMode,
+   sortModes,
    onSortModeChange,
-   viewMode,
-   onViewModeChange,
    onExportClick,
-}: SpeciesListResultsBarProps) {
-   const { t } = useLocale()
-   const sortLabels: Record<SpeciesSortMode, string> = {
-      alpha: t('speciesList.sort.alpha'),
-      recent: t('speciesList.sort.recent'),
-      samples: t('speciesList.sort.samples'),
-   }
+}: SpeciesListResultsSummaryProps) {
    return (
       <TooltipPrimitive.Provider delayDuration={200}>
-         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-muted-foreground">
-               {loading ? (
-                  t('common.loading')
-               ) : (
-                  <>
-                     {t('common.showing')} {itemsLength.toLocaleString()} {t('common.of')}{' '}
-                     {total.toLocaleString()} {t('speciesList.species')}
-                     {filtersActive ? <> ({t('speciesList.filtered')})</> : null}
-                  </>
-               )}
-            </p>
-            <div className="flex flex-wrap items-center justify-end gap-2">
-               <Select
-                  value={sortMode}
-                  onValueChange={(v) => onSortModeChange(v as SpeciesSortMode)}
-               >
-                  <SelectTrigger
-                     className="h-9 w-[min(100%,11rem)] sm:w-52"
-                     aria-label={t('speciesList.sortSpeciesList')}
-                  >
-                     <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                     {SORT_MODES.map((m) => (
-                        <SelectItem key={m} value={m}>
-                           {sortLabels[m]}
-                        </SelectItem>
-                     ))}
-                  </SelectContent>
-               </Select>
-
-               <div className="flex h-9 w-fit shrink-0 rounded-md border border-input shadow-xs">
-                  <Tip label={t('speciesList.gridView')}>
-                     <Button
-                        type="button"
-                        variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
-                        size="icon"
-                        onClick={() => onViewModeChange('grid')}
-                        className="h-9 w-9 rounded-r-none border-0 shadow-none"
-                        aria-pressed={viewMode === 'grid'}
-                        aria-label={t('speciesList.gridView')}
-                     >
-                        <Grid3X3 className="h-4 w-4" />
-                     </Button>
-                  </Tip>
-                  <Tip label={t('speciesList.listView')}>
-                     <Button
-                        type="button"
-                        variant={viewMode === 'list' ? 'secondary' : 'ghost'}
-                        size="icon"
-                        onClick={() => onViewModeChange('list')}
-                        className="h-9 w-9 rounded-l-none border-0 border-l border-border shadow-none"
-                        aria-pressed={viewMode === 'list'}
-                        aria-label={t('speciesList.listView')}
-                     >
-                        <LayoutList className="h-4 w-4" />
-                     </Button>
-                  </Tip>
-               </div>
-
-               <Tip label={t('speciesList.downloadDataTsv')}>
-                  <Button
-                     type="button"
-                     variant="outline"
-                     size="sm"
-                     className="h-9 gap-1.5"
-                     onClick={onExportClick}
-                     aria-label={t('speciesList.downloadDataTsv')}
-                  >
-                     <Download className="h-4 w-4 shrink-0" aria-hidden />
-                     <span className="hidden sm:inline">{t('common.exportTsv')}</span>
-                  </Button>
-               </Tip>
+         <div className="flex min-w-0 flex-nowrap items-end justify-between gap-2 sm:gap-3">
+            <div className="min-w-0 flex-1 basis-0 overflow-hidden">
+               <SpeciesListResultsStatus
+                  loading={loading}
+                  itemsLength={itemsLength}
+                  total={total}
+                  filtersActive={filtersActive}
+                  listRefreshing={listRefreshing}
+                  className="truncate"
+               />
             </div>
+            <SpeciesListSortExportControls
+               sortMode={sortMode}
+               sortModes={sortModes}
+               onSortModeChange={onSortModeChange}
+               onExportClick={onExportClick}
+            />
          </div>
       </TooltipPrimitive.Provider>
+   )
+}
+
+/** Showing X of Y — use inside {@link SpeciesListResultsSummary} or standalone. */
+export function SpeciesListResultsStatus({
+   loading,
+   itemsLength,
+   total,
+   filtersActive,
+   listRefreshing,
+   className,
+}: SpeciesListResultsStatusProps) {
+   const { t } = useLocale()
+   const statusInitialLoad = loading && itemsLength === 0
+
+   return (
+      <p
+         className={cn(
+            'text-xs leading-relaxed text-muted-foreground tabular-nums sm:text-sm',
+            className,
+         )}
+         role="status"
+      >
+         {statusInitialLoad ? (
+            t('common.loading')
+         ) : listRefreshing ? (
+            <>
+               {t('common.showing')} {itemsLength.toLocaleString()} {t('common.of')}{' '}
+               {total.toLocaleString()} {t('speciesList.species')}
+               {filtersActive ? <> · {t('speciesList.filtered')}</> : null}
+               <span className="whitespace-nowrap text-muted-foreground/90">
+                  {' '}
+                  · {t('speciesList.updatingResults')}
+               </span>
+            </>
+         ) : (
+            <>
+               {t('common.showing')} {itemsLength.toLocaleString()} {t('common.of')}{' '}
+               {total.toLocaleString()} {t('speciesList.species')}
+               {filtersActive ? <> · {t('speciesList.filtered')}</> : null}
+            </>
+         )}
+      </p>
    )
 }

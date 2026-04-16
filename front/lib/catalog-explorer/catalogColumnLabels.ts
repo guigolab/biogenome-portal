@@ -1,5 +1,31 @@
-import type { DataModels } from '@/lib/portal/types'
+import type { CatalogCardFieldDef, DataModels } from '@/lib/portal/types'
 import { pickLocalized } from '@/lib/i18n/pickLocalized'
+
+/** Last path segment, underscores → spaces; light acronym handling — used when no catalog map entry exists. */
+export function humanizeCatalogFieldKey(key: string): string {
+   const trimmed = key.trim()
+   if (!trimmed) return key
+   const last = trimmed.includes('.') ? trimmed.slice(trimmed.lastIndexOf('.') + 1) : trimmed
+   const words = last
+      .split(/_+/)
+      .join(' ')
+      .split(/\s+/)
+      .filter(Boolean)
+   if (words.length === 0) return key
+   const fix = (w: string) => {
+      const lower = w.toLowerCase()
+      if (lower === 'gc') return 'GC'
+      if (lower === 'id') return 'ID'
+      if (lower === 'n50') return 'N50'
+      if (lower === 'rna') return 'RNA'
+      if (lower === 'dna') return 'DNA'
+      if (lower === 'ena') return 'ENA'
+      if (lower === 'insdc') return 'INSDC'
+      if (w.length <= 2 && w === w.toUpperCase()) return w
+      return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()
+   }
+   return words.map(fix).join(' ')
+}
 
 const COMMON_COLUMN_LABELS: Record<string, Record<string, string>> = {
    scientific_name: { en: 'Scientific name', cat: 'Nom científic' },
@@ -7,8 +33,8 @@ const COMMON_COLUMN_LABELS: Record<string, Record<string, string>> = {
 }
 
 /**
- * Human-readable table column titles for catalog dot-paths.
- * Keys match `portal.json` / defaults `columns` after `ensureTaxonColumns` (scientific_name, taxid first).
+ * Human-readable labels for catalog dot-paths (sort fields, export columns, card rows).
+ * Taxon fields (`scientific_name`, `taxid`) are listed first in merged export lists.
  */
 const COLUMN_LABELS: Partial<Record<DataModels, Record<string, Record<string, string>>>> = {
    assemblies: {
@@ -23,13 +49,26 @@ const COLUMN_LABELS: Partial<Record<DataModels, Record<string, Record<string, st
       'metadata.assembly_info.assembly_status': { en: 'Assembly status', cat: "Estat de l'assemblatge" },
       'metadata.assembly_info.release_date': { en: 'Release date', cat: 'Data de publicació' },
       'metadata.assembly_info.sequencing_tech': { en: 'Sequencing tech', cat: 'Tecnologia de seqüenciació' },
+      'metadata.assembly_info.refseq_category': {
+         en: '',
+         cat: '',
+      },
       'metadata.assembly_stats.contig_n50': { en: 'Contig N50', cat: 'Contig N50' },
       'metadata.assembly_stats.scaffold_n50': { en: 'Scaffold N50', cat: 'Scaffold N50' },
+      'metadata.assembly_stats.gc_percent': { en: 'GC content', cat: 'Contingut GC' },
+      'metadata.assembly_stats.number_of_component_sequences': {
+         en: 'Component sequences',
+         cat: "Seqüències components",
+      },
       'metadata.assembly_stats.total_sequence_length': {
          en: 'Total length (bp)',
          cat: 'Longitud total (bp)',
       },
       'metadata.source_database': { en: 'Source database', cat: 'Base de dades font' },
+      'scatter.assembly.contig_n50_scaffold_n50': {
+         en: 'Contig N50 vs scaffold N50',
+         cat: 'Contig N50 vs scaffold N50',
+      },
    },
    biosamples: {
       accession: { en: 'BioSample', cat: 'BioSample' },
@@ -46,6 +85,7 @@ const COLUMN_LABELS: Partial<Record<DataModels, Record<string, Record<string, st
          cat: 'Localitat',
       },
       'metadata.habitat': { en: 'Habitat', cat: 'Hàbitat' },
+      'metadata.geo_loc_name': { en: 'Geographic location', cat: 'Ubicació geogràfica' },
       'metadata.lifestage': { en: 'Life stage', cat: 'Estadi vital' },
       'metadata.sex': { en: 'Sex', cat: 'Sexe' },
       'metadata.organism part': { en: 'Organism part', cat: "Part de l'organisme" },
@@ -73,17 +113,53 @@ const COLUMN_LABELS: Partial<Record<DataModels, Record<string, Record<string, st
    annotations: {
       name: { en: 'Annotation', cat: 'Anotació' },
       assembly_accession: { en: 'Assembly', cat: 'Assemblatge' },
-      external: { en: 'External', cat: 'Extern' },
-      'metadata.assembly_name': { en: 'Assembly (metadata)', cat: 'Assemblatge (metadades)' },
+      external: { en: 'External import', cat: 'Import extern' },
+      'metadata.assembly_name': { en: 'Assembly name', cat: "Nom de l'assemblatge" },
       'metadata.annotation_id': { en: 'Annotation ID', cat: "ID d'anotació" },
-      'metadata.organism_name': { en: 'Organism (metadata)', cat: "Organisme (metadades)" },
+      'metadata.organism_name': { en: 'Organism name', cat: "Nom de l'organisme" },
       'metadata.busco': { en: 'BUSCO', cat: 'BUSCO' },
       'metadata.features_summary': { en: 'Features summary', cat: 'Resum de característiques' },
       'metadata.busco.busco_lineage': { en: 'BUSCO lineage', cat: 'Llinatge BUSCO' },
+      'metadata.busco.complete': { en: 'BUSCO complete', cat: 'BUSCO complet' },
+      'metadata.source_file_info.database': { en: 'Source database', cat: 'Base de dades font' },
+      'metadata.source_file_info.provider': { en: 'Data provider', cat: 'Proveïdor de dades' },
+      'metadata.features_statistics.gene_category_stats.coding.total_count': {
+         en: 'Coding genes',
+         cat: 'Genes codificants',
+      },
+      'metadata.features_statistics.gene_category_stats.non_coding.total_count': {
+         en: 'Non-coding genes',
+         cat: 'Genes no codificants',
+      },
+      'metadata.features_statistics.gene_category_stats.pseudogene.total_count': {
+         en: 'Pseudogenes',
+         cat: 'Pseudogenes',
+      },
+      'metadata.features_summary.biotypes': { en: 'Gene biotypes', cat: 'Biotips de gens' },
    },
    local_samples: {
       local_id: { en: 'Local ID', cat: 'ID local' },
+      country: { en: 'Country', cat: 'País' },
+      user: { en: 'User', cat: 'Usuari' },
    },
+}
+
+/**
+ * Label for catalog export / column pickers: optional per-field `label` from portal `cardFields`
+ * overrides the static {@link COLUMN_LABELS} map and {@link humanizeCatalogFieldKey} fallback.
+ */
+export function catalogExportFieldDisplayLabel(
+   model: DataModels,
+   key: string,
+   cardFieldByKey: ReadonlyMap<string, CatalogCardFieldDef> | undefined,
+   locale: string,
+): string {
+   const def = cardFieldByKey?.get(key)
+   if (def?.label) {
+      const picked = pickLocalized(def.label, locale, '')
+      if (picked) return picked
+   }
+   return catalogColumnHeaderLabel(model, key, locale)
 }
 
 export function catalogColumnHeaderLabel(model: DataModels, columnKey: string, locale: string): string {
@@ -97,5 +173,6 @@ export function catalogColumnHeaderLabel(model: DataModels, columnKey: string, l
       const picked = pickLocalized(map, locale, '')
       if (picked) return picked
    }
-   return columnKey.replace(/\./g, ' · ')
+   // Any model: try last-segment humanization (never show raw metadata paths in UI).
+   return humanizeCatalogFieldKey(columnKey)
 }

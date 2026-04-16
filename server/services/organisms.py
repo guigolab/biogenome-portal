@@ -10,6 +10,7 @@ from db.model import (
     ReadRun,
     TaxonNode,
 )
+from services.organism_audit_log import organism_snapshot, record_organism_audit
 from db.constants import GOAT_PROJECT_NAME
 from helpers import taxonomy as taxonomy_helper, user as user_helper, organism as organism_helper, geolocation as geoloc_helper, data as data_helper
 from helpers import resource_mixins as response_helper
@@ -70,6 +71,7 @@ def _mongo_validation_message(exc: ValidationError) -> str:
 
 def update_organism(data, taxid):
     organism = get_or_404(Organism, f"Organism {taxid} not found!", taxid=taxid)
+    previous_snapshot = organism_snapshot(organism)
 
     if data is None:
         raise BadRequest(description="Request body is required (send a JSON object)")
@@ -100,6 +102,18 @@ def update_organism(data, taxid):
         raise BadRequest(
             description="Could not persist organism update. Check field types and constraints."
         ) from e
+
+    try:
+        organism.reload()
+    except Exception:
+        pass
+    record_organism_audit(
+        action="update",
+        taxid=str(organism.taxid),
+        scientific_name=str(organism.scientific_name or ""),
+        previous_object=previous_snapshot,
+        new_object=organism_snapshot(organism),
+    )
 
     return taxid
 
@@ -174,6 +188,18 @@ def create_organism(data):
             "create_organism: failed to queue post-taxonomy enrichment for taxid=%s",
             taxid,
         )
+
+    try:
+        organism.reload()
+    except Exception:
+        pass
+    record_organism_audit(
+        action="create",
+        taxid=str(organism.taxid),
+        scientific_name=str(organism.scientific_name or ""),
+        previous_object=None,
+        new_object=organism_snapshot(organism),
+    )
 
     return taxid
 
@@ -342,6 +368,7 @@ def _map_single_organism_field(field, value, taxid):
 
 def patch_organism(data, taxid):
     organism = get_or_404(Organism, f"Organism {taxid} not found!", taxid=taxid)
+    previous_snapshot = organism_snapshot(organism)
     field, value = parse_single_field_patch_payload(data)
     try:
         mapped_field, mapped_value = _map_single_organism_field(field, value, taxid)
@@ -355,6 +382,17 @@ def patch_organism(data, taxid):
         raise BadRequest(description=f"Invalid payload for '{field}': {e}")
     except Exception as e:
         raise BadRequest(description=f"{e}")
+    try:
+        organism.reload()
+    except Exception:
+        pass
+    record_organism_audit(
+        action="patch",
+        taxid=str(organism.taxid),
+        scientific_name=str(organism.scientific_name or ""),
+        previous_object=previous_snapshot,
+        new_object=organism_snapshot(organism),
+    )
     return taxid, field
 
 
@@ -468,7 +506,17 @@ def map_organism_lineage(lineage):
 
 def delete_organism(taxid):
     organism_to_delete = get_or_404(Organism, f"Organism {taxid} not found!", taxid=taxid)
+    previous_snapshot = organism_snapshot(organism_to_delete)
+    del_taxid = str(organism_to_delete.taxid)
+    del_name = str(organism_to_delete.scientific_name or "")
     cascade_delete_organism(organism_to_delete)
+    record_organism_audit(
+        action="delete",
+        taxid=del_taxid,
+        scientific_name=del_name,
+        previous_object=previous_snapshot,
+        new_object=None,
+    )
     return f"Organisms {taxid} succesfully deleted", 200
     
 def get_unassigned_organisms(format='json',filter=None, limit=20, offset=0):

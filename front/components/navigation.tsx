@@ -2,8 +2,8 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useMemo, useState } from 'react'
-import { Dna, Menu } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { Menu } from 'lucide-react'
 
 import { AppearanceSwitcher } from '@/components/appearance-switcher'
 import { LanguageSwitcher } from '@/components/language-switcher'
@@ -16,26 +16,35 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { useLocale } from '@/contexts/locale-context'
 import { usePortalConfig } from '@/contexts/portal-context'
+import { useCmsNavSession } from '@/hooks/use-cms-nav-session'
 import { pickLocalized } from '@/lib/i18n/pickLocalized'
-import {
-   navRouteIcons,
-   showCmsLoginNav,
-   showGoatStatusPage,
-   showMap,
-} from '@/lib/portal'
+import { footerLogoSrcWithBasePath } from '@/lib/portal/footerLogoPublicUrl'
+import { navRouteIcons, showCmsLoginNav, showMap } from '@/lib/portal'
 import { cn } from '@/lib/utils'
 
-const LOGO_PUBLIC_PATH = '/portal-logo.svg'
+const brandTitleClassName =
+   'min-w-0 truncate text-base font-semibold tracking-tight text-foreground sm:text-lg max-md:max-w-[min(12rem,55vw)] md:max-w-[min(18rem,40vw)] lg:max-w-md xl:max-w-xl 2xl:max-w-none'
+
+const brandShellClassName =
+   'flex max-w-[min(100%,28rem)] shrink-0 items-center gap-2 sm:gap-3 text-foreground transition-colors hover:text-foreground/90'
+
+const customLogoImgClassName =
+   'h-9 w-auto max-w-[min(12rem,38vw)] shrink-0 object-contain object-left sm:h-10 sm:max-w-[min(20rem,55vw)] md:max-w-[min(20rem,70vw)]'
 
 export function Navigation() {
    const pathname = usePathname()
    const [logoFailed, setLogoFailed] = useState(false)
-   const { config } = usePortalConfig()
+   const { config, loading: portalLoading } = usePortalConfig()
 
-   const logoSrc = useMemo(() => {
-      const bp = (process.env.NEXT_PUBLIC_BASE_PATH ?? '').replace(/\/$/, '')
-      return bp ? `${bp}${LOGO_PUBLIC_PATH}` : LOGO_PUBLIC_PATH
-   }, [])
+   const footerLogo = config?.footer?.logoUrl?.trim()
+   const usesFooterLogo = Boolean(footerLogo)
+
+   const logoSrc = useMemo(() => footerLogoSrcWithBasePath(footerLogo), [footerLogo])
+
+   useEffect(() => {
+      setLogoFailed(false)
+   }, [footerLogo])
+
    const { locale, t } = useLocale()
 
    const general = config?.general as
@@ -44,12 +53,16 @@ export function Navigation() {
            externalLink?: string
         }
       | undefined
-   const brand = pickLocalized(general?.title, locale, 'BioGenome')
+   const picked = pickLocalized(general?.title, locale, 'BioGenome')
+   const brand = picked.trim() || 'BioGenome'
    const externalLink = general?.externalLink?.trim()
 
    const mapOn = config ? showMap(config) : true
-   const goatStatusNav = config ? showGoatStatusPage(config) : false
    const cmsLoginOn = config ? showCmsLoginNav(config) : false
+   const { showMyArea } = useCmsNavSession({
+      enabled: cmsLoginOn,
+      portalLoading,
+   })
 
    const navItems = [
       { href: '/', label: t('nav.home'), icon: navRouteIcons.home },
@@ -62,11 +75,27 @@ export function Navigation() {
          label: t('nav.genomeBrowser'),
          icon: navRouteIcons.genomeBrowser,
       },
-      ...(goatStatusNav ? [{ href: '/status', label: t('nav.status'), icon: navRouteIcons.status }] : []),
       ...(cmsLoginOn
-         ? [{ href: '/login', label: t('nav.login'), icon: navRouteIcons.login }]
+         ? [
+              showMyArea
+                 ? {
+                      href: '/admin',
+                      label: t('nav.myArea'),
+                      icon: navRouteIcons.myArea,
+                      match: (p: string) => p.startsWith('/admin'),
+                   }
+                 : {
+                      href: '/login',
+                      label: t('nav.login'),
+                      icon: navRouteIcons.login,
+                      match: (p: string) => p === '/login',
+                   },
+           ]
          : []),
    ]
+
+   const navItemIsActive = (item: (typeof navItems)[number], p: string) =>
+      'match' in item && item.match ? item.match(p) : p === item.href
 
    const linkClass = (isActive: boolean) =>
       cn(
@@ -75,6 +104,29 @@ export function Navigation() {
             ? 'bg-primary/15 text-primary shadow-sm ring-1 ring-inset ring-primary/25'
             : 'text-muted-foreground hover:bg-secondary hover:text-foreground',
       )
+
+   // Logo only when `footer.logoUrl` is set and the asset loads; otherwise title only (no bundled default logo).
+   const showLogo = usesFooterLogo && !logoFailed
+   const showTitle = !showLogo
+
+   const brandInner = (
+      <>
+         {showLogo ? (
+            <img
+               src={logoSrc}
+               alt=""
+               decoding="async"
+               className={customLogoImgClassName}
+               onError={() => setLogoFailed(true)}
+            />
+         ) : null}
+         {showTitle ? (
+            <span className={brandTitleClassName} title={brand}>
+               {brand}
+            </span>
+         ) : null}
+      </>
+   )
 
    return (
       <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -85,65 +137,26 @@ export function Navigation() {
                      href={externalLink}
                      target="_blank"
                      rel="noreferrer"
-                     className="flex min-w-0 shrink items-center gap-2 sm:gap-3"
+                     className={brandShellClassName}
+                     aria-label={showLogo ? brand : undefined}
                   >
-                     {logoFailed ? (
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary sm:h-10 sm:w-10">
-                           <Dna className="h-4 w-4 text-primary-foreground sm:h-5 sm:w-5" />
-                        </div>
-                     ) : (
-                        <span className="box-border inline-flex shrink-0 items-center py-1.5 pl-0 pr-1 sm:py-2 sm:px-1.5">
-                           <img
-                              src={logoSrc}
-                              alt={brand}
-                              decoding="async"
-                              className="max-h-9 w-auto max-w-[min(12rem,38vw)] object-contain object-left sm:max-h-12 sm:max-w-[min(20rem,55vw)] md:max-w-[min(20rem,70vw)]"
-                              onError={() => setLogoFailed(true)}
-                           />
-                        </span>
-                     )}
-                     {logoFailed ? (
-                        <span
-                           className="min-w-0 truncate text-base font-semibold tracking-tight sm:text-lg max-md:max-w-[min(9.5rem,34vw)] md:max-w-[min(18rem,28vw)] lg:max-w-md xl:max-w-xl 2xl:max-w-none"
-                           title={brand}
-                        >
-                           {brand}
-                        </span>
-                     ) : null}
+                     {brandInner}
                   </a>
                ) : (
-                  <Link href="/" className="flex min-w-0 shrink items-center gap-2 sm:gap-3">
-                     {logoFailed ? (
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary sm:h-10 sm:w-10">
-                           <Dna className="h-4 w-4 text-primary-foreground sm:h-5 sm:w-5" />
-                        </div>
-                     ) : (
-                        <span className="box-border inline-flex shrink-0 items-center py-1.5 pl-0 pr-1 sm:py-2 sm:px-1.5">
-                           <img
-                              src={logoSrc}
-                              alt={brand}
-                              decoding="async"
-                              className="max-h-9 w-auto max-w-[min(12rem,38vw)] object-contain object-left sm:max-h-12 sm:max-w-[min(20rem,55vw)] md:max-w-[min(20rem,70vw)]"
-                              onError={() => setLogoFailed(true)}
-                           />
-                        </span>
-                     )}
-                     {logoFailed ? (
-                        <span
-                           className="min-w-0 truncate text-base font-semibold tracking-tight sm:text-lg max-md:max-w-[min(9.5rem,34vw)] md:max-w-[min(18rem,28vw)] lg:max-w-md xl:max-w-xl 2xl:max-w-none"
-                           title={brand}
-                        >
-                           {brand}
-                        </span>
-                     ) : null}
+                  <Link
+                     href="/"
+                     className={brandShellClassName}
+                     aria-label={showLogo ? brand : undefined}
+                  >
+                     {brandInner}
                   </Link>
                )}
 
-               <div className="hidden shrink-0 items-center gap-2 md:flex">
+               <div className="hidden min-w-0 shrink-0 items-center gap-2 md:flex">
                   <nav className="flex flex-wrap items-center gap-1">
                      {navItems.map((item) => {
                         const Icon = item.icon
-                        const isActive = pathname === item.href
+                        const isActive = navItemIsActive(item, pathname)
                         return (
                            <Link key={item.href} href={item.href} className={linkClass(isActive)}>
                               <Icon className="h-4 w-4 shrink-0" />
@@ -174,7 +187,7 @@ export function Navigation() {
                      <DropdownMenuContent align="end" className="w-56" sideOffset={8}>
                         {navItems.map((item) => {
                            const Icon = item.icon
-                           const isActive = pathname === item.href
+                           const isActive = navItemIsActive(item, pathname)
                            return (
                               <DropdownMenuItem key={item.href} asChild>
                                  <Link

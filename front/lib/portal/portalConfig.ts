@@ -1,5 +1,6 @@
 import type {
    AppConfig,
+   CatalogCardFieldDef,
    ConfigFilter,
    ConfigModel,
    ConfigModelWire,
@@ -18,7 +19,7 @@ import {
    defaultLocalSamplesCatalogWire,
    defaultOrganismCatalogWire,
    INSDC_CODE_ONLY_CATALOG_MODEL_KEYS,
-} from './catalogModelsDefaults'
+} from '@/lib/catalog-models'
 import { dataModels } from './types'
 
 export const DEFAULT_VUESTIC_UI_BASE: Record<string, unknown> = {
@@ -100,14 +101,9 @@ export async function fetchPortalConfig(): Promise<PortalConfig> {
 }
 
 function defaultChartSize(type: string): number {
-   return type === 'dateline' ? 4 : 2
+   if (type === 'dateline' || type === 'scatter') return 4
+   return 2
 }
-
-const INSDC_ORGANISM_FILTERS: ConfigFilter[] = [{ key: 'insdc_status', type: 'select' }]
-const INSDC_ORGANISM_STATUS_COLUMNS = ['insdc_status'] as const
-const INSDC_ORGANISM_CHARTS_WIRE: NonNullable<ConfigModelWire['charts']> = [
-   { field: 'insdc_status', type: 'pie', size: 2 },
-]
 
 const GOAT_ORGANISM_FILTERS: ConfigFilter[] = [
    { key: 'goat_status', type: 'select' },
@@ -124,32 +120,17 @@ function ensureTaxonColumns(columns: string[] | undefined): string[] {
    return ['scientific_name', 'taxid', ...rest]
 }
 
-function injectInsdcOrganismModel(raw: ConfigModelWire): ConfigModelWire {
-   const filters = [...(raw.filters ?? [])]
-   const filterKeys = new Set(filters.map((f) => f.key))
-   for (const f of INSDC_ORGANISM_FILTERS) {
-      if (!filterKeys.has(f.key)) {
-         filters.push(f)
-         filterKeys.add(f.key)
-      }
-   }
-   const columns = [...(raw.columns ?? [])]
-   const colSet = new Set(columns)
-   for (const k of INSDC_ORGANISM_STATUS_COLUMNS) {
-      if (!colSet.has(k)) {
-         columns.push(k)
-         colSet.add(k)
-      }
-   }
-   const charts = [...(raw.charts ?? [])]
-   const chartFields = new Set(charts.map((c) => c.field))
-   for (const ch of INSDC_ORGANISM_CHARTS_WIRE) {
-      if (!chartFields.has(ch.field)) {
-         charts.push({ ...ch })
-         chartFields.add(ch.field)
-      }
-   }
-   return { ...raw, filters, columns, charts }
+/** Prepends taxon fields for TSV/export field lists (same ordering as `ensureTaxonColumns`). */
+function ensureTaxonExportFields(fields: string[] | undefined): string[] {
+   const rest = (fields ?? []).filter((c) => c !== 'scientific_name' && c !== 'taxid')
+   return ['scientific_name', 'taxid', ...rest]
+}
+
+/** Migration: derive minimal card field defs from legacy `columns` (body only; header uses taxon + id). */
+function cardFieldsShimFromColumns(columns: string[]): CatalogCardFieldDef[] {
+   return columns
+      .filter((c) => c !== 'scientific_name' && c !== 'taxid')
+      .map((key) => ({ key }))
 }
 
 function injectGoatOrganismModel(raw: ConfigModelWire): ConfigModelWire {
@@ -163,10 +144,16 @@ function injectGoatOrganismModel(raw: ConfigModelWire): ConfigModelWire {
    }
    const columns = [...(raw.columns ?? [])]
    const colSet = new Set(columns)
+   const exportFields = [...(raw.exportFields ?? raw.columns ?? [])]
+   const exportSet = new Set(exportFields)
    for (const k of GOAT_ORGANISM_STATUS_COLUMNS) {
       if (!colSet.has(k)) {
          columns.push(k)
          colSet.add(k)
+      }
+      if (!exportSet.has(k)) {
+         exportFields.push(k)
+         exportSet.add(k)
       }
    }
    const charts = [...(raw.charts ?? [])]
@@ -177,12 +164,11 @@ function injectGoatOrganismModel(raw: ConfigModelWire): ConfigModelWire {
          chartFields.add(ch.field)
       }
    }
-   return { ...raw, filters, columns, charts }
+   return { ...raw, filters, columns, exportFields, charts }
 }
 
 export type NormalizeModelsOptions = {
    goatEnabled?: boolean
-   insdcStatus?: boolean
 }
 
 function isStringArray(value: unknown): value is string[] {
@@ -221,6 +207,9 @@ function resolveChartsFromPortal(
       type: c.type ?? 'bar',
       size: c.size ?? defaultChartSize(c.type ?? 'bar'),
       ...(c.model !== undefined ? { model: c.model } : {}),
+      ...(c.xField !== undefined ? { xField: c.xField } : {}),
+      ...(c.yField !== undefined ? { yField: c.yField } : {}),
+      ...(c.colorField !== undefined ? { colorField: c.colorField } : {}),
    }))
 }
 
@@ -229,6 +218,20 @@ function mergeOverridableCatalogModel(base: ConfigModelWire, portal: PortalCatal
    const filters = resolveFiltersFromPortal(portal.filters, base.filters ?? [])
    const charts = resolveChartsFromPortal(portal.charts, base.charts ?? [])
    const columns = portal.columns !== undefined ? [...portal.columns] : [...(base.columns ?? [])]
+   const cardFields =
+      portal.cardFields !== undefined ? [...portal.cardFields] : base.cardFields !== undefined ? [...base.cardFields] : undefined
+   const sortableFields =
+      portal.sortableFields !== undefined
+         ? [...portal.sortableFields]
+         : base.sortableFields !== undefined
+           ? [...base.sortableFields]
+           : undefined
+   const exportFields =
+      portal.exportFields !== undefined
+         ? [...portal.exportFields]
+         : base.exportFields !== undefined
+           ? [...base.exportFields]
+           : undefined
    return {
       ...base,
       label: portal.label ?? portal.title ?? base.label,
@@ -237,6 +240,9 @@ function mergeOverridableCatalogModel(base: ConfigModelWire, portal: PortalCatal
       ...(portal.icon !== undefined ? { icon: portal.icon } : {}),
       filters,
       columns,
+      ...(cardFields !== undefined ? { cardFields } : {}),
+      ...(sortableFields !== undefined ? { sortableFields } : {}),
+      ...(exportFields !== undefined ? { exportFields } : {}),
       charts,
    }
 }
@@ -245,19 +251,19 @@ export function normalizeModelsForApp(
    models: PortalModelsWire | undefined,
    options: NormalizeModelsOptions = {},
 ): Partial<Record<DataModels, ConfigModel>> {
-   const { goatEnabled = false, insdcStatus = false } = options
+   const { goatEnabled = false } = options
    const imported = models ?? {}
 
    const mergedWire: Partial<Record<DataModels, ConfigModelWire>> = {}
    for (const key of INSDC_CODE_ONLY_CATALOG_MODEL_KEYS) {
       mergedWire[key] = { ...defaultInsdcCatalogModels[key] }
    }
-   mergedWire.annotations = { ...defaultInsdcCatalogModels.annotations }
+   mergedWire.annotations = mergeOverridableCatalogModel(
+      defaultInsdcCatalogModels.annotations,
+      imported.annotations,
+   )
 
    let organismsWire: ConfigModelWire = { ...defaultOrganismCatalogWire }
-   if (insdcStatus) {
-      organismsWire = injectInsdcOrganismModel(organismsWire)
-   }
    if (goatEnabled) {
       organismsWire = injectGoatOrganismModel(organismsWire)
    }
@@ -273,9 +279,6 @@ export function normalizeModelsForApp(
       let raw = mergedWire[key]
       if (!raw) continue
       if (key === 'organisms') {
-         if (insdcStatus) {
-            raw = injectInsdcOrganismModel(raw)
-         }
          if (goatEnabled) {
             raw = injectGoatOrganismModel(raw)
          }
@@ -285,12 +288,27 @@ export function normalizeModelsForApp(
          field: c.field,
          type: c.type,
          size: c.size ?? defaultChartSize(c.type),
+         ...(c.xField !== undefined ? { xField: c.xField } : {}),
+         ...(c.yField !== undefined ? { yField: c.yField } : {}),
+         ...(c.colorField !== undefined ? { colorField: c.colorField } : {}),
       }))
+      const cardFieldsResolved: CatalogCardFieldDef[] | undefined =
+         raw.cardFields?.length
+            ? raw.cardFields
+            : raw.columns?.length
+              ? cardFieldsShimFromColumns(raw.columns)
+              : undefined
+      const exportSource =
+         raw.exportFields?.length ? raw.exportFields : raw.columns?.length ? raw.columns : undefined
+      const exportFieldsResolved = exportSource?.length ? ensureTaxonExportFields(exportSource) : undefined
       out[key] = {
          label,
          description: raw.description,
          filters: raw.filters,
-         columns: ensureTaxonColumns(raw.columns),
+         ...(raw.columns?.length ? { columns: ensureTaxonColumns(raw.columns) } : {}),
+         ...(cardFieldsResolved !== undefined ? { cardFields: cardFieldsResolved } : {}),
+         ...(raw.sortableFields?.length ? { sortableFields: raw.sortableFields } : {}),
+         ...(exportFieldsResolved !== undefined ? { exportFields: exportFieldsResolved } : {}),
          charts,
          ...(raw.icon !== undefined ? { icon: raw.icon } : {}),
       }
@@ -451,7 +469,6 @@ export function normalizePortalConfig(
    const footerRaw = migrateEsCtKeysToCat(raw.footer ?? {}) as PortalFooterWire
    const footer = normalizeFooterWire(footerRaw)
    const goatEnabled = general.goat === true
-   const insdcStatus = general.insdcStatus === true
    return {
       general: {
          ...general,
@@ -461,7 +478,6 @@ export function normalizePortalConfig(
       ui: normalizeColors(uiRaw),
       models: normalizeModelsForApp(models ?? {}, {
          goatEnabled,
-         insdcStatus,
       }),
       organismFormSteps: resolveOrganismFormSteps(raw),
       ...(footer ? { footer } : {}),

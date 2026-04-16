@@ -25,9 +25,22 @@ function computeCompletion(
    vernacularNames: OrganismCommonName[],
    metadataList: { key: string; value: string }[],
    images: OrganismImageRow[],
+   opts?: {
+      isEditMode: boolean
+      /** Selected taxid already exists in portal (create flow) */
+      createOrganismTaxonConflict: boolean
+      /** Existence check still in flight after picking a taxon (create flow) */
+      taxonExistenceCheckPending?: boolean
+   },
 ): StepCompletionState {
    switch (id) {
       case 'selectOrganism':
+         if (
+            !opts?.isEditMode &&
+            (opts?.createOrganismTaxonConflict || opts?.taxonExistenceCheckPending)
+         ) {
+            return { complete: false, partial: false }
+         }
          return { complete: Boolean(form.taxid), partial: false }
       case 'goatStatus':
          return { complete: Boolean(form.goat_status || form.target_list_status), partial: false }
@@ -75,6 +88,8 @@ export function useOrganismFormStepper({
    vernacularNames,
    metadataList,
    images,
+   createOrganismTaxonConflict = false,
+   taxonExistenceCheckPending = false,
 }: {
    steps: OrganismFormStepDef[]
    isEditMode: boolean
@@ -84,6 +99,10 @@ export function useOrganismFormStepper({
    vernacularNames: OrganismCommonName[]
    metadataList: { key: string; value: string }[]
    images: OrganismImageRow[]
+   /** Create flow only: true when the selected taxid already exists in the portal */
+   createOrganismTaxonConflict?: boolean
+   /** Create flow: true while POST existence check is in flight after selecting a taxon */
+   taxonExistenceCheckPending?: boolean
 }) {
    const [activeIndex, setActiveIndex] = useState(0)
 
@@ -96,10 +115,29 @@ export function useOrganismFormStepper({
       })
    }, [steps, isEditMode, hasGoat])
 
+   const completionOpts = useMemo(
+      () => ({ isEditMode, createOrganismTaxonConflict, taxonExistenceCheckPending }),
+      [isEditMode, createOrganismTaxonConflict, taxonExistenceCheckPending],
+   )
+
    const runtimeSteps = useMemo((): RuntimeStep[] => {
       let blockedFromHere = false
       return visibleSteps.map((step, index) => {
-         let completion = computeCompletion(step.id, form, publications, vernacularNames, metadataList, images)
+         let completion = computeCompletion(
+            step.id,
+            form,
+            publications,
+            vernacularNames,
+            metadataList,
+            images,
+            completionOpts,
+         )
+         if (step.id === 'goatStatus' && step.required) {
+            completion = {
+               complete: Boolean(form.goat_status?.trim()) && Boolean(form.target_list_status),
+               partial: false,
+            }
+         }
          if (step.id === 'images' && step.required) {
             completion = {
                complete: images.some((img) => Boolean(img.url?.trim())),
@@ -112,7 +150,7 @@ export function useOrganismFormStepper({
          }
          return { ...step, index, completion, blocked }
       })
-   }, [visibleSteps, form, publications, vernacularNames, metadataList, images])
+   }, [visibleSteps, form, publications, vernacularNames, metadataList, images, completionOpts])
 
    const activeStep = runtimeSteps[activeIndex] ?? runtimeSteps[0]
 

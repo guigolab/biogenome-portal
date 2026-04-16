@@ -26,13 +26,27 @@ export type CatalogMetadataPanelProps = {
    model: InsdcCatalogMetadataModel
    metadata: unknown
    className?: string
+   /** Omit top-level metadata sections by id (e.g. assembly raw blobs shown elsewhere). */
+   omitSectionIds?: ReadonlySet<string> | readonly string[]
 }
 
 /**
  * Renders catalog `metadata` using shared layout rules (assembly / read / annotation / biosample).
  */
-export function CatalogMetadataPanel({ model, metadata, className }: CatalogMetadataPanelProps) {
+export function CatalogMetadataPanel({
+   model,
+   metadata,
+   className,
+   omitSectionIds,
+}: CatalogMetadataPanelProps) {
    if (metadata === null || metadata === undefined) return null
+
+   const omit =
+      omitSectionIds == null
+         ? null
+         : omitSectionIds instanceof Set
+           ? omitSectionIds
+           : new Set(omitSectionIds)
 
    const mapped = mapCatalogMetadata(model, metadata)
 
@@ -93,7 +107,10 @@ export function CatalogMetadataPanel({ model, metadata, className }: CatalogMeta
       )
    }
 
-   const { sections } = mapped
+   let { sections } = mapped
+   if (omit?.size) {
+      sections = sections.filter((s) => !omit.has(s.id))
+   }
    if (sections.length === 0) return null
 
    return (

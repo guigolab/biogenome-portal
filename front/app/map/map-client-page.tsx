@@ -2,11 +2,10 @@
 
 import { useSearchParams } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Download, Loader2, MapPin, Search, VectorSquare } from 'lucide-react'
+import { Loader2, MapPin, Search, VectorSquare } from 'lucide-react'
 
 import { MapView } from '@/components/map-view'
 import { SpeciesCard } from '@/components/species-card'
-import { SpeciesExportSheet } from '@/components/species-export-sheet'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -18,6 +17,8 @@ import {
 } from '@/lib/api/coordinates'
 import { fetchOrganisms } from '@/lib/api/organisms'
 import { useLocale } from '@/contexts/locale-context'
+import { usePortalConfig } from '@/contexts/portal-context'
+import { showGoatStatusPage } from '@/lib/portal'
 
 const PAGE_SIZE = 21
 
@@ -111,6 +112,8 @@ function frequencyMapPointForOrganism(
 
 export default function MapClientPage() {
    const { t } = useLocale()
+   const { config: portalConfig } = usePortalConfig()
+   const goatEnabled = showGoatStatusPage(portalConfig)
    const searchParams = useSearchParams()
    const taxidFromUrl = searchParams.get('taxid')?.trim() || ''
 
@@ -189,20 +192,6 @@ export default function MapClientPage() {
       },
       [taxidFromUrl, listQueryPolygon, debouncedSearch, statusFilter],
    )
-
-   /** Same filters as the species list + map scope (polygon / sample locations); no pagination — for TSV export sheet. */
-   const organismExportParams = useMemo((): Record<string, string | number> => {
-      const q: Record<string, string | number> = {
-         sort_column: 'scientific_name',
-         sort_order: 'asc',
-      }
-      if (taxidFromUrl) q.taxon_lineage = taxidFromUrl
-      if (listQueryPolygon) q.polygon = JSON.stringify(listQueryPolygon)
-      else q.has_sample_locations = 'true'
-      if (debouncedSearch) q.filter = debouncedSearch
-      if (statusFilter !== 'all') q.iucn_redlist__category = statusFilter
-      return q
-   }, [taxidFromUrl, listQueryPolygon, debouncedSearch, statusFilter])
 
    /** Same catalog + sample filters as the organism list, for POST /coordinates/frequency. */
    const buildOrganismFrequencyBody = useCallback((): PostLocationsFrequencyBody => {
@@ -525,7 +514,13 @@ export default function MapClientPage() {
                                        }}
                                        onMouseLeave={() => setListHoverMapPoint(null)}
                                     >
-                                       <SpeciesCard organism={row} compact compactVariant="comfortable" />
+                                       <SpeciesCard
+                                          organism={row}
+                                          compact
+                                          lineageMode="summary"
+                                          compactVariant="comfortable"
+                                          showGoatChips={goatEnabled}
+                                       />
                                     </div>
                                  )
                               })}
@@ -549,35 +544,18 @@ export default function MapClientPage() {
                      )}
                   </div>
 
-                  <div className="border-border bg-card shrink-0 space-y-1 border-t px-4 py-3">
-                     <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-9 w-full gap-2"
-                        disabled={listLoading}
-                        onClick={() => setExportSheetOpen(true)}
-                     >
-                        <Download className="h-4 w-4" />
-                        {t('common.exportTsv')}
-                     </Button>
-                     {items.length > 0 && total > 0 ? (
+                  {items.length > 0 && total > 0 ? (
+                     <div className="border-border bg-card shrink-0 border-t px-4 py-3">
                         <p className="text-muted-foreground text-center text-[10px]">
                            {t('common.showing')} {items.length.toLocaleString()} {t('common.of')}{' '}
                            {total.toLocaleString()}
                            {items.length < total ? ` · ${t('common.scrollToLoadMore')}` : null}
                         </p>
-                     ) : null}
-                  </div>
+                     </div>
+                  ) : null}
                </div>
             </aside>
          </div>
-
-         <SpeciesExportSheet
-            open={exportSheetOpen}
-            onOpenChange={setExportSheetOpen}
-            exportParams={organismExportParams}
-            totalCount={total}
-         />
       </div>
    )
 }

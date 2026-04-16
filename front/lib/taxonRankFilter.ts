@@ -20,6 +20,23 @@ export const SPECIES_RANK_GROUPS: RankGroupDef[] = [
 ]
 
 /**
+ * Species taxonomy sidebar Select: this value means browse the full portal tree
+ * (GET /taxons/root), not a taxonomic rank list.
+ */
+export const TAXONOMY_EXPLORER_TREE_MODE_ID = 'catalog_tree' as const
+
+/** Map API / taxon ``rank`` string to a species explorer rank group id, or null if unknown. */
+export function rankGroupIdFromApiRank(rank: string | undefined): string | null {
+   if (!rank) return null
+   const r = rank.trim().toLowerCase()
+   for (const g of SPECIES_RANK_GROUPS) {
+      if (g.apiRankParam.value.toLowerCase() === r) return g.id
+   }
+   if (r === 'superkingdom') return 'domain_kingdom'
+   return null
+}
+
+/**
  * Rank toggle chrome: rotate portal `primary` / `secondary` / `accent`, with a second
  * “soft” intensity (lighter border/background) so six ranks stay distinct without fixed hues.
  */
@@ -68,37 +85,6 @@ export const RANK_GROUP_TOGGLE_STYLES: Record<
       inactive:
          'border-accent/30 bg-accent/[0.04] text-foreground/95 hover:bg-accent/[0.08] dark:border-accent/25',
       badge: 'bg-accent/15 text-accent',
-   },
-}
-
-/**
- * Plain text colors for lineage on species cards (no chip chrome).
- * ``label`` = rank name; ``name`` = scientific name at that rank.
- */
-export const RANK_GROUP_LINEAGE_TEXT: Record<string, { label: string; name: string }> = {
-   domain_kingdom: {
-      label: 'text-primary/70',
-      name: 'text-primary',
-   },
-   phylum: {
-      label: 'text-secondary/70',
-      name: 'text-secondary',
-   },
-   class: {
-      label: 'text-accent/70',
-      name: 'text-accent',
-   },
-   order: {
-      label: 'text-primary/60',
-      name: 'text-primary/90',
-   },
-   family: {
-      label: 'text-secondary/60',
-      name: 'text-secondary/90',
-   },
-   genus: {
-      label: 'text-accent/60',
-      name: 'text-accent/90',
    },
 }
 

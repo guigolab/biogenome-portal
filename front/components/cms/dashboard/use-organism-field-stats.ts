@@ -8,19 +8,30 @@ const NO_ENTRY = 'No Entry'
 
 export type OrganismFieldStats = {
    goat_status: Record<string, number>
-   insdc_status: Record<string, number>
    target_list_status: Record<string, number>
 }
 
-export function useOrganismFieldStats() {
+type UseOrganismFieldStatsOptions = {
+   /** When false, skips fetch (e.g. GoaT disabled for portal). */
+   enabled?: boolean
+}
+
+export function useOrganismFieldStats(options?: UseOrganismFieldStatsOptions) {
+   const enabled = options?.enabled !== false
    const [data, setData] = useState<OrganismFieldStats | null>(null)
    const [loading, setLoading] = useState(true)
 
    useEffect(() => {
+      if (!enabled) {
+         setData(null)
+         setLoading(false)
+         return
+      }
       let cancelled = false
       ;(async () => {
+         setLoading(true)
          try {
-            const fields = ['goat_status', 'insdc_status', 'target_list_status'] as const
+            const fields = ['goat_status', 'target_list_status'] as const
             const results = await Promise.all(
                fields.map(async (field) => {
                   const res = await cmsGetModelFieldStats('organisms', field, {})
@@ -30,8 +41,7 @@ export function useOrganismFieldStats() {
             if (!cancelled) {
                setData({
                   goat_status: results[0],
-                  insdc_status: results[1],
-                  target_list_status: results[2],
+                  target_list_status: results[1],
                })
             }
          } catch {
@@ -43,7 +53,7 @@ export function useOrganismFieldStats() {
       return () => {
          cancelled = true
       }
-   }, [])
+   }, [enabled])
 
    return { data, loading }
 }

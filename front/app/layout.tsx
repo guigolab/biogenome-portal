@@ -1,26 +1,35 @@
 import type { Metadata } from 'next'
 import type { CSSProperties } from 'react'
-import { Geist, Geist_Mono } from 'next/font/google'
-import { Analytics } from '@vercel/analytics/next'
+import { Geist } from 'next/font/google'
 
 import { AppChrome } from '@/components/app-chrome'
+import { MatomoTracker } from '@/components/matomo-tracker'
 import { Providers } from '@/components/providers'
 import { applyPortalGeneralRuntime } from '@/lib/portal/apiRuntime'
+import { metadataFaviconIcon } from '@/lib/portal/footerLogoPublicUrl'
 import { normalizePortalConfig, normalizeUiColors } from '@/lib/portal'
+import { portalSiteDescription, portalSiteTitle } from '@/lib/portal/portalDocumentMetadata'
 import { loadPortalConfigFromDisk } from '@/lib/portal/portalServer'
 import { portalThemeStyleProps } from '@/lib/portal/themeApply'
 
 import './globals.css'
 
 const geist = Geist({ subsets: ['latin'] })
-const geistMono = Geist_Mono({ subsets: ['latin'] })
 
-export const metadata: Metadata = {
-   title: 'BioGenome Portal',
-   description: 'Explore biodiversity through genomics',
-   icons: {
-      icon: [{ url: '/icon.svg', type: 'image/svg+xml' }],
-   },
+export async function generateMetadata(): Promise<Metadata> {
+   const portal = await loadPortalConfigFromDisk()
+   const siteTitle = portalSiteTitle(portal)
+   const siteDescription = portalSiteDescription(portal)
+   const favicon = metadataFaviconIcon(portal?.footer?.logoUrl)
+
+   return {
+      title: {
+         default: siteTitle,
+         template: `%s · ${siteTitle}`,
+      },
+      description: siteDescription ?? 'Explore biodiversity through genomics',
+      icons: { icon: [favicon] },
+   }
 }
 
 export default async function RootLayout({
@@ -43,11 +52,11 @@ export default async function RootLayout({
 
    return (
       <html lang="en" suppressHydrationWarning style={htmlThemeStyle}>
-         <body className={`${geist.className} ${geistMono.variable} font-sans antialiased`}>
-            <Providers>
+         <body className={`${geist.className} font-sans antialiased`}>
+            <Providers initialPortal={portal ?? undefined}>
                <AppChrome>{children}</AppChrome>
             </Providers>
-            <Analytics />
+            <MatomoTracker />
          </body>
       </html>
    )

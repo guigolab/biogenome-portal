@@ -1,8 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { FlaskConical, LayoutGrid, Plus, Trash2, Upload, Users } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { FlaskConical, LayoutGrid, Plus, Trash2, User, Users } from 'lucide-react'
 
 import { AdminDashboardStats } from '@/components/cms/dashboard/admin-dashboard-stats'
 import { DeleteRequestsModule } from '@/components/cms/dashboard/delete-requests-module'
@@ -11,19 +10,8 @@ import { SpeciesOverviewModule } from '@/components/cms/dashboard/species-overvi
 import { SubmittedBiosamplesModule } from '@/components/cms/dashboard/submitted-biosamples-module'
 import { UsersModule } from '@/components/cms/dashboard/users-module'
 import { Button } from '@/components/ui/button'
-import {
-   DropdownMenu,
-   DropdownMenuContent,
-   DropdownMenuItem,
-   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { usePortalConfig } from '@/contexts/portal-context'
-import { fetchTaxon, getRootTaxid } from '@/lib/api/taxon'
-import { cmsGetUserRelatedData } from '@/lib/cms/services/auth'
-import type { DataModels } from '@/lib/portal/types'
-import type { PortalStatRow } from '@/lib/portal/taxonNodeStats'
-import { taxonNodeToPortalStats } from '@/lib/portal/taxonNodeStats'
 import { useCmsAuthStore } from '@/stores/cms-auth-store'
 import { useCmsDrawerStore } from '@/stores/cms-drawer-store'
 
@@ -33,47 +21,11 @@ const DASHBOARD_TAB_PANEL_CLASS = 'mt-0 min-h-[min(72vh,52rem)] outline-none'
 export function AdminDashboardClient() {
    const { config } = usePortalConfig()
    const userRole = useCmsAuthStore((s) => s.userRole)
-   const userName = useCmsAuthStore((s) => s.userName)
    const isAdmin = userRole === 'Admin'
    const openDrawer = useCmsDrawerStore((s) => s.open)
 
    const general = config?.general as Record<string, unknown> | undefined
    const enaTemplate = Boolean(general?.enaTemplate)
-   const hasGoat = Boolean(general?.goat)
-
-   const [rawStats, setRawStats] = useState<PortalStatRow[]>([])
-   const [statsLoading, setStatsLoading] = useState(true)
-
-   useEffect(() => {
-      let cancelled = false
-      ;(async () => {
-         setStatsLoading(true)
-         try {
-            if (isAdmin) {
-               const node = await fetchTaxon(getRootTaxid())
-               if (!cancelled) setRawStats(taxonNodeToPortalStats(node))
-            } else if (userName) {
-               const data = await cmsGetUserRelatedData(userName)
-               if (!cancelled) {
-                  setRawStats(
-                     Object.entries(data)
-                        .filter(([, v]) => Boolean(v))
-                        .map(([k, v]) => ({ key: k as DataModels, count: Number(v) })),
-                  )
-               }
-            } else if (!cancelled) {
-               setRawStats([])
-            }
-         } catch {
-            if (!cancelled) setRawStats([])
-         } finally {
-            if (!cancelled) setStatsLoading(false)
-         }
-      })()
-      return () => {
-         cancelled = true
-      }
-   }, [isAdmin, userName])
 
    const title = isAdmin ? 'Dashboard' : 'My data'
    const description = isAdmin
@@ -101,53 +53,21 @@ export function AdminDashboardClient() {
                   </Link>
                </Button>
                {isAdmin ? (
-                  <>
-                     <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                           <Button size="sm" variant="outline" className="gap-2">
-                              <Upload className="h-4 w-4" />
-                              Import
-                           </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-52">
-                           <DropdownMenuItem className="gap-2" onSelect={() => openDrawer({ panel: 'insdc' })}>
-                              Import from INSDC
-                           </DropdownMenuItem>
-                           {hasGoat ? (
-                              <DropdownMenuItem className="gap-2" onSelect={() => openDrawer({ panel: 'goat' })}>
-                                 Import GoaT report
-                              </DropdownMenuItem>
-                           ) : null}
-                           <DropdownMenuItem className="gap-2" onSelect={() => openDrawer({ panel: 'spreadsheet' })}>
-                              Import spreadsheet
-                           </DropdownMenuItem>
-                        </DropdownMenuContent>
-                     </DropdownMenu>
-                     <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                           <Button size="sm" variant="outline" className="gap-2">
-                              <Plus className="h-4 w-4" />
-                              Create
-                           </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-52">
-                           <DropdownMenuItem className="gap-2" onSelect={() => openDrawer({ panel: 'annotation' })}>
-                              Annotation
-                           </DropdownMenuItem>
-                           <DropdownMenuItem className="gap-2" onSelect={() => openDrawer({ panel: 'user' })}>
-                              User
-                           </DropdownMenuItem>
-                        </DropdownMenuContent>
-                     </DropdownMenu>
-                  </>
+                  <Button
+                     type="button"
+                     size="sm"
+                     variant="outline"
+                     className="gap-2"
+                     onClick={() => openDrawer({ panel: 'user' })}
+                  >
+                     <User className="h-4 w-4" />
+                     Create user
+                  </Button>
                ) : null}
             </div>
          </div>
 
-         {isAdmin && !statsLoading ? <AdminDashboardStats rawStats={rawStats} /> : null}
-         {isAdmin && statsLoading ? (
-            <div className="h-32 animate-pulse rounded-xl bg-muted/60" aria-hidden />
-         ) : null}
+         {isAdmin ? <AdminDashboardStats /> : null}
 
          {isAdmin ? (
             <Tabs defaultValue="species" className="gap-4">
@@ -158,7 +78,7 @@ export function AdminDashboardClient() {
                   </TabsTrigger>
                   <TabsTrigger value="biosamples" className="gap-1.5 rounded-lg px-3 py-2">
                      <FlaskConical className="h-4 w-4" />
-                     Biosamples
+                     Submitted biosamples
                   </TabsTrigger>
                   <TabsTrigger value="users" className="gap-1.5 rounded-lg px-3 py-2">
                      <Users className="h-4 w-4" />
@@ -189,10 +109,10 @@ export function AdminDashboardClient() {
                      Species
                   </TabsTrigger>
                   <TabsTrigger value="biosamples" className="gap-1.5 rounded-lg px-3 py-2">
-                     Biosamples
+                     Submitted biosamples
                   </TabsTrigger>
                   <TabsTrigger value="sankey" className="gap-1.5 rounded-lg px-3 py-2">
-                     Species ↔ biosamples
+                     Species ↔ submitted biosamples
                   </TabsTrigger>
                </TabsList>
                <TabsContent value="species" className={DASHBOARD_TAB_PANEL_CLASS}>

@@ -9,13 +9,13 @@ export function catalogModelKeysExcludingOrganisms(
    return dataModels.filter((k) => k !== 'organisms' && models[k] != null)
 }
 
-export function defaultSortColumn(columns: string[] | undefined): string {
-   if (!columns?.length) return 'taxid'
-   const c = columns[0]
+export function defaultSortColumn(sortableFields: string[] | undefined): string {
+   if (!sortableFields?.length) return 'taxid'
+   const c = sortableFields[0]
    return c && c.trim() ? c : 'taxid'
 }
 
-/** Preferred `sort_column` when present in the resolved column list (after `ensureTaxonColumns`). */
+/** Preferred `sort_column` when present in the resolved sortable field list. */
 const PREFERRED_SORT: Partial<Record<DataModels, string>> = {
    assemblies: 'accession',
    biosamples: 'accession',
@@ -24,10 +24,10 @@ const PREFERRED_SORT: Partial<Record<DataModels, string>> = {
    local_samples: 'local_id',
 }
 
-export function defaultSortColumnForCatalog(catalogKey: DataModels, columns: string[]): string {
+export function defaultSortColumnForCatalog(catalogKey: DataModels, sortableFields: string[]): string {
    const pref = PREFERRED_SORT[catalogKey]
-   if (pref && columns.includes(pref)) return pref
-   return defaultSortColumn(columns)
+   if (pref && sortableFields.includes(pref)) return pref
+   return defaultSortColumn(sortableFields)
 }
 
 /** Effective catalog model from local selected key + visible keys + portal models. */

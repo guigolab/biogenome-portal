@@ -6,10 +6,16 @@ import { AppThemeProvider } from '@/components/app-theme-provider'
 import { Toaster } from '@/components/ui/sonner'
 import { LocaleProviderWrapper } from '@/components/locale-provider-wrapper'
 import { PortalProvider } from '@/contexts/portal-context'
+import type { PortalConfig } from '@/lib/portal'
 
-export function Providers({ children }: { children: ReactNode }) {
+type ProvidersProps = {
+   children: ReactNode
+   initialPortal?: PortalConfig
+}
+
+export function Providers({ children, initialPortal }: ProvidersProps) {
    return (
-      <PortalProvider>
+      <PortalProvider initialPortal={initialPortal}>
          <AppThemeProvider>
             <LocaleProviderWrapper>
                {children}

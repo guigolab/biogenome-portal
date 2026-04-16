@@ -11,15 +11,10 @@ import { useLocale } from '@/contexts/locale-context'
 import { usePortalConfig } from '@/contexts/portal-context'
 import { splitTitleForHighlight } from '@/lib/i18n/titleHighlight'
 import { pickLocalized } from '@/lib/i18n/pickLocalized'
+import { footerLogoSrcWithBasePath } from '@/lib/portal/footerLogoPublicUrl'
 import { cn } from '@/lib/utils'
 import { modelLucideMap } from '@/lib/modelIcons'
-import {
-   navRouteIcons,
-   showGoatStatusPage,
-   showMap,
-   taxonNodeToPortalStats,
-   type DataModels,
-} from '@/lib/portal'
+import { navRouteIcons, showMap, taxonNodeToPortalStats, type DataModels } from '@/lib/portal'
 import { useRootTaxonStore } from '@/stores/root-taxon-store'
 
 /** Fixed hero strip: same labels as the legacy home page; counts from root taxon aggregates. */
@@ -30,8 +25,6 @@ const HERO_STRIP_STATS: { key: DataModels; labelKey: string }[] = [
    { key: 'annotations', labelKey: 'home.hero.stats.annotations' },
    { key: 'reads', labelKey: 'home.hero.stats.sequencingRuns' },
 ]
-
-const LOGO_PUBLIC_PATH = '/portal-logo.svg'
 
 type HomeStatRow = {
    key: DataModels
@@ -44,7 +37,7 @@ export function HomePage() {
    const { locale, t } = useLocale()
    const [stats, setStats] = useState<HomeStatRow[]>([])
    const [statsLoading, setStatsLoading] = useState(true)
-   const [navbarLogoFailed, setNavbarLogoFailed] = useState(false)
+   const [footerLogoFailed, setFooterLogoFailed] = useState(false)
 
    const rootTaxon = useRootTaxonStore((s) => s.rootTaxon)
    const rootStatus = useRootTaxonStore((s) => s.status)
@@ -99,17 +92,16 @@ export function HomePage() {
       const link = general?.externalLink?.trim()
       return link ? link : null
    }, [general?.externalLink])
-   const navbarLogoSrc = useMemo(() => {
-      const bp = (process.env.NEXT_PUBLIC_BASE_PATH ?? '').replace(/\/$/, '')
-      return bp ? `${bp}${LOGO_PUBLIC_PATH}` : LOGO_PUBLIC_PATH
-   }, [])
+
+   useEffect(() => {
+      setFooterLogoFailed(false)
+   }, [footer?.logoUrl])
+
    const footerLogoSrc = useMemo(() => {
-      if (!navbarLogoFailed) return navbarLogoSrc
       const path = footer?.logoUrl?.trim()
-      if (!path) return null
-      const bp = (process.env.NEXT_PUBLIC_BASE_PATH ?? '').replace(/\/$/, '')
-      return bp ? `${bp}${path.startsWith('/') ? path : `/${path}`}` : path
-   }, [footer?.logoUrl, navbarLogoFailed, navbarLogoSrc])
+      if (!path || footerLogoFailed) return null
+      return footerLogoSrcWithBasePath(path) || null
+   }, [footer?.logoUrl, footerLogoFailed])
    const heroAccentStyle = useMemo(() => {
       const colors = raw?.theme?.colors as Record<string, unknown> | undefined
       const primary = typeof colors?.primary === 'string' ? colors.primary : null
@@ -167,7 +159,6 @@ export function HomePage() {
    }, [locale, t, rootTaxon, rootStatus])
 
    const mapOn = config ? showMap(config) : true
-   const goatStatusOn = config ? showGoatStatusPage(config) : false
 
    const features = useMemo(() => {
       const items: Array<{
@@ -200,17 +191,8 @@ export function HomePage() {
          icon: navRouteIcons.species,
          color: 'bg-chart-3/10 text-chart-3',
       })
-      if (goatStatusOn) {
-         items.push({
-            href: '/status',
-            titleKey: 'home.statusFeature.title',
-            descKey: 'home.statusFeature.description',
-            icon: navRouteIcons.status,
-            color: 'bg-chart-4/10 text-chart-4',
-         })
-      }
       return items
-   }, [mapOn, goatStatusOn])
+   }, [mapOn])
 
    if (portalLoading || !config) {
       return (
@@ -397,7 +379,7 @@ export function HomePage() {
                            alt={title}
                            className="h-10 max-w-[min(16rem,70vw)] object-contain object-center opacity-90 sm:h-12"
                            decoding="async"
-                           onError={() => setNavbarLogoFailed(true)}
+                           onError={() => setFooterLogoFailed(true)}
                         />
                      </a>
                   ) : (
@@ -406,7 +388,7 @@ export function HomePage() {
                         alt={title}
                         className="h-10 max-w-[min(16rem,70vw)] object-contain object-center opacity-90 sm:h-12"
                         decoding="async"
-                        onError={() => setNavbarLogoFailed(true)}
+                        onError={() => setFooterLogoFailed(true)}
                      />
                   )
                ) : null}

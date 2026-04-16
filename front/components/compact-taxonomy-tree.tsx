@@ -3,12 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { Checkbox } from '@/components/ui/checkbox'
-import {
-   fetchTaxon,
-   fetchTaxonChildren,
-   type TaxonRecord,
-   taxonRecordFromApi,
-} from '@/lib/api/taxon'
+import { fetchTaxonChildren, type TaxonRecord, taxonRecordFromApi } from '@/lib/api/taxon'
+import { fetchRootTaxon } from '@/lib/api/taxons'
 import { cn } from '@/lib/utils'
 import { ChevronDown, ChevronRight, Loader2 } from 'lucide-react'
 
@@ -20,6 +16,15 @@ interface TreeNode {
 }
 
 export type CompactTaxonomicTreeProps = {
+   /**
+    * ``root``: load portal root from ``GET /taxons/root`` unless ``rankRoots`` is non-empty.
+    * ``rankList``: never load portal root; roots come only from ``rankRoots`` (lazy pages).
+    */
+   variant?: 'root' | 'rankList'
+   /**
+    * When ``rankRoots`` is not set, the tree root is always loaded from ``GET /taxons/root``
+    * (server ``ROOT_NODE``). ``rootTaxid`` is ignored in that mode.
+    */
    rootTaxid?: string
    rankRoots?: TaxonRecord[]
    selectedTaxons: TaxonRecord[]
@@ -30,10 +35,12 @@ export type CompactTaxonomicTreeProps = {
    loadingRankRoots?: boolean
    hasMoreRankRoots?: boolean
    onLoadMore?: () => void
+   /** When true, tree fills the parent flex box (parent should be `min-h-0 flex-1`); omit fixed `maxHeight`. */
+   fillContainer?: boolean
 }
 
 export function CompactTaxonomicTree({
-   rootTaxid = '2759',
+   variant = 'root',
    rankRoots,
    selectedTaxons,
    onTaxonToggle,
@@ -42,30 +49,42 @@ export function CompactTaxonomicTree({
    loadingRankRoots = false,
    hasMoreRankRoots = false,
    onLoadMore,
+   fillContainer = false,
 }: CompactTaxonomicTreeProps) {
    const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set())
    const [childrenData, setChildrenData] = useState<Map<string, TaxonRecord[]>>(new Map())
    const [fetchingNodes, setFetchingNodes] = useState<Set<string>>(new Set())
    const loadMoreObserverRef = useRef<HTMLDivElement>(null)
+   /** Scrollport for infinite rank list; must be IntersectionObserver `root` when not using viewport. */
+   const scrollContainerRef = useRef<HTMLDivElement>(null)
 
-   const useRankRoots = rankRoots && rankRoots.length > 0
+   const isRankListMode = variant === 'rankList'
+   const useRankRoots = Boolean(rankRoots && rankRoots.length > 0)
+   const skipPortalRootFetch = isRankListMode || useRankRoots
 
    const [rootNode, setRootNode] = useState<Record<string, unknown> | null>(null)
-   const [isLoadingRoot, setIsLoadingRoot] = useState(!useRankRoots)
+   const [resolvedRootTaxid, setResolvedRootTaxid] = useState<string>('')
+   const [isLoadingRoot, setIsLoadingRoot] = useState(!skipPortalRootFetch)
 
    useEffect(() => {
-      if (useRankRoots) {
+      if (skipPortalRootFetch) {
          setIsLoadingRoot(false)
          return
       }
       let cancelled = false
       setIsLoadingRoot(true)
-      void fetchTaxon(rootTaxid)
+      void fetchRootTaxon()
          .then((d) => {
-            if (!cancelled) setRootNode(d)
+            if (!cancelled) {
+               setRootNode(d)
+               setResolvedRootTaxid(String(d.taxid ?? ''))
+            }
          })
          .catch(() => {
-            if (!cancelled) setRootNode(null)
+            if (!cancelled) {
+               setRootNode(null)
+               setResolvedRootTaxid('')
+            }
          })
          .finally(() => {
             if (!cancelled) setIsLoadingRoot(false)
@@ -73,14 +92,14 @@ export function CompactTaxonomicTree({
       return () => {
          cancelled = true
       }
-   }, [rootTaxid, useRankRoots])
+   }, [skipPortalRootFetch])
 
    useEffect(() => {
-      if (useRankRoots) return
-      if (rootNode) {
-         setExpandedNodes((prev) => new Set([...prev, rootTaxid]))
+      if (skipPortalRootFetch) return
+      if (rootNode && resolvedRootTaxid) {
+         setExpandedNodes((prev) => new Set([...prev, resolvedRootTaxid]))
       }
-   }, [rootNode, rootTaxid, useRankRoots])
+   }, [rootNode, resolvedRootTaxid, skipPortalRootFetch])
 
    useEffect(() => {
       const idsToFetch = [...expandedNodes].filter((tid) => !childrenData.has(tid))
@@ -94,7 +113,7 @@ export function CompactTaxonomicTree({
                if (cancelled) return
                const children = rows
                   .map((r) => taxonRecordFromApi(r))
-                  .sort((a, b) => (b.annotations_count ?? 0) - (a.annotations_count ?? 0))
+                  .sort((a, b) => (b.organisms_count ?? 0) - (a.organisms_count ?? 0))
                setChildrenData((prev) => {
                   const next = new Map(prev)
                   next.set(tid, children)
@@ -152,11 +171,11 @@ export function CompactTaxonomicTree({
       if (useRankRoots && rankRoots) {
          return rankRoots.map((root) => buildTree(root.taxid, root, 0))
       }
-      if (rootNode) {
-         return [buildTree(rootTaxid, taxonRecordFromApi(rootNode), 0)]
+      if (rootNode && resolvedRootTaxid) {
+         return [buildTree(resolvedRootTaxid, taxonRecordFromApi(rootNode), 0)]
       }
       return []
-   }, [useRankRoots, rankRoots, rootNode, rootTaxid, buildTree])
+   }, [useRankRoots, rankRoots, rootNode, resolvedRootTaxid, buildTree])
 
    const flattenedNodes = useMemo(() => {
       if (trees.length === 0) return []
@@ -175,9 +194,12 @@ export function CompactTaxonomicTree({
       return nodes
    }, [trees])
 
-   useEffect(() => {
-      if (!hasMoreRankRoots || !onLoadMore || !useRankRoots) return
+   const rankListPaging = isRankListMode || useRankRoots
 
+   useEffect(() => {
+      if (!hasMoreRankRoots || !onLoadMore || !rankListPaging) return
+
+      const scrollRoot = fillContainer ? scrollContainerRef.current : null
       const observer = new IntersectionObserver(
          (entries) => {
             if (entries[0]?.isIntersecting && hasMoreRankRoots && !loadingRankRoots && onLoadMore) {
@@ -185,6 +207,7 @@ export function CompactTaxonomicTree({
             }
          },
          {
+            root: scrollRoot ?? undefined,
             rootMargin: '50px',
             threshold: 0.1,
          },
@@ -200,7 +223,7 @@ export function CompactTaxonomicTree({
             observer.unobserve(currentTarget)
          }
       }
-   }, [hasMoreRankRoots, loadingRankRoots, onLoadMore, useRankRoots])
+   }, [hasMoreRankRoots, loadingRankRoots, onLoadMore, rankListPaging, fillContainer])
 
    const handleExpand = useCallback((taxid: string, e: React.MouseEvent) => {
       e.stopPropagation()
@@ -222,7 +245,7 @@ export function CompactTaxonomicTree({
       [selectedTaxons],
    )
 
-   if (isLoadingRoot && !useRankRoots) {
+   if (!isRankListMode && isLoadingRoot && !useRankRoots) {
       return (
          <div className="flex items-center justify-center py-4">
             <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
@@ -231,15 +254,37 @@ export function CompactTaxonomicTree({
       )
    }
 
+   if (isRankListMode && loadingRankRoots && trees.length === 0) {
+      return (
+         <div className="flex items-center justify-center py-4">
+            <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-xs text-muted-foreground">Loading taxa…</span>
+         </div>
+      )
+   }
+
    if (trees.length === 0) {
       return (
-         <div className="py-4 text-center text-xs text-muted-foreground">No tree data available</div>
+         <div className="py-4 text-center text-xs text-muted-foreground">
+            {isRankListMode ? 'No taxa at this rank' : 'No tree data available'}
+         </div>
       )
    }
 
    return (
-      <div className="overflow-x-auto border" style={{ maxHeight }}>
-         <div className="overflow-y-auto" style={{ maxHeight }}>
+      <div
+         className={
+            fillContainer
+               ? 'flex h-full min-h-0 flex-col overflow-hidden'
+               : 'overflow-x-auto border'
+         }
+         style={fillContainer ? undefined : { maxHeight }}
+      >
+         <div
+            ref={fillContainer ? scrollContainerRef : undefined}
+            className={fillContainer ? 'min-h-0 flex-1 overflow-x-auto overflow-y-auto' : 'overflow-y-auto'}
+            style={fillContainer ? undefined : { maxHeight }}
+         >
             <div className="min-w-max space-y-0.5 p-1.5">
                {flattenedNodes.map((node) => {
                   const children = childrenData.get(node.taxid)
@@ -308,16 +353,19 @@ export function CompactTaxonomicTree({
                            {node.data.scientific_name || node.taxid}
                         </button>
 
-                        {node.data.annotations_count !== undefined && node.data.annotations_count > 0 ? (
-                           <span className="ml-1 shrink-0 font-mono text-[10px] text-muted-foreground">
-                              {node.data.annotations_count.toLocaleString()}
-                           </span>
-                        ) : null}
+                        <span
+                           className="ml-1 shrink-0 font-mono text-[10px] text-muted-foreground tabular-nums"
+                           title="Organisms in portal"
+                        >
+                           {node.data.organisms_count > 0
+                              ? node.data.organisms_count.toLocaleString()
+                              : '—'}
+                        </span>
                      </div>
                   )
                })}
 
-               {useRankRoots && hasMoreRankRoots ? (
+               {rankListPaging && hasMoreRankRoots ? (
                   <div ref={loadMoreObserverRef} className="flex items-center justify-center py-2">
                      {loadingRankRoots ? (
                         <>

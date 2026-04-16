@@ -4,13 +4,14 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { organismImageUrls } from '@/lib/organismImages'
 import { iucnRedListBadge } from '@/lib/iucnCategory'
+import { labelGoatStatus, TARGET_LIST_STATUS_LABELS } from '@/lib/organismStatusLabels'
 import {
    lineageRankPillsFromOrganism,
-   RANK_GROUP_LINEAGE_TEXT,
    SPECIES_RANK_GROUPS,
    type LineageRankPill,
 } from '@/lib/taxonRankFilter'
-import { Database, Dna, FlaskConical, Leaf, PlayCircle } from 'lucide-react'
+import { ModelIcon } from '@/lib/modelIcons'
+import { Leaf } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export interface SpeciesCardProps {
@@ -19,6 +20,15 @@ export interface SpeciesCardProps {
    compactVariant?: 'default' | 'comfortable'
    /** Grid: family/genus emphasis or truncated full lineage. Ignored when `compact`. */
    lineageMode?: 'full' | 'summary'
+   /** Hide compact lineage rank pills (e.g. taxonomy organism list). */
+   hideCompactLineage?: boolean
+   /** Show GoaT / target-list chips when portal `general.goat` is enabled. */
+   showGoatChips?: boolean
+   /**
+    * `'store'` — country chip visibility follows `useOrganismCountriesDisplayStore` (species list).
+    * `'off'` — never show country chips (default for map/taxonomy/etc.).
+    */
+   countryChipsSource?: 'off' | 'store'
 }
 
 function getTaxid(row: Record<string, unknown>): string {
@@ -108,7 +118,6 @@ function LineageRankText({
          title={lineageTitle}
       >
          {displayPills.map((p, i) => {
-            const colors = RANK_GROUP_LINEAGE_TEXT[p.styleKey] ?? RANK_GROUP_LINEAGE_TEXT.phylum
             const rankLabel = lineageRankGroupLabel(p.styleKey)
             return (
                <Fragment key={`${p.apiField}-${p.name}`}>
@@ -120,9 +129,7 @@ function LineageRankText({
                   <span
                      className={cn(
                         'break-words',
-                        mutedLineage ? 'font-normal' : 'font-medium',
-                        !mutedLineage && colors.name,
-                        mutedLineage && 'text-muted-foreground',
+                        mutedLineage ? 'font-normal text-muted-foreground' : 'font-medium text-foreground',
                      )}
                      title={`${rankLabel}: ${p.name}`}
                   >
@@ -145,11 +152,127 @@ function num(row: Record<string, unknown>, k: string): number {
    return 0
 }
 
+function normalizeGoatStatusValue(raw: unknown, fallback = 'No Entry'): string {
+   if (raw == null || raw === '') return fallback
+   return String(raw)
+}
+
+function OrganismGoatChips({ organism }: { organism: Record<string, unknown> }) {
+   const goatPrimary = normalizeGoatStatusValue(organism.goat_status)
+   const tlsRaw = organism.target_list_status
+   const recordedLabel = labelGoatStatus(goatPrimary)
+   const showGoat =
+      typeof organism.goat_status === 'string' &&
+      organism.goat_status.trim() &&
+      organism.goat_status !== 'No Entry'
+   const tlsCode =
+      typeof tlsRaw === 'string' && tlsRaw.trim() && tlsRaw !== 'No Entry' ? tlsRaw.trim() : null
+   const tlsStr = tlsCode
+      ? (TARGET_LIST_STATUS_LABELS[tlsCode] ?? tlsCode.replace(/_/g, ' '))
+      : null
+   if (!showGoat && !tlsStr) return null
+   return (
+      <div className="mt-1 flex flex-wrap gap-1">
+         {showGoat ? (
+            <Badge
+               variant="outline"
+               className="max-w-[11rem] truncate px-1.5 py-0 text-[10px] font-normal leading-snug text-foreground"
+            >
+               {recordedLabel}
+            </Badge>
+         ) : null}
+         {tlsStr && tlsCode ? (
+            <Badge
+               variant="outline"
+               className="max-w-[11rem] truncate px-1.5 py-0 text-[10px] font-normal leading-snug text-foreground"
+            >
+               {tlsStr}
+            </Badge>
+         ) : null}
+      </div>
+   )
+}
+
+function SubProjectSequencingLine({
+   organism,
+   className,
+}: {
+   organism: Record<string, unknown>
+   className?: string
+}) {
+   const sp =
+      typeof organism.sub_project === 'string' && organism.sub_project.trim()
+         ? organism.sub_project.trim()
+         : null
+   const stRaw = organism.sequencing_type
+   const st = Array.isArray(stRaw)
+      ? stRaw.map((x) => String(x)).filter((s) => s.length > 0)
+      : []
+   const stLabel = st.length > 0 ? st.join(', ') : null
+   if (!sp && !stLabel) return null
+   return (
+      <p className={cn('text-[11px] text-muted-foreground line-clamp-2', className)}>
+         {sp ? <span>{sp}</span> : null}
+         {sp && stLabel ? <span className="text-muted-foreground/50"> · </span> : null}
+         {stLabel ? <span>{stLabel}</span> : null}
+      </p>
+   )
+}
+
+function OrganismStatsRow({
+   organism,
+   className,
+}: {
+   organism: Record<string, unknown>
+   className?: string
+}) {
+   const assemblies = num(organism, 'assemblies_count')
+   const biosamples = num(organism, 'biosamples_count')
+   const reads = num(organism, 'reads_count')
+   const annotations = num(organism, 'genome_annotations_count')
+   if (assemblies === 0 && biosamples === 0 && reads === 0 && annotations === 0) return null
+   return (
+      <div
+         className={cn(
+            'flex flex-wrap items-center gap-x-3 gap-y-0.5 border-t border-border pt-2 text-[11px] text-muted-foreground',
+            className,
+         )}
+      >
+         {assemblies > 0 ? (
+            <span className="flex items-center gap-1">
+               <ModelIcon modelKey="assemblies" className="h-3 w-3 shrink-0" />
+               {assemblies} genomes
+            </span>
+         ) : null}
+         {biosamples > 0 ? (
+            <span className="flex items-center gap-1">
+               <ModelIcon modelKey="biosamples" className="h-3 w-3 shrink-0" />
+               {biosamples} samples
+            </span>
+         ) : null}
+         {reads > 0 ? (
+            <span className="flex items-center gap-1">
+               <ModelIcon modelKey="reads" className="h-3 w-3 shrink-0" />
+               {reads} runs
+            </span>
+         ) : null}
+         {annotations > 0 ? (
+            <span className="flex items-center gap-1">
+               <ModelIcon modelKey="annotations" className="h-3 w-3 shrink-0" />
+               {annotations} annotations
+            </span>
+         ) : null}
+      </div>
+   )
+}
+
 export function SpeciesCard({
    organism,
    compact = false,
    compactVariant = 'default',
    lineageMode = 'full',
+   hideCompactLineage = false,
+   showGoatChips = false,
 }: SpeciesCardProps) {
    const comfy = compact && compactVariant === 'comfortable'
    const taxid = getTaxid(organism)
@@ -158,11 +281,6 @@ export function SpeciesCard({
    const commonName = getCommonName(organism)
    const kingdomLabel = getKingdomLabel(organism)
    const primaryImage = organismImageUrls(organism)[0] ?? null
-
-   const assemblies = num(organism, 'assemblies_count')
-   const biosamples = num(organism, 'biosamples_count')
-   const reads = num(organism, 'reads_count')
-   const annotations = num(organism, 'genome_annotations_count')
 
    const iucnBadge = iucnRedListBadge(organism)
 
@@ -248,9 +366,14 @@ export function SpeciesCard({
                               ) : null}
                            </div>
                         </div>
-                        <LineageRankText organism={organism} compact compactComfortable={comfy} />
+                        {hideCompactLineage ? null : (
+                           <LineageRankText organism={organism} compact compactComfortable={comfy} />
+                        )}
+                        {showGoatChips ? <OrganismGoatChips organism={organism} /> : null}
                      </div>
                   </div>
+                  <SubProjectSequencingLine organism={organism} className="mt-2" />
+                  <OrganismStatsRow organism={organism} className="mt-2" />
                </CardContent>
             </Card>
          </Link>
@@ -279,6 +402,7 @@ export function SpeciesCard({
                               {kingdomLabel}
                            </Badge>
                         ) : null}
+                        {showGoatChips ? <OrganismGoatChips organism={organism} /> : null}
                      </div>
                      <div className="flex shrink-0 flex-col items-end gap-1">
                         {iucnBadge ? (
@@ -298,34 +422,10 @@ export function SpeciesCard({
                   <div className="min-h-[2.5rem] flex-1">
                      <LineageRankText organism={organism} lineageMode={lineageMode} />
                   </div>
+                  <SubProjectSequencingLine organism={organism} className="mt-1" />
                </div>
 
-               <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-0.5 border-t border-border pt-2 text-[11px] text-muted-foreground">
-                  {assemblies > 0 ? (
-                     <span className="flex items-center gap-1">
-                        <Dna className="h-3 w-3 shrink-0" aria-hidden />
-                        {assemblies} genomes
-                     </span>
-                  ) : null}
-                  {biosamples > 0 ? (
-                     <span className="flex items-center gap-1">
-                        <FlaskConical className="h-3 w-3 shrink-0" aria-hidden />
-                        {biosamples} samples
-                     </span>
-                  ) : null}
-                  {reads > 0 ? (
-                     <span className="flex items-center gap-1">
-                        <PlayCircle className="h-3 w-3 shrink-0" aria-hidden />
-                        {reads} runs
-                     </span>
-                  ) : null}
-                  {annotations > 0 ? (
-                     <span className="flex items-center gap-1">
-                        <Database className="h-3 w-3 shrink-0" aria-hidden />
-                        {annotations} annotations
-                     </span>
-                  ) : null}
-               </div>
+               <OrganismStatsRow organism={organism} className="mt-auto" />
             </CardContent>
          </Card>
       </Link>

@@ -127,16 +127,18 @@ export async function downloadPolygonData(body: DownloadPolygonBody): Promise<Bl
 
 /**
  * GET ``/coordinates`` — paginated sample points; filter by ``taxid`` uses lineage containment
- * (same as ``server/helpers/geolocation.create_query``).
+ * (same as ``server/helpers/geolocation.create_query``). Optional ``sample_accession`` narrows to one accession.
  */
 export async function fetchSampleLocations(
-   params: { taxid: string; limit?: number; offset?: number },
+   params: { taxid: string; limit?: number; offset?: number; sample_accession?: string },
 ): Promise<SampleCoordinatesPayload> {
    const base = getApiBase()
    const sp = new URLSearchParams()
    sp.set('taxid', params.taxid)
    sp.set('limit', String(params.limit ?? 2000))
    sp.set('offset', String(params.offset ?? 0))
+   const acc = params.sample_accession?.trim()
+   if (acc) sp.set('sample_accession', acc)
    const url = `${base}/coordinates?${sp.toString()}`
    const res = await fetch(url, {
       credentials: 'include',

@@ -1,282 +1,243 @@
 'use client'
 
-import Link from 'next/link'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
+import { CatalogRecordCardGrid } from '@/components/catalog-explorer/catalog-record-card-grid'
+import { CatalogRecordDetailSheet } from '@/components/catalog-explorer/catalog-record-detail-sheet'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useLocale } from '@/contexts/locale-context'
+import { usePortalConfig } from '@/contexts/portal-context'
+import { getRootTaxid } from '@/lib/api/taxon'
 import { fetchOrganismRelatedWithTotal, type OrganismRelatedModel } from '@/lib/api/organisms'
-import {
-  assemblyFromDoc,
-  biosampleFromDoc,
-  readRunFromDoc,
-} from '@/lib/species-detail-from-organism'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { ExternalLink, Layers } from 'lucide-react'
+import { ModelIcon } from '@/lib/modelIcons'
+import type { AppConfig, DataModels } from '@/lib/portal/types'
+import { cn } from '@/lib/utils'
+
+function labelForCatalogModel(
+   k: DataModels,
+   models: AppConfig['models'] | undefined,
+   locale: string,
+   t: (key: string) => string,
+): string {
+   const labels = models?.[k]?.label
+   if (labels && typeof labels === 'object') {
+      const fromLocale = labels[locale]
+      const fromEn = labels.en
+      const pick =
+         (typeof fromLocale === 'string' && fromLocale.trim() ? fromLocale : null) ??
+         (typeof fromEn === 'string' && fromEn.trim() ? fromEn : null) ??
+         Object.values(labels).find((x) => typeof x === 'string' && String(x).trim())
+      if (typeof pick === 'string' && pick.trim()) return pick.trim()
+   }
+   const key = `models.${k}` as const
+   const tr = t(key)
+   if (tr && tr !== key) return tr
+   return k.replace(/_/g, ' ')
+}
 
 export type RelatedCatalogModel = OrganismRelatedModel
 
 type Counts = {
-  assemblies: number
-  biosamples: number
-  reads: number
+   assemblies: number
+   biosamples: number
+   reads: number
+}
+
+type CachedModel = {
+   data: Record<string, unknown>[]
+   total: number
 }
 
 type SpeciesRelatedRecordsTabsProps = {
-  taxid: string
-  counts: Counts
-  /** First model in assemblies → biosamples → reads with count &gt; 0. */
-  defaultModel: RelatedCatalogModel
-  initialRows: Record<string, unknown>[]
-  /** Accessions for which a JBrowse session exists; shows a "Browse" button when present. */
-  browserableAccessions?: string[]
+   taxid: string
+   counts: Counts
+   /** First model in assemblies → biosamples → reads with count &gt; 0. */
+   defaultModel: RelatedCatalogModel
+   initialRows: Record<string, unknown>[]
+   /** Total count for `initialRows` query (same as catalog “Showing n of total”). */
+   initialTotal: number
 }
 
-const TAB_BODY_CLASS = 'h-[min(28rem,58vh)] overflow-y-auto overflow-x-auto'
+function speciesHrefForRow(row: Record<string, unknown>): string | null {
+   if (row.taxid == null) return null
+   return `/species/${encodeURIComponent(String(row.taxid))}`
+}
+
+type VisibleModel = { key: OrganismRelatedModel; count: number }
 
 export function SpeciesRelatedRecordsTabs({
-  taxid,
-  counts,
-  defaultModel,
-  initialRows,
-  browserableAccessions,
+   taxid,
+   counts,
+   defaultModel,
+   initialRows,
+   initialTotal,
 }: SpeciesRelatedRecordsTabsProps) {
-  const [cache, setCache] = useState<Record<RelatedCatalogModel, Record<string, unknown>[] | null>>({
-    assemblies: defaultModel === 'assemblies' ? initialRows : null,
-    biosamples: defaultModel === 'biosamples' ? initialRows : null,
-    reads: defaultModel === 'reads' ? initialRows : null,
-  })
-  const cacheRef = useRef(cache)
-  useEffect(() => {
-    cacheRef.current = cache
-  }, [cache])
+   const { config } = usePortalConfig()
+   const { locale, t } = useLocale()
+   const rootTaxid = String(getRootTaxid()).trim()
 
-  const [loading, setLoading] = useState<RelatedCatalogModel | null>(null)
-  const [error, setError] = useState<string | null>(null)
+   const visibleModels: VisibleModel[] = []
+   if (counts.assemblies > 0) visibleModels.push({ key: 'assemblies', count: counts.assemblies })
+   if (counts.biosamples > 0) visibleModels.push({ key: 'biosamples', count: counts.biosamples })
+   if (counts.reads > 0) visibleModels.push({ key: 'reads', count: counts.reads })
 
-  const browserableSet = useMemo(
-    () => new Set(browserableAccessions ?? []),
-    [browserableAccessions],
-  )
+   const [activeModel, setActiveModel] = useState<RelatedCatalogModel>(defaultModel)
+   const [detailRow, setDetailRow] = useState<Record<string, unknown> | null>(null)
 
-  const ensureLoaded = useCallback(async (model: RelatedCatalogModel) => {
-    if (cacheRef.current[model] != null) return
-    setError(null)
-    setLoading(model)
-    try {
-      const { data } = await fetchOrganismRelatedWithTotal(taxid, model, { limit: 200, offset: 0 })
-      setCache((prev) => ({ ...prev, [model]: data }))
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e)
-      setError(msg)
-    } finally {
-      setLoading(null)
-    }
-  }, [taxid])
+   const [cache, setCache] = useState<Record<RelatedCatalogModel, CachedModel | null>>({
+      assemblies: defaultModel === 'assemblies' ? { data: initialRows, total: initialTotal } : null,
+      biosamples: defaultModel === 'biosamples' ? { data: initialRows, total: initialTotal } : null,
+      reads: defaultModel === 'reads' ? { data: initialRows, total: initialTotal } : null,
+   })
+   const cacheRef = useRef(cache)
+   useEffect(() => {
+      cacheRef.current = cache
+   }, [cache])
 
-  const onTabChange = (value: string) => {
-    const model = value as RelatedCatalogModel
-    if (counts.assemblies === 0 && model === 'assemblies') return
-    if (counts.biosamples === 0 && model === 'biosamples') return
-    if (counts.reads === 0 && model === 'reads') return
-    void ensureLoaded(model)
-  }
+   const [loading, setLoading] = useState<RelatedCatalogModel | null>(null)
+   const [loadingMore, setLoadingMore] = useState<RelatedCatalogModel | null>(null)
+   const [error, setError] = useState<string | null>(null)
 
-  const genomes = (cache.assemblies ?? []).map((r) => assemblyFromDoc(r))
-  const biosamples = (cache.biosamples ?? []).map((r) => biosampleFromDoc(r))
-  const runs = (cache.reads ?? []).map((r) => readRunFromDoc(r))
+   const ensureLoaded = useCallback(async (model: OrganismRelatedModel) => {
+      if (cacheRef.current[model] != null) return
+      setError(null)
+      setLoading(model)
+      try {
+         const { data, total } = await fetchOrganismRelatedWithTotal(taxid, model, {
+            limit: 200,
+            offset: 0,
+         })
+         setCache((prev) => ({ ...prev, [model]: { data, total } }))
+      } catch (e) {
+         const msg = e instanceof Error ? e.message : String(e)
+         setError(msg)
+      } finally {
+         setLoading(null)
+      }
+   }, [taxid])
 
-  return (
-    <Card className="mt-6">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg">Catalog records</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Tabs defaultValue={defaultModel} className="w-full" onValueChange={onTabChange}>
-          <TabsList className="bg-muted/60 border border-border flex-wrap h-auto gap-1 p-1">
-            {counts.assemblies > 0 ? (
-              <TabsTrigger value="assemblies" className="text-xs sm:text-sm">
-                Genomes ({counts.assemblies.toLocaleString()})
-              </TabsTrigger>
-            ) : null}
-            {counts.biosamples > 0 ? (
-              <TabsTrigger value="biosamples" className="text-xs sm:text-sm">
-                Biosamples ({counts.biosamples.toLocaleString()})
-              </TabsTrigger>
-            ) : null}
-            {counts.reads > 0 ? (
-              <TabsTrigger value="reads" className="text-xs sm:text-sm">
-                Sequencing runs ({counts.reads.toLocaleString()})
-              </TabsTrigger>
-            ) : null}
-          </TabsList>
+   const loadMore = useCallback(
+      async (model: OrganismRelatedModel) => {
+         const cached = cacheRef.current[model]
+         if (!cached || cached.data.length >= cached.total) return
+         setLoadingMore(model)
+         try {
+            const { data, total } = await fetchOrganismRelatedWithTotal(taxid, model, {
+               limit: 200,
+               offset: cached.data.length,
+            })
+            setCache((prev) => {
+               const cur = prev[model]
+               if (!cur) return prev
+               return {
+                  ...prev,
+                  [model]: {
+                     data: [...cur.data, ...data],
+                     total,
+                  },
+               }
+            })
+         } finally {
+            setLoadingMore(null)
+         }
+      },
+      [taxid],
+   )
 
-          {error ? <p className="text-sm text-destructive mt-3">{error}</p> : null}
+   const modelLabel = useMemo(
+      () => (k: DataModels) => labelForCatalogModel(k, config?.models, locale, t),
+      [config?.models, locale, t],
+   )
 
-          {counts.assemblies > 0 ? (
-            <TabsContent value="assemblies" className="mt-4">
-              <div className={TAB_BODY_CLASS}>
-                {loading === 'assemblies' && cache.assemblies == null ? (
-                  <p className="text-sm text-muted-foreground py-6">Loading assemblies…</p>
-                ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Accession</TableHead>
-                        <TableHead>Assembly Level</TableHead>
-                        <TableHead>Size</TableHead>
-                        <TableHead>GC %</TableHead>
-                        <TableHead>N50</TableHead>
-                        <TableHead>Submitted</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {genomes.map((genome) => (
-                        <TableRow key={genome.id}>
-                          <TableCell className="font-mono text-sm">
-                            <div className="flex items-center gap-2">
-                              <a
-                                href={`https://www.ncbi.nlm.nih.gov/assembly/${genome.accession}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-primary hover:underline inline-flex items-center gap-1"
-                              >
-                                {genome.accession}
-                                <ExternalLink className="h-3 w-3 shrink-0" />
-                              </a>
-                              {browserableSet.has(genome.accession) ? (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  asChild
-                                  className="h-6 px-1.5 text-xs gap-1 shrink-0"
-                                >
-                                  <Link href={`/genome-browser?assembly=${genome.accession}`}>
-                                    <Layers className="h-3 w-3" />
-                                    Browse
-                                  </Link>
-                                </Button>
-                              ) : null}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline">{genome.assemblyLevel}</Badge>
-                          </TableCell>
-                          <TableCell>{genome.size}</TableCell>
-                          <TableCell>
-                            {genome.gcContent === '—' ? '—' : `${genome.gcContent}%`}
-                          </TableCell>
-                          <TableCell>{genome.n50}</TableCell>
-                          <TableCell className="text-muted-foreground">{genome.submissionDate}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                )}
-              </div>
-            </TabsContent>
-          ) : null}
+   const handleSelectModel = (model: OrganismRelatedModel) => {
+      setDetailRow(null)
+      setActiveModel(model)
+      void ensureLoaded(model)
+   }
 
-          {counts.biosamples > 0 ? (
-            <TabsContent value="biosamples" className="mt-4">
-              <div className={TAB_BODY_CLASS}>
-                {loading === 'biosamples' && cache.biosamples == null ? (
-                  <p className="text-sm text-muted-foreground py-6">Loading biosamples…</p>
-                ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Accession</TableHead>
-                        <TableHead>Tissue</TableHead>
-                        <TableHead>Location</TableHead>
-                        <TableHead>Collector</TableHead>
-                        <TableHead>Collected</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {biosamples.map((sample) => (
-                        <TableRow key={sample.id}>
-                          <TableCell className="font-mono text-sm">
-                            <a
-                              href={`https://www.ncbi.nlm.nih.gov/biosample/${sample.accession}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-primary hover:underline flex items-center gap-1"
-                            >
-                              {sample.accession}
-                              <ExternalLink className="h-3 w-3" />
-                            </a>
-                          </TableCell>
-                          <TableCell>{sample.tissue}</TableCell>
-                          <TableCell className="max-w-48 truncate">{sample.location}</TableCell>
-                          <TableCell className="max-w-32 truncate">{sample.collector}</TableCell>
-                          <TableCell className="text-muted-foreground">{sample.collectionDate}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                )}
-              </div>
-            </TabsContent>
-          ) : null}
+   const cached = cache[activeModel]
+   const loadingModel = loading === activeModel && cached == null
+   const rows = cached?.data ?? []
+   const showDetail = detailRow != null
 
-          {counts.reads > 0 ? (
-            <TabsContent value="reads" className="mt-4">
-              <div className={TAB_BODY_CLASS}>
-                {loading === 'reads' && cache.reads == null ? (
-                  <p className="text-sm text-muted-foreground py-6">Loading sequencing runs…</p>
-                ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Accession</TableHead>
-                        <TableHead>Platform</TableHead>
-                        <TableHead>Strategy</TableHead>
-                        <TableHead>Reads</TableHead>
-                        <TableHead>Bases</TableHead>
-                        <TableHead>Submitted</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {runs.map((run) => (
-                        <TableRow key={run.id}>
-                          <TableCell className="font-mono text-sm">
-                            <a
-                              href={`https://www.ncbi.nlm.nih.gov/sra/${run.accession}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-primary hover:underline flex items-center gap-1"
-                            >
-                              {run.accession}
-                              <ExternalLink className="h-3 w-3" />
-                            </a>
-                          </TableCell>
-                          <TableCell>{run.platform}</TableCell>
-                          <TableCell>
-                            <Badge variant="outline">{run.libraryStrategy}</Badge>
-                          </TableCell>
-                          <TableCell>{(run.readCount / 1000000).toFixed(0)}M</TableCell>
-                          <TableCell>{run.baseCount}</TableCell>
-                          <TableCell className="text-muted-foreground">{run.submissionDate}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                )}
-              </div>
-            </TabsContent>
-          ) : null}
-        </Tabs>
-      </CardContent>
-    </Card>
-  )
+   return (
+      <div className="mt-6 space-y-4">
+         <div className="w-full min-w-0">
+            <div
+               className="w-full min-w-0 overflow-x-auto"
+               role="tablist"
+               aria-label={t('speciesDetail.relatedRecordsTablist')}
+            >
+               <div className="flex w-max min-w-full gap-1 rounded-xl bg-muted/80 p-1 dark:bg-muted/60">
+                  {visibleModels.map(({ key, count }) => {
+                     const active = key === activeModel
+                     return (
+                        <button
+                           key={key}
+                           type="button"
+                           role="tab"
+                           aria-selected={active}
+                           className={cn(
+                              'flex min-h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg px-2.5 py-2 text-sm transition-all sm:px-3',
+                              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+                              active
+                                 ? cn(
+                                      'bg-background font-semibold text-foreground shadow-sm ring-1 ring-border/80',
+                                      'dark:bg-card dark:text-foreground dark:shadow-md dark:ring-2 dark:ring-primary/55',
+                                   )
+                                 : 'font-medium text-muted-foreground hover:bg-muted/70 hover:text-foreground dark:hover:bg-muted/40',
+                           )}
+                           onClick={() => handleSelectModel(key)}
+                        >
+                           <ModelIcon
+                              modelKey={key}
+                              className={cn(
+                                 'h-4 w-4 shrink-0',
+                                 active ? 'text-primary' : 'text-muted-foreground',
+                              )}
+                           />
+                           <span className="whitespace-nowrap">{modelLabel(key)}</span>
+                           <Badge
+                              variant={active ? 'default' : 'secondary'}
+                              className="shrink-0 tabular-nums px-1.5 py-0 text-[10px]"
+                           >
+                              {count.toLocaleString()}
+                           </Badge>
+                        </button>
+                     )
+                  })}
+               </div>
+            </div>
+         </div>
+
+         {error ? <p className="text-sm text-destructive">{error}</p> : null}
+
+         <div className="grid min-h-[12rem] grid-cols-1 gap-4">
+            <div className="min-w-0 space-y-4">
+               <CatalogRecordCardGrid
+                  model={activeModel}
+                  rows={rows}
+                  loading={loadingModel}
+                  loadingMore={loadingMore === activeModel}
+                  total={cached?.total ?? 0}
+                  onRowClick={(row) => setDetailRow(row)}
+                  onLoadMore={() => void loadMore(activeModel)}
+                  emptyMessage={t('catalog.tableEmpty')}
+                  activeRow={detailRow}
+               />
+            </div>
+            <CatalogRecordDetailSheet
+               open={showDetail && detailRow != null}
+               onOpenChange={(open) => {
+                  if (!open) setDetailRow(null)
+               }}
+               catalogKey={activeModel}
+               detailRow={detailRow}
+               rootTaxid={rootTaxid}
+               speciesHref={detailRow ? speciesHrefForRow(detailRow) : null}
+               t={t}
+            />
+         </div>
+      </div>
+   )
 }

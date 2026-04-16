@@ -2,7 +2,10 @@ import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import { Loader2 } from 'lucide-react'
 
-/** Client uses `useSearchParams` (`taxid` deep-link); keep wrapped in Suspense. */
+/**
+ * Client uses `useSearchParams` (`taxid` deep-link); keep wrapped in Suspense.
+ * Tree data loads once as `GET /api/tree?format=tsv`; ranks and truncation are derived in the browser.
+ */
 import TaxonomyClientPage from './taxonomy-client-page'
 
 export const metadata: Metadata = {
@@ -12,7 +15,7 @@ export const metadata: Metadata = {
 
 export default function TaxonomyPage() {
    return (
-      <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex h-full min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden">
          <Suspense
             fallback={
                <div className="flex min-h-[50vh] flex-1 items-center justify-center py-20 text-muted-foreground">

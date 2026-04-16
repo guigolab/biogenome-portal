@@ -209,6 +209,32 @@ def _taxids_with_sample_locations_for_organism_match(org_match: dict):
     return out
 
 
+def _organism_countries_in_q(codes):
+    """
+    Organism.countries is ListField(str): match organisms whose list contains any
+    selected ISO alpha-2 code (OR). None in ``codes`` matches empty / missing list
+    (same bucket as stats ``No Entry``).
+    """
+    if not codes:
+        return None
+    if not isinstance(codes, (list, tuple)):
+        codes = [codes]
+    parts = []
+    for v in codes:
+        if v is None:
+            parts.append(
+                Q(__raw__={"$or": [{"countries": {"$exists": False}}, {"countries": {"$size": 0}}]})
+            )
+        elif isinstance(v, str) and v.strip():
+            parts.append(Q(countries=v.strip()))
+    if not parts:
+        return None
+    combined = parts[0]
+    for p in parts[1:]:
+        combined |= p
+    return combined
+
+
 def organism_queryset_for_map_filters(immutable_dict):
     """
     Organism queryset for catalog map / frequency: same filters as GET /organisms
@@ -243,10 +269,15 @@ def organism_queryset_for_map_filters(immutable_dict):
 
     query, q_query = create_query(args, q_query)
 
+    countries_in = query.pop("countries__in", None)
     items = Organism.objects(**query)
 
     if q_query:
         items = items.filter(q_query)
+
+    countries_q = _organism_countries_in_q(countries_in)
+    if countries_q is not None:
+        items = items.filter(countries_q)
 
     if insdc_counts_any_raw:
         icq = _insdc_counts_any_q(str(insdc_counts_any_raw))
@@ -395,6 +426,19 @@ def create_query(args, q_query):
 
         if "." in key:
             key = key.replace(".", "__")
+
+        # Reference genome filter: portal sends `reference_genome`; Mongo may store
+        # `reference genome` (space) or mixed casing from NCBI.
+        if key == "metadata__assembly_info__refseq_category":
+            norm = str(value).strip().lower().replace(" ", "_")
+            if norm == "reference_genome":
+                query["metadata__assembly_info__refseq_category__in"] = [
+                    "reference_genome",
+                    "reference genome",
+                    "Reference genome",
+                    "Reference Genome",
+                ]
+                continue
 
         # Handle greater than/less than conditions
         if any(op in key for op in ["__gte", "__lte", "__gt", "__lt", "__size"]):

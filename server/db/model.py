@@ -60,6 +60,35 @@ class BioProject(db.Document):
     }
 
 
+class BioSampleFetchFailure(db.Document):
+    """
+    Audit record for biosample accessions that could not be resolved after all
+    fetch strategies (NCBI datasets metadata, ENA bulk XML, EBI BioSamples API,
+    NCBI Entrez) were exhausted during an ingest run.
+
+    One document per ``(biosample_accession, related_model, related_id)`` triple;
+    updated in-place on repeated failures via pymongo upsert.  Cleared when the
+    accession is successfully resolved in a later run.
+    """
+
+    biosample_accession = db.StringField(required=True)
+    related_model = db.StringField(required=True)   # "Assembly" | "ReadRun"
+    related_id = db.StringField(required=True)       # assembly accession or run_accession
+    last_attempt_at = db.DateTimeField(required=True)
+    attempt_count = db.IntField(default=1)
+    last_error = db.StringField()
+    meta = {
+        "indexes": [
+            "biosample_accession",
+            "last_attempt_at",
+            {
+                "fields": ["biosample_accession", "related_model", "related_id"],
+                "unique": True,
+            },
+        ]
+    }
+
+
 class BioSampleSubmission(db.DynamicDocument):
     taxid = db.StringField(required=True)
     scientific_name = db.StringField(required=True)
@@ -107,7 +136,7 @@ class Experiment(db.Document):
     taxon_lineage = db.ListField(db.StringField())
     instrument_model = db.StringField()
     taxid = db.StringField(required=True)
-    scientific_name = db.StringField()
+    scientific_name = db.StringField() 
     created = db.DateTimeField(default=datetime.datetime.now())
     metadata = db.DictField()
     meta = {
@@ -229,8 +258,8 @@ class OrganismAuditLog(db.Document):
     action = db.StringField(required=True)
     user = db.StringField(required=True)
     timestamp = db.DateTimeField(default=datetime.datetime.now())
-    previous_organism = db.DictField()
-    new_organism = db.DictField()
+    previous_object = db.DictField()
+    new_object = db.DictField()
     taxid = db.StringField(required=True)
     scientific_name = db.StringField(required=True)
     meta = {

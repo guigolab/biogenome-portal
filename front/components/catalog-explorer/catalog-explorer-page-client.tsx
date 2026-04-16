@@ -1,38 +1,42 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { CatalogExplorerView } from '@/components/catalog-explorer/catalog-explorer-view'
 import { useLocale } from '@/contexts/locale-context'
 import { usePortalConfig } from '@/contexts/portal-context'
-import {
-   buildCatalogQueryParams,
-   sortColumnForApi,
-   type FilterValuesState,
-} from '@/lib/catalogQueryParams'
+import { buildCatalogQueryParams, type FilterValuesState } from '@/lib/catalogQueryParams'
 import {
    catalogColumnHeaderLabel,
    catalogModelKeysExcludingOrganisms,
-   defaultSortColumnForCatalog,
    deriveCanFetchList,
    deriveVisibleCatalogKeys,
+   readCatalogUrlState,
    resolveCatalogKey,
+   type CatalogPageSize,
    useCatalogFilterSelectOptions,
    useCatalogList,
    useSyncInvalidCatalogParam,
+   writeCatalogUrlState,
 } from '@/lib/catalog-explorer'
-import { getRootTaxid } from '@/lib/api/taxon'
+import { defaultCatalogExportFields } from '@/lib/catalog-explorer/catalogRecordCardLayout'
+import { fetchTaxon, getRootTaxid } from '@/lib/api/taxon'
 import { pickLocalized } from '@/lib/i18n/pickLocalized'
 import type { DataModels } from '@/lib/portal/types'
 import { useRootTaxonStore } from '@/stores/root-taxon-store'
 import { Loader2 } from 'lucide-react'
-import type { CatalogChartDef } from '@/components/catalog-explorer/catalog-charts'
+import type { CatalogChartDef } from '@/components/catalog-explorer/catalog-chart-def'
+import { fetchAssembly } from '@/lib/api/assemblies'
 
-/** Portal root scope only: no `taxid` in URL; list/charts use root taxon lineage context. */
+/** Portal root scope; optional `tid` narrows list/charts to that taxon. */
 export function CatalogExplorerPageClient() {
    const { config, loading: portalLoading } = usePortalConfig()
    const { locale, t } = useLocale()
+   const router = useRouter()
+   const pathname = usePathname()
+   const searchParams = useSearchParams()
 
    const rootTaxon = useRootTaxonStore((s) => s.rootTaxon)
    const rootStatus = useRootTaxonStore((s) => s.status)
@@ -47,15 +51,64 @@ export function CatalogExplorerPageClient() {
 
    const allModelKeys = useMemo(() => catalogModelKeysExcludingOrganisms(config?.models), [config?.models])
 
-   const countsReady = rootStatus === 'success' && scopeTaxon != null
+   const initialUrl = useMemo(() => readCatalogUrlState(searchParams), []) // eslint-disable-line react-hooks/exhaustive-deps
+
+   const [selectedCatalog, setSelectedCatalog] = useState<DataModels | null>(
+      initialUrl.catalogKey ?? null,
+   )
+   const [viewMode, setViewMode] = useState<'dashboard' | 'table'>(
+      initialUrl.viewMode ?? 'table',
+   )
+   const [pageSize, setPageSize] = useState<CatalogPageSize>(initialUrl.pageSize ?? 50)
+   const [filterValues, setFilterValues] = useState<Record<string, FilterValuesState | undefined>>(
+      initialUrl.filterValues ?? {},
+   )
+   const [speciesTaxid, setSpeciesTaxid] = useState<string | null>(initialUrl.speciesTaxid ?? null)
+   const [scopedTaxonDoc, setScopedTaxonDoc] = useState<Record<string, unknown> | null>(null)
+   const [scopedLoadState, setScopedLoadState] = useState<'idle' | 'loading' | 'ok' | 'err'>('idle')
+   const [scopedTaxonError, setScopedTaxonError] = useState<string | null>(null)
+   const scopedFetchSeq = useRef(0)
+
+   useEffect(() => {
+      const tid = speciesTaxid?.trim()
+      if (!tid) {
+         setScopedTaxonDoc(null)
+         setScopedLoadState('idle')
+         setScopedTaxonError(null)
+         return
+      }
+      const seq = ++scopedFetchSeq.current
+      setScopedLoadState('loading')
+      setScopedTaxonError(null)
+      void fetchTaxon(tid)
+         .then((doc) => {
+            if (seq !== scopedFetchSeq.current) return
+            setScopedTaxonDoc(doc)
+            setScopedLoadState('ok')
+         })
+         .catch(() => {
+            if (seq !== scopedFetchSeq.current) return
+            setScopedLoadState('err')
+            setScopedTaxonError(t('catalog.taxonScopeFetchError'))
+         })
+   }, [speciesTaxid, t])
+
+   const taxonForTabCounts = useMemo((): Record<string, unknown> | null => {
+      if (!speciesTaxid?.trim()) return scopeTaxon
+      if (scopedTaxonDoc) return scopedTaxonDoc
+      if (scopedLoadState === 'err') return scopeTaxon
+      return null
+   }, [speciesTaxid, scopedTaxonDoc, scopedLoadState, scopeTaxon])
+
+   const tabsCountsReady =
+      rootStatus === 'success' &&
+      scopeTaxon != null &&
+      (!speciesTaxid?.trim() || scopedLoadState === 'ok' || scopedLoadState === 'err')
 
    const visibleCatalogKeys = useMemo(
-      () => deriveVisibleCatalogKeys(countsReady, scopeTaxon, allModelKeys),
-      [countsReady, scopeTaxon, allModelKeys],
+      () => deriveVisibleCatalogKeys(tabsCountsReady, taxonForTabCounts, allModelKeys),
+      [tabsCountsReady, taxonForTabCounts, allModelKeys],
    )
-
-   const [selectedCatalog, setSelectedCatalog] = useState<DataModels | null>(null)
-   const [viewMode, setViewMode] = useState<'dashboard' | 'table'>('table')
 
    const catalogKey = useMemo(
       () => resolveCatalogKey(selectedCatalog, visibleCatalogKeys, allModelKeys),
@@ -69,7 +122,7 @@ export function CatalogExplorerPageClient() {
    }, [selectedCatalog, allModelKeys])
 
    useSyncInvalidCatalogParam({
-      countsReady,
+      countsReady: tabsCountsReady,
       visibleCatalogKeys,
       selectedCatalog: catalogKey,
       setSelectedCatalog,
@@ -77,85 +130,47 @@ export function CatalogExplorerPageClient() {
 
    const modelConfig = config?.models?.[catalogKey]
 
-   const [filterText, setFilterText] = useState('')
-   const [debouncedFilter, setDebouncedFilter] = useState('')
-   useEffect(() => {
-      const timer = window.setTimeout(() => setDebouncedFilter(filterText.trim()), 250)
-      return () => window.clearTimeout(timer)
-   }, [filterText])
-
-   const [filterValues, setFilterValues] = useState<Record<string, FilterValuesState | undefined>>({})
-
+   // Reset facet filters when switching catalog model; keep taxon scope.
    useEffect(() => {
       setFilterValues({})
-      setFilterText('')
-      setDebouncedFilter('')
    }, [catalogKey])
 
-   const columns = useMemo(() => modelConfig?.columns ?? ['taxid', 'scientific_name'], [modelConfig])
+   const exportFields = useMemo(() => {
+      const fromConfig = modelConfig?.exportFields
+      if (fromConfig?.length) return fromConfig
+      return defaultCatalogExportFields(catalogKey)
+   }, [modelConfig?.exportFields, catalogKey])
 
-   const columnLabels = useMemo(
+   const exportModelLabel = useMemo(
       () =>
-         Object.fromEntries(
-            columns.map((c) => [c, catalogColumnHeaderLabel(catalogKey, c, locale)]),
-         ),
-      [columns, catalogKey, locale],
+         modelConfig?.label
+            ? pickLocalized(modelConfig.label, locale, catalogKey)
+            : catalogKey,
+      [modelConfig?.label, locale, catalogKey],
    )
 
-   const [sortColumn, setSortColumn] = useState('taxid')
-   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
-
-   useEffect(() => {
-      setSortColumn(defaultSortColumnForCatalog(catalogKey, columns))
-      setSortOrder('asc')
-   }, [catalogKey, columns])
-
-   const onSort = useCallback(
-      (col: string) => {
-         setSortColumn((prev) => {
-            if (prev === col) {
-               setSortOrder((o) => (o === 'asc' ? 'desc' : 'asc'))
-               return prev
-            }
-            setSortOrder('asc')
-            return col
-         })
-      },
-      [setSortOrder],
-   )
-
-   /** Root scope: no `taxon_lineage` query param (same as previous “portal root” selection). */
    const effectiveTaxonLineage = null as string | null
-
-   const selectOptions = useCatalogFilterSelectOptions({
-      catalogKey,
-      filters: modelConfig?.filters,
-      effectiveTaxonLineage,
-   })
 
    const baseQuery = useMemo(() => {
       return buildCatalogQueryParams({
          taxonLineage: effectiveTaxonLineage,
-         filter: debouncedFilter || undefined,
-         sortColumn: sortColumnForApi(sortColumn),
-         sortOrder,
+         speciesTaxid,
          filterDefs: modelConfig?.filters,
          filterValues,
       })
-   }, [effectiveTaxonLineage, debouncedFilter, sortColumn, sortOrder, modelConfig?.filters, filterValues])
+   }, [effectiveTaxonLineage, speciesTaxid, modelConfig?.filters, filterValues])
 
-   const statsQuery = useMemo(() => {
-      const q = { ...baseQuery }
-      delete (q as Record<string, unknown>).sort_column
-      delete (q as Record<string, unknown>).sort_order
-      return q
-   }, [baseQuery])
+   const { selectOptions, loadingFields, ensureSelectOptionsLoaded } = useCatalogFilterSelectOptions({
+      catalogKey,
+      filters: modelConfig?.filters,
+      statsBase: baseQuery,
+   })
 
    const canFetchList = deriveCanFetchList(
       null,
       catalogKey,
       allModelKeys,
-      countsReady,
+      tabsCountsReady,
       visibleCatalogKeys,
    )
 
@@ -163,6 +178,7 @@ export function CatalogExplorerPageClient() {
       catalogKey,
       baseQuery,
       canFetchList,
+      pageSize,
    })
 
    const setViewTable = useCallback((table: boolean) => setViewMode(table ? 'table' : 'dashboard'), [])
@@ -170,12 +186,44 @@ export function CatalogExplorerPageClient() {
    const [detailRow, setDetailRow] = useState<Record<string, unknown> | null>(null)
    const [exportOpen, setExportOpen] = useState(false)
 
+   const onScatterAssemblyAccessionClick = useCallback(
+      async (accession: string) => {
+         const acc = accession.trim()
+         if (!acc) return
+         if (detailRow && String(detailRow.accession ?? '') === acc) {
+            setDetailRow(null)
+            return
+         }
+         try {
+            const row = await fetchAssembly(acc)
+            if (row) setDetailRow(row)
+         } catch {
+            /* ignore; optional: toast */
+         }
+      },
+      [detailRow],
+   )
+
    useEffect(() => {
       setDetailRow(null)
    }, [catalogKey])
 
-   const title = pickLocalized(modelConfig?.label, locale, catalogKey)
-   const description = pickLocalized(modelConfig?.description, locale, '')
+   const clearAllFilters = useCallback(() => {
+      setFilterValues({})
+   }, [])
+
+   const onSelectTaxon = useCallback((taxid: string, node: Record<string, unknown>) => {
+      setSpeciesTaxid(taxid)
+      setScopedTaxonDoc(node)
+      setScopedTaxonError(null)
+   }, [])
+
+   const onClearTaxon = useCallback(() => {
+      setSpeciesTaxid(null)
+      setScopedTaxonDoc(null)
+      setScopedLoadState('idle')
+      setScopedTaxonError(null)
+   }, [])
 
    const charts: CatalogChartDef[] = useMemo(
       () =>
@@ -183,6 +231,9 @@ export function CatalogExplorerPageClient() {
             field: c.field,
             type: c.type,
             size: c.size ?? 2,
+            ...(c.xField !== undefined ? { xField: c.xField } : {}),
+            ...(c.yField !== undefined ? { yField: c.yField } : {}),
+            ...(c.colorField !== undefined ? { colorField: c.colorField } : {}),
          })),
       [modelConfig?.charts],
    )
@@ -195,14 +246,57 @@ export function CatalogExplorerPageClient() {
       return m
    }, [charts, catalogKey, locale])
 
-   const recordSearchPlaceholder = useMemo(() => {
-      const key = `catalog.searchRecords.${catalogKey}` as const
-      const specific = t(key)
-      return specific !== key ? specific : t('catalog.recordSearchPlaceholder')
-   }, [catalogKey, t])
-
    const speciesHref =
       detailRow?.taxid != null ? `/species/${encodeURIComponent(String(detailRow.taxid))}` : null
+
+   const isMountedRef = useRef(false)
+   useEffect(() => {
+      if (!isMountedRef.current) {
+         isMountedRef.current = true
+         return
+      }
+      const params = writeCatalogUrlState({
+         catalogKey,
+         viewMode,
+         pageSize,
+         filterValues,
+         speciesTaxid,
+      })
+      const qs = params.toString()
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false })
+   }, [catalogKey, viewMode, pageSize, filterValues, speciesTaxid, pathname, router])
+
+   useEffect(() => {
+      function onKeyDown(e: KeyboardEvent) {
+         const target = e.target as HTMLElement
+         const inInput =
+            target instanceof HTMLInputElement ||
+            target instanceof HTMLTextAreaElement ||
+            target.isContentEditable
+         if (e.key === '/' && !inInput) {
+            e.preventDefault()
+            document.getElementById('catalog-taxon-search')?.focus()
+            return
+         }
+         if (e.key === 'Escape' && detailRow) {
+            setDetailRow(null)
+            return
+         }
+         if ((e.key === 'j' || e.key === 'ArrowDown') && detailRow && !inInput) {
+            e.preventDefault()
+            const idx = items.indexOf(detailRow)
+            if (idx < items.length - 1) setDetailRow(items[idx + 1] ?? null)
+            return
+         }
+         if ((e.key === 'k' || e.key === 'ArrowUp') && detailRow && !inInput) {
+            e.preventDefault()
+            const idx = items.indexOf(detailRow)
+            if (idx > 0) setDetailRow(items[idx - 1] ?? null)
+         }
+      }
+      window.addEventListener('keydown', onKeyDown)
+      return () => window.removeEventListener('keydown', onKeyDown)
+   }, [detailRow, items])
 
    if (portalLoading || !config || rootStatus === 'loading' || rootStatus === 'idle') {
       return (
@@ -226,40 +320,42 @@ export function CatalogExplorerPageClient() {
    return (
       <CatalogExplorerView
          t={t}
-         countsReady={countsReady}
+         countsReady={tabsCountsReady}
          visibleCatalogKeys={visibleCatalogKeys}
          rootTaxid={rootTaxid}
-         scopeTaxon={scopeTaxon}
+         scopeTaxon={taxonForTabCounts}
          catalogKey={catalogKey}
          onSelectCatalog={setSelectedCatalog}
-         title={title}
-         description={description}
          modelFilters={modelConfig?.filters}
          filterValues={filterValues}
          setFilterValues={setFilterValues}
-         filterText={filterText}
-         setFilterText={setFilterText}
-         recordSearchPlaceholder={recordSearchPlaceholder}
+         onClearAllFilters={clearAllFilters}
+         speciesTaxid={speciesTaxid}
+         onSelectTaxon={onSelectTaxon}
+         onClearTaxon={onClearTaxon}
+         scopedTaxonDoc={scopedTaxonDoc}
+         scopedTaxonLoading={Boolean(speciesTaxid?.trim()) && scopedLoadState === 'loading'}
+         scopedTaxonError={scopedTaxonError}
+         catalogModelKeys={allModelKeys}
          selectOptions={selectOptions}
+         ensureSelectOptionsLoaded={ensureSelectOptionsLoaded}
+         selectOptionsLoading={loadingFields}
          viewIsTable={viewMode === 'table'}
          setViewTable={setViewTable}
          charts={charts}
-         statsQuery={statsQuery}
+         statsQuery={baseQuery}
          chartTitles={chartTitles}
          canFetchList={canFetchList}
-         columns={columns}
-         columnLabels={columnLabels}
+         exportFieldKeys={exportFields}
+         exportCardFields={modelConfig?.cardFields}
+         exportModelLabel={exportModelLabel}
          items={items}
          total={total}
          loading={loading}
          loadingMore={loadingMore}
          listError={listError}
-         sortColumn={sortColumn}
-         sortOrder={sortOrder}
-         onSort={onSort}
-         onRowClick={(row) => {
-            setDetailRow(row)
-         }}
+         onRowClick={(row) => setDetailRow(row)}
+         onScatterAssemblyAccessionClick={onScatterAssemblyAccessionClick}
          onClearDetail={() => setDetailRow(null)}
          onLoadMore={loadMore}
          detailRow={detailRow}
@@ -267,8 +363,6 @@ export function CatalogExplorerPageClient() {
          exportOpen={exportOpen}
          setExportOpen={setExportOpen}
          effectiveTaxonLineageExport={effectiveTaxonLineage}
-         debouncedFilter={debouncedFilter}
-         sortColumnApi={sortColumnForApi(sortColumn)}
       />
    )
 }

@@ -1,12 +1,13 @@
 from services import organisms
+from services.organism_audit_log import search_organism_audit_logs
 from flask import Response, request
 from flask_restful import Resource
 import json
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import get_jwt, jwt_required, verify_jwt_in_request
 from werkzeug.exceptions import BadRequest
 from wrappers import organism_access, admin
 from db.model import Organism
-from helpers.resource_mixins import document_json_response, json_message, read_payload
+from helpers.resource_mixins import document_json_response, dump_json, json_message, read_payload
 from helpers.service_utils import get_or_404
 
 
@@ -52,6 +53,20 @@ class OrganismLineageApi(Resource):
 		tree = organisms.map_organism_lineage(organism_obj.taxon_lineage)
 		return Response(json.dumps(tree),mimetype="application/json", status=200)
 
+class OrganismAuditLogsApi(Resource):
+	"""GET /api/organisms/audit_logs — admin search over organism CMS audit rows."""
+
+	@jwt_required()
+	@admin.admin_required()
+	def get(self):
+		payload = search_organism_audit_logs(dict(request.args))
+		return Response(
+			dump_json(payload),
+			mimetype="application/json",
+			status=200,
+		)
+
+
 class UnassignedOrganismsApi(Resource):
 	@jwt_required()
 	@admin.admin_required()
@@ -65,6 +80,41 @@ class OrganismsWithUser(Resource):
 	def get(self):
 		resp, mimetype = organisms.get_assigned_organisms(request.args)
 		return Response(resp, mimetype=mimetype, status=200)
+
+class OrganismSuggestImagesApi(Resource):
+    """POST /api/organisms/suggest_external_images — enqueue image suggestion task."""
+
+    def post(self):
+        verify_jwt_in_request()
+        claims = get_jwt()
+        role = claims.get("role")
+        if role not in ("DataManager", "Admin"):
+            return json_message("Data managers only!", status=403)
+
+        body = read_payload(request) or {}
+        scientific_name = (body.get("scientific_name") or "").strip()
+        if not scientific_name:
+            return json_message("scientific_name is required", status=400)
+        max_images = int(body.get("max_images") or 12)
+
+        from jobs.organism_images import suggest_external_organism_images_task
+
+        result = suggest_external_organism_images_task.delay(
+            scientific_name=scientific_name,
+            max_images=max_images,
+        )
+        return Response(
+            json.dumps(
+                {
+                    "task_id": result.id,
+                    "status_url": f"/api/tasks/{result.id}",
+                    "message": f"Image suggestion job {result.id} launched for {scientific_name!r}",
+                }
+            ),
+            mimetype="application/json",
+            status=201,
+        )
+
 
 class OrganismToDeleteApi(Resource):
 

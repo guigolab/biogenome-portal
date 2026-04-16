@@ -1,72 +1,26 @@
 import { create } from 'zustand'
 
 import { fetchTaxon } from '@/lib/api/taxon'
+import { fetchRootTreeTsv, type SubtreeLookupResponse } from '@/lib/api/tree'
+import { useRootTaxonStore } from '@/stores/root-taxon-store'
 import {
-   fetchRootTreeTable,
-   fetchSubtreeLookup,
-   fetchSubtreeTreeTable,
-   type SubtreeLookupResponse,
-} from '@/lib/api/tree'
-import { fetchRootTaxon } from '@/lib/api/taxons'
-import { flattenedTreeToNested, type NestedTaxonNode } from '@/lib/taxonomy/flattenedTreeToNested'
+   flattenedTreeToNested,
+   type FlattenedTreeResponse,
+   type NestedTaxonNode,
+} from '@/lib/taxonomy/flattenedTreeToNested'
 import { pruneByRank } from '@/lib/taxonomy/treeFilter'
-import { TREE_RANK_FILTER_OPTIONS } from '@/lib/taxonomy/treeRankOptions'
 import {
-   countNestedTreeLeaves,
-   pickSubtreeApiRank,
-} from '@/lib/taxonomy/taxonomyTreeLoad'
-import { MAX_TREE_LEAVES } from '@/lib/taxonomy/taxonomyTreeLimits'
-import {
-   parseTreeRow,
-   rowToFlatTreeNode,
-   type FlatTreeNode,
-   type TreeTableRow,
-} from '@/lib/taxonomy/treeTableTypes'
+   buildTreeSlice,
+} from '@/lib/taxonomy/taxonomyTreePipeline'
+import type { FlatTreeNode, TreeTableRow } from '@/lib/taxonomy/treeTableTypes'
 
 type Status = 'idle' | 'loading' | 'success' | 'error'
 
-export type TaxonomyLoadMode = 'full' | 'subtree'
+let loadGeneration = 0
 
-type TaxonomyTreeState = {
-   status: Status
-   error: string | null
-   nestedTree: NestedTaxonNode | null
-   byTaxid: Map<string, FlatTreeNode>
-   rowByTaxid: Map<string, TreeTableRow>
-
-   /** Root taxid used for the current payload (URL `root` or portal root). */
-   treeRootTaxid: string | null
-   /** Display name for `treeRootTaxid` (from taxon document). */
-   rootScientificName: string | null
-   /** Portal root from API (``ROOT_NODE`` / ``GET /taxons/root``). */
-   portalRootTaxid: string | null
-   loadMode: TaxonomyLoadMode
-   /** Subtree truncation rank when `loadMode === 'subtree'`. */
-   apiRankLevel: string | null
-   lookupByRank: Record<string, SubtreeLookupResponse>
-   subtreeWarning: boolean
-
-   loadTree: (rootTaxid: string, opts?: { requestedRank?: string | null }) => Promise<void>
-}
-
-async function fetchAllRankLookups(
-   rootTaxid: string,
-   myGen: number,
-): Promise<Record<string, SubtreeLookupResponse>> {
-   const lookupByRank: Record<string, SubtreeLookupResponse> = {}
-   await Promise.all(
-      TREE_RANK_FILTER_OPTIONS.map(async (rank) => {
-         try {
-            const L = await fetchSubtreeLookup(rootTaxid, rank)
-            if (myGen !== loadGeneration) return
-            lookupByRank[rank] = L
-         } catch {
-            /* skip */
-         }
-      }),
-   )
-   return lookupByRank
-}
+let fullTableCache: FlattenedTreeResponse | null = null
+let fullNestedCache: NestedTaxonNode | null = null
+let fullCachePortalId: string | null = null
 
 function rootDisplayNameFromDoc(doc: Record<string, unknown>): string | null {
    const s = doc.scientific_name
@@ -76,19 +30,47 @@ function rootDisplayNameFromDoc(doc: Record<string, unknown>): string | null {
    return null
 }
 
-function buildMaps(fields: string[], rows: (string | number | null)[][]) {
-   const byTaxid = new Map<string, FlatTreeNode>()
-   const rowByTaxid = new Map<string, TreeTableRow>()
-   for (const row of rows) {
-      const parsed = parseTreeRow(fields, row)
-      if (!parsed) continue
-      rowByTaxid.set(parsed.taxid, parsed)
-      byTaxid.set(parsed.taxid, rowToFlatTreeNode(parsed))
+async function ensureFullPortalTree(
+   portalId: string,
+   myGen: number,
+): Promise<{ table: FlattenedTreeResponse; fullNested: NestedTaxonNode } | null> {
+   if (fullTableCache && fullNestedCache && fullCachePortalId === portalId) {
+      return { table: fullTableCache, fullNested: fullNestedCache }
    }
-   return { byTaxid, rowByTaxid }
+   const table = await fetchRootTreeTsv()
+   if (myGen !== loadGeneration) return null
+   const { tree } = flattenedTreeToNested(table, portalId)
+   if (myGen !== loadGeneration) return null
+   fullTableCache = table
+   fullNestedCache = tree
+   fullCachePortalId = portalId
+   return { table, fullNested: tree }
 }
 
-let loadGeneration = 0
+type TaxonomyTreeState = {
+   status: Status
+   error: string | null
+   nestedTree: NestedTaxonNode | null
+   byTaxid: Map<string, FlatTreeNode>
+   rowByTaxid: Map<string, TreeTableRow>
+   /** Root taxid used for the current payload (URL `root` or portal root). */
+   treeRootTaxid: string | null
+   /** Display name for `treeRootTaxid` (from taxon document). */
+   rootScientificName: string | null
+   /** Portal root from API (``ROOT_NODE`` / ``GET /taxons/root``). */
+   portalRootTaxid: string | null
+   /**
+    * Default truncation rank when the subtree has more than MAX_TREE_LEAVES tip
+    * nodes (finest rank under cap).  `null` means default to "all leaves".
+    */
+   apiRankLevel: string | null
+   lookupByRank: Record<string, SubtreeLookupResponse>
+   subtreeWarning: boolean
+   /** Topology leaf count: tip nodes in the unfiltered slice (not organism count). */
+   topologyLeafCount: number
+
+   loadTree: (rootTaxid: string, opts?: { requestedRank?: string | null }) => Promise<void>
+}
 
 export const useTaxonomyTreeStore = create<TaxonomyTreeState>((set) => ({
    status: 'idle',
@@ -99,10 +81,10 @@ export const useTaxonomyTreeStore = create<TaxonomyTreeState>((set) => ({
    treeRootTaxid: null,
    rootScientificName: null,
    portalRootTaxid: null,
-   loadMode: 'full',
    apiRankLevel: null,
    lookupByRank: {},
    subtreeWarning: false,
+   topologyLeafCount: 0,
 
    loadTree: async (rootTaxid: string, opts?: { requestedRank?: string | null }) => {
       const root = rootTaxid.trim()
@@ -116,20 +98,25 @@ export const useTaxonomyTreeStore = create<TaxonomyTreeState>((set) => ({
             treeRootTaxid: null,
             rootScientificName: null,
             portalRootTaxid: null,
-            loadMode: 'full',
             apiRankLevel: null,
             lookupByRank: {},
             subtreeWarning: false,
+            topologyLeafCount: 0,
          })
          return
       }
 
       const myGen = ++loadGeneration
-      set({ status: 'loading', error: null })
+      set({ status: 'loading', error: null, lookupByRank: {} })
 
       try {
-         const portalDoc = await fetchRootTaxon()
+         await useRootTaxonStore.getState().loadRootTaxon()
          if (myGen !== loadGeneration) return
+
+         const portalDoc = useRootTaxonStore.getState().rootTaxon
+         if (!portalDoc) {
+            throw new Error('Portal root taxon unavailable')
+         }
          const portalId = String(portalDoc.taxid ?? '').trim()
          if (!portalId) {
             throw new Error('Portal root taxon missing taxid')
@@ -138,69 +125,34 @@ export const useTaxonomyTreeStore = create<TaxonomyTreeState>((set) => ({
          const rootDoc = root === portalId ? portalDoc : await fetchTaxon(root)
          if (myGen !== loadGeneration) return
 
-         const orgCount =
-            typeof rootDoc.organisms_count === 'number'
-               ? rootDoc.organisms_count
-               : Number(rootDoc.organisms_count) || 0
+         const rootName = rootDisplayNameFromDoc(rootDoc as Record<string, unknown>)
 
-         const isPortalRoot = root === portalId
+         const got = await ensureFullPortalTree(portalId, myGen)
+         if (myGen !== loadGeneration) return
+         if (!got) return
 
-         const rootName = rootDisplayNameFromDoc(rootDoc)
-
-         const runSubtree = async () => {
-            const lookupByRank = await fetchAllRankLookups(root, myGen)
-            if (myGen !== loadGeneration) return
-
-            const { rank, usedFallback } = pickSubtreeApiRank(lookupByRank, opts?.requestedRank ?? null)
-            const table = await fetchSubtreeTreeTable(root, rank)
-            if (myGen !== loadGeneration) return
-
-            const { tree } = flattenedTreeToNested(table, root)
-            const maps = buildMaps(table.fields, table.rows)
-            set({
-               status: 'success',
-               error: null,
-               nestedTree: tree,
-               ...maps,
-               treeRootTaxid: root,
-               rootScientificName: rootName,
-               portalRootTaxid: portalId,
-               loadMode: 'subtree',
-               apiRankLevel: rank,
-               lookupByRank,
-               subtreeWarning: usedFallback,
-            })
+         const { table, fullNested } = got
+         const slice = buildTreeSlice(table, fullNested, root, opts)
+         if (!slice) {
+            throw new Error(
+               `Taxon ${root} is not in the loaded portal taxonomy table (wrong root or stale data).`,
+            )
          }
 
-         if (isPortalRoot && orgCount <= MAX_TREE_LEAVES) {
-            const table = await fetchRootTreeTable()
-            if (myGen !== loadGeneration) return
-            const { tree } = flattenedTreeToNested(table, portalId)
-            const leaves = countNestedTreeLeaves(tree)
-            if (leaves <= MAX_TREE_LEAVES) {
-               const maps = buildMaps(table.fields, table.rows)
-               set({
-                  status: 'success',
-                  error: null,
-                  nestedTree: tree,
-                  ...maps,
-                  treeRootTaxid: root,
-                  rootScientificName: rootName,
-                  portalRootTaxid: portalId,
-                  loadMode: 'full',
-                  apiRankLevel: null,
-                  lookupByRank: {},
-                  subtreeWarning: false,
-               })
-               void fetchAllRankLookups(root, myGen).then((lookups) => {
-                  if (myGen !== loadGeneration) return
-                  set((prev) => ({ ...prev, lookupByRank: lookups }))
-               })
-               return
-            }
-         }
-
-         await runSubtree()
+         set({
+            status: 'success',
+            error: null,
+            nestedTree: slice.nestedSlice,
+            byTaxid: slice.byTaxid,
+            rowByTaxid: slice.rowByTaxid,
+            treeRootTaxid: root,
+            rootScientificName: rootName,
+            portalRootTaxid: portalId,
+            apiRankLevel: slice.apiRankLevel,
+            lookupByRank: slice.lookupByRank,
+            subtreeWarning: slice.subtreeWarning,
+            topologyLeafCount: slice.topologyLeafCount,
+         })
       } catch (e) {
          if (myGen !== loadGeneration) return
          const message = e instanceof Error ? e.message : String(e)
@@ -213,25 +165,21 @@ export const useTaxonomyTreeStore = create<TaxonomyTreeState>((set) => ({
             treeRootTaxid: root,
             rootScientificName: null,
             portalRootTaxid: null,
-            loadMode: 'full',
             apiRankLevel: null,
             lookupByRank: {},
             subtreeWarning: false,
+            topologyLeafCount: 0,
          })
       }
    },
 }))
 
-/**
- * Rank filter applies only in `full` mode (client prune). Subtree mode is already truncated server-side.
- */
+/** Client-side rank filter (`pruneByRank`) on the in-memory slice. */
 export function getDisplayNestedRoot(
    nestedTree: NestedTaxonNode | null,
    rankFilter: string | null,
-   loadMode: TaxonomyLoadMode,
 ): NestedTaxonNode | null {
    if (!nestedTree) return null
-   if (loadMode === 'subtree') return nestedTree
    if (rankFilter?.trim()) {
       const pruned = pruneByRank(nestedTree, rankFilter.trim())
       return pruned ?? nestedTree

@@ -9,3 +9,5 @@ docker-compose-DEV.yml
 .venv
 .cursor
 .next
+# CI-injected branding assets (portal.config.json, logos, hero-map.geojson)
+front/branding/

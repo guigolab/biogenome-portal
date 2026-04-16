@@ -25,7 +25,7 @@ export type OrganismFormState = {
    publications: OrganismPublication[]
    sub_project: string | null
    goat_status: string
-   target_list_status: 'long_list' | 'family_representative' | 'other_priority' | null
+   target_list_status: 'long_list' | 'family_representative' | 'other_priority' | ''
    sequencing_type: string[]
 }
 
@@ -40,7 +40,7 @@ const emptyForm = (): OrganismFormState => ({
    publications: [],
    sub_project: null,
    goat_status: '',
-   target_list_status: null,
+   target_list_status: 'long_list',
    sequencing_type: [],
 })
 
@@ -50,12 +50,14 @@ type OrganismFormStore = {
    publications: OrganismPublication[]
    vernacularNames: OrganismCommonName[]
    images: OrganismImageRow[]
+   imageUsageComplianceOk: boolean
    setOrganismForm: (p: Partial<OrganismFormState>) => void
    replaceOrganismForm: (f: OrganismFormState) => void
    setMetadataList: (v: { key: string; value: string }[]) => void
    setPublications: (v: OrganismPublication[]) => void
    setVernacularNames: (v: OrganismCommonName[]) => void
    setImages: (v: OrganismImageRow[]) => void
+   setImageUsageComplianceOk: (v: boolean) => void
    reset: () => void
 }
 
@@ -65,6 +67,7 @@ export const useOrganismFormStore = create<OrganismFormStore>((set) => ({
    publications: [],
    vernacularNames: [],
    images: [],
+   imageUsageComplianceOk: false,
 
    setOrganismForm: (p) => set((s) => ({ organismForm: { ...s.organismForm, ...p } })),
    replaceOrganismForm: (f) => set({ organismForm: f }),
@@ -72,6 +75,7 @@ export const useOrganismFormStore = create<OrganismFormStore>((set) => ({
    setPublications: (publications) => set({ publications }),
    setVernacularNames: (vernacularNames) => set({ vernacularNames }),
    setImages: (images) => set({ images }),
+   setImageUsageComplianceOk: (imageUsageComplianceOk) => set({ imageUsageComplianceOk }),
 
    reset: () =>
       set({
@@ -80,5 +84,6 @@ export const useOrganismFormStore = create<OrganismFormStore>((set) => ({
          publications: [],
          vernacularNames: [],
          images: [],
+         imageUsageComplianceOk: false,
       }),
 }))

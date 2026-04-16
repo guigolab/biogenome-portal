@@ -32,10 +32,27 @@ type PortalContextValue = {
 
 const PortalContext = createContext<PortalContextValue | null>(null)
 
-export function PortalProvider({ children }: { children: ReactNode }) {
-   const [config, setConfig] = useState<AppConfig | null>(null)
-   const [raw, setRaw] = useState<PortalConfig | null>(null)
-   const [loading, setLoading] = useState(true)
+type PortalProviderProps = {
+   children: ReactNode
+   /**
+    * Server-loaded portal config passed from RootLayout so the client
+    * initializes synchronously — no loading flash, no extra fetch.
+    * Falls back to a client-side fetch when omitted (e.g. Storybook, tests).
+    */
+   initialPortal?: PortalConfig
+}
+
+function buildAppConfig(raw: PortalConfig) {
+   applyPortalGeneralRuntime(raw.general)
+   return normalizePortalConfig(raw, normalizeUiColors)
+}
+
+export function PortalProvider({ children, initialPortal }: PortalProviderProps) {
+   const [config, setConfig] = useState<AppConfig | null>(
+      () => (initialPortal ? buildAppConfig(initialPortal) : null),
+   )
+   const [raw, setRaw] = useState<PortalConfig | null>(initialPortal ?? null)
+   const [loading, setLoading] = useState(!initialPortal)
    const [error, setError] = useState<string | null>(null)
 
    const load = useCallback(async () => {
@@ -49,16 +66,18 @@ export function PortalProvider({ children }: { children: ReactNode }) {
          setError(msg)
          rawConfig = defaultPortalConfig
       }
-      applyPortalGeneralRuntime(rawConfig.general)
-      const app = normalizePortalConfig(rawConfig, normalizeUiColors)
+      const app = buildAppConfig(rawConfig)
       setRaw(rawConfig)
       setConfig(app)
       setLoading(false)
    }, [])
 
+   // When no initialPortal is provided (dev / fallback), fetch on mount.
    useEffect(() => {
-      void load()
-   }, [load])
+      if (!initialPortal) {
+         void load()
+      }
+   }, [initialPortal, load])
 
    useEffect(() => {
       if (!config || typeof document === 'undefined') return

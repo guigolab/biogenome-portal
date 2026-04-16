@@ -7,8 +7,6 @@ type TooltipPayload = {
    title: string
    rank?: string
    organismsCount: number
-   assembliesCount: number
-   annotationsCount: number
 }
 
 export function TaxonomyNodeTooltip({
@@ -36,8 +34,6 @@ export function TaxonomyNodeTooltip({
          ) : null}
          <div className="mt-1 space-y-0.5 text-xs text-muted-foreground">
             <div>Organisms: {payload.organismsCount.toLocaleString()}</div>
-            <div>Assemblies: {payload.assembliesCount.toLocaleString()}</div>
-            <div>Annotations: {payload.annotationsCount.toLocaleString()}</div>
          </div>
       </div>
    )

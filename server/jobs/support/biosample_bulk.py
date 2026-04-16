@@ -9,6 +9,7 @@ from clients import ebi_client
 from db.model import BioSample
 from helpers.data import create_batches
 from parsers import biosample
+from uuid import uuid4
 
 logger = logging.getLogger(__name__)
 
@@ -55,20 +56,25 @@ def fetch_new_biosamples_from_ebi_portal(accessions, tmp_dir):
     batches = create_batches(accessions, 5000)
     biosamples = []
     for batch in batches:
-        path_to_gzipped_xml_file = os.path.join(tmp_dir, f"biosamples_{len(batch)}.xml.gz")
-        fetch_success = ebi_client.get_xml_from_ena_browser(batch, path_to_gzipped_xml_file)
-        if (
-            not fetch_success
-            or not os.path.exists(path_to_gzipped_xml_file)
-            or os.path.getsize(path_to_gzipped_xml_file) == 0
-        ):
-            continue
-        biosamples.extend(parse_biosamples_from_xml(path_to_gzipped_xml_file))
-        # Best-effort cleanup to save disk space
         try:
-            os.remove(path_to_gzipped_xml_file)
-        except OSError:
-            pass
+            path_to_gzipped_xml_file = os.path.join(tmp_dir, f"biosamples_{uuid4()}.xml.gz")
+            fetch_success = ebi_client.get_xml_from_ena_browser(batch, path_to_gzipped_xml_file)
+            if (
+                not fetch_success
+                or not os.path.exists(path_to_gzipped_xml_file)
+                or os.path.getsize(path_to_gzipped_xml_file) == 0
+            ):
+                continue
+            biosamples.extend(parse_biosamples_from_xml(path_to_gzipped_xml_file))
+        # Best-effort cleanup to save disk space
+        except Exception as e:
+            logger.exception(f"Error fetching biosamples from ENA portal: {e}")
+            continue
+        finally:
+            try:
+                os.remove(path_to_gzipped_xml_file)
+            except OSError:
+                pass
     return biosamples
 
 

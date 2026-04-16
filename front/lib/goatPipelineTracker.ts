@@ -83,6 +83,17 @@ export function goatStatusTrackerBadgeStyle(value: string): CSSProperties {
    }
 }
 
+/** Filled badge for `target_list_status` — aligns with `TARGET_LIST_CHIP_COLORS` / pipeline chips. */
+export function targetListStatusBadgeStyle(value: string): CSSProperties {
+   const idx = targetListStatusColorIndex(value)
+   const hex = TARGET_LIST_CHIP_COLORS[idx] ?? TARGET_LIST_CHIP_COLORS[0]
+   return {
+      backgroundColor: hex,
+      borderColor: hex,
+      color: '#ffffff',
+   }
+}
+
 export function buildGoatTrackerStages(
    goatStats: Record<string, number> | null | undefined,
 ): { stages: GoatTrackerStage[]; total: number } {

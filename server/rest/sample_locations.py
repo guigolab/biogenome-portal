@@ -1,23 +1,31 @@
-from flask import Response,request
+from flask import Response, request
 from flask_restful import Resource
+from helpers.cache_key import cached_endpoint
 from services import sample_locations
 import json
 
+_CACHE_TTL = 900
+
+
 class SampleLocations(Resource):
+    @cached_endpoint(timeout=_CACHE_TTL)
     def get(self):
         resp = sample_locations.get_sample_locations(request.args)
         return Response(json.dumps(resp), mimetype="application/json", status=200)
-    
+
     def post(self):
         data = request.json if request.is_json else request.form
         resp = sample_locations.post_sample_locations(data)
         return Response(json.dumps(resp), mimetype="application/json", status=200)
 
+
 class UniqueLocations(Resource):
+    @cached_endpoint(timeout=_CACHE_TTL)
     def get(self):
         resp = sample_locations.get_unique_sample_locations(request.args)
         return Response(json.dumps(resp), mimetype="application/json", status=200)
 
+    @cached_endpoint(timeout=_CACHE_TTL)
     def post(self):
         data = request.json if request.is_json else request.form
         resp = sample_locations.post_unique_sample_locations(data)

@@ -89,7 +89,7 @@ export default function LoginPage() {
                   <CardDescription>Use your portal curator or admin account.</CardDescription>
                </CardHeader>
                <CardContent>
-                  {/* Standard login field names for browser password managers; keep distinct from CMS user form (`cms_user_*`). */}
+                  {/* Standard login field names for browser password managers; CMS user form uses a different autocomplete section (`section-portal-cms-user`). */}
                   <form className="grid gap-4" onSubmit={onSubmit} autoComplete="on">
                      <div className="grid gap-2">
                         <Label htmlFor="login-username">Username</Label>

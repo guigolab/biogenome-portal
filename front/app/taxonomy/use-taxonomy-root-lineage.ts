@@ -19,7 +19,11 @@ function parseTaxonDoc(doc: Record<string, unknown>): LineageEntry | null {
 }
 
 /**
- * Ancestors from portal root through the current tree root (``GET /taxons/:id/ancestors``, root-to-tip order).
+ * Ancestors from portal root through the current tree root
+ * (``GET /taxons/:id/ancestors``, root-to-tip order).
+ *
+ * Always resolves `loadingLineage` to `false` — network errors produce an
+ * empty lineage rather than leaving the spinner stuck.
  */
 export function useTaxonomyRootLineage(
    treeRootTaxid: string | null,
@@ -38,21 +42,31 @@ export function useTaxonomyRootLineage(
       let cancelled = false
       setLoadingLineage(true)
 
-      void fetchTaxonAncestors(treeRootTaxid.trim()).then((docs) => {
-         if (cancelled) return
-         const parsed = docs
-            .map((d) => parseTaxonDoc(d))
-            .filter((x): x is LineageEntry => x != null)
+      const load = async () => {
+         try {
+            const docs = await fetchTaxonAncestors(treeRootTaxid.trim())
+            if (cancelled) return
 
-         let segment = parsed
-         if (portalRootTaxid?.trim()) {
-            const pi = parsed.findIndex((x) => x.taxid === portalRootTaxid.trim())
-            if (pi >= 0) segment = parsed.slice(pi)
+            const parsed = docs
+               .map((d) => parseTaxonDoc(d))
+               .filter((x): x is LineageEntry => x !== null)
+
+            let segment = parsed
+            if (portalRootTaxid?.trim()) {
+               const pi = parsed.findIndex((x) => x.taxid === portalRootTaxid.trim())
+               if (pi >= 0) segment = parsed.slice(pi)
+            }
+
+            setLineage(segment)
+         } catch {
+            if (cancelled) return
+            setLineage([])
+         } finally {
+            if (!cancelled) setLoadingLineage(false)
          }
+      }
 
-         setLineage(segment)
-         setLoadingLineage(false)
-      })
+      void load()
 
       return () => {
          cancelled = true

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-import { getCachedPortalFlags, sessionProbeUrl } from '@/lib/cms/middleware-portal'
+import { getPortalFlags, sessionProbeUrl } from '@/lib/cms/middleware-portal'
 
 function withBasePath(path: string): string {
    const bp = (process.env.NEXT_PUBLIC_BASE_PATH ?? '').replace(/\/$/, '')
@@ -28,11 +28,7 @@ async function sessionOk(request: NextRequest, apiBase: string): Promise<boolean
 }
 
 export async function middleware(request: NextRequest) {
-   const flags = await getCachedPortalFlags(request)
-
-   if (!flags) {
-      return NextResponse.redirect(new URL(withBasePath('/'), request.nextUrl.origin))
-   }
+   const flags = getPortalFlags(request)
 
    if (!flags.cms) {
       return NextResponse.redirect(new URL(withBasePath('/'), request.nextUrl.origin))

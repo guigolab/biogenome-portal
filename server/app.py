@@ -7,7 +7,7 @@ from werkzeug.exceptions import Unauthorized
 from routes import initialize_api
 from flask_jwt_extended import JWTManager,get_jwt, create_access_token, get_jwt_identity, set_access_cookies
 from db.enums import Roles
-from db.model import BioGenomeUser, Assembly, BioSample, Chromosome, Experiment, GenomeAnnotation, LocalSample, Organism, Read, ReadRun, SampleCoordinates, TaxonNode
+from db.model import BioGenomeUser, Assembly, BioSample, BioSampleFetchFailure, Chromosome, Experiment, GenomeAnnotation, LocalSample, Organism, Read, ReadRun, SampleCoordinates, TaxonNode
 from tendo.singleton import SingleInstance
 from flask_mongoengine import MongoEngine
 from datetime import datetime,timedelta,timezone
@@ -21,7 +21,8 @@ app = Flask(__name__)
 
 
 app.config.from_object(BaseConfig)
-app.config["JWT_TOKEN_LOCATION"] = ["cookies"]
+# Headers allow scripts over HTTP where Secure cookies are not stored/sent; browsers keep using cookies.
+app.config["JWT_TOKEN_LOCATION"] = ["cookies", "headers"]
 
 # Periodic tasks for Celery Beat: loaded from JSON (see CELERY_BEAT_SCHEDULE_FILE / volume in compose).
 beat_schedule = load_beat_schedule_from_json_file(BaseConfig.CELERY_BEAT_SCHEDULE_FILE)
@@ -44,7 +45,14 @@ db.init_app(app)
 
 celery_app = celery_init_app(app)
 
-cache.cache.init_app(app, config={"CACHE_TYPE": "SimpleCache", "CACHE_DEFAULT_TIMEOUT": 300}) 
+cache.cache.init_app(app, config={
+    "CACHE_TYPE": "RedisCache",
+    "CACHE_REDIS_HOST": os.environ.get("REDIS_HOST", "bgp_redis"),
+    "CACHE_REDIS_PORT": int(os.environ.get("REDIS_PORT", 6379)),
+    "CACHE_REDIS_DB": int(os.environ.get("REDIS_CACHE_DB", 1)),
+    "CACHE_KEY_PREFIX": "bgp_api_cache:",
+    "CACHE_DEFAULT_TIMEOUT": 300,
+})
 
 initialize_api(app)
 

@@ -8,44 +8,23 @@ export type PortalMiddlewareFlags = {
    apiBase: string
 }
 
-type CacheEntry = { at: number; flags: PortalMiddlewareFlags }
-
-let cache: CacheEntry | null = null
-const TTL_MS = 45_000
-
-function portalJsonUrl(request: NextRequest): string {
-   const base = (process.env.NEXT_PUBLIC_BASE_PATH ?? '').replace(/\/$/, '')
-   const path = base ? `${base}/portal.json` : '/portal.json'
-   return new URL(path, request.nextUrl.origin).href
-}
-
 /**
- * Reads `general.cms` and `general.apiBase` from portal.json with a short in-memory TTL.
+ * Returns CMS flags for the middleware from build-time env vars baked into the
+ * image by `scripts/bake-portal.mjs`. No runtime HTTP fetch to portal.json.
+ *
+ * NEXT_PUBLIC_CMS   — set to "true" when CMS is enabled (from PORTAL_CONFIG or NEXT_PUBLIC_CMS build-arg)
+ * PORTAL_API_BASE   — API base path baked into the image; falls back to "/api"
+ *
+ * For local dev without a baked image, set NEXT_PUBLIC_CMS and PORTAL_API_BASE
+ * in your .env.local (or they default to cms=false, apiBase=/api which is fine
+ * for non-CMS dev).
  */
-export async function getCachedPortalFlags(request: NextRequest): Promise<PortalMiddlewareFlags | null> {
-   const now = Date.now()
-   if (cache && now - cache.at < TTL_MS) {
-      return cache.flags
-   }
+export function getPortalFlags(_request?: NextRequest): PortalMiddlewareFlags {
+   const cmsEnv = process.env.NEXT_PUBLIC_CMS
+   const cms = cmsEnv === 'true'
 
-   try {
-      const res = await fetch(portalJsonUrl(request), { cache: 'no-store' })
-      if (!res.ok) return null
-      const json = (await res.json()) as { general?: { cms?: boolean; apiBase?: string } }
-      const general = json?.general
-      const rawBase =
-         typeof general?.apiBase === 'string' && general.apiBase.trim().length > 0
-            ? general.apiBase.trim().replace(/\/$/, '')
-            : '/api'
-      const flags: PortalMiddlewareFlags = {
-         cms: general?.cms === true,
-         apiBase: rawBase,
-      }
-      cache = { at: now, flags }
-      return flags
-   } catch {
-      return null
-   }
+   const rawBase = process.env.PORTAL_API_BASE?.trim().replace(/\/$/, '') || '/api'
+   return { cms, apiBase: rawBase }
 }
 
 export function sessionProbeUrl(request: NextRequest, apiBase: string): string {

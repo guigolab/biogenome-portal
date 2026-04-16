@@ -1,19 +1,29 @@
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
+import { Loader2 } from 'lucide-react'
 
 import { CatalogExplorerPageClient } from '@/components/catalog-explorer/catalog-explorer-page-client'
 
-/** Assemblies, BioSamples, read runs, organisms, and annotations use catalog layout from `lib/portal/catalogModelsDefaults.ts`. Only `models.local_samples` in portal.json may override labels/filters/columns/charts. */
+/** Assemblies, BioSamples, read runs, organisms, and annotations use catalog layout from `lib/portal/catalogModelsDefaults.ts`. `models.local_samples` / `models.annotations` in portal.json may override card layout, sort/export fields, labels, filters, and charts. */
 
 export const metadata: Metadata = {
    title: 'Catalog',
    description:
-      'INSDC catalog explorer: assemblies (NCBI metadata, BlobToolKit), BioSamples (ENA checklist fields), read runs (ENA filereport), and genome annotations. Per-model columns, filters, themed dashboard charts (palette by collection), TSV/JSONL export, and shortcuts to the genome browser or ENA. Annotation dashboard calls out Annotrieve-style vs portal-upload rows on the loaded page.',
+      'Portal INSDC catalogs (assemblies, BioSamples, reads, annotations): filter, browse records or dashboard charts, TSV/JSONL export.',
 }
 
 export default function CatalogPage() {
    return (
-      <div className="flex min-h-0 flex-1 flex-col">
-         <CatalogExplorerPageClient />
+      <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden">
+         <Suspense
+            fallback={
+               <div className="flex min-h-[50vh] items-center justify-center text-muted-foreground">
+                  <Loader2 className="h-10 w-10 animate-spin" aria-label="Loading" />
+               </div>
+            }
+         >
+            <CatalogExplorerPageClient />
+         </Suspense>
       </div>
    )
 }

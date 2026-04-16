@@ -6,7 +6,9 @@ import { fetchCatalogList } from '@/lib/api/catalog'
 import { mergeListPagination } from '@/lib/catalogQueryParams'
 import type { DataModels } from '@/lib/portal/types'
 
-const PAGE_SIZE = 50
+export const CATALOG_PAGE_SIZE_OPTIONS = [25, 50, 100] as const
+export type CatalogPageSize = (typeof CATALOG_PAGE_SIZE_OPTIONS)[number]
+const DEFAULT_PAGE_SIZE: CatalogPageSize = 50
 
 /**
  * Paginated catalog list fetch + infinite scroll append.
@@ -15,8 +17,9 @@ export function useCatalogList(options: {
    catalogKey: DataModels
    baseQuery: Record<string, string | number | boolean>
    canFetchList: boolean
+   pageSize?: CatalogPageSize
 }) {
-   const { catalogKey, baseQuery, canFetchList } = options
+   const { catalogKey, baseQuery, canFetchList, pageSize = DEFAULT_PAGE_SIZE } = options
 
    const [items, setItems] = useState<Record<string, unknown>[]>([])
    const [total, setTotal] = useState(0)
@@ -34,7 +37,7 @@ export function useCatalogList(options: {
       let cancelled = false
       setLoading(true)
       setListError(null)
-      const params = mergeListPagination(baseQuery, PAGE_SIZE, 0)
+      const params = mergeListPagination(baseQuery, pageSize, 0)
       void fetchCatalogList(catalogKey, params)
          .then((res) => {
             if (cancelled) return
@@ -59,7 +62,7 @@ export function useCatalogList(options: {
       if (!canFetchList || items.length >= total || loadingMore || loading) return
       setLoadingMore(true)
       setListError(null)
-      const params = mergeListPagination(baseQuery, PAGE_SIZE, items.length)
+      const params = mergeListPagination(baseQuery, pageSize, items.length)
       void fetchCatalogList(catalogKey, params)
          .then((res) => {
             setItems((prev) => [...prev, ...res.data])

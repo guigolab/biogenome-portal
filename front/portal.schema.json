@@ -23,10 +23,6 @@
             },
             "cms": { "type": "boolean" },
             "goat": { "type": "boolean", "description": "Enable GoaT pipeline / target-list filters, columns, charts, and home GOAT status." },
-            "insdcStatus": {
-               "type": "boolean",
-               "description": "Enable INSDC status filters, columns, charts, and home INSDC status section when true."
-            },
             "map": {
                "type": "boolean",
                "description": "Enable the geographic explorer route and actions. Defaults to true when omitted."
@@ -34,11 +30,6 @@
             "languages": {
                "type": "array",
                "items": { "type": "string" }
-            },
-            "featuredTaxids": {
-               "type": "array",
-               "description": "NCBI taxids to highlight on the home page (featured taxa cards).",
-               "items": { "type": "string", "pattern": "^[0-9]+$" }
             },
             "apiBase": {
                "type": "string",
@@ -49,6 +40,11 @@
                "type": "string",
                "pattern": "^[0-9]+$",
                "description": "Next.js front: default root NCBI taxid for UI fallbacks; prefer GET /taxons/root when online."
+            },
+            "goatProjectLink": {
+               "type": "string",
+               "minLength": 1,
+               "description": "Optional http(s) URL to this portal’s Genomes on a Tree (GoaT) project. When set, the species list GoaT drawer shows a “View in GoaT” button."
             }
          }
       },
@@ -118,10 +114,11 @@
       },
       "models": {
          "type": "object",
-         "description": "Optional catalog overrides. Only `local_samples` may be configured; other catalog models use built-in defaults.",
+         "description": "Optional catalog overrides. `local_samples` and `annotations` card/export layouts may be configured; INSDC list filters/charts remain code-defined.",
          "additionalProperties": false,
          "properties": {
-            "local_samples": { "$ref": "#/$defs/model" }
+            "local_samples": { "$ref": "#/$defs/model" },
+            "annotations": { "$ref": "#/$defs/model" }
          }
       },
       "footer": {
@@ -132,7 +129,7 @@
             "logoUrl": {
                "type": "string",
                "minLength": 1,
-               "description": "Public URL path to the footer logo (e.g. /portal-logo.svg). Omit to hide the logo."
+               "description": "Public path under Next `public/` (e.g. /portal-logo.png). Must match the mounted file; omit for title-only branding."
             },
             "copyright": { "$ref": "#/$defs/i18nStrings" },
             "tagline": {
@@ -183,7 +180,52 @@
             "key": { "type": "string", "minLength": 1 },
             "type": {
                "type": "string",
-               "enum": ["select", "date", "checkbox"]
+               "enum": [
+                  "select",
+                  "date",
+                  "checkbox",
+                  "input",
+                  "histogramDate",
+                  "experimentList",
+                  "thresholdToggle",
+                  "thresholdPair",
+                  "referenceGenome"
+               ]
+            },
+            "label": { "$ref": "#/$defs/i18nStrings" },
+            "checkboxLabel": {
+               "$ref": "#/$defs/i18nStrings",
+               "description": "Optional label for referenceGenome checkbox line (section title uses label)."
+            },
+            "threshold": { "type": "number", "description": "Lower bound for thresholdToggle (__gte)." },
+            "thresholdPair": {
+               "type": "array",
+               "description": "Per-row key + threshold for thresholdPair (state under each key).",
+               "items": {
+                  "type": "object",
+                  "required": ["key", "threshold"],
+                  "additionalProperties": false,
+                  "properties": {
+                     "key": { "type": "string", "minLength": 1 },
+                     "threshold": { "type": "number" },
+                     "label": { "$ref": "#/$defs/i18nStrings" }
+                  }
+               }
+            }
+         }
+      },
+      "catalogCardField": {
+         "type": "object",
+         "description": "Catalog record card row: API field dot-path, optional i18n label, Lucide icon name, section group.",
+         "additionalProperties": false,
+         "required": ["key"],
+         "properties": {
+            "key": { "type": "string", "minLength": 1 },
+            "label": { "$ref": "#/$defs/i18nStrings" },
+            "icon": { "type": "string" },
+            "section": {
+               "type": "string",
+               "enum": ["meta", "stats", "location", "identifiers", "annotation"]
             }
          }
       },
@@ -195,7 +237,7 @@
             "field": { "type": "string", "minLength": 1 },
             "type": {
                "type": "string",
-               "enum": ["bar", "pie", "dateline"]
+               "enum": ["bar", "pie", "dateline", "scatter"]
             },
             "size": {
                "type": "integer",
@@ -203,7 +245,10 @@
                "maximum": 4,
                "description": "Optional in JSON; defaults are applied when normalizing config."
             },
-            "model": { "type": "string" }
+            "model": { "type": "string" },
+            "xField": { "type": "string", "description": "Scatter charts: X axis (dot path)." },
+            "yField": { "type": "string", "description": "Scatter charts: Y axis (dot path)." },
+            "colorField": { "type": "string", "description": "Scatter charts: categorical color (dot path)." }
          }
       },
       "model": {
@@ -223,6 +268,19 @@
                "items": { "$ref": "#/$defs/filter" }
             },
             "columns": {
+               "type": "array",
+               "description": "Deprecated: use cardFields and exportFields.",
+               "items": { "type": "string", "minLength": 1 }
+            },
+            "cardFields": {
+               "type": "array",
+               "items": { "$ref": "#/$defs/catalogCardField" }
+            },
+            "sortableFields": {
+               "type": "array",
+               "items": { "type": "string", "minLength": 1 }
+            },
+            "exportFields": {
                "type": "array",
                "items": { "type": "string", "minLength": 1 }
             },

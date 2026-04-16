@@ -19,6 +19,36 @@ function appendParams(
 /**
  * GET /api/<model> — same contract as other catalog list endpoints.
  */
+const CATALOG_LIST_PAGE_MAX = 200
+
+/**
+ * Paginated GET /api/&lt;model&gt; until all rows for the same filter are loaded (max page size 200).
+ * Use `fields` to limit payload (e.g. `accession,metadata` for assembly scatter plots).
+ */
+export async function fetchCatalogListAll(
+   model: DataModels,
+   params: Record<string, string | number | boolean | undefined | null>,
+   options?: { fields?: string[] },
+): Promise<{ total: number; data: Record<string, unknown>[] }> {
+   const fieldsParam = options?.fields?.length ? { fields: options.fields.join(',') } : {}
+   let offset = 0
+   const all: Record<string, unknown>[] = []
+   let total = 0
+   for (;;) {
+      const res = await fetchCatalogList(model, {
+         ...params,
+         ...fieldsParam,
+         limit: CATALOG_LIST_PAGE_MAX,
+         offset,
+      })
+      total = res.total
+      all.push(...res.data)
+      if (all.length >= total || res.data.length === 0) break
+      offset += CATALOG_LIST_PAGE_MAX
+   }
+   return { total, data: all }
+}
+
 export async function fetchCatalogList(
    model: DataModels,
    params: Record<string, string | number | boolean | undefined | null>,

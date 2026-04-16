@@ -2,6 +2,8 @@ import logging
 
 from extensions.cache import cache
 from helpers import data as data_helper
+from helpers.catalog_date_regex import CATALOG_HISTOGRAM_ISO_DATE_PATTERN
+from helpers.catalog_field_agg import mongo_value_expr
 from helpers.data import MODEL_MAPPER
 from helpers.resource_mixins import dump_json
 
@@ -75,4 +77,68 @@ def get_stats(model, field, query):
 
     except Exception as e:
         logger.exception("get_stats failed for model=%r field=%r", model, field)
+        return {"message": str(e)}, 500
+
+
+def get_date_histogram_buckets(model, field, query):
+    """
+    Ordered date/sentinel value buckets for slider UI: regex-filtered distinct values + counts.
+
+    Response JSON: ``{"buckets": [{"value": str, "count": int}, ...]}`` (no memoize — query-specific).
+    """
+    if model not in MODEL_LIST:
+        return {"message": "model not found"}, 404
+
+    db_model = MODEL_LIST[model]
+    parsed_query, q_query = data_helper.create_query(query, None)
+    items = db_model.objects(**parsed_query)
+    if q_query:
+        items = items.filter(q_query)
+
+    val_expr = mongo_value_expr(field.strip())
+    # Coerce to string for regex; skip null / empty / facet sentinel.
+    pipeline = [
+        {"$set": {"_hv": val_expr}},
+        {
+            "$set": {
+                "_hs": {
+                    "$convert": {
+                        "input": "$_hv",
+                        "to": "string",
+                        "onError": "",
+                        "onNull": "",
+                    }
+                }
+            }
+        },
+        {
+            "$match": {
+                "_hs": {"$nin": ["", NO_VALUE_KEY]},
+            }
+        },
+        {
+            "$match": {
+                "$expr": {
+                    "$regexMatch": {
+                        "input": "$_hs",
+                        "regex": CATALOG_HISTOGRAM_ISO_DATE_PATTERN,
+                    }
+                }
+            }
+        },
+        {
+            "$group": {
+                "_id": "$_hs",
+                "count": {"$sum": 1},
+            }
+        },
+        {"$sort": {"_id": 1}},
+    ]
+
+    try:
+        cursor = items.no_cache().aggregate(pipeline, allowDiskUse=True)
+        buckets = [{"value": str(doc["_id"]), "count": int(doc["count"])} for doc in cursor]
+        return dump_json({"buckets": buckets}), 200
+    except Exception as e:
+        logger.exception("get_date_histogram_buckets failed for model=%r field=%r", model, field)
         return {"message": str(e)}, 500

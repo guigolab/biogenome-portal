@@ -38,7 +38,7 @@ export function UserFormPanel({ editName }: { editName?: string | null }) {
    const [email, setEmail] = useState('')
    const [role, setRole] = useState<'Admin' | 'DataManager'>('DataManager')
 
-   const [onlyUnassigned, setOnlyUnassigned] = useState(false)
+   const [onlyUnassigned, setOnlyUnassigned] = useState(true)
    const [searchFilter, setSearchFilter] = useState('')
    const [debouncedSearch, setDebouncedSearch] = useState('')
    const [searchPage, setSearchPage] = useState(1)
@@ -190,85 +190,112 @@ export function UserFormPanel({ editName }: { editName?: string | null }) {
       )
    }
 
-   const passwordAutoComplete =
-      editName && isAdminEditingDataManager && showPassword ? 'off' : 'new-password'
+   const isCreate = !editName
+   // Distinct section from /login (`section-portal-login`) so browsers do not apply login creds here.
+   const ac = {
+      // Use `nickname` (not `username`) so autofill does not match /login’s `username` token.
+      accountName: 'section-portal-cms-user nickname',
+      email: 'section-portal-cms-user email',
+      newPassword: 'section-portal-cms-user new-password',
+   } as const
+   const passwordAutoComplete = ac.newPassword
+
+   const nameField = (
+      <div className="sm:col-span-2">
+         <Label htmlFor="cms-user-name">Username</Label>
+         <Input
+            id="cms-user-name"
+            name="cms_user_name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            disabled={!!editName}
+            autoComplete={ac.accountName}
+            autoCorrect="off"
+            autoCapitalize="off"
+         />
+      </div>
+   )
+
+   const emailField = (
+      <div className="sm:col-span-2">
+         <Label htmlFor="cms-user-email">Email</Label>
+         <Input
+            id="cms-user-email"
+            name="cms_user_email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            autoComplete={ac.email}
+         />
+      </div>
+   )
+
+   const passwordBlock =
+      editName && isAdminEditingDataManager && !showPassword ? (
+         <div className="sm:col-span-2 rounded-md border border-border bg-muted/40 p-3 text-sm">
+            <p className="mb-2 text-muted-foreground">Password hidden. Change email or assignments without rotating password.</p>
+            <Button type="button" size="sm" variant="secondary" onClick={() => setShowPassword(true)}>
+               Change password
+            </Button>
+         </div>
+      ) : (
+         <div className="sm:col-span-2">
+            <Label htmlFor="cms-user-password">Password {editName && isAdminEditingDataManager ? '(optional if unchanged)' : ''}</Label>
+            <Input
+               id="cms-user-password"
+               name="cms_user_password"
+               type="password"
+               value={password}
+               onChange={(e) => setPassword(e.target.value)}
+               autoComplete={passwordAutoComplete}
+            />
+            {editName && isAdminEditingDataManager && showPassword ? (
+               <Button
+                  type="button"
+                  variant="link"
+                  className="mt-1 h-auto p-0 text-xs"
+                  onClick={() => {
+                     setShowPassword(false)
+                     setPassword('')
+                  }}
+               >
+                  Keep existing password
+               </Button>
+            ) : null}
+         </div>
+      )
 
    return (
       <form
          className="space-y-6"
          autoComplete="off"
+         data-cms-user-form={isCreate ? 'create' : 'edit'}
          onSubmit={(e) => {
             e.preventDefault()
             void handleSubmit()
          }}
       >
          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="sm:col-span-2">
-               <Label htmlFor="cms-user-name">Username</Label>
-               <Input
-                  id="cms-user-name"
-                  name="cms_user_name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  disabled={!!editName}
-                  autoComplete="off"
-                  autoCorrect="off"
-                  autoCapitalize="off"
-               />
-            </div>
-            {editName && isAdminEditingDataManager && !showPassword ? (
-               <div className="sm:col-span-2 rounded-md border border-border bg-muted/40 p-3 text-sm">
-                  <p className="mb-2 text-muted-foreground">Password hidden. Change email or assignments without rotating password.</p>
-                  <Button type="button" size="sm" variant="secondary" onClick={() => setShowPassword(true)}>
-                     Change password
-                  </Button>
-               </div>
+            {editName ? (
+               <>
+                  {nameField}
+                  {passwordBlock}
+                  {emailField}
+               </>
             ) : (
-               <div className="sm:col-span-2">
-                  <Label htmlFor="cms-user-password">Password {editName && isAdminEditingDataManager ? '(optional if unchanged)' : ''}</Label>
-                  <Input
-                     id="cms-user-password"
-                     name="cms_user_password"
-                     type="password"
-                     value={password}
-                     onChange={(e) => setPassword(e.target.value)}
-                     autoComplete={passwordAutoComplete}
-                     data-1p-ignore
-                     data-lpignore="true"
-                  />
-                  {editName && isAdminEditingDataManager && showPassword ? (
-                     <Button
-                        type="button"
-                        variant="link"
-                        className="mt-1 h-auto p-0 text-xs"
-                        onClick={() => {
-                           setShowPassword(false)
-                           setPassword('')
-                        }}
-                     >
-                        Keep existing password
-                     </Button>
-                  ) : null}
-               </div>
+               <>
+                  {emailField}
+                  {nameField}
+                  {passwordBlock}
+               </>
             )}
-            <div className="sm:col-span-2">
-               <Label htmlFor="cms-user-email">Email</Label>
-               <Input
-                  id="cms-user-email"
-                  name="cms_user_email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  autoComplete="off"
-               />
-            </div>
             <div className="sm:col-span-2">
                <Label>Role</Label>
                <Select value={role} onValueChange={(v) => setRole(v as 'Admin' | 'DataManager')}>
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full min-w-0">
                      <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent position="popper">
                      <SelectItem value="DataManager">DataManager</SelectItem>
                      <SelectItem value="Admin">Admin</SelectItem>
                   </SelectContent>
@@ -277,8 +304,8 @@ export function UserFormPanel({ editName }: { editName?: string | null }) {
          </div>
 
          {role === 'DataManager' ? (
-            <div className="grid gap-4 border-t border-border pt-4 md:grid-cols-2">
-               <div className="flex min-h-0 flex-col gap-2">
+            <div className="grid gap-4 border-t border-border pt-4 md:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)]">
+               <div className="flex min-h-0 min-w-0 flex-col gap-2">
                   <div className="flex items-center justify-between gap-2">
                      <span className="text-sm font-medium">Available</span>
                      <label className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -296,7 +323,7 @@ export function UserFormPanel({ editName }: { editName?: string | null }) {
                      name="cms_user_species_search"
                      autoComplete="off"
                   />
-                  <ScrollArea className="h-48 rounded-md border border-border">
+                  <ScrollArea className="h-52 w-full min-w-0 rounded-md border border-border [&_[data-slot=scroll-area-viewport]]:overflow-x-hidden">
                      {searchLoading ? (
                         <div className="flex justify-center py-8">
                            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -304,20 +331,30 @@ export function UserFormPanel({ editName }: { editName?: string | null }) {
                      ) : available.length === 0 ? (
                         <p className="p-3 text-center text-xs text-muted-foreground">No matches.</p>
                      ) : (
-                        <ul className="divide-y divide-border p-1">
+                        <ul className="w-full min-w-0 divide-y divide-border px-2 py-0.5">
                            {available.map((org) => (
-                              <li key={String(org.taxid)} className="flex items-center gap-2 py-2 text-sm">
+                              <li
+                                 key={String(org.taxid)}
+                                 className="flex min-w-0 flex-col gap-2 py-2 text-sm sm:flex-row sm:items-start sm:gap-3"
+                              >
                                  <div className="min-w-0 flex-1">
-                                    <p className="truncate italic">{String(org.scientific_name)}</p>
-                                    <p className="font-mono text-xs text-muted-foreground">{String(org.taxid)}</p>
+                                    <p className="break-words italic text-pretty [overflow-wrap:anywhere]">
+                                       {String(org.scientific_name)}
+                                    </p>
+                                    <p className="break-all font-mono text-xs text-muted-foreground">{String(org.taxid)}</p>
                                  </div>
-                                 {org.goat_status ? <CmsStatusPill value={String(org.goat_status)} type="goat" /> : null}
                                  {isAssignedTaxid(org.taxid) ? (
-                                    <span className="flex items-center gap-1 text-xs text-chart-2">
-                                       <Check className="h-3.5 w-3.5" /> Assigned
+                                    <span className="flex shrink-0 items-center gap-1 self-start whitespace-nowrap text-xs text-chart-2 sm:pt-0.5">
+                                       <Check className="h-3.5 w-3.5 shrink-0" /> Assigned
                                     </span>
                                  ) : (
-                                    <Button type="button" size="icon" variant="outline" className="h-8 w-8 shrink-0" onClick={() => assignOrg(org)}>
+                                    <Button
+                                       type="button"
+                                       size="icon"
+                                       variant="outline"
+                                       className="h-8 w-8 shrink-0 self-start sm:mt-0.5"
+                                       onClick={() => assignOrg(org)}
+                                    >
                                        <Plus className="h-4 w-4" />
                                     </Button>
                                  )}
@@ -349,7 +386,7 @@ export function UserFormPanel({ editName }: { editName?: string | null }) {
                   ) : null}
                </div>
 
-               <div className="flex min-h-0 flex-col gap-2">
+               <div className="flex min-h-0 min-w-0 flex-col gap-2">
                   <span className="text-sm font-medium">Assigned ({assigned.length})</span>
                   <Input
                      placeholder="Filter assigned…"
@@ -361,18 +398,29 @@ export function UserFormPanel({ editName }: { editName?: string | null }) {
                      name="cms_user_assigned_filter"
                      autoComplete="off"
                   />
-                  <ScrollArea className="h-48 rounded-md border border-border">
+                  <ScrollArea className="h-52 w-full min-w-0 rounded-md border border-border [&_[data-slot=scroll-area-viewport]]:overflow-x-hidden">
                      {filteredAssigned.length === 0 ? (
                         <p className="p-3 text-center text-xs text-muted-foreground">No species.</p>
                      ) : (
-                        <ul className="divide-y divide-border p-1">
+                        <ul className="w-full min-w-0 divide-y divide-border px-2 py-0.5">
                            {filteredAssigned.map((org) => (
-                              <li key={String(org.taxid)} className="flex items-center justify-between gap-2 py-2 text-sm">
-                                 <div className="min-w-0">
-                                    <p className="truncate italic">{String(org.scientific_name)}</p>
-                                    <p className="font-mono text-xs text-muted-foreground">{String(org.taxid)}</p>
+                              <li
+                                 key={String(org.taxid)}
+                                 className="flex min-w-0 flex-col gap-2 py-2 text-sm sm:flex-row sm:items-start sm:justify-between sm:gap-3"
+                              >
+                                 <div className="min-w-0 flex-1 pr-0 sm:pr-1">
+                                    <p className="break-words italic text-pretty [overflow-wrap:anywhere]">
+                                       {String(org.scientific_name)}
+                                    </p>
+                                    <p className="break-all font-mono text-xs text-muted-foreground">{String(org.taxid)}</p>
                                  </div>
-                                 <Button type="button" variant="ghost" size="sm" className="shrink-0 text-destructive" onClick={() => unassignOrg(org.taxid)}>
+                                 <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-auto shrink-0 self-start whitespace-nowrap text-destructive sm:pt-0.5"
+                                    onClick={() => unassignOrg(org.taxid)}
+                                 >
                                     Remove
                                  </Button>
                               </li>

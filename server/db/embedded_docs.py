@@ -1,6 +1,4 @@
-import datetime
-
-from .enums import ExternalImageSource, PublicationSource
+from .enums import PublicationSource
 import mongoengine as db
 
 class CommonName(db.EmbeddedDocument):

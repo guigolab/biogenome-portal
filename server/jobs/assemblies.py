@@ -20,19 +20,20 @@ from jobs.support.catalog_ingest_pipeline import (
     finalize_touched_species_catalog,
     run_phase2_taxonomy_bootstrap,
 )
-from jobs.support.biosample_bulk import handle_biosamples_from_accessions
+from jobs.support.biosample_ingest import resolve_biosamples_for_accessions
 from jobs.support.geolocation_batch import update_geolocations
 from jobs.support.ingest_job_utils import (
     dedupe_nonempty_strs,
     maybe_enqueue_enrich_organisms,
     scalar_taxids_batched,
 )
+from parsers.biosample_from_ncbi_datasets import build_assembly_row_by_biosample
 
 logger = logging.getLogger(__name__)
 
 PROJECT_ACCESSION = os.getenv("PROJECT_ACCESSION")
 TMP_DIR = os.getenv("TMP_DIR", "/tmp")
-
+IMPORT_BLOBTOOLKIT = os.getenv("IMPORT_BLOBTOOLKIT", "true")
 
 def _assembly_import_triggers_annotrieve() -> bool:
     """When true (default), enqueue Annotrieve annotation upsert after new assemblies."""
@@ -89,8 +90,20 @@ def _run_assembly_import_pipeline(
 
     newly_fetched_biosample_accessions: List[str] = []
     if assembly_biosample_accessions:
-        newly_fetched_biosample_accessions = handle_biosamples_from_accessions(
-            assembly_biosample_accessions, TMP_DIR
+        assembly_row_by_biosample = build_assembly_row_by_biosample(
+            new_rows, assemblies_to_update
+        )
+        related_id_by_biosample = {
+            acc: (assembly_row_by_biosample[acc].get("accession") or "")
+            for acc in assembly_biosample_accessions
+            if acc in assembly_row_by_biosample
+        }
+        newly_fetched_biosample_accessions = resolve_biosamples_for_accessions(
+            assembly_biosample_accessions,
+            TMP_DIR,
+            assembly_by_biosample=assembly_row_by_biosample,
+            related_kind="Assembly",
+            related_id_by_biosample=related_id_by_biosample,
         )
 
     saved_assembly_accessions = persist_assembly_import_payload(
@@ -148,22 +161,22 @@ def _run_assembly_import_pipeline(
         update_geolocations(newly_fetched_biosample_accessions)
 
     maybe_enqueue_enrich_organisms(saved_organism_taxids)
-
-    blob_stats = {
-        "blobtoolkit_updated": 0,
-        "blobtoolkit_no_hit": 0,
-        "blobtoolkit_api_errors": 0,
-    }
-    if saved_assembly_accessions:
-        still_present = list(
-            Assembly.objects(
-                accession__in=saved_assembly_accessions,
-                blobtoolkit_id=None,
-            ).scalar("accession")
-        )
-        if still_present:
-            blob_stats = bulk_link_blobtoolkit_for_assembly_accessions(still_present)
-
+    blob_stats = dict()
+    if IMPORT_BLOBTOOLKIT == "true":
+        blob_stats = {
+            "blobtoolkit_updated": 0,
+            "blobtoolkit_no_hit": 0,
+            "blobtoolkit_api_errors": 0,
+        }
+        if saved_assembly_accessions:
+            still_present = list(
+                Assembly.objects(
+                    accession__in=saved_assembly_accessions,
+                    blobtoolkit_id=None,
+                ).scalar("accession")
+            )
+            if still_present:
+                blob_stats = bulk_link_blobtoolkit_for_assembly_accessions(still_present)
     if (
         _assembly_import_triggers_annotrieve()
         and saved_assembly_accessions

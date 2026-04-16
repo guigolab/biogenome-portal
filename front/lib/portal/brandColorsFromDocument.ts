@@ -7,6 +7,7 @@ export type BrandCssVarName =
    | '--primary'
    | '--secondary'
    | '--accent'
+   | '--background'
    | '--foreground'
    | '--muted-foreground'
 
@@ -14,21 +15,38 @@ const FALLBACK_RGB: Record<BrandCssVarName, string> = {
    '--primary': 'rgb(34, 197, 94)',
    '--secondary': 'rgb(59, 130, 246)',
    '--accent': 'rgb(45, 212, 191)',
+   '--background': 'rgb(255, 255, 255)',
    '--foreground': 'rgb(10, 10, 10)',
    '--muted-foreground': 'rgb(113, 113, 122)',
 }
 
 /**
- * Read the used `color` for `var(--name)` on `root` (typically `document.documentElement`).
+ * Read the computed RGB for `var(--name)` on `root` (typically `document.documentElement`).
+ * Uses `color` for text/brand tokens; `--background` uses `background-color` so the browser
+ * resolves the token the same way as `bg-background` (using `color` can yield transparent /
+ * wrong values for background-only tokens).
  */
 export function resolveCssVarToRgb(root: HTMLElement, varName: BrandCssVarName): string {
    if (typeof document === 'undefined') return FALLBACK_RGB[varName]
 
    const probe = document.createElement('div')
-   probe.style.cssText = `position:absolute;left:-9999px;top:0;color:var(${varName});`
-   root.appendChild(probe)
-   const rgb = getComputedStyle(probe).color
-   root.removeChild(probe)
+   const isBackground = varName === '--background'
+   probe.style.cssText = isBackground
+      ? `position:absolute;left:-9999px;top:0;width:1px;height:1px;background-color:var(${varName});`
+      : `position:absolute;left:-9999px;top:0;color:var(${varName});`
+   const mountParent = typeof document !== 'undefined' && document.body ? document.body : root
+   mountParent.appendChild(probe)
+   const style = getComputedStyle(probe)
+   let rgb = isBackground ? style.backgroundColor : style.color
+   mountParent.removeChild(probe)
+
+   if (
+      isBackground &&
+      (!rgb || rgb === 'rgba(0, 0, 0, 0)' || rgb === 'transparent')
+   ) {
+      const raw = getComputedStyle(root).getPropertyValue('--background').trim()
+      if (raw) rgb = raw
+   }
 
    if (!rgb || rgb === 'rgba(0, 0, 0, 0)') return FALLBACK_RGB[varName]
    return rgb

@@ -20,48 +20,21 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart'
+import { usePortalConfig } from '@/contexts/portal-context'
 import { fetchFieldStats } from '@/lib/api/stats'
+import {
+   buildPortalCategoricalChartPalette,
+   catalogCategoricalColor,
+} from '@/lib/catalog-explorer/portalCategoricalChartPalette'
 import { downloadChartPng, downloadChartSvg } from '@/lib/catalog-explorer/chartExport'
+import type { CatalogChartDef } from '@/components/catalog-explorer/catalog-chart-def'
+import { AssemblyScatterChartPanel } from '@/components/catalog-explorer/catalog-scatter-assembly-chart'
 import { inferAnnotationRowSource } from '@/lib/catalog-explorer/annotationMetadataSource'
+import { pickBrandHexes } from '@/lib/portal/themeApply'
 import { toStatsQueryRecord } from '@/lib/catalogQueryParams'
-import type { ChartType, DataModels } from '@/lib/portal/types'
+import type { DataModels } from '@/lib/portal/types'
 import { cn } from '@/lib/utils'
 import { ImageDown, Info, Loader2 } from 'lucide-react'
-
-/** Theme tokens are oklch in `globals.css`; use `var(--chart-n)` (not `hsl(var(...))`). */
-const CHART_COLOR_VARS = [
-   'var(--chart-1)',
-   'var(--chart-2)',
-   'var(--chart-3)',
-   'var(--chart-4)',
-   'var(--chart-5)',
-   'var(--chart-6)',
-   'var(--chart-7)',
-   'var(--chart-8)',
-   'var(--chart-9)',
-   'var(--chart-10)',
-] as const
-
-/** Rotate palette start per catalog so adjacent dashboards don’t look identical. */
-function catalogPaletteOffset(model: DataModels): number {
-   switch (model) {
-      case 'assemblies':
-         return 0
-      case 'biosamples':
-         return 3
-      case 'reads':
-         return 5
-      case 'annotations':
-         return 2
-      default:
-         return 0
-   }
-}
-
-function chartColorAt(model: DataModels, index: number): string {
-   const n = CHART_COLOR_VARS.length
-   return CHART_COLOR_VARS[(index + catalogPaletteOffset(model)) % n]!
-}
 
 const MAX_CATEGORICAL_SLICES = 14
 
@@ -93,11 +66,7 @@ function parseChartTime(name: string): number {
    return Number.isFinite(t) ? t : 0
 }
 
-export type CatalogChartDef = {
-   field: string
-   type: ChartType
-   size: number
-}
+export type { CatalogChartDef }
 
 type ChartPanelProps = {
    model: DataModels
@@ -108,6 +77,8 @@ type ChartPanelProps = {
    annotrieveBuscoHint: string
    exportFilenameBase: string
    t: (key: string) => string
+   /** Pie / bar slices — derived from portal primary; line/area use `var(--primary)` only. */
+   categoricalPalette: readonly string[]
 }
 
 function ChartPanel({
@@ -119,6 +90,7 @@ function ChartPanel({
    annotrieveBuscoHint,
    exportFilenameBase,
    t,
+   categoricalPalette,
 }: ChartPanelProps) {
    const exportRootRef = useRef<HTMLDivElement>(null)
    const gradId = useId().replace(/:/g, '')
@@ -169,19 +141,20 @@ function ChartPanel({
       pairs.forEach((p, i) => {
          cfg[`slice_${i}`] = {
             label: p.name,
-            color: chartColorAt(model, i),
+            color: catalogCategoricalColor(model, i, categoricalPalette),
          }
       })
       return cfg
-   }, [pairs, model])
+   }, [pairs, model, categoricalPalette])
 
-   const pieData = pairs.map((p, i) => ({ ...p, fill: chartColorAt(model, i) }))
+   const pieData = pairs.map((p, i) => ({ ...p, fill: catalogCategoricalColor(model, i, categoricalPalette) }))
 
    const lineData = [...pairsFull]
       .sort((a, b) => parseChartTime(a.name) - parseChartTime(b.name))
       .map((p) => ({ label: p.name, count: p.value }))
 
-   const lineStroke = chartColorAt(model, 0)
+   /** Line + area: match portal primary (not categorical palette). */
+   const lineStroke = 'var(--primary)'
 
    const canExportImage = Boolean(stats && !loading && !error && pairs.length > 0)
    const [pngBusy, setPngBusy] = useState(false)
@@ -307,7 +280,7 @@ function ChartPanel({
                               <ChartTooltip content={<ChartTooltipContent />} />
                               <Bar dataKey="value" radius={[5, 5, 0, 0]} maxBarSize={48}>
                                  {pairs.map((_, i) => (
-                                    <Cell key={i} fill={chartColorAt(model, i)} />
+                                    <Cell key={i} fill={catalogCategoricalColor(model, i, categoricalPalette)} />
                                  ))}
                               </Bar>
                            </BarChart>
@@ -405,6 +378,8 @@ export type CatalogChartsProps = {
    /** First page of list rows — used for annotations source hint only. */
    listSampleRows?: Record<string, unknown>[]
    t: (key: string) => string
+   /** Assemblies scatter: open / toggle detail drawer when a point is clicked. */
+   onScatterAssemblyAccessionClick?: (accession: string) => void
 }
 
 export function CatalogCharts({
@@ -414,7 +389,15 @@ export function CatalogCharts({
    chartTitles,
    listSampleRows,
    t,
+   onScatterAssemblyAccessionClick,
 }: CatalogChartsProps) {
+   const { config, raw } = usePortalConfig()
+
+   const categoricalPalette = useMemo(() => {
+      const primary = config ? pickBrandHexes(config, raw ?? null).primary : '#22c55e'
+      return buildPortalCategoricalChartPalette(primary)
+   }, [config, raw])
+
    if (!charts.length) return null
 
    const otherLabel = t('catalog.chartOther')
@@ -426,19 +409,34 @@ export function CatalogCharts({
             <AnnotationSourceSampleNote rows={listSampleRows} t={t} />
          ) : null}
          <div className="grid gap-4 md:grid-cols-2">
-            {charts.map((ch) => (
-               <ChartPanel
-                  key={ch.field}
-                  model={model}
-                  chart={ch}
-                  statsQuery={statsQuery}
-                  title={chartTitles[ch.field] ?? ch.field}
-                  otherLabel={otherLabel}
-                  annotrieveBuscoHint={annotrieveBuscoHint}
-                  exportFilenameBase={`${model}-${ch.field.replace(/\./g, '_')}`}
-                  t={t}
-               />
-            ))}
+            {charts.map((ch) =>
+               ch.type === 'scatter' && model === 'assemblies' ? (
+                  <AssemblyScatterChartPanel
+                     key={ch.field}
+                     model={model}
+                     chart={ch}
+                     statsQuery={statsQuery}
+                     title={chartTitles[ch.field] ?? ch.field}
+                     exportFilenameBase={`${model}-${ch.field.replace(/\./g, '_')}`}
+                     t={t}
+                     categoricalPalette={categoricalPalette}
+                     onAssemblyAccessionClick={onScatterAssemblyAccessionClick ?? (() => {})}
+                  />
+               ) : (
+                  <ChartPanel
+                     key={ch.field}
+                     model={model}
+                     chart={ch}
+                     statsQuery={statsQuery}
+                     title={chartTitles[ch.field] ?? ch.field}
+                     otherLabel={otherLabel}
+                     annotrieveBuscoHint={annotrieveBuscoHint}
+                     exportFilenameBase={`${model}-${ch.field.replace(/\./g, '_')}`}
+                     t={t}
+                     categoricalPalette={categoricalPalette}
+                  />
+               ),
+            )}
          </div>
       </div>
    )

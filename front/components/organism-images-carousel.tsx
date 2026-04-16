@@ -52,15 +52,17 @@ export function OrganismImagesCarousel({ images, title, compact, className }: Pr
             {images.map((img, index) => (
               <CarouselItem key={`${img.url}-${index}`} className={cn(compact && '!pl-0')}>
                 {compact ? (
-                  <figure className="relative h-[min(22rem,50vh)] w-full overflow-hidden rounded-lg border border-border bg-muted">
-                    {/* eslint-disable-next-line @next/next/no-img-element -- remote organism URLs; config may omit remotePatterns */}
-                    <img
-                      src={img.url}
-                      alt={`${title} — image ${index + 1} of ${images.length}`}
-                      className="absolute inset-0 h-full w-full object-cover object-center"
-                      loading={index === 0 ? 'eager' : 'lazy'}
-                    />
-                    <figcaption className="absolute inset-x-0 bottom-0 z-[1] bg-gradient-to-t from-black/85 via-black/50 to-transparent px-3 pt-10 pb-3 text-xs text-white">
+                  <figure className="relative flex h-[min(22rem,50vh)] w-full flex-col overflow-hidden rounded-lg border border-border bg-muted/80">
+                    <div className="flex min-h-0 flex-1 items-center justify-center p-2 sm:p-3">
+                      {/* eslint-disable-next-line @next/next/no-img-element -- remote organism URLs; config may omit remotePatterns */}
+                      <img
+                        src={img.url}
+                        alt={`${title} — image ${index + 1} of ${images.length}`}
+                        className="max-h-full max-w-full object-contain object-center"
+                        loading={index === 0 ? 'eager' : 'lazy'}
+                      />
+                    </div>
+                    <figcaption className="shrink-0 border-t border-border/60 bg-gradient-to-t from-black/90 via-black/75 to-black/40 px-3 py-2.5 text-xs text-white">
                       <div className="space-y-1.5">
                         {img.author ? (
                           <p>

@@ -1,7 +1,5 @@
 'use client'
 
-import Link from 'next/link'
-
 import { Button } from '@/components/ui/button'
 import type { DataModels } from '@/lib/portal/types'
 import { ExternalLink } from 'lucide-react'
@@ -24,32 +22,9 @@ export type CatalogRecordActionsProps = {
  * Catalog-specific shortcuts (genome browser, INSDC) shown in the table detail panel.
  */
 export function CatalogRecordActions({ catalogKey, row, t }: CatalogRecordActionsProps) {
-   const taxid = row.taxid != null ? String(row.taxid).trim() : ''
-
-   if (catalogKey === 'assemblies') {
-      const acc = typeof row.accession === 'string' ? row.accession.trim() : ''
-      if (!acc) return null
-      const qs = new URLSearchParams({ assembly: acc })
-      if (taxid) qs.set('taxid', taxid)
-      return (
-         <Button variant="outline" size="sm" asChild>
-            <Link href={`/genome-browser?${qs.toString()}`}>{t('catalog.openGenomeBrowser')}</Link>
-         </Button>
-      )
-   }
-
-   if (catalogKey === 'annotations') {
-      const name = typeof row.name === 'string' ? row.name.trim() : ''
-      const asm =
-         typeof row.assembly_accession === 'string' ? row.assembly_accession.trim() : ''
-      if (!name || !asm) return null
-      const qs = new URLSearchParams({ assembly: asm, annotation: name })
-      if (taxid) qs.set('taxid', taxid)
-      return (
-         <Button variant="outline" size="sm" asChild>
-            <Link href={`/genome-browser?${qs.toString()}`}>{t('catalog.openGenomeBrowser')}</Link>
-         </Button>
-      )
+   /** Genome browser entry points for assemblies / annotations live in the detail body (gated). */
+   if (catalogKey === 'assemblies' || catalogKey === 'annotations') {
+      return null
    }
 
    if (catalogKey === 'reads') {

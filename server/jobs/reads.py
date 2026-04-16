@@ -8,7 +8,7 @@ from clients import ebi_client
 from db.model import Experiment, Read, ReadRun
 from helpers.job_paths import ensure_parent_dir, safe_remove_file
 from jobs.taxonomy import enrich_organisms_post_taxonomy
-from jobs.support.biosample_bulk import handle_biosamples_from_accessions
+from jobs.support.biosample_ingest import resolve_biosamples_for_accessions
 from jobs.support.catalog_ingest_pipeline import (
     reload_prune_denorm_after_primary_import,
     run_phase2_taxonomy_bootstrap,
@@ -60,11 +60,24 @@ def get_reads_from_bioproject_accession(
                 f"Could not read downloaded TSV at {output_file_path!r}"
             ) from exc
 
-        biosamples_to_fetch = ReadRun.objects(
-            run_accession__in=new_read_accessions
-        ).scalar("sample_accession")
-        saved_biosample_accessions = handle_biosamples_from_accessions(
-            biosamples_to_fetch, TMP_DIR
+        # Build per-biosample mapping to one representative run_accession for
+        # failure audit records (first run per biosample, stable order from DB).
+        related_id_by_biosample: Dict[str, str] = {}
+        biosample_accessions_ordered: list = []
+        for rr in ReadRun.objects(run_accession__in=new_read_accessions).only(
+            "run_accession", "sample_accession"
+        ):
+            sa = rr.sample_accession
+            if sa and sa not in related_id_by_biosample:
+                related_id_by_biosample[sa] = rr.run_accession
+                biosample_accessions_ordered.append(sa)
+
+        saved_biosample_accessions = resolve_biosamples_for_accessions(
+            biosample_accessions_ordered,
+            TMP_DIR,
+            assembly_by_biosample={},
+            related_kind="ReadRun",
+            related_id_by_biosample=related_id_by_biosample,
         )
 
         taxids = ReadRun.objects(run_accession__in=new_read_accessions).scalar("taxid")

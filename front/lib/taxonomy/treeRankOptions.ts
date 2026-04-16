@@ -1,16 +1,14 @@
-/** Matches biogenome-client `Tree.vue` RANKS for radial rank filter. */
+/**
+ * Ranks available in the taxonomy tree rank filter (coarse → fine).
+ * Species-level detail is shown via “All leaves” (no rank truncation).
+ */
 export const TREE_RANK_FILTER_OPTIONS = [
-   'domain',
    'kingdom',
    'phylum',
-   'subphylum',
    'class',
-   'subclass',
    'order',
-   'superorder',
    'family',
    'genus',
-   'species',
 ] as const
 
 export type TreeRankFilterValue = (typeof TREE_RANK_FILTER_OPTIONS)[number]

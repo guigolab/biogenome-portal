@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Check, ChevronLeft, ChevronRight, Loader2, Lock } from 'lucide-react'
+import { Check, ChevronLeft, ChevronRight, Download, ImageOff, Loader2, Lock, Pencil, TriangleAlert } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -16,7 +16,9 @@ import {
    AlertDialogHeader,
    AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
@@ -26,8 +28,17 @@ import { usePortalConfig } from '@/contexts/portal-context'
 import { defaultPortalConfig, resolveOrganismFormSteps } from '@/lib/portal'
 import { extractApiMessage } from '@/lib/cms/extract-api-message'
 import { cmsCreateOrganism, cmsGetItem, cmsGetItems, cmsUpdateOrganism } from '@/lib/cms/services/auth'
+import {
+   mergeImageRows,
+   pollUntilReady,
+   triggerSuggestImages,
+} from '@/lib/cms/organism-image-suggestions'
+import {
+   IMAGE_LICENSE_OPTIONS,
+   normalizeOrganismImageLicenseFromApi,
+} from '@/lib/cms/organism-image-license-options'
 import { searchExternalTaxons, type TaxonHit } from '@/lib/taxon-search'
-import { useOrganismFormStepper } from '@/hooks/use-organism-form-stepper'
+import { useOrganismFormStepper, type RuntimeStep } from '@/hooks/use-organism-form-stepper'
 import { cn } from '@/lib/utils'
 import {
    useOrganismFormStore,
@@ -67,6 +78,12 @@ const TARGET_LIST: { key: 'long_list' | 'family_representative' | 'other_priorit
    { key: 'other_priority', label: 'Other priority' },
 ]
 
+function normalizeTargetListStatusForForm(raw: unknown): OrganismFormState['target_list_status'] {
+   if (typeof raw !== 'string' || !raw.trim()) return 'long_list'
+   if (TARGET_LIST.some((t) => t.key === raw)) return raw as OrganismFormState['target_list_status']
+   return 'long_list'
+}
+
 function buildPayload() {
    const { organismForm, metadataList, images, publications, vernacularNames } = useOrganismFormStore.getState()
    const metadata = Object.fromEntries(metadataList.map(({ key, value }) => [key, value]))
@@ -105,10 +122,15 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
    const setVernacularNames = useOrganismFormStore((s) => s.setVernacularNames)
    const images = useOrganismFormStore((s) => s.images)
    const setImages = useOrganismFormStore((s) => s.setImages)
+   const imageUsageComplianceOk = useOrganismFormStore((s) => s.imageUsageComplianceOk)
+   const setImageUsageComplianceOk = useOrganismFormStore((s) => s.setImageUsageComplianceOk)
    const replaceOrganismForm = useOrganismFormStore((s) => s.replaceOrganismForm)
    const resetStore = useOrganismFormStore((s) => s.reset)
 
    const isEditMode = Boolean(editTaxid)
+
+   const [existsWarning, setExistsWarning] = useState<string | null>(null)
+   const [taxonExistencePending, setTaxonExistencePending] = useState(false)
 
    const {
       runtimeSteps,
@@ -119,6 +141,7 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
       goPrev,
       resetStepper,
       canSubmit,
+      canNavigateTo,
    } = useOrganismFormStepper({
       steps,
       isEditMode,
@@ -128,6 +151,8 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
       vernacularNames,
       metadataList,
       images,
+      createOrganismTaxonConflict: Boolean(existsWarning),
+      taxonExistenceCheckPending: taxonExistencePending,
    })
 
    const [busy, setBusy] = useState(isEditMode)
@@ -136,9 +161,9 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
    const [searchQ, setSearchQ] = useState('')
    const [searchHits, setSearchHits] = useState<TaxonHit[]>([])
    const [searchLoading, setSearchLoading] = useState(false)
-   const [existsWarning, setExistsWarning] = useState<string | null>(null)
    const [showChangeModal, setShowChangeModal] = useState(false)
    const [showResetModal, setShowResetModal] = useState(false)
+   const [importingImages, setImportingImages] = useState(false)
 
    const loadOrganism = useCallback(async () => {
       if (!editTaxid) return
@@ -159,11 +184,15 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
             publications: [],
             sub_project: (base.sub_project as string) ?? null,
             goat_status: (base.goat_status as string) ?? '',
-            target_list_status: (base.target_list_status as OrganismFormState['target_list_status']) ?? null,
+            target_list_status: normalizeTargetListStatusForForm(base.target_list_status),
             sequencing_type: Array.isArray(base.sequencing_type) ? (base.sequencing_type as string[]) : [],
          })
          if (Array.isArray(base.publications)) setPublications(base.publications as OrganismPublication[])
-         if (Array.isArray(base.images)) setImages(base.images as OrganismImageRow[])
+         if (Array.isArray(base.images)) {
+            setImages(
+               (base.images as OrganismImageRow[]).map((img) => normalizeOrganismImageLicenseFromApi(img)),
+            )
+         }
          if (Array.isArray(base.common_names)) setVernacularNames(base.common_names as OrganismCommonName[])
          const md = base.metadata
          if (md && typeof md === 'object' && !Array.isArray(md)) {
@@ -206,20 +235,63 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
       }
    }, [searchQ])
 
+   /** If a duplicate taxon is detected after a race (e.g. user advanced before the check finished), return to step 1. */
+   useEffect(() => {
+      if (!isEditMode && existsWarning && activeIndex > 0) {
+         goToStep(0)
+      }
+   }, [isEditMode, existsWarning, activeIndex, goToStep])
+
    async function selectTaxon(hit: TaxonHit) {
       setExistsWarning(null)
+      setTaxonExistencePending(true)
       setOrganismForm({ taxid: hit.taxId, scientific_name: hit.scientificName })
       try {
          const { data } = await cmsGetItems('organisms', { filter: hit.taxId, limit: 5 })
          if (data?.some((o) => String(o.taxid) === hit.taxId)) {
-            setExistsWarning(`Taxon ${hit.taxId} already exists in this portal.`)
+            setExistsWarning(
+               `Taxon ${hit.taxId} already exists in this portal. Select a different species to continue.`,
+            )
          }
       } catch {
          /* ignore */
+      } finally {
+         setTaxonExistencePending(false)
+      }
+   }
+
+   async function handleImportImages() {
+      const name = organismForm.scientific_name?.trim()
+      if (!name) return
+      setImportingImages(true)
+      try {
+         const job = await triggerSuggestImages(name)
+         const status = await pollUntilReady(job.task_id)
+         if (status.successful && status.result?.images?.length) {
+            setImages(mergeImageRows(images, status.result.images))
+            toast.success(`Imported ${status.result.images.length} image suggestion(s).`)
+         } else if (status.successful) {
+            toast.info('No licensable images found for this species.')
+         } else {
+            const msg =
+               typeof status.error === 'string'
+                  ? status.error
+                  : status.error?.message ?? 'Image import failed.'
+            toast.error(msg)
+         }
+      } catch (e) {
+         toast.error(extractApiMessage(e, 'Image import failed.'))
+      } finally {
+         setImportingImages(false)
       }
    }
 
    async function handleSubmit() {
+      const hasImages = images.some((img) => img.url?.trim())
+      if (hasImages && !imageUsageComplianceOk) {
+         toast.error('Please confirm image usage compliance before submitting.')
+         return
+      }
       setSubmitting(true)
       try {
          const payload = buildPayload()
@@ -294,7 +366,7 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
             <p className="mt-1 text-muted-foreground">{description}</p>
          </div>
 
-         {(isEditMode || (organismForm.taxid && sid !== 'selectOrganism')) && (
+         {(isEditMode || organismForm.taxid) && (
             <div className="flex flex-col gap-3 rounded-lg border border-border bg-muted/30 p-4 sm:flex-row sm:items-center sm:justify-between">
                <div>
                   <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Selected organism</p>
@@ -366,21 +438,30 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
                      ) : null}
                      <Input placeholder="e.g. Homo sapiens or 9606" value={searchQ} onChange={(e) => setSearchQ(e.target.value)} />
                      {searchLoading ? <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /> : null}
+                     {taxonExistencePending ? (
+                        <p className="text-xs text-muted-foreground">Checking whether this taxon is already registered…</p>
+                     ) : null}
                      {existsWarning ? <p className="text-sm text-destructive">{existsWarning}</p> : null}
                      <ScrollArea className="h-56 rounded-md border">
                         <ul className="divide-y p-1">
-                           {searchHits.map((h) => (
-                              <li key={h.taxId}>
-                                 <button
-                                    type="button"
-                                    className="flex w-full flex-col px-2 py-2 text-left text-sm hover:bg-muted"
-                                    onClick={() => void selectTaxon(h)}
-                                 >
-                                    <span className="italic">{h.scientificName}</span>
-                                    <span className="font-mono text-xs text-muted-foreground">{h.taxId}</span>
-                                 </button>
-                              </li>
-                           ))}
+                           {searchHits.map((h) => {
+                              const isSelected = organismForm.taxid === h.taxId
+                              return (
+                                 <li key={h.taxId}>
+                                    <button
+                                       type="button"
+                                       className={cn(
+                                          'flex w-full flex-col px-2 py-2 text-left text-sm hover:bg-muted',
+                                          isSelected && 'border-l-2 border-primary bg-primary/5',
+                                       )}
+                                       onClick={() => void selectTaxon(h)}
+                                    >
+                                       <span className="italic">{h.scientificName}</span>
+                                       <span className="font-mono text-xs text-muted-foreground">{h.taxId}</span>
+                                    </button>
+                                 </li>
+                              )
+                           })}
                         </ul>
                      </ScrollArea>
                   </div>
@@ -416,18 +497,14 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
                      <div>
                         <Label className="mb-2 block">Target list</Label>
                         <RadioGroup
-                           value={organismForm.target_list_status ?? '__none__'}
+                           value={organismForm.target_list_status ?? 'long_list'}
                            onValueChange={(val) =>
                               setOrganismForm({
                                  target_list_status:
-                                    val === '__none__' ? null : (val as OrganismFormState['target_list_status']),
+                                    val === '__none__' ? 'long_list' : (val as OrganismFormState['target_list_status']),
                               })
                            }
                         >
-                           <div className="flex items-center gap-2 py-1">
-                              <RadioGroupItem value="__none__" id="tls-none" />
-                              <Label htmlFor="tls-none">None</Label>
-                           </div>
                            {TARGET_LIST.map((t) => (
                               <div key={t.key} className="flex items-center gap-2 py-1">
                                  <RadioGroupItem value={t.key} id={t.key} />
@@ -478,42 +555,100 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
                )}
 
                {sid === 'images' && (
-                  <div className="space-y-3">
+                  <div className="space-y-4">
+                     {/* Guidelines tip */}
+                     <div className="rounded-md border border-blue-500/30 bg-blue-500/5 p-4 text-sm space-y-3">
+                        <p className="font-medium text-blue-700 dark:text-blue-400">Where to deposit your images</p>
+                        <p className="text-muted-foreground">
+                           For long-term accessibility, upload images to an open data repository before adding them
+                           here. Two recommended options:
+                        </p>
+                        <ul className="space-y-2 text-muted-foreground">
+                           <li>
+                              <span className="font-medium text-foreground">Wikimedia Commons — </span>
+                              use the{' '}
+                              <a
+                                 href="https://commons.wikimedia.org/wiki/Special:UploadWizard"
+                                 target="_blank"
+                                 rel="noopener noreferrer"
+                                 className="underline hover:text-foreground"
+                              >
+                                 Upload Wizard
+                              </a>
+                              . After upload, copy the file page URL into <em>Source record URL</em>, select the
+                              license shown on the file page, and fill in the photographer name as{' '}
+                              <em>Author</em>.
+                           </li>
+                           <li>
+                              <span className="font-medium text-foreground">Zenodo — </span>
+                              create a new record at{' '}
+                              <a
+                                 href="https://zenodo.org/uploads/new"
+                                 target="_blank"
+                                 rel="noopener noreferrer"
+                                 className="underline hover:text-foreground"
+                              >
+                                 zenodo.org
+                              </a>
+                              . Use direct file URL as <em>Image URL</em> and the record page as{' '}
+                              <em>Source record URL</em>, and fill the license from the record metadata.
+                           </li>
+                        </ul>
+                     </div>
+
+                     {/* Import from external sources */}
+                     <div className="flex items-center gap-3">
+                        <Button
+                           type="button"
+                           variant="outline"
+                           size="sm"
+                           disabled={importingImages || !organismForm.scientific_name?.trim()}
+                           onClick={() => void handleImportImages()}
+                           className="gap-2"
+                        >
+                           {importingImages ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                           ) : (
+                              <Download className="h-4 w-4" />
+                           )}
+                           {importingImages ? 'Searching…' : 'Import from external sources'}
+                        </Button>
+                        <span className="text-xs text-muted-foreground">
+                           Searches iNaturalist, Wikimedia Commons, and GBIF for openly licensed images.
+                        </span>
+                     </div>
+
+                     {/* Image rows */}
                      {images.map((img, i) => (
-                        <div key={i} className="grid gap-2 rounded-md border p-3 sm:grid-cols-2">
-                           <Input
-                              placeholder="Image URL"
-                              value={img.url}
-                              onChange={(e) =>
-                                 setImages(images.map((r, j) => (j === i ? { ...r, url: e.target.value } : r)))
-                              }
-                           />
-                           <Input
-                              placeholder="Author"
-                              value={img.author}
-                              onChange={(e) =>
-                                 setImages(images.map((r, j) => (j === i ? { ...r, author: e.target.value } : r)))
-                              }
-                           />
-                           <Input
-                              placeholder="Source record URL"
-                              value={img.source_record_url}
-                              onChange={(e) =>
-                                 setImages(images.map((r, j) => (j === i ? { ...r, source_record_url: e.target.value } : r)))
-                              }
-                           />
-                           <Input
-                              placeholder="License"
-                              value={img.license}
-                              onChange={(e) =>
-                                 setImages(images.map((r, j) => (j === i ? { ...r, license: e.target.value } : r)))
-                              }
-                           />
-                        </div>
+                        <ImageRow
+                           key={i}
+                           img={img}
+                           index={i}
+                           images={images}
+                           setImages={setImages}
+                        />
                      ))}
+
                      <Button type="button" variant="outline" size="sm" onClick={() => setImages([...images, emptyImage()])}>
                         Add image
                      </Button>
+
+                     {/* Compliance checkbox */}
+                     {images.some((img) => img.url?.trim()) && (
+                        <div className="flex items-start gap-3 rounded-md border border-amber-500/30 bg-amber-500/5 p-3">
+                           <Checkbox
+                              id="image-compliance"
+                              checked={imageUsageComplianceOk}
+                              onCheckedChange={(v) => setImageUsageComplianceOk(Boolean(v))}
+                              className="mt-0.5"
+                           />
+                           <label htmlFor="image-compliance" className="text-sm leading-snug cursor-pointer">
+                              I confirm that all images listed above are published under an open license (CC0, CC BY,
+                              CC BY-SA, or Public Domain) that permits unrestricted use and redistribution, and that
+                              the author and source information provided are correct to the best of my knowledge.
+                           </label>
+                        </div>
+                     )}
                   </div>
                )}
 
@@ -631,15 +766,26 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
                )}
 
                {sid === 'reviewSubmit' && (
-                  <div className="space-y-4">
-                     <p className="text-sm text-muted-foreground">
-                        {canSubmit
-                           ? 'All required steps are complete. Submit to save this record.'
-                           : 'Complete required steps before submitting.'}
-                     </p>
-                     <Button disabled={!canSubmit || submitting} onClick={() => void handleSubmit()}>
-                        {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : isEditMode ? 'Save changes' : 'Create organism'}
-                     </Button>
+                  <div className="space-y-6">
+                     <OrganismFormReview
+                        runtimeSteps={runtimeSteps}
+                        organismForm={organismForm}
+                        publications={publications}
+                        vernacularNames={vernacularNames}
+                        metadataList={metadataList}
+                        images={images}
+                        onGoToStep={goToStep}
+                     />
+                     <div className="border-t pt-4 space-y-3">
+                        <p className="text-sm text-muted-foreground">
+                           {canSubmit
+                              ? 'All required steps are complete. Submit to save this record.'
+                              : 'Complete required steps before submitting.'}
+                        </p>
+                        <Button disabled={!canSubmit || submitting} onClick={() => void handleSubmit()}>
+                           {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : isEditMode ? 'Save changes' : 'Create organism'}
+                        </Button>
+                     </div>
                   </div>
                )}
 
@@ -651,7 +797,9 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
                      </Button>
                      <Button
                         type="button"
-                        disabled={activeIndex >= runtimeSteps.length - 1}
+                        disabled={
+                           activeIndex >= runtimeSteps.length - 1 || !canNavigateTo(activeIndex + 1)
+                        }
                         onClick={goNext}
                         className="gap-1"
                      >
@@ -678,6 +826,7 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
                         setSearchQ('')
                         setSearchHits([])
                         setExistsWarning(null)
+                        setTaxonExistencePending(false)
                         setShowChangeModal(false)
                      }}
                   >
@@ -701,6 +850,8 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
                         else {
                            resetStore()
                            resetStepper()
+                           setExistsWarning(null)
+                           setTaxonExistencePending(false)
                         }
                         setShowResetModal(false)
                      }}
@@ -716,4 +867,319 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
 
 function emptyImage(): OrganismImageRow {
    return { url: '', author: '', source_record_url: '', license: '' }
+}
+
+function ImageRow({
+   img,
+   index,
+   images,
+   setImages,
+}: {
+   img: OrganismImageRow
+   index: number
+   images: OrganismImageRow[]
+   setImages: (v: OrganismImageRow[]) => void
+}) {
+   const [previewError, setPreviewError] = useState(false)
+   const update = (patch: Partial<OrganismImageRow>) =>
+      setImages(images.map((r, j) => (j === index ? { ...r, ...patch } : r)))
+   const selectedOption = IMAGE_LICENSE_OPTIONS.find((o) => o.value === img.license)
+
+   return (
+      <div className="rounded-md border p-3 space-y-3">
+         {/* Preview + URL row */}
+         <div className="flex gap-3 items-start">
+            <div className="flex-shrink-0 h-32 w-32 rounded-md border bg-muted overflow-hidden flex items-center justify-center">
+               {img.url?.trim() && !previewError ? (
+                  <img
+                     src={img.url}
+                     alt="Preview"
+                     className="h-full w-full object-cover"
+                     loading="lazy"
+                     referrerPolicy="no-referrer"
+                     onError={() => setPreviewError(true)}
+                  />
+               ) : (
+                  <ImageOff className="h-16 w-16 text-muted-foreground" />
+               )}
+            </div>
+            <div className="flex-1 space-y-2">
+               <Input
+                  placeholder="Image URL"
+                  value={img.url}
+                  onChange={(e) => {
+                     setPreviewError(false)
+                     update({ url: e.target.value })
+                  }}
+               />
+               <Input
+                  placeholder="Author"
+                  value={img.author}
+                  onChange={(e) => update({ author: e.target.value })}
+               />
+            </div>
+         </div>
+
+         {/* Source + License row */}
+         <div className="grid gap-2 sm:grid-cols-2">
+            <Input
+               placeholder="Source record URL"
+               value={img.source_record_url}
+               onChange={(e) => update({ source_record_url: e.target.value })}
+            />
+            {/* License options mirror the server allowlist (organism_images_fetch.py) */}
+            <Select
+               value={img.license}
+               onValueChange={(v) => {
+                  const opt = IMAGE_LICENSE_OPTIONS.find((o) => o.value === v)
+                  update({ license: v, license_url: opt?.license_url ?? '' })
+               }}
+            >
+               <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select license" />
+               </SelectTrigger>
+               <SelectContent>
+                  {IMAGE_LICENSE_OPTIONS.map((opt) => (
+                     <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                     </SelectItem>
+                  ))}
+               </SelectContent>
+            </Select>
+         </div>
+
+         {selectedOption && (
+            <p className="text-xs text-muted-foreground">
+               License deed:{' '}
+               <a
+                  href={selectedOption.license_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline hover:text-foreground"
+               >
+                  {selectedOption.license_url}
+               </a>
+            </p>
+         )}
+
+         <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="text-destructive hover:text-destructive"
+            onClick={() => setImages(images.filter((_, j) => j !== index))}
+         >
+            Remove
+         </Button>
+      </div>
+   )
+}
+
+function OrganismFormReview({
+   runtimeSteps,
+   organismForm,
+   publications,
+   vernacularNames,
+   metadataList,
+   images,
+   onGoToStep,
+}: {
+   runtimeSteps: RuntimeStep[]
+   organismForm: OrganismFormState
+   publications: OrganismPublication[]
+   vernacularNames: OrganismCommonName[]
+   metadataList: { key: string; value: string }[]
+   images: OrganismImageRow[]
+   onGoToStep: (index: number) => void
+}) {
+   const reviewableSections = runtimeSteps.filter((s) => s.id !== 'reviewSubmit')
+
+   function renderContent(step: RuntimeStep) {
+      switch (step.id) {
+         case 'selectOrganism':
+            return (
+               <div className="space-y-1">
+                  {organismForm.scientific_name && (
+                     <p className="italic text-sm">{organismForm.scientific_name}</p>
+                  )}
+                  {organismForm.taxid && (
+                     <p className="font-mono text-xs text-muted-foreground">TaxID {organismForm.taxid}</p>
+                  )}
+                  {!organismForm.scientific_name && !organismForm.taxid && (
+                     <p className="text-xs text-muted-foreground">Not selected</p>
+                  )}
+               </div>
+            )
+
+         case 'goatStatus':
+            return (
+               <div className="flex flex-wrap gap-2">
+                  {organismForm.goat_status ? (
+                     <Badge variant="secondary">{organismForm.goat_status}</Badge>
+                  ) : (
+                     <span className="text-xs text-muted-foreground">No GoaT status</span>
+                  )}
+                  {organismForm.target_list_status && (
+                     <Badge variant="outline">
+                        {TARGET_LIST.find((t) => t.key === organismForm.target_list_status)?.label ??
+                           organismForm.target_list_status}
+                     </Badge>
+                  )}
+               </div>
+            )
+
+         case 'sequencingAndSubproject':
+            return (
+               <div className="space-y-2">
+                  {(organismForm.sequencing_type?.length ?? 0) > 0 ? (
+                     <div className="flex flex-wrap gap-1.5">
+                        {organismForm.sequencing_type.map((t) => (
+                           <Badge key={t} variant="secondary">
+                              {t}
+                           </Badge>
+                        ))}
+                     </div>
+                  ) : (
+                     <p className="text-xs text-muted-foreground">No sequencing technologies</p>
+                  )}
+                  {organismForm.sub_project?.trim() && (
+                     <p className="text-sm">
+                        <span className="text-muted-foreground">Sub-project: </span>
+                        {organismForm.sub_project}
+                     </p>
+                  )}
+               </div>
+            )
+
+         case 'piOrEntity':
+            return organismForm.sub_project?.trim() ? (
+               <p className="text-sm">{organismForm.sub_project}</p>
+            ) : (
+               <p className="text-xs text-muted-foreground">Not filled</p>
+            )
+
+         case 'images': {
+            const validImages = images.filter((i) => i.url?.trim())
+            return validImages.length > 0 ? (
+               <div className="flex flex-wrap gap-2">
+                  {validImages.map((img, i) => (
+                     <div key={i} className="h-16 w-16 overflow-hidden rounded border bg-muted flex-shrink-0">
+                        <img
+                           src={img.url}
+                           alt={img.author || 'Image'}
+                           className="h-full w-full object-cover"
+                           loading="lazy"
+                           referrerPolicy="no-referrer"
+                        />
+                     </div>
+                  ))}
+               </div>
+            ) : (
+               <p className="text-xs text-muted-foreground">No images</p>
+            )
+         }
+
+         case 'publications': {
+            const validPubs = publications.filter((p) => p.id.trim())
+            return validPubs.length > 0 ? (
+               <ul className="space-y-1">
+                  {validPubs.map((p, i) => (
+                     <li key={i} className="text-sm">
+                        <span className="text-muted-foreground">{p.source}: </span>
+                        {p.id}
+                     </li>
+                  ))}
+               </ul>
+            ) : (
+               <p className="text-xs text-muted-foreground">No publications</p>
+            )
+         }
+
+         case 'vernacularNames': {
+            const validNames = vernacularNames.filter((n) => n.value.trim())
+            return validNames.length > 0 ? (
+               <ul className="space-y-1">
+                  {validNames.map((n, i) => (
+                     <li key={i} className="text-sm">
+                        {n.value}
+                        {(n.lang || n.locality) && (
+                           <span className="text-muted-foreground ml-1 text-xs">
+                              ({[n.lang, n.locality].filter(Boolean).join(', ')})
+                           </span>
+                        )}
+                     </li>
+                  ))}
+               </ul>
+            ) : (
+               <p className="text-xs text-muted-foreground">No vernacular names</p>
+            )
+         }
+
+         case 'extraMetadata': {
+            const validMeta = metadataList.filter((m) => m.key.trim())
+            return validMeta.length > 0 ? (
+               <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
+                  {validMeta.map((m, i) => (
+                     <>
+                        <dt key={`k${i}`} className="text-muted-foreground font-medium truncate">
+                           {m.key}
+                        </dt>
+                        <dd key={`v${i}`} className="truncate">
+                           {m.value}
+                        </dd>
+                     </>
+                  ))}
+               </dl>
+            ) : (
+               <p className="text-xs text-muted-foreground">No extra metadata</p>
+            )
+         }
+
+         default:
+            return null
+      }
+   }
+
+   return (
+      <div className="divide-y rounded-lg border">
+         {reviewableSections.map((step) => {
+            const titleEn = typeof step.title === 'string' ? step.title : step.title['en'] ?? step.id
+            const isComplete = step.completion.complete
+            const isRequired = step.required
+
+            return (
+               <div key={step.id} className="px-4 py-3 space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                     <div className="flex items-center gap-2">
+                        {isComplete ? (
+                           <Check className="h-4 w-4 text-green-500 shrink-0" />
+                        ) : isRequired ? (
+                           <TriangleAlert className="h-4 w-4 text-destructive shrink-0" />
+                        ) : (
+                           <div className="h-4 w-4 shrink-0" />
+                        )}
+                        <span className="text-sm font-medium">{titleEn}</span>
+                        {isRequired && !isComplete && (
+                           <Badge variant="destructive" className="text-[10px] px-1.5 py-0">
+                              Required
+                           </Badge>
+                        )}
+                     </div>
+                     <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 gap-1 text-xs"
+                        onClick={() => onGoToStep(step.index)}
+                     >
+                        <Pencil className="h-3 w-3" />
+                        Edit
+                     </Button>
+                  </div>
+                  <div className="pl-6">{renderContent(step)}</div>
+               </div>
+            )
+         })}
+      </div>
+   )
 }

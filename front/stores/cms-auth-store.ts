@@ -5,6 +5,7 @@ import { create } from 'zustand'
 /** Non-security UX hint (tab-scoped): last successful CMS login in this tab. */
 export const CMS_LOGIN_HINT_KEY = 'cms_login_hint'
 
+/** Session fields mirrored from the API user document (never includes JWT `access_token`). */
 export type CmsSessionUser = {
    name: string
    role: string

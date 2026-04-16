@@ -27,6 +27,8 @@ export type CatalogTableProps = {
    onRowClick: (row: Record<string, unknown>) => void
    onLoadMore: () => void
    emptyMessage: string
+   /** Row reference that is currently open in the detail sheet; highlighted in the table. */
+   activeRow?: Record<string, unknown> | null
 }
 
 function headerLabel(key: string): string {
@@ -46,12 +48,13 @@ export function CatalogTable({
    onRowClick,
    onLoadMore,
    emptyMessage,
+   activeRow,
 }: CatalogTableProps) {
    const activeSortApi = sortColumnForApi(sortColumn)
 
    return (
       <div className="space-y-3">
-         <div className="rounded-xl border border-border overflow-x-auto">
+         <div className="overflow-x-auto">
             <Table>
                <TableHeader>
                   <TableRow>
@@ -101,7 +104,11 @@ export function CatalogTable({
                      rows.map((row, idx) => (
                         <TableRow
                            key={idx}
-                           className="cursor-pointer"
+                           className={cn(
+                              'cursor-pointer',
+                              row === activeRow &&
+                                 'bg-primary/5 ring-1 ring-inset ring-primary/25 hover:bg-primary/10',
+                           )}
                            onClick={() => onRowClick(row)}
                         >
                            {columns.map((col) => (
@@ -115,12 +122,7 @@ export function CatalogTable({
                </TableBody>
             </Table>
          </div>
-         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-muted-foreground">
-               {loading && rows.length === 0
-                  ? '…'
-                  : `Showing ${rows.length.toLocaleString()} of ${total.toLocaleString()}`}
-            </p>
+         <div className="flex items-center justify-end">
             {rows.length < total ? (
                <Button type="button" variant="outline" size="sm" onClick={onLoadMore} disabled={loadingMore}>
                   {loadingMore ? (

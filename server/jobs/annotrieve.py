@@ -6,15 +6,9 @@ from db.model import Assembly
 from jobs.support.annotrieve_ingest import run_annotrieve_import_for_accessions
 
 
-def _collect_assembly_accessions():
-    return list(
-        dict.fromkeys(a.accession for a in Assembly.objects if a.accession)
-    )
-
-
 @shared_task(name="annotations_import_from_annotrieve", ignore_result=False)
 def import_annotations_from_annotrieve():
-    accessions = _collect_assembly_accessions()
+    accessions = Assembly.objects().scalar("accession")
     if not accessions:
         return {
             "status": "no_assemblies",

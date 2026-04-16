@@ -143,11 +143,18 @@ def login_user(payload):
     user_obj = BioGenomeUser.objects(name=name, password=password).exclude('id','password').first()
     if not user_obj:
         return Response(json.dumps(dict(msg=f"Bad user or password")), mimetype="application/json", status=401)
-    response = user_obj.to_mongo().to_dict()
-    access_token = create_access_token(identity=response,expires_delta=timedelta(days=7),additional_claims={"role": user_obj.role.value, "username":user_obj.name})
-    response = Response(json.dumps(response), mimetype="application/json", status=200)
+    user_doc = user_obj.to_mongo().to_dict()
+    access_token = create_access_token(
+        identity=user_doc,
+        expires_delta=timedelta(days=7),
+        additional_claims={"role": user_obj.role.value, "username": user_obj.name},
+    )
+    # Expose JWT for non-browser clients (e.g. HTTP scripts where Secure cookies are not sent).
+    payload = dict(user_doc)
+    payload["access_token"] = access_token
+    response = Response(json.dumps(payload), mimetype="application/json", status=200)
     set_access_cookies(response, access_token)
-    return response  
+    return response
 
 
 def lookup_user_data(name):

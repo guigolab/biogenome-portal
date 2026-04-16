@@ -10,12 +10,10 @@
       },
       "cms": true,
       "goat": true,
-      "insdcStatus": false,
       "map": true,
       "languages": ["en", "cat"],
       "apiBase": "/api",
       "rootTaxid": "131567",
-      "featuredTaxids": [],
       "titleHighlight": {
          "en": "BioGenome",
          "cat": "BioGenome"
@@ -46,7 +44,6 @@
       }
    },
    "footer": {
-      "logoUrl": "/portal-logo.svg",
       "copyright": {
          "en": "© BioGenome Portal",
          "cat": "© Portal BioGenome"

@@ -127,6 +127,54 @@ def license_is_allowlisted(raw: Optional[str]) -> Optional[Tuple[str, Optional[s
     return None
 
 
+# Canonical strings must stay aligned with the CMS dropdown (see front/lib/cms/organism-image-license-options.ts).
+_PORTAL_CANONICAL_LICENSES: Set[str] = {
+    "CC0-1.0",
+    "public_domain",
+    "CC-BY-4.0",
+    "CC-BY-3.0",
+    "CC-BY-2.0",
+    "CC-BY-SA-4.0",
+    "CC-BY-SA-3.0",
+    "CC-BY-SA-2.0",
+}
+
+
+def normalize_license_to_portal_canonical(
+    label: str, lic_url: Optional[str]
+) -> Tuple[str, Optional[str]]:
+    """
+    Map ``license_is_allowlisted`` output to the fixed vocabulary used by the
+    portal CMS so stored ``license`` values match Select options.
+    """
+    if label in _PORTAL_CANONICAL_LICENSES:
+        return label, lic_url
+    url = (lic_url or "").strip() or None
+    if url and "creativecommons.org" in url.lower():
+        m = re.search(
+            r"creativecommons\.org/licenses/(by(?:-sa)?)/([\d.]+)/?",
+            url,
+            re.I,
+        )
+        if m:
+            kind, ver = m.group(1).lower(), m.group(2)
+            canon = f"CC-BY-SA-{ver}" if "sa" in kind else f"CC-BY-{ver}"
+            if canon in _PORTAL_CANONICAL_LICENSES:
+                return canon, url
+        if "publicdomain/zero/" in url.lower():
+            return "CC0-1.0", url
+    if label == "CC0":
+        return (
+            "CC0-1.0",
+            url or "https://creativecommons.org/publicdomain/zero/1.0/",
+        )
+    if label == "CC-BY":
+        return "CC-BY-4.0", url or "https://creativecommons.org/licenses/by/4.0/"
+    if label == "CC-BY-SA":
+        return "CC-BY-SA-4.0", url or "https://creativecommons.org/licenses/by-sa/4.0/"
+    return label, lic_url
+
+
 def _inat_photo_large_url(square_or_medium_url: str, photo_id: Optional[int] = None) -> str:
     u = square_or_medium_url
     for size in ("square", "medium", "small", "thumb"):
@@ -212,6 +260,7 @@ def _fetch_inat_images(
             if not allowed:
                 continue
             label, lic_url = allowed
+            label, lic_url = normalize_license_to_portal_canonical(label, lic_url)
             url = _inat_photo_large_url(ph.get("url") or "", ph.get("id"))
             if not url or not url.startswith("http"):
                 continue
@@ -316,6 +365,7 @@ def _fetch_commons_images(
             label, lic_url = allowed
             if not lic_url and lic_url_meta:
                 lic_url = lic_url_meta.strip() or None
+            label, lic_url = normalize_license_to_portal_canonical(label, lic_url)
 
             wiki_title = title.replace(" ", "_")
             file_page = "https://commons.wikimedia.org/wiki/" + quote(wiki_title, safe="/():'!%")
@@ -397,6 +447,7 @@ def _fetch_gbif_images(
             if not allowed:
                 continue
             label, lic_url = allowed
+            label, lic_url = normalize_license_to_portal_canonical(label, lic_url)
             record_url = f"https://www.gbif.org/occurrence/{occ_key}" if occ_key else None
             if url in existing_urls:
                 continue
@@ -436,6 +487,46 @@ def _dedupe_images_keep_last(images: List[OrganismImage]) -> List[OrganismImage]
         deduped_reversed.append(img)
     deduped_reversed.reverse()
     return deduped_reversed
+
+
+def fetch_external_image_candidates(
+    scientific_name: str,
+    max_images: int = 12,
+) -> List[Dict[str, Any]]:
+    """
+    Return up to ``max_images`` image candidates for ``scientific_name`` from
+    iNaturalist → Wikimedia Commons → GBIF, each serialised as a plain dict
+    compatible with ``OrganismImage`` (keys: url, author, source_record_url,
+    license, license_url).  Candidates missing source_record_url are dropped
+    to avoid schema-validation surprises when the caller saves them.
+    """
+    if not (scientific_name or "").strip():
+        return []
+    need = max(1, int(max_images))
+    session = _session()
+    existing_urls: Set[str] = set()
+    docs: List[OrganismImage] = []
+
+    docs.extend(_fetch_inat_images(session, scientific_name, need, existing_urls))
+    if len(docs) < need:
+        docs.extend(_fetch_commons_images(session, scientific_name, need - len(docs), existing_urls))
+    if len(docs) < need:
+        docs.extend(_fetch_gbif_images(session, scientific_name, need - len(docs), existing_urls))
+
+    out: List[Dict[str, Any]] = []
+    for img in docs:
+        if not img.source_record_url:
+            continue
+        out.append(
+            {
+                "url": img.url,
+                "author": img.author or "",
+                "source_record_url": img.source_record_url,
+                "license": img.license,
+                "license_url": img.license_url or "",
+            }
+        )
+    return out
 
 
 def fetch_images_for_organism(

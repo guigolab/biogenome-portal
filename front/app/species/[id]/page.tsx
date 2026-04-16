@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
@@ -6,18 +7,15 @@ import { Button } from '@/components/ui/button'
 import { OrganismImagesCarousel } from '@/components/organism-images-carousel'
 import { SpeciesIucnSection } from '@/components/species-iucn-section'
 import { SpeciesLocationsMap } from '@/components/species-locations-map'
+import { SpeciesPageStatsStrip } from '@/components/species-page-stats-strip'
+import { SpeciesGoatPipelineSection } from '@/components/species-goat-pipeline-section'
 import { SpeciesRelatedRecordsTabs, type RelatedCatalogModel } from '@/components/species-related-records-tabs'
 import { fetchSampleLocations, parseSampleLocationsPayload } from '@/lib/api/coordinates'
 import { fetchTaxonAncestors } from '@/lib/api/taxon'
 import { fetchOrganism, fetchOrganismRelatedWithTotal } from '@/lib/api/organisms'
-import { fetchJBrowseSessions } from '@/lib/api/jbrowse'
 import { publicationExternalUrl } from '@/lib/publicationLinks'
 import { loadPortalConfigFromDisk } from '@/lib/portal/portalServer'
-import {
-  buildSpeciesDetailView,
-  parseOrganismImages,
-  sequencingStatusColors,
-} from '@/lib/species-detail-from-organism'
+import { buildSpeciesDetailView, parseOrganismImages } from '@/lib/species-detail-from-organism'
 import { getRootTaxid } from '@/lib/api/taxon'
 import { taxonomyTaxonHref } from '@/lib/taxonomyLinks'
 import {
@@ -26,19 +24,9 @@ import {
   parseTaxonAncestors,
   type AncestryNode,
 } from '@/lib/species-lineage'
-import {
-  ArrowLeft,
-  Database,
-  FlaskConical,
-  MapPin,
-  Dna,
-  ExternalLink,
-  PlayCircle,
-  Globe,
-  BookOpen,
-  Tags,
-  type LucideIcon,
-} from 'lucide-react'
+import { countryLabelEn } from '@/lib/countryLabels'
+import { showCountriesUi } from '@/lib/portal'
+import { ArrowLeft, MapPin, Dna, ExternalLink, BookOpen, Tags, Globe } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 function str(v: unknown): string {
@@ -56,18 +44,13 @@ function nonNegInt(v: unknown): number {
   return 0
 }
 
-function formatTargetListStatus(v: unknown): string {
-  const s = str(v)
-  if (!s) return ''
-  return s.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
-}
-
 function metadataEntries(meta: unknown): [string, string][] {
   if (!meta || typeof meta !== 'object' || Array.isArray(meta)) return []
   const o = meta as Record<string, unknown>
   const out: [string, string][] = []
   for (const [k, v] of Object.entries(o)) {
-    if (v == null || v === '') continue
+    if (v == null) continue
+    if (typeof v === 'string' && v.trim() === '') continue
     if (typeof v === 'object') {
       try {
         out.push([k, JSON.stringify(v)])
@@ -188,6 +171,22 @@ function pickDefaultRelatedModel(
   return null
 }
 
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}): Promise<Metadata> {
+  const { id } = await params
+  const organism = await fetchOrganism(id)
+  if (!organism) {
+    return { title: 'Species' }
+  }
+  const scientific = str(organism.scientific_name)
+  return {
+    title: scientific || 'Species',
+  }
+}
+
 export default async function SpeciesDetailPage({
   params,
 }: {
@@ -212,16 +211,18 @@ export default async function SpeciesDetailPage({
   const hasCatalogRecords =
     assemblyCount > 0 || biosampleCount > 0 || readsCount > 0
 
-  const [relatedInitial, locationsPeek, ancestorRows, jbrowseSessions] = await Promise.all([
+  const [relatedInitial, locationsPeek, ancestorRows] = await Promise.all([
     hasCatalogRecords && defaultRelatedModel
-      ? fetchOrganismRelatedWithTotal(id, defaultRelatedModel, { limit: 200, offset: 0 })
+      ? fetchOrganismRelatedWithTotal(id, defaultRelatedModel, {
+          limit: 200,
+          offset: 0,
+        })
       : Promise.resolve({ data: [] as Record<string, unknown>[], total: 0 }),
     fetchSampleLocations({ taxid: id, limit: 1 }).catch(() => ({
       total: 0,
       data: [] as Record<string, unknown>[],
     })),
     fetchTaxonAncestors(id),
-    fetchJBrowseSessions({ taxon_lineage: id, limit: 200 }).catch(() => ({ total: 0, data: [] })),
   ])
 
   let locationsPayload = locationsPeek
@@ -283,70 +284,32 @@ export default async function SpeciesDetailPage({
     }
   }
 
-  const sequencingTypes = Array.isArray(organism.sequencing_type)
-    ? (organism.sequencing_type as unknown[]).map((x) => str(x)).filter(Boolean)
-    : []
+  const sequencingRaw = organism.sequencing_type
+  const sequencingTypes = Array.isArray(sequencingRaw)
+    ? (sequencingRaw as unknown[]).map((x) => str(x)).filter(Boolean)
+    : str(sequencingRaw)
+      ? [str(sequencingRaw)]
+      : []
   const subProject = str(organism.sub_project)
   const metaPairs = metadataEntries(organism.metadata)
-  const showProjectBlock =
-    Boolean(subProject) || sequencingTypes.length > 0 || metaPairs.length > 0
+  const showProjectBlock = Boolean(subProject) || sequencingTypes.length > 0
+  const showMetadataBlock = metaPairs.length > 0
 
-  const goatStatus = str(organism.goat_status)
-  const targetListStatus = formatTargetListStatus(organism.target_list_status)
-
-  type StatItem = {
-    key: string
-    icon: LucideIcon
-    value: number
-    label: string
-    iconWrapClass: string
-    iconClass: string
+  const linkUrls: string[] = []
+  if (Array.isArray(organism.links)) {
+    for (const u of organism.links) {
+      const s = str(u)
+      if (s) linkUrls.push(s)
+    }
   }
 
-  const statCandidates: StatItem[] = [
-    {
-      key: 'genomes',
-      icon: Database,
-      value: assemblyCount,
-      label: 'Genomes',
-      iconWrapClass: 'bg-primary/10',
-      iconClass: 'text-primary',
-    },
-    {
-      key: 'biosamples',
-      icon: FlaskConical,
-      value: biosampleCount,
-      label: 'Biosamples',
-      iconWrapClass: 'bg-chart-2/10',
-      iconClass: 'text-chart-2',
-    },
-    {
-      key: 'locations',
-      icon: MapPin,
-      value: hasMapCoords ? locationsTotal : 0,
-      label: 'Locations',
-      iconWrapClass: 'bg-chart-3/10',
-      iconClass: 'text-chart-3',
-    },
-    {
-      key: 'runs',
-      icon: PlayCircle,
-      value: readsCount,
-      label: 'Seq. Runs',
-      iconWrapClass: 'bg-chart-4/10',
-      iconClass: 'text-chart-4',
-    },
-  ]
-  const statsStrip = statCandidates.filter((s) => s.value > 0)
-  const browserableAccessions = jbrowseSessions.data.map((s) => s.accession)
-  const statsGridClass =
-    statsStrip.length <= 1
-      ? 'grid-cols-1 max-w-xs'
-      : statsStrip.length === 2
-        ? 'grid-cols-2'
-        : statsStrip.length === 3
-          ? 'grid-cols-2 lg:grid-cols-3'
-          : 'grid-cols-2 lg:grid-cols-4'
+  const countryCodes: string[] = []
+  if (Array.isArray(organism.countries)) {
+    for (const c of organism.countries) {
+      const s = str(c)
+      if (s) countryCodes.push(s)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -358,6 +321,14 @@ export default async function SpeciesDetailPage({
           </Link>
         </Button>
 
+        <div className="mb-3 text-sm">
+          {lineageAncestors.length > 0 ? (
+            <LineageBreadcrumb ancestors={lineageAncestors} currentTaxid={detail.taxonId} />
+          ) : (
+            <FallbackLineageLabels detail={detail} />
+          )}
+        </div>
+
         <div className="bg-card border border-border rounded-lg p-6 mb-6">
           <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
             <div className="min-w-0 flex-1">
@@ -367,57 +338,29 @@ export default async function SpeciesDetailPage({
                   {detail.conservationBadge.label}
                 </Badge>
               </div>
-              <p className="text-xl text-muted-foreground mb-3">{detail.commonName}</p>
-
-              {goatPortalEnabled && (goatStatus || targetListStatus) ? (
-                <div className="flex flex-wrap gap-2 mb-3">
-                  {goatStatus ? (
-                    <Badge variant="secondary" className="font-normal">
-                      GoaT: {goatStatus}
-                    </Badge>
-                  ) : null}
-                  {targetListStatus ? (
-                    <Badge variant="outline" className="font-normal">
-                      Target list: {targetListStatus}
-                    </Badge>
-                  ) : null}
-                </div>
-              ) : null}
-
-              {lineageAncestors.length > 0 ? (
-                <LineageBreadcrumb ancestors={lineageAncestors} currentTaxid={detail.taxonId} />
-              ) : (
-                <FallbackLineageLabels detail={detail} />
-              )}
+              <p className="text-xl text-muted-foreground">{detail.commonName}</p>
             </div>
 
             <div className="flex flex-col items-start lg:items-end gap-2 shrink-0">
-              <Badge className={cn('text-sm', sequencingStatusColors[detail.sequencingStatus])}>
-                {detail.sequencingLabel}
-              </Badge>
               <div className="text-sm text-muted-foreground">Taxon ID: {detail.taxonId}</div>
             </div>
           </div>
 
-          {statsStrip.length > 0 ? (
-            <div className={cn('grid gap-4 mt-6 pt-6 border-t border-border', statsGridClass)}>
-              {statsStrip.map((s) => {
-                const Icon = s.icon
-                return (
-                  <div key={s.key} className="flex items-center gap-3">
-                    <div className={cn('p-2 rounded-lg', s.iconWrapClass)}>
-                      <Icon className={cn('h-5 w-5', s.iconClass)} />
-                    </div>
-                    <div>
-                      <div className="text-2xl font-bold">{s.value.toLocaleString()}</div>
-                      <div className="text-sm text-muted-foreground">{s.label}</div>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          ) : null}
+          <SpeciesPageStatsStrip
+            assemblyCount={assemblyCount}
+            biosampleCount={biosampleCount}
+            readsCount={readsCount}
+            locationsTotal={locationsTotal}
+            hasMapCoords={hasMapCoords}
+          />
         </div>
+
+        {goatPortalEnabled ? (
+          <SpeciesGoatPipelineSection
+            goatStatusRaw={organism.goat_status}
+            targetListStatusRaw={organism.target_list_status}
+          />
+        ) : null}
 
         <div
           className={cn(
@@ -443,33 +386,41 @@ export default async function SpeciesDetailPage({
           <SpeciesIucnSection organism={organism} scientificName={detail.scientificName} />
         </div>
 
-        {showProjectBlock ? (
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="text-lg">Project &amp; sequencing</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4 text-sm">
-              {subProject ? (
-                <div>
-                  <div className="text-muted-foreground mb-1">Sub-project</div>
-                  <p className="font-medium">{subProject}</p>
-                </div>
-              ) : null}
-              {sequencingTypes.length > 0 ? (
-                <div>
-                  <div className="text-muted-foreground mb-2">Sequencing type</div>
-                  <div className="flex flex-wrap gap-2">
-                    {sequencingTypes.map((t) => (
-                      <Badge key={t} variant="secondary">
-                        {t}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              ) : null}
-              {metaPairs.length > 0 ? (
-                <div>
-                  <div className="text-muted-foreground mb-2">Metadata</div>
+        {showProjectBlock || showMetadataBlock ? (
+          <div className={cn('mb-6 grid gap-4', showProjectBlock && showMetadataBlock ? 'lg:grid-cols-2' : '')}>
+            {showProjectBlock ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Project &amp; sequencing</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4 text-sm">
+                  {subProject ? (
+                    <div>
+                      <div className="text-muted-foreground mb-1">Sub-project</div>
+                      <p className="font-medium">{subProject}</p>
+                    </div>
+                  ) : null}
+                  {sequencingTypes.length > 0 ? (
+                    <div>
+                      <div className="text-muted-foreground mb-2">Sequencing type</div>
+                      <div className="flex flex-wrap gap-2">
+                        {sequencingTypes.map((t) => (
+                          <Badge key={t} variant="secondary">
+                            {t}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+                </CardContent>
+              </Card>
+            ) : null}
+            {showMetadataBlock ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Metadata</CardTitle>
+                </CardHeader>
+                <CardContent>
                   <dl className="space-y-2">
                     {metaPairs.map(([k, v]) => (
                       <div
@@ -481,10 +432,10 @@ export default async function SpeciesDetailPage({
                       </div>
                     ))}
                   </dl>
-                </div>
-              ) : null}
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
+            ) : null}
+          </div>
         ) : null}
 
         {publications.length > 0 ? (
@@ -551,6 +502,26 @@ export default async function SpeciesDetailPage({
           </Card>
         ) : null}
 
+        {showCountriesUi() && countryCodes.length > 0 ? (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Globe className="h-5 w-5 text-primary" />
+                Countries
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-2">
+                {countryCodes.map((code) => (
+                  <Badge key={code} variant="secondary" title={code}>
+                    {countryLabelEn(code)}
+                  </Badge>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        ) : null}
+
         {hasMapCoords && mapPoints.length > 0 ? (
           <Card className="mb-6">
             <CardHeader>
@@ -574,12 +545,6 @@ export default async function SpeciesDetailPage({
                   </>
                 ) : null}
               </p>
-              <Button asChild variant="outline" size="sm">
-                <Link href="/map">
-                  <Globe className="h-4 w-4 mr-2" />
-                  Explore full map
-                </Link>
-              </Button>
             </CardContent>
           </Card>
         ) : null}
@@ -591,38 +556,63 @@ export default async function SpeciesDetailPage({
               External Resources
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
-              <Button variant="outline" size="sm" asChild>
-                <a
-                  href={`https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=${detail.taxonId}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  NCBI Taxonomy
-                  <ExternalLink className="h-3 w-3 ml-1" />
-                </a>
-              </Button>
-              <Button variant="outline" size="sm" asChild>
-                <a
-                  href={`https://www.gbif.org/species/search?q=${encodeURIComponent(detail.scientificName)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  GBIF
-                  <ExternalLink className="h-3 w-3 ml-1" />
-                </a>
-              </Button>
-              <Button variant="outline" size="sm" asChild>
-                <a
-                  href={`https://www.iucnredlist.org/search?query=${encodeURIComponent(detail.scientificName)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  IUCN Red List
-                  <ExternalLink className="h-3 w-3 ml-1" />
-                </a>
-              </Button>
+          <CardContent className="space-y-4">
+            {linkUrls.length > 0 ? (
+              <div>
+                <p className="text-xs text-muted-foreground mb-2">Links from record</p>
+                <ul className="space-y-2">
+                  {linkUrls.map((href, idx) => (
+                    <li key={`${href}#${idx}`}>
+                      <a
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-primary hover:underline inline-flex items-start gap-1.5 break-all"
+                      >
+                        <span className="min-w-0">{href}</span>
+                        <ExternalLink className="h-3.5 w-3.5 shrink-0 mt-0.5" aria-hidden />
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+            <div>
+              {linkUrls.length > 0 ? (
+                <p className="text-xs text-muted-foreground mb-2">Suggested resources</p>
+              ) : null}
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" size="sm" asChild>
+                  <a
+                    href={`https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=${detail.taxonId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    NCBI Taxonomy
+                    <ExternalLink className="h-3 w-3 ml-1" />
+                  </a>
+                </Button>
+                <Button variant="outline" size="sm" asChild>
+                  <a
+                    href={`https://www.gbif.org/species/search?q=${encodeURIComponent(detail.scientificName)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    GBIF
+                    <ExternalLink className="h-3 w-3 ml-1" />
+                  </a>
+                </Button>
+                <Button variant="outline" size="sm" asChild>
+                  <a
+                    href={`https://www.iucnredlist.org/search?query=${encodeURIComponent(detail.scientificName)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    IUCN Red List
+                    <ExternalLink className="h-3 w-3 ml-1" />
+                  </a>
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -637,7 +627,7 @@ export default async function SpeciesDetailPage({
             }}
             defaultModel={defaultRelatedModel}
             initialRows={relatedInitial.data}
-            browserableAccessions={browserableAccessions}
+            initialTotal={relatedInitial.total}
           />
         ) : null}
       </div>

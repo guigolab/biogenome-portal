@@ -324,7 +324,6 @@ export function GenomeBrowserPageClient() {
             </h1>
             <div className="text-muted-foreground max-w-3xl space-y-2 text-sm leading-relaxed">
                <p>{t('genomeBrowser.description')}</p>
-               <p>{t('genomeBrowser.browseableSessionsScope')}</p>
             </div>
             {taxid ? (
                <div className="border-border bg-muted/40 mt-3 inline-flex flex-wrap items-baseline gap-x-2 gap-y-1 rounded-xl border px-3 py-2 text-sm">
@@ -680,9 +679,8 @@ function SessionOverviewBand({
    const { t } = useLocale()
    const stats = useMemo(() => assemblyFromDoc(assemblyDoc), [assemblyDoc])
 
-   const scientificName =
-      typeof assemblyDoc.scientific_name === 'string' ? assemblyDoc.scientific_name : null
-
+   const description =
+      typeof assemblyDoc.scientific_name === 'string' ? `${assemblyDoc.scientific_name} (${accession})` : accession
    const metadata = assemblyDoc.metadata
    const refseqCategory =
       metadata != null && typeof metadata === 'object' && !Array.isArray(metadata)
@@ -757,10 +755,7 @@ function SessionOverviewBand({
                      </Tooltip>
                   ) : null}
                </div>
-               {scientificName ? (
-                  <p className="text-muted-foreground truncate text-xs italic">{scientificName}</p>
-               ) : null}
-               <p className="text-muted-foreground font-mono text-[0.65rem] tracking-wide">{accession}</p>
+               <p className="text-muted-foreground font-mono text-[0.65rem] tracking-wide">{description}</p>
             </div>
 
             {/* Stat chips + details toggle */}

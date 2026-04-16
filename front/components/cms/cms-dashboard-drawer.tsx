@@ -33,7 +33,8 @@ const PANEL_COPY: Record<CmsDashboardDrawerPanel, { title: string; description: 
 }
 
 function sheetWidth(panel: CmsDashboardDrawerPanel | null) {
-   if (panel === 'user' || panel === 'annotation') return 'sm:max-w-xl'
+   if (panel === 'user') return 'sm:max-w-2xl'
+   if (panel === 'annotation') return 'sm:max-w-xl'
    return 'sm:max-w-md'
 }
 
@@ -67,9 +68,13 @@ export function CmsDashboardDrawer() {
             onOpenAutoFocus={(e) => {
                if (panel === 'user') {
                   e.preventDefault()
-                  requestAnimationFrame(() => {
-                     document.getElementById('cms-user-name')?.focus()
-                  })
+                  // Create user: do not focus email/password/username — autofill still fires and breaks the sheet.
+                  // Edit user: focus username (disabled field; no password pairing).
+                  if (userName) {
+                     requestAnimationFrame(() => {
+                        document.getElementById('cms-user-name')?.focus()
+                     })
+                  }
                }
             }}
          >

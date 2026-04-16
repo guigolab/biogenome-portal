@@ -1,3 +1,4 @@
+from flask import Response, request
 from flask_jwt_extended import jwt_required
 from flask_restful import Resource
 from wrappers.admin import admin_required
@@ -5,7 +6,15 @@ from db.model import ReadRun
 from helpers.resource_mixins import document_json_response, json_message
 from helpers.service_utils import get_or_404
 
-from services import reads
+from services import read_experiments, reads
+
+
+class ReadExperimentsApi(Resource):
+    """GET paginated experiment_accession + title groups for read-run filters (catalog query string)."""
+
+    def get(self):
+        json_resp, status = read_experiments.get_read_experiment_groups(request.args)
+        return Response(json_resp, mimetype="application/json", status=status)
 
 
 class ReadApi(Resource):

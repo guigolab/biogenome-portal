@@ -2,6 +2,19 @@ import type { CmsSessionUser } from '@/stores/cms-auth-store'
 import { cmsFetch, cmsFetchBlob, cmsFetchJson } from '@/lib/cms/fetch'
 import type { DataModels } from '@/lib/portal/types'
 
+/**
+ * Login JSON may include `access_token` for non-browser clients; the CMS UI uses HttpOnly cookies only.
+ * Strip secrets so they are never held in React state, zustand, or accidentally logged.
+ */
+function toCmsSessionUser(raw: Record<string, unknown>): CmsSessionUser {
+   return {
+      name: String(raw.name ?? ''),
+      role: String(raw.role ?? ''),
+      email: typeof raw.email === 'string' ? raw.email : undefined,
+      species: Array.isArray(raw.species) ? raw.species.map(String) : undefined,
+   }
+}
+
 export async function cmsLogin(name: string, password: string): Promise<CmsSessionUser> {
    const res = await cmsFetch('/login', {
       method: 'POST',
@@ -12,7 +25,8 @@ export async function cmsLogin(name: string, password: string): Promise<CmsSessi
       const text = await res.text().catch(() => '')
       throw new Error(text.trim() || 'Bad user or password')
    }
-   return res.json() as Promise<CmsSessionUser>
+   const raw = (await res.json()) as Record<string, unknown>
+   return toCmsSessionUser(raw)
 }
 
 /** GET /login — current session user or throws. */
@@ -23,7 +37,8 @@ export async function cmsCheckSession(): Promise<CmsSessionUser> {
       err.status = res.status
       throw err
    }
-   return res.json() as Promise<CmsSessionUser>
+   const raw = (await res.json()) as Record<string, unknown>
+   return toCmsSessionUser(raw)
 }
 
 export async function cmsLogout(): Promise<void> {

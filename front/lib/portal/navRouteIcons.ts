@@ -4,6 +4,7 @@ import {
    Dna,
    FolderTree,
    Home,
+   LayoutDashboard,
    Leaf,
    LogIn,
    Map,
@@ -20,6 +21,7 @@ export const navRouteIcons = {
    genomeBrowser: Dna,
    status: Activity,
    login: LogIn,
+   myArea: LayoutDashboard,
 } satisfies Record<string, LucideIcon>
 
 export type NavRouteIconKey = keyof typeof navRouteIcons
