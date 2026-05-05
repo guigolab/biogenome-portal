@@ -53,7 +53,6 @@ const TAB_META: Record<string, Omit<TabMeta, never>> = {
       label: 'Local samples',
       icon: FlaskConical,
       columns: ['sample_id', 'scientific_name'],
-      createLabel: 'Import samples',
    },
    annotations: {
       label: 'Annotations',
@@ -129,7 +128,6 @@ export function RecordModelsModule({ stats }: { stats: PortalStatRow[] }) {
       if (key === 'biosamples') openDrawer({ panel: 'insdc', insdcImportModel: 'biosamples' })
       else if (key === 'reads') openDrawer({ panel: 'insdc', insdcImportModel: 'reads' })
       else if (key === 'assemblies') openDrawer({ panel: 'insdc', insdcImportModel: 'assemblies' })
-      else if (key === 'local_samples') openDrawer({ panel: 'spreadsheet' })
       else if (key === 'annotations') openDrawer({ panel: 'annotation' })
    }
 

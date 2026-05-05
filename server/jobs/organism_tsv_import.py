@@ -1,13 +1,13 @@
 """
 Import organisms from a TSV (taxid column + extra metadata columns).
 
-Uses :func:`~jobs.support.organism_catalog_taxonomy.handle_full_taxonomy_from_taxids`
+Uses :func:`~jobs.support.catalog_taxonomy_bootstrap.handle_full_taxonomy_from_taxids`
 then merges row metadata into :class:`~db.model.Organism`.metadata,
-refreshes **TaxonNode** aggregate counts via
-:func:`~jobs.support.organism_catalog_finalize.bulk_update_taxon_node_counts_for_taxids`
-(does **not** run :func:`~jobs.support.organism_catalog_finalize.bulk_update_organism_counts_for_taxids`
-on the imported species), and queues
-:func:`~jobs.taxonomy.enrich_organisms_post_taxonomy`.
+propagates ``Organism`` lineages to catalog rows and TaxonNode edges for the TSV taxids
+(:func:`~jobs.support.catalog_denorm_finalize.bulk_copy_organism_lineages_to_catalog`), then
+refreshes :class:`~db.model.TaxonNode` catalog counters via
+:func:`~jobs.support.stats.update_taxon_node_counts` (no INSDC/GoaT status pass), and runs
+:func:`~jobs.support.organism_enrich.run_enrich_followup_for_taxids` in-process.
 
 Large inputs are processed in row batches (see ``ORGANISM_TSV_IMPORT_BATCH_ROWS``) so peak
 memory stays bounded by batch size plus unique-taxid tracking, not full parse structures.
@@ -26,17 +26,22 @@ from io import StringIO
 from typing import Any, Dict, Iterator, List, Optional, Set, Tuple
 
 from celery import shared_task
+from pymongo import UpdateOne
 
 from db.model import Organism
+from helpers.data import create_batches
 from helpers.upload_temp import safe_unlink
-from jobs.support.organism_catalog_finalize import bulk_update_taxon_node_counts_for_taxids
-from jobs.support.organism_catalog_taxonomy import handle_full_taxonomy_from_taxids
-from jobs.taxonomy import enrich_organisms_post_taxonomy
+from jobs.support.catalog_ingest_guard import prune_organisms_missing_taxon_lineage
+from jobs.support.catalog_taxonomy_bootstrap import handle_full_taxonomy_from_taxids
+from jobs.support.organism_enrich import run_enrich_followup_for_taxids
+from jobs.taxonomy import cleanup_catalog_outside_root_lineage
 
 logger = logging.getLogger(__name__)
 
 DEFAULT_MAX_TSV_BYTES = int(os.getenv("ORGANISM_TSV_IMPORT_MAX_BYTES", str(10 * 1024 * 1024)))
 DEFAULT_BATCH_ROWS = int(os.getenv("ORGANISM_TSV_IMPORT_BATCH_ROWS", "2000"))
+# Batched ``$in`` + bulk_write chunk size (BSON / round-trip bounds).
+_METADATA_MERGE_CHUNK = int(os.getenv("ORGANISM_TSV_METADATA_MERGE_CHUNK", "500"))
 TMP_DIR = os.getenv("TMP_DIR", "/tmp")
 
 
@@ -145,7 +150,6 @@ def is_allowed_organism_tsv_import_path(path: str, tmp_dir: str | None = None) -
         return False
     return os.path.isfile(path_real)
 
-
 def iter_organism_tsv_batches(
     tsv_text: str,
     *,
@@ -237,6 +241,7 @@ def _run_organism_tsv_import_batches(
     missing_all: List[str] = []
     data_rows_total = 0
     batch_index = 0
+    taxonomy_initialized: Set[str] = set()
 
     for n_rows, ordered_batch, by_taxid_batch in batch_source:
         batch_index += 1
@@ -247,8 +252,15 @@ def _run_organism_tsv_import_batches(
                 species_seen.add(tid)
                 species_order.append(tid)
 
-        saved_batch = handle_full_taxonomy_from_taxids(ordered_batch, tmp_dir)
-        saved_taxonomy.extend(saved_batch)
+        new_taxids_for_bootstrap = [
+            t for t in ordered_batch if t not in taxonomy_initialized
+        ]
+        if new_taxids_for_bootstrap:
+            saved_batch = handle_full_taxonomy_from_taxids(
+                new_taxids_for_bootstrap, tmp_dir
+            )
+            saved_taxonomy.extend(saved_batch)
+            taxonomy_initialized.update(new_taxids_for_bootstrap)
 
         m, miss = _merge_metadata_for_taxids(by_taxid_batch)
         merged_total += m
@@ -270,6 +282,7 @@ def _run_organism_tsv_import_batches(
         "organism_tsv_import: taxonomy bootstrap reported %s new organism taxid(s) (cumulative)",
         len(saved_taxonomy),
     )
+    prune_organisms_missing_taxon_lineage(species_order)
 
     missing_unique = sorted(set(missing_all))
     if missing_unique:
@@ -279,13 +292,20 @@ def _run_organism_tsv_import_batches(
             missing_unique[:50],
         )
 
-    bulk_update_taxon_node_counts_for_taxids(species_order)
+    from jobs.support.catalog_denorm_finalize import bulk_copy_organism_lineages_to_catalog
+    from jobs.support.stats import update_taxon_node_counts
+
+    bulk_copy_organism_lineages_to_catalog(species_order)
+    update_taxon_node_counts(species_order)
     logger.info(
-        "organism_tsv_import: refreshed TaxonNode aggregate counts for %s species taxid(s)",
+        "organism_tsv_import: bulk lineage copy + taxon node counts for %s species taxid(s)",
         len(species_order),
     )
 
-    enrich_result = enrich_organisms_post_taxonomy(taxids=species_order, iucn_force=bool(iucn_force))
+    enrich_result = run_enrich_followup_for_taxids(
+        species_order,
+        iucn_force=bool(iucn_force),
+    )
 
     return {
         "status": "ok",
@@ -305,21 +325,41 @@ def _merge_metadata_for_taxids(taxid_to_meta: Dict[str, Dict[str, Any]]) -> Tupl
     """
     Merge each metadata map into the corresponding ``Organism.metadata``.
 
+    Uses chunked ``taxid__in`` reads and ``bulk_write`` to avoid one round trip per row.
+
     Returns (updated_count, taxids_missing_organism).
     """
+    if not taxid_to_meta:
+        return 0, []
+
     missing: List[str] = []
     updated = 0
+    coll = Organism._get_collection()
+    chunk_size = max(1, _METADATA_MERGE_CHUNK)
+    keys = list(taxid_to_meta.keys())
 
-    for tid, incoming in taxid_to_meta.items():
-        org = Organism.objects(taxid=tid).first()
-        if org is None:
-            missing.append(tid)
-            continue
-        base = dict(org.metadata or {})
-        base.update(incoming)
-        org.metadata = base
-        org.save()
-        updated += 1
+    for chunk in create_batches(keys, chunk_size):
+        tids = list(chunk)
+        orgs = list(
+            Organism.objects(taxid__in=tids).only("taxid", "metadata")
+        )
+        org_by = {str(o.taxid).strip(): o for o in orgs if o.taxid is not None}
+
+        ops: List[UpdateOne] = []
+        for tid in tids:
+            tid_s = str(tid).strip()
+            incoming = taxid_to_meta[tid]
+            org = org_by.get(tid_s)
+            if org is None:
+                missing.append(tid_s)
+                continue
+            base = dict(org.metadata or {})
+            base.update(incoming)
+            ops.append(UpdateOne({"taxid": tid_s}, {"$set": {"metadata": base}}))
+
+        if ops:
+            coll.bulk_write(ops, ordered=False)
+            updated += len(ops)
 
     return updated, missing
 
@@ -335,11 +375,11 @@ def import_organisms_from_tsv_task(
         handler (small Celery/Redis payload). The file is removed after processing.
     :param tsv_text: Optional full TSV body for ``POST /api/cronjob/...`` with JSON ``kwargs``
         only (not used together with ``tsv_path``).
-    :param iucn_force: Passed to :func:`~jobs.taxonomy.enrich_organisms_post_taxonomy`.
+    :param iucn_force: Passed to :func:`~jobs.support.organism_enrich.run_enrich_followup_for_taxids`.
 
-    Refreshes lineage roll-up counts on :class:`~db.model.TaxonNode` for the import taxids
-    and their ancestors. Does **not** recompute per-organism catalog counters
-    (``assemblies_count``, ``reads_count``, etc.) on :class:`~db.model.Organism` documents.
+    After ingest, runs :func:`~jobs.support.catalog_denorm_finalize.bulk_copy_organism_lineages_to_catalog`
+    and :func:`~jobs.support.stats.update_taxon_node_counts` for the import's species taxids —
+    no full-DB recount and no INSDC/GoaT status update.
 
     Row batches (default 2000, ``ORGANISM_TSV_IMPORT_BATCH_ROWS``) limit peak parse memory.
     """
@@ -351,12 +391,14 @@ def import_organisms_from_tsv_task(
             safe_unlink(tsv_path)
             return {"status": "error", "reason": "invalid_tsv_path"}
         try:
-            return _run_organism_tsv_import_batches(
+            result = _run_organism_tsv_import_batches(
                 iter_organism_tsv_batches_from_path(tsv_path, batch_rows=batch_rows),
                 tmp_dir=TMP_DIR,
                 batch_rows=batch_rows,
                 iucn_force=iucn_force,
             )
+            result["root_lineage_cleanup"] = cleanup_catalog_outside_root_lineage()
+            return result
         except Exception:
             logger.exception("helpers_import_organisms_from_tsv: failed processing %r", tsv_path)
             raise
@@ -364,12 +406,14 @@ def import_organisms_from_tsv_task(
             safe_unlink(tsv_path)
 
     if tsv_text is not None and str(tsv_text).strip():
-        return _run_organism_tsv_import_batches(
+        result = _run_organism_tsv_import_batches(
             iter_organism_tsv_batches(str(tsv_text), batch_rows=batch_rows),
             tmp_dir=TMP_DIR,
             batch_rows=batch_rows,
             iucn_force=iucn_force,
         )
+        result["root_lineage_cleanup"] = cleanup_catalog_outside_root_lineage()
+        return result
 
     logger.info("helpers_import_organisms_from_tsv: missing tsv_path and tsv_text")
     return {"status": "error", "reason": "empty_tsv"}

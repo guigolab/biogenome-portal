@@ -2,7 +2,8 @@
 Fetch attributed species images from iNaturalist, Wikimedia Commons, and GBIF.
 
 Respects a conservative license allowlist and skips organisms that already have
-enough ``images`` (see task / env ``ORGANISM_IMAGE_MIN_COUNT``).
+enough ``images`` unless ``run_external_image_backfill(..., force_update=True)``
+refreshes their image set in place (see task / env ``ORGANISM_IMAGE_MIN_COUNT``).
 """
 
 from __future__ import annotations
@@ -533,34 +534,77 @@ def fetch_images_for_organism(
     organism: Organism,
     session: requests.Session,
     min_images: int,
+    *,
+    force_update: bool = False,
 ) -> int:
     """
-    Append up to ``min_images`` total images (existing + new).
-    Returns number of new images appended.
+    Default: append images until the organism has at least ``min_images`` total
+    (iNaturalist → Commons → GBIF), then return how many new images were appended.
+
+    With ``force_update=True``: re-run that fetch for up to ``min_images`` results
+    using a **fresh** URL set (so the same source priority applies again) and
+    **replace** the stored ``images`` list with the new set—no appending onto the
+    old list. If the sources return nothing, the previous images are left unchanged.
+    Returns the number of images stored from this run (append count or replace count).
     """
     existing = _dedupe_images_keep_last(list(organism.images or []))
     if existing != list(organism.images or []):
         organism.images = existing
         organism.save()
-    if len(existing) >= min_images:
+    n0 = len(existing)
+
+    if force_update:
+        scientific_name = organism.scientific_name or ""
+        existing_urls: Set[str] = set()
+        new_docs: List[OrganismImage] = []
+        remaining = min_images
+        new_docs.extend(
+            _fetch_inat_images(session, scientific_name, remaining, existing_urls)
+        )
+        remaining = min_images - len(new_docs)
+        if remaining > 0:
+            new_docs.extend(
+                _fetch_commons_images(
+                    session, scientific_name, remaining, existing_urls
+                )
+            )
+        remaining = min_images - len(new_docs)
+        if remaining > 0:
+            new_docs.extend(
+                _fetch_gbif_images(
+                    session, scientific_name, remaining, existing_urls
+                )
+            )
+        if not new_docs:
+            return 0
+        final = _dedupe_images_keep_last(new_docs)
+        organism.images = final
+        organism.save()
+        return len(final)
+
+    if n0 >= min_images:
         return 0
-    need = min_images - len(existing)
+    target_additional = max(0, min_images - n0)
+    if target_additional <= 0:
+        return 0
+
     scientific_name = organism.scientific_name or ""
     existing_urls = _collect_existing_sets(organism)
-    new_docs: List[OrganismImage] = []
+    new_docs = []
 
+    remaining = target_additional
     new_docs.extend(
-        _fetch_inat_images(session, scientific_name, need, existing_urls)
+        _fetch_inat_images(session, scientific_name, remaining, existing_urls)
     )
-    need = min_images - len(existing) - len(new_docs)
-    if need > 0:
+    remaining = target_additional - len(new_docs)
+    if remaining > 0:
         new_docs.extend(
-            _fetch_commons_images(session, scientific_name, need, existing_urls)
+            _fetch_commons_images(session, scientific_name, remaining, existing_urls)
         )
-    need = min_images - len(existing) - len(new_docs)
-    if need > 0:
+    remaining = target_additional - len(new_docs)
+    if remaining > 0:
         new_docs.extend(
-            _fetch_gbif_images(session, scientific_name, need, existing_urls)
+            _fetch_gbif_images(session, scientific_name, remaining, existing_urls)
         )
 
     if not new_docs:
@@ -575,10 +619,16 @@ def run_external_image_backfill(
     taxids: Optional[List[Any]] = None,
     min_images: Optional[int] = None,
     max_organisms: Optional[int] = None,
+    *,
+    force_update: bool = False,
 ) -> Dict[str, Any]:
     """
     For each organism with fewer than ``min_images`` images, fetch from
     iNaturalist → Commons → GBIF until the quota is met or sources are exhausted.
+
+    With ``force_update=True``, every organism in scope is processed: images are
+    **replaced** by a fresh fetch from the same sources (not appended); see
+    :func:`fetch_images_for_organism`.
     """
     min_c = int(min_images) if min_images is not None else int(
         os.getenv("ORGANISM_IMAGE_MIN_COUNT", str(_DEFAULT_MIN_IMAGES))
@@ -608,11 +658,13 @@ def run_external_image_backfill(
         if normalized_images != list(org.images or []):
             org.images = normalized_images
             org.save()
-        if len(org.images or []) >= min_c:
+        if not force_update and len(org.images or []) >= min_c:
             skipped_full += 1
             continue
         try:
-            n = fetch_images_for_organism(org, session, min_c)
+            n = fetch_images_for_organism(
+                org, session, min_c, force_update=force_update
+            )
             if n:
                 updated += 1
                 added_total += n
@@ -630,6 +682,7 @@ def run_external_image_backfill(
     return {
         "status": "ok",
         "min_images": min_c,
+        "force_update": bool(force_update),
         "processed": processed,
         "organisms_updated": updated,
         "images_added": added_total,

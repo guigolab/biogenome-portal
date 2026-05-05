@@ -1,44 +1,41 @@
 import logging
 import os
-from typing import Any, Dict, Iterable, List, Optional, Set
+import uuid
+from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
 
 from celery import shared_task
+from mongoengine.queryset.visitor import Q
 
 from clients.ncbi_client import query_datasets_to_file
+from db.constants import GOAT_PROJECT_NAME
 from db.model import Assembly, BioSample
+from helpers.assembly import CHROMOSOME_REPORT_ASSEMBLY_LEVELS
 from helpers.data import create_batches
 from helpers.job_paths import ensure_parent_dir, safe_remove_file
-from jobs.support.organism_catalog_sync import delete_rows_without_organism
+from jobs.support.catalog_ingest_guard import (
+    delete_rows_without_organism,
+    prune_organisms_missing_taxon_lineage,
+)
 from jobs.support.assembly_jsonl import (
     bulk_link_blobtoolkit_for_assembly_accessions,
-    collect_sample_accessions_from_assembly_rows,
-    collect_taxids_from_assembly_rows,
-    merge_assembly_jsonl_rows_from_paths,
-    persist_assembly_import_payload,
+    run_assembly_import_merge_persist_bounded,
+    save_chromosomes_bulk_and_update_assemblies,
 )
-from jobs.support.catalog_ingest_pipeline import (
-    finalize_touched_species_catalog,
-    run_phase2_taxonomy_bootstrap,
-)
+from jobs.support.catalog_taxonomy_bootstrap import handle_full_taxonomy_from_taxids
 from jobs.support.biosample_ingest import resolve_biosamples_for_accessions
 from jobs.support.geolocation_batch import update_geolocations
-from jobs.support.ingest_job_utils import (
-    dedupe_nonempty_strs,
-    maybe_enqueue_enrich_organisms,
-    scalar_taxids_batched,
-)
-from parsers.biosample_from_ncbi_datasets import build_assembly_row_by_biosample
-
+from jobs.support.ingest_job_utils import dedupe_nonempty_strs, scalar_taxids_batched
+from jobs.support.annotrieve import sync_annotrieve_annotations_for_assembly_accessions
+from jobs.support.catalog_denorm_finalize import bulk_copy_organism_lineages_to_catalog
+from jobs.support.stats import update_organism_counts, update_taxon_node_counts
+from jobs.support.organism_enrich import run_enrich_followup_for_taxids
+from jobs.support.goat_status import apply_goat_status_after_assembly_ingest
+from jobs.taxonomy import cleanup_catalog_outside_root_lineage
 logger = logging.getLogger(__name__)
 
 PROJECT_ACCESSION = os.getenv("PROJECT_ACCESSION")
 TMP_DIR = os.getenv("TMP_DIR", "/tmp")
 IMPORT_BLOBTOOLKIT = os.getenv("IMPORT_BLOBTOOLKIT", "true")
-
-def _assembly_import_triggers_annotrieve() -> bool:
-    """When true (default), enqueue Annotrieve annotation upsert after new assemblies."""
-    v = os.getenv("ASSEMBLY_IMPORT_TRIGGER_ANNOTRIEVE", "1").strip().lower()
-    return v not in ("0", "false", "no", "off")
 
 
 def _write_accession_batch(path: str, batch: List[str]) -> None:
@@ -55,13 +52,14 @@ def _run_assembly_import_pipeline(
     context_label: str,
 ) -> Dict[str, Any]:
     """
-    Shared flow (bioproject + accession list imports):
+    Shared flow (bioproject + accession list imports) — canonical phases:
 
-    1. Primary model: parse/persist assemblies (+ chromosomes).
-    2. Secondary model: fetch linked biosamples when present.
-    3. Taxonomy bootstrap: create/fetch organisms for touched taxids.
-    4. Prune catalog rows without Organism (cascade chromosomes / related).
-    5. Finalize denorm for all touched species; geolocation; enrichment; BlobToolKit.
+    1. **Fetch/merge** JSONL rows; collect taxids and biosample accessions from rows.
+    2. **Store** assemblies; then resolve linked biosamples (tier-1 JSONL → ENA…).
+    3. **Taxonomy** bootstrap; **prune** organisms without usable ``taxon_lineage`` (guarded).
+    4. **Catalog prune** of rows without Organism; optional **inline Annotrieve** (skip its finalize).
+    5. **Finalize** one merged species set (counts + INSDC/GoaT + enrich chain for new organisms).
+    6. **Geolocation**; **BlobToolKit** link; launch chromosome-refetch follow-up task.
     """
     if not jsonl_paths:
         return {
@@ -74,25 +72,32 @@ def _run_assembly_import_pipeline(
             "status": "no_jsonl",
         }
 
-    new_rows, assemblies_to_update = merge_assembly_jsonl_rows_from_paths(jsonl_paths)
-    if not new_rows and not assemblies_to_update:
+    sqlite_staging = os.path.join(TMP_DIR, f"assembly_import_{uuid.uuid4().hex}.sqlite")
+    ensure_parent_dir(sqlite_staging)
+    try:
+        merged = run_assembly_import_merge_persist_bounded(
+            jsonl_paths,
+            sqlite_staging,
+            taxids_with_organism=None,
+        )
+    finally:
+        safe_remove_file(sqlite_staging)
+
+    if merged.staging_accession_count == 0:
         raise RuntimeError(
             f"{context_label}: JSONL contained no usable assembly rows (empty or invalid)."
         )
 
-    all_taxids = collect_taxids_from_assembly_rows(new_rows, assemblies_to_update)
+    all_taxids = merged.all_taxids
     if not all_taxids:
         logger.warning("%s: no taxids found in assembly JSONL rows.", context_label)
 
-    assembly_biosample_accessions = collect_sample_accessions_from_assembly_rows(
-        new_rows, assemblies_to_update
-    )
+    assembly_biosample_accessions = merged.assembly_biosample_accessions
+    saved_assembly_accessions = merged.saved_assembly_accessions
 
     newly_fetched_biosample_accessions: List[str] = []
     if assembly_biosample_accessions:
-        assembly_row_by_biosample = build_assembly_row_by_biosample(
-            new_rows, assemblies_to_update
-        )
+        assembly_row_by_biosample = merged.assembly_row_by_biosample
         related_id_by_biosample = {
             acc: (assembly_row_by_biosample[acc].get("accession") or "")
             for acc in assembly_biosample_accessions
@@ -106,13 +111,8 @@ def _run_assembly_import_pipeline(
             related_id_by_biosample=related_id_by_biosample,
         )
 
-    saved_assembly_accessions = persist_assembly_import_payload(
-        new_rows,
-        assemblies_to_update,
-        taxids_with_organism=None,
-    )
-
-    saved_organism_taxids = run_phase2_taxonomy_bootstrap(list(all_taxids), TMP_DIR)
+    saved_organism_taxids = handle_full_taxonomy_from_taxids(list(all_taxids), TMP_DIR)
+    prune_organisms_missing_taxon_lineage(list(all_taxids))
 
     if not saved_assembly_accessions:
         logger.warning(
@@ -121,6 +121,7 @@ def _run_assembly_import_pipeline(
         )
 
     # Remove bad rows before lineage reload so we do not bulk-update documents we are about to delete.
+    assembly_accessions_still_in_db: List[str] = []
     if saved_assembly_accessions:
         removed_assemblies = delete_rows_without_organism(
             Assembly, "accession", saved_assembly_accessions
@@ -131,7 +132,12 @@ def _run_assembly_import_pipeline(
                 context_label,
                 removed_assemblies,
             )
-
+        # Re-resolve accessions so Annotrieve / BlobToolKit / metrics never target deleted rows.
+        assembly_accessions_still_in_db = dedupe_nonempty_strs(
+            Assembly.objects(accession__in=saved_assembly_accessions).scalar("accession")
+        )
+        sync_annotrieve_annotations_for_assembly_accessions(assembly_accessions_still_in_db, skip_finalize=True)
+    
     if newly_fetched_biosample_accessions:
         delete_rows_without_organism(
             BioSample, "accession", newly_fetched_biosample_accessions
@@ -139,7 +145,9 @@ def _run_assembly_import_pipeline(
 
     species_from_assemblies: Set[str] = {
         str(t)
-        for t in Assembly.objects(accession__in=saved_assembly_accessions).scalar("taxid")
+        for t in Assembly.objects(
+            accession__in=assembly_accessions_still_in_db
+        ).scalar("taxid")
         if t is not None and str(t).strip()
     }
     species_from_biosamples: Set[str] = scalar_taxids_batched(
@@ -155,12 +163,16 @@ def _run_assembly_import_pipeline(
     )
 
     if species_to_refresh:
-        finalize_touched_species_catalog(species_to_refresh, copy_lineages=True)
+        bulk_copy_organism_lineages_to_catalog(species_to_refresh)
+        update_organism_counts(species_to_refresh)
+        update_taxon_node_counts(species_to_refresh)
+        if (GOAT_PROJECT_NAME or "").strip():
+            apply_goat_status_after_assembly_ingest(species_to_refresh)
+        run_enrich_followup_for_taxids(species_to_refresh)
 
     if newly_fetched_biosample_accessions:
         update_geolocations(newly_fetched_biosample_accessions)
-
-    maybe_enqueue_enrich_organisms(saved_organism_taxids)
+    
     blob_stats = dict()
     if IMPORT_BLOBTOOLKIT == "true":
         blob_stats = {
@@ -168,31 +180,81 @@ def _run_assembly_import_pipeline(
             "blobtoolkit_no_hit": 0,
             "blobtoolkit_api_errors": 0,
         }
-        if saved_assembly_accessions:
+        if assembly_accessions_still_in_db:
             still_present = list(
                 Assembly.objects(
-                    accession__in=saved_assembly_accessions,
+                    accession__in=assembly_accessions_still_in_db,
                     blobtoolkit_id=None,
                 ).scalar("accession")
             )
             if still_present:
                 blob_stats = bulk_link_blobtoolkit_for_assembly_accessions(still_present)
-    if (
-        _assembly_import_triggers_annotrieve()
-        and saved_assembly_accessions
-    ):
-        from jobs.annotrieve import import_annotations_for_assembly_accessions
-
-        import_annotations_for_assembly_accessions.delay(
-            list(saved_assembly_accessions)
+    followup_task_id = None
+    try:
+        followup = refetch_chromosome_reports_for_empty_chromosomes.delay()
+        followup_task_id = followup.id
+        logger.info(
+            "%s: launched chromosome refetch follow-up task id=%s",
+            context_label,
+            followup_task_id,
         )
+    except Exception:
+        logger.exception(
+            "%s: failed to launch chromosome refetch follow-up task",
+            context_label,
+        )
+    cleanup_result = cleanup_catalog_outside_root_lineage()
 
     return {
-        "saved_assembly_accessions": saved_assembly_accessions,
+        "saved_assembly_accessions": assembly_accessions_still_in_db,
         "saved_biosample_accessions": newly_fetched_biosample_accessions,
         "saved_organism_taxids": saved_organism_taxids,
         "status": "ok",
+        "chromosome_refetch_task_id": followup_task_id,
+        "root_lineage_cleanup": cleanup_result,
         **blob_stats,
+    }
+
+
+@shared_task(name="assemblies_refetch_chromosome_reports", ignore_result=False)
+def refetch_chromosome_reports_for_empty_chromosomes(
+    limit: Optional[int] = None,
+    skip: int = 0,
+) -> Dict[str, Any]:
+    """
+    Re-fetch NCBI assembly reports for assemblies that have no ``chromosomes`` list yet
+    but are Complete Genome or Chromosome level (same gate as import / REST). Used to
+    recover from transient FTP failures (e.g. 503) during bulk import.
+    """
+    if skip < 0:
+        raise ValueError("skip must be >= 0")
+    if limit is not None and limit < 0:
+        raise ValueError("limit must be >= 0 when set")
+
+    empty_list = Q(chromosomes__size=0) | Q(chromosomes__exists=False)
+    level_in = Q(
+        metadata__assembly_info__assembly_level__in=list(
+            CHROMOSOME_REPORT_ASSEMBLY_LEVELS
+        )
+    )
+    base_qs = Assembly.objects(empty_list & level_in).only("accession", "assembly_name")
+    total_matched = base_qs.count()
+    slice_qs = base_qs
+    if skip:
+        slice_qs = slice_qs.skip(skip)
+    if limit is not None:
+        slice_qs = slice_qs.limit(limit)
+    items: List[Tuple[str, Optional[str]]] = [
+        (str(a.accession), a.assembly_name) for a in slice_qs if a.accession
+    ]
+    if items:
+        save_chromosomes_bulk_and_update_assemblies(items)
+    return {
+        "status": "ok",
+        "matched_total": total_matched,
+        "queued_for_fetch": len(items),
+        "skip": skip,
+        "limit": limit,
     }
 
 
@@ -261,7 +323,8 @@ def import_assemblies_from_accessions(
     # dedupes per JSONL, but this avoids duplicate datasets calls and duplicate JSONL rows.
     accessions_list = dedupe_nonempty_strs(accessions)
     logger.info("Assemblies to fetch: %s (unique)", len(accessions_list))
-
+    if os.getenv("DEV") == "true":
+        accessions_list = accessions_list[:100]
     batches = create_batches(accessions_list, 1000)
     temp_paths: List[str] = []
     output_files_paths: List[str] = []

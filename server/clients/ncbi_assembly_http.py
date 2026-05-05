@@ -7,8 +7,30 @@ import aiohttp
 NCBI_HTTP_BASE = "https://ftp.ncbi.nlm.nih.gov"
 NCBI_GENOMES_ALL = "/genomes/all"
 
-NCBI_CONCURRENT_CONNECTIONS = 10
-NCBI_BATCH_DELAY_SECONDS = 1.0
+NCBI_CONCURRENT_CONNECTIONS = 20
+NCBI_BATCH_DELAY_SECONDS = 0.5
+
+
+def sanitize_assembly_name_for_ftp_path(name: str) -> str:
+    """Spaces become underscores (NCBI genome FTP directory naming)."""
+    return name.strip().replace(" ", "_")
+
+
+def build_candidate_assembly_report_url(accession: str, assembly_name: str) -> Optional[str]:
+    """
+    Deterministic HTTPS URL for *_assembly_report.txt when the FTP folder matches
+    ``{accession}_{sanitized_assembly_name}/`` (spaces in assembly_name → '_').
+    Returns None if accession path is invalid or assembly name is empty after sanitize.
+    """
+    sanitized = sanitize_assembly_name_for_ftp_path(assembly_name)
+    if not sanitized:
+        return None
+    base_path = _ncbi_ftp_path_from_accession(accession.strip())
+    if not base_path:
+        return None
+    acc_seg = accession.strip().upper()
+    segment = f"{acc_seg}_{sanitized}"
+    return f"{NCBI_HTTP_BASE}{base_path}/{segment}/{segment}_assembly_report.txt"
 
 
 def _ncbi_ftp_path_from_accession(accession):
@@ -190,13 +212,22 @@ def normalize_assembly_report_tsv_line(line: str) -> Optional[str]:
     return line or None
 
 
+async def iter_report_body_lines(resp: aiohttp.ClientResponse):
+    """
+    Yield decoded text lines from an open aiohttp response body (streaming).
+    Caller must ensure status is acceptable before consuming (e.g. 200).
+    """
+    buffer = ""
+    async for chunk in resp.content.iter_chunked(8192):
+        buffer += chunk.decode("utf-8", errors="replace")
+        while "\n" in buffer:
+            line, buffer = buffer.split("\n", 1)
+            yield line
+
+
 async def stream_report_lines(session: aiohttp.ClientSession, report_url: str):
     """Stream the report URL and yield decoded lines (without loading the full body)."""
     async with session.get(report_url, timeout=aiohttp.ClientTimeout(total=60)) as resp:
         resp.raise_for_status()
-        buffer = ""
-        async for chunk in resp.content.iter_chunked(8192):
-            buffer += chunk.decode("utf-8", errors="replace")
-            while "\n" in buffer:
-                line, buffer = buffer.split("\n", 1)
-                yield line
+        async for line in iter_report_body_lines(resp):
+            yield line

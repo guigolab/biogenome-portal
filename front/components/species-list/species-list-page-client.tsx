@@ -31,7 +31,6 @@ import { fetchTaxons } from '@/lib/api/taxons'
 import {
    IUCN_LABELS,
    IUCN_STATS_NO_ENTRY,
-   iucnFieldStatsOnlyNoEntry,
    sortIucnThreatStatEntries,
 } from '@/lib/iucnCategory'
 import { countryLabelEn } from '@/lib/countryLabels'
@@ -45,19 +44,16 @@ import { navRouteIcons } from '@/lib/portal'
 import {
    GOAT_PUBLIC_INFO_URL,
    parseGoatProjectLink,
+   showCmsLoginNav,
    showCountriesUi,
    showGoatStatusPage,
 } from '@/lib/portal/portalFeatures'
 import {
    isSpeciesMetadataEmptyBucketKey,
-   organismFieldStatsHasFilterableValues,
    sortStatEntriesByCountDesc,
    speciesMetadataBucketToQueryValue,
 } from '@/lib/speciesFieldStats'
-import {
-   selectCountryFilterSectionVisible,
-   useOrganismCountriesDisplayStore,
-} from '@/stores/organism-countries-display-store'
+import { useOrganismCountriesDisplayStore } from '@/stores/organism-countries-display-store'
 import {
    speciesSortToApi,
    visibleSpeciesSortModes,
@@ -88,6 +84,7 @@ const TARGET_LIST_STATS_FIELD = 'target_list_status'
 export function SpeciesListPageClient() {
    const { t } = useLocale()
    const { config } = usePortalConfig()
+   const cmsEnabled = showCmsLoginNav(config)
    const goatEnabled = showGoatStatusPage(config)
    const countriesEnabled = showCountriesUi()
    const labelIucnThreatOption = useCallback(
@@ -216,20 +213,17 @@ export function SpeciesListPageClient() {
       [sequencingTypeStats],
    )
 
-   const iucnFilterVisible = !iucnFieldStatsOnlyNoEntry(iucnThreatStats)
-   const subProjectFilterVisible =
-      subProjectStats == null || organismFieldStatsHasFilterableValues(subProjectStats)
-   const sequencingTypeFilterVisible =
-      sequencingTypeStats == null || organismFieldStatsHasFilterableValues(sequencingTypeStats)
+   const iucnFilterVisible = true
+   const subProjectFilterVisible = cmsEnabled
+   const sequencingTypeFilterVisible = cmsEnabled
    const countryFrequencyStats = useOrganismCountriesDisplayStore((s) =>
       countriesEnabled ? s.countryFrequencyStats : null,
    )
-   const countryFilterSectionVisible =
-      countriesEnabled && useOrganismCountriesDisplayStore(selectCountryFilterSectionVisible)
+   const countryFilterSectionVisible = countriesEnabled
 
-   const effectiveIucnThreatFilter = iucnFilterVisible ? iucnThreatFilter : 'all'
-   const effectiveSubProjectFilter = subProjectFilterVisible ? subProjectFilter : 'all'
-   const effectiveSequencingTypeFilter = sequencingTypeFilterVisible ? sequencingTypeFilter : 'all'
+   const effectiveIucnThreatFilter = iucnThreatFilter
+   const effectiveSubProjectFilter = subProjectFilter
+   const effectiveSequencingTypeFilter = sequencingTypeFilter
 
    const statsQueryBase = useMemo(
       () => ({
@@ -295,31 +289,6 @@ export function SpeciesListPageClient() {
       ensureGoatStats()
       ensureTargetListStats()
    }, [goatEnabled, goatDrawerOpen, statsQueryBase, ensureGoatStats, ensureTargetListStats])
-
-   useEffect(() => {
-      if (!iucnFilterVisible && iucnThreatFilter !== 'all') {
-         setIucnThreatFilter('all')
-      }
-   }, [iucnFilterVisible, iucnThreatFilter])
-
-   useEffect(() => {
-      if (!subProjectFilterVisible && subProjectFilter !== 'all') {
-         setSubProjectFilter('all')
-      }
-   }, [subProjectFilterVisible, subProjectFilter])
-
-   useEffect(() => {
-      if (!sequencingTypeFilterVisible && sequencingTypeFilter !== 'all') {
-         setSequencingTypeFilter('all')
-      }
-   }, [sequencingTypeFilterVisible, sequencingTypeFilter])
-
-   const countryStatsLoaded = useOrganismCountriesDisplayStore((s) => s.countryFrequencyStats !== null)
-   useEffect(() => {
-      if (countriesEnabled && countryStatsLoaded && !countryFilterSectionVisible) {
-         setSelectedCountryCodes([])
-      }
-   }, [countriesEnabled, countryStatsLoaded, countryFilterSectionVisible])
 
    useEffect(() => {
       if (isLg) setFiltersOpen(false)

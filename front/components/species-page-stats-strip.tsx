@@ -1,6 +1,8 @@
 'use client'
 
+import Link from 'next/link'
 import { List } from 'lucide-react'
+import { ArrowUpRight } from 'lucide-react'
 
 import { useLocale } from '@/contexts/locale-context'
 import { modelLucideMap } from '@/lib/modelIcons'
@@ -8,6 +10,7 @@ import type { DataModels } from '@/lib/portal/types'
 import { cn } from '@/lib/utils'
 
 export type SpeciesPageStatsStripProps = {
+  taxid: string
   assemblyCount: number
   biosampleCount: number
   readsCount: number
@@ -28,6 +31,7 @@ type StatRow = {
  * Original horizontal strip layout; icons from `modelLucideMap` and labels from the same i18n keys as the home hero stats.
  */
 export function SpeciesPageStatsStrip({
+  taxid,
   assemblyCount,
   biosampleCount,
   readsCount,
@@ -95,13 +99,26 @@ export function SpeciesPageStatsStrip({
     <div className={cn('grid gap-4 mt-6 pt-6 border-t border-border', statsGridClass)}>
       {rows.map((stat) => {
         const Icon = modelLucideMap[stat.modelKey] ?? List
+        const catalogHref = `/catalog?cat=${encodeURIComponent(stat.modelKey)}&tid=${encodeURIComponent(taxid)}`
         return (
           <div key={stat.key} className="flex items-center gap-3">
             <div className={cn('p-2 rounded-lg', stat.iconWrapClass)}>
               <Icon className={cn('h-5 w-5', stat.iconClass)} aria-hidden />
             </div>
             <div>
-              <div className="text-2xl font-bold">{stat.value.toLocaleString(fmt)}</div>
+              <div className="text-2xl font-bold flex items-center gap-2">
+                <span>{stat.value.toLocaleString(fmt)}</span>
+                {stat.key !== 'locations' && (
+                  <Link
+                    href={catalogHref}
+                    className="text-muted-foreground hover:text-foreground inline-flex"
+                    aria-label={`Open ${t(stat.labelKey)} in catalog`}
+                    title={`Open ${t(stat.labelKey)} in catalog`}
+                  >
+                    <ArrowUpRight className="h-5 w-5" />
+                  </Link>
+                )}
+              </div>
               <div className="text-sm text-muted-foreground">{t(stat.labelKey)}</div>
             </div>
           </div>

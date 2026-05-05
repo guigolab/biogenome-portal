@@ -1,6 +1,10 @@
 'use client'
 
+import Link from 'next/link'
+import { ExternalLink } from 'lucide-react'
+
 import { CatalogRecordDetailContent } from '@/components/catalog-explorer/catalog-record-detail-content'
+import { inferAnnotationRowSource } from '@/lib/catalog-explorer/annotationMetadataSource'
 import {
    cardHeaderDescription,
    cardHeaderTitle,
@@ -10,6 +14,17 @@ import { ModelIcon } from '@/lib/modelIcons'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import type { DataModels } from '@/lib/portal/types'
+
+function annotationSourceLabel(row: Record<string, unknown>, t: (key: string) => string): string {
+   switch (inferAnnotationRowSource(row)) {
+      case 'annotrieve':
+         return t('catalog.annotationDetailAnnotrieve')
+      case 'portal_custom':
+         return t('catalog.annotationDetailPortal')
+      default:
+         return t('catalog.annotationDetailOther')
+   }
+}
 
 export type CatalogRecordDetailSheetProps = {
    open: boolean
@@ -32,6 +47,9 @@ export function CatalogRecordDetailSheet({
 }: CatalogRecordDetailSheetProps) {
    const title = detailRow ? cardHeaderTitle(catalogKey, detailRow) : t('catalog.recordDetails')
    const description = detailRow ? cardHeaderDescription(catalogKey, detailRow) : catalogKey
+   const showTaxidPrefix = useTaxidInDescription(catalogKey)
+   const subtitleText = showTaxidPrefix ? `taxid · ${description}` : description
+   const hasSpeciesLink = Boolean(speciesHref && description && description !== '—')
 
    return (
       <Sheet open={open} onOpenChange={onOpenChange}>
@@ -39,13 +57,13 @@ export function CatalogRecordDetailSheet({
             side="right"
             className="flex w-[min(100vw-1rem,28rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-xl lg:w-[min(100vw-2rem,40rem)] lg:max-w-2xl"
          >
-            {/* a11y-only label; visible title is rendered below */}
+            {/* a11y-only label; visible title is rendered in the sticky strip below */}
             <SheetHeader className="sr-only shrink-0">
                <SheetTitle>{title}</SheetTitle>
                <SheetDescription>{description}</SheetDescription>
             </SheetHeader>
 
-            {/* Visible non-scrolling header strip */}
+            {/* Sticky visible header — does not scroll */}
             {detailRow ? (
                <div className="shrink-0 border-b border-border px-4 pb-3 pr-12 pt-4">
                   <div className="flex min-w-0 items-start gap-2.5">
@@ -54,13 +72,27 @@ export function CatalogRecordDetailSheet({
                      </span>
                      <div className="min-w-0 flex-1">
                         <p className="line-clamp-2 text-sm font-semibold leading-snug">{title}</p>
-                        <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                           {useTaxidInDescription(catalogKey) ? (
-                              <>taxid · {description}</>
-                           ) : (
-                              description
-                           )}
-                        </p>
+
+                        {hasSpeciesLink ? (
+                           <Link
+                              href={speciesHref!}
+                              className="mt-0.5 inline-flex max-w-full min-w-0 items-center gap-1 text-xs text-primary underline-offset-4 hover:underline"
+                              aria-label={t('catalog.openSpeciesPage')}
+                           >
+                              <span className="truncate">{subtitleText}</span>
+                              <ExternalLink className="h-3 w-3 shrink-0 opacity-70" aria-hidden />
+                           </Link>
+                        ) : (
+                           <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                              {subtitleText}
+                           </p>
+                        )}
+
+                        {catalogKey === 'annotations' ? (
+                           <span className="mt-1 inline-block rounded-md bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
+                              {annotationSourceLabel(detailRow, t)}
+                           </span>
+                        ) : null}
                      </div>
                   </div>
                </div>
@@ -73,9 +105,7 @@ export function CatalogRecordDetailSheet({
                         catalogKey={catalogKey}
                         detailRow={detailRow}
                         rootTaxid={rootTaxid}
-                        speciesHref={speciesHref}
                         t={t}
-                        hideHeader
                      />
                   </div>
                ) : null}

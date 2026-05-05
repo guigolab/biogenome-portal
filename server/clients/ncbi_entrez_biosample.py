@@ -21,6 +21,9 @@ from typing import List, Optional
 
 import requests
 
+from db.model import BioSample
+from parsers.biosample_ncbi_xml import parse_biosamples_from_ncbi_xml
+
 logger = logging.getLogger(__name__)
 
 _EFETCH_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
@@ -41,13 +44,61 @@ def _email() -> Optional[str]:
     return os.getenv("NCBI_EMAIL") or None
 
 
+def fetch_biosample_docs_for_accessions(accessions: List[str]) -> List[BioSample]:
+    """
+    Fetch NCBI BioSample records via Entrez efetch, parsing each HTTP response
+    with :func:`parsers.biosample_ncbi_xml.parse_biosamples_from_ncbi_xml`.
+
+    Batches requests according to the API-key-aware rate limits. Avoids building
+    one giant concatenated XML string in memory.
+    """
+    if not accessions:
+        return []
+
+    key = _api_key()
+    email = _email()
+    batch_size = _BATCH_SIZE_WITH_KEY if key else _BATCH_SIZE_NO_KEY
+    delay = _DELAY_WITH_KEY if key else _DELAY_NO_KEY
+
+    out: List[BioSample] = []
+    unique_accessions = list(dict.fromkeys(a for a in accessions if a and str(a).strip()))
+
+    for i in range(0, len(unique_accessions), batch_size):
+        batch = unique_accessions[i : i + batch_size]
+        params: dict = {
+            "db": "biosample",
+            "id": ",".join(batch),
+            "retmode": "xml",
+        }
+        if key:
+            params["api_key"] = key
+        if email:
+            params["email"] = email
+
+        try:
+            resp = requests.get(_EFETCH_URL, params=params, timeout=_TIMEOUT)
+            resp.raise_for_status()
+            docs = parse_biosamples_from_ncbi_xml(resp.text)
+            out.extend(docs)
+        except Exception:
+            logger.exception(
+                "NCBI Entrez efetch failed for BioSample batch (first accession: %s, size: %d)",
+                batch[0],
+                len(batch),
+            )
+
+        if i + batch_size < len(unique_accessions):
+            time.sleep(delay)
+
+    return out
+
+
 def fetch_biosample_xml_for_accessions(accessions: List[str]) -> Optional[str]:
     """
-    Fetch NCBI BioSample XML for a list of accessions via Entrez efetch.
+    Deprecated for large inputs: use :func:`fetch_biosample_docs_for_accessions`
+    to parse per efetch response without concatenating all XML in memory.
 
-    Returns the raw XML string on success, or ``None`` on any error.
-    Batches requests according to the API-key-aware rate limits and assembles
-    a single concatenated XML string with a ``<BioSampleSet>`` wrapper.
+    Kept for callers that still want a single XML document string.
     """
     if not accessions:
         return None
@@ -59,7 +110,6 @@ def fetch_biosample_xml_for_accessions(accessions: List[str]) -> Optional[str]:
 
     collected: List[str] = []
 
-    # Unique, stable order
     unique_accessions = list(dict.fromkeys(a for a in accessions if a and str(a).strip()))
 
     for i in range(0, len(unique_accessions), batch_size):
@@ -91,22 +141,20 @@ def fetch_biosample_xml_for_accessions(accessions: List[str]) -> Optional[str]:
     if not collected:
         return None
 
-    # Wrap fragments in a single root element so the XML parser always sees a
-    # well-formed document.  Each efetch response is already a
-    # ``<BioSampleSet>...</BioSampleSet>``; strip the individual root tags and
-    # reassemble under one.
     inner_parts: List[str] = []
     for fragment in collected:
         stripped = fragment.strip()
         if stripped.startswith("<?xml"):
-            # Remove the XML declaration
             newline = stripped.find("\n")
             if newline != -1:
                 stripped = stripped[newline + 1 :].strip()
-        # Strip outer <BioSampleSet>...</BioSampleSet> wrapper
         if stripped.startswith("<BioSampleSet>") and stripped.endswith("</BioSampleSet>"):
             inner_parts.append(stripped[len("<BioSampleSet>") : -len("</BioSampleSet>")].strip())
         else:
             inner_parts.append(stripped)
 
-    return "<?xml version=\"1.0\"?>\n<BioSampleSet>\n" + "\n".join(inner_parts) + "\n</BioSampleSet>"
+    return (
+        '<?xml version="1.0"?>\n<BioSampleSet>\n'
+        + "\n".join(inner_parts)
+        + "\n</BioSampleSet>"
+    )

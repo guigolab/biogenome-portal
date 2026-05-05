@@ -1,7 +1,7 @@
 import asyncio
 import csv
 import logging
-from typing import List
+from typing import Any, List, Mapping, Optional, Union
 
 import aiohttp
 
@@ -14,6 +14,32 @@ _ASSEMBLY_REPORT_ROLE_COL = "Sequence-Role"
 _ASSEMBLY_REPORT_ACCN_COL_GENBANK = "GenBank-Accn"
 _ASSEMBLY_REPORT_ACCN_COL_REFSEQ = "RefSeq-Accn"
 _CHROMOSOME_ROLE = "assembled-molecule"
+
+# NCBI datasets / assembly report fetch: only these levels have per-molecule rows worth persisting.
+CHROMOSOME_REPORT_ASSEMBLY_LEVELS = frozenset({"Complete Genome", "Chromosome"})
+
+
+def assembly_level_allows_chromosome_report(
+    metadata_or_doc: Optional[Union[Mapping[str, Any], Any]],
+) -> bool:
+    """
+    True if ``metadata.assembly_info.assembly_level`` is one of the levels for which we
+    fetch and store ``assembled-molecule`` rows from the NCBI assembly report.
+    Accepts a metadata dict or an object with a ``metadata`` attribute.
+    """
+    if metadata_or_doc is None:
+        return False
+    meta: Any
+    if isinstance(metadata_or_doc, Mapping):
+        meta = metadata_or_doc
+    else:
+        meta = getattr(metadata_or_doc, "metadata", None)
+    if not isinstance(meta, Mapping):
+        return False
+    raw_info = meta.get("assembly_info")
+    info: Any = raw_info if isinstance(raw_info, Mapping) else {}
+    level = info.get("assembly_level")
+    return level in CHROMOSOME_REPORT_ASSEMBLY_LEVELS
 
 # NCBI assembly reports use these as missing-value placeholders in some columns (e.g. UCSC-style-name).
 _NCBI_REPORT_NA_CELLS = frozenset(("", "na", "n/a", ".", "-"))
@@ -93,10 +119,7 @@ def save_chromosomes_from_assembly_report(assembly_obj) -> None:
     Same source as the import jobs' chromosome path; skips non-chromosome assembly levels.
     """
     accession = assembly_obj.accession
-    if assembly_obj.metadata.get("assembly_info", {}).get("assembly_level") not in (
-        "Complete Genome",
-        "Chromosome",
-    ):
+    if not assembly_level_allows_chromosome_report(assembly_obj):
         return
     try:
         chromosomes = stream_assembly_report_chromosomes_sync(accession)

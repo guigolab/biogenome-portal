@@ -2,13 +2,6 @@ from mongoengine.queryset.visitor import Q
 
 from db.model import SampleCoordinates
 
-# Catalog coordinate + country updates live in the job support module (batched lineage, logging).
-from jobs.support.geolocation_batch import (
-    save_coordinates,
-    update_countries_from_biosample,
-)
-
-
 def add_image(taxid, image):
     coordinates = SampleCoordinates.objects(taxid=taxid)
     if len(coordinates) > 0:

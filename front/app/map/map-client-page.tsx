@@ -15,7 +15,10 @@ import {
    type LocationFrequencyPoint,
    type PostLocationsFrequencyBody,
 } from '@/lib/api/coordinates'
-import { fetchOrganisms } from '@/lib/api/organisms'
+import {
+   fetchOrganismsForMapPointSelection,
+   fetchOrganismsWithSampleLocationFilters,
+} from '@/lib/api/organisms'
 import { useLocale } from '@/contexts/locale-context'
 import { usePortalConfig } from '@/contexts/portal-context'
 import { showGoatStatusPage } from '@/lib/portal'
@@ -33,22 +36,6 @@ function isUsableMapPolygon(g: GeoJsonGeometry | null | undefined): g is GeoJson
       if (!Array.isArray(ring0) || ring0.length < 3) return false
    }
    return true
-}
-
-/** GeoJSON polygon: small box around a frequency point for `polygon` on GET /organisms (geo_within). */
-function tinyBoundingPolygon(lng: number, lat: number, delta = 1e-5): GeoJsonGeometry {
-   return {
-      type: 'Polygon',
-      coordinates: [
-         [
-            [lng - delta, lat - delta],
-            [lng + delta, lat - delta],
-            [lng + delta, lat + delta],
-            [lng - delta, lat + delta],
-            [lng - delta, lat - delta],
-         ],
-      ],
-   }
 }
 
 function sameSamplePoint(
@@ -138,6 +125,9 @@ export default function MapClientPage() {
    itemsRef.current = items
    totalRef.current = total
 
+   /** When selecting a map point with a huge `taxid__in`, merged rows for client-side pagination. */
+   const pointOrganismsFullRef = useRef<Record<string, unknown>[] | null>(null)
+
    const [selectedLatLng, setSelectedLatLng] = useState<{ lat: number; lng: number } | null>(null)
 
    const [searchQuery, setSearchQuery] = useState('')
@@ -152,22 +142,46 @@ export default function MapClientPage() {
    }, [searchQuery])
 
    const listQueryPolygon = useMemo<GeoJsonGeometry | null>(() => {
-      if (coordinateFilter) {
-         return tinyBoundingPolygon(coordinateFilter.lng, coordinateFilter.lat)
-      }
       if (isUsableMapPolygon(activePolygon)) return activePolygon
       return null
-   }, [coordinateFilter, activePolygon])
+   }, [activePolygon])
+
+   const pointTaxidsForListKey = useMemo(() => {
+      if (!coordinateFilter) return ''
+      const pt = locations.find((p) => {
+         const [lng, lat] = p.coordinates
+         return sameSamplePoint({ lng, lat }, coordinateFilter)
+      })
+      return (pt?.taxids ?? []).join(',')
+   }, [coordinateFilter, locations])
+
+   const organismListSharedFilters = useMemo(
+      () => ({
+         ...(taxidFromUrl ? { taxon_lineage: taxidFromUrl } : {}),
+         ...(debouncedSearch ? { filter: debouncedSearch } : {}),
+         ...(statusFilter !== 'all' ? { iucn_redlist__category: statusFilter } : {}),
+      }),
+      [taxidFromUrl, debouncedSearch, statusFilter],
+   )
 
    const listFiltersKey = useMemo(
       () =>
          JSON.stringify({
             taxid: taxidFromUrl,
             poly: listQueryPolygon,
+            coord: coordinateFilter,
+            pointTaxids: pointTaxidsForListKey,
             search: debouncedSearch,
             iucn: statusFilter,
          }),
-      [taxidFromUrl, listQueryPolygon, debouncedSearch, statusFilter],
+      [
+         taxidFromUrl,
+         listQueryPolygon,
+         coordinateFilter,
+         pointTaxidsForListKey,
+         debouncedSearch,
+         statusFilter,
+      ],
    )
 
    useEffect(() => {
@@ -180,6 +194,19 @@ export default function MapClientPage() {
             limit: PAGE_SIZE,
             offset,
          }
+         if (coordinateFilter) {
+            const pt = locations.find((p) => {
+               const [lng, lat] = p.coordinates
+               return sameSamplePoint({ lng, lat }, coordinateFilter)
+            })
+            const ids = pt?.taxids?.map((t) => String(t).trim()).filter(Boolean) ?? []
+            q.taxid__in =
+               ids.length > 0 ? ids.join(',') : '__no_samples_in_map_selection__'
+            if (taxidFromUrl) q.taxon_lineage = taxidFromUrl
+            if (debouncedSearch) q.filter = debouncedSearch
+            if (statusFilter !== 'all') q.iucn_redlist__category = statusFilter
+            return q
+         }
          if (taxidFromUrl) q.taxon_lineage = taxidFromUrl
          if (listQueryPolygon) q.polygon = JSON.stringify(listQueryPolygon)
          else {
@@ -190,7 +217,14 @@ export default function MapClientPage() {
          if (statusFilter !== 'all') q.iucn_redlist__category = statusFilter
          return q
       },
-      [taxidFromUrl, listQueryPolygon, debouncedSearch, statusFilter],
+      [
+         coordinateFilter,
+         locations,
+         taxidFromUrl,
+         listQueryPolygon,
+         debouncedSearch,
+         statusFilter,
+      ],
    )
 
    /** Same catalog + sample filters as the organism list, for POST /coordinates/frequency. */
@@ -245,10 +279,42 @@ export default function MapClientPage() {
       setListLoading(true)
       setListError(null)
       setItems([])
+      pointOrganismsFullRef.current = null
       ;(async () => {
          try {
+            if (coordinateFilter) {
+               const pt = locations.find((p) => {
+                  const [lng, lat] = p.coordinates
+                  return sameSamplePoint({ lng, lat }, coordinateFilter)
+               })
+               const ids = pt?.taxids?.map((x) => String(x).trim()).filter(Boolean) ?? []
+               if (ids.length === 0) {
+                  if (!cancelled) {
+                     setItems([])
+                     setTotal(0)
+                     setListLoading(false)
+                  }
+                  return
+               }
+               const res = await fetchOrganismsForMapPointSelection(
+                  ids,
+                  organismListSharedFilters,
+                  0,
+                  PAGE_SIZE,
+               )
+               if (cancelled) return
+               if (res.clientFull) {
+                  pointOrganismsFullRef.current = res.clientFull
+               } else {
+                  pointOrganismsFullRef.current = null
+               }
+               setItems(res.data)
+               setTotal(res.total)
+               return
+            }
+
             const q = buildOrganismListQuery(0)
-            const { data, total: t } = await fetchOrganisms(q)
+            const { data, total: t } = await fetchOrganismsWithSampleLocationFilters(q)
             if (!cancelled) {
                setItems(data)
                setTotal(t)
@@ -266,7 +332,14 @@ export default function MapClientPage() {
       return () => {
          cancelled = true
       }
-   }, [listFiltersKey, buildOrganismListQuery])
+   }, [
+      listFiltersKey,
+      buildOrganismListQuery,
+      coordinateFilter,
+      locations,
+      organismListSharedFilters,
+      t,
+   ])
 
    const loadMoreOrganisms = useCallback(async () => {
       if (listLoadingMore || listLoading || loadMoreInFlightRef.current) return
@@ -276,8 +349,17 @@ export default function MapClientPage() {
       setListLoadingMore(true)
       setListError(null)
       try {
+         const merged = pointOrganismsFullRef.current
+         if (merged && coordinateFilterRef.current) {
+            const next = merged.slice(0, offset + PAGE_SIZE)
+            setItems(next)
+            loadMoreInFlightRef.current = false
+            setListLoadingMore(false)
+            return
+         }
+
          const q = buildOrganismListQuery(offset)
-         const { data, total: t } = await fetchOrganisms(q)
+         const { data, total: t } = await fetchOrganismsWithSampleLocationFilters(q)
          setTotal(t)
          setItems((prev) => [...prev, ...data])
       } catch (e) {
@@ -286,7 +368,7 @@ export default function MapClientPage() {
          loadMoreInFlightRef.current = false
          setListLoadingMore(false)
       }
-   }, [buildOrganismListQuery, listLoading, listLoadingMore])
+   }, [buildOrganismListQuery, listLoading, listLoadingMore, t])
 
    const loadMoreOrganismsRef = useRef(loadMoreOrganisms)
    loadMoreOrganismsRef.current = loadMoreOrganisms

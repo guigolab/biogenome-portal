@@ -13,7 +13,6 @@ import {
    DialogHeader,
    DialogTitle,
 } from '@/components/ui/dialog'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { cmsGetSubmittedBioSample } from '@/lib/cms/services/auth'
 import { extractApiMessage } from '@/lib/cms/extract-api-message'
 import { cn } from '@/lib/utils'
@@ -137,7 +136,7 @@ export function SubmittedBiosampleDetailDialog({
                </DialogDescription>
             </DialogHeader>
 
-            <div className="min-h-0 flex-1 overflow-hidden">
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
                {loading ? (
                   <div className="flex justify-center py-16">
                      <Loader2 className="h-10 w-10 animate-spin text-muted-foreground" />
@@ -145,8 +144,8 @@ export function SubmittedBiosampleDetailDialog({
                ) : error ? (
                   <p className="px-6 py-8 text-center text-sm text-destructive">{error}</p>
                ) : record ? (
-                  <div className="flex max-h-[min(75vh,42rem)] flex-col gap-0 md:grid md:max-h-[min(75vh,42rem)] md:grid-cols-[1fr_min(280px,40%)] md:gap-0">
-                     <ScrollArea className="h-[min(75vh,42rem)] md:h-full md:border-r md:border-border">
+                  <div className="flex min-h-0 flex-1 flex-col gap-0 overflow-hidden md:grid md:h-full md:min-h-0 md:grid-cols-[1fr_min(280px,40%)] md:grid-rows-1 md:gap-0">
+                     <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain border-border md:h-full md:min-h-0 md:border-r">
                         <div className="space-y-6 px-6 py-4">
                            <div className="space-y-2">
                               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -219,9 +218,9 @@ export function SubmittedBiosampleDetailDialog({
                               </div>
                            ) : null}
                         </div>
-                     </ScrollArea>
+                     </div>
 
-                     <div className="flex min-h-[200px] flex-col border-t border-border md:border-t-0 md:border-l">
+                     <div className="flex min-h-0 shrink-0 flex-col border-t border-border md:h-full md:min-h-0 md:border-t-0 md:border-l">
                         <div className="flex items-center gap-2 border-b border-border bg-muted/40 px-3 py-2">
                            <MapPin className="h-4 w-4 text-muted-foreground" />
                            <span className="text-xs font-semibold">Location</span>

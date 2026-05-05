@@ -1,20 +1,28 @@
 import logging
 import os
+from typing import List, Set
 from urllib.parse import quote
 
 from celery import shared_task
 from mongoengine.errors import NotUniqueError, ValidationError
 
 from clients import ebi_client
+from db.constants import GOAT_PROJECT_NAME
 from db.model import BioSample
 
 from helpers.data import create_batches
-from jobs.taxonomy import enrich_organisms_post_taxonomy
-from jobs.support.catalog_ingest_pipeline import (
-    reload_prune_denorm_after_primary_import,
-    run_phase2_taxonomy_bootstrap,
-)
 from jobs.support.geolocation_batch import update_geolocations
+from jobs.support.ingest_job_utils import dedupe_nonempty_strs, scalar_taxids_batched
+from jobs.support.catalog_ingest_guard import (
+    delete_rows_without_organism,
+    prune_organisms_missing_taxon_lineage,
+)
+from jobs.support.organism_enrich import run_enrich_followup_for_taxids
+from jobs.support.catalog_denorm_finalize import bulk_copy_organism_lineages_to_catalog
+from jobs.support.catalog_taxonomy_bootstrap import handle_full_taxonomy_from_taxids
+from jobs.support.stats import update_organism_counts, update_taxon_node_counts
+from jobs.support.goat_status import apply_goat_status_after_biosample_ingest
+from jobs.taxonomy import cleanup_catalog_outside_root_lineage
 from parsers import biosample as biosample_parser
 
 logger = logging.getLogger(__name__)
@@ -43,27 +51,46 @@ def _existing_accessions_batch(accessions):
     return existing
 
 
-def _scalar_taxids_for_accessions(accessions):
-    """Fetch taxids for accessions in batches to avoid huge $in queries."""
-    taxids = []
+def _unique_taxid_strings_for_accessions(accessions) -> List[str]:
+    """
+    Distinct non-empty taxids for the given BioSample accessions (batched ``$in`` queries).
+    Sorted for stable taxonomy / prune inputs without duplicate species work.
+    """
+    seen: Set[str] = set()
+    acc_list = list(accessions)
+    if not acc_list:
+        return []
+    for batch in create_batches(acc_list, ACCESSION_BATCH_SIZE):
+        for t in BioSample.objects(accession__in=batch).scalar("taxid"):
+            if t is not None and str(t).strip():
+                seen.add(str(t).strip())
+    return sorted(seen)
+
+
+def _biosample_accessions_still_in_db(accessions: List[str]) -> List[str]:
+    """Re-query accessions that still exist; chunked ``$in`` (bounded RAM / BSON)."""
+    if not accessions:
+        return []
+    scalars: List = []
     for batch in create_batches(list(accessions), ACCESSION_BATCH_SIZE):
-        taxids.extend(BioSample.objects(accession__in=batch).scalar("taxid"))
-    return taxids
+        scalars.extend(BioSample.objects(accession__in=batch).scalar("accession"))
+    return dedupe_nonempty_strs(scalars)
 
 
 @shared_task(name="biosamples_import", ignore_result=False)
 def import_biosamples_from_project_names():
     """
-    Pipeline phases:
-    1) primary model (BioSample), 3) taxonomy bootstrap,
-    4) related updates (prune/finalize, geolocation, async ToLID).
+    Canonical ingest phases:
+    1) Fetch (EBI) and store primary model (BioSample).
+    2) Taxonomy bootstrap; organism lineage prune.
+    3) Prune orphan biosamples, copy lineage, recount touched species, status + enrich, geolocation.
     """
     projects_env = os.getenv("PROJECTS")
     if not projects_env or not projects_env.strip():
         raise ValueError("No PROJECTS defined in environment")
 
     project_names = [p.strip() for p in projects_env.split(",") if p.strip()]
-    saved_accessions = []
+    inserted_accessions: Set[str] = set()
     stats = {
         "projects": len(project_names),
         "pages_fetched": 0,
@@ -129,7 +156,7 @@ def import_biosamples_from_project_names():
                     for doc in new_biosamples:
                         try:
                             doc.save()
-                            saved_accessions.append(doc.accession)
+                            inserted_accessions.add(doc.accession)
                             stats["inserted"] += 1
                         except (NotUniqueError, ValidationError):
                             logger.debug(
@@ -140,7 +167,7 @@ def import_biosamples_from_project_names():
                                 "Failed saving biosample %s", doc.accession
                             )
                 else:
-                    saved_accessions.extend(b.accession for b in new_biosamples)
+                    inserted_accessions.update(b.accession for b in new_biosamples)
                     stats["inserted"] += len(new_biosamples)
 
             page_count += 1
@@ -150,21 +177,22 @@ def import_biosamples_from_project_names():
             "Finished project %r: %d pages processed", project_name, page_count
         )
 
-    if not saved_accessions:
+    if not inserted_accessions:
         logger.info("No new biosamples to process for taxonomy/geolocation")
+        stats["root_lineage_cleanup"] = cleanup_catalog_outside_root_lineage()
         return stats
 
+    saved_accessions_list = list(inserted_accessions)
+
     try:
-        biosample_taxids = _scalar_taxids_for_accessions(saved_accessions)
-        biosample_taxids = [t for t in biosample_taxids if t]
-        saved_organism_taxids = run_phase2_taxonomy_bootstrap(biosample_taxids, TMP_DIR)
-        removed = reload_prune_denorm_after_primary_import(
-            BioSample,
-            "accession",
-            saved_accessions,
-            saved_organism_taxids,
-            merge_context="biosample_import",
-            apply_goat_inference=True,
+        taxonomy_taxids = _unique_taxid_strings_for_accessions(saved_accessions_list)
+        saved_organism_taxids = handle_full_taxonomy_from_taxids(
+            taxonomy_taxids, TMP_DIR
+        )
+        prune_organisms_missing_taxon_lineage(taxonomy_taxids)
+
+        removed = delete_rows_without_organism(
+            BioSample, "accession", saved_accessions_list
         )
         stats["orphan_biosamples_removed"] += removed
         if removed:
@@ -172,14 +200,36 @@ def import_biosamples_from_project_names():
                 "Removed %s biosample(s) with no Organism after taxonomy import",
                 removed,
             )
-        if saved_organism_taxids:
-            enrich_organisms_post_taxonomy.delay(list(saved_organism_taxids))
-        update_geolocations(saved_accessions)
+
+        biosample_accessions_still_in_db = _biosample_accessions_still_in_db(
+            saved_accessions_list
+        )
+        species_from_biosamples = scalar_taxids_batched(
+            BioSample,
+            "accession",
+            biosample_accessions_still_in_db,
+            batch_size=ACCESSION_BATCH_SIZE,
+        )
+        species_to_refresh = sorted(
+            species_from_biosamples
+            | {str(t) for t in saved_organism_taxids if t}
+        )
+
+        if species_to_refresh:
+            bulk_copy_organism_lineages_to_catalog(species_to_refresh)
+            update_organism_counts(species_to_refresh)
+            update_taxon_node_counts(species_to_refresh)
+            if (GOAT_PROJECT_NAME or "").strip():
+                apply_goat_status_after_biosample_ingest(species_to_refresh)
+            run_enrich_followup_for_taxids(species_to_refresh)
+
+        update_geolocations(biosample_accessions_still_in_db)
     except Exception:
         logger.exception(
             "Post-import taxonomy/geolocation failed after inserting %d biosamples",
-            len(saved_accessions),
+            len(inserted_accessions),
         )
         raise
 
+    stats["root_lineage_cleanup"] = cleanup_catalog_outside_root_lineage()
     return stats

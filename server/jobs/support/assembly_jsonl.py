@@ -11,8 +11,10 @@ import asyncio
 import csv
 import json
 import logging
+import sqlite3
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
+from dataclasses import dataclass
+from typing import Any, AsyncIterator, Dict, Iterable, List, Optional, Set, Tuple
 
 import aiohttp
 from mongoengine.errors import NotUniqueError, ValidationError
@@ -27,6 +29,12 @@ from parsers.assembly import parse_assembly_from_ncbi_datasets
 
 logger = logging.getLogger(__name__)
 
+# Large assembly imports: bound RAM (see docs / ingest plan).
+ASSEMBLY_IMPORT_EXISTENCE_BATCH = 5000
+ASSEMBLY_IMPORT_PERSIST_CHUNK = 1000
+# Fetch/persist NCBI assembly reports in slices (async gather + DB writes per slice).
+CHROMOSOME_PERSIST_SLICE_SIZE = 48
+
 # --- Chromosome bulk (NCBI assembly reports) ---------------------------------
 
 _ASSEMBLY_REPORT_ROLE_COL = "Sequence-Role"
@@ -35,19 +43,17 @@ _ASSEMBLY_REPORT_ACCN_COL_REFSEQ = "RefSeq-Accn"
 _CHROMOSOME_ROLE = "assembled-molecule"
 
 
-async def _fetch_chromosomes_from_report_url(
-    session: aiohttp.ClientSession, assembly_accession: str, report_url: str
+async def _chromosomes_from_line_iterator(
+    lines: AsyncIterator[str],
+    assembly_accession: str,
 ) -> List[Chromosome]:
-    """
-    Stream assembly report from URL, parse chromosomes (assembled-molecule rows),
-    set metadata.assembly_accession on each, and return the list.
-    """
+    """Parse assembled-molecule rows from an async line iterator (shared by URL stream paths)."""
     chromosomes: List[Chromosome] = []
     is_refseq = assembly_accession.upper().startswith("GCF_")
     accn_col = _ASSEMBLY_REPORT_ACCN_COL_REFSEQ if is_refseq else _ASSEMBLY_REPORT_ACCN_COL_GENBANK
     header = None
     role_idx = accn_idx = 0
-    async for line in ncbi_assembly_http.stream_report_lines(session, report_url):
+    async for line in lines:
         norm = ncbi_assembly_http.normalize_assembly_report_tsv_line(line)
         if norm is None:
             continue
@@ -76,75 +82,136 @@ async def _fetch_chromosomes_from_report_url(
     return chromosomes
 
 
+async def _fetch_chromosomes_from_report_url(
+    session: aiohttp.ClientSession, assembly_accession: str, report_url: str
+) -> List[Chromosome]:
+    """
+    Stream assembly report from URL, parse chromosomes (assembled-molecule rows),
+    set metadata.assembly_accession on each, and return the list.
+    """
+    return await _chromosomes_from_line_iterator(
+        ncbi_assembly_http.stream_report_lines(session, report_url),
+        assembly_accession,
+    )
+
+
+async def _fetch_chromosomes_for_one_assembly(
+    session: aiohttp.ClientSession,
+    assembly_accession: str,
+    assembly_name: Optional[str],
+) -> List[Chromosome]:
+    """
+    Try deterministic FTP-derived report URL (single GET + parse); on failure scrape paths
+    then stream report (same as legacy flow).
+    """
+    candidate: Optional[str] = None
+    if assembly_name:
+        candidate = ncbi_assembly_http.build_candidate_assembly_report_url(
+            assembly_accession, assembly_name
+        )
+    if candidate:
+        try:
+            async with session.get(
+                candidate, timeout=aiohttp.ClientTimeout(total=60)
+            ) as resp:
+                if resp.status == 200:
+                    return await _chromosomes_from_line_iterator(
+                        ncbi_assembly_http.iter_report_body_lines(resp),
+                        assembly_accession,
+                    )
+        except Exception as e:
+            logger.debug(
+                "Candidate assembly report GET failed for %s (%s); falling back to scrape: %s",
+                assembly_accession,
+                candidate,
+                e,
+            )
+    report_url = await ncbi_assembly_http.get_assembly_report_url(
+        session, assembly_accession
+    )
+    if not report_url:
+        return []
+    return await _fetch_chromosomes_from_report_url(
+        session, assembly_accession, report_url
+    )
+
+
 async def fetch_chromosomes_for_assemblies_bulk(
-    accessions: List[str], batch_size: int = 50
+    items: List[Tuple[str, Optional[str]]],
 ) -> Dict[str, List[Chromosome]]:
     """
-    Resolve assembly report URLs for all accessions, then fetch and parse reports
-    concurrently. Returns a dict mapping assembly accession to list of Chromosome instances.
+    Fetch and parse assembly reports concurrently (one GET when deterministic URL works,
+    otherwise scrape then GET). Returns a dict mapping assembly accession to chromosomes.
     """
-    if not accessions:
-        return {}
-    url_pairs = await ncbi_assembly_http.get_assembly_report_urls(accessions, batch_size=batch_size)
-    if not url_pairs:
+    if not items:
         return {}
     connector = aiohttp.TCPConnector(
-        limit=min(len(url_pairs), ncbi_assembly_http.NCBI_CONCURRENT_CONNECTIONS),
+        limit=min(len(items), ncbi_assembly_http.NCBI_CONCURRENT_CONNECTIONS),
         limit_per_host=ncbi_assembly_http.NCBI_CONCURRENT_CONNECTIONS,
     )
     result: Dict[str, List[Chromosome]] = {}
+    ok_with_rows = 0
+    unsuccessful = 0
     async with aiohttp.ClientSession(connector=connector) as session:
         tasks = [
-            _fetch_chromosomes_from_report_url(session, acc, url)
-            for acc, url in url_pairs
+            _fetch_chromosomes_for_one_assembly(session, acc, name)
+            for acc, name in items
         ]
         batch_results = await asyncio.gather(*tasks, return_exceptions=True)
-        for (acc, _), value in zip(url_pairs, batch_results):
+        for (acc, _), value in zip(items, batch_results):
             if isinstance(value, Exception):
+                unsuccessful += 1
                 logger.warning(
                     "Assembly report fetch failed for %s: %s", acc, value
                 )
                 continue
             result[acc] = value
+            if value:
+                ok_with_rows += 1
+            else:
+                unsuccessful += 1
+    logger.info(
+        "Assembly *_assembly_report.txt bulk fetch finished: %s assemblies with a "
+        "successful report parse (assembled-molecule rows), %s unsuccessful "
+        "(HTTP/error, unresolved URL, or empty parse)",
+        ok_with_rows,
+        unsuccessful,
+    )
     return result
 
 
 def fetch_chromosomes_for_assemblies_bulk_sync(
-    accessions: List[str], batch_size: int = 50
+    items: List[Tuple[str, Optional[str]]],
 ) -> Dict[str, List[Chromosome]]:
     """Synchronous wrapper for fetch_chromosomes_for_assemblies_bulk."""
-    return asyncio.run(fetch_chromosomes_for_assemblies_bulk(accessions, batch_size=batch_size))
+    return asyncio.run(fetch_chromosomes_for_assemblies_bulk(items))
 
 
-def save_chromosomes_bulk_and_update_assemblies(accessions: List[str]) -> None:
+def _persist_chromosomes_wave_and_update_assemblies(
+    chroms_by_assembly: Dict[str, List[Chromosome]],
+    *,
+    carried_existing_versions: Set[str],
+) -> Set[str]:
     """
-    Fetch chromosomes from NCBI assembly reports in bulk for the given assembly accessions,
-    save chromosome documents, and update each assembly's chromosomes list.
-
-    Skips assemblies with no parsed ``assembled-molecule`` rows so we do not delete
-    existing chromosome documents on an empty or ambiguous fetch result.
+    Persist one wave of fetched chromosome lists. ``carried_existing_versions`` holds
+    accession_version strings already present or inserted in prior slices; it is
+    updated the same way as the original single-block implementation.
     """
-    if not accessions:
-        return
-    chroms_by_assembly = fetch_chromosomes_for_assemblies_bulk_sync(accessions)
     all_versions: set[str] = set()
     for chroms in chroms_by_assembly.values():
         for c in chroms:
             if c.accession_version:
                 all_versions.add(c.accession_version)
-    existing_versions: set[str] = set()
+    existing_versions: Set[str] = set(carried_existing_versions)
     if all_versions:
-        existing_versions = set(
+        existing_versions.update(
             Chromosome.objects(accession_version__in=list(all_versions)).scalar(
                 "accession_version"
             )
         )
+
     for acc, chroms in chroms_by_assembly.items():
         if not chroms:
-            logger.warning(
-                "No assembled-molecule rows for assembly %s; leaving stored chromosomes unchanged",
-                acc,
-            )
             continue
         try:
             Chromosome.objects(metadata__assembly_accession=acc).delete()
@@ -168,6 +235,33 @@ def save_chromosomes_bulk_and_update_assemblies(accessions: List[str]) -> None:
                 "Failed to persist chromosomes for assembly %s; DB may be inconsistent for this accession",
                 acc,
             )
+    return existing_versions
+
+
+def save_chromosomes_bulk_and_update_assemblies(
+    items: List[Tuple[str, Optional[str]]],
+    *,
+    slice_size: int = CHROMOSOME_PERSIST_SLICE_SIZE,
+) -> None:
+    """
+    Fetch chromosomes from NCBI assembly reports in bulk for the given
+    ``(accession, assembly_name)`` pairs (assembly_name used for fast-path URL),
+    save chromosome documents, and update each assembly's chromosomes list.
+
+    Skips assemblies with no parsed ``assembled-molecule`` rows so we do not delete
+    existing chromosome documents on an empty or ambiguous fetch result.
+
+    Large imports process assemblies in slices so peak RAM stays bounded.
+    """
+    if not items:
+        return
+    carried: Set[str] = set()
+    for slice_items in create_batches(items, max(slice_size, 1)):
+        chroms_by_assembly = fetch_chromosomes_for_assemblies_bulk_sync(list(slice_items))
+        carried = _persist_chromosomes_wave_and_update_assemblies(
+            chroms_by_assembly,
+            carried_existing_versions=carried,
+        )
 
 
 # --- JSONL merge / persist ----------------------------------------------------
@@ -249,25 +343,6 @@ def collect_taxids_from_assembly_rows(
     return out
 
 
-def collect_sample_accessions_for_taxids(
-    new_rows: List[Dict[str, Any]],
-    assemblies_to_update: Dict[str, Dict[str, Any]],
-    taxids_with_organism: Set[str],
-) -> List[str]:
-    """Biosample accessions from rows whose taxid has an Organism after taxonomy import."""
-    seen: Set[str] = set()
-    ordered: List[str] = []
-    for row in list(new_rows) + list(assemblies_to_update.values()):
-        tid = _taxid_from_assembly_dict(row)
-        if not tid or tid not in taxids_with_organism:
-            continue
-        sa = _sample_accession_from_assembly_dict(row)
-        if sa and sa not in seen:
-            seen.add(sa)
-            ordered.append(sa)
-    return ordered
-
-
 def collect_sample_accessions_from_assembly_rows(
     new_rows: List[Dict[str, Any]],
     assemblies_to_update: Dict[str, Dict[str, Any]],
@@ -286,33 +361,26 @@ def collect_sample_accessions_from_assembly_rows(
     return ordered
 
 
-def persist_assembly_import_payload(
-    new_rows: List[Dict[str, Any]],
+def _allowed_assembly_row(
+    assembly_dict: Dict[str, Any],
+    *,
+    taxids_with_organism: Optional[Set[str]],
+) -> bool:
+    tid = _taxid_from_assembly_dict(assembly_dict)
+    if not tid:
+        return False
+    if taxids_with_organism is None:
+        return True
+    return tid in taxids_with_organism
+
+
+def _persist_metadata_updates(
     assemblies_to_update: Dict[str, Dict[str, Any]],
     *,
     taxids_with_organism: Optional[Set[str]] = None,
-) -> List[str]:
-    """
-    Insert new assemblies, update existing metadata, and fetch chromosomes for new accessions.
-
-    When ``taxids_with_organism`` is set, rows are skipped unless the taxon exists in that set.
-    When ``None`` (primary-first ingest), any row with a non-empty taxid is persisted; orphans
-    are removed after taxonomy bootstrap. Missing or unfetched biosamples do not block assembly
-    persistence.
-
-    Returns accessions **newly inserted** in this run (for downstream cleanup / chromosomes).
-    """
-
-    def allowed(assembly_dict: Dict[str, Any]) -> bool:
-        tid = _taxid_from_assembly_dict(assembly_dict)
-        if not tid:
-            return False
-        if taxids_with_organism is None:
-            return True
-        return tid in taxids_with_organism
-
+) -> None:
     for acc, assembly in assemblies_to_update.items():
-        if not allowed(assembly):
+        if not _allowed_assembly_row(assembly, taxids_with_organism=taxids_with_organism):
             logger.info(
                 "Skip metadata update for assembly %s (no organism for taxon)", acc
             )
@@ -322,9 +390,19 @@ def persist_assembly_import_payload(
         except Exception:
             logger.exception("Failed to update metadata for assembly %s", acc)
 
+
+def _persist_new_inserts(
+    new_rows: List[Dict[str, Any]],
+    *,
+    taxids_with_organism: Optional[Set[str]] = None,
+) -> List[str]:
+    """
+    Insert new assemblies from JSONL dict rows.
+    Returns accessions newly inserted in this call.
+    """
     by_new_accession: Dict[str, Assembly] = {}
     for row in new_rows:
-        if not allowed(row):
+        if not _allowed_assembly_row(row, taxids_with_organism=taxids_with_organism):
             logger.info(
                 "Skip insert for assembly %r (no organism for taxon)",
                 row.get("accession"),
@@ -332,7 +410,6 @@ def persist_assembly_import_payload(
             continue
         doc = _parse_assembly_document(row)
         if doc and doc.accession:
-            # Last row wins; avoids BulkWriteError if JSONL ever repeats an accession.
             by_new_accession[str(doc.accession).strip()] = doc
 
     to_insert = list(by_new_accession.values())
@@ -367,10 +444,242 @@ def persist_assembly_import_payload(
                 except Exception:
                     logger.exception("Failed to save assembly %s", acc)
 
-    if new_assembly_accessions:
-        save_chromosomes_bulk_and_update_assemblies(new_assembly_accessions)
-
     return new_assembly_accessions
+
+
+def persist_assembly_import_payload(
+    new_rows: List[Dict[str, Any]],
+    assemblies_to_update: Dict[str, Dict[str, Any]],
+    *,
+    taxids_with_organism: Optional[Set[str]] = None,
+) -> List[str]:
+    """
+    Insert new assemblies and update existing metadata.
+
+    When ``taxids_with_organism`` is set, rows are skipped unless the taxon exists in that set.
+    When ``None`` (primary-first ingest), any row with a non-empty taxid is persisted; orphans
+    are removed after taxonomy bootstrap. Missing or unfetched biosamples do not block assembly
+    persistence.
+
+    Returns accessions **newly inserted** in this run (for downstream cleanup / follow-up jobs).
+    """
+    _persist_metadata_updates(
+        assemblies_to_update, taxids_with_organism=taxids_with_organism
+    )
+    return _persist_new_inserts(new_rows, taxids_with_organism=taxids_with_organism)
+
+
+# --- SQLite staging (bounded RAM for large imports) ---------------------------
+
+
+@dataclass
+class AssemblyImportStagingResult:
+    """Outputs matching downstream assembly import pipeline needs."""
+
+    staging_accession_count: int
+    saved_assembly_accessions: List[str]
+    all_taxids: Set[str]
+    assembly_biosample_accessions: List[str]
+    assembly_row_by_biosample: Dict[str, Dict[str, Any]]
+
+
+def stream_assembly_jsonl_into_sqlite(file_paths: List[str], db_path: str) -> int:
+    """
+    Merge JSONL paths into SQLite with last-line-wins payload per accession and
+    ``first_seq`` = line index of first appearance (for ordering parity with in-memory merge).
+
+    Returns the number of non-empty lines read from the files (including skipped-invalid lines
+    that advanced the stream). ``part`` is 0 for all rows until :func:`mark_staging_partitions`.
+    """
+    conn = sqlite3.connect(db_path)
+    try:
+        conn.execute("PRAGMA journal_mode=WAL")
+        conn.execute(
+            """
+            CREATE TABLE staging (
+                accession TEXT PRIMARY KEY,
+                payload_json TEXT NOT NULL,
+                line_seq INTEGER NOT NULL,
+                first_seq INTEGER NOT NULL,
+                part INTEGER NOT NULL DEFAULT 0
+            )
+            """
+        )
+        lines_read = 0
+        for path in file_paths:
+            with open(path, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    lines_read += 1
+                    try:
+                        assembly = json.loads(line)
+                    except json.JSONDecodeError:
+                        logger.warning("Skipping invalid JSON line in %s", path)
+                        continue
+                    acc = assembly.get("accession")
+                    if not acc:
+                        logger.warning("Skipping JSONL row without accession (%s)", path)
+                        continue
+                    acc = str(acc).strip()
+                    if not acc:
+                        continue
+                    payload = json.dumps(assembly)
+                    conn.execute(
+                        """
+                        INSERT INTO staging (accession, payload_json, line_seq, first_seq, part)
+                        VALUES (?, ?, ?, ?, 0)
+                        ON CONFLICT(accession) DO UPDATE SET
+                            payload_json = excluded.payload_json,
+                            line_seq = excluded.line_seq,
+                            first_seq = MIN(staging.first_seq, excluded.first_seq)
+                        """,
+                        (acc, payload, lines_read, lines_read),
+                    )
+        conn.commit()
+        return lines_read
+    finally:
+        conn.close()
+
+
+def mark_staging_partitions(
+    conn: sqlite3.Connection,
+    *,
+    existence_batch: int = ASSEMBLY_IMPORT_EXISTENCE_BATCH,
+) -> None:
+    """
+    Set ``staging.part`` to 1 for accessions that exist in Mongo at call time (import snapshot).
+    Rows with part 0 are treated as new inserts; part 1 as metadata updates.
+    """
+    cur = conn.execute("SELECT accession FROM staging")
+    all_accs = [r[0] for r in cur.fetchall()]
+    for batch in create_batches(all_accs, existence_batch):
+        found_raw = Assembly.objects(accession__in=list(batch)).scalar("accession")
+        found = {str(x) for x in found_raw if x}
+        if not found:
+            continue
+        conn.executemany(
+            "UPDATE staging SET part = 1 WHERE accession = ?",
+            [(a,) for a in found],
+        )
+    conn.commit()
+
+
+def _derive_taxids_and_biosample_maps_from_staging(
+    conn: sqlite3.Connection,
+) -> Tuple[Set[str], List[str], Dict[str, Dict[str, Any]]]:
+    """
+    Same iteration order as ``list(new_rows) + list(assemblies_to_update.values())``:
+    part 0 (new) ordered by ``first_seq``, then part 1 (update) ordered by ``first_seq``.
+    """
+    all_taxids: Set[str] = set()
+    seen_bs: Set[str] = set()
+    ordered_bs: List[str] = []
+    asm_by_bs: Dict[str, Dict[str, Any]] = {}
+
+    cur = conn.execute(
+        "SELECT payload_json FROM staging ORDER BY part ASC, first_seq ASC"
+    )
+    for (raw,) in cur:
+        row = json.loads(raw)
+        tid = _taxid_from_assembly_dict(row)
+        if tid:
+            all_taxids.add(tid)
+        sa = _sample_accession_from_assembly_dict(row)
+        if tid and sa and sa not in seen_bs:
+            seen_bs.add(sa)
+            ordered_bs.append(sa)
+        if tid and sa and sa not in asm_by_bs:
+            asm_by_bs[sa] = row
+
+    return all_taxids, ordered_bs, asm_by_bs
+
+
+def persist_assembly_import_payload_from_staging(
+    conn: sqlite3.Connection,
+    *,
+    persist_chunk: int = ASSEMBLY_IMPORT_PERSIST_CHUNK,
+    taxids_with_organism: Optional[Set[str]] = None,
+) -> List[str]:
+    """
+    Run metadata updates for all ``part=1`` rows, then chunked inserts for ``part=0`` rows.
+    Matches :func:`persist_assembly_import_payload` semantics.
+    """
+    saved_all: List[str] = []
+
+    cur = conn.execute(
+        "SELECT accession, payload_json FROM staging WHERE part = 1 ORDER BY first_seq"
+    )
+    while True:
+        rows = cur.fetchmany(persist_chunk)
+        if not rows:
+            break
+        upd: Dict[str, Dict[str, Any]] = {}
+        for acc, raw in rows:
+            upd[acc] = json.loads(raw)
+        _persist_metadata_updates(upd, taxids_with_organism=taxids_with_organism)
+
+    cur = conn.execute(
+        "SELECT payload_json FROM staging WHERE part = 0 ORDER BY first_seq"
+    )
+    while True:
+        rows = cur.fetchmany(persist_chunk)
+        if not rows:
+            break
+        new_rows = [json.loads(r[0]) for r in rows]
+        saved_all.extend(
+            _persist_new_inserts(new_rows, taxids_with_organism=taxids_with_organism)
+        )
+
+    return saved_all
+
+
+def run_assembly_import_merge_persist_bounded(
+    file_paths: List[str],
+    sqlite_db_path: str,
+    *,
+    persist_chunk: int = ASSEMBLY_IMPORT_PERSIST_CHUNK,
+    taxids_with_organism: Optional[Set[str]] = None,
+) -> AssemblyImportStagingResult:
+    """
+    Stream-merge JSONL into SQLite, classify new vs update using only batched existence checks
+    for accessions in this import, persist in chunks, and derive taxid / biosample side data.
+
+    Caller owns ``sqlite_db_path`` lifecycle (create before, remove after).
+    """
+    n_lines = stream_assembly_jsonl_into_sqlite(file_paths, sqlite_db_path)
+    conn = sqlite3.connect(sqlite_db_path)
+    try:
+        n_rows = int(conn.execute("SELECT COUNT(*) FROM staging").fetchone()[0])
+        if n_lines == 0 or n_rows == 0:
+            return AssemblyImportStagingResult(
+                staging_accession_count=0,
+                saved_assembly_accessions=[],
+                all_taxids=set(),
+                assembly_biosample_accessions=[],
+                assembly_row_by_biosample={},
+            )
+
+        mark_staging_partitions(conn)
+        saved_assembly_accessions = persist_assembly_import_payload_from_staging(
+            conn,
+            persist_chunk=persist_chunk,
+            taxids_with_organism=taxids_with_organism,
+        )
+        all_taxids, assembly_biosample_accessions, assembly_row_by_biosample = (
+            _derive_taxids_and_biosample_maps_from_staging(conn)
+        )
+    finally:
+        conn.close()
+
+    return AssemblyImportStagingResult(
+        staging_accession_count=n_rows,
+        saved_assembly_accessions=saved_assembly_accessions,
+        all_taxids=all_taxids,
+        assembly_biosample_accessions=assembly_biosample_accessions,
+        assembly_row_by_biosample=assembly_row_by_biosample,
+    )
 
 
 # --- BlobToolKit bulk link ----------------------------------------------------

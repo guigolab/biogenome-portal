@@ -235,11 +235,13 @@ def _organism_countries_in_q(codes):
     return combined
 
 
-def organism_queryset_for_map_filters(immutable_dict):
+def _build_organism_queryset(immutable_dict, *, apply_sample_location_geo: bool):
     """
-    Organism queryset for catalog map / frequency: same filters as GET /organisms
-    (taxon_lineage, text filter, polygon → sample taxids, insdc_counts_any, etc.)
-    without pagination, sort, format, or field projection.
+    Shared organism queryset for catalog and map.
+
+    When ``apply_sample_location_geo`` is True, applies polygon / has_sample_locations
+    (SampleCoordinates-backed filters). GET /organisms uses False; map list and
+    frequency aggregation use True.
     """
     mapper = MODEL_MAPPER["organisms"]
     args = dict(_catalog_params_as_plain_dict(immutable_dict))
@@ -284,6 +286,9 @@ def organism_queryset_for_map_filters(immutable_dict):
         if icq is not None:
             items = items.filter(icq)
 
+    if not apply_sample_location_geo:
+        return items
+
     # Map polygon filter: coordinates live on SampleCoordinates, not Organism.
     if polygon_geo is not None:
         geo_args = {"polygon": polygon_geo}
@@ -312,7 +317,20 @@ def organism_queryset_for_map_filters(immutable_dict):
     return items
 
 
-def get_items(model, immutable_dict):
+def organism_queryset_catalog_only(immutable_dict):
+    """GET /organisms: catalog filters only (no polygon / has_sample_locations)."""
+    return _build_organism_queryset(immutable_dict, apply_sample_location_geo=False)
+
+
+def organism_queryset_for_map_filters(immutable_dict):
+    """
+    Organism queryset for catalog map / frequency: catalog filters plus polygon and/or
+    has_sample_locations (SampleCoordinates), without pagination, sort, or projection.
+    """
+    return _build_organism_queryset(immutable_dict, apply_sample_location_geo=True)
+
+
+def get_items(model, immutable_dict, *, organisms_sample_location_geo=False):
     from helpers import resource_mixins as rm
 
     try:
@@ -341,7 +359,10 @@ def get_items(model, immutable_dict):
             )
 
         if model == "organisms":
-            items = organism_queryset_for_map_filters(params)
+            if organisms_sample_location_geo:
+                items = organism_queryset_for_map_filters(params)
+            else:
+                items = organism_queryset_catalog_only(params)
         else:
             query, q_query = create_query(args, q_query)
 

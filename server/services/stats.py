@@ -1,6 +1,6 @@
 import logging
 
-from extensions.cache import cache
+from services.redis_cache import redis_memoize
 from helpers import data as data_helper
 from helpers.catalog_date_regex import CATALOG_HISTOGRAM_ISO_DATE_PATTERN
 from helpers.catalog_field_agg import mongo_value_expr
@@ -26,7 +26,7 @@ MODEL_LIST = {k: MODEL_MAPPER[k]["model"] for k in STATS_MODEL_KEYS}
 NO_VALUE_KEY = "No Entry"
 
 
-@cache.memoize(timeout=300)
+@redis_memoize(timeout=300)
 def get_stats(model, field, query):
     # Fail fast before parsing query args (404 path is cheaper).
     if model not in MODEL_LIST:

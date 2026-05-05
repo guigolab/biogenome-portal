@@ -5,7 +5,11 @@ from clients import ebi_client
 from db.model import ReadRun
 from helpers import biosample as biosample_helper, data as data_helper, organism as organism_helper
 from helpers.rest_catalog_sync import sync_species_after_catalog_change
-from parsers.read import parse_read_from_ena_portal
+from parsers.read import (
+    backfill_readrun_scientific_name_from_organism,
+    parse_read_from_ena_portal,
+    readrun_taxid_is_pending,
+)
 from werkzeug.exceptions import BadRequest
 from helpers.service_utils import get_or_404
 
@@ -44,7 +48,7 @@ def create_read_runs_from_ena_accession(accession: str) -> str:
             rr = parse_read_from_ena_portal(row)
         except Exception as exc:
             raise BadRequest(description=f"Invalid filereport row: {exc}") from exc
-        if rr.run_accession and rr.taxid and rr.sample_accession:
+        if rr.run_accession and (rr.sample_accession or "").strip():
             parsed_runs.append(rr)
 
     if not parsed_runs:
@@ -61,21 +65,34 @@ def create_read_runs_from_ena_accession(accession: str) -> str:
     biosample_cache: Dict[str, Optional[Any]] = {}
 
     for rr in parsed_runs:
-        taxid = str(rr.taxid)
-        if taxid not in organism_cache:
-            organism_cache[taxid] = organism_helper.handle_organism(rr.taxid)
-        organism_obj = organism_cache[taxid]
-        if not organism_obj:
-            continue
-
         sample_accession = str(rr.sample_accession)
         if sample_accession not in biosample_cache:
             biosample_cache[sample_accession] = biosample_helper.handle_biosample(
                 rr.sample_accession
             )
         biosample_obj = biosample_cache[sample_accession]
-        if not biosample_obj:
+
+        if readrun_taxid_is_pending(rr.taxid):
+            if not biosample_obj:
+                continue
+            rr.taxid = str(biosample_obj.taxid).strip()
+            sn_bio = (biosample_obj.scientific_name or "").strip()
+            if sn_bio:
+                rr.scientific_name = sn_bio
+        elif not biosample_obj:
             continue
+
+        taxid = str(rr.taxid).strip()
+        if not taxid or readrun_taxid_is_pending(rr.taxid):
+            continue
+
+        if taxid not in organism_cache:
+            organism_cache[taxid] = organism_helper.handle_organism(rr.taxid)
+        organism_obj = organism_cache[taxid]
+        if not organism_obj:
+            continue
+
+        backfill_readrun_scientific_name_from_organism(rr, organism_obj)
 
         existing = existing_by_accession.get(rr.run_accession)
         if existing:

@@ -1,5 +1,8 @@
 """
 Shared helpers for INSDC / catalog ingest Celery jobs (dedupe, batched scalars).
+
+For the canonical fetch → store → taxonomy → prune → finalize → enrich order and
+duplicate-status avoidance, see ``docs/celery-jobs/ingest-pipeline.md``.
 """
 
 from __future__ import annotations
@@ -38,12 +41,3 @@ def scalar_taxids_batched(
             if t is not None and str(t).strip():
                 out.add(str(t))
     return out
-
-
-def maybe_enqueue_enrich_organisms(taxids: Iterable[Any]) -> None:
-    """Enqueue taxonomy enrichment when the list is non-empty."""
-    from jobs.taxonomy import enrich_organisms_post_taxonomy
-
-    tid_list = dedupe_nonempty_strs(taxids)
-    if tid_list:
-        enrich_organisms_post_taxonomy.delay(tid_list)

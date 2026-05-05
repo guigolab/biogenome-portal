@@ -71,10 +71,64 @@ export function parseTreeTableTsv(text: string): FlattenedTreeResponse {
    return { fields, rows }
 }
 
+function parseTreeJsonl(text: string): FlattenedTreeResponse {
+   const fields = [
+      'taxid',
+      'parent_taxid',
+      'name',
+      'rank',
+      'organisms_count',
+      'assemblies_count',
+      'reads_count',
+      'biosamples_count',
+      'local_samples_count',
+      'genome_annotations_count',
+   ]
+   const rows: (string | number | null)[][] = []
+   const lines = text.split(/\r?\n/)
+   for (const line of lines) {
+      const trimmed = line.trim()
+      if (!trimmed) continue
+      let doc: Record<string, unknown>
+      try {
+         doc = JSON.parse(trimmed) as Record<string, unknown>
+      } catch {
+         throw new Error('tree: invalid NDJSON payload')
+      }
+      rows.push(
+         fields.map((f) => {
+            const raw = doc[f]
+            if (raw === undefined || raw === null || raw === '') return null
+            return typeof raw === 'number' ? raw : String(raw)
+         }),
+      )
+   }
+   return { fields, rows }
+}
+
+async function fetchRootTreeCompressed(): Promise<FlattenedTreeResponse> {
+   const base = getApiBase()
+   const url = `${base}/tree?format=jsonl-gz`
+   const res = await fetch(url, {
+      credentials: 'include',
+      headers: { Accept: 'application/x-ndjson' },
+   })
+   if (!res.ok) {
+      throw new Error(`tree(jsonl-gz): ${res.status} ${res.statusText}`)
+   }
+   return parseTreeJsonl(await res.text())
+}
+
 /**
  * Full portal taxonomy table from the root tree (same rows as GET /tree?format=json / tsv).
  */
 export async function fetchRootTreeTsv(): Promise<FlattenedTreeResponse> {
+   try {
+      return await fetchRootTreeCompressed()
+   } catch {
+      // Backward-compatible fallback for deployments that have not rolled out
+      // the compressed endpoint yet.
+   }
    const base = getApiBase()
    const url = `${base}/tree?format=tsv`
    const res = await fetch(url, {

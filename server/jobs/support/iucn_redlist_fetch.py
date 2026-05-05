@@ -16,6 +16,8 @@ Conservative pacing (overridable via env):
 - ``IUCN_INTER_ORGANISM_PAUSE_JITTER_SEC`` — extra random 0..N after each species (default 0.4).
 - ``IUCN_429_MAX_WAIT_SEC`` — cap on seconds to honor ``Retry-After`` when retrying after HTTP 429 (default 120).
 - ``IUCN_DOCUMENTATION_MAX_CHARS`` — max chars stored from assessment ``documentation`` (default 24000).
+- ``IUCN_RANK_PAGE_DELAY_SEC`` — fixed extra sleep before each ``taxa/{rank}/{name}`` page call on top of
+  the standard throttle (default 2.0 s). Controls pacing of the bulk rank-based fetch path.
 """
 
 from __future__ import annotations
@@ -27,6 +29,8 @@ import os
 import random
 import re
 import time
+import urllib.parse
+from collections import defaultdict
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -52,6 +56,17 @@ _USER_AGENT = os.getenv(
 )
 _429_RETRY_MAX_WAIT = float(os.getenv("IUCN_429_MAX_WAIT_SEC", "120"))
 _DOC_MAX = max(0, int(os.getenv("IUCN_DOCUMENTATION_MAX_CHARS", "24000")))
+_RANK_PAGE_DELAY = float(os.getenv("IUCN_RANK_PAGE_DELAY_SEC", "2.0"))
+
+# Ranks checked in priority order when grouping organisms for the bulk fetch path.
+# Each tuple is (iucn_url_rank, lineage_rank_labels_attr).
+# "class" is a Python keyword so the DB field is "class_name" but the URL segment is "class".
+_RANK_PRIORITY: List[Tuple[str, str]] = [
+    ("family", "family"),
+    ("order", "order"),
+    ("class", "class_name"),
+    ("phylum", "phylum"),
+]
 
 
 def _api_token() -> Optional[str]:
@@ -517,6 +532,7 @@ def _assessment_to_embedded(
     assessment: Optional[Dict[str, Any]],
     *,
     not_found: bool,
+    assessment_id: Optional[int] = None,
 ) -> OrganismRedList:
     now = datetime.now(timezone.utc)
     if not_found or not assessment:
@@ -541,8 +557,17 @@ def _assessment_to_embedded(
     ]
     narratives = _narratives_from_assessment(assessment)
 
+    if assessment_id is None:
+        raw_aid = assessment.get("assessment_id")
+        if raw_aid is not None:
+            try:
+                assessment_id = int(raw_aid)
+            except (TypeError, ValueError):
+                pass
+
     return OrganismRedList(
         not_found=False,
+        assessment_id=assessment_id,
         category=_red_list_category_code(assessment.get("red_list_category")),
         population_trend=_scalar_str(assessment.get("population_trend")),
         assessment_date=_scalar_str(assessment.get("assessment_date")),
@@ -637,15 +662,11 @@ def run_iucn_fetch_for_taxids(
     }
 
 
-def run_iucn_backfill_missing(
-    *,
-    max_organisms: int = 120,
-    force: bool = False,
-) -> Dict[str, Any]:
+def run_iucn_backfill_missing() -> Dict[str, Any]:
     """
-    Populate ``iucn_redlist`` for organisms where it is absent (or all, if ``force``).
+    Refresh IUCN Red List data for every organism document (ordered by ``taxid``).
 
-    ``max_organisms`` caps how many documents are processed per run (rate limits).
+    One HTTP request per organism (plus pauses); suitable for a manual or scheduled full refresh.
     """
     token = _api_token()
     if not token:
@@ -659,12 +680,7 @@ def run_iucn_backfill_missing(
             "errors": 0,
         }
 
-    max_organisms = max(int(max_organisms), 1)
-    q = Organism.objects()
-    if not force:
-        q = q.filter(iucn_redlist=None)
-
-    organisms: List[Organism] = list(q.order_by("taxid").limit(max_organisms))
+    organisms: List[Organism] = list(Organism.objects().order_by("taxid"))
     if not organisms:
         return {
             "status": "skipped",
@@ -698,69 +714,539 @@ def run_iucn_backfill_missing(
         "ok": ok,
         "not_found": not_found,
         "errors": errors,
-        "max_organisms": max_organisms,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Bulk rank-based fetch (replaces per-organism taxa/scientific_name lookups)
+# ---------------------------------------------------------------------------
+
+def _run_bulk_rank_fetch_streaming(
+    base_mongo_filter: Dict[str, Any],
+    session: requests.Session,
+    token: str,
+) -> Tuple[int, int, int]:
+    """
+    Stream organisms from the database grouped by their highest-priority lineage
+    rank (family → order → class → phylum) without loading the full collection
+    into RAM.
+
+    Strategy:
+    - For each rank level in priority order, call ``collection.distinct()`` to get
+      the set of rank_name strings that exist among matching organisms (just strings,
+      no Organism objects in memory).
+    - For each rank_name, paginate the IUCN ``taxa/{rank}/{name}`` endpoint to build
+      the name→assessment_id lookup, then stream matching organisms via a
+      ``no_cache()`` MongoEngine cursor and resolve them one at a time.
+    - Each processed rank level is accumulated into ``absent_conditions`` so the
+      next (lower-priority) rank excludes organisms already handled.
+    - Organisms with no usable rank at any level are handled via the per-organism
+      fallback path.
+
+    ``base_mongo_filter`` is ANDed into every query; callers use it to scope by
+    taxid set, IUCN state, or leave it ``{}`` for all organisms.
+
+    Returns ``(ok, not_found, errors)``.
+    """
+    org_coll = Organism._get_collection()
+    ok = not_found = errors = 0
+    absent_conditions: Dict[str, Any] = {}
+
+    for url_rank, db_attr in _RANK_PRIORITY:
+        rank_field = f"lineage_rank_labels.{db_attr}"
+
+        # Exclusive filter: all higher-priority ranks must be absent for this rank.
+        # MongoDB treats {field: {$in: [None, ""]}} as matching null, "", and missing.
+        exclusive_filter: Dict[str, Any] = {
+            **base_mongo_filter,
+            **absent_conditions,
+            rank_field: {"$nin": [None, ""]},
+        }
+
+        rank_names: List[str] = org_coll.distinct(rank_field, exclusive_filter)
+
+        for rank_name in rank_names:
+            per_rank_filter = {**exclusive_filter, rank_field: rank_name}
+            logger.info(
+                "IUCN bulk fetch: scanning %s/%s",
+                url_rank,
+                rank_name,
+            )
+            try:
+                name_to_aid = _fetch_all_taxa_for_rank(
+                    session, token, url_rank, rank_name
+                )
+            except Exception:
+                logger.exception(
+                    "IUCN bulk fetch: failed to paginate %s/%s — falling back to per-organism",
+                    url_rank,
+                    rank_name,
+                )
+                for org in Organism.objects(__raw__=per_rank_filter).no_cache():
+                    try:
+                        outcome = sync_organism_iucn(org, session, token)
+                        if outcome == "ok":
+                            ok += 1
+                        elif outcome == "not_found":
+                            not_found += 1
+                        else:
+                            errors += 1
+                    except Exception:
+                        logger.exception("IUCN sync failed for taxid %s", org.taxid)
+                        errors += 1
+                    _inter_organism_pause()
+                continue
+
+            for org in Organism.objects(__raw__=per_rank_filter).no_cache():
+                try:
+                    outcome = _sync_organism_from_lookup(
+                        org, name_to_aid, session, token
+                    )
+                    if outcome == "ok":
+                        ok += 1
+                    elif outcome == "not_found":
+                        not_found += 1
+                    else:
+                        errors += 1
+                except Exception:
+                    logger.exception("IUCN sync failed for taxid %s", org.taxid)
+                    errors += 1
+
+        # Mark this rank as absent for subsequent lower-priority rank queries.
+        absent_conditions[rank_field] = {"$in": [None, ""]}
+
+    # Fallback: organisms with none of the four ranks populated.
+    fallback_filter: Dict[str, Any] = {**base_mongo_filter, **absent_conditions}
+    for org in Organism.objects(__raw__=fallback_filter).no_cache():
+        logger.debug(
+            "IUCN fallback (no rank): taxid=%s name=%s", org.taxid, org.scientific_name
+        )
+        try:
+            outcome = sync_organism_iucn(org, session, token)
+            if outcome == "ok":
+                ok += 1
+            elif outcome == "not_found":
+                not_found += 1
+            else:
+                errors += 1
+        except Exception:
+            logger.exception("IUCN sync failed for taxid %s", org.taxid)
+            errors += 1
+        _inter_organism_pause()
+
+    return ok, not_found, errors
+
+
+def _pick_best_aid_from_assessments(items: List[Dict[str, Any]]) -> Optional[int]:
+    """
+    From a list of flat assessment dicts (as returned by ``taxa/{rank}/{name}``),
+    return the assessment_id that best represents the current status:
+      priority 0 — latest=True  + global scope (code "1")
+      priority 1 — latest=True  (any scope)
+      priority 2 — any entry    (first encountered)
+    """
+    best_aid: Optional[int] = None
+    best_priority = 99
+
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        raw = item.get("assessment_id")
+        if raw is None:
+            continue
+        try:
+            aid = int(raw)
+        except (TypeError, ValueError):
+            continue
+
+        is_latest = bool(item.get("latest"))
+        is_global = any(
+            str(sc.get("code") or "") == "1"
+            for sc in (item.get("scopes") or [])
+            if isinstance(sc, dict)
+        )
+
+        if is_latest and is_global:
+            priority = 0
+        elif is_latest:
+            priority = 1
+        else:
+            priority = 2
+
+        if priority < best_priority:
+            best_priority = priority
+            best_aid = aid
+            if priority == 0:
+                break  # can't do better
+
+    return best_aid
+
+
+def _fetch_all_taxa_for_rank(
+    session: requests.Session,
+    token: str,
+    url_rank: str,
+    rank_name: str,
+) -> Dict[str, int]:
+    """
+    Paginate through ``taxa/{url_rank}/{rank_name}`` and build a lookup dict
+    ``{normalized_scientific_name: best_assessment_id}``.
+
+    Each page is fetched with an additional ``_RANK_PAGE_DELAY`` sleep on top of
+    the standard ``_throttle()`` inside ``_get_v4``.
+
+    The API returns a flat list under ``"assessments"`` (100 per page). Multiple
+    historical entries per species are expected; ``_pick_best_aid_from_assessments``
+    selects the global + latest one.
+    """
+    path = f"taxa/{url_rank}/{urllib.parse.quote(rank_name, safe='')}"
+    name_to_aid: Dict[str, int] = {}
+    # Accumulate all raw assessment items per normalised name so
+    # priority selection runs across the whole page at once.
+    per_name: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
+    page = 1
+
+    while True:
+        time.sleep(_RANK_PAGE_DELAY)
+        data, _ = _get_v4(session, token, path, params={"page": page})
+        if data is None:
+            logger.warning(
+                "IUCN rank fetch: no data for %s/%s page %d — stopping pagination",
+                url_rank,
+                rank_name,
+                page,
+            )
+            break
+
+        items: List[Dict[str, Any]] = data.get("assessments") or []
+        for item in items:
+            sci = (item.get("taxon_scientific_name") or "").strip()
+            if not sci:
+                continue
+            per_name[normalize_binomial(sci)].append(item)
+
+        logger.debug(
+            "IUCN rank fetch: %s/%s page %d → %d assessments",
+            url_rank,
+            rank_name,
+            page,
+            len(items),
+        )
+
+        if len(items) < 100:
+            break
+        page += 1
+
+    for norm_name, candidates in per_name.items():
+        aid = _pick_best_aid_from_assessments(candidates)
+        if aid is not None:
+            name_to_aid[norm_name] = aid
+
+    logger.info(
+        "IUCN rank fetch: %s/%s → %d unique taxa across %d page(s)",
+        url_rank,
+        rank_name,
+        len(name_to_aid),
+        page,
+    )
+    return name_to_aid
+
+
+def _sync_organism_from_lookup(
+    org: Organism,
+    name_to_aid: Dict[str, int],
+    session: requests.Session,
+    token: str,
+) -> str:
+    """
+    Look up *org* in the pre-fetched rank name→assessment_id dict, fetch the full
+    assessment, and save. Returns 'ok', 'not_found', or 'error'.
+    """
+    aid: Optional[int] = None
+    for candidate in iucn_name_candidates(org.scientific_name or ""):
+        aid = name_to_aid.get(normalize_binomial(candidate))
+        if aid is not None:
+            break
+
+    if aid is None:
+        org.iucn_redlist = _assessment_to_embedded(None, not_found=True)
+        org.save()
+        return "not_found"
+
+    full, _ = _get_v4(session, token, f"assessment/{aid}")
+    if full is None:
+        org.iucn_redlist = _assessment_to_embedded(None, not_found=True)
+        org.save()
+        return "error"
+
+    org.iucn_redlist = _assessment_to_embedded(full, not_found=False, assessment_id=aid)
+    org.save()
+    return "ok"
+
+
+
+
+def run_iucn_fetch_bulk_by_rank(
+    taxids: List[str],
+    *,
+    force: bool = False,
+) -> Dict[str, Any]:
+    """
+    Update IUCN Red List embedded docs for the given NCBI taxids using the bulk
+    rank-based strategy.
+
+    Organisms are grouped by their highest available lineage rank (family → order →
+    class → phylum). For each group the ``taxa/{rank}/{rank_name}`` paginated endpoint
+    is scraped to build a name→assessment_id lookup (100 assessments per page, with a
+    ``_RANK_PAGE_DELAY`` extra sleep per page). Individual ``assessment/{id}`` calls
+    are made only for organisms whose scientific name appears in the lookup.
+
+    If ``force`` is False, organisms that already have ``iucn_redlist`` set are skipped.
+    Organisms with no usable lineage rank fall back to the per-organism
+    ``taxa/scientific_name`` path.
+    """
+    token = _api_token()
+    if not token:
+        logger.error("IUCN fetch skipped: set IUCN_TOKEN or UICN_TOKEN in the environment")
+        return {
+            "status": "skipped",
+            "reason": "missing_token",
+            "processed": 0,
+            "ok": 0,
+            "not_found": 0,
+            "errors": 0,
+        }
+
+    ids = [str(t).strip() for t in taxids if str(t).strip()]
+    if not ids:
+        return {
+            "status": "skipped",
+            "reason": "no_taxids",
+            "processed": 0,
+            "ok": 0,
+            "not_found": 0,
+            "errors": 0,
+        }
+
+    org_coll = Organism._get_collection()
+    taxid_filter: Dict[str, Any] = {"taxid": {"$in": ids}}
+    not_in_db_errors = len(ids) - org_coll.count_documents(taxid_filter)
+
+    # force=False: only process organisms that have never been attempted (iucn_redlist is null).
+    # force=True: process all matching organisms regardless of existing iucn_redlist state.
+    iucn_filter: Dict[str, Any] = {} if force else {"iucn_redlist": None}
+    base_filter: Dict[str, Any] = {**taxid_filter, **iucn_filter}
+
+    if org_coll.count_documents(base_filter) == 0:
+        return {
+            "status": "skipped",
+            "reason": "no_candidates",
+            "processed": 0,
+            "ok": 0,
+            "not_found": 0,
+            "errors": not_in_db_errors,
+            "force": force,
+        }
+
+    session = _session()
+    ok, not_found, bulk_errors = _run_bulk_rank_fetch_streaming(
+        base_filter, session, token
+    )
+    errors = not_in_db_errors + bulk_errors
+    processed = ok + not_found + errors
+    return {
+        "status": "ok",
+        "processed": processed,
+        "ok": ok,
+        "not_found": not_found,
+        "errors": errors,
         "force": force,
     }
 
 
-def run_iucn_redlist_reconcile_from_narratives(
-    *,
-    max_organisms: int = 500,
-) -> Dict[str, Any]:
+def run_iucn_backfill_by_rank() -> Dict[str, Any]:
     """
-    For organisms that already have ``iucn_redlist`` but empty ``habitats`` / ``threats`` lists,
-    populate those lists from the matching string keys in ``narratives`` (legacy / API quirks).
+    Refresh ``Organism.iucn_redlist`` from the IUCN API for every organism in the
+    database using the bulk rank-based strategy.
 
-    Does not call the IUCN HTTP API. Safe to run in batches.
+    Organisms are streamed and grouped by lineage rank so a single
+    ``taxa/{rank}/{name}`` pagination covers all organisms in that group rather than
+    one API call per species. No organism list is loaded into RAM.
     """
-    max_organisms = max(int(max_organisms), 1)
-    scanned = updated = 0
-    q = (
-        Organism.objects(iucn_redlist__ne=None)
-        .filter(iucn_redlist__not_found=False)
-        .only("id", "taxid", "iucn_redlist")
-        .order_by("taxid")
-    )
-    for org in q.limit(max_organisms):
-        scanned += 1
-        rl = org.iucn_redlist
-        if rl is None or rl.not_found:
-            continue
-        nar = rl.narratives if isinstance(rl.narratives, dict) else {}
-        changed = False
+    token = _api_token()
+    if not token:
+        logger.error("IUCN backfill skipped: set IUCN_TOKEN or UICN_TOKEN in the environment")
+        return {
+            "status": "skipped",
+            "reason": "missing_token",
+            "processed": 0,
+            "ok": 0,
+            "not_found": 0,
+            "errors": 0,
+        }
 
-        if not rl.habitats:
-            hb = nar.get("habitats")
-            if isinstance(hb, str) and hb.strip():
-                row = _synthetic_row_from_prose(hb, kind="habitats")
-                if row.get("description"):
-                    safe = _json_safe(row)
-                    if isinstance(safe, dict):
-                        rl.habitats = [safe]
-                        changed = True
+    if Organism._get_collection().count_documents({}) == 0:
+        return {
+            "status": "skipped",
+            "reason": "no_candidates",
+            "processed": 0,
+            "ok": 0,
+            "not_found": 0,
+            "errors": 0,
+        }
 
-        if not rl.threats:
-            th = nar.get("threats")
-            if isinstance(th, str) and th.strip():
-                row = _synthetic_row_from_prose(th, kind="threats")
-                if row.get("description"):
-                    safe = _json_safe(row)
-                    if isinstance(safe, dict):
-                        rl.threats = [safe]
-                        changed = True
-
-        if changed:
-            try:
-                org.save()
-                updated += 1
-            except Exception:
-                logger.exception(
-                    "IUCN reconcile save failed for taxid %s", getattr(org, "taxid", "?")
-                )
-
+    session = _session()
+    ok, not_found, errors = _run_bulk_rank_fetch_streaming({}, session, token)
+    processed = ok + not_found + errors
     return {
         "status": "ok",
-        "scanned": scanned,
-        "updated": updated,
-        "max_organisms": max_organisms,
+        "processed": processed,
+        "ok": ok,
+        "not_found": not_found,
+        "errors": errors,
+    }
+
+
+def run_iucn_refresh_known_assessments() -> Dict[str, Any]:
+    """
+    Re-fetch the full assessment for every organism that already has a cached
+    ``iucn_redlist.assessment_id``.
+
+    Skips the rank page scan entirely — goes directly to ``assessment/{id}`` for
+    each organism — so this is much faster than the full bulk fetch and suitable
+    for routine periodic refreshes of known-listed species.
+    """
+    token = _api_token()
+    if not token:
+        logger.error(
+            "IUCN refresh skipped: set IUCN_TOKEN or UICN_TOKEN in the environment"
+        )
+        return {
+            "status": "skipped",
+            "reason": "missing_token",
+            "processed": 0,
+            "ok": 0,
+            "errors": 0,
+        }
+
+    has_aid_filter = {"iucn_redlist.assessment_id": {"$exists": True, "$ne": None}}
+    org_coll = Organism._get_collection()
+    count = org_coll.count_documents(has_aid_filter)
+
+    if count == 0:
+        return {
+            "status": "skipped",
+            "reason": "no_candidates",
+            "processed": 0,
+            "ok": 0,
+            "errors": 0,
+        }
+
+    logger.info(
+        "IUCN refresh known assessments: %d organism(s) with cached assessment_id",
+        count,
+    )
+
+    session = _session()
+    ok = errors = 0
+    for org in Organism.objects(__raw__=has_aid_filter).no_cache():
+        aid = org.iucn_redlist.assessment_id
+        try:
+            full, _ = _get_v4(session, token, f"assessment/{aid}")
+            if full is None:
+                logger.warning(
+                    "IUCN refresh: assessment/%s returned nothing for taxid=%s",
+                    aid,
+                    org.taxid,
+                )
+                errors += 1
+                continue
+            org.iucn_redlist = _assessment_to_embedded(
+                full, not_found=False, assessment_id=aid
+            )
+            org.save()
+            ok += 1
+        except Exception:
+            logger.exception(
+                "IUCN refresh failed for taxid=%s assessment_id=%s", org.taxid, aid
+            )
+            errors += 1
+
+    processed = ok + errors
+    logger.info(
+        "IUCN refresh known assessments: finished — ok=%d errors=%d", ok, errors
+    )
+    return {
+        "status": "ok",
+        "processed": processed,
+        "ok": ok,
+        "errors": errors,
+    }
+
+
+def run_iucn_fetch_missing_redlist() -> Dict[str, Any]:
+    """
+    Run the bulk rank-based fetch for organisms that have not yet been successfully
+    assessed: those with ``iucn_redlist`` as ``None`` (never attempted) and those
+    with ``not_found=True`` (previously not listed — re-checked because IUCN may have
+    added a new assessment since the last run).
+
+    Organisms that already have a cached ``assessment_id`` are excluded; use
+    ``run_iucn_refresh_known_assessments`` to refresh those.
+    """
+    token = _api_token()
+    if not token:
+        logger.error(
+            "IUCN fetch-missing skipped: set IUCN_TOKEN or UICN_TOKEN in the environment"
+        )
+        return {
+            "status": "skipped",
+            "reason": "missing_token",
+            "processed": 0,
+            "ok": 0,
+            "not_found": 0,
+            "errors": 0,
+        }
+
+    missing_filter: Dict[str, Any] = {
+        "$or": [
+            {"iucn_redlist": None},
+            {"iucn_redlist.not_found": True},
+        ]
+    }
+    org_coll = Organism._get_collection()
+    count = org_coll.count_documents(missing_filter)
+
+    if count == 0:
+        return {
+            "status": "skipped",
+            "reason": "no_candidates",
+            "processed": 0,
+            "ok": 0,
+            "not_found": 0,
+            "errors": 0,
+        }
+
+    logger.info(
+        "IUCN fetch-missing: %d organism(s) with no iucn_redlist or not_found=True",
+        count,
+    )
+
+    session = _session()
+    ok, not_found, errors = _run_bulk_rank_fetch_streaming(
+        missing_filter, session, token
+    )
+    processed = ok + not_found + errors
+    logger.info(
+        "IUCN fetch-missing: finished — ok=%d not_found=%d errors=%d",
+        ok,
+        not_found,
+        errors,
+    )
+    return {
+        "status": "ok",
+        "processed": processed,
+        "ok": ok,
+        "not_found": not_found,
+        "errors": errors,
     }

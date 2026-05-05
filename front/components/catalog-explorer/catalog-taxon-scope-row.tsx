@@ -41,6 +41,12 @@ function hasAnyCatalogCount(row: Record<string, unknown>, catalogModelKeys: Data
    return taxonNodeToPortalStats(row).some((s) => catalogModelKeys.includes(s.key) && s.count > 0)
 }
 
+function taxonHasChildren(row: Record<string, unknown> | null): boolean {
+   if (!row) return false
+   const raw = row.children
+   return Array.isArray(raw) && raw.length > 0
+}
+
 export type CatalogTaxonScopeRowProps = {
    speciesTaxid: string | null
    scopedTaxonDoc: Record<string, unknown> | null
@@ -127,6 +133,15 @@ export function CatalogTaxonScopeRow({
    const selectedLabel = useMemo(() => {
       if (!speciesTaxid?.trim()) return ''
       return taxonDisplayName(scopedTaxonDoc ?? { taxid: speciesTaxid })
+   }, [speciesTaxid, scopedTaxonDoc])
+
+   const selectedDetailsHref = useMemo(() => {
+      const tid = speciesTaxid?.trim()
+      if (!tid) return '#'
+      if (taxonHasChildren(scopedTaxonDoc)) {
+         return taxonomyTaxonHref(tid)
+      }
+      return `/species/${encodeURIComponent(tid)}`
    }, [speciesTaxid, scopedTaxonDoc])
 
    const onPick = useCallback(
@@ -275,7 +290,7 @@ export function CatalogTaxonScopeRow({
                   <div className="flex shrink-0 items-center gap-0.5">
                      <Button type="button" variant="secondary" size="icon" className="h-8 w-8" asChild>
                         <Link
-                           href={taxonomyTaxonHref(speciesTaxid.trim())}
+                           href={selectedDetailsHref}
                            title={t('catalog.taxonScopeViewInTaxonomy')}
                         >
                            <ExternalLink className="h-3.5 w-3.5" aria-hidden />

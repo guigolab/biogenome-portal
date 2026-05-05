@@ -6,12 +6,6 @@ server {
 
     # portal.json is served only by Next.js (public/portal.json); proxied via location /.
 
-    location = /hero-map.geojson {
-        alias /usr/share/nginx/html/hero-map.geojson;
-        default_type application/json;
-        add_header Cache-Control "public, max-age=120";
-    }
-
     location /api {
         proxy_pass http://${UPSTREAM_API_HOST}:${UPSTREAM_API_PORT};
         proxy_http_version 1.1;

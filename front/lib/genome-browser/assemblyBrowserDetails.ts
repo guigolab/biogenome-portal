@@ -148,5 +148,5 @@ export function assemblyDescriptionFromDoc(assemblyDoc: Record<string, unknown>)
    if (!meta || typeof meta !== 'object' || Array.isArray(meta)) return ''
    const info = (meta as Record<string, unknown>).assembly_info as Record<string, unknown> | undefined
    if (!info) return ''
-   return str(info.description) || str(info.assembly_method)
+   return str(info.description) ||  str(info.assembly_method)
 }

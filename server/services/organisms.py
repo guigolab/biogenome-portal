@@ -180,12 +180,12 @@ def create_organism(data):
         user_helper.add_species_to_datamanager([taxid], user)
 
     try:
-        from jobs.taxonomy import enrich_organisms_post_taxonomy
+        from jobs.support.organism_enrich import run_enrich_followup_for_taxids
 
-        enrich_organisms_post_taxonomy.delay([taxid])
+        run_enrich_followup_for_taxids([taxid])
     except Exception:
         logger.exception(
-            "create_organism: failed to queue post-taxonomy enrichment for taxid=%s",
+            "create_organism: failed post-taxonomy enrichment for taxid=%s",
             taxid,
         )
 

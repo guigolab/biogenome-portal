@@ -7,18 +7,16 @@ from werkzeug.exceptions import Unauthorized
 from routes import initialize_api
 from flask_jwt_extended import JWTManager,get_jwt, create_access_token, get_jwt_identity, set_access_cookies
 from db.enums import Roles
-from db.model import BioGenomeUser, Assembly, BioSample, BioSampleFetchFailure, Chromosome, Experiment, GenomeAnnotation, LocalSample, Organism, Read, ReadRun, SampleCoordinates, TaxonNode
+from db.model import BioGenomeUser, Assembly, BioSample, Chromosome, ReadRun, GenomeAnnotation, LocalSample, Organism, SampleCoordinates, TaxonNode
 from tendo.singleton import SingleInstance
 from flask_mongoengine import MongoEngine
 from datetime import datetime,timedelta,timezone
 import os
-from extensions import cache
 from jobs import celery_init_app
+from services.redis_cache import init_redis_cache
 from helpers.celery_beat_schedule import load_beat_schedule_from_json_file
 
 app = Flask(__name__)
-
-
 
 app.config.from_object(BaseConfig)
 # Headers allow scripts over HTTP where Secure cookies are not stored/sent; browsers keep using cookies.
@@ -45,14 +43,7 @@ db.init_app(app)
 
 celery_app = celery_init_app(app)
 
-cache.cache.init_app(app, config={
-    "CACHE_TYPE": "RedisCache",
-    "CACHE_REDIS_HOST": os.environ.get("REDIS_HOST", "bgp_redis"),
-    "CACHE_REDIS_PORT": int(os.environ.get("REDIS_PORT", 6379)),
-    "CACHE_REDIS_DB": int(os.environ.get("REDIS_CACHE_DB", 1)),
-    "CACHE_KEY_PREFIX": "bgp_api_cache:",
-    "CACHE_DEFAULT_TIMEOUT": 300,
-})
+init_redis_cache(app)
 
 initialize_api(app)
 
@@ -89,16 +80,16 @@ password = os.getenv('DB_PASS')
 try:
     FIRST_START = SingleInstance()
     #drop collections
-    # if os.getenv('DEV') == 'true':
-    #     Assembly.drop_collection()
-    #     BioSample.drop_collection()
-    #     Chromosome.drop_collection()
-    #     ReadRun.drop_collection()
-    #     GenomeAnnotation.drop_collection()
-    #     LocalSample.drop_collection()
-    #     Organism.drop_collection()
-    #     SampleCoordinates.drop_collection()
-    #     TaxonNode.drop_collection()
+    #if os.getenv('DEV') == 'true':
+    #    Assembly.drop_collection()
+    #    BioSample.drop_collection()
+    #    Chromosome.drop_collection()
+    #    ReadRun.drop_collection()
+    #    GenomeAnnotation.drop_collection()
+    #    LocalSample.drop_collection()
+    #    Organism.drop_collection()
+    #    SampleCoordinates.drop_collection()
+    #    TaxonNode.drop_collection()
 
     ##create root user if does not exist
     user = BioGenomeUser.objects(name = username).first()

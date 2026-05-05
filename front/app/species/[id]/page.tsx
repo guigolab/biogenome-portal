@@ -9,10 +9,9 @@ import { SpeciesIucnSection } from '@/components/species-iucn-section'
 import { SpeciesLocationsMap } from '@/components/species-locations-map'
 import { SpeciesPageStatsStrip } from '@/components/species-page-stats-strip'
 import { SpeciesGoatPipelineSection } from '@/components/species-goat-pipeline-section'
-import { SpeciesRelatedRecordsTabs, type RelatedCatalogModel } from '@/components/species-related-records-tabs'
 import { fetchSampleLocations, parseSampleLocationsPayload } from '@/lib/api/coordinates'
 import { fetchTaxonAncestors } from '@/lib/api/taxon'
-import { fetchOrganism, fetchOrganismRelatedWithTotal } from '@/lib/api/organisms'
+import { fetchOrganism } from '@/lib/api/organisms'
 import { publicationExternalUrl } from '@/lib/publicationLinks'
 import { loadPortalConfigFromDisk } from '@/lib/portal/portalServer'
 import { buildSpeciesDetailView, parseOrganismImages } from '@/lib/species-detail-from-organism'
@@ -160,17 +159,6 @@ function ClassificationCard({
   )
 }
 
-function pickDefaultRelatedModel(
-  assemblyCount: number,
-  biosampleCount: number,
-  readsCount: number,
-): RelatedCatalogModel | null {
-  if (assemblyCount > 0) return 'assemblies'
-  if (biosampleCount > 0) return 'biosamples'
-  if (readsCount > 0) return 'reads'
-  return null
-}
-
 export async function generateMetadata({
   params,
 }: {
@@ -207,17 +195,8 @@ export default async function SpeciesDetailPage({
   const assemblyCount = nonNegInt(organism.assemblies_count)
   const biosampleCount = nonNegInt(organism.biosamples_count)
   const readsCount = nonNegInt(organism.reads_count)
-  const defaultRelatedModel = pickDefaultRelatedModel(assemblyCount, biosampleCount, readsCount)
-  const hasCatalogRecords =
-    assemblyCount > 0 || biosampleCount > 0 || readsCount > 0
 
-  const [relatedInitial, locationsPeek, ancestorRows] = await Promise.all([
-    hasCatalogRecords && defaultRelatedModel
-      ? fetchOrganismRelatedWithTotal(id, defaultRelatedModel, {
-          limit: 200,
-          offset: 0,
-        })
-      : Promise.resolve({ data: [] as Record<string, unknown>[], total: 0 }),
+  const [locationsPeek, ancestorRows] = await Promise.all([
     fetchSampleLocations({ taxid: id, limit: 1 }).catch(() => ({
       total: 0,
       data: [] as Record<string, unknown>[],
@@ -347,6 +326,7 @@ export default async function SpeciesDetailPage({
           </div>
 
           <SpeciesPageStatsStrip
+            taxid={id}
             assemblyCount={assemblyCount}
             biosampleCount={biosampleCount}
             readsCount={readsCount}
@@ -532,19 +512,6 @@ export default async function SpeciesDetailPage({
             </CardHeader>
             <CardContent className="space-y-3">
               <SpeciesLocationsMap points={mapPoints} className="h-[320px] w-full" />
-              <p className="text-xs text-muted-foreground">
-                {locationsTotal.toLocaleString()} georeferenced sample
-                {locationsTotal === 1 ? '' : 's'} in the portal catalog for this lineage (including biosamples and
-                local samples).
-                {typeof locationsPayload.total === 'number' &&
-                locationsPayload.total > sampleLocations.length ? (
-                  <>
-                    {' '}
-                    Showing {sampleLocations.length.toLocaleString()} of{' '}
-                    {locationsPayload.total.toLocaleString()} in this request.
-                  </>
-                ) : null}
-              </p>
             </CardContent>
           </Card>
         ) : null}
@@ -617,19 +584,6 @@ export default async function SpeciesDetailPage({
           </CardContent>
         </Card>
 
-        {hasCatalogRecords && defaultRelatedModel ? (
-          <SpeciesRelatedRecordsTabs
-            taxid={id}
-            counts={{
-              assemblies: assemblyCount,
-              biosamples: biosampleCount,
-              reads: readsCount,
-            }}
-            defaultModel={defaultRelatedModel}
-            initialRows={relatedInitial.data}
-            initialTotal={relatedInitial.total}
-          />
-        ) : null}
       </div>
     </div>
   )

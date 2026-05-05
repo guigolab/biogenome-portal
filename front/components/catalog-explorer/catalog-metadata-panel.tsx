@@ -4,15 +4,29 @@ import type { InsdcCatalogMetadataModel } from '@/lib/catalog-metadata'
 import { mapCatalogMetadata, stringifyMetadataValue } from '@/lib/catalog-metadata'
 import { cn } from '@/lib/utils'
 
-function EntryRow({ e }: { e: { label: string; displayValue: string; valueKind: string } }) {
+/** `paired_accession` → `Paired Accession`, `wgs_info` → `Wgs Info`. */
+function humanizeSectionTitle(id: string): string {
+   return id.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+}
+
+function EntryRow({
+   e,
+   hideLabel = false,
+}: {
+   e: { label: string; displayValue: string; valueKind: string }
+   hideLabel?: boolean
+}) {
    const isMultiline =
       e.valueKind === 'object' || e.valueKind === 'array' || e.displayValue.includes('\n')
    return (
       <div className="border-b border-border/60 py-2 last:border-b-0">
-         <div className="text-[11px] font-medium text-muted-foreground">{e.label}</div>
+         {!hideLabel ? (
+            <div className="text-[11px] font-medium text-muted-foreground">{e.label}</div>
+         ) : null}
          <div
             className={cn(
-               'mt-0.5 break-words text-xs',
+               'break-words text-xs',
+               !hideLabel && 'mt-0.5',
                isMultiline && 'whitespace-pre-wrap rounded-md bg-muted/40 p-2 font-mono leading-relaxed',
             )}
          >
@@ -118,11 +132,15 @@ export function CatalogMetadataPanel({
          {sections.map((sec) => (
             <section key={sec.id}>
                <h4 className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  {sec.title}
+                  {humanizeSectionTitle(sec.title)}
                </h4>
                <div className="rounded-md border border-border px-2">
                   {sec.entries.map((e) => (
-                     <EntryRow key={e.key} e={e} />
+                     <EntryRow
+                        key={e.key}
+                        e={e}
+                        hideLabel={sec.entries.length === 1 && e.label === sec.id}
+                     />
                   ))}
                </div>
             </section>

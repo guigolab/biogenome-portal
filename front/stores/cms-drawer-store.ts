@@ -2,7 +2,7 @@
 
 import { create } from 'zustand'
 
-export type CmsDashboardDrawerPanel = 'insdc' | 'goat' | 'spreadsheet' | 'user' | 'annotation'
+export type CmsDashboardDrawerPanel = 'insdc' | 'user' | 'annotation'
 
 type DrawerState = {
    panel: CmsDashboardDrawerPanel | null

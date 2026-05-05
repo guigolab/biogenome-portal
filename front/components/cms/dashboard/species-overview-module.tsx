@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useCallback, useEffect, useState } from 'react'
-import { ChevronDown, Download, Loader2, Plus } from 'lucide-react'
+import { ChevronDown, Download, History, Loader2, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 
 import {
@@ -33,6 +33,7 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { extractApiMessage } from '@/lib/cms/extract-api-message'
 import type { DashboardModuleVariant } from '@/components/cms/dashboard/dashboard-module-variant'
 import { OrganismCuratorsCell } from '@/components/cms/dashboard/organism-curators-cell'
+import { OrganismAuditLogHistoryDialog } from '@/components/cms/dashboard/organism-audit-log-history-dialog'
 import {
    cmsCreateDeletionRequest,
    cmsDeleteItem,
@@ -67,6 +68,7 @@ export function SpeciesOverviewModule({ variant = 'standalone' }: { variant?: Da
 
    const [deleteReqOrg, setDeleteReqOrg] = useState<Record<string, unknown> | null>(null)
    const [adminDeleteOrg, setAdminDeleteOrg] = useState<Record<string, unknown> | null>(null)
+   const [historyOrg, setHistoryOrg] = useState<Record<string, unknown> | null>(null)
    const [deleteBusy, setDeleteBusy] = useState(false)
 
    const fetchData = useCallback(async () => {
@@ -115,15 +117,15 @@ export function SpeciesOverviewModule({ variant = 'standalone' }: { variant?: Da
 
    useEffect(() => {
       if (!isAdmin) return
-      ;(async () => {
-         try {
-            const { data } = await cmsGetUsers({ limit: 10000 })
-            const list = (data ?? []).filter((u: Record<string, unknown>) => u.role !== 'Admin')
-            setUsers(list)
-         } catch {
-            setUsers([])
-         }
-      })()
+         ; (async () => {
+            try {
+               const { data } = await cmsGetUsers({ limit: 10000 })
+               const list = (data ?? []).filter((u: Record<string, unknown>) => u.role !== 'Admin')
+               setUsers(list)
+            } catch {
+               setUsers([])
+            }
+         })()
    }, [isAdmin])
 
    async function downloadTsv() {
@@ -216,7 +218,7 @@ export function SpeciesOverviewModule({ variant = 'standalone' }: { variant?: Da
                   className={cn(
                      'flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-center',
                      embedded &&
-                        'rounded-xl border border-border bg-card p-3 sm:p-4 dark:bg-card/60',
+                     'rounded-xl border border-border bg-card p-3 sm:p-4 dark:bg-card/60',
                   )}
                >
                   <Input
@@ -348,7 +350,7 @@ export function SpeciesOverviewModule({ variant = 'standalone' }: { variant?: Da
                               <TableHead>GoaT</TableHead>
                               <TableHead>INSDC</TableHead>
                               <TableHead>Target</TableHead>
-                              {isAdmin && toggle === 'assigned' ? <TableHead>Curators</TableHead> : null}
+                              {isAdmin ? <TableHead>Curators</TableHead> : null}
                               <TableHead className="text-right">Actions</TableHead>
                            </TableRow>
                         </TableHeader>
@@ -371,7 +373,7 @@ export function SpeciesOverviewModule({ variant = 'standalone' }: { variant?: Da
                                  <TableCell>
                                     <CmsStatusPill value={org.target_list_status as string} type="target" />
                                  </TableCell>
-                                 {isAdmin && toggle === 'assigned' ? (
+                                 {isAdmin ? (
                                     <TableCell className="align-top">
                                        <OrganismCuratorsCell
                                           taxid={String(org.taxid)}
@@ -393,9 +395,19 @@ export function SpeciesOverviewModule({ variant = 'standalone' }: { variant?: Da
                                           <span className="text-xs text-amber-600">Pending deletion</span>
                                        ) : (
                                           <>
+                                             <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="gap-1.5"
+                                                onClick={() => setHistoryOrg(org)}
+                                             >
+                                                <History className="h-3.5 w-3.5" />
+                                                History
+                                             </Button>
                                              <Button variant="outline" size="sm" asChild>
                                                 <Link href={`/admin/update-organism/${org.taxid}`}>Edit</Link>
                                              </Button>
+
                                              {isAdmin ? (
                                                 <Button
                                                    variant="destructive"
@@ -469,6 +481,15 @@ export function SpeciesOverviewModule({ variant = 'standalone' }: { variant?: Da
                </AlertDialogFooter>
             </AlertDialogContent>
          </AlertDialog>
+
+         <OrganismAuditLogHistoryDialog
+            open={Boolean(historyOrg)}
+            onOpenChange={(open) => {
+               if (!open) setHistoryOrg(null)
+            }}
+            taxid={historyOrg ? String(historyOrg.taxid ?? '') : null}
+            scientificName={historyOrg ? String(historyOrg.scientific_name ?? '') : null}
+         />
 
          <AlertDialog open={!!adminDeleteOrg} onOpenChange={() => setAdminDeleteOrg(null)}>
             <AlertDialogContent>

@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Check, ChevronLeft, ChevronRight, Download, ImageOff, Loader2, Lock, Pencil, TriangleAlert } from 'lucide-react'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
 import {
@@ -16,6 +16,7 @@ import {
    AlertDialogHeader,
    AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -27,7 +28,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { usePortalConfig } from '@/contexts/portal-context'
 import { defaultPortalConfig, resolveOrganismFormSteps } from '@/lib/portal'
 import { extractApiMessage } from '@/lib/cms/extract-api-message'
-import { cmsCreateOrganism, cmsGetItem, cmsGetItems, cmsUpdateOrganism } from '@/lib/cms/services/auth'
+import { cmsCreateOrganism, cmsGetItem, cmsUpdateOrganism } from '@/lib/cms/services/auth'
 import {
    mergeImageRows,
    pollUntilReady,
@@ -128,6 +129,13 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
    const resetStore = useOrganismFormStore((s) => s.reset)
 
    const isEditMode = Boolean(editTaxid)
+
+   const canEditExistingOrganism = useMemo(() => {
+      const tid = organismForm.taxid?.trim()
+      if (!tid) return false
+      if (isAdmin) return true
+      return userSpecies.includes(tid)
+   }, [isAdmin, organismForm.taxid, userSpecies])
 
    const [existsWarning, setExistsWarning] = useState<string | null>(null)
    const [taxonExistencePending, setTaxonExistencePending] = useState(false)
@@ -247,14 +255,16 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
       setTaxonExistencePending(true)
       setOrganismForm({ taxid: hit.taxId, scientific_name: hit.scientificName })
       try {
-         const { data } = await cmsGetItems('organisms', { filter: hit.taxId, limit: 5 })
-         if (data?.some((o) => String(o.taxid) === hit.taxId)) {
-            setExistsWarning(
-               `Taxon ${hit.taxId} already exists in this portal. Select a different species to continue.`,
-            )
+         // Existence: GET /api/organisms/<taxid> (exact); avoid collection list + filter semantics.
+         await cmsGetItem('organisms', hit.taxId)
+         setExistsWarning(
+            `Taxon ${hit.taxId} already exists in this portal. Select a different species to continue.`,
+         )
+      } catch (e) {
+         const status = typeof e === 'object' && e !== null && 'status' in e ? (e as { status: number }).status : 0
+         if (status !== 404) {
+            /* network / server errors: do not treat as “missing”; leave form usable */
          }
-      } catch {
-         /* ignore */
       } finally {
          setTaxonExistencePending(false)
       }
@@ -366,6 +376,29 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
             <p className="mt-1 text-muted-foreground">{description}</p>
          </div>
 
+         {!isEditMode && existsWarning ? (
+            <Alert variant="destructive" className="border-destructive/50">
+               <TriangleAlert />
+               <AlertTitle>Species already registered</AlertTitle>
+               <AlertDescription className="space-y-3">
+                  <p>{existsWarning}</p>
+                  {canEditExistingOrganism && organismForm.taxid ? (
+                     <Button asChild variant="secondary" size="sm" className="w-fit gap-2">
+                        <Link href={`/admin/update-organism/${encodeURIComponent(organismForm.taxid)}`}>
+                           <Pencil className="h-4 w-4" />
+                           Edit this species
+                        </Link>
+                     </Button>
+                  ) : (
+                     <p className="text-destructive/90">
+                        You don&apos;t have permission to edit this species. Choose a different taxon or contact an
+                        administrator.
+                     </p>
+                  )}
+               </AlertDescription>
+            </Alert>
+         ) : null}
+
          {(isEditMode || organismForm.taxid) && (
             <div className="flex flex-col gap-3 rounded-lg border border-border bg-muted/30 p-4 sm:flex-row sm:items-center sm:justify-between">
                <div>
@@ -441,7 +474,6 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
                      {taxonExistencePending ? (
                         <p className="text-xs text-muted-foreground">Checking whether this taxon is already registered…</p>
                      ) : null}
-                     {existsWarning ? <p className="text-sm text-destructive">{existsWarning}</p> : null}
                      <ScrollArea className="h-56 rounded-md border">
                         <ul className="divide-y p-1">
                            {searchHits.map((h) => {

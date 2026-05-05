@@ -2,9 +2,7 @@
 
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { AnnotationFormPanel } from '@/components/cms/drawer/annotation-form-panel'
-import { GoatUploadPanel } from '@/components/cms/drawer/goat-upload-panel'
 import { InsdcImportPanel } from '@/components/cms/drawer/insdc-import-panel'
-import { SpreadsheetUploadPanel } from '@/components/cms/drawer/spreadsheet-upload-panel'
 import { UserFormPanel } from '@/components/cms/drawer/user-form-panel'
 import { useCmsDrawerStore, type CmsDashboardDrawerPanel } from '@/stores/cms-drawer-store'
 import { cn } from '@/lib/utils'
@@ -13,14 +11,6 @@ const PANEL_COPY: Record<CmsDashboardDrawerPanel, { title: string; description: 
    insdc: {
       title: 'Import from INSDC',
       description: 'BioSamples, assemblies, and reads by accession.',
-   },
-   goat: {
-      title: 'GoaT report upload',
-      description: 'Bulk organism updates from a GoaT TSV.',
-   },
-   spreadsheet: {
-      title: 'Sample metadata import',
-      description: 'Spreadsheet upload for local samples.',
    },
    user: {
       title: 'User',
@@ -86,8 +76,6 @@ export function CmsDashboardDrawer() {
 
                <div className="min-h-0 flex-1 overflow-y-auto pt-4">
                   {panel === 'insdc' ? <InsdcImportPanel presetModel={insdcImportModel} /> : null}
-                  {panel === 'goat' ? <GoatUploadPanel /> : null}
-                  {panel === 'spreadsheet' ? <SpreadsheetUploadPanel /> : null}
                   {panel === 'user' ? <UserFormPanel editName={userName} /> : null}
                   {panel === 'annotation' ? <AnnotationFormPanel editName={annotationName} /> : null}
                </div>

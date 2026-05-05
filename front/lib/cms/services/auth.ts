@@ -219,24 +219,6 @@ export async function cmsDeleteDeletionRequest(taxid: string) {
    }
 }
 
-export async function cmsImportSpreadsheet(formData: FormData) {
-   const res = await cmsFetch('/local_samples/upload', { method: 'POST', body: formData })
-   if (!res.ok) {
-      const text = await res.text().catch(() => '')
-      throw new Error(text.trim() || 'Upload failed')
-   }
-   return res.json() as Promise<{ id: string; state?: string; status_url?: string }>
-}
-
-export async function cmsImportGoatReport(formData: FormData) {
-   const res = await cmsFetch('/goat_report', { method: 'POST', body: formData })
-   if (!res.ok) {
-      const text = await res.text().catch(() => '')
-      throw new Error(text.trim() || 'Upload failed')
-   }
-   return res.json() as Promise<{ id: string; state?: string }>
-}
-
 export async function cmsTaskStatus(id: string) {
    return cmsFetchJson<Record<string, unknown>>(`/tasks/${encodeURIComponent(id)}`)
 }
@@ -344,6 +326,26 @@ export async function cmsGetItemsTsv(
 
 type OrganismListJson = { data?: Record<string, unknown>[]; total?: number }
 
+export type CmsOrganismAuditLogAction = 'create' | 'update' | 'patch' | 'delete' | string
+
+export type CmsOrganismAuditLogRow = {
+   _id?: unknown
+   action: CmsOrganismAuditLogAction
+   user: string
+   timestamp?: string
+   previous_object?: Record<string, unknown> | null
+   new_object?: Record<string, unknown> | null
+   taxid: string
+   scientific_name: string
+}
+
+export type CmsOrganismAuditLogsResponse = {
+   total?: number
+   limit?: number
+   offset?: number
+   data?: CmsOrganismAuditLogRow[]
+}
+
 export async function cmsGetOrganismsWithUsers(
    params: Record<string, string | number | boolean | undefined>,
    download?: false,
@@ -386,6 +388,33 @@ export async function cmsGetUnassignedOrganisms(
    const path = `/organisms/unassigned?${sp.toString()}`
    if (download) return cmsFetchBlob(path)
    return cmsFetchJson<OrganismListJson>(path)
+}
+
+export async function cmsGetOrganismAuditLogs(
+   params: Record<string, string | number | boolean | undefined>,
+) {
+   const sp = new URLSearchParams()
+   for (const [k, v] of Object.entries(params)) {
+      if (v === undefined || v === '') continue
+      sp.set(k, String(v))
+   }
+   const q = sp.toString()
+   return cmsFetchJson<CmsOrganismAuditLogsResponse>(`/organisms/audit_logs${q ? `?${q}` : ''}`)
+}
+
+export async function cmsGetOrganismAuditLogsByTaxid(
+   taxid: string,
+   params: Record<string, string | number | boolean | undefined>,
+) {
+   const sp = new URLSearchParams()
+   for (const [k, v] of Object.entries(params)) {
+      if (v === undefined || v === '') continue
+      sp.set(k, String(v))
+   }
+   const q = sp.toString()
+   return cmsFetchJson<CmsOrganismAuditLogsResponse>(
+      `/organisms/${encodeURIComponent(taxid)}/audit_logs${q ? `?${q}` : ''}`,
+   )
 }
 
 export async function cmsGetModelFieldStats(

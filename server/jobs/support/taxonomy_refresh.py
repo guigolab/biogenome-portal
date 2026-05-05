@@ -7,9 +7,9 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import Any, Dict, List, Literal, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Literal, Optional, Set, Tuple
 
-from pymongo import UpdateMany, UpdateOne
+from pymongo import UpdateOne
 
 from db.model import (
     Assembly,
@@ -22,45 +22,26 @@ from db.model import (
     TaxonNode,
 )
 from helpers.data import create_batches
-from jobs.support.organism_catalog_finalize import (
-    bulk_update_taxon_node_counts_for_keys,
-    finalize_organism_catalog_for_taxids,
+from jobs.support.catalog_ingest_guard import (
+    TAXID_LIST_LIMIT,
+    prune_organisms_missing_taxon_lineage,
 )
-from jobs.support.organism_catalog_guard import TAXID_LIST_LIMIT
-from jobs.support.organism_catalog_taxonomy import (
+from jobs.support.catalog_taxonomy_bootstrap import (
     _insert_new_taxon_nodes_from_dict,
     fetch_new_organisms,
 )
+from jobs.support.stats import update_organism_counts, update_taxon_node_counts
 
 logger = logging.getLogger(__name__)
 
 ChangeType = Literal["scientific_name", "taxid", "both", "lineage_only"]
 _LINEAGE_BULK_CHUNK = 1000
-DEFAULT_CHUNK = 3000
-
-
-def _taxid_variants_for_filter(tid: str) -> List[Union[str, int]]:
-    """Values for $in matching catalog docs with string or int taxid."""
-    s = str(tid).strip() if tid is not None else ""
-    if not s:
-        return [s]
-    out: List[Union[str, int]] = [s]
-    if s.isdigit():
-        try:
-            out.append(int(s))
-        except ValueError:
-            pass
-    return out
 
 
 def _catalog_taxid_filter(tid: str) -> Dict[str, Any]:
+    """Filter by species ``taxid`` (stored as string on catalog documents)."""
     tid = str(tid).strip()
-    if not tid:
-        return {"taxid": tid}
-    variants = _taxid_variants_for_filter(tid)
-    if len(variants) == 1:
-        return {"taxid": tid}
-    return {"taxid": {"$in": variants}}
+    return {"taxid": tid}
 
 
 def _chunked_bulk_write(
@@ -288,18 +269,78 @@ def apply_organism_updates(changes: List[OrganismChange]) -> None:
             )
 
 
+def apply_taxon_node_intrinsic_updates_from_ena(
+    fresh_taxons_dict: Dict[str, Any],
+    *,
+    bulk_chunk: int = 500,
+) -> int:
+    """
+    For TaxonNode rows already in the DB, set ``name`` and ``rank`` from ENA when they differ.
+
+    New nodes are inserted by :func:`_insert_new_taxon_nodes_from_dict` with correct fields;
+    this pass aligns existing rows with the latest INSDC payload.
+    """
+    if not fresh_taxons_dict:
+        return 0
+
+    coll = TaxonNode._get_collection()
+    ops: List[UpdateOne] = []
+    updated = 0
+
+    def flush() -> None:
+        nonlocal ops, updated
+        if not ops:
+            return
+        coll.bulk_write(ops, ordered=False)
+        updated += len(ops)
+        ops.clear()
+
+    for tid_raw, fresh in fresh_taxons_dict.items():
+        tid = str(tid_raw).strip()
+        if not tid or fresh is None:
+            continue
+        fresh_name = (getattr(fresh, "name", None) or "").strip()
+        fresh_rank = (getattr(fresh, "rank", None) or "").strip()
+        doc = coll.find_one({"taxid": tid}, {"name": 1, "rank": 1})
+        if not doc:
+            continue
+        db_name = (doc.get("name") or "").strip()
+        db_rank = (doc.get("rank") or "").strip()
+        if fresh_name == db_name and fresh_rank == db_rank:
+            continue
+        ops.append(
+            UpdateOne(
+                {"taxid": tid},
+                {"$set": {"name": fresh_name, "rank": fresh_rank}},
+            )
+        )
+        if len(ops) >= bulk_chunk:
+            flush()
+    flush()
+    return updated
+
+
 def rebuild_taxon_node_edges_and_counts(
     fresh_taxons_dict: Dict[str, Any],
     updated_organism_taxids: List[str],
-) -> None:
+) -> int:
     """
-    Rebuild TaxonNode parent/children from organism lineages and refresh counts.
-    Inserts any new TaxonNodes from fresh data before updating edges.
+    Insert missing TaxonNodes, sync ``name``/``rank`` from ENA for existing nodes, then
+    rebuild ``parent`` / ``children`` from organism lineages. Prefer ENA taxon payloads over
+    stale DB documents when building the taxon map for edge derivation.
+
+    Returns the number of TaxonNode documents updated for intrinsic field changes.
+
+    Caller should refresh catalog counters for touched species with
+    :func:`~jobs.support.stats.update_organism_counts` and
+    :func:`~jobs.support.stats.update_taxon_node_counts` (see
+    :func:`execute_taxonomy_refresh_pipeline`).
     """
     if not updated_organism_taxids:
-        return
+        return 0
 
     _insert_new_taxon_nodes_from_dict(fresh_taxons_dict)
+    intrinsic_updated = apply_taxon_node_intrinsic_updates_from_ena(fresh_taxons_dict)
 
     orgs = list(
         Organism.objects(taxid__in=updated_organism_taxids).only(
@@ -307,44 +348,45 @@ def rebuild_taxon_node_edges_and_counts(
         )
     )
     if not orgs:
-        return
+        return intrinsic_updated
 
-    taxon_map = dict(fresh_taxons_dict)
     all_lineage_taxids: Set[str] = set()
     for o in orgs:
         if o.taxon_lineage:
             all_lineage_taxids.update(str(x) for x in o.taxon_lineage if x)
+
+    taxon_map: Dict[str, Any] = {}
+    for tid in all_lineage_taxids:
+        if tid in fresh_taxons_dict:
+            taxon_map[tid] = fresh_taxons_dict[tid]
     if all_lineage_taxids:
         existing = {
             str(n.taxid): n
             for n in TaxonNode.objects(taxid__in=list(all_lineage_taxids))
         }
-        taxon_map.update(existing)
+        for tid, node in existing.items():
+            if tid not in taxon_map:
+                taxon_map[tid] = node
 
-    from jobs.support.organism_catalog_finalize import (
-        _bulk_update_taxonnode_edges_from_organism_lineages,
+    from jobs.support.catalog_denorm_finalize import (
+        sync_taxonnode_edges_from_organism_lineages,
     )
 
-    _bulk_update_taxonnode_edges_from_organism_lineages(
+    sync_taxonnode_edges_from_organism_lineages(
         orgs,
         taxon_map,
     )
-
-    keys: Set[str] = set(updated_organism_taxids)
-    for o in orgs:
-        keys.add(str(o.taxid))
-        if o.taxon_lineage:
-            keys.update(str(x) for x in o.taxon_lineage if x)
-    bulk_update_taxon_node_counts_for_keys(
-        sorted(keys),
-        chunk_size=DEFAULT_CHUNK,
-    )
+    return intrinsic_updated
 
 
-def run_taxonomy_refresh(tmp_dir: str) -> Dict[str, Any]:
+def execute_taxonomy_refresh_pipeline(tmp_dir: str) -> Dict[str, Any]:
     """
-    Main orchestration: collect taxids, fetch fresh data, compute changes,
-    apply updates, rebuild taxon edges/counts, finalize.
+    Main orchestration: collect taxids, fetch fresh data from ENA, detect organism changes,
+    mirror organism fields to catalog rows, sync TaxonNode name/rank and parent/children,
+    then refresh Organism and TaxonNode catalog counters for touched species (no INSDC/GoaT
+    status pass).
+
+    Used by :func:`jobs.taxonomy.refresh_taxonomy_recurrent`.
     """
     species_taxids, lineage_taxids = collect_taxids_for_refresh()
     all_taxids = sorted(set(species_taxids) | lineage_taxids)
@@ -353,6 +395,7 @@ def run_taxonomy_refresh(tmp_dir: str) -> Dict[str, Any]:
             "organisms_updated": 0,
             "taxids_changed": 0,
             "species_fetched": 0,
+            "taxon_nodes_fields_updated": 0,
         }
 
     db_organisms = list(
@@ -371,6 +414,7 @@ def run_taxonomy_refresh(tmp_dir: str) -> Dict[str, Any]:
         for c in changes
         if c.change_type in ("taxid", "both")
     )
+    taxon_nodes_fields_updated = 0
 
     if changes:
         apply_organism_updates(changes)
@@ -379,20 +423,23 @@ def run_taxonomy_refresh(tmp_dir: str) -> Dict[str, Any]:
             for c in changes
             if c.fresh_org.taxid
         ]
-        rebuild_taxon_node_edges_and_counts(fresh_taxons, updated_taxids)
-        finalize_organism_catalog_for_taxids(
-            updated_taxids,
-            copy_lineages=False,
-            chunk_size=DEFAULT_CHUNK,
+        prune_organisms_missing_taxon_lineage(updated_taxids)
+        taxon_nodes_fields_updated = rebuild_taxon_node_edges_and_counts(
+            fresh_taxons, updated_taxids
         )
+        update_organism_counts(updated_taxids)
+        update_taxon_node_counts(updated_taxids)
 
     logger.info(
-        "Taxonomy refresh: %d organism(s) updated, %d taxid change(s)",
+        "Taxonomy refresh: %d organism(s) updated, %d taxid change(s), "
+        "%d taxon node(s) intrinsic field update(s)",
         organisms_updated,
         taxids_changed,
+        taxon_nodes_fields_updated,
     )
     return {
         "organisms_updated": organisms_updated,
         "taxids_changed": taxids_changed,
         "species_fetched": len(species_taxids),
+        "taxon_nodes_fields_updated": taxon_nodes_fields_updated,
     }

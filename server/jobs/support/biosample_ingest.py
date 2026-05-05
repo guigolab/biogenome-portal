@@ -24,12 +24,11 @@ from typing import Any, Dict, List, Optional
 from mongoengine.errors import NotUniqueError, ValidationError
 
 from clients import ebi_client
-from clients.ncbi_entrez_biosample import fetch_biosample_xml_for_accessions
+from clients.ncbi_entrez_biosample import fetch_biosample_docs_for_accessions
 from db.model import BioSample, BioSampleFetchFailure
 from helpers.data import create_batches
 from parsers import biosample as biosample_parser
 from parsers.biosample_from_ncbi_datasets import parse_biosample_from_assembly_dict
-from parsers.biosample_ncbi_xml import parse_biosamples_from_ncbi_xml
 
 from .biosample_bulk import fetch_new_biosamples_from_ebi_portal
 
@@ -186,10 +185,7 @@ def _tier4_ncbi_entrez(accessions: List[str]) -> Dict[str, BioSample]:
     """Return ``{accession: BioSample}`` fetched from NCBI Entrez efetch."""
     if not accessions:
         return {}
-    xml_text = fetch_biosample_xml_for_accessions(accessions)
-    if not xml_text:
-        return {}
-    docs = parse_biosamples_from_ncbi_xml(xml_text)
+    docs = fetch_biosample_docs_for_accessions(accessions)
     return {doc.accession: doc for doc in docs if doc.accession}
 
 

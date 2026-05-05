@@ -1,11 +1,12 @@
 """
-Helpers for building deterministic, stable Flask-Caching keys from request data.
+Helpers for deterministic Redis cache keys from Flask request data and
+endpoint decorators that cache JSON HTTP responses.
 
-- GET  routes: key from route path + sorted query args.
-- POST routes: key from route path + sorted query args + sorted/hashed JSON/form body.
+- GET  routes: key from method + path + sorted query args.
+- POST routes: key from method + path + sorted query args + hashed JSON body.
 
-Use ``make_cache_key_for_request`` as the ``make_cache_key`` argument to
-``@cache.cached()`` on Flask-RESTful Resource methods.
+Use :func:`cached_endpoint` on Flask-RESTful ``Resource`` methods that return
+:class:`~flask.Response` (JSON bodies only; not streaming).
 """
 
 from __future__ import annotations
@@ -15,7 +16,7 @@ import json
 from functools import wraps
 from typing import Any, Callable
 
-from flask import request
+from flask import Response, request
 
 
 def _stable_dict_hash(payload: Any) -> str:
@@ -30,12 +31,14 @@ def _sorted_query_string(args) -> str:
     return "&".join(f"{k}={v}" for k, v in pairs)
 
 
-def make_cache_key_for_request() -> str:
+def make_cache_key_for_request(*_args, **_kwargs) -> str:
     """
     Build a stable cache key for the current Flask request.
 
     GET  → ``<method>:<path>?<sorted_qs>``
     POST → ``<method>:<path>?<sorted_qs>#<body_hash>``
+
+    Extra positional/keyword args (e.g. ``self`` from Flask-RESTful) are ignored.
     """
     base = f"{request.method}:{request.path}"
     qs = _sorted_query_string(request.args)
@@ -55,8 +58,7 @@ def make_cache_key_for_request() -> str:
 
 def cached_endpoint(timeout: int):
     """
-    Decorator that applies ``@cache.cached(timeout, make_cache_key)`` using the
-    shared ``extensions.cache.cache`` instance.
+    Cache JSON :class:`~flask.Response` bodies in Redis (pickle of body, status, mimetype).
 
     Usage::
 
@@ -64,14 +66,29 @@ def cached_endpoint(timeout: int):
             @cached_endpoint(timeout=900)
             def get(self):
                 ...
-
-            @cached_endpoint(timeout=900)
-            def post(self):
-                ...
     """
-    from extensions.cache import cache
 
     def decorator(fn: Callable) -> Callable:
-        return cache.cached(timeout=timeout, make_cache_key=make_cache_key_for_request)(fn)
+        from services.redis_cache import cache_get, cache_set
+
+        @wraps(fn)
+        def wrapper(*args, **kwargs):
+            key = make_cache_key_for_request(*args, **kwargs)
+            hit = cache_get(key)
+            if hit is not None:
+                body, status, mimetype = hit
+                return Response(body, mimetype=mimetype, status=status)
+
+            resp = fn(*args, **kwargs)
+            if isinstance(resp, Response):
+                body_text = resp.get_data(as_text=True)
+                cache_set(
+                    key,
+                    (body_text, resp.status_code, resp.mimetype or "application/json"),
+                    timeout,
+                )
+            return resp
+
+        return wrapper
 
     return decorator

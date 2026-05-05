@@ -1,5 +1,8 @@
 from services import organisms
-from services.organism_audit_log import search_organism_audit_logs
+from services.organism_audit_log import (
+	search_organism_audit_logs,
+	search_organism_audit_logs_for_taxid,
+)
 from flask import Response, request
 from flask_restful import Resource
 import json
@@ -60,6 +63,20 @@ class OrganismAuditLogsApi(Resource):
 	@admin.admin_required()
 	def get(self):
 		payload = search_organism_audit_logs(dict(request.args))
+		return Response(
+			dump_json(payload),
+			mimetype="application/json",
+			status=200,
+		)
+
+
+class OrganismTaxidAuditLogsApi(Resource):
+	"""GET /api/organisms/<taxid>/audit_logs — species-scoped audit history."""
+
+	@jwt_required()
+	@organism_access.organism_access_required()
+	def get(self, taxid):
+		payload = search_organism_audit_logs_for_taxid(str(taxid), dict(request.args))
 		return Response(
 			dump_json(payload),
 			mimetype="application/json",

@@ -57,7 +57,7 @@ class RootTreeApi(Resource):
         fmt = request.args.get("format", "json")
         if fmt == "json":
             return _root_tree_json_cached()
-        return taxons.root_tree_response(fmt)
+        return taxons.root_tree_response(fmt, if_none_match=request.headers.get("If-None-Match"))
 
 
 @cached_endpoint(timeout=_TREE_CACHE_TTL)

@@ -1,21 +1,189 @@
 """
 Celery tasks for organism-related background work.
 """
+from __future__ import annotations
+
 import logging
+import os
 from typing import Any, Dict, List, Optional
 
 from celery import shared_task
+from pymongo import UpdateOne
 
-from db.model import Organism
+from db.model import Organism, TaxonNode
+from helpers import geolocation as geolocation_helper
 from jobs.support.iucn_redlist_fetch import (
-    run_iucn_backfill_missing,
-    run_iucn_fetch_for_taxids,
-    run_iucn_redlist_reconcile_from_narratives,
+    run_iucn_backfill_by_rank,
+    run_iucn_fetch_missing_redlist,
+    run_iucn_refresh_known_assessments,
 )
-from jobs.support.tolid_prefixes import fetch_tolid_prefixes
-from jobs.support.organism_catalog_sync import finalize_organism_catalog_for_taxids
+from jobs.support.organism_enrich import (
+    fetch_iucn_redlist_for_taxids,
+    fetch_tolid_prefixes,
+)
+from jobs.support.taxonomy import (
+    ORGANISM_LINEAGE_LABELS_BATCH,
+    _bulk_write_lineage_rank_labels_for_organism_docs,
+)
 
 logger = logging.getLogger(__name__)
+
+# Batched $unset for Organism legacy / deprecated scalar fields (env-tunable).
+_UNSET_ORGANISM_FIELDS_BULK = int(os.getenv("ORGANISM_UNSET_DEPRECATED_FIELDS_BULK", "2000"))
+
+_ORGANISM_UNSET_FIELDS = {"insdc_status": "", "image": "", "image_urls": ""}
+
+_ORGANISM_HAS_UNSET_TARGET_FIELDS_QUERY = {
+    "$or": [
+        {"insdc_status": {"$exists": True}},
+        {"image": {"$exists": True}},
+        {"image_urls": {"$exists": True}},
+    ],
+}
+
+
+@shared_task(name="helpers_unset_organism_insdc_status_and_images", ignore_result=False)
+def unset_organism_insdc_status_and_images() -> Dict[str, Any]:
+    """
+    Remove deprecated / cleared fields from every :class:`~db.model.Organism` that still
+    has them, using MongoDB ``$unset`` in batches.
+
+    Unsets:
+
+    - ``insdc_status`` (no longer derived from catalog counts).
+    - ``image`` and ``image_urls`` (primary image + URL list).
+
+    For organisms that had a non-empty ``image``, also clears the denormalized
+    ``SampleCoordinates.image`` for that taxid (same as the REST patch path) so map
+    tiles do not keep a stale URL.
+    """
+    org_coll = Organism._get_collection()
+    matched = org_coll.count_documents(_ORGANISM_HAS_UNSET_TARGET_FIELDS_QUERY)
+    if matched == 0:
+        logger.info(
+            "Organism: no documents with insdc_status, image, or image_urls; nothing to do"
+        )
+        return {
+            "unset_batches": 0,
+            "documents_updated": 0,
+            "matched_initially": 0,
+            "geoloc_image_cleared_for_taxids": 0,
+            "remaining_insdc_status": 0,
+            "remaining_image": 0,
+            "remaining_image_urls": 0,
+        }
+
+    batches = 0
+    documents_updated = 0
+    geoloc_cleared = 0
+    cursor = org_coll.find(
+        _ORGANISM_HAS_UNSET_TARGET_FIELDS_QUERY,
+        {"_id": 1, "taxid": 1, "image": 1},
+        batch_size=_UNSET_ORGANISM_FIELDS_BULK,
+    )
+    batch_docs: list = []
+
+    def flush_batch() -> None:
+        nonlocal batch_docs, documents_updated, batches, geoloc_cleared
+        if not batch_docs:
+            return
+        ops = [
+            UpdateOne({"_id": d["_id"]}, {"$unset": _ORGANISM_UNSET_FIELDS})
+            for d in batch_docs
+        ]
+        org_coll.bulk_write(ops, ordered=False)
+        documents_updated += len(batch_docs)
+        batches += 1
+        for d in batch_docs:
+            tid = d.get("taxid")
+            if tid and d.get("image"):
+                geolocation_helper.add_image(str(tid), None)
+                geoloc_cleared += 1
+        batch_docs.clear()
+        logger.info(
+            "Organism: unset deprecated fields batch %d (%d document(s) updated so far)",
+            batches,
+            documents_updated,
+        )
+
+    for doc in cursor:
+        batch_docs.append(doc)
+        if len(batch_docs) >= _UNSET_ORGANISM_FIELDS_BULK:
+            flush_batch()
+
+    flush_batch()
+
+    still_insdc = org_coll.count_documents({"insdc_status": {"$exists": True}})
+    still_image = org_coll.count_documents({"image": {"$exists": True}})
+    still_urls = org_coll.count_documents({"image_urls": {"$exists": True}})
+    logger.info(
+        "Organism: finished unsetting deprecated fields (%d batch(es), %d update(s), "
+        "%d geolocation image clear(s)); remaining insdc_status=%d image=%d image_urls=%d",
+        batches,
+        documents_updated,
+        geoloc_cleared,
+        still_insdc,
+        still_image,
+        still_urls,
+    )
+    return {
+        "unset_batches": batches,
+        "documents_updated": documents_updated,
+        "matched_initially": matched,
+        "geoloc_image_cleared_for_taxids": geoloc_cleared,
+        "remaining_insdc_status": still_insdc,
+        "remaining_image": still_image,
+        "remaining_image_urls": still_urls,
+    }
+
+
+@shared_task(name="helpers_backfill_organism_lineage_rank_labels", ignore_result=False)
+def backfill_organism_lineage_rank_labels() -> Dict[str, Any]:
+    """
+    Set ``Organism.lineage_rank_labels`` from :class:`~db.model.TaxonNode` name/rank
+    for each taxid in ``taxon_lineage``. Uses PyMongo bulk writes.
+
+    Documents with no resolvable labels get ``lineage_rank_labels`` unset.
+    """
+    org_coll = Organism._get_collection()
+    taxon_coll = TaxonNode._get_collection()
+
+    scanned = 0
+    set_count = 0
+    unset_count = 0
+    batch_docs: list = []
+
+    def flush_batch():
+        nonlocal batch_docs, set_count, unset_count
+        if not batch_docs:
+            return
+        s, u = _bulk_write_lineage_rank_labels_for_organism_docs(
+            batch_docs, org_coll, taxon_coll
+        )
+        set_count += s
+        unset_count += u
+        batch_docs = []
+
+    cursor = org_coll.find({}, {"taxon_lineage": 1}).batch_size(ORGANISM_LINEAGE_LABELS_BATCH)
+    for doc in cursor:
+        scanned += 1
+        batch_docs.append(doc)
+        if len(batch_docs) >= ORGANISM_LINEAGE_LABELS_BATCH:
+            flush_batch()
+
+    flush_batch()
+
+    logger.info(
+        "backfill_organism_lineage_rank_labels: scanned=%d set=%d unset=%d",
+        scanned,
+        set_count,
+        unset_count,
+    )
+    return {
+        "organisms_scanned": scanned,
+        "lineage_rank_labels_set": set_count,
+        "lineage_rank_labels_unset": unset_count,
+    }
 
 
 @shared_task(name="organisms.fetch_tolid_prefixes", ignore_result=False)
@@ -42,35 +210,6 @@ def fetch_tolid_prefixes_task(taxids: Optional[List[Any]] = None) -> Dict[str, A
     logger.info("organisms.fetch_tolid_prefixes: finished for %s taxids", len(taxids_list))
     return {"status": "ok", "count": len(taxids_list)}
 
-
-@shared_task(name="organisms.backfill_related_counts", ignore_result=False)
-def backfill_organism_related_counts(batch_size: int = 1000) -> Dict[str, Any]:
-    """
-    Recompute and persist denormalized related-data counters/statuses on Organism.
-
-    Uses ``jobs.support.organism_catalog_sync.finalize_organism_catalog_for_taxids``.
-    """
-    taxids = [str(t) for t in Organism.objects().scalar("taxid") if t]
-    if not taxids:
-        logger.info("organisms.backfill_related_counts: no organisms found")
-        return {"status": "skipped", "count": 0, "batch_size": int(batch_size)}
-
-    total = len(taxids)
-    processed = 0
-    batch_size = max(int(batch_size), 1)
-    for i in range(0, total, batch_size):
-        batch = taxids[i : i + batch_size]
-        finalize_organism_catalog_for_taxids(batch, copy_lineages=False)
-        processed += len(batch)
-        logger.info(
-            "organisms.backfill_related_counts: processed %s/%s",
-            processed,
-            total,
-        )
-
-    return {"status": "ok", "count": processed, "batch_size": batch_size}
-
-
 @shared_task(name="organisms.fetch_iucn_redlist", ignore_result=False)
 def fetch_iucn_redlist_task(
     taxids: Optional[List[Any]] = None,
@@ -95,7 +234,7 @@ def fetch_iucn_redlist_task(
         force,
     )
     try:
-        result = run_iucn_fetch_for_taxids(taxids_list, force=bool(force))
+        result = fetch_iucn_redlist_for_taxids(taxids_list, force=bool(force))
     except Exception:
         logger.exception("organisms.fetch_iucn_redlist failed")
         raise
@@ -104,29 +243,13 @@ def fetch_iucn_redlist_task(
 
 
 @shared_task(name="organisms.backfill_iucn_redlist", ignore_result=False)
-def backfill_iucn_redlist_task(
-    max_organisms: int = 250,
-    force: bool = False,
-) -> Dict[str, Any]:
+def backfill_iucn_redlist_task() -> Dict[str, Any]:
     """
-    Backfill ``Organism.iucn_redlist`` for documents where it is missing.
-
-    ``max_organisms`` limits work per run (default is conservative for IUCN). With ``force``,
-    refreshes up to ``max_organisms`` organisms regardless of existing cache.
-
-    POST body example::
-        {"kwargs": {"max_organisms": 200, "force": false}}
+    Refresh ``Organism.iucn_redlist`` from the IUCN API for every organism in the database.
     """
-    logger.info(
-        "organisms.backfill_iucn_redlist: starting max_organisms=%s force=%s",
-        max_organisms,
-        force,
-    )
+    logger.info("organisms.backfill_iucn_redlist: starting (all organisms)")
     try:
-        result = run_iucn_backfill_missing(
-            max_organisms=int(max_organisms),
-            force=bool(force),
-        )
+        result = run_iucn_backfill_by_rank()
     except Exception:
         logger.exception("organisms.backfill_iucn_redlist failed")
         raise
@@ -134,24 +257,40 @@ def backfill_iucn_redlist_task(
     return result
 
 
-@shared_task(name="organisms.reconcile_iucn_redlist_lists", ignore_result=False)
-def reconcile_iucn_redlist_lists_task(max_organisms: int = 500) -> Dict[str, Any]:
+@shared_task(name="organisms.refresh_iucn_known_assessments", ignore_result=False)
+def refresh_iucn_known_assessments_task() -> Dict[str, Any]:
     """
-    Backfill empty ``habitats`` / ``threats`` embedded lists from ``narratives`` strings.
+    Re-fetch the full IUCN assessment for every organism that has a cached
+    ``iucn_redlist.assessment_id``.
 
-    No IUCN HTTP calls. POST body example::
-        {"kwargs": {"max_organisms": 1000}}
+    Goes directly to ``assessment/{id}`` for each organism — no rank page scan —
+    so this is fast and suitable for routine periodic refreshes of known-listed species.
     """
-    logger.info(
-        "organisms.reconcile_iucn_redlist_lists: starting max_organisms=%s",
-        max_organisms,
-    )
+    logger.info("organisms.refresh_iucn_known_assessments: starting")
     try:
-        result = run_iucn_redlist_reconcile_from_narratives(
-            max_organisms=int(max_organisms),
-        )
+        result = run_iucn_refresh_known_assessments()
     except Exception:
-        logger.exception("organisms.reconcile_iucn_redlist_lists failed")
+        logger.exception("organisms.refresh_iucn_known_assessments failed")
         raise
-    logger.info("organisms.reconcile_iucn_redlist_lists: finished %s", result)
+    logger.info("organisms.refresh_iucn_known_assessments: finished %s", result)
+    return result
+
+
+@shared_task(name="organisms.fetch_iucn_missing_redlist", ignore_result=False)
+def fetch_iucn_missing_redlist_task() -> Dict[str, Any]:
+    """
+    Run the bulk rank-based IUCN fetch for all organisms that have never been
+    fetched (``iucn_redlist`` is ``None``).
+
+    Organisms that were previously attempted (``not_found=True``) or that already
+    have an ``assessment_id`` are excluded. Useful after a bulk organism import to
+    populate IUCN data for newly added species without re-processing existing ones.
+    """
+    logger.info("organisms.fetch_iucn_missing_redlist: starting")
+    try:
+        result = run_iucn_fetch_missing_redlist()
+    except Exception:
+        logger.exception("organisms.fetch_iucn_missing_redlist failed")
+        raise
+    logger.info("organisms.fetch_iucn_missing_redlist: finished %s", result)
     return result

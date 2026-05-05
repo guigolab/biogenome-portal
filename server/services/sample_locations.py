@@ -109,79 +109,27 @@ def _organism_lookup_match_from_qs(items):
     return dict(q)
 
 
-def _aggregate_unique_locations(filter_args):
-    """
-    Per coordinate, count distinct sample taxids whose organism matches the same catalog
-    filters as GET /organisms (via $lookup), after SampleCoordinates geo/text filters.
-    """
-    from helpers import data as data_helper
+def _geojson_polygon_usable(poly):
+    """Same validity idea as the map client: Polygon / MultiPolygon with real coordinates."""
+    if not poly or not isinstance(poly, dict):
+        return False
+    t = poly.get("type")
+    if t not in ("Polygon", "MultiPolygon"):
+        return False
+    coords = poly.get("coordinates")
+    if not isinstance(coords, list) or len(coords) == 0:
+        return False
+    if t == "Polygon":
+        ring0 = coords[0] if coords else None
+        if not isinstance(ring0, list) or len(ring0) < 3:
+            return False
+    return True
 
-    data = _frequency_request_dict(filter_args)
 
-    if data.get("taxon_lineage") and not data.get("taxid"):
-        data = dict(data)
-        data["taxid"] = data["taxon_lineage"]
-
-    sample_q = geolocation.create_query(data)
-    try:
-        org_items = data_helper.organism_queryset_for_map_filters(data)
-    except BadRequest:
-        raise
-    except Exception as e:
-        logger.exception("_aggregate_unique_locations organism filter failed: %s", e)
-        raise BadRequest(description=str(e))
-
-    sc_coll = SampleCoordinates._get_collection()
-    org_coll = Organism._get_collection()
-
-    sample_qs = SampleCoordinates.objects(sample_q)
-    try:
-        sample_match = dict(sample_qs._query) if sample_qs._query else {}
-    except Exception:
-        sample_match = {}
-
-    org_match = _organism_lookup_match_from_qs(org_items)
-
-    expr = {
-        "$eq": [
-            {"$toString": "$taxid"},
-            {"$toString": "$$tid"},
-        ]
-    }
-    if org_match:
-        inner_match = {"$and": [{"$expr": expr}, org_match]}
-    else:
-        inner_match = {"$expr": expr}
-
-    pipeline = []
-    if sample_match:
-        pipeline.append({"$match": sample_match})
-
-    pipeline.extend(
-        [
-            {
-                "$lookup": {
-                    "from": org_coll.name,
-                    "let": {"tid": "$taxid"},
-                    "pipeline": [{"$match": inner_match}],
-                    "as": "_org_hit",
-                }
-            },
-            {"$match": {"_org_hit": {"$ne": []}}},
-            {"$group": {"_id": "$coordinates", "taxids": {"$addToSet": "$taxid"}}},
-            {
-                "$project": {
-                    "_id": 0,
-                    "coord": "$_id",
-                    "taxids": "$taxids",
-                    "count": {"$size": "$taxids"},
-                }
-            },
-        ]
-    )
-
+def _frequency_rows_from_aggregate_docs(docs_iter):
+    """Turn aggregation docs (coord, taxids, count, images) into API list rows."""
     out = []
-    for doc in sc_coll.aggregate(pipeline, allowDiskUse=True):
+    for doc in docs_iter:
         coord = doc.get("coord")
         count = doc.get("count", 0)
         raw_taxids = doc.get("taxids") or []
@@ -201,9 +149,107 @@ def _aggregate_unique_locations(filter_args):
         row = {"coordinates": coords, "count": int(count)}
         if taxids:
             row["taxids"] = taxids
+        raw_images = doc.get("images") or []
+        images = [i for i in raw_images if i]
+        if images:
+            row["images"] = images
         out.append(row)
-
     return out
+
+
+def _aggregate_unique_locations(filter_args):
+    """
+    Per coordinate: distinct sample taxids (and optional images) for samples whose organism
+    matches GET /organisms filters. Geo/text filters on SampleCoordinates via create_query.
+
+    Without a usable polygon: resolve allowed taxids once on Organism, then taxid__in on
+    samples — no per-row $lookup. With a polygon: same taxid__in optimization when organism
+    filters yield a match dict; otherwise existence $lookup on taxid.
+    """
+    from helpers import data as data_helper
+
+    data = _frequency_request_dict(filter_args)
+
+    if data.get("taxon_lineage") and not data.get("taxid"):
+        data = dict(data)
+        data["taxid"] = data["taxon_lineage"]
+
+    try:
+        org_items = data_helper.organism_queryset_for_map_filters(data)
+    except BadRequest:
+        raise
+    except Exception as e:
+        logger.exception("_aggregate_unique_locations organism filter failed: %s", e)
+        raise BadRequest(description=str(e))
+
+    sc_coll = SampleCoordinates._get_collection()
+    org_coll = Organism._get_collection()
+
+    has_polygon = _geojson_polygon_usable(data.get("polygon"))
+    data_for_geo = dict(data)
+    if not has_polygon:
+        data_for_geo.pop("polygon", None)
+
+    sample_q = geolocation.create_query(data_for_geo)
+    sample_qs = SampleCoordinates.objects(sample_q)
+
+    org_match = _organism_lookup_match_from_qs(org_items)
+    if org_match:
+        allowed = [
+            str(x).strip()
+            for x in org_items.scalar("taxid")
+            if x is not None and str(x).strip()
+        ]
+        if not allowed:
+            return []
+        sample_qs = sample_qs.filter(taxid__in=allowed)
+
+    try:
+        sample_match = dict(sample_qs._query) if sample_qs._query else {}
+    except Exception:
+        sample_match = {}
+
+    group_stages = [
+        {
+            "$group": {
+                "_id": "$coordinates",
+                "taxids": {"$addToSet": "$taxid"},
+                "images": {"$push": "$image"},
+            }
+        },
+        {
+            "$project": {
+                "_id": 0,
+                "coord": "$_id",
+                "taxids": "$taxids",
+                "count": {"$size": "$taxids"},
+                "images": "$images",
+            }
+        },
+    ]
+
+    pipeline = []
+    if sample_match:
+        pipeline.append({"$match": sample_match})
+
+    if not org_match:
+        pipeline.append(
+            {
+                "$lookup": {
+                    "from": org_coll.name,
+                    "localField": "taxid",
+                    "foreignField": "taxid",
+                    "as": "_org_hit",
+                }
+            }
+        )
+        pipeline.append({"$match": {"_org_hit": {"$ne": []}}})
+
+    pipeline.extend(group_stages)
+
+    return _frequency_rows_from_aggregate_docs(
+        sc_coll.aggregate(pipeline, allowDiskUse=True)
+    )
 
 
 def get_unique_sample_locations(args):
@@ -212,6 +258,18 @@ def get_unique_sample_locations(args):
 
 def post_unique_sample_locations(data):
     return _aggregate_unique_locations(data)
+
+
+def get_organisms_with_location_filters(filter_args):
+    """
+    Paginated organisms whose SampleCoordinates match polygon and/or has_sample_locations,
+    plus the same catalog filters as GET /organisms (without duplicating geo on /organisms).
+    """
+    from helpers import data as data_helper
+
+    return data_helper.get_items(
+        "organisms", filter_args, organisms_sample_location_geo=True
+    )
 
 
 def get_locations_from_coordinates(coords):

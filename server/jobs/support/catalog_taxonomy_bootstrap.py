@@ -1,7 +1,11 @@
 """
-ENA taxonomy bootstrap: fetch XML, parse organisms and TaxonNode rows, insert-only.
+Species taxonomy bootstrap for ingest: ENA bulk XML, optional single-taxon fallback.
 
-Does not run denormalization, lineage copy onto catalog collections, or ToLID.
+Inserts missing ``Organism`` / ``TaxonNode`` rows. Callers propagate ``Organism.taxon_lineage``
+onto Assembly / BioSample / ReadRun and refresh TaxonNode edges via
+:func:`bulk_copy_organism_lineages_to_catalog` in :mod:`jobs.support.catalog_denorm_finalize`
+(``GenomeAnnotation`` / ``LocalSample`` use the helpers in :mod:`jobs.support.taxonomy`). Does
+not enqueue full catalog counter recompute or ToLID.
 """
 
 from __future__ import annotations
@@ -17,7 +21,7 @@ from clients import ebi_client
 from db.model import Organism, TaxonNode
 from helpers.data import create_batches
 from helpers.organism import create_organism_and_related_taxons
-from jobs.support.organism_catalog_guard import TAXID_LIST_LIMIT
+from jobs.support.catalog_ingest_guard import TAXID_LIST_LIMIT
 
 logger = logging.getLogger(__name__)
 
@@ -233,10 +237,9 @@ def handle_full_taxonomy_from_taxids(
     which runs :func:`helpers.organism.retrieve_taxonomic_info` (ENA browser → ENA portal
     → NCBI → ENA Taxonomy REST + browser).
 
-    After bulk Organism insert, runs :func:`bulk_copy_organism_lineages_to_catalog` for
-    that batch so every lineage taxon is linked (``parent`` / ``children``) immediately.
-
-    This helper does not run denormalization and does not schedule/fetch ToLID.
+    This helper does not copy lineages onto BioSample / Assembly / ReadRun or refresh TaxonNode
+    edges — each ingest job does that after taxonomy. Does not enqueue catalog counter recompute
+    or fetch ToLID.
     """
     saved_taxids: List[str] = []
     batches = create_batches(list(taxids), TAXID_LIST_LIMIT)
@@ -293,20 +296,6 @@ def handle_full_taxonomy_from_taxids(
                 )
 
         _insert_new_taxon_nodes_from_dict(taxons_dict)
-
-        if bulk_inserted and unique_orgs:
-            batch_species_tids = [
-                str(o.taxid).strip()
-                for o in unique_orgs
-                if o.taxid is not None and str(o.taxid).strip()
-            ]
-            if batch_species_tids:
-                # Lazy import avoids circular import (finalize imports this module).
-                from jobs.support.organism_catalog_finalize import (
-                    bulk_copy_organism_lineages_to_catalog,
-                )
-
-                bulk_copy_organism_lineages_to_catalog(batch_species_tids)
 
         _fallback_create_organisms_for_taxids(missing_from_bulk, saved_taxids)
 

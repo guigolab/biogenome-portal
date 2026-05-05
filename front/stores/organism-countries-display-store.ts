@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 
-import { countryFilterSectionVisible } from '@/lib/speciesCountryStats'
+import { countryStatRealCodes, showCountryChipsOnCards } from '@/lib/speciesCountryStats'
 
 /**
  * Global state for organism country field stats on the species list (and any feature that opts in).
@@ -30,17 +30,19 @@ export const useOrganismCountriesDisplayStore = create<OrganismCountriesDisplayS
 /**
  * Sidebar: show the country collapsible whenever `showCountries` is true.
  * While stats are still null (not yet fetched) we show the section so the user can open it and
- * trigger the lazy fetch — same pattern as IUCN/subproject. Once stats are loaded we hide the
- * section only when fewer than two real countries are present.
+ * trigger the lazy fetch — same pattern as IUCN/subproject.
+ * Keep the section visible when a scoped result has exactly one country; hiding it immediately
+ * after opening feels like the panel "disappears".
+ * Once stats are loaded we hide the section only when no real country buckets are present.
  * Do not hide while `countryStatsLoading` — brief nulling during refetches would clear the
  * user's selection via the effect in species-list-page-client.
  */
 export function selectCountryFilterSectionVisible(s: OrganismCountriesDisplayState): boolean {
    if (s.countryFrequencyStats == null) return true
-   return countryFilterSectionVisible(s.countryFrequencyStats)
+   return countryStatRealCodes(s.countryFrequencyStats).length > 0
 }
 
-/** Species cards: same rule as the filter — multi-country mix (excluding “No Entry”). */
+/** Species cards: keep stricter "multi-country mix" rule to avoid repetitive single-country chips. */
 export function selectShowCountryChipsOnCards(s: OrganismCountriesDisplayState): boolean {
-   return selectCountryFilterSectionVisible(s)
+   return showCountryChipsOnCards(s.countryFrequencyStats)
 }

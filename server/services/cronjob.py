@@ -6,7 +6,7 @@ from jobs import (
     annotrieve,
     assemblies,
     biosamples,
-    catalog_ingest_tasks,
+    catalog_counts,
     organism_images,
     organism_tsv_import,
     organisms,
@@ -32,15 +32,13 @@ JOB_MODELS = {
     'assemblies': {
         'import': assemblies.import_assemblies_by_bioproject,
         'accessions_import': assemblies.import_assemblies_from_accessions,
+        'refetch_chromosome_reports': assemblies.refetch_chromosome_reports_for_empty_chromosomes,
     },
     'helpers': {
-        'backfill_taxon_parents': taxonomy.backfill_taxon_parents_and_refresh_counts,
-        'backfill_organism_lineage_rank_labels': taxonomy.backfill_organism_lineage_rank_labels,
-        'backfill_organism_lineage_rank_labels_for_taxids': taxonomy.backfill_organism_lineage_rank_labels_for_taxids,
-        'catalog_ingest_taxonomy_bootstrap': catalog_ingest_tasks.catalog_ingest_taxonomy_bootstrap_task,
-        'catalog_ingest_reload_prune_finalize': catalog_ingest_tasks.catalog_ingest_reload_prune_finalize_task,
-        'enrich_organisms_post_taxonomy': taxonomy.enrich_organisms_post_taxonomy,
+        'backfill_organism_lineage_rank_labels': organisms.backfill_organism_lineage_rank_labels,
+        'compute_all_counts': catalog_counts.compute_all_counts_task,
         'import_organisms_from_tsv': organism_tsv_import.import_organisms_from_tsv_task,
+        'unset_organism_insdc_status_and_images': organisms.unset_organism_insdc_status_and_images,
         'unset_taxon_node_legacy_fields': taxonomy.unset_taxon_node_legacy_fields,
         'refresh_taxonomy': taxonomy.refresh_taxonomy_recurrent,
     },
@@ -49,11 +47,9 @@ JOB_MODELS = {
         'fetch_external_images': organism_images.fetch_external_images_task,
         'fetch_iucn_redlist': organisms.fetch_iucn_redlist_task,
         'backfill_iucn_redlist': organisms.backfill_iucn_redlist_task,
-        'reconcile_iucn_redlist_lists': organisms.reconcile_iucn_redlist_lists_task,
     },
     'annotations': {
         'import': annotrieve.import_annotations_from_annotrieve,
-        'import_for_assembly_accessions': annotrieve.import_annotations_for_assembly_accessions,
     },
 
 }

@@ -6,9 +6,7 @@ from db.constants import GOAT_PROJECT_NAME
 from db.enums import GoaTStatus
 from db.model import GoaTUpdateDate, Organism
 from werkzeug.exceptions import BadRequest
-from helpers import user as user_helper
-from jobs import goat_report_upload
-from helpers.upload_temp import save_upload_to_temp
+
 GOAT_STATUS_EXPORT_MAPPER = {
     GoaTStatus.SAMPLE_COLLECTED.value: "sample_collected",
     GoaTStatus.SAMPLE_ACQUIRED.value: "sample_acquired",
@@ -45,8 +43,6 @@ GOAT_HEADER_ROWS = [
 ]
 
 STREAM_BUFFER_ROWS = 2000
-
-TMP_DIR = os.getenv("TMP_DIR", "/tmp")
 
 
 def _get_column_value(column, organism):
@@ -113,29 +109,3 @@ def download_goat_report():
         raise BadRequest(description=f"Missing data key: {e}")
     except Exception as e:
         raise BadRequest(description=f"Unexpected error: {e}")
-
-
-def upload_goat_report(request_files):
-    if not GOAT_PROJECT_NAME:
-        raise BadRequest(
-            description="GoaT report upload is disabled (GOAT_PROJECT_NAME is not set)."
-        )
-    report = request_files.get("goat_report")
-    if not report:
-        raise BadRequest(description="Invalid 'goat_report' provided")
-
-    user_obj = user_helper.get_current_user()
-    if not user_obj:
-        raise BadRequest(description="User not found")
-
-    try:
-        with save_upload_to_temp(
-            report, TMP_DIR, filename_prefix="goat_upload", suffix=".tsv"
-        ) as stored_path:
-            task = goat_report_upload.upload_goat_report.delay(
-                user_obj.name, stored_path
-            )
-    except OSError as e:
-        raise BadRequest(description=f"Could not store upload: {e}")
-
-    return dict(id=task.id, state=task.state), 200

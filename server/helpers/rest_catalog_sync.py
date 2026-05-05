@@ -35,7 +35,6 @@ from db.model import (
     TaxonNode,
 )
 
-from helpers import taxonomy as taxonomy_helper
 from helpers.organism_denorm_pure import (
     MergeContext,
     RelatedCounts,
@@ -74,9 +73,12 @@ def refresh_organism_status_fields(
     """
     Mutate document (Organism) in place before ``save()``.
 
-    When ``apply_goat_inference`` is False, counts and ``insdc_status`` still update;
-    GoaT inference is skipped. Inference also does nothing when ``goat_project_name``
-    is unset (no ``GOAT_PROJECT_NAME`` env).
+    When ``apply_goat_inference`` is False, denormalized **counts** still update; GoaT
+    inference is skipped. Inference also does nothing when ``goat_project_name`` is
+    unset (no ``GOAT_PROJECT_NAME`` env).
+
+    ``Organism.insdc_status`` is not written here (deprecated; no longer derived from
+    catalog counts on recount).
     """
     derived = derive_organism_denorm(
         counts,
@@ -91,7 +93,6 @@ def refresh_organism_status_fields(
     document.biosamples_count = derived.biosamples_count
     document.local_samples_count = derived.local_samples_count
     document.genome_annotations_count = derived.genome_annotations_count
-    document.insdc_status = derived.insdc_status
     if derived.update_goat_field and derived.goat_status is not None:
         document.goat_status = derived.goat_status
     if derived.touch_goat_update_date:
@@ -102,11 +103,39 @@ def refresh_organism_status_fields(
 def refresh_taxon_counts_for_taxid_lineage(
     taxid: str, lineage_fallback: Optional[Iterable[str]] = None
 ) -> None:
-    """Recompute TaxonNode aggregates for this taxid and ancestors; prefer DB lineage."""
-    tid = str(taxid)
-    org = Organism.objects(taxid=tid).only("taxon_lineage").first()
-    lineage = (org.taxon_lineage if org and org.taxon_lineage else None) or lineage_fallback
-    taxonomy_helper.refresh_taxon_counts_for_lineage(tid, lineage)
+    """
+    Recompute :class:`~db.model.TaxonNode` roll-up counters for this species taxid and
+    every lineage key that touches it (same node set as :func:`sync_species_after_catalog_change`
+    would affect via bulk stats).
+
+    Loads lineage from the species :class:`~db.model.Organism` when present; merges
+    ``lineage_fallback`` (e.g. from the catalog row being synced) so counts still update
+    if the organism or its ``taxon_lineage`` is missing.
+    """
+    tid = str(taxid).strip()
+    if not tid:
+        return
+
+    keys: set[str] = {tid}
+    org = Organism.objects(taxid=tid).only("taxid", "taxon_lineage").first()
+    if org is not None:
+        for node_id in org.taxon_lineage or []:
+            if node_id is None:
+                continue
+            s = str(node_id).strip()
+            if s:
+                keys.add(s)
+    if lineage_fallback is not None:
+        for node_id in lineage_fallback:
+            if node_id is None:
+                continue
+            s = str(node_id).strip()
+            if s:
+                keys.add(s)
+
+    from jobs.support.stats import refresh_taxon_node_counts_for_lineage_keys
+
+    refresh_taxon_node_counts_for_lineage_keys(sorted(keys))
 
 
 def reconcile_taxon_lineage_after_organism_delete(taxon_nodes) -> None:
@@ -122,7 +151,9 @@ def reconcile_taxon_lineage_after_organism_delete(taxon_nodes) -> None:
     if not tax_ids:
         return
 
-    taxonomy_helper.update_taxon_node_counts_for_taxids(tax_ids)
+    from jobs.support.stats import refresh_taxon_node_counts_for_lineage_keys
+
+    refresh_taxon_node_counts_for_lineage_keys(tax_ids)
 
     for node in TaxonNode.objects(taxid__in=tax_ids):
         if (node.organisms_count or 0) != 0:
@@ -137,7 +168,7 @@ def refresh_organism_status_for_taxid(
     apply_goat_inference: bool = True,
     merge_context: MergeContext = "default",
 ) -> None:
-    """Recompute INSDC/GoaT-related fields and counters on the species Organism document."""
+    """Recompute denormalized catalog counters and GoaT-related fields on the species Organism."""
     tid = str(taxid)
     organism = Organism.objects(taxid=tid).first()
     if not organism:
@@ -172,7 +203,7 @@ def sync_species_after_catalog_change(
 ) -> None:
     """
     After a catalog row is created, updated, or deleted: refresh that species' Organism
-    (denormalized counts + status) and TaxonNode roll-ups.
+    (denormalized counts + GoaT status when inference applies) and TaxonNode roll-ups.
     """
     if taxid is None:
         return

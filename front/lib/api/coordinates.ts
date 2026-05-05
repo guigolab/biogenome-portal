@@ -11,6 +11,8 @@ export type LocationFrequencyPoint = {
    count: number
    /** Species taxids aggregated at this coordinate (for map ↔ list hover). */
    taxids?: string[]
+   /** Sample image URLs pushed from aggregation (optional). */
+   images?: string[]
 }
 
 function normalizeFrequencyPayload(data: unknown): LocationFrequencyPoint[] {
@@ -32,10 +34,16 @@ function normalizeFrequencyPayload(data: unknown): LocationFrequencyPoint[] {
             Array.isArray(rawTaxids) && rawTaxids.length > 0
                ? rawTaxids.map((t) => String(t).trim()).filter(Boolean)
                : undefined
+         const rawImages = r.images
+         const images =
+            Array.isArray(rawImages) && rawImages.length > 0
+               ? rawImages.map((u) => String(u).trim()).filter(Boolean)
+               : undefined
          return {
             coordinates: [lng, lat] as [number, number],
             count: n,
             ...(taxids && taxids.length > 0 ? { taxids } : {}),
+            ...(images && images.length > 0 ? { images } : {}),
          }
       })
       .filter((x): x is LocationFrequencyPoint => x != null)

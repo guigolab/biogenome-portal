@@ -1,7 +1,7 @@
 """
 Single-organism creation and taxonomic lookup for REST services and shared callers.
 
-Bulk ENA taxonomy import for Celery lives in ``jobs.support.organism_catalog_sync``.
+Bulk ENA taxonomy import for Celery lives in ``jobs.support.catalog_taxonomy_bootstrap``.
 """
 
 from typing import List

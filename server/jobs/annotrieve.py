@@ -3,8 +3,8 @@
 from celery import shared_task
 
 from db.model import Assembly
-from jobs.support.annotrieve_ingest import run_annotrieve_import_for_accessions
-
+from jobs.support.annotrieve import sync_annotrieve_annotations_for_assembly_accessions
+from jobs.taxonomy import cleanup_catalog_outside_root_lineage
 
 @shared_task(name="annotations_import_from_annotrieve", ignore_result=False)
 def import_annotations_from_annotrieve():
@@ -16,14 +16,9 @@ def import_annotations_from_annotrieve():
             "assembly_accession_batches": 0,
             "assembly_accessions": 0,
             "taxids_synced": 0,
+            "root_lineage_cleanup": cleanup_catalog_outside_root_lineage(),
         }
-    return run_annotrieve_import_for_accessions(accessions)
+    result = sync_annotrieve_annotations_for_assembly_accessions(accessions)
+    result["root_lineage_cleanup"] = cleanup_catalog_outside_root_lineage()
+    return result
 
-
-@shared_task(name="annotations_import_for_assembly_accessions", ignore_result=False)
-def import_annotations_for_assembly_accessions(accessions=None):
-    """
-    Fetch Annotrieve annotations for the given assembly accessions and upsert
-    ``GenomeAnnotation`` rows, then finalize touched species catalog entries.
-    """
-    return run_annotrieve_import_for_accessions(accessions or [])

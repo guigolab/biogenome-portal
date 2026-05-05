@@ -8,7 +8,8 @@ from typing import Any, Dict, List, Optional
 from celery import shared_task
 from mongoengine.queryset.visitor import Q
 
-from jobs.support.organism_images_fetch import fetch_external_image_candidates, run_external_image_backfill
+from jobs.support.organism_images_fetch import fetch_external_image_candidates
+from jobs.support.organism_enrich import fetch_external_organism_images
 from db.model import Organism, TargetListStatus
 logger = logging.getLogger(__name__)
 
@@ -32,14 +33,12 @@ def fetch_external_images_task(
         min_images,
         max_organisms,
     )
-    #overwrite organisms with null target list status
-    q = Q(target_list_status="") | Q(target_list_status=None) | Q(target_list_status="")
-    Organism.objects(q).update(set__target_list_status=TargetListStatus.OTHER_PRIORITY)
     try:
-        result = run_external_image_backfill(
+        result = fetch_external_organism_images(
             taxids=taxids,
             min_images=min_images,
             max_organisms=max_organisms,
+            force_update=True,
         )
     except Exception:
         logger.exception("organisms.fetch_external_images failed")

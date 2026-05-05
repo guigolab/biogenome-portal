@@ -1,5 +1,5 @@
 import requests
-from extensions.cache import cache
+from services.redis_cache import redis_memoize
 import time
 
 # (connect timeout, read timeout) for taxonomy and portal calls
@@ -271,7 +271,7 @@ def get_xml_from_ena_browser(accessions, path_to_gzipped_xml_file):
         print(e)
         return None
 
-@cache.memoize(timeout=3000)
+@redis_memoize(timeout=3000)
 def get_webin_token(username, password):
     headers = {
         "Accept": "*/*",

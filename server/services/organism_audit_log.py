@@ -128,3 +128,13 @@ def search_organism_audit_logs(query: dict[str, Any]) -> dict[str, Any]:
     items = list(qs.order_by(order).skip(offset).limit(limit))
     data = [log.to_mongo().to_dict() for log in items]
     return {"total": total, "limit": limit, "offset": offset, "data": data}
+
+
+def search_organism_audit_logs_for_taxid(
+    taxid: str,
+    query: dict[str, Any],
+) -> dict[str, Any]:
+    """Taxid-scoped search over ``OrganismAuditLog`` (caller controls authz)."""
+    scoped_query = dict(query)
+    scoped_query["taxid"] = str(taxid).strip()
+    return search_organism_audit_logs(scoped_query)

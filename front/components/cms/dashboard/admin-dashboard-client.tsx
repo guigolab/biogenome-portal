@@ -1,11 +1,11 @@
 'use client'
 
 import Link from 'next/link'
-import { FlaskConical, LayoutGrid, Plus, Trash2, User, Users } from 'lucide-react'
+import { FlaskConical, History, LayoutGrid, Plus, Trash2, User, Users } from 'lucide-react'
 
 import { AdminDashboardStats } from '@/components/cms/dashboard/admin-dashboard-stats'
 import { DeleteRequestsModule } from '@/components/cms/dashboard/delete-requests-module'
-import { SpeciesBiosampleSankeyModule } from '@/components/cms/dashboard/species-biosample-sankey-module'
+import { OrganismAuditLogsModule } from '@/components/cms/dashboard/organism-audit-logs-module'
 import { SpeciesOverviewModule } from '@/components/cms/dashboard/species-overview-module'
 import { SubmittedBiosamplesModule } from '@/components/cms/dashboard/submitted-biosamples-module'
 import { UsersModule } from '@/components/cms/dashboard/users-module'
@@ -88,6 +88,10 @@ export function AdminDashboardClient() {
                      <Trash2 className="h-4 w-4" />
                      Pending deletions
                   </TabsTrigger>
+                  <TabsTrigger value="audit-logs" className="gap-1.5 rounded-lg px-3 py-2">
+                     <History className="h-4 w-4" />
+                     Audit logs
+                  </TabsTrigger>
                </TabsList>
                <TabsContent value="species" className={DASHBOARD_TAB_PANEL_CLASS}>
                   <SpeciesOverviewModule variant="tabPanel" />
@@ -101,6 +105,9 @@ export function AdminDashboardClient() {
                <TabsContent value="deletions" className={DASHBOARD_TAB_PANEL_CLASS}>
                   <DeleteRequestsModule variant="tabPanel" />
                </TabsContent>
+               <TabsContent value="audit-logs" className={DASHBOARD_TAB_PANEL_CLASS}>
+                  <OrganismAuditLogsModule variant="tabPanel" />
+               </TabsContent>
             </Tabs>
          ) : (
             <Tabs defaultValue="species" className="gap-4">
@@ -111,18 +118,12 @@ export function AdminDashboardClient() {
                   <TabsTrigger value="biosamples" className="gap-1.5 rounded-lg px-3 py-2">
                      Submitted biosamples
                   </TabsTrigger>
-                  <TabsTrigger value="sankey" className="gap-1.5 rounded-lg px-3 py-2">
-                     Species ↔ submitted biosamples
-                  </TabsTrigger>
                </TabsList>
                <TabsContent value="species" className={DASHBOARD_TAB_PANEL_CLASS}>
                   <SpeciesOverviewModule variant="tabPanel" />
                </TabsContent>
                <TabsContent value="biosamples" className={DASHBOARD_TAB_PANEL_CLASS}>
                   <SubmittedBiosamplesModule hasEnaTemplate={enaTemplate} variant="tabPanel" />
-               </TabsContent>
-               <TabsContent value="sankey" className={DASHBOARD_TAB_PANEL_CLASS}>
-                  <SpeciesBiosampleSankeyModule hasEnaTemplate={enaTemplate} variant="tabPanel" />
                </TabsContent>
             </Tabs>
          )}

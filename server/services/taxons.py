@@ -1,13 +1,17 @@
 import csv
+import gzip
+import hashlib
 import io
 import json
 import os
+import time
+from typing import Optional
 
 from flask import Response
 from werkzeug.exceptions import BadRequest, NotFound
 
 from db.model import TaxonNode
-from extensions.cache import cache
+from services.redis_cache import cache_get, cache_set
 from helpers import organism as organism_helper
 from helpers.resource_mixins import dump_json
 from helpers.service_utils import get_or_404
@@ -37,6 +41,7 @@ _TREE_QUERY_FIELDS = ("taxid", "parent", "name", "rank") + ROOT_TREE_COUNT_FIELD
 
 # Rows buffered per yielded TSV chunk (trades latency for fewer HTTP chunks).
 _TSV_CHUNK_ROWS = 4000
+_ROOT_TREE_CACHE_TTL = 3600
 
 
 def get_root_taxon():
@@ -99,7 +104,7 @@ def _taxon_node_to_tree_doc(node: TaxonNode) -> dict:
     }
 
 
-def iter_root_tree_documents(batch_size: int = 1000):
+def iter_root_tree_documents(batch_size: int = 2000):
     """
     Stream TaxonNode rows as dicts using a MongoEngine queryset.
 
@@ -120,7 +125,7 @@ def get_root_tree_table() -> dict:
     Cached {fields, rows} for JSON clients. Materializes all rows in memory once per cache window.
     """
     cache_key = f"cached_root_tree_table_{ROOT_NODE}_v4"
-    cached = cache.get(cache_key)
+    cached = cache_get(cache_key)
     if cached is not None:
         return cached
 
@@ -130,8 +135,55 @@ def get_root_tree_table() -> dict:
         rows.append([doc.get(f) for f in fields])
 
     result = {"fields": fields, "rows": rows}
-    cache.set(cache_key, result, timeout=3600)
+    cache_set(cache_key, result, timeout=3600)
     return result
+
+
+def _root_tree_compressed_cache_key() -> str:
+    return f"cached_root_tree_jsonl_gzip_{ROOT_NODE}_v1"
+
+
+def _build_root_tree_jsonl_gzip_bundle() -> dict:
+    """
+    Build gzip-compressed NDJSON payload and metadata for root tree delivery.
+    """
+    gz_buffer = io.BytesIO()
+    row_count = 0
+    with gzip.GzipFile(fileobj=gz_buffer, mode="wb", compresslevel=6) as gz:
+        for doc in iter_root_tree_documents():
+            line = json.dumps(doc, ensure_ascii=False, separators=(",", ":")) + "\n"
+            gz.write(line.encode("utf-8"))
+            row_count += 1
+    payload = gz_buffer.getvalue()
+    etag = hashlib.sha256(payload).hexdigest()
+    return {
+        "payload": payload,
+        "etag": etag,
+        "row_count": row_count,
+        "built_at": int(time.time()),
+    }
+
+
+def get_root_tree_jsonl_gzip_bundle() -> dict:
+    """
+    Cached gzip-compressed NDJSON payload for fast `/tree` transfer.
+    """
+    cache_key = _root_tree_compressed_cache_key()
+    cached = cache_get(cache_key)
+    if cached is not None:
+        return cached
+    bundle = _build_root_tree_jsonl_gzip_bundle()
+    cache_set(cache_key, bundle, timeout=_ROOT_TREE_CACHE_TTL)
+    return bundle
+
+
+def _etag_matches(if_none_match: Optional[str], etag_value: str) -> bool:
+    if not if_none_match:
+        return False
+    quoted = f"\"{etag_value}\""
+    weak = f"W/{quoted}"
+    parts = [p.strip() for p in if_none_match.split(",")]
+    return "*" in parts or quoted in parts or weak in parts
 
 
 def stream_root_tree_jsonl():
@@ -168,7 +220,7 @@ def stream_root_tree_tsv():
         yield output.getvalue()
 
 
-def root_tree_response(fmt: str) -> Response:
+def root_tree_response(fmt: str, if_none_match: Optional[str] = None) -> Response:
     """
     Build a Flask response for the root taxonomy table.
     fmt: 'json' | 'jsonl' | 'tsv'
@@ -186,6 +238,28 @@ def root_tree_response(fmt: str) -> Response:
             mimetype="application/x-ndjson",
             headers={"X-Content-Type-Options": "nosniff"},
         )
+    if f in ("jsonl-gz", "ndjson-gz", "treebin"):
+        bundle = get_root_tree_jsonl_gzip_bundle()
+        etag = str(bundle["etag"])
+        headers = {
+            "Content-Encoding": "gzip",
+            "Content-Type": "application/x-ndjson; charset=utf-8",
+            "Cache-Control": "public, max-age=3600, stale-while-revalidate=300",
+            "ETag": f"\"{etag}\"",
+            "Vary": "Accept-Encoding",
+            "X-Content-Type-Options": "nosniff",
+            "X-Tree-Rows": str(bundle.get("row_count", "")),
+            "X-Tree-Built-At": str(bundle.get("built_at", "")),
+        }
+        if _etag_matches(if_none_match, etag):
+            return Response(status=304, headers=headers)
+        payload = bundle["payload"]
+        headers["Content-Length"] = str(len(payload))
+        return Response(
+            payload,
+            status=200,
+            headers=headers,
+        )
     if f in ("tsv", "tab"):
         return Response(
             stream_root_tree_tsv(),
@@ -193,7 +267,9 @@ def root_tree_response(fmt: str) -> Response:
             headers={"X-Content-Type-Options": "nosniff"},
         )
     raise BadRequest(
-        description="Invalid format; use format=json, format=jsonl, or format=tsv"
+        description=(
+            "Invalid format; use format=json, format=jsonl, format=jsonl-gz, or format=tsv"
+        )
     )
 
 

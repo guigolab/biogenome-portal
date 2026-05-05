@@ -12,6 +12,7 @@ import { downloadOrganismsTsv, fetchOrganisms } from '@/lib/api/organisms'
 import { ModelIcon } from '@/lib/modelIcons'
 import type { DataModels } from '@/lib/portal/types'
 import { findSubtree } from '@/lib/taxonomy/treeFilter'
+import { taxonomyTaxonHref } from '@/lib/taxonomyLinks'
 import type { NestedTaxonNode } from '@/lib/taxonomy/flattenedTreeToNested'
 import type { FlatTreeNode, TreeTableRow } from '@/lib/taxonomy/treeTableTypes'
 import { formatRankFilterLabel } from '@/lib/taxonomy/treeRankOptions'
@@ -90,6 +91,9 @@ export function TaxonomyDetailAside({
    const hasChildren = childNodes.length > 0
    /** No child taxa in loaded tree — species-level leaf for navigation purposes. */
    const isSpeciesLeaf = !hasChildren
+   const selectedDetailsHref = isSpeciesLeaf
+      ? `/species/${encodeURIComponent(selectedTaxid)}`
+      : taxonomyTaxonHref(selectedTaxid)
    const atTreeRoot = selectedTaxid.trim() === effectiveTreeRoot.trim()
    const showExploreLineage = !atTreeRoot && hasChildren
 
@@ -442,7 +446,7 @@ export function TaxonomyDetailAside({
                         asChild
                         className="ring-primary/20 h-9 w-full font-semibold shadow-sm ring-1"
                      >
-                        <Link href={`/species/${encodeURIComponent(selectedTaxid)}`}>
+                        <Link href={selectedDetailsHref}>
                            {t('taxonomy.detail.seeSpeciesDetails')}
                            <ChevronRight className="ml-1 size-3.5" aria-hidden />
                         </Link>

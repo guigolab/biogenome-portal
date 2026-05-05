@@ -46,6 +46,7 @@ class OrganismRedList(db.EmbeddedDocument):
     """
 
     not_found = db.BooleanField(default=False)
+    assessment_id = db.IntField()
     category = db.StringField()
     population_trend = db.StringField()
     assessment_date = db.StringField()

@@ -144,12 +144,6 @@ def save_coordinates(
         lat = float(str(latitude).translate(_COORD_NORMALIZE))
         lng = float(str(longitude).translate(_COORD_NORMALIZE))
     except ValueError:
-        logger.warning(
-            "Invalid latitude %r or longitude %r for sample %s",
-            latitude,
-            longitude,
-            saved_sample[id_field],
-        )
         return
 
     if not (-90.0 <= lat <= 90.0 and -180.0 <= lng <= 180.0):

@@ -10,21 +10,16 @@ import { CatalogRecordActions } from '@/components/catalog-explorer/catalog-reco
 import { ChromosomeOverview } from '@/components/genome-browser/chromosome-overview'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
-import { fetchGenomeBrowserContext } from '@/lib/api/jbrowse'
 import { fetchSampleLocations, parseSampleLocationsPayload } from '@/lib/api/coordinates'
 import { inferAnnotationRowSource } from '@/lib/catalog-explorer/annotationMetadataSource'
 import {
    assemblyBrowserAssemblyLevelFromRow,
    assemblyLevelSupportsGenomeBrowser,
 } from '@/lib/catalog-explorer/assemblyGenomeBrowserEligibility'
-import {
-   cardHeaderDescription,
-   cardHeaderTitle,
-   useTaxidInDescription,
-} from '@/lib/catalog-explorer/catalogRecordHeader'
+import { useCatalogGenomeBrowserContext } from '@/lib/catalog-explorer/useCatalogGenomeBrowserContext'
 import { isReferenceGenomeCategory } from '@/lib/catalog-explorer/catalogRecordCardLayout'
-import { ModelIcon } from '@/lib/modelIcons'
 import type { DataModels } from '@/lib/portal/types'
+import type { ChromosomeRow } from '@/lib/genome-browser/buildDefaultSession'
 import {
    assemblyDescriptionFromDoc,
    assemblyExternalLinks,
@@ -32,15 +27,17 @@ import {
 } from '@/lib/genome-browser/assemblyBrowserDetails'
 import { ncbiDatasetsGenomeUrl, ncbiGenomesAllDirectoryUrl } from '@/lib/ncbiAssemblyFtp'
 import { formatCatalogCardCellValue, getNestedValue } from '@/lib/catalogQueryParams'
-import { taxonomyTaxonHref } from '@/lib/taxonomyLinks'
 import { cn } from '@/lib/utils'
 import { Check, Clipboard, Download, ExternalLink, Loader2, Star } from 'lucide-react'
 
-/** Large JSON blobs: shown on cards via structured fields / stats, not raw in the panel. */
+/** Large JSON blobs already shown via structured fields / stats; hidden from raw metadata panel. */
 const ASSEMBLY_METADATA_OMIT_IDS = new Set([
    'assembly_info',
    'organism',
    'assembly_stats',
+   'organelle_info',
+   'annotation_info',
+   'average_nucleotide_identity',
    'wgs_info',
 ])
 
@@ -111,17 +108,6 @@ const SpeciesLocationsMap = dynamic(
    },
 )
 
-function annotationSourceLabel(row: Record<string, unknown>, t: (key: string) => string): string {
-   switch (inferAnnotationRowSource(row)) {
-      case 'annotrieve':
-         return t('catalog.annotationDetailAnnotrieve')
-      case 'portal_custom':
-         return t('catalog.annotationDetailPortal')
-      default:
-         return t('catalog.annotationDetailOther')
-   }
-}
-
 function splitFtpUrls(raw: unknown): string[] {
    if (typeof raw !== 'string' || !raw.trim()) return []
    return raw
@@ -139,66 +125,30 @@ function val(row: Record<string, unknown>, key: string): string {
    return formatCatalogCardCellValue(getNestedValue(row, key))
 }
 
+// ─── Section bodies ────────────────────────────────────────────────────────
+
 function AssemblySection({
    row,
-   taxid,
    t,
+   gbLoading,
+   gbErr,
+   chromosomes,
 }: {
    row: Record<string, unknown>
-   taxid: string
    t: (key: string) => string
+   gbLoading: boolean
+   gbErr: string | null
+   chromosomes: ChromosomeRow[]
 }) {
-   const acc = str(row.accession)
-   const assemblyLevel = assemblyBrowserAssemblyLevelFromRow(row)
-   const [ctxLoading, setCtxLoading] = useState(false)
-   const [chrCtx, setChrCtx] = useState<Awaited<ReturnType<typeof fetchGenomeBrowserContext>> | null>(
-      null,
+   const isRefGenome = isReferenceGenomeCategory(
+      getNestedValue(row, 'metadata.assembly_info.refseq_category'),
    )
-   const [ctxErr, setCtxErr] = useState<string | null>(null)
-
-   useEffect(() => {
-      if (!acc) return
-      let cancelled = false
-      setCtxLoading(true)
-      setCtxErr(null)
-      void fetchGenomeBrowserContext(acc)
-         .then((c) => {
-            if (!cancelled) setChrCtx(c)
-         })
-         .catch(() => {
-            if (!cancelled) {
-               setChrCtx(null)
-               setCtxErr(t('catalog.detailAssemblyBrowserContextUnavailable'))
-            }
-         })
-         .finally(() => {
-            if (!cancelled) setCtxLoading(false)
-         })
-      return () => {
-         cancelled = true
-      }
-   }, [acc])
-
-   const statsRows = assemblyStatsRowsFromDoc(row)
-   const extLinks = acc ? assemblyExternalLinks(acc, row) : []
-   const ftpDir = acc ? ncbiGenomesAllDirectoryUrl(acc) : null
-   const ncbiDataset = acc ? ncbiDatasetsGenomeUrl(acc) : null
    const desc = assemblyDescriptionFromDoc(row)
-
+   const statsRows = assemblyStatsRowsFromDoc(row)
    const rowChroms = row.chromosomes
    const chromListFromRow = Array.isArray(rowChroms)
       ? rowChroms.map((c) => String(c).trim()).filter(Boolean)
       : []
-
-   const annotations = chrCtx?.annotations ?? []
-   const firstAnnName = annotations[0]?.name
-   const showGenomeBrowserOpen =
-      assemblyLevelSupportsGenomeBrowser(assemblyLevel) && Boolean(firstAnnName)
-
-   const isRefGenome = isReferenceGenomeCategory(
-      getNestedValue(row, 'metadata.assembly_info.refseq_category'),
-   )
-
    const infoRows: InfoRow[] = [
       { label: 'Assembly level', value: val(row, 'metadata.assembly_info.assembly_level') },
       { label: 'Assembly type', value: val(row, 'metadata.assembly_info.assembly_type') },
@@ -216,41 +166,12 @@ function AssemblySection({
             </div>
          ) : null}
 
+         {desc ? <p className="text-sm text-muted-foreground">{desc}</p> : null}
+
          <section>
             <SectionHeader>{t('catalog.detailAssemblyInfo')}</SectionHeader>
             <DetailInfoGrid rows={infoRows} />
          </section>
-
-         {desc ? <p className="text-sm text-muted-foreground">{desc}</p> : null}
-
-         <div className="flex flex-wrap gap-2">
-            {ncbiDataset ? (
-               <Button variant="outline" size="sm" className="gap-1.5" asChild>
-                  <a href={ncbiDataset} target="_blank" rel="noopener noreferrer">
-                     <Download className="h-3.5 w-3.5" />
-                     {t('catalog.detailDownloadNcbiDataset')}
-                     <ExternalLink className="h-3.5 w-3.5 opacity-70" />
-                  </a>
-               </Button>
-            ) : null}
-            {ftpDir ? (
-               <Button variant="outline" size="sm" className="gap-1.5" asChild>
-                  <a href={ftpDir} target="_blank" rel="noopener noreferrer">
-                     {t('catalog.detailBrowseNcbiFtp')}
-                     <ExternalLink className="h-3.5 w-3.5 opacity-70" />
-                  </a>
-               </Button>
-            ) : null}
-            {acc && showGenomeBrowserOpen ? (
-               <Button variant="default" size="sm" asChild>
-                  <Link
-                     href={`/genome-browser?assembly=${encodeURIComponent(acc)}&annotation=${encodeURIComponent(firstAnnName!)}${taxid ? `&taxid=${encodeURIComponent(taxid)}` : ''}`}
-                  >
-                     {t('catalog.detailOpenFirstAnnotation')}
-                  </Link>
-               </Button>
-            ) : null}
-         </div>
 
          {statsRows.length > 0 ? (
             <section>
@@ -266,45 +187,33 @@ function AssemblySection({
             </section>
          ) : null}
 
-         {ctxLoading ? (
+         {gbLoading ? (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
                <Loader2 className="h-4 w-4 animate-spin" />
                {t('catalog.detailLoadingChromosomes')}
             </div>
          ) : null}
-         {ctxErr && !ctxLoading ? <p className="text-xs text-muted-foreground">{ctxErr}</p> : null}
+         {gbErr && !gbLoading ? (
+            <p className="text-xs text-muted-foreground">
+               {t('catalog.detailAssemblyBrowserContextUnavailable')}
+            </p>
+         ) : null}
 
-         {chrCtx && chrCtx.chromosomes.length > 0 ? (
+         {chromosomes.length > 0 ? (
             <section>
                <SectionHeader>{t('catalog.detailChromosomes')}</SectionHeader>
-               <ChromosomeOverview chromosomes={chrCtx.chromosomes} variant="strip" />
+               <ChromosomeOverview
+                  chromosomes={chromosomes}
+                  variant="strip"
+                  className="flex-wrap overflow-x-visible overflow-y-visible gap-2 pb-0 pr-0 snap-none"
+               />
             </section>
-         ) : !ctxLoading && chromListFromRow.length > 0 ? (
+         ) : !gbLoading && chromListFromRow.length > 0 ? (
             <section>
                <SectionHeader>{t('catalog.detailChromosomes')}</SectionHeader>
                <ul className="max-h-40 list-inside list-disc overflow-auto rounded-md border border-border px-3 py-2 text-xs font-mono">
                   {chromListFromRow.map((c) => (
                      <li key={c}>{c}</li>
-                  ))}
-               </ul>
-            </section>
-         ) : null}
-
-         {extLinks.length > 0 ? (
-            <section>
-               <SectionHeader>{t('catalog.detailRelatedLinks')}</SectionHeader>
-               <ul className="space-y-1.5 text-sm">
-                  {extLinks.map((l) => (
-                     <li key={l.href}>
-                        <a
-                           href={l.href}
-                           target="_blank"
-                           rel="noopener noreferrer"
-                           className="text-primary underline-offset-4 hover:underline"
-                        >
-                           {l.label}
-                        </a>
-                     </li>
                   ))}
                </ul>
             </section>
@@ -404,16 +313,6 @@ function BiosampleSection({
 }
 
 function ReadSection({ row, t }: { row: Record<string, unknown>; t: (key: string) => string }) {
-   const meta = row.metadata
-   const rec =
-      meta && typeof meta === 'object' && !Array.isArray(meta) ? (meta as Record<string, unknown>) : null
-
-   const fastq = rec ? splitFtpUrls(rec.fastq_ftp) : []
-   const submitted = rec ? splitFtpUrls(rec.submitted_ftp) : []
-   const asperaFq = rec ? splitFtpUrls(rec.fastq_aspera) : []
-   const asperaSub = rec ? splitFtpUrls(rec.submitted_aspera) : []
-   const allUrls = [...new Set([...fastq, ...submitted, ...asperaFq, ...asperaSub])]
-
    const libraryRows: InfoRow[] = [
       { label: 'Library strategy', value: val(row, 'metadata.library_strategy') },
       { label: 'Library source', value: val(row, 'metadata.library_source') },
@@ -425,35 +324,12 @@ function ReadSection({ row, t }: { row: Record<string, unknown>; t: (key: string
       { label: 'Read count', value: val(row, 'metadata.read_count') },
       { label: 'Base count', value: val(row, 'metadata.base_count') },
    ]
-
    return (
       <div className="space-y-4">
          <section>
             <SectionHeader>{t('catalog.detailLibraryInfo')}</SectionHeader>
             <DetailInfoGrid rows={libraryRows} />
          </section>
-
-         {allUrls.length > 0 ? (
-            <section>
-               <SectionHeader>{t('catalog.detailReadFiles')}</SectionHeader>
-               <ul className="space-y-2 text-sm">
-                  {allUrls.map((url) => (
-                     <li key={url} className="break-all">
-                        <a
-                           href={url}
-                           target="_blank"
-                           rel="noopener noreferrer"
-                           className="text-primary underline-offset-4 hover:underline"
-                        >
-                           {url}
-                        </a>
-                     </li>
-                  ))}
-               </ul>
-            </section>
-         ) : (
-            <p className="text-sm text-muted-foreground">{t('catalog.detailNoReadFiles')}</p>
-         )}
          <CatalogMetadataPanel model="reads" metadata={row.metadata} />
       </div>
    )
@@ -461,83 +337,12 @@ function ReadSection({ row, t }: { row: Record<string, unknown>; t: (key: string
 
 function AnnotationSection({
    row,
-   taxid,
    t,
 }: {
    row: Record<string, unknown>
-   taxid: string
    t: (key: string) => string
 }) {
-   const gff = str(row.gff_gz_location)
-   const csi = str(row.tab_index_location)
-   const taxidQs = taxid ? `&taxid=${encodeURIComponent(taxid)}` : ''
-   const asm = str(row.assembly_accession)
-   const annName = str(row.name)
    const source = inferAnnotationRowSource(row)
-
-   const [asmCtxLoading, setAsmCtxLoading] = useState(false)
-   const [asmChroms, setAsmChroms] = useState(0)
-
-   useEffect(() => {
-      if (!asm) {
-         setAsmChroms(0)
-         return
-      }
-      let cancelled = false
-      setAsmCtxLoading(true)
-      void fetchGenomeBrowserContext(asm)
-         .then((c) => {
-            if (!cancelled) setAsmChroms(c.chromosomes.length)
-         })
-         .catch(() => {
-            if (!cancelled) setAsmChroms(0)
-         })
-         .finally(() => {
-            if (!cancelled) setAsmCtxLoading(false)
-         })
-      return () => {
-         cancelled = true
-      }
-   }, [asm])
-
-   const showGenomeBrowser = Boolean(asm && annName && asmChroms > 0)
-
-   const actionButtons = (
-      <div className="flex flex-wrap items-center gap-2">
-         {gff ? (
-            <Button variant="outline" size="sm" className="gap-1.5" asChild>
-               <a href={gff} target="_blank" rel="noopener noreferrer">
-                  <Download className="h-3.5 w-3.5" />
-                  {t('catalog.detailDownloadGff')}
-                  <ExternalLink className="h-3.5 w-3.5 opacity-70" />
-               </a>
-            </Button>
-         ) : null}
-         {csi ? (
-            <Button variant="outline" size="sm" className="gap-1.5" asChild>
-               <a href={csi} target="_blank" rel="noopener noreferrer">
-                  {t('catalog.detailDownloadTabix')}
-                  <ExternalLink className="h-3.5 w-3.5 opacity-70" />
-               </a>
-            </Button>
-         ) : null}
-         {asmCtxLoading ? (
-            <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-               <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
-               {t('catalog.detailLoadingChromosomes')}
-            </span>
-         ) : null}
-         {showGenomeBrowser ? (
-            <Button variant="default" size="sm" asChild>
-               <Link
-                  href={`/genome-browser?assembly=${encodeURIComponent(asm)}&annotation=${encodeURIComponent(annName)}${taxidQs}`}
-               >
-                  {t('catalog.openGenomeBrowser')}
-               </Link>
-            </Button>
-         ) : null}
-      </div>
-   )
 
    if (source === 'annotrieve') {
       const buscoRows: InfoRow[] = [
@@ -594,26 +399,21 @@ function AnnotationSection({
                   <DetailInfoGrid rows={geneRows} />
                </section>
             ) : null}
-            {actionButtons}
          </div>
       )
    }
 
-   // portal_custom or other sources
+   // portal_custom or other annotation sources
    const metaRows: InfoRow[] = [
       { label: 'Assembly name', value: val(row, 'metadata.assembly_name') },
       { label: 'Organism name', value: val(row, 'metadata.organism_name') },
    ]
+   if (!metaRows.some((r) => r.value && r.value !== '—')) return null
    return (
-      <div className="space-y-4">
-         {metaRows.some((r) => r.value && r.value !== '—') ? (
-            <section>
-               <SectionHeader>{t('catalog.detailAnnotationInfo')}</SectionHeader>
-               <DetailInfoGrid rows={metaRows} />
-            </section>
-         ) : null}
-         {actionButtons}
-      </div>
+      <section>
+         <SectionHeader>{t('catalog.detailAnnotationInfo')}</SectionHeader>
+         <DetailInfoGrid rows={metaRows} />
+      </section>
    )
 }
 
@@ -628,41 +428,91 @@ function LocalSampleSection({ row }: { row: Record<string, unknown> }) {
    return <DetailInfoGrid rows={infoRows} />
 }
 
+// ─── Main export ────────────────────────────────────────────────────────────
+
 export type CatalogRecordDetailContentProps = {
    catalogKey: DataModels
    detailRow: Record<string, unknown>
    rootTaxid: string
-   speciesHref: string | null
    t: (key: string) => string
    className?: string
-   /**
-    * When true, the identity block (model icon, title, description) is not rendered.
-    * Use when the parent (e.g. the detail sheet) already provides a visible header.
-    */
-   hideHeader?: boolean
 }
 
 export function CatalogRecordDetailContent({
    catalogKey,
    detailRow,
    rootTaxid,
-   speciesHref,
    t,
    className,
-   hideHeader = false,
 }: CatalogRecordDetailContentProps) {
    const taxid = detailRow.taxid != null ? String(detailRow.taxid).trim() : rootTaxid
+   const taxidQs = taxid ? `&taxid=${encodeURIComponent(taxid)}` : ''
+
+   // Genome browser context — fetched for assemblies and annotations, idle for other models.
+   const assemblyAccForCtx =
+      catalogKey === 'assemblies'
+         ? str(detailRow.accession)
+         : catalogKey === 'annotations'
+           ? str(detailRow.assembly_accession)
+           : ''
+   const gbCtx = useCatalogGenomeBrowserContext(assemblyAccForCtx)
+
+   // Assembly toolbar + outbound link values
+   const assemblyAcc = catalogKey === 'assemblies' ? str(detailRow.accession) : ''
+   const ncbiDataset = assemblyAcc ? ncbiDatasetsGenomeUrl(assemblyAcc) : null
+   const ftpDir = assemblyAcc ? ncbiGenomesAllDirectoryUrl(assemblyAcc) : null
+   const extLinks = assemblyAcc ? assemblyExternalLinks(assemblyAcc, detailRow) : []
+   const firstAnnName = gbCtx.annotations[0]?.name
+   const showAsmGenomeBrowser =
+      catalogKey === 'assemblies' &&
+      assemblyLevelSupportsGenomeBrowser(assemblyBrowserAssemblyLevelFromRow(detailRow)) &&
+      Boolean(firstAnnName)
+
+   // Annotation toolbar values
+   const annGff = catalogKey === 'annotations' ? str(detailRow.gff_gz_location) : ''
+   const annName = catalogKey === 'annotations' ? str(detailRow.name) : ''
+   const annAsm = catalogKey === 'annotations' ? str(detailRow.assembly_accession) : ''
+   const showAnnGenomeBrowser =
+      catalogKey === 'annotations' && Boolean(annAsm && annName && gbCtx.chromosomes.length > 0)
+
+   // Reads outbound URLs (FTP / Aspera)
+   const readAllUrls = (() => {
+      if (catalogKey !== 'reads') return []
+      const rec =
+         detailRow.metadata &&
+         typeof detailRow.metadata === 'object' &&
+         !Array.isArray(detailRow.metadata)
+            ? (detailRow.metadata as Record<string, unknown>)
+            : null
+      if (!rec) return []
+      return [
+         ...new Set([
+            ...splitFtpUrls(rec.fastq_ftp),
+            ...splitFtpUrls(rec.submitted_ftp),
+            ...splitFtpUrls(rec.fastq_aspera),
+            ...splitFtpUrls(rec.submitted_aspera),
+         ]),
+      ]
+   })()
 
    const body = (() => {
       switch (catalogKey) {
          case 'assemblies':
-            return <AssemblySection row={detailRow} taxid={taxid} t={t} />
+            return (
+               <AssemblySection
+                  row={detailRow}
+                  t={t}
+                  gbLoading={gbCtx.loading}
+                  gbErr={gbCtx.error}
+                  chromosomes={gbCtx.chromosomes}
+               />
+            )
          case 'biosamples':
             return <BiosampleSection row={detailRow} taxid={taxid} t={t} />
          case 'reads':
             return <ReadSection row={detailRow} t={t} />
          case 'annotations':
-            return <AnnotationSection row={detailRow} taxid={taxid} t={t} />
+            return <AnnotationSection row={detailRow} t={t} />
          case 'local_samples':
             return <LocalSampleSection row={detailRow} />
          default:
@@ -676,50 +526,118 @@ export function CatalogRecordDetailContent({
 
    return (
       <div className={cn('space-y-4', className)}>
-         {!hideHeader ? (
-            <div className="space-y-3">
-               <div className="flex min-w-0 items-start gap-3">
-                  <span
-                     className="flex shrink-0 pt-0.5 text-primary"
-                     title={catalogKey.replace(/_/g, ' ')}
-                     aria-hidden
-                  >
-                     <ModelIcon modelKey={catalogKey} className="h-7 w-7" />
-                  </span>
-                  <div className="min-w-0 flex-1 space-y-1">
-                     <p className="sr-only">{catalogKey.replace(/_/g, ' ')}</p>
-                     <h3 className="line-clamp-2 text-base font-semibold leading-snug tracking-tight">
-                        {cardHeaderTitle(catalogKey, detailRow)}
-                     </h3>
-                     <p className="text-xs text-muted-foreground">
-                        {useTaxidInDescription(catalogKey) ? (
-                           <>taxid · {cardHeaderDescription(catalogKey, detailRow)}</>
-                        ) : (
-                           cardHeaderDescription(catalogKey, detailRow)
-                        )}
-                     </p>
-                  </div>
-               </div>
-               {catalogKey === 'annotations' ? (
-                  <span className="inline-block rounded-md bg-primary/10 px-2 py-1 text-[11px] font-medium text-primary">
-                     {annotationSourceLabel(detailRow, t)}
-                  </span>
-               ) : null}
-            </div>
+         {/* ── Toolbar ── */}
+         <div className="flex flex-wrap items-center gap-2">
+            <CatalogRecordActions catalogKey={catalogKey} row={detailRow} t={t} />
+
+            {catalogKey === 'assemblies' ? (
+               <>
+                  {ncbiDataset ? (
+                     <Button variant="outline" size="sm" className="gap-1.5" asChild>
+                        <a href={ncbiDataset} target="_blank" rel="noopener noreferrer">
+                           <Download className="h-3.5 w-3.5" />
+                           {t('catalog.detailDownloadNcbiDataset')}
+                           <ExternalLink className="h-3.5 w-3.5 opacity-70" />
+                        </a>
+                     </Button>
+                  ) : null}
+                  {ftpDir ? (
+                     <Button variant="outline" size="sm" className="gap-1.5" asChild>
+                        <a href={ftpDir} target="_blank" rel="noopener noreferrer">
+                           {t('catalog.detailBrowseNcbiFtp')}
+                           <ExternalLink className="h-3.5 w-3.5 opacity-70" />
+                        </a>
+                     </Button>
+                  ) : null}
+                  {gbCtx.loading ? (
+                     <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+                        {t('catalog.detailLoadingChromosomes')}
+                     </span>
+                  ) : null}
+                  {showAsmGenomeBrowser ? (
+                     <Button variant="default" size="sm" asChild>
+                        <Link
+                           href={`/genome-browser?assembly=${encodeURIComponent(assemblyAcc)}&annotation=${encodeURIComponent(firstAnnName!)}${taxidQs}`}
+                        >
+                           {t('catalog.detailOpenFirstAnnotation')}
+                        </Link>
+                     </Button>
+                  ) : null}
+               </>
+            ) : null}
+
+            {catalogKey === 'annotations' ? (
+               <>
+                  {annGff ? (
+                     <Button variant="outline" size="sm" className="gap-1.5" asChild>
+                        <a href={annGff} target="_blank" rel="noopener noreferrer">
+                           <Download className="h-3.5 w-3.5" />
+                           {t('catalog.detailDownloadGff')}
+                           <ExternalLink className="h-3.5 w-3.5 opacity-70" />
+                        </a>
+                     </Button>
+                  ) : null}
+                  {gbCtx.loading ? (
+                     <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+                        {t('catalog.detailLoadingChromosomes')}
+                     </span>
+                  ) : null}
+                  {showAnnGenomeBrowser ? (
+                     <Button variant="default" size="sm" asChild>
+                        <Link
+                           href={`/genome-browser?assembly=${encodeURIComponent(annAsm)}&annotation=${encodeURIComponent(annName)}${taxidQs}`}
+                        >
+                           {t('catalog.openGenomeBrowser')}
+                        </Link>
+                     </Button>
+                  ) : null}
+               </>
+            ) : null}
+         </div>
+
+         {/* ── Assembly outbound named links (NCBI Assembly, BLAST, BioProject…) ── */}
+         {extLinks.length > 0 ? (
+            <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
+               {extLinks.map((l) => (
+                  <li key={l.href}>
+                     <a
+                        href={l.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-primary underline-offset-4 hover:underline"
+                     >
+                        {l.label}
+                        <ExternalLink className="h-3 w-3 shrink-0 opacity-60" aria-hidden />
+                     </a>
+                  </li>
+               ))}
+            </ul>
          ) : null}
 
-         <div className="flex flex-wrap gap-2">
-            {speciesHref ? (
-               <Button variant="outline" size="sm" asChild>
-                  <Link href={speciesHref}>{t('catalog.openSpeciesPage')}</Link>
-               </Button>
-            ) : (
-               <Button variant="outline" size="sm" asChild>
-                  <Link href={taxonomyTaxonHref(rootTaxid)}>{t('catalog.openTaxonomyView')}</Link>
-               </Button>
-            )}
-            <CatalogRecordActions catalogKey={catalogKey} row={detailRow} t={t} />
-         </div>
+         {/* ── Reads: file download URLs ── */}
+         {readAllUrls.length > 0 ? (
+            <section>
+               <SectionHeader>{t('catalog.detailReadFiles')}</SectionHeader>
+               <ul className="space-y-1.5 text-xs">
+                  {readAllUrls.map((url) => (
+                     <li key={url} className="break-all">
+                        <a
+                           href={url}
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           className="text-primary underline-offset-4 hover:underline"
+                        >
+                           {url}
+                        </a>
+                     </li>
+                  ))}
+               </ul>
+            </section>
+         ) : catalogKey === 'reads' ? (
+            <p className="text-sm text-muted-foreground">{t('catalog.detailNoReadFiles')}</p>
+         ) : null}
 
          <Separator />
 

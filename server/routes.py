@@ -69,6 +69,7 @@ def _rows():
         (sample_locations.SampleLocations, "/api/coordinates"),
         (sample_locations.LocationFromCoords, "/api/coordinates/<coordinates>"),
         (sample_locations.UniqueLocations, "/api/coordinates/frequency"),
+        (sample_locations.OrganismsWithSampleLocations, "/api/coordinates/organisms"),
         (sample_locations.LookupRelatedData, "/api/coordinates/frequency/lookup"),
         (
             sample_locations.GetRelatedModelData,
@@ -81,6 +82,7 @@ def _rows():
         # --- Organisms (extensions; list/create on catalog routes) ---
         (organisms.UnassignedOrganismsApi, "/api/organisms/unassigned"),
         (organisms.OrganismAuditLogsApi, "/api/organisms/audit_logs"),
+        (organisms.OrganismTaxidAuditLogsApi, "/api/organisms/<taxid>/audit_logs"),
         (organisms.OrganismsWithUser, "/api/organisms/with_users"),
         (organisms.OrganismSuggestImagesApi, "/api/organisms/suggest_external_images"),
         (organisms.OrganismApi, "/api/organisms/<taxid>"),
@@ -109,7 +111,6 @@ def _rows():
         (biosamples.AssembliesByBiosample, "/api/biosamples/<accession>/assemblies"),
         (biosamples.SubSamplesApi, "/api/biosamples/<accession>/sub_samples"),
         # --- Local samples ---
-        (local_samples.LocalSampleUploadApi, "/api/local_samples/upload"),
         (local_samples.LocalSampleApi, "/api/local_samples/<local_id>"),
         # --- Read runs (INSDC): experiments list before accession wildcard ---
         (reads.ReadExperimentsApi, "/api/reads/experiments"),

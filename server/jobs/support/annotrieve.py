@@ -1,29 +1,33 @@
 """
-Annotrieve fetch + ``GenomeAnnotation`` upsert helpers (no Celery).
+Annotrieve fetch, ``GenomeAnnotation`` upsert, and sync with portal organism lineages.
 
-Used by :mod:`jobs.annotrieve` tasks and tests.
+Core upsert/finalize helpers are used by :func:`run_annotrieve_import_for_accessions` and
+:func:`sync_annotrieve_annotations_for_assembly_accessions` (and tests / Celery).
+
+:func:`sync_annotrieve_annotations_for_assembly_accessions` composes upsert with
+:func:`jobs.support.taxonomy.copy_organism_taxon_lineage_to_catalog_for_genome_annotation_names`
+so ``GenomeAnnotation.taxon_lineage`` matches the portal ``Organism`` lineage after upsert.
 """
 
 from __future__ import annotations
 
 import datetime
 import logging
-import os
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
 
 import requests
 from pymongo import UpdateOne
 
 from clients.annotrieve_client import fetch_annotations_for_assembly_accessions, file_url
-from db.constants import GOAT_PROJECT_NAME
 from db.model import GenomeAnnotation
 from helpers.data import create_batches
-from jobs.support.catalog_ingest_pipeline import finalize_touched_species_catalog
+from jobs.support.stats import update_organism_counts, update_taxon_node_counts
+from jobs.support.taxonomy import copy_organism_taxon_lineage_to_catalog_for_genome_annotation_names
 
 logger = logging.getLogger(__name__)
 
-ACCESSION_BATCH = int(os.getenv("ANNOTRIEVE_ACCESSION_BATCH", "200"))
-BULK_CHUNK = int(os.getenv("ANNOTRIEVE_BULK_CHUNK", "500"))
+ACCESSION_BATCH = 200
+BULK_CHUNK = 500
 
 
 def dedupe_assembly_accessions(accessions: Iterable[Any]) -> List[str]:
@@ -153,51 +157,85 @@ def upsert_genome_annotations_from_rows(
         total += len(chunk)
     return total, taxids
 
-
-def finalize_after_annotrieve_upsert(taxids: Set[str]) -> None:
-    """Refresh species denorm for taxids touched by annotation upserts (GoaT when configured)."""
-    if not taxids:
-        return
-    finalize_touched_species_catalog(
-        sorted(taxids),
-        copy_lineages=False,
-        apply_goat_inference=bool(GOAT_PROJECT_NAME),
-    )
-
-
-def run_annotrieve_import_for_accessions(accessions: Iterable[Any]) -> Dict[str, Any]:
+def _genome_annotation_names_from_rows(rows: List[Dict[str, Any]]) -> List[str]:
     """
-    Fetch from Annotrieve, upsert ``GenomeAnnotation``, finalize touched species.
-
-    Returns a summary dict suitable as a Celery task result.
+    ``GenomeAnnotation.name`` values (Annotrieve ``annotation_id``) for rows that pass
+    the same validation as the bulk upsert.
     """
-    accs = dedupe_assembly_accessions(accessions)
+    out: List[str] = []
+    seen: Set[str] = set()
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        if annotation_row_to_bulk_op(row) is None:
+            continue
+        raw_id = row.get("annotation_id")
+        if raw_id is None:
+            continue
+        name = str(raw_id).strip()
+        if not name or name in seen:
+            continue
+        seen.add(name)
+        out.append(name)
+    return out
+
+
+def sync_annotrieve_annotations_for_assembly_accessions(
+    assembly_accessions: Iterable[Any],
+    *,
+    skip_finalize: bool = False,
+) -> List[str]:
+    """
+    Fetch Annotrieve annotations for the given assembly accessions, upsert
+    :class:`~db.model.GenomeAnnotation` documents, copy ``taxon_lineage`` from each species
+    :class:`~db.model.Organism`, and optionally run the usual species catalog finalize.
+
+    Returns the ``name`` field of each saved annotation (Annotrieve annotation id), in
+    first-seen order, excluding duplicates.
+
+    When ``skip_finalize`` is True (e.g. assembly import merges taxids into one catalog
+    finalize), callers must run :func:`jobs.support.stats.update_organism_counts` and
+    :func:`jobs.support.stats.update_taxon_node_counts` for the touched species taxids (same as
+    the non-``skip_finalize`` branch below).
+    """
+    accs = dedupe_assembly_accessions(assembly_accessions)
     if not accs:
-        return {
-            "status": "no_accessions",
-            "annotations_upserted": 0,
-            "assembly_accessions": 0,
-            "assembly_accession_batches": 0,
-            "taxids_synced": 0,
-        }
+        return []
 
-    batches = list(create_batches(accs, ACCESSION_BATCH))
+    saved_names: List[str] = []
+    total_ops = 0
+    taxids_touched: Set[str] = set()
+
     with requests.Session() as session:
-        rows = fetch_annotation_rows_for_accessions(accs, session=session)
+        for http_batch in create_batches(accs, ACCESSION_BATCH):
+            batch = list(http_batch)
+            if not batch:
+                continue
+            rows = fetch_annotations_for_assembly_accessions(session, batch)
+            names_batch = _genome_annotation_names_from_rows(rows)
+            ops_b, tids_b = upsert_genome_annotations_from_rows(rows)
+            total_ops += ops_b
+            taxids_touched |= tids_b
+            if names_batch:
+                copy_organism_taxon_lineage_to_catalog_for_genome_annotation_names(
+                    names_batch
+                )
+            saved_names.extend(names_batch)
 
-    total_ops, taxids_touched = upsert_genome_annotations_from_rows(rows)
-    finalize_after_annotrieve_upsert(taxids_touched)
+    if not skip_finalize and taxids_touched:
+        update_organism_counts(list(taxids_touched))
+        update_taxon_node_counts(list(taxids_touched))
+
+    deduped_names = list(dict.fromkeys(saved_names))
 
     logger.info(
-        "Annotrieve import for %s accessions: %s upserts, %s taxids finalized",
+        "Annotrieve sync for %s assembly accessions: %s row ops, %s annotation name(s), "
+        "%s taxid(s) %s",
         len(accs),
         total_ops,
+        len(deduped_names),
         len(taxids_touched),
+        "finalize skipped" if skip_finalize else "finalized",
     )
-    return {
-        "status": "ok",
-        "assembly_accession_batches": len(batches),
-        "assembly_accessions": len(accs),
-        "annotations_upserted": total_ops,
-        "taxids_synced": len(taxids_touched),
-    }
+
+    return deduped_names
