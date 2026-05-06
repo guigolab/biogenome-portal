@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 
 PROJECT_ACCESSION = os.getenv("PROJECT_ACCESSION")
 TMP_DIR = os.getenv("TMP_DIR", "/tmp")
-IMPORT_BLOBTOOLKIT = os.getenv("IMPORT_BLOBTOOLKIT", "true")
+IMPORT_BLOBTOOLKIT = os.getenv("IMPORT_BLOBTOOLKIT", "false")
 
 
 def _write_accession_batch(path: str, batch: List[str]) -> None:

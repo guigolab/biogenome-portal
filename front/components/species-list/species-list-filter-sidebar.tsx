@@ -7,6 +7,8 @@ import {
    filterSidebarScrollColumnClassName,
 } from '@/components/filters/filter-sidebar-template'
 import { useLocale } from '@/contexts/locale-context'
+import { usePortalConfig } from '@/contexts/portal-context'
+import { showCmsLoginNav } from '@/lib/portal'
 import type { TaxonRecord } from '@/lib/api/taxon'
 import type { RankGroupDef } from '@/lib/taxonRankFilter'
 import { cn } from '@/lib/utils'
@@ -33,19 +35,15 @@ function SpeciesFilterCollapsible({
    title,
    children,
    onPanelOpen,
-   /** When true, keep filter body mounted while collapsed (e.g. taxonomy tree state). */
-   keepMountedWhenClosed = false,
 }: {
    sectionId: string
    title: string
    children: ReactNode
    /** @deprecated Facet stats load from `SpeciesListFacetStatsSync` when this section is open. */
    onPanelOpen?: () => void
-   keepMountedWhenClosed?: boolean
 }) {
    const { openSection, setOpenSection } = useSpeciesListFilterAccordion()
    const isOpen = openSection === sectionId
-   const showChildren = keepMountedWhenClosed || isOpen
 
    return (
       <FilterSectionCollapsible
@@ -56,7 +54,7 @@ function SpeciesFilterCollapsible({
          }}
          title={title}
       >
-         {showChildren ? children : null}
+         {children}
       </FilterSectionCollapsible>
    )
 }
@@ -277,6 +275,8 @@ export function SpeciesListFiltersPanel({
    goatFacetStatsLoading: goatFacetStatsLoadingProp,
 }: SpeciesListFiltersPanelProps) {
    const { t } = useLocale()
+   const { config } = usePortalConfig()
+   const cmsEnabledFromConfig = showCmsLoginNav(config)
    const { openSection } = useSpeciesListFilterAccordion()
    const goatFacetStatsLoading =
       goatFacetStatsLoadingProp ??
@@ -298,7 +298,6 @@ export function SpeciesListFiltersPanel({
          <SpeciesFilterCollapsible
             sectionId={TAXONOMY_SECTION_ID}
             title={t('speciesList.taxonomySectionTitle')}
-            keepMountedWhenClosed
          >
             <TaxonomyFilterSection
                visibleRankGroups={visibleRankGroups}
@@ -346,7 +345,7 @@ export function SpeciesListFiltersPanel({
                />
             </SpeciesFilterCollapsible>
          ) : null}
-         {subProjectFilterVisible ? (
+         {subProjectFilterVisible && cmsEnabledFromConfig ? (
             <SpeciesFilterCollapsible sectionId={SUB_PROJECT_SECTION_ID} title={t('speciesList.subProjectSectionTitle')}>
                <StringBucketFilterList
                   value={subProjectFilter}
@@ -358,7 +357,7 @@ export function SpeciesListFiltersPanel({
                />
             </SpeciesFilterCollapsible>
          ) : null}
-         {sequencingTypeFilterVisible ? (
+         {sequencingTypeFilterVisible && cmsEnabledFromConfig ? (
             <SpeciesFilterCollapsible
                sectionId={SEQUENCING_TYPE_SECTION_ID}
                title={t('speciesList.sequencingTypeSectionTitle')}
