@@ -41,18 +41,32 @@ _TAXON_NODE_HAS_LEGACY_FIELD_QUERY = {
 @shared_task(name="helpers_unset_taxon_node_legacy_fields", ignore_result=False)
 def unset_taxon_node_legacy_fields():
     """
-    Remove legacy TaxonNode fields via MongoDB ``$unset``:
+    Two-phase TaxonNode maintenance:
 
-    - ``leaves`` (superseded by aggregate counts / ``organisms_count`` in API logic).
-    - ``submitted_biosamples_count`` (legacy denormalized counter).
+    1. ``$unset`` legacy TaxonNode fields:
+       - ``leaves`` (superseded by aggregate counts / ``organisms_count`` in API logic).
+       - ``submitted_biosamples_count`` (legacy denormalized counter).
+    2. Backfill ``TaxonNode.parent`` (and ``children``) edges from every
+       ``Organism.taxon_lineage`` chain via
+       :func:`~jobs.support.catalog_denorm_finalize.sync_taxonnode_edges_from_organism_lineages`.
+       Placeholder TaxonNode rows are inserted for lineage taxids missing from the DB
+       (``rank="other"``); a taxonomy refresh fills their real name/rank later.
 
-    Only touches the ``TaxonNode`` collection (not e.g. BioProject ``leaves``).
+    Only touches the ``TaxonNode`` collection (not e.g. BioProject ``leaves`` or
+    catalog ``taxon_lineage`` mirrors on BioSample / Assembly / ReadRun).
     """
+    unset_stats = _unset_taxon_node_legacy_fields_bulk()
+    backfill_stats = _backfill_taxon_node_parent_edges_from_organisms()
+    return {**unset_stats, **backfill_stats}
+
+
+def _unset_taxon_node_legacy_fields_bulk() -> Dict[str, int]:
+    """``$unset`` ``leaves`` / ``submitted_biosamples_count`` from every TaxonNode that has them."""
     coll = TaxonNode._get_collection()
     matched = coll.count_documents(_TAXON_NODE_HAS_LEGACY_FIELD_QUERY)
     if matched == 0:
         logger.info(
-            "TaxonNode: no documents with `leaves` or `submitted_biosamples_count`; nothing to do"
+            "TaxonNode: no documents with `leaves` or `submitted_biosamples_count`; nothing to unset"
         )
         return {
             "unset_batches": 0,
@@ -107,6 +121,71 @@ def unset_taxon_node_legacy_fields():
         "matched_initially": matched,
         "remaining_with_leaves": still_leaves,
         "remaining_submitted_biosamples_count": still_submitted,
+    }
+
+
+def _backfill_taxon_node_parent_edges_from_organisms() -> Dict[str, int]:
+    """
+    Set ``TaxonNode.parent`` and ``children`` from every ``Organism.taxon_lineage`` chain.
+
+    Reuses :func:`~jobs.support.catalog_denorm_finalize.sync_taxonnode_edges_from_organism_lineages`
+    so edges are written the same way as in the ingest / taxonomy refresh pipelines.
+    """
+    from helpers import taxonomy as taxonomy_helper
+    from jobs.support.catalog_denorm_finalize import (
+        sync_taxonnode_edges_from_organism_lineages,
+    )
+
+    coll = TaxonNode._get_collection()
+    parent_missing_before = coll.count_documents({"parent": {"$exists": False}})
+
+    orgs = list(
+        Organism.objects().only("taxid", "taxon_lineage", "scientific_name")
+    )
+    if not orgs:
+        logger.info(
+            "TaxonNode: no Organism documents in db; skipping parent edge backfill"
+        )
+        return {
+            "organisms_scanned": 0,
+            "taxon_nodes_inserted_for_lineage": 0,
+            "lineage_taxids_resolved": 0,
+            "parent_missing_before": parent_missing_before,
+            "parent_missing_after": parent_missing_before,
+        }
+
+    n_ensured = taxonomy_helper.ensure_taxon_nodes_for_organisms_lineages(orgs)
+    if n_ensured:
+        logger.info(
+            "TaxonNode: inserted %d placeholder row(s) for lineage taxids missing in db",
+            n_ensured,
+        )
+
+    all_lineage_taxids: set = set()
+    for o in orgs:
+        if o.taxon_lineage:
+            all_lineage_taxids.update(
+                str(x) for x in o.taxon_lineage if x is not None
+            )
+
+    taxon_map = taxonomy_helper.taxon_node_map_for_taxids(all_lineage_taxids)
+    sync_taxonnode_edges_from_organism_lineages(orgs, taxon_map)
+
+    parent_missing_after = coll.count_documents({"parent": {"$exists": False}})
+    logger.info(
+        "TaxonNode: parent backfill done (scanned %d organism(s), resolved %d lineage taxid(s)); "
+        "documents without parent: %d -> %d",
+        len(orgs),
+        len(taxon_map),
+        parent_missing_before,
+        parent_missing_after,
+    )
+    return {
+        "organisms_scanned": len(orgs),
+        "taxon_nodes_inserted_for_lineage": n_ensured,
+        "lineage_taxids_resolved": len(taxon_map),
+        "parent_missing_before": parent_missing_before,
+        "parent_missing_after": parent_missing_after,
     }
 
 
