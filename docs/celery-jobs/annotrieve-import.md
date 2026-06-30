@@ -116,11 +116,8 @@ jobs/annotrieve.py
 │   └── file_url → ANNOTRIEVE_FILES_BASE
 ├── db/model.py                    → Assembly, GenomeAnnotation
 ├── helpers/data.py                → create_batches
-├── jobs/support/organism_catalog_sync.py → finalize_organism_catalog_for_taxids
-│   ├── bulk_update_organism_counts_for_taxids   → counts from Assembly, ReadRun, BioSample, LocalSample, GenomeAnnotation
-│   ├── bulk_update_taxon_node_counts_for_taxids
-│   ├── bulk_update_organism_statuses_for_taxids → helpers/organism_denorm_pure.py
-│   └── db/constants.py          → GOAT_PROJECT_NAME
+├── jobs/support/stats.py → update_organism_counts, update_taxon_node_counts (when not skipping finalize)
+├── helpers/organism_denorm_pure.py → derive_organism_denorm (status policy via ingest helpers)
 ├── pymongo UpdateOne
 └── requests.Session
 ```

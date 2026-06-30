@@ -1352,6 +1352,43 @@ components:
           type: "string"
         locality:
           type: "string"
+
+    ExternalImageSource:
+      type: "string"
+      enum:
+        - "inaturalist"
+        - "wikimedia_commons"
+        - "gbif"
+
+    OrganismAttributedImage:
+      type: "object"
+      properties:
+        url:
+          type: "string"
+          description: "Direct image URL suitable for display"
+        author:
+          type: "string"
+          description: "Photographer or uploader attribution"
+        source:
+          $ref: "#/components/schemas/ExternalImageSource"
+        license:
+          type: "string"
+          description: "Normalized license label (allowlisted CC / public domain)"
+        license_url:
+          type: "string"
+          description: "License deed URL when available"
+        source_record_url:
+          type: "string"
+          description: "Provider page for the image or observation"
+        external_id:
+          type: "string"
+          description: "Stable id from the provider for deduplication"
+        verified_taxon_name:
+          type: "string"
+          description: "Scientific name from the provider for the matched taxon"
+        fetched_at:
+          type: "string"
+          format: "date-time"
   
     TaxonNode:
       type: "object"
@@ -1380,8 +1417,6 @@ components:
         biosamples_count:
           type: "number"
         local_samples_count:
-          type: "number"
-        submitted_biosamples_count:
           type: "number"
         genome_annotations_count:
           type: "number"
@@ -1468,6 +1503,11 @@ components:
           type: "array"
           items:
             type: "string"
+        attributed_images:
+          type: "array"
+          description: "Species images ingested from external providers with license attribution (job-maintained)"
+          items:
+            $ref: "#/components/schemas/OrganismAttributedImage"
         taxon_lineage:
           type: "array"
           items:

@@ -11,3 +11,4 @@ docker-compose-DEV.yml
 .next
 # CI-injected branding assets (portal.config.json, logos, hero-map.geojson)
 front/branding/
+.pytest_cache/

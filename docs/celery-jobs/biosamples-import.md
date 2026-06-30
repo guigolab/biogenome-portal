@@ -52,7 +52,7 @@ Discover samples tagged with `project name` in BioSamples, **insert only new** `
 
    c. **`reload_prune_denorm_after_taxonomy_import(BioSample, "accession", saved_accessions, saved_organism_taxids, merge_context="biosample_import")`**  
       Same machinery as reads job (see `docs/celery-jobs/reads-import.md` § catalog sync), except:
-      - **No ReadRun** model → **no** `backfill_readrun_taxon_lineage_from_organisms`.
+      - **No ReadRun** model → no read-run–specific lineage backfill.
       - **`merge_context="biosample_import"`** → `derive_organism_denorm` avoids downgrading GoaT `DATA_GENERATION` / `IN_ASSEMBLY` when inference would be weaker (e.g. more biosamples only).
 
    d. **`stats["orphan_biosamples_removed"] +=` returned** delete count.
@@ -120,7 +120,8 @@ jobs/biosamples.py
 ├── helpers/data.py                → create_batches
 ├── jobs/organisms.py              → fetch_tolid_prefixes_task
 ├── jobs/support/geolocation_batch.py → update_geolocations
-├── jobs/support/organism_catalog_sync.py → handle_full_taxonomy_from_taxids, reload_prune_denorm_after_taxonomy_import(..., merge_context="biosample_import")
+├── jobs/support/organism_catalog_taxonomy.py → handle_full_taxonomy_from_taxids
+├── jobs/support/organism_catalog_finalize.py → reload_prune_denorm_after_taxonomy_import(..., merge_context="biosample_import")
 │   ├── readrun_ena_tsv.py       → backfill only if model is ReadRun (not used here)
 │   └── organism_denorm_pure.py  → MergeContext "biosample_import" behavior
 └── parsers/biosample.py           → parse_biosample_from_ebi_data

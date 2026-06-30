@@ -1,24 +1,33 @@
-IMPROVEMENTS: 1-> PRIORITY 2-> AVERAGE 3-> SOMETIME IN THE FUTURE
+TODO: 
+- Migrate CBP Images to new image embedded document  
+- New 
 
- 1 ADD SAMPLE LIST MODAL ON TAXON MAP OCCURRENCES CLICK
- 2 JOBS UPDATE ASSEMBLY METADATA
- 2 JOBS DISTINGUISH BETWEEN EXPERIMENT and READS TYPES
- 2 REFACTOR FILTERS --> FILTERS + HITS -> SUBMIT FILTERS
- 1 fix DOI DIFFERENCE BETWEEN PAPER AND GH (USE STATIC ONE)
- 1 add goat subproject logic
-   2 USE YAML TO DEFINE JOBS
-   3 USE READ INSTEAD OF EXPERIMENTS?
-
-MODULARIZE APP?:
-
-API
-
-ADD GOAT STATUS AND INSDC STATUS DOCUMENTS, WITH TAXID AND TAXON LINEAGE
-
-SHOUDL FRONT-END APPS BE CONFIGURATION AGNOSTIC?
-
-CMS --> PUBLISH CONTAINER IN DOCKERHUB -> INJECT VARIABLES AT RUNNING TIME
-PORTAL --> more taxonomy explorer centered 
-JBROWSE --> use url parameters to pass data (assembly, annotations, taxonomic lineage, assembly details) to genome browser
+JOBS:
+add scientific name check for organisms (update it)
 
 
+FEATURES TO TEST:
+    -edit/create/delete/import organisms/biosamples/assemblies/local_samples/annotations/reads
+    -trigger assemblies from bioproject/list of accessions
+    -trigger biosamples from project name 
+    -trigger reads from bioproject
+    -update organism goat status to in assembly and trigger sample import of the organism (it should stay in assembly)
+    -upload biosample to EBI.
+    -audit logs
+    
+fix user role select in user form, also admin can be created...
+
+organism form: 
+
+    change organism form custom fields logic to be injected from portal json 
+        - sub_project (free text + select)
+        - sequencing type (free text + select)
+
+MAP:
+map loading is still slow
+
+tree:
+tree loading is slow
+
+genome browser:
+use chr aliases from annotrieve

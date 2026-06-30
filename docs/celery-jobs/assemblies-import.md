@@ -47,24 +47,20 @@ So it calls **`finalize_organism_catalog_for_taxids(species_to_refresh, copy_lin
    - Compares to `Assembly.objects().scalar("accession")`.
    - Returns `new_rows` (not in DB) and `assemblies_to_update` (existing accession → full record for metadata refresh).
 3. **Taxids** — `collect_taxids_from_assembly_rows` from both structures (`organism.tax_id` in JSON).
-4. **Taxonomy** — `handle_full_taxonomy_from_taxids(all_taxids, TMP_DIR)` → **`saved_organism_taxids`** (new inserts only).
-5. **Gate** — `taxids_with_organism` = distinct taxids among JSONL taxids that have an **`Organism`** document.
-6. **Biosample accessions** — `collect_sample_accessions_for_taxids` from rows whose taxid ∈ `taxids_with_organism`; deduped list.
-7. **Fetch biosamples** — `handle_biosamples_from_accessions` (same as reads job) → **`BioSample`** inserts; list `newly_fetched_biosample_accessions`.
-8. **Persist assemblies** — `persist_assembly_import_payload(new_rows, assemblies_to_update, taxids_with_organism=...)`:
+4. **Biosample accessions** — `collect_sample_accessions_from_assembly_rows` (any row with a non-empty taxid); deduped list.
+5. **Persist assemblies** — `persist_assembly_import_payload(new_rows, assemblies_to_update, taxids_with_organism=None)`:
    - Updates **metadata** on existing assemblies (if taxon allowed).
    - Parses new rows with `parsers.assembly.parse_assembly_from_ncbi_datasets` → **`Assembly`** insert (or per-doc save on bulk failure).
-   - **`save_chromosomes_bulk_and_update_assemblies(new_accessions)`**: async HTTP to NCBI assembly reports (`clients.ncbi_assembly_http`, `aiohttp`), **`Chromosome`** delete-by-assembly + insert, **`Assembly.chromosomes`** list updated.
-9. **Prune assemblies** — `delete_rows_without_organism(Assembly, "accession", saved_assembly_accessions)` if any saved.
-10. **Prune biosamples** — if biosamples fetched: `delete_rows_without_organism(BioSample, "accession", newly_fetched_biosample_accessions)`.
-11. **Species refresh set** — distinct `taxid` values on surviving `Assembly` rows for `saved_assembly_accessions`.
-12. **Finalize** — `finalize_organism_catalog_for_taxids(species_to_refresh, copy_lineages=True)`:
-    - `bulk_copy_organism_lineages_to_catalog` → **TaxonNode** edges + **BioSample** / **Assembly** / **ReadRun** `taxon_lineage` by `taxid`.
-    - Organism five counters; TaxonNode roll-ups; `insdc_status` / `goat_status` / `GoaTUpdateDate`.
-13. **Geolocation** — `update_geolocations(newly_fetched_biosample_accessions)` if non-empty.
-14. **ToLID** — `fetch_tolid_prefixes_task.delay(saved_organism_taxids)` if non-empty.
-15. **BlobToolKit** — for `saved_assembly_accessions` still missing `blobtoolkit_id`: `bulk_link_blobtoolkit_for_assembly_accessions` (`clients.genomehubs_client`).
-16. **Return** dict with accessions lists, organism taxids, blob stats, `status: ok`.
+   - **`save_chromosomes_bulk_and_update_assemblies((accession, assembly_name), …)`**: for each new assembly, builds the usual NCBI genome FTP HTTPS URL to `*_assembly_report.txt` from accession + assembly name (spaces → `_`) and fetches it in **one** GET, streaming the body into the chromosome parser; if that fails (404, name mismatch, etc.), falls back to the prior directory-scrape + report GET. Persists **`Chromosome`** and **`Assembly.chromosomes`** via `aiohttp` and `clients.ncbi_assembly_http`.
+6. **Fetch biosamples** — `resolve_biosamples_for_accessions` → **`BioSample`** inserts; list `newly_fetched_biosample_accessions`.
+7. **Taxonomy** — `handle_full_taxonomy_from_taxids(all_taxids, TMP_DIR)` → **`saved_organism_taxids`**; `prune_organisms_missing_taxon_lineage(all_taxids)`.
+8. **Prune assemblies** — `delete_rows_without_organism(Assembly, "accession", saved_assembly_accessions)` if any saved; optional inline Annotrieve with `skip_finalize=True`.
+9. **Prune biosamples** — if biosamples fetched: `delete_rows_without_organism(BioSample, "accession", newly_fetched_biosample_accessions)`.
+10. **Species refresh set** — union of taxids on surviving assemblies, taxids on fetched biosamples, and `saved_organism_taxids`.
+11. **Finalize** — `bulk_copy_organism_lineages_to_catalog`, `update_organism_counts` / `update_taxon_node_counts`, `apply_goat_status_after_assembly_ingest` (when `GOAT_PROJECT_NAME` set), `run_enrich_followup_for_taxids`.
+12. **Geolocation** — `update_geolocations(newly_fetched_biosample_accessions)` if non-empty.
+13. **BlobToolKit** — for surviving new assemblies still missing `blobtoolkit_id`: `bulk_link_blobtoolkit_for_assembly_accessions`.
+14. **Return** dict with accessions lists, organism taxids, blob stats, `status: ok`.
 
 ---
 
@@ -160,7 +156,9 @@ jobs/assemblies.py
 │   └── db/model.py              → Assembly, Chromosome
 ├── jobs/support/biosample_bulk.py → (same tree as reads doc)
 ├── jobs/support/geolocation_batch.py
-└── jobs/support/organism_catalog_sync.py → handle_full_taxonomy_from_taxids, delete_rows_without_organism, finalize_organism_catalog_for_taxids
+├── jobs/support/organism_catalog_taxonomy.py → handle_full_taxonomy_from_taxids
+├── jobs/support/organism_catalog_guard.py → delete_rows_without_organism
+└── jobs/support/organism_catalog_finalize.py → finalize_organism_catalog_for_taxids
     └── (same denorm subtree as reads doc)
 ```
 

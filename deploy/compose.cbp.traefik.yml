@@ -1,11 +1,16 @@
-# CBP production-style stack: Traefik routes /api → Flask and everything else → Next (no nginx).
+# CBP production stack: Traefik routes /api → Flask and everything else → Next.
 # Prerequisites: external Docker network `biogenome` (same as your Traefik stack).
 #
-# Required in .env (or environment) when deploying:
-#   PORTAL_NEXT_IMAGE=<account>.dkr.ecr.<region>.amazonaws.com/<repo>:portal_next
+# portal.json, logo, and other branding assets are now BAKED into the Next image
+# at build time via scripts/bake-portal.mjs — no bind-mounts needed for them.
 #
-# portal.json is mounted into Next public/ so GET /portal.json is served by the app.
-# Optional: PORTAL_LOGO_HOST → bind-mount to /app/public/portal-logo.svg (navbar).
+# Required in .env (or environment) when deploying:
+#   PORTAL_NEXT_IMAGE  — ECR image tag, e.g. .../biogenome_registry:portal_next_cbp
+#
+# Optional runtime server-side knobs (not branding; affect internal fetch routing):
+#   INTERNAL_FETCH_ORIGIN  — internal URL of the Flask API (e.g. http://cbp_server:5000)
+#                            Set only when Next and Flask are on different internal hosts.
+#                            Omit when Traefik routes /api on the same public host.
 
 services:
   cbp_mongo:
@@ -29,8 +34,12 @@ services:
       - cbp_redis
     volumes:
       - ${ANNOTATIONS_PATH}:/server/annotations_data
+      # Defaults to deploy/celery_beat_schedule.json when run from this folder.
+      - ${CELERY_BEAT_SCHEDULE_HOST:-./celery_beat_schedule.json}:/server/celery_beat_schedule.json:ro
       - ./templates:/server/templates
       - cbp_shared_tmp:/app/tmp
+    environment:
+      - REDIS_HOST=cbp_redis
     env_file:
       - .env
     networks:
@@ -47,20 +56,23 @@ services:
       - "traefik.http.routers.cbp_api.tls.domains[0].main=dades.biogenoma.cat"
       - "traefik.http.routers.cbp_api.tls.domains[0].sans=data.biogenoma.cat,dades.biogenoma.org,data.biogenoma.org"
       - "traefik.http.routers.cbp_api.service=cbp_api"
+      - "traefik.http.routers.cbp_api.middlewares=cbp_api_compress"
       - "traefik.http.services.cbp_api.loadbalancer.server.port=5000"
+      - "traefik.http.middlewares.cbp_api_compress.compress=true"
 
   cbp_next:
-    image: ${PORTAL_NEXT_IMAGE:?set PORTAL_NEXT_IMAGE to your ECR Next image, e.g. .../biogenome_registry:portal_next}
+    # NEXT_PUBLIC_SHOW_COUNTRIES is baked into the image at build time (Next.js inlines it into the
+    # client bundle). Runtime environment cannot change it — rebuild the image with the desired
+    # --build-arg NEXT_PUBLIC_SHOW_COUNTRIES=true|false to toggle country UI.
+    image: ${PORTAL_NEXT_IMAGE:?set PORTAL_NEXT_IMAGE to your ECR Next image, e.g. .../biogenome_registry:portal_next_cbp}
     restart: always
     expose:
       - "3000"
-    volumes:
-      - ./portal.json:/app/public/portal.json:ro
-      - /home/emilior/bgp-configs/biogenome-portal-cbp/CBPLogo.png:/app/public/portal-logo.svg:ro
-      # Optional: same as legacy nginx hero-map mount
-      # - ./hero-map.geojson:/app/public/hero-map.geojson:ro
     environment:
       - NODE_ENV=production
+      # Set only when Flask is reachable on a different internal host than the public URL.
+      # Example: - INTERNAL_FETCH_ORIGIN=http://cbp_server:5000
+      # When Traefik proxies /api on the same public host, this can be omitted.
     networks:
       - biogenome
     labels:
@@ -81,6 +93,7 @@ services:
     command: celery --app app.celery_app worker --loglevel=info --autoscale=1,1
     restart: always
     volumes:
+      - ${CELERY_BEAT_SCHEDULE_HOST:-./celery_beat_schedule.json}:/server/celery_beat_schedule.json:ro
       - cbp_shared_tmp:/app/tmp
     env_file:
       - .env
@@ -96,7 +109,7 @@ services:
     command: celery --app app.celery_app beat --loglevel=info
     restart: always
     volumes:
-      - ./celery_beat_schedule.json:/app/celery_beat_schedule.json:ro
+      - ${CELERY_BEAT_SCHEDULE_HOST:-./celery_beat_schedule.json}:/server/celery_beat_schedule.json:ro
       - cbp_shared_tmp:/app/tmp
     env_file:
       - .env
@@ -113,11 +126,15 @@ services:
     restart: always
     expose:
       - "6379"
+    volumes:
+      - cbp_redis_data:/data
+    command: redis-server --save 60 1 --loglevel warning
     networks:
       - biogenome
 
 volumes:
   cbp_shared_tmp:
+  cbp_redis_data:
 
 networks:
   biogenome:

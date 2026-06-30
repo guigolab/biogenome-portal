@@ -1,32 +1,35 @@
 {
   "general": {
     "title": {
-      "en": "BioGenome Portal",
+      "en": "Iberoamerican BioGenome Portal",
       "cat": "Portal BioGenome"
     },
     "description": {
-      "en": "The Biogenome portal app provides a user friendly way to explore biodiversity genomics",
-      "cat": "El portal Biogenome ofereix una manera amigable d'explorar la genòmica de la biodiversitat"
+      "en": "The Iberoamerican BioGenome Portal collects the genomes of species sampled in the Iberoamerican region",
+      "cat": "El Portal Iberoamericà recull els genomes de les espècies muestrades a la regió Iberoamericana.",
+      "es": "El Portal Iberoamericano recopila los genomas de las especies muestreadas en la región Iberoamericana."
     },
-    "cms": true,
-    "goat": true,
+    "cms": false,
+    "goat": false,
     "map": true,
     "languages": [
       "en",
-      "cat"
+      "cat",
+      "es"
     ],
-    "apiBase": "/api",
-    "rootTaxid": "131567",
+    "apiBase": "/iberamerica/api",
+    "rootTaxid": "2759",
     "titleHighlight": {
-      "en": "BioGenome",
+      "en": "Iberoamerican",
       "cat": "BioGenome"
-    }
+    },
+    "contactEmail": "emilio.righi@crg.eu"
   },
   "theme": {
     "colors": {
-      "primary": "#22c55e",
-      "secondary": "#3b82f6",
-      "accent": "#2dd4bf"
+      "primary": "#4f46e5",
+      "secondary": "#312e81",
+      "accent": "#f97316"
     }
   },
   "cms": {
@@ -56,12 +59,15 @@
   },
   "footer": {
     "copyright": {
-      "en": "© BioGenome Portal",
-      "cat": "© Portal BioGenome"
+      "en": "Ibero-America BioGenome Portal",
+      "cat": "Portal Iberoamericà de BioGenoma Terrestre",
+      "es": "Portal Iberoamericano de BioGenoma Terrestre"
     },
     "tagline": {
-      "en": "Exploring biodiversity through genomics",
-      "cat": "Explorant la biodiversitat a través de la genòmica"
+      "en": "Ibero-America BioGenome Portal",
+      "cat": "Portal Iberoamericà de BioGenoma Terrestre",
+      "es": "Portal Iberoamericano de BioGenoma Terrestre"
     }
-  }
+  },
+  "$schema": "../portal.schema.json"
 }

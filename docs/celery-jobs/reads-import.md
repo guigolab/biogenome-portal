@@ -45,30 +45,21 @@ Stream ENA **read_run** data for a bioproject into a TSV, insert/update **`ReadR
 4. **Parse TSV** — `jobs.support.readrun_ena_tsv.ingest_readruns_from_ena_tsv(output_file_path)`:
    - Reads tab-separated filereport with `csv.DictReader`.
    - Each row → `parsers.read.parse_read_from_ena_portal` → **`ReadRun`** instance (`run_accession`, `taxid`, `experiment_accession`, `sample_accession`, `scientific_name`, `metadata` = full row).
-   - **Existing** `run_accession`: accumulates `metadata` updates, flushed in batches (`flush_readrun_metadata_updates`).
-   - **New** runs: batched `insert_readrun_batch` → `ReadRun.objects.insert`.
+   - **New** runs: batched existence check + `insert_readrun_batch` → `ReadRun.objects.insert` (existing runs are skipped; no bulk metadata refresh in this path).
    - Returns `(new_read_accessions: List[str], ReadRunTsvIngestStats)`.
-5. **Collect sample accessions** — `ReadRun.objects(run_accession__in=new_read_accessions).scalar("sample_accession")` (may include duplicates/None; downstream dedupes).
-6. **Fetch biosamples** — `jobs.support.biosample_bulk.handle_biosamples_from_accessions(biosamples_to_fetch, TMP_DIR)`:
-   - Batches accessions (5000); skips already in `BioSample`.
-   - `ebi_client.get_xml_from_ena_browser` → gzipped XML → `parse_biosamples_from_xml` → `parsers.biosample` → **`BioSample.objects.insert`**.
-   - Returns list of **saved** biosample accessions.
-7. **Taxonomy** — `ReadRun.objects(run_accession__in=new_read_accessions).scalar("taxid")` → `jobs.support.organism_catalog_sync.handle_full_taxonomy_from_taxids(...)`:
+5. **Collect sample accessions** — `jobs.support.read_batch_queries.biosample_related_maps_from_run_accessions`: chunked `ReadRun` lookups (default 5000 `run_accession`s per query) build `related_id_by_biosample` and `biosample_accessions_ordered` with **first biosample accession per sample** when stepping through `new_read_accessions` in list order (bounded `$in` size for large bioprojects).
+6. **Fetch biosamples** — `jobs.support.biosample_ingest.resolve_biosamples_for_accessions(...)` (ENA / NCBI tiers; see `biosample_ingest.py`).
+7. **ReadRun ↔ BioSample sync** — `apply_readrun_taxonomy_from_biosamples_for_accessions(new_read_accessions)` (taxid / sample fields from resolved biosamples where applicable).
+8. **Taxonomy** — `jobs.support.read_batch_queries.unique_taxids_for_taxonomy_from_run_accessions` (batched `taxid` scalars) → **distinct** non-pending taxids (sorted) → `jobs.support.catalog_taxonomy_bootstrap.handle_full_taxonomy_from_taxids(..., TMP_DIR)`:
    - Inserts missing **`Organism`** + **`TaxonNode`** stubs from ENA taxonomy XML.
-   - Insert-only bootstrap: no finalize and no ToLID call inside this helper.
    - Returns **`saved_organism_taxids`** (taxids where a **new** `Organism` was inserted this call — not all touched taxids).
-8. **Catalog sync + prune** — `jobs.support.organism_catalog_sync.reload_prune_denorm_after_taxonomy_import(ReadRun, "run_accession", new_read_accessions or None, saved_organism_taxids)` (default `merge_context`):
-   - `taxids_on_catalog_documents` for batch `taxid` set.
-   - `bulk_copy_organism_lineages_to_catalog` for union(batch taxids, saved organism taxids).
-   - **`backfill_readrun_taxon_lineage_from_organisms(new_read_accessions)`** — per-run `UpdateOne` by `run_accession` (handles BSON `taxid` quirks).
-   - If `new_read_accessions` empty → returns `0` early (no prune).
-   - Else `delete_rows_without_organism(ReadRun, ...)` — removes runs in batch whose `taxid` has no `Organism`.
-   - `finalize_organism_catalog_for_taxids(sync_taxids, copy_lineages=False)` — counts, TaxonNode roll-ups, statuses (lineage already copied).
-   - **Extra** `bulk_update_taxon_node_counts_for_keys` for organisms that had batch taxids but may have lost all runs (ancestor counts).
-9. **ToLID** — if `saved_organism_taxids`: `jobs.organisms.fetch_tolid_prefixes_task.delay(...)`.
-10. **Geolocation** — `jobs.support.geolocation_batch.update_geolocations(saved_biosample_accessions)` → `SampleCoordinates`, `Organism.countries`, etc.
-11. **Cleanup** — `safe_remove_file(output_file_path)` in `finally`.
-12. **Return** dict with stats + `status: ok`.
+   - `prune_organisms_missing_taxon_lineage` on the **same unique** taxid list (avoids redundant work when many runs share a species).
+9. **Prune orphan runs** — `delete_rows_without_organism(ReadRun, "run_accession", new_read_accessions)` when the batch is non-empty.
+10. **Still-present runs** — `jobs.support.read_batch_queries.run_accessions_still_in_database` (batched queries), then **Scientific name backfill** — `backfill_readrun_scientific_name_from_organisms(run_accessions_still_in_db)` for runs still in DB after prune.
+11. **Finalize** — build `species_to_refresh` (taxids from surviving runs ∪ `saved_organism_taxids`); then `bulk_copy_organism_lineages_to_catalog`, `update_organism_counts` / `update_taxon_node_counts`, `apply_goat_status_after_reads_ingest` when `GOAT_PROJECT_NAME` is set, and `run_enrich_followup_for_taxids`.
+12. **Geolocation** — `update_geolocations(...)` on biosample accessions that were actually saved.
+13. **Cleanup** — `safe_remove_file(output_file_path)` in `finally`.
+14. **Return** dict with stats + `status: ok`.
 
 ---
 
@@ -118,7 +109,7 @@ flowchart LR
 
 | Model | Operation | When / why |
 |-------|-----------|------------|
-| **ReadRun** | insert, metadata update, delete (orphans), bulk lineage `UpdateOne` | Core import; prune if no organism |
+| **ReadRun** | insert, metadata update, delete (orphans); scientific-name backfill | Core import; prune if no organism |
 | **BioSample** | insert (via bulk handler) | Samples linked to new runs |
 | **Organism** | insert (taxonomy); read; **update** counters, `insdc_status`, `goat_status`; countries via geolocation | Taxonomy + `finalize_organism_catalog_for_taxids` + geo |
 | **TaxonNode** | insert (taxonomy); **update** parent/children, rollup counts | `bulk_copy_organism_lineages_to_catalog` + taxon count phase |
@@ -139,16 +130,12 @@ jobs/reads.py
 ├── db/model.py                    → Experiment, Read, ReadRun
 ├── helpers/job_paths.py           → ensure_parent_dir, safe_remove_file
 ├── jobs/organisms.py              → fetch_tolid_prefixes_task
-├── jobs/support/biosample_bulk.py → handle_biosamples_from_accessions
-│   ├── clients/ebi_client.py    → get_xml_from_ena_browser
-│   ├── db/model.py              → BioSample
-│   ├── parsers/biosample.py     → parse_biosample_from_ena_xml_element (XML path)
-│   └── lxml.etree               → streaming SAMPLE parse
-├── jobs/support/organism_catalog_sync.py → handle_full_taxonomy_from_taxids, reload_prune_denorm_after_taxonomy_import, …
-│   ├── db/model.py              → Assembly, BioSample, GenomeAnnotation, GoaTUpdateDate, LocalSample, Organism, ReadRun, TaxonNode
-│   ├── helpers/organism_denorm_pure.py → derive_organism_denorm (status policy)
-│   ├── db/constants.py          → GOAT_PROJECT_NAME
-│   └── jobs/support/readrun_ena_tsv.py → backfill_readrun_taxon_lineage_from_organisms
+├── jobs/support/biosample_ingest.py → resolve_biosamples_for_accessions
+├── jobs/support/catalog_taxonomy_bootstrap.py → handle_full_taxonomy_from_taxids
+├── jobs/support/catalog_denorm_finalize.py → bulk_copy_organism_lineages_to_catalog
+├── jobs/support/stats.py → update_organism_counts, update_taxon_node_counts
+├── jobs/support/goat_status.py → apply_goat_status_after_reads_ingest
+├── jobs/support/organism_enrich.py → run_enrich_followup_for_taxids
 ├── jobs/support/geolocation_batch.py → update_geolocations
 │   ├── db/model.py              → BioSample, Organism, SampleCoordinates
 │   ├── shapely                  → Point, polygon country lookup
