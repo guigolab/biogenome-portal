@@ -1,9 +1,20 @@
 'use client'
 
 import Link from 'next/link'
-import { FlaskConical, History, LayoutGrid, Plus, Trash2, User, Users } from 'lucide-react'
+import { useState } from 'react'
+import {
+   FlaskConical,
+   History,
+   LayoutDashboard,
+   LayoutGrid,
+   Plus,
+   Trash2,
+   User,
+   Users,
+} from 'lucide-react'
 
-import { AdminDashboardStats } from '@/components/cms/dashboard/admin-dashboard-stats'
+import { AdminOverviewStatsModule } from '@/components/cms/dashboard/admin-overview-stats-module'
+import { DataManagerOverviewStatsModule } from '@/components/cms/dashboard/data-manager-overview-stats-module'
 import { DeleteRequestsModule } from '@/components/cms/dashboard/delete-requests-module'
 import { OrganismAuditLogsModule } from '@/components/cms/dashboard/organism-audit-logs-module'
 import { SpeciesOverviewModule } from '@/components/cms/dashboard/species-overview-module'
@@ -23,6 +34,7 @@ export function AdminDashboardClient() {
    const userRole = useCmsAuthStore((s) => s.userRole)
    const isAdmin = userRole === 'Admin'
    const openDrawer = useCmsDrawerStore((s) => s.open)
+   const [tab, setTab] = useState('overview')
 
    const general = config?.general as Record<string, unknown> | undefined
    const enaTemplate = Boolean(general?.enaTemplate)
@@ -67,11 +79,13 @@ export function AdminDashboardClient() {
             </div>
          </div>
 
-         {isAdmin ? <AdminDashboardStats /> : null}
-
          {isAdmin ? (
-            <Tabs defaultValue="species" className="gap-4">
+            <Tabs value={tab} onValueChange={setTab} className="gap-4">
                <TabsList className="h-auto w-full flex-wrap justify-start gap-1 rounded-xl bg-muted/80 p-1 sm:w-auto">
+                  <TabsTrigger value="overview" className="gap-1.5 rounded-lg px-3 py-2">
+                     <LayoutDashboard className="h-4 w-4" />
+                     Overview
+                  </TabsTrigger>
                   <TabsTrigger value="species" className="gap-1.5 rounded-lg px-3 py-2">
                      <LayoutGrid className="h-4 w-4" />
                      Species
@@ -93,37 +107,49 @@ export function AdminDashboardClient() {
                      Audit logs
                   </TabsTrigger>
                </TabsList>
+               <TabsContent value="overview" className={DASHBOARD_TAB_PANEL_CLASS}>
+                  <AdminOverviewStatsModule active={tab === 'overview'} />
+               </TabsContent>
                <TabsContent value="species" className={DASHBOARD_TAB_PANEL_CLASS}>
-                  <SpeciesOverviewModule variant="tabPanel" />
+                  <SpeciesOverviewModule />
                </TabsContent>
                <TabsContent value="biosamples" className={DASHBOARD_TAB_PANEL_CLASS}>
-                  <SubmittedBiosamplesModule hasEnaTemplate={enaTemplate} variant="tabPanel" />
+                  <SubmittedBiosamplesModule hasEnaTemplate={enaTemplate} />
                </TabsContent>
                <TabsContent value="users" className={DASHBOARD_TAB_PANEL_CLASS}>
-                  <UsersModule variant="tabPanel" />
+                  <UsersModule />
                </TabsContent>
                <TabsContent value="deletions" className={DASHBOARD_TAB_PANEL_CLASS}>
-                  <DeleteRequestsModule variant="tabPanel" />
+                  <DeleteRequestsModule />
                </TabsContent>
                <TabsContent value="audit-logs" className={DASHBOARD_TAB_PANEL_CLASS}>
-                  <OrganismAuditLogsModule variant="tabPanel" />
+                  <OrganismAuditLogsModule />
                </TabsContent>
             </Tabs>
          ) : (
-            <Tabs defaultValue="species" className="gap-4">
+            <Tabs value={tab} onValueChange={setTab} className="gap-4">
                <TabsList className="h-auto w-full flex-wrap justify-start gap-1 rounded-xl bg-muted/80 p-1 sm:w-auto">
+                  <TabsTrigger value="overview" className="gap-1.5 rounded-lg px-3 py-2">
+                     <LayoutDashboard className="h-4 w-4" />
+                     Overview
+                  </TabsTrigger>
                   <TabsTrigger value="species" className="gap-1.5 rounded-lg px-3 py-2">
+                     <LayoutGrid className="h-4 w-4" />
                      Species
                   </TabsTrigger>
                   <TabsTrigger value="biosamples" className="gap-1.5 rounded-lg px-3 py-2">
+                     <FlaskConical className="h-4 w-4" />
                      Submitted biosamples
                   </TabsTrigger>
                </TabsList>
+               <TabsContent value="overview" className={DASHBOARD_TAB_PANEL_CLASS}>
+                  <DataManagerOverviewStatsModule active={tab === 'overview'} />
+               </TabsContent>
                <TabsContent value="species" className={DASHBOARD_TAB_PANEL_CLASS}>
-                  <SpeciesOverviewModule variant="tabPanel" />
+                  <SpeciesOverviewModule />
                </TabsContent>
                <TabsContent value="biosamples" className={DASHBOARD_TAB_PANEL_CLASS}>
-                  <SubmittedBiosamplesModule hasEnaTemplate={enaTemplate} variant="tabPanel" />
+                  <SubmittedBiosamplesModule hasEnaTemplate={enaTemplate} />
                </TabsContent>
             </Tabs>
          )}

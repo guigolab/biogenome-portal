@@ -12,6 +12,7 @@ from pymongo import UpdateOne
 
 from db.model import Organism, TaxonNode
 from helpers import geolocation as geolocation_helper
+from jobs.support.genome_publication_backfill import run_genome_publication_backfill
 from jobs.support.iucn_redlist_fetch import (
     run_iucn_backfill_by_rank,
     run_iucn_fetch_missing_redlist,
@@ -293,4 +294,22 @@ def fetch_iucn_missing_redlist_task() -> Dict[str, Any]:
         logger.exception("organisms.fetch_iucn_missing_redlist failed")
         raise
     logger.info("organisms.fetch_iucn_missing_redlist: finished %s", result)
+    return result
+
+
+@shared_task(name="organisms.backfill_genome_publication", ignore_result=False)
+def backfill_genome_publication_task() -> Dict[str, Any]:
+    """
+    One-off migration: for organisms with a linked assembly, move the first
+    validated entry of ``publications`` into the new ``genome_publication`` field
+    and remove it from the list. See
+    ``jobs.support.genome_publication_backfill.run_genome_publication_backfill``.
+    """
+    logger.info("organisms.backfill_genome_publication: starting")
+    try:
+        result = run_genome_publication_backfill()
+    except Exception:
+        logger.exception("organisms.backfill_genome_publication failed")
+        raise
+    logger.info("organisms.backfill_genome_publication: finished %s", result)
     return result

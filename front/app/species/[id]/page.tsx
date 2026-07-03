@@ -12,7 +12,13 @@ import { SpeciesGoatPipelineSection } from '@/components/species-goat-pipeline-s
 import { fetchSampleLocations, parseSampleLocationsPayload } from '@/lib/api/coordinates'
 import { fetchTaxonAncestors } from '@/lib/api/taxon'
 import { fetchOrganism } from '@/lib/api/organisms'
-import { publicationExternalUrl } from '@/lib/publicationLinks'
+import {
+  parseOrganismPublication,
+  parseOrganismPublications,
+  publicationExternalUrl,
+  publicationsMatch,
+  type ParsedPublication,
+} from '@/lib/publicationLinks'
 import { loadPortalConfigFromDisk } from '@/lib/portal/portalServer'
 import { buildSpeciesDetailView, parseOrganismImages } from '@/lib/species-detail-from-organism'
 import { getRootTaxid } from '@/lib/api/taxon'
@@ -159,6 +165,28 @@ function ClassificationCard({
   )
 }
 
+function PublicationRow({ pub }: { pub: ParsedPublication }) {
+  const href = publicationExternalUrl(pub.source, pub.id)
+  return (
+    <li className="flex flex-wrap items-baseline gap-2 text-sm">
+      <span className="text-muted-foreground">{pub.source}:</span>
+      {href ? (
+        <a
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-primary hover:underline inline-flex items-center gap-1 font-mono"
+        >
+          {pub.id}
+          <ExternalLink className="h-3 w-3 shrink-0" />
+        </a>
+      ) : (
+        <span className="font-mono">{pub.id}</span>
+      )}
+    </li>
+  )
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -235,17 +263,11 @@ export default async function SpeciesDetailPage({
       : sampleLocations.length
   const mapPoints = sampleLocations.map((p) => ({ lat: p.lat, lng: p.lng }))
 
-  const publicationsRaw = organism.publications
-  const publications: { source: string; id: string }[] = []
-  if (Array.isArray(publicationsRaw)) {
-    for (const p of publicationsRaw) {
-      if (!p || typeof p !== 'object') continue
-      const o = p as Record<string, unknown>
-      const source = str(o.source)
-      const pid = str(o.id)
-      if (pid) publications.push({ source: source || 'Publication', id: pid })
-    }
-  }
+  const genomePublication = parseOrganismPublication(organism.genome_publication)
+  const otherPublications = parseOrganismPublications(organism.publications).filter(
+    (pub) => !genomePublication || !publicationsMatch(pub, genomePublication),
+  )
+  const showPublicationsCard = Boolean(genomePublication) || otherPublications.length > 0
 
   const commonNamesRaw = organism.common_names
   const commonNames: { value: string; lang?: string; locality?: string }[] = []
@@ -401,14 +423,14 @@ export default async function SpeciesDetailPage({
                   <CardTitle className="text-lg">Metadata</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <dl className="space-y-2">
+                  <dl className="space-y-3">
                     {metaPairs.map(([k, v]) => (
                       <div
                         key={k}
-                        className="flex flex-col sm:flex-row sm:gap-4 border-t border-border pt-2 first:border-0 first:pt-0"
+                        className="flex flex-col sm:flex-row sm:justify-between sm:gap-4"
                       >
-                        <dt className="text-muted-foreground shrink-0 sm:w-40 font-mono text-xs">{k}</dt>
-                        <dd className="font-mono text-xs break-all">{v}</dd>
+                        <dt className="text-muted-foreground text-sm">{k}</dt>
+                        <dd className="font-medium text-sm sm:text-right break-words">{v}</dd>
                       </div>
                     ))}
                   </dl>
@@ -418,7 +440,7 @@ export default async function SpeciesDetailPage({
           </div>
         ) : null}
 
-        {publications.length > 0 ? (
+        {showPublicationsCard ? (
           <Card className="mb-6">
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
@@ -426,33 +448,29 @@ export default async function SpeciesDetailPage({
                 Publications
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <ul className="space-y-2">
-                {publications.map((pub, idx) => {
-                  const href = publicationExternalUrl(pub.source, pub.id)
-                  return (
-                    <li
-                      key={`${pub.source}-${pub.id}-${idx}`}
-                      className="flex flex-wrap items-baseline gap-2 text-sm"
-                    >
-                      <span className="text-muted-foreground">{pub.source}:</span>
-                      {href ? (
-                        <a
-                          href={href}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-primary hover:underline inline-flex items-center gap-1 font-mono"
-                        >
-                          {pub.id}
-                          <ExternalLink className="h-3 w-3 shrink-0" />
-                        </a>
-                      ) : (
-                        <span className="font-mono">{pub.id}</span>
-                      )}
-                    </li>
-                  )
-                })}
-              </ul>
+            <CardContent className="space-y-4">
+              {genomePublication ? (
+                <div className="space-y-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge variant="secondary">Genome assembly publication</Badge>
+                  </div>
+                  <ul className="space-y-2">
+                    <PublicationRow pub={genomePublication} />
+                  </ul>
+                </div>
+              ) : null}
+              {otherPublications.length > 0 ? (
+                <div className="space-y-2">
+                  {genomePublication ? (
+                    <p className="text-sm font-medium text-muted-foreground">Other publications</p>
+                  ) : null}
+                  <ul className="space-y-2">
+                    {otherPublications.map((pub, idx) => (
+                      <PublicationRow key={`${pub.source}-${pub.id}-${idx}`} pub={pub} />
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
             </CardContent>
           </Card>
         ) : null}
@@ -469,12 +487,17 @@ export default async function SpeciesDetailPage({
               <ul className="divide-y divide-border">
                 {commonNames.map((n, idx) => (
                   <li key={`${n.value}-${idx}`} className="py-2 first:pt-0 last:pb-0 text-sm">
-                    <span className="font-medium">{n.value}</span>
-                    {(n.lang || n.locality) && (
-                      <span className="text-muted-foreground ml-2">
-                        {[n.lang, n.locality].filter(Boolean).join(' · ')}
-                      </span>
-                    )}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-medium">{n.value}</span>
+                      {n.lang ? (
+                        <Badge variant="outline" className="font-normal">
+                          {n.lang}
+                        </Badge>
+                      ) : null}
+                    </div>
+                    {n.locality ? (
+                      <p className="text-muted-foreground text-sm mt-0.5">{n.locality}</p>
+                    ) : null}
                   </li>
                 ))}
               </ul>

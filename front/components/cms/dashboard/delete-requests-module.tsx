@@ -15,7 +15,7 @@ import {
    AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import {
    Table,
@@ -26,13 +26,13 @@ import {
    TableRow,
 } from '@/components/ui/table'
 import { extractApiMessage } from '@/lib/cms/extract-api-message'
-import type { DashboardModuleVariant } from '@/components/cms/dashboard/dashboard-module-variant'
+import { DashboardModuleHeader } from '@/components/cms/dashboard/dashboard-module-header'
+import { DashboardModulePagination } from '@/components/cms/dashboard/dashboard-module-pagination'
 import { cmsDeleteDeletionRequest, cmsDeleteItem, cmsGetItems } from '@/lib/cms/services/auth'
-import { cn } from '@/lib/utils'
 
 const LIMIT = 7
 
-export function DeleteRequestsModule({ variant = 'standalone' }: { variant?: DashboardModuleVariant }) {
+export function DeleteRequestsModule() {
    const [items, setItems] = useState<Record<string, unknown>[]>([])
    const [total, setTotal] = useState(0)
    const [loading, setLoading] = useState(true)
@@ -59,6 +59,10 @@ export function DeleteRequestsModule({ variant = 'standalone' }: { variant?: Das
             limit: LIMIT,
             offset: (page - 1) * LIMIT,
          })
+         if ((data?.length ?? 0) === 0 && page > 1 && (t ?? 0) > 0) {
+            setPage((p) => Math.max(1, p - 1))
+            return
+         }
          setItems(data ?? [])
          setTotal(t ?? 0)
       } catch {
@@ -94,7 +98,6 @@ export function DeleteRequestsModule({ variant = 'standalone' }: { variant?: Das
          await cmsDeleteItem('organisms', taxid)
          toast.success('Organism deleted.')
          setApproveItem(null)
-         setPage(1)
          await fetchData()
       } catch (e) {
          toast.error(extractApiMessage(e, 'Deletion failed'))
@@ -103,40 +106,19 @@ export function DeleteRequestsModule({ variant = 'standalone' }: { variant?: Das
       }
    }
 
-   const embedded = variant === 'tabPanel'
-
    return (
       <>
-         <Card
-            className={cn(
-               'border-border/80 border-destructive/20 shadow-sm',
-               embedded && 'rounded-xl border bg-card',
-            )}
-         >
-            <CardHeader className={cn(embedded && 'pb-2')}>
-               {embedded ? (
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                     <p className="text-sm text-muted-foreground">Approve or deny curator deletion requests.</p>
-                     {total > 0 ? (
-                        <span className="rounded-full bg-destructive px-2 py-0.5 text-xs font-bold text-destructive-foreground">
-                           {total}
-                        </span>
-                     ) : null}
-                  </div>
-               ) : (
-                  <>
-                     <div className="flex items-center justify-between gap-2">
-                        <CardTitle>Deletion requests</CardTitle>
-                        {total > 0 ? (
-                           <span className="rounded-full bg-destructive px-2 py-0.5 text-xs font-bold text-destructive-foreground">
-                              {total}
-                           </span>
-                        ) : null}
-                     </div>
-                     <CardDescription>Approve or deny curator deletion requests.</CardDescription>
-                  </>
-               )}
-            </CardHeader>
+         <Card className="gap-3 border-destructive/20 shadow-sm">
+            <DashboardModuleHeader
+               description="Approve or deny curator deletion requests."
+               badge={
+                  total > 0 ? (
+                     <span className="rounded-full bg-destructive px-2 py-0.5 text-xs font-bold text-destructive-foreground">
+                        {total}
+                     </span>
+                  ) : null
+               }
+            />
             <CardContent className="space-y-4">
                <Input
                   placeholder="Filter by name or taxid…"
@@ -196,24 +178,12 @@ export function DeleteRequestsModule({ variant = 'standalone' }: { variant?: Das
                   </div>
                )}
                {total > LIMIT ? (
-                  <div className="flex justify-between text-sm text-muted-foreground">
-                     <span>
-                        Page {page} / {Math.ceil(total / LIMIT)}
-                     </span>
-                     <div className="flex gap-2">
-                        <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
-                           Prev
-                        </Button>
-                        <Button
-                           variant="outline"
-                           size="sm"
-                           disabled={page >= Math.ceil(total / LIMIT)}
-                           onClick={() => setPage((p) => p + 1)}
-                        >
-                           Next
-                        </Button>
-                     </div>
-                  </div>
+                  <DashboardModulePagination
+                     page={page}
+                     totalPages={Math.ceil(total / LIMIT)}
+                     onPrevious={() => setPage((p) => p - 1)}
+                     onNext={() => setPage((p) => p + 1)}
+                  />
                ) : null}
             </CardContent>
          </Card>

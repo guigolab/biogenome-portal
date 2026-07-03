@@ -17,10 +17,17 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import {
+   Select,
+   SelectContent,
+   SelectItem,
+   SelectTrigger,
+   SelectValue,
+} from '@/components/ui/select'
 import {
    Table,
    TableBody,
@@ -29,28 +36,39 @@ import {
    TableHeader,
    TableRow,
 } from '@/components/ui/table'
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { extractApiMessage } from '@/lib/cms/extract-api-message'
-import type { DashboardModuleVariant } from '@/components/cms/dashboard/dashboard-module-variant'
+import { DashboardModuleHeader } from '@/components/cms/dashboard/dashboard-module-header'
+import { DashboardModulePagination } from '@/components/cms/dashboard/dashboard-module-pagination'
 import { OrganismCuratorsCell } from '@/components/cms/dashboard/organism-curators-cell'
+import { OrganismStatusPatchSelect } from '@/components/cms/dashboard/organism-status-patch-select'
 import { OrganismAuditLogHistoryDialog } from '@/components/cms/dashboard/organism-audit-log-history-dialog'
 import {
    cmsCreateDeletionRequest,
    cmsDeleteItem,
+   cmsGetAllOrganismsWithUsers,
    cmsGetOrganismsWithUsers,
    cmsGetUnassignedOrganisms,
    cmsGetUserSpecies,
    cmsGetUsers,
 } from '@/lib/cms/services/auth'
 import { cn } from '@/lib/utils'
+import { usePortalConfig } from '@/contexts/portal-context'
 import { useCmsAuthStore } from '@/stores/cms-auth-store'
 import { useCmsDrawerStore } from '@/stores/cms-drawer-store'
 
-import { CmsStatusPill } from './status-pill'
-
 const LIMIT = 10
 
-export function SpeciesOverviewModule({ variant = 'standalone' }: { variant?: DashboardModuleVariant }) {
+const ASSIGNMENT_FILTER_OPTIONS = [
+   { value: 'all', label: 'All' },
+   { value: 'assigned', label: 'Assigned' },
+   { value: 'unassigned', label: 'Unassigned' },
+] as const
+
+export function SpeciesOverviewModule() {
+   const { config } = usePortalConfig()
+   const general = config?.general as Record<string, unknown> | undefined
+   const hasGoat = Boolean(general?.goat)
+
    const userName = useCmsAuthStore((s) => s.userName)
    const isAdmin = useCmsAuthStore((s) => s.userRole === 'Admin')
    const openDrawer = useCmsDrawerStore((s) => s.open)
@@ -61,7 +79,7 @@ export function SpeciesOverviewModule({ variant = 'standalone' }: { variant?: Da
    const [filterDraft, setFilterDraft] = useState('')
    const [filter, setFilter] = useState('')
    const [page, setPage] = useState(1)
-   const [toggle, setToggle] = useState<'assigned' | 'unassigned'>('assigned')
+   const [toggle, setToggle] = useState<'all' | 'assigned' | 'unassigned'>('all')
    const [users, setUsers] = useState<Record<string, unknown>[]>([])
    const [selectedUsers, setSelectedUsers] = useState<string[]>([])
    const [downloading, setDownloading] = useState(false)
@@ -80,7 +98,12 @@ export function SpeciesOverviewModule({ variant = 'standalone' }: { variant?: Da
             offset: (page - 1) * LIMIT,
          }
          if (isAdmin) {
-            if (toggle === 'assigned') {
+            if (toggle === 'all') {
+               if (selectedUsers.length) params.name__in = selectedUsers.join(',')
+               const { data, total: t } = await cmsGetAllOrganismsWithUsers(params)
+               setOrganisms(data ?? [])
+               setTotal(t ?? 0)
+            } else if (toggle === 'assigned') {
                if (selectedUsers.length) params.name__in = selectedUsers.join(',')
                const { data, total: t } = await cmsGetOrganismsWithUsers(params)
                setOrganisms(data ?? [])
@@ -132,10 +155,14 @@ export function SpeciesOverviewModule({ variant = 'standalone' }: { variant?: Da
       setDownloading(true)
       try {
          const params: Record<string, string | number | boolean> = { format: 'tsv', filter }
-         if (toggle === 'assigned' && selectedUsers.length) params.name__in = selectedUsers.join(',')
-         const blob = (await (toggle === 'assigned'
-            ? cmsGetOrganismsWithUsers(params, true)
-            : cmsGetUnassignedOrganisms(params, true))) as Blob
+         if ((toggle === 'assigned' || toggle === 'all') && selectedUsers.length) {
+            params.name__in = selectedUsers.join(',')
+         }
+         const blob = (await (toggle === 'unassigned'
+            ? cmsGetUnassignedOrganisms(params, true)
+            : toggle === 'assigned'
+              ? cmsGetOrganismsWithUsers(params, true)
+              : cmsGetAllOrganismsWithUsers(params, true))) as Blob
          const href = URL.createObjectURL(blob)
          const a = document.createElement('a')
          a.href = href
@@ -179,48 +206,26 @@ export function SpeciesOverviewModule({ variant = 'standalone' }: { variant?: Da
       }
    }
 
-   const embedded = variant === 'tabPanel'
-
    return (
       <>
-         <Card className={cn('border-border/80 shadow-sm', embedded && 'rounded-xl border bg-card')}>
-            <CardHeader
-               className={cn(
-                  'flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between',
-                  embedded && 'pb-2',
-               )}
-            >
-               {embedded ? (
-                  <p className="text-sm text-muted-foreground">
-                     {isAdmin
-                        ? 'All portal species and curator assignments.'
-                        : 'Species assigned to you and their statuses.'}
-                  </p>
-               ) : (
-                  <div>
-                     <CardTitle>{isAdmin ? 'Species overview' : 'My species'}</CardTitle>
-                     <CardDescription>
-                        {isAdmin
-                           ? 'All portal species and curator assignments.'
-                           : 'Species assigned to you and their statuses.'}
-                     </CardDescription>
-                  </div>
-               )}
-               <Button size="sm" asChild className="shrink-0 gap-2">
-                  <Link href="/admin/create-organism">
-                     <Plus className="h-4 w-4" />
-                     Add species
-                  </Link>
-               </Button>
-            </CardHeader>
+         <Card className="gap-3 border-border/80 shadow-sm">
+            <DashboardModuleHeader
+               description={
+                  isAdmin
+                     ? 'All portal species and curator assignments.'
+                     : 'Species assigned to you and their statuses.'
+               }
+               action={
+                  <Button size="sm" asChild className="gap-2">
+                     <Link href="/admin/create-organism">
+                        <Plus className="h-4 w-4" />
+                        Add species
+                     </Link>
+                  </Button>
+               }
+            />
             <CardContent className="space-y-4">
-               <div
-                  className={cn(
-                     'flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-center',
-                     embedded &&
-                     'rounded-xl border border-border bg-card p-3 sm:p-4 dark:bg-card/60',
-                  )}
-               >
+               <div className="flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-center">
                   <Input
                      placeholder="Filter by name or taxid…"
                      value={filterDraft}
@@ -229,11 +234,10 @@ export function SpeciesOverviewModule({ variant = 'standalone' }: { variant?: Da
                   />
                   {isAdmin ? (
                      <>
-                        <ToggleGroup
-                           type="single"
+                        <Select
                            value={toggle}
                            onValueChange={(v) => {
-                              if (v === 'assigned' || v === 'unassigned') {
+                              if (v === 'all' || v === 'assigned' || v === 'unassigned') {
                                  setToggle(v)
                                  setPage(1)
                                  setFilterDraft('')
@@ -241,12 +245,19 @@ export function SpeciesOverviewModule({ variant = 'standalone' }: { variant?: Da
                                  setSelectedUsers([])
                               }
                            }}
-                           className="justify-start"
                         >
-                           <ToggleGroupItem value="assigned">Assigned</ToggleGroupItem>
-                           <ToggleGroupItem value="unassigned">Unassigned</ToggleGroupItem>
-                        </ToggleGroup>
-                        {toggle === 'assigned' ? (
+                           <SelectTrigger className="w-full sm:w-[11rem]" aria-label="Assignment filter">
+                              <SelectValue />
+                           </SelectTrigger>
+                           <SelectContent>
+                              {ASSIGNMENT_FILTER_OPTIONS.map((option) => (
+                                 <SelectItem key={option.value} value={option.value}>
+                                    {option.label}
+                                 </SelectItem>
+                              ))}
+                           </SelectContent>
+                        </Select>
+                        {toggle === 'assigned' || toggle === 'all' ? (
                            <Popover>
                               <PopoverTrigger asChild>
                                  <Button
@@ -329,7 +340,11 @@ export function SpeciesOverviewModule({ variant = 'standalone' }: { variant?: Da
                            ) : (
                               <Download className="h-4 w-4" />
                            )}
-                           {toggle === 'assigned' ? 'Export assigned' : 'Export unassigned'}
+                           {toggle === 'assigned'
+                              ? 'Export assigned'
+                              : toggle === 'unassigned'
+                                ? 'Export unassigned'
+                                : 'Export all'}
                         </Button>
                      </>
                   ) : null}
@@ -348,7 +363,6 @@ export function SpeciesOverviewModule({ variant = 'standalone' }: { variant?: Da
                            <TableRow>
                               <TableHead>Species</TableHead>
                               <TableHead>GoaT</TableHead>
-                              <TableHead>INSDC</TableHead>
                               <TableHead>Target</TableHead>
                               {isAdmin ? <TableHead>Curators</TableHead> : null}
                               <TableHead className="text-right">Actions</TableHead>
@@ -365,13 +379,25 @@ export function SpeciesOverviewModule({ variant = 'standalone' }: { variant?: Da
                                     <span className="text-xs text-muted-foreground">{String(org.taxid)}</span>
                                  </TableCell>
                                  <TableCell>
-                                    <CmsStatusPill value={org.goat_status as string} type="goat" />
+                                    <OrganismStatusPatchSelect
+                                       taxid={String(org.taxid)}
+                                       scientificName={String(org.scientific_name ?? '')}
+                                       field="goat_status"
+                                       value={org.goat_status}
+                                       disabled={Boolean(org.pending_deletion) && !isAdmin}
+                                       readOnly={!hasGoat}
+                                       onUpdated={() => void fetchData()}
+                                    />
                                  </TableCell>
                                  <TableCell>
-                                    <CmsStatusPill value={org.insdc_status as string} type="insdc" />
-                                 </TableCell>
-                                 <TableCell>
-                                    <CmsStatusPill value={org.target_list_status as string} type="target" />
+                                    <OrganismStatusPatchSelect
+                                       taxid={String(org.taxid)}
+                                       scientificName={String(org.scientific_name ?? '')}
+                                       field="target_list_status"
+                                       value={org.target_list_status}
+                                       disabled={Boolean(org.pending_deletion) && !isAdmin}
+                                       onUpdated={() => void fetchData()}
+                                    />
                                  </TableCell>
                                  {isAdmin ? (
                                     <TableCell className="align-top">
@@ -437,29 +463,12 @@ export function SpeciesOverviewModule({ variant = 'standalone' }: { variant?: Da
                )}
 
                {total > LIMIT ? (
-                  <div className="flex items-center justify-between text-sm text-muted-foreground">
-                     <span>
-                        Page {page} of {Math.ceil(total / LIMIT)}
-                     </span>
-                     <div className="flex gap-2">
-                        <Button
-                           variant="outline"
-                           size="sm"
-                           disabled={page <= 1}
-                           onClick={() => setPage((p) => p - 1)}
-                        >
-                           Previous
-                        </Button>
-                        <Button
-                           variant="outline"
-                           size="sm"
-                           disabled={page >= Math.ceil(total / LIMIT)}
-                           onClick={() => setPage((p) => p + 1)}
-                        >
-                           Next
-                        </Button>
-                     </div>
-                  </div>
+                  <DashboardModulePagination
+                     page={page}
+                     totalPages={Math.ceil(total / LIMIT)}
+                     onPrevious={() => setPage((p) => p - 1)}
+                     onNext={() => setPage((p) => p + 1)}
+                  />
                ) : null}
             </CardContent>
          </Card>

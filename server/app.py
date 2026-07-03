@@ -79,17 +79,6 @@ password = os.getenv('DB_PASS')
 
 try:
     FIRST_START = SingleInstance()
-    #drop collections
-    #if os.getenv('DEV') == 'true':
-    #    Assembly.drop_collection()
-    #    BioSample.drop_collection()
-    #    Chromosome.drop_collection()
-    #    ReadRun.drop_collection()
-    #    GenomeAnnotation.drop_collection()
-    #    LocalSample.drop_collection()
-    #    Organism.drop_collection()
-    #    SampleCoordinates.drop_collection()
-    #    TaxonNode.drop_collection()
 
     ##create root user if does not exist
     user = BioGenomeUser.objects(name = username).first()

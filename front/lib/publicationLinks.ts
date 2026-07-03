@@ -15,3 +15,41 @@ export function publicationExternalUrl(source: string, id: string): string | nul
    }
    return null
 }
+
+export type ParsedPublication = { source: string; id: string }
+
+function normalizePublicationSource(raw: unknown): string {
+   if (raw == null) return ''
+   if (typeof raw === 'string') return raw.trim()
+   if (typeof raw === 'object' && raw !== null && 'value' in raw) {
+      const v = (raw as { value?: unknown }).value
+      return typeof v === 'string' ? v.trim() : String(v ?? '').trim()
+   }
+   return String(raw).trim()
+}
+
+/** Parse a single embedded publication (``genome_publication`` or list row). */
+export function parseOrganismPublication(raw: unknown): ParsedPublication | null {
+   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null
+   const o = raw as Record<string, unknown>
+   const id = String(o.id ?? '').trim()
+   if (!id) return null
+   const source = normalizePublicationSource(o.source) || 'Publication'
+   return { source, id }
+}
+
+/** Parse an organism ``publications`` list from API JSON. */
+export function parseOrganismPublications(raw: unknown): ParsedPublication[] {
+   if (!Array.isArray(raw)) return []
+   const out: ParsedPublication[] = []
+   for (const item of raw) {
+      const parsed = parseOrganismPublication(item)
+      if (parsed) out.push(parsed)
+   }
+   return out
+}
+
+/** True when two publication rows refer to the same source + identifier. */
+export function publicationsMatch(a: ParsedPublication, b: ParsedPublication): boolean {
+   return a.source === b.source && a.id === b.id
+}

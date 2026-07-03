@@ -42,6 +42,7 @@ def _rows():
         reads,
         sample_locations,
         stats,
+        cms_stats,
         taxons,
         users,
     )
@@ -51,8 +52,9 @@ def _rows():
         # --- Auth ---
         (users.LoginApi, "/api/login"),
         (users.LogoutApi, "/api/logout"),
-        # --- Publication lookup ---
+        # --- Publication lookup / validation ---
         (publications.PublicationLookupApi, "/api/publications/lookup"),
+        (publications.PublicationValidateApi, "/api/publications/validate"),
         # --- GoaT reports ---
         (goat_reports.GoaTReportApi, "/api/goat_report"),
         # --- Async task status ---
@@ -60,6 +62,9 @@ def _rows():
         # --- Stats (POST /api/stats/<model> before path-based GET so body carries field) ---
         (stats.FieldStatsByModelApi, "/api/stats/<model>"),
         (stats.FieldStatsApi, "/api/stats/<model>/<field>"),
+        # --- CMS dashboard stats (uncached; JWT only) ---
+        (cms_stats.CmsAdminOverviewStatsApi, "/api/cms/stats/admin_overview"),
+        (cms_stats.CmsDataManagerOverviewStatsApi, "/api/cms/stats/data_manager_overview"),
         # --- Taxonomy tree (root table only; portal UI slices client-side) ---
         (taxons.RootTreeApi, "/api/tree"),
         # --- JBrowse genome browser ---
@@ -84,6 +89,7 @@ def _rows():
         (organisms.OrganismAuditLogsApi, "/api/organisms/audit_logs"),
         (organisms.OrganismTaxidAuditLogsApi, "/api/organisms/<taxid>/audit_logs"),
         (organisms.OrganismsWithUser, "/api/organisms/with_users"),
+        (organisms.AllOrganismsWithUser, "/api/organisms/all_with_users"),
         (organisms.OrganismSuggestImagesApi, "/api/organisms/suggest_external_images"),
         (organisms.OrganismApi, "/api/organisms/<taxid>"),
         (organisms.OrganismLineageApi, "/api/organisms/<taxid>/lineage"),

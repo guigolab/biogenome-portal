@@ -1,3 +1,16 @@
+import { formatDistanceToNow } from 'date-fns'
+import type { LucideIcon } from 'lucide-react'
+import {
+   CircleDot,
+   Minus,
+   Pencil,
+   Plus,
+   RefreshCcw,
+   ShieldAlert,
+   ShieldCheck,
+   Trash2,
+} from 'lucide-react'
+
 import type { CmsOrganismAuditLogRow } from '@/lib/cms/services/auth'
 
 export type AuditChangeType = 'added' | 'removed' | 'updated'
@@ -82,7 +95,7 @@ export function buildOrganismAuditFieldDiff(
    return changes.sort((a, b) => a.path.localeCompare(b.path))
 }
 
-export function formatAuditTimestamp(value: unknown): string {
+export function parseAuditTimestamp(value: unknown): Date | null {
    const raw =
       typeof value === 'string'
          ? value
@@ -92,10 +105,149 @@ export function formatAuditTimestamp(value: unknown): string {
              typeof (value as { $date?: unknown }).$date === 'string'
            ? (value as { $date: string }).$date
            : null
-   if (!raw) return 'Unknown date'
+   if (!raw) return null
    const d = new Date(raw)
-   if (Number.isNaN(d.getTime())) return raw
+   if (Number.isNaN(d.getTime())) return null
+   return d
+}
+
+export function parseAuditObjectId(value: unknown): string | null {
+   if (typeof value === 'string' && value.trim()) return value.trim()
+   if (
+      value &&
+      typeof value === 'object' &&
+      '$oid' in value &&
+      typeof (value as { $oid?: unknown }).$oid === 'string'
+   ) {
+      return (value as { $oid: string }).$oid
+   }
+   return null
+}
+
+export function formatAuditTimestamp(value: unknown): string {
+   const d = parseAuditTimestamp(value)
+   if (!d) {
+      if (typeof value === 'string') return value
+      return 'Unknown date'
+   }
    return d.toLocaleString()
+}
+
+export function formatRelativeAuditTimestamp(value: unknown): string {
+   const d = parseAuditTimestamp(value)
+   if (!d) return 'Unknown date'
+   return formatDistanceToNow(d, { addSuffix: true })
+}
+
+export type AuditActionMeta = {
+   label: string
+   Icon: LucideIcon
+   badgeClassName: string
+   dotClassName: string
+}
+
+export const ORGANISM_AUDIT_ACTIONS = [
+   'create',
+   'update',
+   'patch',
+   'delete',
+   'request_deletion',
+   'deny_deletion',
+] as const
+
+export type OrganismAuditAction = (typeof ORGANISM_AUDIT_ACTIONS)[number]
+
+const AUDIT_ACTION_META: Record<string, AuditActionMeta> = {
+   create: {
+      label: 'Created',
+      Icon: Plus,
+      badgeClassName:
+         'border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
+      dotClassName: 'bg-emerald-500',
+   },
+   update: {
+      label: 'Updated',
+      Icon: Pencil,
+      badgeClassName: 'border-sky-500/40 bg-sky-500/10 text-sky-700 dark:text-sky-400',
+      dotClassName: 'bg-sky-500',
+   },
+   patch: {
+      label: 'Patched',
+      Icon: RefreshCcw,
+      badgeClassName: 'border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400',
+      dotClassName: 'bg-amber-500',
+   },
+   delete: {
+      label: 'Deleted',
+      Icon: Trash2,
+      badgeClassName: 'border-rose-500/40 bg-rose-500/10 text-rose-700 dark:text-rose-400',
+      dotClassName: 'bg-rose-500',
+   },
+   request_deletion: {
+      label: 'Deletion requested',
+      Icon: ShieldAlert,
+      badgeClassName: 'border-orange-500/40 bg-orange-500/10 text-orange-700 dark:text-orange-400',
+      dotClassName: 'bg-orange-500',
+   },
+   deny_deletion: {
+      label: 'Deletion denied',
+      Icon: ShieldCheck,
+      badgeClassName: 'border-teal-500/40 bg-teal-500/10 text-teal-700 dark:text-teal-400',
+      dotClassName: 'bg-teal-500',
+   },
+}
+
+const DEFAULT_AUDIT_ACTION_META: AuditActionMeta = {
+   label: 'Changed',
+   Icon: CircleDot,
+   badgeClassName: 'border-border bg-muted/50 text-muted-foreground',
+   dotClassName: 'bg-muted-foreground',
+}
+
+export function getAuditActionMeta(action: string): AuditActionMeta {
+   const key = action.trim().toLowerCase()
+   const known = AUDIT_ACTION_META[key]
+   if (known) return known
+   const label = action.replace(/_/g, ' ')
+   return {
+      ...DEFAULT_AUDIT_ACTION_META,
+      label: label ? label.charAt(0).toUpperCase() + label.slice(1) : DEFAULT_AUDIT_ACTION_META.label,
+   }
+}
+
+export type AuditChangeTypeMeta = {
+   label: string
+   Icon: LucideIcon
+   badgeClassName: string
+   addedBlockClassName: string
+   removedBlockClassName: string
+}
+
+export const AUDIT_CHANGE_TYPE_META: Record<AuditChangeType, AuditChangeTypeMeta> = {
+   added: {
+      label: 'Added',
+      Icon: Plus,
+      badgeClassName:
+         'border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
+      addedBlockClassName:
+         'border-emerald-500/30 bg-emerald-500/10 text-emerald-900 dark:text-emerald-100',
+      removedBlockClassName: '',
+   },
+   removed: {
+      label: 'Removed',
+      Icon: Minus,
+      badgeClassName: 'border-rose-500/40 bg-rose-500/10 text-rose-700 dark:text-rose-400',
+      addedBlockClassName: '',
+      removedBlockClassName: 'border-rose-500/30 bg-rose-500/10 text-rose-900 dark:text-rose-100',
+   },
+   updated: {
+      label: 'Updated',
+      Icon: Pencil,
+      badgeClassName: 'border-sky-500/40 bg-sky-500/10 text-sky-700 dark:text-sky-400',
+      addedBlockClassName:
+         'border-emerald-500/30 bg-emerald-500/10 text-emerald-900 dark:text-emerald-100',
+      removedBlockClassName: 'border-rose-500/30 bg-rose-500/10 text-rose-900 dark:text-rose-100',
+   },
 }
 
 export function formatAuditValue(value: unknown): string {
@@ -116,6 +268,7 @@ export function getAuditLogChanges(log: CmsOrganismAuditLogRow): OrganismAuditFi
 const SECTION_LABELS: Record<string, string> = {
    common_names: 'Common Names',
    publications: 'Publications',
+   genome_publication: 'Genome Publication',
    images: 'Images',
    lineage_rank_labels: 'Lineage Rank Labels',
    iucn_redlist: 'IUCN Red List',

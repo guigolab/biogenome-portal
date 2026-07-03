@@ -26,11 +26,14 @@ MODEL_LIST = {k: MODEL_MAPPER[k]["model"] for k in STATS_MODEL_KEYS}
 NO_VALUE_KEY = "No Entry"
 
 
-@redis_memoize(timeout=300)
-def get_stats(model, field, query):
-    # Fail fast before parsing query args (404 path is cheaper).
+def compute_field_stats(model, field, query):
+    """
+    Uncached field frequency map for a catalog model.
+
+    Returns ``{value: count, ...}``. Raises ``ValueError`` when model is unknown.
+    """
     if model not in MODEL_LIST:
-        return {"message": "model not found"}, 404
+        raise ValueError("model not found")
 
     db_model = MODEL_LIST[model]
     parsed_query, q_query = data_helper.create_query(query, None)
@@ -65,16 +68,18 @@ def get_stats(model, field, query):
         },
     ]
 
-    try:
-        # Aggregation ignores the in-memory result cache; skip cache bookkeeping.
-        cursor = items.no_cache().aggregate(pipeline)
-        response = {
-            str(doc["_id"]): int(doc["count"]) for doc in cursor
-        }
-        # dump_json uses sort_keys=True — same key order as the old
-        # sorted(response.items()) + dump_json, without an extra Python sort.
-        return dump_json(response), 200
+    cursor = items.no_cache().aggregate(pipeline)
+    return {str(doc["_id"]): int(doc["count"]) for doc in cursor}
 
+
+@redis_memoize(timeout=300)
+def get_stats(model, field, query):
+    if model not in MODEL_LIST:
+        return {"message": "model not found"}, 404
+
+    try:
+        response = compute_field_stats(model, field, query)
+        return dump_json(response), 200
     except Exception as e:
         logger.exception("get_stats failed for model=%r field=%r", model, field)
         return {"message": str(e)}, 500

@@ -1,3 +1,4 @@
+from __future__ import annotations
 
 from db.embedded_docs import CommonName, OrganismImage, Publication
 from db.model import (
@@ -11,14 +12,21 @@ from db.model import (
     TaxonNode,
 )
 from services.organism_audit_log import organism_snapshot, record_organism_audit
+from services.publications import has_linked_assembly, validate_publication_or_raise
 from db.constants import GOAT_PROJECT_NAME
+from db.enums import GoaTStatus
 from helpers import taxonomy as taxonomy_helper, user as user_helper, organism as organism_helper, geolocation as geoloc_helper, data as data_helper
 from helpers import resource_mixins as response_helper
-from helpers.rest_catalog_sync import cascade_delete_organism, sync_species_after_catalog_change
+from helpers.rest_catalog_sync import (
+    cascade_delete_organism,
+    sync_species_after_catalog_change,
+    touch_goat_update_date,
+)
 from werkzeug.exceptions import BadRequest, Conflict, NotFound
 from mongoengine.errors import NotUniqueError, ValidationError
 import logging
 import os
+from typing import Optional
 from helpers.service_utils import get_or_404
 
 logger = logging.getLogger(__name__)
@@ -59,6 +67,25 @@ def get_organism_related_data(taxid, model, args):
         default_sort_column=mapped_model.get('id'),
     )
 
+def _goat_status_scalar(status) -> Optional[str]:
+    if status is None:
+        return None
+    if isinstance(status, GoaTStatus):
+        return status.value
+    text = str(status).strip()
+    return text or None
+
+
+def _touch_goat_update_date_on_manual_goat_status_change(
+    taxid: str, previous, new
+) -> None:
+    if not GOAT_PROJECT_NAME:
+        return
+    if _goat_status_scalar(previous) == _goat_status_scalar(new):
+        return
+    touch_goat_update_date(taxid)
+
+
 def _mongo_validation_message(exc: ValidationError) -> str:
     to_dict = getattr(exc, "to_dict", None)
     if callable(to_dict):
@@ -86,8 +113,19 @@ def update_organism(data, taxid):
     if not organism_data:
         return taxid
 
+    previous_goat_status = (
+        getattr(organism, "goat_status", None)
+        if "goat_status" in organism_data
+        else None
+    )
+
     for k, v in organism_data.items():
         setattr(organism, k, v)
+
+    if "goat_status" in organism_data:
+        _touch_goat_update_date_on_manual_goat_status_change(
+            taxid, previous_goat_status, organism_data["goat_status"]
+        )
 
     try:
         organism.save()
@@ -226,6 +264,7 @@ _ORGANISM_PATCHABLE_FIELDS = frozenset(
         "sequencing_type",
         "common_names",
         "publications",
+        "genome_publication",
         "links",
         "countries",
     }
@@ -258,8 +297,39 @@ def _coerce_publications_list(value):
             raise BadRequest(description=f"'publications[{idx}]' must be an object")
         if "id" not in item:
             raise BadRequest(description=f"'publications[{idx}].id' is required")
+        validate_publication_or_raise(
+            item.get("source"), item.get("id"), context=f"publications[{idx}]"
+        )
         out.append(Publication(**item))
     return out
+
+
+def _coerce_genome_publication(value, taxid):
+    """
+    Validate and coerce the single ``genome_publication`` field.
+
+    ``None``/``{}`` clears the field without validation (always allowed). Otherwise
+    the organism must already have at least one linked assembly, and the
+    publication must resolve against a supported source (DOI, PubMed, PubMed
+    Central) — both checks raise ``BadRequest`` to block the save.
+    """
+    if value is None or value == {}:
+        return None
+    if not isinstance(value, dict):
+        raise BadRequest(description="'genome_publication' must be an object or null")
+    if "id" not in value or not str(value.get("id") or "").strip():
+        raise BadRequest(description="'genome_publication.id' is required")
+    if not has_linked_assembly(taxid):
+        raise BadRequest(
+            description=(
+                "Cannot set a genome publication: no assembly is linked to this "
+                "organism yet."
+            )
+        )
+    validate_publication_or_raise(
+        value.get("source"), value.get("id"), context="genome_publication"
+    )
+    return Publication(**value)
 
 
 def _coerce_images_list(value):
@@ -360,6 +430,9 @@ def _map_single_organism_field(field, value, taxid):
     if field == "publications":
         return "publications", _coerce_publications_list(value)
 
+    if field == "genome_publication":
+        return "genome_publication", _coerce_genome_publication(value, taxid)
+
     if field == "images":
         return "images", _coerce_images_list(value)
 
@@ -370,9 +443,16 @@ def patch_organism(data, taxid):
     organism = get_or_404(Organism, f"Organism {taxid} not found!", taxid=taxid)
     previous_snapshot = organism_snapshot(organism)
     field, value = parse_single_field_patch_payload(data)
+    previous_goat_status = (
+        getattr(organism, "goat_status", None) if field == "goat_status" else None
+    )
     try:
         mapped_field, mapped_value = _map_single_organism_field(field, value, taxid)
         setattr(organism, mapped_field, mapped_value)
+        if mapped_field == "goat_status":
+            _touch_goat_update_date_on_manual_goat_status_change(
+                taxid, previous_goat_status, mapped_value
+            )
         organism.save()
     except BadRequest:
         raise
@@ -494,6 +574,11 @@ def map_organism_data(data, taxid):
     if "publications" in data:
         organism["publications"] = _coerce_publications_list(data["publications"])
 
+    if "genome_publication" in data:
+        organism["genome_publication"] = _coerce_genome_publication(
+            data["genome_publication"], taxid
+        )
+
     return organism
 
 #map lineage into tree structure
@@ -518,21 +603,55 @@ def delete_organism(taxid):
         new_object=None,
     )
     return f"Organisms {taxid} succesfully deleted", 200
-    
+
+
+def assigned_organism_taxids() -> list[str]:
+    """Union of all taxids listed on BioGenomeUser.species (string-normalized)."""
+    taxids: set[str] = set()
+    for user in BioGenomeUser.objects.only("species").no_cache():
+        for species_id in user.species or []:
+            taxid = str(species_id).strip()
+            if taxid:
+                taxids.add(taxid)
+    return list(taxids)
+
+
 def get_unassigned_organisms(format='json',filter=None, limit=20, offset=0):
-    users_taxids = BioGenomeUser.objects().distinct('species')
+    assigned_taxids = assigned_organism_taxids()
     offset = int(offset)
     limit = int(limit)
     fields = [
         'scientific_name', 'taxid', 'sub_project',
         'sequencing_type', 'insdc_status', 'goat_status', 'target_list_status'
     ]
-    organisms = Organism.objects(taxid__not__in=users_taxids)
+    if assigned_taxids:
+        organisms = Organism.objects(taxid__not__in=assigned_taxids)
+    else:
+        organisms = Organism.objects()
     if filter:
         organisms = organisms.filter(data_helper.query_visitors.organism_query(filter))
     return response_helper.generate_response(format, fields, organisms, limit, offset)
 
-def get_assigned_organisms(args):
+
+def _build_organism_to_users_map(users) -> dict[str, list[str]]:
+    organism_to_users: dict[str, list[str]] = {}
+    for user in users:
+        for species_id in user.species or []:
+            taxid = str(species_id).strip()
+            if not taxid:
+                continue
+            organism_to_users.setdefault(taxid, []).append(user.name)
+    return organism_to_users
+
+
+def _organism_row_with_users(organism, organism_to_users: dict[str, list[str]]) -> dict:
+    taxid = str(organism.taxid).strip()
+    row = {k: v for k, v in organism.to_mongo().to_dict().items()}
+    row["assigned_users"] = list(organism_to_users.get(taxid, []))
+    return row
+
+
+def get_organisms_with_users_list(args, *, assigned_only=True):
     query = {**args}
     fields = [
         'scientific_name', 'taxid', 'assigned_users', 'sub_project',
@@ -545,18 +664,22 @@ def get_assigned_organisms(args):
     selected_users = {name.strip() for name in user_filter.split(',')} if user_filter else set()
     users = BioGenomeUser.objects.only('name', 'species').no_cache()
 
-    organism_to_users = {}
+    organism_to_users = _build_organism_to_users_map(users)
     filtered_taxids = set()
-    for user in users:
-        user_species = [str(species_id) for species_id in user.species]
-        if selected_users and user.name in selected_users:
-            filtered_taxids.update(user_species)
-        for species_id in user_species:
-            organism_to_users.setdefault(species_id, []).append(user.name)
+    if selected_users:
+        for user in users:
+            if user.name in selected_users:
+                for species_id in user.species or []:
+                    taxid = str(species_id).strip()
+                    if taxid:
+                        filtered_taxids.add(taxid)
 
-    organism_ids = list(filtered_taxids) if selected_users else list(organism_to_users.keys())
-    if organism_ids:
-        query['taxid__in'] = organism_ids
+    if selected_users:
+        query['taxid__in'] = list(filtered_taxids)
+    elif assigned_only:
+        organism_ids = list(organism_to_users.keys())
+        if organism_ids:
+            query['taxid__in'] = organism_ids
 
     if organism_filter:
         organism_filter = data_helper.query_visitors.organism_query(organism_filter)
@@ -573,6 +696,7 @@ def get_assigned_organisms(args):
         'insdc_status',
         'goat_status',
         'target_list_status',
+        'pending_deletion',
     )
 
     if q:
@@ -582,9 +706,7 @@ def get_assigned_organisms(args):
 
     def iter_payload(queryset):
         for organism in queryset:
-            payload = organism.to_mongo().to_dict()
-            payload["assigned_users"] = organism_to_users.get(str(organism.taxid), [])
-            yield payload
+            yield _organism_row_with_users(organism, organism_to_users)
 
     # Handle different output formats
     if output_format == 'tsv':
@@ -602,6 +724,14 @@ def get_assigned_organisms(args):
     return response_helper.dump_json(response), "application/json"
 
 
+def get_assigned_organisms(args):
+    return get_organisms_with_users_list(args, assigned_only=True)
+
+
+def get_all_organisms_with_users(args):
+    return get_organisms_with_users_list(args, assigned_only=False)
+
+
 def get_organisms_with_user(args):
     translated = dict(args)
     if translated.get('user__icontains'):
@@ -611,18 +741,34 @@ def get_organisms_with_user(args):
     return get_assigned_organisms(translated)
 
 def create_organism_to_delete(taxid):
-    organism = get_or_404(Organism, f"Organism {taxid} not found!", taxid=taxid)
     user = user_helper.get_current_user()
     if not user:
         raise NotFound(description='User Not Found')
-    
-    if organism.pending_deletion:
+
+    organism = get_or_404(Organism, f"Organism {taxid} not found!", taxid=taxid)
+    updated = Organism.objects(taxid=taxid, pending_deletion__ne=True).update(
+        set__pending_deletion=True
+    )
+    if not updated:
         raise Conflict(description=f"Request to delete {organism.scientific_name} already present")
-    
-    organism.modify(pending_deletion=True)
+
+    record_organism_audit(
+        action="request_deletion",
+        taxid=str(organism.taxid),
+        scientific_name=str(organism.scientific_name or ""),
+        previous_object={"pending_deletion": False},
+        new_object={"pending_deletion": True},
+    )
     return f"Request to delete organism {taxid} successfully sent"
 
 def delete_organism_to_delete(taxid):
     organism = get_or_404(Organism, f"Organism {taxid} not found!", taxid=taxid)
     organism.modify(pending_deletion=False)
-    return f"request to delete organism {taxid}, successfully deleted"
+    record_organism_audit(
+        action="deny_deletion",
+        taxid=str(organism.taxid),
+        scientific_name=str(organism.scientific_name or ""),
+        previous_object={"pending_deletion": True},
+        new_object={"pending_deletion": False},
+    )
+    return f"Deletion request for organism {taxid} denied"

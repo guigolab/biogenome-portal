@@ -98,6 +98,13 @@ class OrganismsWithUser(Resource):
 		resp, mimetype = organisms.get_assigned_organisms(request.args)
 		return Response(resp, mimetype=mimetype, status=200)
 
+class AllOrganismsWithUser(Resource):
+	@jwt_required()
+	@admin.admin_required()
+	def get(self):
+		resp, mimetype = organisms.get_all_organisms_with_users(request.args)
+		return Response(resp, mimetype=mimetype, status=200)
+
 class OrganismSuggestImagesApi(Resource):
     """POST /api/organisms/suggest_external_images — enqueue image suggestion task."""
 
@@ -145,6 +152,6 @@ class OrganismToDeleteApi(Resource):
 	@admin.admin_required()
 	def delete(self, taxid):
 		message = organisms.delete_organism_to_delete(taxid)
-		return json_message(message, status=201, taxid=taxid)
+		return json_message(message, status=200, taxid=taxid)
 
 		## add organism to delete

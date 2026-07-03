@@ -44,13 +44,19 @@ def _goat_rank(status: Optional[GoaTStatus]) -> int:
     return GOAT_PIPELINE_RANK.get(status, 0)
 
 
+def has_genome_publication_set(organism) -> bool:
+    """True when the organism has a ``genome_publication`` with a non-empty ``id``."""
+    pub = getattr(organism, "genome_publication", None)
+    return bool(pub and str(getattr(pub, "id", "") or "").strip())
+
+
 def infer_goat_candidate(
     counts: CatalogCountView,
-    has_publications: bool,
+    has_genome_publication: bool,
 ) -> Optional[GoaTStatus]:
-    """Highest-priority GoaT stage implied by counts and publications."""
+    """Highest-priority GoaT stage implied by counts and the genome assembly publication."""
     status_candidates: List[tuple[bool, GoaTStatus]] = [
-        (has_publications, GoaTStatus.PUBLICATION_AVAILABLE),
+        (has_genome_publication, GoaTStatus.PUBLICATION_AVAILABLE),
         (counts.assemblies > 0, GoaTStatus.INSDC_SUBMITTED),
         (counts.reads > 0, GoaTStatus.IN_ASSEMBLY),
         (
@@ -137,9 +143,10 @@ def apply_goat_status_after_assembly_ingest(
     chunk_size: int = DEFAULT_CHUNK,
 ) -> int:
     """
-    After assembly catalog ingest: species with at least one assembly and no publications
-    get :attr:`~db.enums.GoaTStatus.INSDC_SUBMITTED`. Does not downgrade
-    :attr:`~db.enums.GoaTStatus.PUBLICATION_AVAILABLE` or overwrite higher ranks.
+    After assembly catalog ingest: species with at least one assembly and no
+    ``genome_publication`` get :attr:`~db.enums.GoaTStatus.INSDC_SUBMITTED`. Does not
+    downgrade :attr:`~db.enums.GoaTStatus.PUBLICATION_AVAILABLE` or overwrite higher
+    ranks.
 
     No-ops when ``GOAT_PROJECT_NAME`` is unset.
     """
@@ -163,7 +170,7 @@ def apply_goat_status_after_assembly_ingest(
             Organism.objects(taxid__in=batch_ids).only(
                 "taxid",
                 "goat_status",
-                "publications",
+                "genome_publication",
                 "assemblies_count",
             )
         )
@@ -176,7 +183,7 @@ def apply_goat_status_after_assembly_ingest(
                 continue
             if int(org.assemblies_count or 0) <= 0:
                 continue
-            if bool(org.publications):
+            if has_genome_publication_set(org):
                 continue
             cur = _normalize_goat_status(getattr(org, "goat_status", None))
             if cur == target:

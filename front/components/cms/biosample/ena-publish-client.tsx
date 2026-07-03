@@ -206,6 +206,7 @@ export function EnaPublishClient() {
 
    const [checklist, setChecklist] = useState<Record<string, unknown> | null>(null)
    const [checklistLoading, setChecklistLoading] = useState(true)
+   const [checklistError, setChecklistError] = useState(false)
    const [orgSearch, setOrgSearch] = useState('')
    const [orgHits, setOrgHits] = useState<Record<string, unknown>[]>([])
    const [orgLoading, setOrgLoading] = useState(false)
@@ -220,32 +221,34 @@ export function EnaPublishClient() {
    const stepper = useEnaUploadStepper(checklist, {
       scientificName,
       sampleIdentifier,
+      taxid,
       characterics,
    })
 
-   useEffect(() => {
-      let cancelled = false
-      ;(async () => {
-         setChecklistLoading(true)
-         try {
-            const data = (await cmsGetEnaChecklist()) as { checklist?: Record<string, unknown> }
-            if (cancelled) return
-            const ch = data.checklist
-            if (ch) {
-               setChecklist({ ...ch })
-               const id = (ch.identifiers as { primary_id?: { text?: string } } | undefined)?.primary_id?.text
-               if (id) setField('checklist', id)
-            }
-         } catch (e) {
-            if (!cancelled) toast.error(extractApiMessage(e, 'Failed to load ENA checklist'))
-         } finally {
-            if (!cancelled) setChecklistLoading(false)
+   const loadChecklist = useCallback(async () => {
+      setChecklistLoading(true)
+      setChecklistError(false)
+      try {
+         const data = (await cmsGetEnaChecklist()) as { checklist?: Record<string, unknown> }
+         const ch = data.checklist
+         if (ch) {
+            setChecklist({ ...ch })
+            const id = (ch.identifiers as { primary_id?: { text?: string } } | undefined)?.primary_id?.text
+            if (id) setField('checklist', id)
+         } else {
+            setChecklistError(true)
          }
-      })()
-      return () => {
-         cancelled = true
+      } catch (e) {
+         setChecklistError(true)
+         toast.error(extractApiMessage(e, 'Failed to load ENA checklist'))
+      } finally {
+         setChecklistLoading(false)
       }
    }, [setField])
+
+   useEffect(() => {
+      void loadChecklist()
+   }, [loadChecklist])
 
    const fetchOrgs = useCallback(async () => {
       setOrgLoading(true)
@@ -294,9 +297,10 @@ export function EnaPublishClient() {
    }, [])
 
    function validateSampleInfo(): boolean {
-      setOrganismError(scientificName.trim() ? '' : 'Please select an organism before continuing.')
+      const hasOrganism = Boolean(scientificName.trim() && taxid.trim())
+      setOrganismError(hasOrganism ? '' : 'Please select an organism before continuing.')
       setIdentifierError(sampleIdentifier.trim() ? '' : 'Sample identifier is required.')
-      return Boolean(scientificName.trim() && sampleIdentifier.trim())
+      return Boolean(hasOrganism && sampleIdentifier.trim())
    }
 
    function handleNextStep() {
@@ -384,11 +388,22 @@ export function EnaPublishClient() {
 
    const sid = stepper.activeStep
 
-   if (checklistLoading || !checklist) {
+   if (checklistLoading) {
       return (
          <div className="flex flex-col items-center gap-2 py-16">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             <p className="text-sm text-muted-foreground">Loading ENA checklist…</p>
+         </div>
+      )
+   }
+
+   if (checklistError || !checklist) {
+      return (
+         <div className="flex flex-col items-center gap-4 py-16">
+            <p className="text-sm text-destructive">Failed to load ENA checklist.</p>
+            <Button type="button" variant="outline" onClick={() => void loadChecklist()}>
+               Retry
+            </Button>
          </div>
       )
    }

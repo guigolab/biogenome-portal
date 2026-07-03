@@ -53,9 +53,11 @@ def _get_column_value(column, organism):
         return organism["target_list_status"]
     if column == "sequencing_status" and "goat_status" in organism:
         return GOAT_STATUS_EXPORT_MAPPER.get(organism["goat_status"], None)
-    if column == "publication_id" and "publications" in organism:
-        publications = organism["publications"]
-        return ";".join(pub["id"] for pub in publications if "id" in pub)
+    if column == "publication_id":
+        genome_publication = organism.get("genome_publication")
+        if genome_publication:
+            return genome_publication.get("id")
+        return None
     return None
 
 

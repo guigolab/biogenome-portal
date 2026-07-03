@@ -282,7 +282,13 @@ def _run_organism_tsv_import_batches(
         "organism_tsv_import: taxonomy bootstrap reported %s new organism taxid(s) (cumulative)",
         len(saved_taxonomy),
     )
-    prune_organisms_missing_taxon_lineage(species_order)
+    # Scope pruning to taxids this run actually bootstrapped (newly created organisms only) —
+    # never the full `species_order`, since that also contains taxids that already had an
+    # Organism before this import (e.g. manually curated ones intentionally without catalog
+    # rows yet). Those pre-existing organisms must never be deleted as a side effect of an
+    # unrelated metadata-only TSV import.
+    if saved_taxonomy:
+        prune_organisms_missing_taxon_lineage(saved_taxonomy)
 
     missing_unique = sorted(set(missing_all))
     if missing_unique:

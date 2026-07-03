@@ -323,8 +323,6 @@ def import_assemblies_from_accessions(
     # dedupes per JSONL, but this avoids duplicate datasets calls and duplicate JSONL rows.
     accessions_list = dedupe_nonempty_strs(accessions)
     logger.info("Assemblies to fetch: %s (unique)", len(accessions_list))
-    if os.getenv("DEV") == "true":
-        accessions_list = accessions_list[:100]
     batches = create_batches(accessions_list, 1000)
     temp_paths: List[str] = []
     output_files_paths: List[str] = []

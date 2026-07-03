@@ -47,6 +47,7 @@ JOB_MODELS = {
         'fetch_external_images': organism_images.fetch_external_images_task,
         'fetch_iucn_redlist': organisms.fetch_iucn_redlist_task,
         'backfill_iucn_redlist': organisms.backfill_iucn_redlist_task,
+        'backfill_genome_publication': organisms.backfill_genome_publication_task,
     },
     'annotations': {
         'import': annotrieve.import_annotations_from_annotrieve,

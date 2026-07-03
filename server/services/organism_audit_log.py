@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from flask_jwt_extended import get_jwt
@@ -13,6 +13,18 @@ from db.model import Organism, OrganismAuditLog
 from helpers.resource_mixins import get_pagination, get_sort
 
 logger = logging.getLogger(__name__)
+
+
+def _parse_audit_bound_datetime(value: str, *, end_of_day: bool = False) -> datetime | None:
+    """Parse ISO-8601 datetime or date-only (YYYY-MM-DD) for audit timestamp filters."""
+    raw = value.strip().replace("Z", "+00:00")
+    try:
+        dt = datetime.fromisoformat(raw)
+    except ValueError:
+        return None
+    if len(raw) == 10 and end_of_day:
+        return dt.replace(hour=23, minute=59, second=59, microsecond=999999)
+    return dt
 
 
 def _actor_username() -> str:
@@ -50,6 +62,7 @@ def record_organism_audit(
         OrganismAuditLog(
             action=action,
             user=_actor_username(),
+            timestamp=datetime.now(timezone.utc),
             taxid=str(taxid),
             scientific_name=str(scientific_name or ""),
             previous_object=previous_object,
@@ -66,9 +79,10 @@ def search_organism_audit_logs(query: dict[str, Any]) -> dict[str, Any]:
     Admin-only search over ``OrganismAuditLog``.
 
     Recognised query keys (all optional): ``taxid``, ``scientific_name`` (icontains),
-    ``user`` (icontains), ``action`` (exact), ``q`` (matches user, taxid, scientific_name,
-    or action substrings), ``date_from``, ``date_to`` (ISO-8601 datetimes for
-    ``timestamp`` range), ``limit``, ``offset``, ``sort_column``, ``sort_order``.
+    ``user`` (icontains), ``action`` (exact), ``q`` (matches user or scientific_name
+    substrings), ``date_from``, ``date_to`` (ISO-8601 datetimes or YYYY-MM-DD for
+    ``timestamp`` range; date-only ``date_to`` is inclusive through end of day),
+    ``limit``, ``offset``, ``sort_column``, ``sort_order``.
     """
     q = dict(query)
     limit, offset = get_pagination(q)
@@ -99,30 +113,21 @@ def search_organism_audit_logs(query: dict[str, Any]) -> dict[str, Any]:
 
     date_from = q.pop("date_from", None)
     if isinstance(date_from, str) and date_from.strip():
-        try:
-            dt = datetime.fromisoformat(date_from.replace("Z", "+00:00"))
+        dt = _parse_audit_bound_datetime(date_from, end_of_day=False)
+        if dt is not None:
             qs = qs.filter(timestamp__gte=dt)
-        except ValueError:
-            pass
 
     date_to = q.pop("date_to", None)
     if isinstance(date_to, str) and date_to.strip():
-        try:
-            dt = datetime.fromisoformat(date_to.replace("Z", "+00:00"))
+        dt = _parse_audit_bound_datetime(date_to, end_of_day=True)
+        if dt is not None:
             qs = qs.filter(timestamp__lte=dt)
-        except ValueError:
-            pass
 
-    # Free-text: match any of user, taxid, scientific_name
+    # Free-text: match user or scientific_name
     search = q.pop("q", None)
     if isinstance(search, str) and search.strip():
         term = search.strip()
-        qs = qs.filter(
-            Q(user__icontains=term)
-            | Q(taxid__icontains=term)
-            | Q(scientific_name__icontains=term)
-            | Q(action__icontains=term)
-        )
+        qs = qs.filter(Q(user__icontains=term) | Q(scientific_name__icontains=term))
 
     total = qs.count()
     items = list(qs.order_by(order).skip(offset).limit(limit))

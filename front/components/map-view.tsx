@@ -14,6 +14,12 @@ import {
 } from '@/lib/portal/brandColorsFromDocument'
 import { useAppearanceStore } from '@/stores/appearance-store'
 
+export type FrequencyHighlightPoint = {
+   lng: number
+   lat: number
+   label?: string
+}
+
 export type MapViewProps = {
    points: LocationFrequencyPoint[]
    onPolygonChange: (geometry: GeoJsonGeometry | null) => void
@@ -24,7 +30,7 @@ export type MapViewProps = {
    /** Sample-frequency marker to render as selected (different color). */
    selectedFrequencyPoint?: { lng: number; lat: number } | null
    /** Highlight a marker while hovering a matching row in the species list. */
-   hoverFrequencyPoint?: { lng: number; lat: number } | null
+   hoverFrequencyPoint?: FrequencyHighlightPoint | null
    /** Fired when the user clicks an aggregated sample marker (lng, lat match frequency API). */
    onMarkerClick?: (lng: number, lat: number) => void
    /** Clicking the basemap (tiles) clears frequency selection; marker clicks do not fire this. */
@@ -45,11 +51,82 @@ const CARTO_TILE_OPTIONS = {
 const CARTO_DARK = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
 const CARTO_LIGHT = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
 
-function sameFrequencyCoord(
-   a: { lng: number; lat: number },
-   b: { lng: number; lat: number },
-): boolean {
-   return Math.abs(a.lng - b.lng) < 1e-7 && Math.abs(a.lat - b.lat) < 1e-7
+function coordKey(lng: number, lat: number): string {
+   return `${lng}:${lat}`
+}
+
+type MarkerPalette = {
+   default: LeafletCircleMarkerStyle
+   selected: LeafletCircleMarkerStyle
+   hover: LeafletCircleMarkerStyle
+}
+
+type MarkerMeta = {
+   countLabel: string
+}
+
+function applyHighlight(
+   markersByKey: Map<string, L.CircleMarker>,
+   markerMetaByKey: Map<string, MarkerMeta>,
+   highlighted: { selected: L.CircleMarker | null; hover: L.CircleMarker | null },
+   palette: MarkerPalette,
+   selectedPoint: { lng: number; lat: number } | null | undefined,
+   hoverPoint: FrequencyHighlightPoint | null | undefined,
+): { selected: L.CircleMarker | null; hover: L.CircleMarker | null } {
+   const resetMarker = (marker: L.CircleMarker | null) => {
+      if (!marker) return
+      const key = (marker as L.CircleMarker & { _coordKey?: string })._coordKey
+      const meta = key ? markerMetaByKey.get(key) : undefined
+      marker.setStyle({ ...palette.default })
+      if (meta) marker.setTooltipContent(meta.countLabel)
+      marker.closeTooltip()
+   }
+
+   const nextSelectedKey =
+      selectedPoint != null ? coordKey(selectedPoint.lng, selectedPoint.lat) : null
+   const nextHoverKey = hoverPoint != null ? coordKey(hoverPoint.lng, hoverPoint.lat) : null
+
+   const prevSelected = highlighted.selected
+   const prevHover = highlighted.hover
+   const prevSelectedKey = prevSelected
+      ? (prevSelected as L.CircleMarker & { _coordKey?: string })._coordKey
+      : null
+   const prevHoverKey = prevHover
+      ? (prevHover as L.CircleMarker & { _coordKey?: string })._coordKey
+      : null
+
+   if (prevSelected && prevSelectedKey !== nextSelectedKey) {
+      resetMarker(prevSelected)
+   }
+   if (prevHover && prevHoverKey !== nextHoverKey && prevHover !== prevSelected) {
+      resetMarker(prevHover)
+   }
+
+   let nextSelectedMarker: L.CircleMarker | null = null
+   let nextHoverMarker: L.CircleMarker | null = null
+
+   if (nextSelectedKey) {
+      const marker = markersByKey.get(nextSelectedKey) ?? null
+      if (marker) {
+         marker.setStyle({ ...palette.selected })
+         nextSelectedMarker = marker
+      }
+   }
+
+   if (nextHoverKey && nextHoverKey !== nextSelectedKey) {
+      const marker = markersByKey.get(nextHoverKey) ?? null
+      if (marker) {
+         marker.setStyle({ ...palette.hover })
+         const label = hoverPoint?.label?.trim()
+         if (label) {
+            marker.setTooltipContent(label)
+            marker.openTooltip()
+         }
+         nextHoverMarker = marker
+      }
+   }
+
+   return { selected: nextSelectedMarker, hover: nextHoverMarker }
 }
 
 export function MapView({
@@ -65,7 +142,13 @@ export function MapView({
    const mapRef = useRef<HTMLDivElement>(null)
    const mapInstanceRef = useRef<L.Map | null>(null)
    const pointsLayerRef = useRef<L.FeatureGroup | null>(null)
-   const lastFitPointsKeyRef = useRef<string>('')
+   const lastFitPointsRef = useRef<LocationFrequencyPoint[] | null>(null)
+   const markersByKeyRef = useRef<Map<string, L.CircleMarker>>(new Map())
+   const markerMetaByKeyRef = useRef<Map<string, MarkerMeta>>(new Map())
+   const highlightedRef = useRef<{ selected: L.CircleMarker | null; hover: L.CircleMarker | null }>({
+      selected: null,
+      hover: null,
+   })
    const drawLayerRef = useRef<L.FeatureGroup | null>(null)
    const onPolygonChangeRef = useRef(onPolygonChange)
    onPolygonChangeRef.current = onPolygonChange
@@ -73,15 +156,15 @@ export function MapView({
    onMarkerClickRef.current = onMarkerClick
    const onMapBackgroundClickRef = useRef(onMapBackgroundClick)
    onMapBackgroundClickRef.current = onMapBackgroundClick
+   const selectedFrequencyPointRef = useRef(selectedFrequencyPoint)
+   selectedFrequencyPointRef.current = selectedFrequencyPoint
+   const hoverFrequencyPointRef = useRef(hoverFrequencyPoint)
+   hoverFrequencyPointRef.current = hoverFrequencyPoint
    const [mounted, setMounted] = useState(false)
    const { resolvedTheme } = useTheme()
    const appearance = useAppearanceStore((s) => s.appearance)
    const tileLayerRef = useRef<L.TileLayer | null>(null)
-   const [markerStyles, setMarkerStyles] = useState<{
-      default: LeafletCircleMarkerStyle
-      selected: LeafletCircleMarkerStyle
-      hover: LeafletCircleMarkerStyle
-   } | null>(null)
+   const [markerStyles, setMarkerStyles] = useState<MarkerPalette | null>(null)
 
    useLayoutEffect(() => {
       if (typeof document === 'undefined') return
@@ -109,6 +192,7 @@ export function MapView({
          minZoom: 2,
          maxZoom: 18,
          zoomControl: true,
+         renderer: L.canvas(),
       })
 
       const pointsLayer = L.featureGroup().addTo(map)
@@ -163,6 +247,9 @@ export function MapView({
          mapInstanceRef.current = null
          pointsLayerRef.current = null
          drawLayerRef.current = null
+         markersByKeyRef.current.clear()
+         markerMetaByKeyRef.current.clear()
+         highlightedRef.current = { selected: null, hover: null }
       }
    }, [mounted])
 
@@ -188,46 +275,67 @@ export function MapView({
       }
    }, [activePolygon])
 
-   // Render / update markers from API points
+   // Build markers when points or palette change (not on hover/selection)
    useEffect(() => {
       const map = mapInstanceRef.current
       const pointsLayer = pointsLayerRef.current
       if (!map || !pointsLayer) return
 
+      const palette = markerStyles ?? leafletMarkerPalettesFromRoot(document.documentElement)
+
       pointsLayer.clearLayers()
+      markersByKeyRef.current.clear()
+      markerMetaByKeyRef.current.clear()
+      highlightedRef.current = { selected: null, hover: null }
+
       const bounds: L.LatLng[] = []
 
       for (const item of points) {
          const [lng, lat] = item.coordinates
          if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue
          bounds.push(L.latLng(lat, lng))
-         const selected =
-            selectedFrequencyPoint != null && sameFrequencyCoord(selectedFrequencyPoint, { lng, lat })
-         const hovered =
-            !selected &&
-            hoverFrequencyPoint != null &&
-            sameFrequencyCoord(hoverFrequencyPoint, { lng, lat })
-         const palette = markerStyles ?? leafletMarkerPalettesFromRoot(document.documentElement)
-         const style = selected ? palette.selected : hovered ? palette.hover : palette.default
-         const marker = L.circleMarker([lat, lng], { ...style })
-         marker.bindTooltip(String(item.count.toLocaleString()))
+
+         const key = coordKey(lng, lat)
+         const countLabel = String(item.count.toLocaleString())
+         const marker = L.circleMarker([lat, lng], { ...palette.default })
+         ;(marker as L.CircleMarker & { _coordKey?: string })._coordKey = key
+         marker.bindTooltip(countLabel)
          marker.on('click', (e: L.LeafletMouseEvent) => {
             L.DomEvent.stopPropagation(e)
             onMarkerClickRef.current?.(lng, lat)
          })
          marker.addTo(pointsLayer)
+         markersByKeyRef.current.set(key, marker)
+         markerMetaByKeyRef.current.set(key, { countLabel })
       }
 
-      if (bounds.length > 0) {
-         const pointsKey = points
-            .map((p) => `${p.coordinates[0]},${p.coordinates[1]},${p.count}`)
-            .join('|')
-         if (pointsKey !== lastFitPointsKeyRef.current) {
-            lastFitPointsKeyRef.current = pointsKey
-            map.fitBounds(L.latLngBounds(bounds), { padding: [24, 24], maxZoom: 12 })
-         }
+      if (bounds.length > 0 && points !== lastFitPointsRef.current) {
+         lastFitPointsRef.current = points
+         map.fitBounds(L.latLngBounds(bounds), { padding: [24, 24], maxZoom: 12 })
       }
-   }, [points, selectedFrequencyPoint, hoverFrequencyPoint, markerStyles])
+
+      highlightedRef.current = applyHighlight(
+         markersByKeyRef.current,
+         markerMetaByKeyRef.current,
+         highlightedRef.current,
+         palette,
+         selectedFrequencyPointRef.current,
+         hoverFrequencyPointRef.current,
+      )
+   }, [points, markerStyles])
+
+   // O(1) highlight updates on hover/selection (no full marker rebuild)
+   useEffect(() => {
+      const palette = markerStyles ?? leafletMarkerPalettesFromRoot(document.documentElement)
+      highlightedRef.current = applyHighlight(
+         markersByKeyRef.current,
+         markerMetaByKeyRef.current,
+         highlightedRef.current,
+         palette,
+         selectedFrequencyPoint,
+         hoverFrequencyPoint,
+      )
+   }, [selectedFrequencyPoint, hoverFrequencyPoint, markerStyles])
 
    // Pan to selected organism (first coordinate not available here — parent passes lat/lng)
    useEffect(() => {

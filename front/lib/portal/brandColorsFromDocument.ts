@@ -85,7 +85,7 @@ export function leafletMarkerPalettesFromRoot(root: HTMLElement): {
          weight: 2,
       },
       hover: {
-         radius: 10,
+         radius: 16,
          color: secondary,
          fillColor: secondary,
          fillOpacity: 0.72,

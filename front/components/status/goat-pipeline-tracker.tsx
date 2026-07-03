@@ -1,6 +1,7 @@
 'use client'
 
 import { Badge } from '@/components/ui/badge'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import {
    TARGET_LIST_PIPELINE_STEPS,
    TARGET_LIST_STATUS_LABELS,
@@ -53,6 +54,10 @@ export type GoatPipelineTrackerProps = {
     * When set, UI strings use fixed English (e.g. admin area) instead of portal locale.
     */
    copyMode?: 'locale' | 'en'
+   /** Override pipeline help line (e.g. scoped to assigned species). */
+   helpText?: string
+   /** Override total species line; `{count}` is replaced with formatted total. */
+   pipelineTotalText?: string
 }
 
 export function GoatPipelineTracker({
@@ -62,9 +67,12 @@ export function GoatPipelineTracker({
    targetListStats,
    layout = 'default',
    copyMode = 'locale',
+   helpText,
+   pipelineTotalText,
 }: GoatPipelineTrackerProps) {
    const { t } = useLocale()
    const isDrawer = layout === 'drawer'
+   const tooltipContentClassName = cn('max-w-xs text-xs', isDrawer && 'z-[1200]')
    const en = copyMode === 'en'
    function tx(key: keyof typeof GOAT_PIPELINE_COPY_EN): string {
       return en ? GOAT_PIPELINE_COPY_EN[key] : t(GOAT_PIPELINE_LOCALE_KEYS[key])
@@ -93,9 +101,11 @@ export function GoatPipelineTracker({
                      </span>
                   ) : (
                      <>
-                        {tx('pipelineHelp')}{' '}
+                        {helpText ?? tx('pipelineHelp')}{' '}
                         <span className="font-medium text-foreground/90 tabular-nums">
-                           {interpolate(tx('pipelineTotal'), { count: totalSpecies.toLocaleString() })}
+                           {interpolate(pipelineTotalText ?? tx('pipelineTotal'), {
+                              count: totalSpecies.toLocaleString(),
+                           })}
                         </span>
                      </>
                   )}
@@ -127,18 +137,23 @@ export function GoatPipelineTracker({
                            TARGET_LIST_STATUS_LABELS[st.value as keyof typeof TARGET_LIST_STATUS_LABELS] ??
                            st.label
                         return (
-                           <Badge
-                              key={st.value}
-                              variant="outline"
-                              role="listitem"
-                              className="max-w-full gap-1 px-2 py-0.5 text-[11px] font-normal leading-snug"
-                              title={st.description}
-                           >
-                              <span className="min-w-0 truncate">{label}</span>
-                              <span className="shrink-0 tabular-nums text-muted-foreground">
-                                 {loading ? '—' : count.toLocaleString()}
-                              </span>
-                           </Badge>
+                           <Tooltip key={st.value}>
+                              <TooltipTrigger asChild>
+                                 <Badge
+                                    variant="outline"
+                                    role="listitem"
+                                    className="max-w-full cursor-help gap-1 px-2 py-0.5 text-[11px] font-normal leading-snug"
+                                 >
+                                    <span className="min-w-0 truncate">{label}</span>
+                                    <span className="shrink-0 tabular-nums text-muted-foreground">
+                                       {loading ? '—' : count.toLocaleString()}
+                                    </span>
+                                 </Badge>
+                              </TooltipTrigger>
+                              <TooltipContent side="bottom" className={tooltipContentClassName}>
+                                 {st.description}
+                              </TooltipContent>
+                           </Tooltip>
                         )
                      })}
                   </div>
@@ -154,17 +169,22 @@ export function GoatPipelineTracker({
                            TARGET_LIST_STATUS_LABELS[st.value as keyof typeof TARGET_LIST_STATUS_LABELS] ??
                            st.label
                         return (
-                           <div
-                              key={st.value}
-                              role="listitem"
-                              className="inline-flex max-w-[10rem] min-h-8 items-center gap-1 rounded-full border border-border bg-background px-2.5 py-1 text-left text-[11px] font-medium text-foreground"
-                              title={st.description}
-                           >
-                              <span className="truncate">{label}</span>
-                              <span className="tabular-nums text-muted-foreground">
-                                 {loading ? '—' : count.toLocaleString()}
-                              </span>
-                           </div>
+                           <Tooltip key={st.value}>
+                              <TooltipTrigger asChild>
+                                 <div
+                                    role="listitem"
+                                    className="inline-flex max-w-[10rem] min-h-8 cursor-help items-center gap-1 rounded-full border border-border bg-background px-2.5 py-1 text-left text-[11px] font-medium text-foreground"
+                                 >
+                                    <span className="truncate">{label}</span>
+                                    <span className="tabular-nums text-muted-foreground">
+                                       {loading ? '—' : count.toLocaleString()}
+                                    </span>
+                                 </div>
+                              </TooltipTrigger>
+                              <TooltipContent side="bottom" className={tooltipContentClassName}>
+                                 {st.description}
+                              </TooltipContent>
+                           </Tooltip>
                         )
                      })}
                   </div>
@@ -199,22 +219,28 @@ export function GoatPipelineTracker({
                         isDrawer && 'w-full',
                      )}
                   >
-                     <div className="flex min-w-0 items-start gap-1.5">
-                        <span
-                           className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-muted-foreground/35"
-                           aria-hidden
-                        />
-                        <span className="min-w-0 text-[11px] font-medium leading-snug text-foreground">
-                           {s.label}
-                        </span>
-                     </div>
+                     <Tooltip>
+                        <TooltipTrigger asChild>
+                           <div className="flex min-w-0 cursor-help items-start gap-1.5 text-left">
+                              <span
+                                 className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-muted-foreground/35"
+                                 aria-hidden
+                              />
+                              <span className="min-w-0 text-[11px] font-medium leading-snug text-foreground">
+                                 {s.label}
+                              </span>
+                           </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom" className={tooltipContentClassName}>
+                           {s.desc}
+                        </TooltipContent>
+                     </Tooltip>
                      <span className="mt-1.5 text-xl font-semibold tabular-nums text-foreground sm:text-[22px]">
                         {loading ? '—' : s.count.toLocaleString()}
                      </span>
                      <div className="mt-1 text-xs text-muted-foreground">
                         <span className="font-medium text-foreground">{s.pct}%</span> {tx('pctOfTotal')}
                      </div>
-                     <p className="mt-2 text-[11px] leading-snug text-muted-foreground">{s.desc}</p>
                   </div>
                ))}
             </div>

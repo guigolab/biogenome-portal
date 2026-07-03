@@ -3,6 +3,13 @@
 import { useCallback, useMemo, useState } from 'react'
 
 import type { OrganismFormStepDef, OrganismFormStepId } from '@/lib/portal/types'
+import {
+   allPublicationsValidated,
+   isCompleteImageRow,
+   isGenomePublicationValidated,
+   isPartialImageRow,
+   type PublicationValidationStatus,
+} from '@/lib/cms/organism-form-payload'
 import type {
    OrganismCommonName,
    OrganismFormState,
@@ -31,13 +38,23 @@ function computeCompletion(
       createOrganismTaxonConflict: boolean
       /** Existence check still in flight after picking a taxon (create flow) */
       taxonExistenceCheckPending?: boolean
+      /** Existence check failed (non-404); taxon availability unknown */
+      taxonExistenceCheckFailed?: boolean
+      /** Single genome-assembly publication (locked until an assembly is linked) */
+      genomePublication?: OrganismPublication | null
+      /** Per-row validation status, keyed by index into `publications` */
+      publicationValidation?: Record<number, PublicationValidationStatus>
+      /** Validation status of `genomePublication` */
+      genomePublicationValidation?: PublicationValidationStatus
    },
 ): StepCompletionState {
    switch (id) {
       case 'selectOrganism':
          if (
             !opts?.isEditMode &&
-            (opts?.createOrganismTaxonConflict || opts?.taxonExistenceCheckPending)
+            (opts?.createOrganismTaxonConflict ||
+               opts?.taxonExistenceCheckPending ||
+               opts?.taxonExistenceCheckFailed)
          ) {
             return { complete: false, partial: false }
          }
@@ -54,12 +71,25 @@ function computeCompletion(
       case 'piOrEntity':
          return { complete: Boolean(form.sub_project && form.sub_project.trim()), partial: false }
       case 'images': {
-         const hasAdditional = images.some((i) => i.url?.trim())
-         return { complete: hasAdditional, partial: false }
+         const complete = images.some(isCompleteImageRow)
+         const partial = !complete && images.some(isPartialImageRow)
+         return { complete, partial }
       }
       case 'publications': {
          const valid = publications.filter((p) => p.id.trim())
-         return { complete: valid.length > 0, partial: publications.some((p) => !p.id.trim() && p.source) }
+         const genomePublication = opts?.genomePublication ?? null
+         const allRowsValidated = allPublicationsValidated(publications, opts?.publicationValidation ?? {})
+         const genomeValidated = isGenomePublicationValidated(
+            genomePublication,
+            opts?.genomePublicationValidation ?? 'idle',
+         )
+         const hasContent = valid.length > 0 || Boolean(genomePublication?.id?.trim())
+         return {
+            complete: hasContent && allRowsValidated && genomeValidated,
+            partial:
+               publications.some((p) => !p.id.trim() && p.source) ||
+               (hasContent && (!allRowsValidated || !genomeValidated)),
+         }
       }
       case 'vernacularNames': {
          const valid = vernacularNames.filter((n) => n.value.trim())
@@ -88,8 +118,12 @@ export function useOrganismFormStepper({
    vernacularNames,
    metadataList,
    images,
+   genomePublication = null,
+   publicationValidation = {},
+   genomePublicationValidation = 'idle',
    createOrganismTaxonConflict = false,
    taxonExistenceCheckPending = false,
+   taxonExistenceCheckFailed = false,
 }: {
    steps: OrganismFormStepDef[]
    isEditMode: boolean
@@ -99,10 +133,18 @@ export function useOrganismFormStepper({
    vernacularNames: OrganismCommonName[]
    metadataList: { key: string; value: string }[]
    images: OrganismImageRow[]
+   /** Single genome-assembly publication (locked until an assembly is linked) */
+   genomePublication?: OrganismPublication | null
+   /** Per-row validation status, keyed by index into `publications` */
+   publicationValidation?: Record<number, PublicationValidationStatus>
+   /** Validation status of `genomePublication` */
+   genomePublicationValidation?: PublicationValidationStatus
    /** Create flow only: true when the selected taxid already exists in the portal */
    createOrganismTaxonConflict?: boolean
    /** Create flow: true while POST existence check is in flight after selecting a taxon */
    taxonExistenceCheckPending?: boolean
+   /** Create flow: true when the existence check errored (non-404) */
+   taxonExistenceCheckFailed?: boolean
 }) {
    const [activeIndex, setActiveIndex] = useState(0)
 
@@ -116,8 +158,24 @@ export function useOrganismFormStepper({
    }, [steps, isEditMode, hasGoat])
 
    const completionOpts = useMemo(
-      () => ({ isEditMode, createOrganismTaxonConflict, taxonExistenceCheckPending }),
-      [isEditMode, createOrganismTaxonConflict, taxonExistenceCheckPending],
+      () => ({
+         isEditMode,
+         createOrganismTaxonConflict,
+         taxonExistenceCheckPending,
+         taxonExistenceCheckFailed,
+         genomePublication,
+         publicationValidation,
+         genomePublicationValidation,
+      }),
+      [
+         isEditMode,
+         createOrganismTaxonConflict,
+         taxonExistenceCheckPending,
+         taxonExistenceCheckFailed,
+         genomePublication,
+         publicationValidation,
+         genomePublicationValidation,
+      ],
    )
 
    const runtimeSteps = useMemo((): RuntimeStep[] => {
@@ -139,9 +197,10 @@ export function useOrganismFormStepper({
             }
          }
          if (step.id === 'images' && step.required) {
+            const complete = images.some(isCompleteImageRow)
             completion = {
-               complete: images.some((img) => Boolean(img.url?.trim())),
-               partial: false,
+               complete,
+               partial: !complete && images.some(isPartialImageRow),
             }
          }
          const blocked = blockedFromHere
@@ -181,9 +240,20 @@ export function useOrganismFormStepper({
 
    const resetStepper = useCallback(() => setActiveIndex(0), [])
 
+   /** Blocks submit even when the (optional) publications step isn't "required": any filled-in
+    *  publication or genome_publication must be validated OK, not just non-empty. */
+   const publicationsBlockSubmit = useMemo(() => {
+      const allRowsValidated = allPublicationsValidated(publications, publicationValidation)
+      const genomeValidated = isGenomePublicationValidated(genomePublication, genomePublicationValidation)
+      return !allRowsValidated || !genomeValidated
+   }, [publications, publicationValidation, genomePublication, genomePublicationValidation])
+
    const canSubmit = useMemo(() => {
-      return runtimeSteps.filter((s) => s.required && s.id !== 'reviewSubmit').every((s) => s.completion.complete)
-   }, [runtimeSteps])
+      const requiredStepsComplete = runtimeSteps
+         .filter((s) => s.required && s.id !== 'reviewSubmit')
+         .every((s) => s.completion.complete)
+      return requiredStepsComplete && !publicationsBlockSubmit
+   }, [runtimeSteps, publicationsBlockSubmit])
 
    return {
       visibleSteps,
@@ -196,5 +266,6 @@ export function useOrganismFormStepper({
       goPrev,
       resetStepper,
       canSubmit,
+      publicationsBlockSubmit,
    }
 }

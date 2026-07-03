@@ -23,6 +23,10 @@ from .enums import (
 )
 
 
+def _utc_now() -> datetime.datetime:
+    return datetime.datetime.now(datetime.timezone.utc)
+
+
 class Assembly(db.Document):
     accession = db.StringField(unique=True)
     taxon_lineage = db.ListField(db.StringField())
@@ -31,7 +35,7 @@ class Assembly(db.Document):
     scientific_name = db.StringField()
     taxid = db.StringField(required=True)
     sample_accession = db.StringField()
-    created = db.DateTimeField(default=datetime.datetime.now())
+    created = db.DateTimeField(default=_utc_now)
     metadata = db.DictField()
     chromosomes = db.ListField(db.StringField())
     chromosomes_aliases = db.BinaryField()
@@ -105,7 +109,7 @@ class BioSample(db.Document):
     location = db.PointField()
     bioprojects = db.ListField(db.StringField())
     sub_samples = db.ListField(db.StringField())
-    created = db.DateTimeField(default=datetime.datetime.now())
+    created = db.DateTimeField(default=_utc_now)
     last_check = db.DateTimeField()
     metadata = db.DictField()
     taxid = db.StringField(required=True)
@@ -137,7 +141,7 @@ class Experiment(db.Document):
     instrument_model = db.StringField()
     taxid = db.StringField(required=True)
     scientific_name = db.StringField() 
-    created = db.DateTimeField(default=datetime.datetime.now())
+    created = db.DateTimeField(default=_utc_now)
     metadata = db.DictField()
     meta = {
         "indexes": ["experiment_accession", "taxid", "taxon_lineage"],
@@ -153,7 +157,7 @@ class GenomeAnnotation(db.Document):
     name = db.StringField(required=True, unique=True)
     gff_gz_location = db.URLField(required=True)
     tab_index_location = db.URLField(required=True)
-    created = db.DateTimeField(default=datetime.datetime.now())
+    created = db.DateTimeField(default=_utc_now)
     metadata = db.DictField()
     user = db.StringField()
     external = db.BooleanField(default=True)
@@ -168,7 +172,7 @@ class GenomeAnnotation(db.Document):
 
 
 class GoaTUpdateDate(db.Document):
-    updated = db.DateTimeField(default=datetime.datetime.now())
+    updated = db.DateTimeField(default=_utc_now)
     taxid = db.StringField(required=True)
 
 
@@ -178,7 +182,7 @@ class LocalAssembly(db.Document):
     scientific_name = db.StringField()
     taxid = db.StringField(required=True)
     sample_accession = db.StringField()
-    created = db.DateTimeField(default=datetime.datetime.now())
+    created = db.DateTimeField(default=_utc_now)
     metadata = db.DictField()
     meta = {
         "indexes": ["assembly_id", "taxid", "taxon_lineage"],
@@ -186,7 +190,7 @@ class LocalAssembly(db.Document):
 
 
 class LocalSample(db.Document):
-    created = db.DateTimeField(default=datetime.datetime.now())
+    created = db.DateTimeField(default=_utc_now)
     local_id = db.StringField(required=True, unique=True)
     taxon_lineage = db.ListField(db.StringField())
     user = db.StringField()
@@ -210,6 +214,7 @@ class LocalSample(db.Document):
 
 class Organism(db.Document):
     publications = db.ListField(db.EmbeddedDocumentField(Publication))
+    genome_publication = db.EmbeddedDocumentField(Publication)
     metadata = db.DictField()
     sub_project = db.StringField()
     tolid_prefix = db.StringField()
@@ -257,7 +262,7 @@ class Organism(db.Document):
 class OrganismAuditLog(db.Document):
     action = db.StringField(required=True)
     user = db.StringField(required=True)
-    timestamp = db.DateTimeField(default=datetime.datetime.now())
+    timestamp = db.DateTimeField(default=_utc_now)
     previous_object = db.DictField()
     new_object = db.DictField()
     taxid = db.StringField(required=True)

@@ -1,10 +1,20 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Check, Loader2, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { CmsStatusPill } from '@/components/cms/dashboard/status-pill'
+import {
+   AlertDialog,
+   AlertDialogAction,
+   AlertDialogCancel,
+   AlertDialogContent,
+   AlertDialogDescription,
+   AlertDialogFooter,
+   AlertDialogHeader,
+   AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
@@ -24,6 +34,8 @@ import { useCmsAuthStore } from '@/stores/cms-auth-store'
 import { useCmsDrawerStore } from '@/stores/cms-drawer-store'
 
 const SEARCH_LIMIT = 8
+
+type SpeciesLoadStatus = 'idle' | 'loading' | 'loaded' | 'error'
 
 export function UserFormPanel({ editName }: { editName?: string | null }) {
    const close = useCmsDrawerStore((s) => s.close)
@@ -48,6 +60,9 @@ export function UserFormPanel({ editName }: { editName?: string | null }) {
 
    const [assignedFilter, setAssignedFilter] = useState('')
    const [assigned, setAssigned] = useState<Record<string, unknown>[]>([])
+   const [speciesLoadStatus, setSpeciesLoadStatus] = useState<SpeciesLoadStatus>(
+      editName ? 'loading' : 'loaded',
+   )
 
    useEffect(() => {
       const t = setTimeout(() => {
@@ -57,7 +72,44 @@ export function UserFormPanel({ editName }: { editName?: string | null }) {
       return () => clearTimeout(t)
    }, [searchFilter])
 
+   // Guards against out-of-order responses: if Prev/Next (or the search debounce) fire in quick
+   // succession, a slower older request must not overwrite a newer one's results.
+   const searchRequestIdRef = useRef(0)
+   const speciesRequestIdRef = useRef(0)
+   const initialAssignedCountRef = useRef(0)
+   const pendingSubmitRef = useRef<{
+      payload: Record<string, unknown>
+      speciesOmitted: boolean
+   } | null>(null)
+
+   const [clearSpeciesConfirmOpen, setClearSpeciesConfirmOpen] = useState(false)
+
+   const fetchAssignedSpecies = useCallback(async () => {
+      if (!editName) {
+         initialAssignedCountRef.current = 0
+         setSpeciesLoadStatus('loaded')
+         return
+      }
+      const requestId = ++speciesRequestIdRef.current
+      setSpeciesLoadStatus('loading')
+      try {
+         const sp = await cmsGetUserSpecies(editName, { limit: 500 })
+         if (requestId !== speciesRequestIdRef.current) return
+         const data = sp.data ?? []
+         initialAssignedCountRef.current = data.length
+         setAssigned(data)
+         setSpeciesLoadStatus('loaded')
+      } catch {
+         if (requestId !== speciesRequestIdRef.current) return
+         setSpeciesLoadStatus('error')
+         toast.warning(
+            'Could not load current species assignments; species editing is disabled until this is retried.',
+         )
+      }
+   }, [editName])
+
    const fetchAvailable = useCallback(async () => {
+      const requestId = ++searchRequestIdRef.current
       setSearchLoading(true)
       try {
          const params = {
@@ -65,20 +117,18 @@ export function UserFormPanel({ editName }: { editName?: string | null }) {
             limit: SEARCH_LIMIT,
             offset: (searchPage - 1) * SEARCH_LIMIT,
          }
-         if (onlyUnassigned) {
-            const body = await cmsGetUnassignedOrganisms(params)
-            setAvailable(body.data ?? [])
-            setSearchTotal(body.total ?? 0)
-         } else {
-            const body = await cmsGetItems('organisms', params)
-            setAvailable(body.data ?? [])
-            setSearchTotal(body.total ?? 0)
-         }
+         const body = onlyUnassigned
+            ? await cmsGetUnassignedOrganisms(params)
+            : await cmsGetItems('organisms', params)
+         if (requestId !== searchRequestIdRef.current) return
+         setAvailable(body.data ?? [])
+         setSearchTotal(body.total ?? 0)
       } catch {
+         if (requestId !== searchRequestIdRef.current) return
          setAvailable([])
          setSearchTotal(0)
       } finally {
-         setSearchLoading(false)
+         if (requestId === searchRequestIdRef.current) setSearchLoading(false)
       }
    }, [debouncedSearch, onlyUnassigned, searchPage])
 
@@ -87,9 +137,8 @@ export function UserFormPanel({ editName }: { editName?: string | null }) {
    }, [fetchAvailable])
 
    useEffect(() => {
-      if (role !== 'DataManager' || !editName) return
-      void cmsGetUserSpecies(editName, { limit: 500 }).then((sp) => setAssigned(sp.data ?? []))
-   }, [role, editName])
+      void fetchAssignedSpecies()
+   }, [fetchAssignedSpecies])
 
    useEffect(() => {
       if (!editName) return
@@ -130,12 +179,49 @@ export function UserFormPanel({ editName }: { editName?: string | null }) {
       return assigned.some((o) => String(o.taxid) === String(taxid))
    }
 
+   const speciesEditingEnabled = !editName || speciesLoadStatus === 'loaded'
+
    function assignOrg(org: Record<string, unknown>) {
+      if (!speciesEditingEnabled) return
       if (!isAssignedTaxid(org.taxid)) setAssigned((a) => [...a, org])
    }
 
    function unassignOrg(taxid: unknown) {
+      if (!speciesEditingEnabled) return
       setAssigned((a) => a.filter((o) => String(o.taxid) !== String(taxid)))
+   }
+
+   function willClearAllLoadedSpecies(
+      speciesVerified: boolean,
+      nextRole: typeof role,
+      nextAssigned: Record<string, unknown>[],
+   ): boolean {
+      if (!editName || !speciesVerified || initialAssignedCountRef.current <= 0) return false
+      if (nextRole === 'Admin') return true
+      return nextRole === 'DataManager' && nextAssigned.length === 0
+   }
+
+   async function executeSave(payload: Record<string, unknown>, speciesOmitted: boolean) {
+      setSubmitting(true)
+      try {
+         if (editName) {
+            await cmsUpdateUser(editName, payload)
+            toast.success(`${name} updated.`)
+            if (speciesOmitted) {
+               toast.warning(
+                  "Species assignments were left unchanged because they couldn't be verified.",
+               )
+            }
+         } else {
+            await cmsCreateUser(payload)
+            toast.success(`${name} created.`)
+         }
+         close()
+      } catch (e) {
+         toast.error(extractApiMessage(e, 'Save failed'))
+      } finally {
+         setSubmitting(false)
+      }
    }
 
    async function handleSubmit() {
@@ -152,35 +238,52 @@ export function UserFormPanel({ editName }: { editName?: string | null }) {
          return
       }
 
-      const species = role === 'DataManager' ? assigned.map((o) => String(o.taxid)) : []
+      const isCreate = !editName
+      const speciesVerified = isCreate || speciesLoadStatus === 'loaded'
       const payload: Record<string, unknown> = {
          name: name.trim(),
          role,
          email: email.trim(),
-         species,
       }
-      if (!editName || showPassword) {
+      if (role === 'DataManager') {
+         if (speciesVerified) {
+            payload.species = assigned.map((o) => String(o.taxid))
+         }
+      } else {
+         payload.species = []
+      }
+      if (!editName) {
          payload.password = password
+      } else if (password.trim()) {
+         payload.password = password.trim()
       }
 
-      setSubmitting(true)
-      try {
-         if (editName) {
-            await cmsUpdateUser(editName, payload)
-            toast.success(`${name} updated.`)
-         } else {
-            await cmsCreateUser(payload)
-            toast.success(`${name} created.`)
-         }
-         close()
-      } catch (e) {
-         toast.error(extractApiMessage(e, 'Save failed'))
-      } finally {
-         setSubmitting(false)
+      const speciesOmitted = Boolean(editName && role === 'DataManager' && !speciesVerified)
+
+      if (willClearAllLoadedSpecies(speciesVerified, role, assigned)) {
+         pendingSubmitRef.current = { payload, speciesOmitted }
+         setClearSpeciesConfirmOpen(true)
+         return
       }
+
+      await executeSave(payload, speciesOmitted)
    }
 
-   const isAdminEditingDataManager = isAdmin && editName && role === 'DataManager'
+   async function confirmClearSpeciesSave() {
+      const pending = pendingSubmitRef.current
+      if (!pending) {
+         setClearSpeciesConfirmOpen(false)
+         return
+      }
+      pendingSubmitRef.current = null
+      setClearSpeciesConfirmOpen(false)
+      await executeSave(pending.payload, pending.speciesOmitted)
+   }
+
+   // Any edit session may collapse the password field behind a "Change password" action;
+   // only Create requires an upfront password. (Not scoped to role: an Admin editing another
+   // Admin — e.g. their own account — should get the same optional-password affordance.)
+   const canCollapsePassword = isAdmin && !!editName
 
    if (loading) {
       return (
@@ -200,6 +303,16 @@ export function UserFormPanel({ editName }: { editName?: string | null }) {
    } as const
    const passwordAutoComplete = ac.newPassword
 
+   // Password-manager opt-out attributes (1Password, LastPass, Bitwarden, Dashlane) — browsers'
+   // built-in Chrome/Edge autofill is handled separately via the decoy fields below, since they
+   // ignore autocomplete tokens/opt-out attributes for credential-fill heuristics.
+   const pmIgnoreProps = {
+      'data-1p-ignore': true,
+      'data-lpignore': 'true',
+      'data-bwignore': true,
+      'data-form-type': 'other',
+   } as const
+
    const nameField = (
       <div className="sm:col-span-2">
          <Label htmlFor="cms-user-name">Username</Label>
@@ -212,6 +325,7 @@ export function UserFormPanel({ editName }: { editName?: string | null }) {
             autoComplete={ac.accountName}
             autoCorrect="off"
             autoCapitalize="off"
+            {...pmIgnoreProps}
          />
       </div>
    )
@@ -226,21 +340,22 @@ export function UserFormPanel({ editName }: { editName?: string | null }) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             autoComplete={ac.email}
+            {...pmIgnoreProps}
          />
       </div>
    )
 
    const passwordBlock =
-      editName && isAdminEditingDataManager && !showPassword ? (
+      canCollapsePassword && !showPassword ? (
          <div className="sm:col-span-2 rounded-md border border-border bg-muted/40 p-3 text-sm">
-            <p className="mb-2 text-muted-foreground">Password hidden. Change email or assignments without rotating password.</p>
+            <p className="mb-2 text-muted-foreground">Password hidden. Leave unchanged, or update it below.</p>
             <Button type="button" size="sm" variant="secondary" onClick={() => setShowPassword(true)}>
                Change password
             </Button>
          </div>
       ) : (
          <div className="sm:col-span-2">
-            <Label htmlFor="cms-user-password">Password {editName && isAdminEditingDataManager ? '(optional if unchanged)' : ''}</Label>
+            <Label htmlFor="cms-user-password">Password {editName ? '(leave blank to keep current)' : ''}</Label>
             <Input
                id="cms-user-password"
                name="cms_user_password"
@@ -248,8 +363,9 @@ export function UserFormPanel({ editName }: { editName?: string | null }) {
                value={password}
                onChange={(e) => setPassword(e.target.value)}
                autoComplete={passwordAutoComplete}
+               {...pmIgnoreProps}
             />
-            {editName && isAdminEditingDataManager && showPassword ? (
+            {canCollapsePassword && showPassword ? (
                <Button
                   type="button"
                   variant="link"
@@ -266,6 +382,7 @@ export function UserFormPanel({ editName }: { editName?: string | null }) {
       )
 
    return (
+      <>
       <form
          className="space-y-6"
          autoComplete="off"
@@ -275,6 +392,14 @@ export function UserFormPanel({ editName }: { editName?: string | null }) {
             void handleSubmit()
          }}
       >
+         {/* Decoy fields: Chrome/Edge ignore autocomplete tokens/opt-out attrs when deciding which
+             saved credential to offer — they fill the nearest username/password pair on the page.
+             These absorb that autofill so it doesn't land in the real fields below. Must stay
+             visually hidden via `sr-only` (not display:none, which browsers ignore for this trick). */}
+         <span className="sr-only" aria-hidden="true">
+            <input type="text" name="username" autoComplete="username" tabIndex={-1} />
+            <input type="password" name="password" autoComplete="current-password" tabIndex={-1} />
+         </span>
          <div className="grid gap-3 sm:grid-cols-2">
             {editName ? (
                <>
@@ -309,7 +434,13 @@ export function UserFormPanel({ editName }: { editName?: string | null }) {
                   <div className="flex items-center justify-between gap-2">
                      <span className="text-sm font-medium">Available</span>
                      <label className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <Checkbox checked={onlyUnassigned} onCheckedChange={(c) => setOnlyUnassigned(c === true)} />
+                        <Checkbox
+                           checked={onlyUnassigned}
+                           onCheckedChange={(c) => {
+                              setOnlyUnassigned(c === true)
+                              setSearchPage(1)
+                           }}
+                        />
                         Unassigned only
                      </label>
                   </div>
@@ -353,6 +484,7 @@ export function UserFormPanel({ editName }: { editName?: string | null }) {
                                        size="icon"
                                        variant="outline"
                                        className="h-8 w-8 shrink-0 self-start sm:mt-0.5"
+                                       disabled={!speciesEditingEnabled}
                                        onClick={() => assignOrg(org)}
                                     >
                                        <Plus className="h-4 w-4" />
@@ -369,10 +501,18 @@ export function UserFormPanel({ editName }: { editName?: string | null }) {
                            Page {searchPage} / {Math.ceil(searchTotal / SEARCH_LIMIT)}
                         </span>
                         <div className="flex gap-1">
-                           <Button variant="outline" size="sm" className="h-7 text-xs" disabled={searchPage <= 1} onClick={() => setSearchPage((p) => p - 1)}>
+                           <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="h-7 text-xs"
+                              disabled={searchPage <= 1}
+                              onClick={() => setSearchPage((p) => p - 1)}
+                           >
                               Prev
                            </Button>
                            <Button
+                              type="button"
                               variant="outline"
                               size="sm"
                               className="h-7 text-xs"
@@ -388,6 +528,23 @@ export function UserFormPanel({ editName }: { editName?: string | null }) {
 
                <div className="flex min-h-0 min-w-0 flex-col gap-2">
                   <span className="text-sm font-medium">Assigned ({assigned.length})</span>
+                  {speciesLoadStatus === 'error' ? (
+                     <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-muted-foreground">
+                        <p>
+                           Couldn&apos;t load current species assignments. Editing is disabled until this
+                           succeeds.
+                        </p>
+                        <Button
+                           type="button"
+                           size="sm"
+                           variant="secondary"
+                           className="mt-2"
+                           onClick={() => void fetchAssignedSpecies()}
+                        >
+                           Retry
+                        </Button>
+                     </div>
+                  ) : null}
                   <Input
                      placeholder="Filter assigned…"
                      value={assignedFilter}
@@ -397,9 +554,14 @@ export function UserFormPanel({ editName }: { editName?: string | null }) {
                      }}
                      name="cms_user_assigned_filter"
                      autoComplete="off"
+                     disabled={!speciesEditingEnabled}
                   />
                   <ScrollArea className="h-52 w-full min-w-0 rounded-md border border-border [&_[data-slot=scroll-area-viewport]]:overflow-x-hidden">
-                     {filteredAssigned.length === 0 ? (
+                     {speciesLoadStatus === 'loading' && editName ? (
+                        <div className="flex justify-center py-8">
+                           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                        </div>
+                     ) : filteredAssigned.length === 0 ? (
                         <p className="p-3 text-center text-xs text-muted-foreground">No species.</p>
                      ) : (
                         <ul className="w-full min-w-0 divide-y divide-border px-2 py-0.5">
@@ -419,6 +581,7 @@ export function UserFormPanel({ editName }: { editName?: string | null }) {
                                     variant="ghost"
                                     size="sm"
                                     className="h-auto shrink-0 self-start whitespace-nowrap text-destructive sm:pt-0.5"
+                                    disabled={!speciesEditingEnabled}
                                     onClick={() => unassignOrg(org.taxid)}
                                  >
                                     Remove
@@ -441,6 +604,39 @@ export function UserFormPanel({ editName }: { editName?: string | null }) {
             </Button>
          </div>
       </form>
+
+      <AlertDialog
+         open={clearSpeciesConfirmOpen}
+         onOpenChange={(open) => {
+            setClearSpeciesConfirmOpen(open)
+            if (!open) pendingSubmitRef.current = null
+         }}
+      >
+         <AlertDialogContent>
+            <AlertDialogHeader>
+               <AlertDialogTitle>Remove all species assignments?</AlertDialogTitle>
+               <AlertDialogDescription>
+                  This user currently has {initialAssignedCountRef.current} assigned species. Saving will
+                  remove every assignment. This action is irreversible — you will need to re-assign species
+                  manually.
+               </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+               <AlertDialogCancel disabled={submitting}>Cancel</AlertDialogCancel>
+               <AlertDialogAction
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  disabled={submitting}
+                  onClick={(e) => {
+                     e.preventDefault()
+                     void confirmClearSpeciesSave()
+                  }}
+               >
+                  {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Remove all species'}
+               </AlertDialogAction>
+            </AlertDialogFooter>
+         </AlertDialogContent>
+      </AlertDialog>
+      </>
    )
 }
 

@@ -112,24 +112,6 @@ def delete_rows_without_organism(
 
     return deleted
 
-
-def _species_has_catalog_rows(taxid: str) -> bool:
-    t = str(taxid).strip()
-    if not t:
-        return False
-    if Assembly.objects(taxid=t).first():
-        return True
-    if BioSample.objects(taxid=t).first():
-        return True
-    if ReadRun.objects(taxid=t).first():
-        return True
-    if LocalSample.objects(taxid=t).first():
-        return True
-    if GenomeAnnotation.objects(taxid=t).first():
-        return True
-    return False
-
-
 _LINEAGE_MISSING_RAW = {
     "$or": [
         {"taxon_lineage": {"$exists": False}},

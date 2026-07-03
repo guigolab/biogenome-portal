@@ -6,6 +6,24 @@ import { XIcon } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 
+const dialogFadeClasses =
+  'transition-opacity duration-200 ease-out data-[state=closed]:opacity-0 data-[state=open]:opacity-100'
+
+/** Opacity transitions (not tw-animate keyframes) avoid Firefox freezing fixed dialogs mid-fade. */
+function useDialogEnterFade<T extends HTMLElement>() {
+  const ref = React.useRef<T>(null)
+
+  React.useLayoutEffect(() => {
+    const el = ref.current
+    if (!el) return
+    el.style.opacity = '0'
+    void el.getBoundingClientRect()
+    el.style.removeProperty('opacity')
+  }, [])
+
+  return ref
+}
+
 function Dialog({
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Root>) {
@@ -34,11 +52,15 @@ function DialogOverlay({
   className,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Overlay>) {
+  const ref = useDialogEnterFade<React.ElementRef<typeof DialogPrimitive.Overlay>>()
+
   return (
     <DialogPrimitive.Overlay
+      ref={ref}
       data-slot="dialog-overlay"
       className={cn(
-        'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-[1100] bg-black/50',
+        dialogFadeClasses,
+        'fixed inset-0 z-[1100] bg-black/50',
         className,
       )}
       {...props}
@@ -54,13 +76,18 @@ function DialogContent({
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean
 }) {
+  const ref = useDialogEnterFade<React.ElementRef<typeof DialogPrimitive.Content>>()
+
   return (
     <DialogPortal data-slot="dialog-portal">
       <DialogOverlay />
       <DialogPrimitive.Content
+        ref={ref}
         data-slot="dialog-content"
         className={cn(
-          'bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-[1110] grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-lg',
+          dialogFadeClasses,
+          // Center with inset/margin (not translate) so opacity transitions don't fight transforms.
+          'bg-background fixed inset-0 z-[1110] m-auto grid h-fit w-full max-w-[calc(100%-2rem)] gap-4 rounded-lg border p-6 shadow-lg sm:max-w-lg',
           className,
         )}
         {...props}

@@ -6,6 +6,24 @@ import * as AlertDialogPrimitive from '@radix-ui/react-alert-dialog'
 import { cn } from '@/lib/utils'
 import { buttonVariants } from '@/components/ui/button'
 
+const alertDialogFadeClasses =
+  'transition-opacity duration-200 ease-out data-[state=closed]:opacity-0 data-[state=open]:opacity-100'
+
+/** Opacity transitions (not tw-animate keyframes) avoid Firefox freezing fixed dialogs mid-fade. */
+function useAlertDialogEnterFade<T extends HTMLElement>() {
+  const ref = React.useRef<T>(null)
+
+  React.useLayoutEffect(() => {
+    const el = ref.current
+    if (!el) return
+    el.style.opacity = '0'
+    void el.getBoundingClientRect()
+    el.style.removeProperty('opacity')
+  }, [])
+
+  return ref
+}
+
 function AlertDialog({
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Root>) {
@@ -32,11 +50,19 @@ function AlertDialogOverlay({
   className,
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Overlay>) {
+  const ref =
+    useAlertDialogEnterFade<
+      React.ElementRef<typeof AlertDialogPrimitive.Overlay>
+    >()
+
   return (
     <AlertDialogPrimitive.Overlay
+      ref={ref}
       data-slot="alert-dialog-overlay"
       className={cn(
-        'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/50',
+        alertDialogFadeClasses,
+        // Above sheet/dialog layers (z-[1100]/z-[1110]) so confirmations stack on top.
+        'fixed inset-0 z-[1120] bg-black/50',
         className,
       )}
       {...props}
@@ -48,13 +74,20 @@ function AlertDialogContent({
   className,
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Content>) {
+  const ref =
+    useAlertDialogEnterFade<
+      React.ElementRef<typeof AlertDialogPrimitive.Content>
+    >()
+
   return (
     <AlertDialogPortal>
       <AlertDialogOverlay />
       <AlertDialogPrimitive.Content
+        ref={ref}
         data-slot="alert-dialog-content"
         className={cn(
-          'bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-lg',
+          alertDialogFadeClasses,
+          'bg-background fixed inset-0 z-[1130] m-auto grid h-fit w-full max-w-[calc(100%-2rem)] gap-4 rounded-lg border p-6 shadow-lg sm:max-w-lg',
           className,
         )}
         {...props}

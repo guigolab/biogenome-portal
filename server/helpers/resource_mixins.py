@@ -178,6 +178,12 @@ def _resolve_tsv_cell(item, field_key):
         return _format_images_tsv(value)
     if field_key == "common_names":
         return _format_common_names_tsv(value)
+    if field_key == "assigned_users":
+        if not value:
+            return ""
+        if isinstance(value, list):
+            return ",".join(_format_tsv_scalar(x) for x in value if x is not None and str(x).strip())
+        return _format_tsv_scalar(value)
 
     if isinstance(value, list):
         if value and isinstance(value[0], dict):

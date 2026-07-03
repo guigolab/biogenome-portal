@@ -79,6 +79,7 @@ export function useEnaUploadStepper(
    sample: {
       scientificName: string
       sampleIdentifier: string
+      taxid: string
       characterics: Record<string, string | string[]>
    },
 ) {
@@ -91,7 +92,9 @@ export function useEnaUploadStepper(
 
    function isStepComplete(step: EnaStepDef): boolean {
       if (step.kind === 'sampleInfo') {
-         return Boolean(sample.scientificName?.trim() && sample.sampleIdentifier?.trim())
+         return Boolean(
+            sample.scientificName?.trim() && sample.sampleIdentifier?.trim() && sample.taxid?.trim(),
+         )
       }
       if (step.kind === 'reviewSubmit') return false
       if (step.mandatoryFieldKeys.length === 0) return true
@@ -111,7 +114,7 @@ export function useEnaUploadStepper(
          }
          return { ...step, index, complete, blocked }
       })
-   }, [steps, sample.scientificName, sample.sampleIdentifier, sample.characterics])
+   }, [steps, sample.scientificName, sample.sampleIdentifier, sample.taxid, sample.characterics])
 
    const activeStep = runtimeSteps[activeIndex] ?? runtimeSteps[0]
 

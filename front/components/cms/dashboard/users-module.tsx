@@ -16,18 +16,18 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { extractApiMessage } from '@/lib/cms/extract-api-message'
-import type { DashboardModuleVariant } from '@/components/cms/dashboard/dashboard-module-variant'
+import { DashboardModuleHeader } from '@/components/cms/dashboard/dashboard-module-header'
+import { DashboardModulePagination } from '@/components/cms/dashboard/dashboard-module-pagination'
 import { cmsDeleteUser, cmsGetUsers } from '@/lib/cms/services/auth'
-import { cn } from '@/lib/utils'
 import { useCmsAuthStore } from '@/stores/cms-auth-store'
 import { useCmsDrawerStore } from '@/stores/cms-drawer-store'
 
 const LIMIT = 8
 
-export function UsersModule({ variant = 'standalone' }: { variant?: DashboardModuleVariant }) {
+export function UsersModule() {
    const currentName = useCmsAuthStore((s) => s.userName)
    const openDrawer = useCmsDrawerStore((s) => s.open)
 
@@ -98,32 +98,18 @@ export function UsersModule({ variant = 'standalone' }: { variant?: DashboardMod
       }
    }
 
-   const embedded = variant === 'tabPanel'
-
    return (
       <>
-         <Card className={cn('border-border/80 shadow-sm', embedded && 'rounded-xl border bg-card')}>
-            <CardHeader
-               className={cn(
-                  'flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between',
-                  embedded && 'pb-2',
-               )}
-            >
-               {embedded ? (
-                  <p className="text-sm text-muted-foreground">
-                     Curator accounts — create, edit, or remove.
-                  </p>
-               ) : (
-                  <div>
-                     <CardTitle>Users</CardTitle>
-                     <CardDescription>Curator accounts — create, edit, or remove.</CardDescription>
-                  </div>
-               )}
-               <Button size="sm" className="gap-2" onClick={() => openDrawer({ panel: 'user' })}>
-                  <UserPlus className="h-4 w-4" />
-                  New user
-               </Button>
-            </CardHeader>
+         <Card className="gap-3 border-border/80 shadow-sm">
+            <DashboardModuleHeader
+               description="Curator accounts — create, edit, or remove."
+               action={
+                  <Button size="sm" className="gap-2" onClick={() => openDrawer({ panel: 'user' })}>
+                     <UserPlus className="h-4 w-4" />
+                     New user
+                  </Button>
+               }
+            />
             <CardContent className="space-y-4">
                <Input
                   placeholder="Filter by name or email…"
@@ -201,24 +187,12 @@ export function UsersModule({ variant = 'standalone' }: { variant?: DashboardMod
                   </ul>
                )}
                {total > LIMIT ? (
-                  <div className="flex justify-between text-sm text-muted-foreground">
-                     <span>
-                        Page {page} / {Math.ceil(total / LIMIT)}
-                     </span>
-                     <div className="flex gap-2">
-                        <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
-                           Prev
-                        </Button>
-                        <Button
-                           variant="outline"
-                           size="sm"
-                           disabled={page >= Math.ceil(total / LIMIT)}
-                           onClick={() => setPage((p) => p + 1)}
-                        >
-                           Next
-                        </Button>
-                     </div>
-                  </div>
+                  <DashboardModulePagination
+                     page={page}
+                     totalPages={Math.ceil(total / LIMIT)}
+                     onPrevious={() => setPage((p) => p - 1)}
+                     onNext={() => setPage((p) => p + 1)}
+                  />
                ) : null}
             </CardContent>
          </Card>

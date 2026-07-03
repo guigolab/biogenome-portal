@@ -4,7 +4,7 @@ import { useSearchParams } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Loader2, MapPin, Search, VectorSquare } from 'lucide-react'
 
-import { MapView } from '@/components/map-view'
+import { MapView, type FrequencyHighlightPoint } from '@/components/map-view'
 import { SpeciesCard } from '@/components/species-card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -66,22 +66,35 @@ function organismPrimaryCoordinate(row: Record<string, unknown>): { lat: number;
    return { lat: a, lng: b }
 }
 
+function coordKey(lng: number, lat: number): string {
+   return `${lng}:${lat}`
+}
+
+function organismDisplayName(row: Record<string, unknown>): string {
+   const sci = row.scientific_name
+   if (typeof sci === 'string' && sci.trim()) return sci.trim()
+   const common = row.insdc_common_name
+   if (typeof common === 'string' && common.trim()) return common.trim()
+   const tid = getTaxid(row)
+   return tid || '—'
+}
+
 /**
  * Map marker for this list row: prefer taxid (frequency points include `taxids` from aggregation);
  * fallback to organism `coordinates` vs point with relaxed epsilon.
  */
 function frequencyMapPointForOrganism(
    row: Record<string, unknown>,
+   pointByTaxid: Map<string, LocationFrequencyPoint>,
    points: LocationFrequencyPoint[],
-): { lng: number; lat: number } | null {
+): FrequencyHighlightPoint | null {
+   const label = organismDisplayName(row)
    const tid = getTaxid(row)
    if (tid) {
-      for (const p of points) {
-         const ids = p.taxids
-         if (ids?.length && ids.some((t) => String(t) === tid)) {
-            const [lng, lat] = p.coordinates
-            return { lng, lat }
-         }
+      const p = pointByTaxid.get(tid)
+      if (p) {
+         const [lng, lat] = p.coordinates
+         return { lng, lat, label }
       }
    }
    const oc = organismPrimaryCoordinate(row)
@@ -91,7 +104,7 @@ function frequencyMapPointForOrganism(
       const [lng, lat] = p.coordinates
       if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue
       if (Math.abs(lng - oc.lng) < eps && Math.abs(lat - oc.lat) < eps) {
-         return { lng, lat }
+         return { lng, lat, label }
       }
    }
    return null
@@ -116,7 +129,7 @@ export default function MapClientPage() {
    const [listLoadingMore, setListLoadingMore] = useState(false)
    const [listError, setListError] = useState<string | null>(null)
    const [coordinateFilter, setCoordinateFilter] = useState<{ lng: number; lat: number } | null>(null)
-   const [listHoverMapPoint, setListHoverMapPoint] = useState<{ lng: number; lat: number } | null>(null)
+   const [listHoverMapPoint, setListHoverMapPoint] = useState<FrequencyHighlightPoint | null>(null)
    const coordinateFilterRef = useRef(coordinateFilter)
    coordinateFilterRef.current = coordinateFilter
    const itemsRef = useRef(items)
@@ -146,14 +159,32 @@ export default function MapClientPage() {
       return null
    }, [activePolygon])
 
+   const pointByCoordKey = useMemo(() => {
+      const m = new Map<string, LocationFrequencyPoint>()
+      for (const p of locations) {
+         const [lng, lat] = p.coordinates
+         if (!Number.isFinite(lng) || !Number.isFinite(lat)) continue
+         m.set(coordKey(lng, lat), p)
+      }
+      return m
+   }, [locations])
+
+   const pointByTaxid = useMemo(() => {
+      const m = new Map<string, LocationFrequencyPoint>()
+      for (const p of locations) {
+         for (const raw of p.taxids ?? []) {
+            const tid = String(raw).trim()
+            if (tid && !m.has(tid)) m.set(tid, p)
+         }
+      }
+      return m
+   }, [locations])
+
    const pointTaxidsForListKey = useMemo(() => {
       if (!coordinateFilter) return ''
-      const pt = locations.find((p) => {
-         const [lng, lat] = p.coordinates
-         return sameSamplePoint({ lng, lat }, coordinateFilter)
-      })
+      const pt = pointByCoordKey.get(coordKey(coordinateFilter.lng, coordinateFilter.lat))
       return (pt?.taxids ?? []).join(',')
-   }, [coordinateFilter, locations])
+   }, [coordinateFilter, pointByCoordKey])
 
    const organismListSharedFilters = useMemo(
       () => ({
@@ -195,10 +226,7 @@ export default function MapClientPage() {
             offset,
          }
          if (coordinateFilter) {
-            const pt = locations.find((p) => {
-               const [lng, lat] = p.coordinates
-               return sameSamplePoint({ lng, lat }, coordinateFilter)
-            })
+            const pt = pointByCoordKey.get(coordKey(coordinateFilter.lng, coordinateFilter.lat))
             const ids = pt?.taxids?.map((t) => String(t).trim()).filter(Boolean) ?? []
             q.taxid__in =
                ids.length > 0 ? ids.join(',') : '__no_samples_in_map_selection__'
@@ -219,7 +247,7 @@ export default function MapClientPage() {
       },
       [
          coordinateFilter,
-         locations,
+         pointByCoordKey,
          taxidFromUrl,
          listQueryPolygon,
          debouncedSearch,
@@ -283,10 +311,7 @@ export default function MapClientPage() {
       ;(async () => {
          try {
             if (coordinateFilter) {
-               const pt = locations.find((p) => {
-                  const [lng, lat] = p.coordinates
-                  return sameSamplePoint({ lng, lat }, coordinateFilter)
-               })
+               const pt = pointByCoordKey.get(coordKey(coordinateFilter.lng, coordinateFilter.lat))
                const ids = pt?.taxids?.map((x) => String(x).trim()).filter(Boolean) ?? []
                if (ids.length === 0) {
                   if (!cancelled) {
@@ -336,7 +361,7 @@ export default function MapClientPage() {
       listFiltersKey,
       buildOrganismListQuery,
       coordinateFilter,
-      locations,
+      pointByCoordKey,
       organismListSharedFilters,
       t,
    ])
@@ -592,7 +617,9 @@ export default function MapClientPage() {
                                     <div
                                        key={tid || JSON.stringify(row)}
                                        onMouseEnter={() => {
-                                          setListHoverMapPoint(frequencyMapPointForOrganism(row, locations))
+                                          setListHoverMapPoint(
+                                             frequencyMapPointForOrganism(row, pointByTaxid, locations),
+                                          )
                                        }}
                                        onMouseLeave={() => setListHoverMapPoint(null)}
                                     >

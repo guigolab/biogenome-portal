@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Check, ChevronLeft, ChevronRight, Download, ImageOff, Loader2, Lock, Pencil, TriangleAlert } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
 import {
@@ -19,7 +19,6 @@ import {
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
@@ -27,8 +26,22 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { usePortalConfig } from '@/contexts/portal-context'
 import { defaultPortalConfig, resolveOrganismFormSteps } from '@/lib/portal'
+import {
+   buildGenomePublicationPayload,
+   buildMetadataPayload,
+   filterCompleteImages,
+   filterValidPublications,
+   filterValidVernacularNames,
+   getIncompleteImageRowFields,
+   type PublicationValidationStatus,
+} from '@/lib/cms/organism-form-payload'
 import { extractApiMessage } from '@/lib/cms/extract-api-message'
-import { cmsCreateOrganism, cmsGetItem, cmsUpdateOrganism } from '@/lib/cms/services/auth'
+import {
+   cmsCreateOrganism,
+   cmsGetItem,
+   cmsUpdateOrganism,
+   cmsValidatePublication,
+} from '@/lib/cms/services/auth'
 import {
    mergeImageRows,
    pollUntilReady,
@@ -38,6 +51,7 @@ import {
    IMAGE_LICENSE_OPTIONS,
    normalizeOrganismImageLicenseFromApi,
 } from '@/lib/cms/organism-image-license-options'
+import { patchImageRowForUrlChange } from '@/lib/cms/infer-image-source-record-url'
 import { searchExternalTaxons, type TaxonHit } from '@/lib/taxon-search'
 import { useOrganismFormStepper, type RuntimeStep } from '@/hooks/use-organism-form-stepper'
 import { cn } from '@/lib/utils'
@@ -86,19 +100,17 @@ function normalizeTargetListStatusForForm(raw: unknown): OrganismFormState['targ
 }
 
 function buildPayload() {
-   const { organismForm, metadataList, images, publications, vernacularNames } = useOrganismFormStore.getState()
-   const metadata = Object.fromEntries(metadataList.map(({ key, value }) => [key, value]))
-   const imgs = images.filter(({ url, author, source_record_url, license }) =>
-      Boolean(url?.trim() && author?.trim() && source_record_url?.trim() && license?.trim()),
-   )
+   const { organismForm, metadataList, images, publications, genomePublication, vernacularNames } =
+      useOrganismFormStore.getState()
    return {
       ...organismForm,
       image: '',
       image_urls: [],
-      metadata,
-      images: imgs,
-      publications: publications.filter((p) => p.id),
-      common_names: vernacularNames.filter((n) => n.value),
+      metadata: buildMetadataPayload(metadataList),
+      images: filterCompleteImages(images),
+      publications: filterValidPublications(publications),
+      genome_publication: buildGenomePublicationPayload(genomePublication),
+      common_names: filterValidVernacularNames(vernacularNames),
    } as Record<string, unknown>
 }
 
@@ -119,12 +131,12 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
    const setMetadataList = useOrganismFormStore((s) => s.setMetadataList)
    const publications = useOrganismFormStore((s) => s.publications)
    const setPublications = useOrganismFormStore((s) => s.setPublications)
+   const genomePublication = useOrganismFormStore((s) => s.genomePublication)
+   const setGenomePublication = useOrganismFormStore((s) => s.setGenomePublication)
    const vernacularNames = useOrganismFormStore((s) => s.vernacularNames)
    const setVernacularNames = useOrganismFormStore((s) => s.setVernacularNames)
    const images = useOrganismFormStore((s) => s.images)
    const setImages = useOrganismFormStore((s) => s.setImages)
-   const imageUsageComplianceOk = useOrganismFormStore((s) => s.imageUsageComplianceOk)
-   const setImageUsageComplianceOk = useOrganismFormStore((s) => s.setImageUsageComplianceOk)
    const replaceOrganismForm = useOrganismFormStore((s) => s.replaceOrganismForm)
    const resetStore = useOrganismFormStore((s) => s.reset)
 
@@ -138,7 +150,17 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
    }, [isAdmin, organismForm.taxid, userSpecies])
 
    const [existsWarning, setExistsWarning] = useState<string | null>(null)
+   const [existenceCheckError, setExistenceCheckError] = useState<string | null>(null)
    const [taxonExistencePending, setTaxonExistencePending] = useState(false)
+
+   const taxonCheckSeqRef = useRef(0)
+   const loadOrganismSeqRef = useRef(0)
+   const importImagesSeqRef = useRef(0)
+
+   const [pubValidationStatus, setPubValidationStatus] = useState<Record<number, PublicationValidationStatus>>({})
+   const [pubValidationError, setPubValidationError] = useState<Record<number, string>>({})
+   const [genomePubStatus, setGenomePubStatus] = useState<PublicationValidationStatus>('idle')
+   const [genomePubError, setGenomePubError] = useState<string | null>(null)
 
    const {
       runtimeSteps,
@@ -150,6 +172,7 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
       resetStepper,
       canSubmit,
       canNavigateTo,
+      publicationsBlockSubmit,
    } = useOrganismFormStepper({
       steps,
       isEditMode,
@@ -159,8 +182,12 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
       vernacularNames,
       metadataList,
       images,
+      genomePublication,
+      publicationValidation: pubValidationStatus,
+      genomePublicationValidation: genomePubStatus,
       createOrganismTaxonConflict: Boolean(existsWarning),
       taxonExistenceCheckPending: taxonExistencePending,
+      taxonExistenceCheckFailed: Boolean(existenceCheckError),
    })
 
    const [busy, setBusy] = useState(isEditMode)
@@ -173,12 +200,16 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
    const [showResetModal, setShowResetModal] = useState(false)
    const [importingImages, setImportingImages] = useState(false)
 
+   const assembliesLocked = (organismForm.assemblies_count ?? 0) <= 0
+
    const loadOrganism = useCallback(async () => {
       if (!editTaxid) return
+      const seq = ++loadOrganismSeqRef.current
       setBusy(true)
       setFetchError(null)
       try {
          const data = await cmsGetItem('organisms', editTaxid)
+         if (seq !== loadOrganismSeqRef.current) return
          const formEntries = Object.entries(data).filter(([k]) => k !== 'id' && k !== 'created')
          const base = Object.fromEntries(formEntries) as Record<string, unknown>
          replaceOrganismForm({
@@ -194,8 +225,28 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
             goat_status: (base.goat_status as string) ?? '',
             target_list_status: normalizeTargetListStatusForForm(base.target_list_status),
             sequencing_type: Array.isArray(base.sequencing_type) ? (base.sequencing_type as string[]) : [],
+            assemblies_count: Number(base.assemblies_count) || 0,
          })
-         if (Array.isArray(base.publications)) setPublications(base.publications as OrganismPublication[])
+         if (Array.isArray(base.publications)) {
+            const loadedPubs = base.publications as OrganismPublication[]
+            setPublications(loadedPubs)
+            // Already-persisted entries are treated as valid until edited (re-validated on submit either way).
+            setPubValidationStatus(
+               Object.fromEntries(loadedPubs.map((p, i) => [i, p.id?.trim() ? 'valid' : 'idle'])),
+            )
+         } else {
+            setPubValidationStatus({})
+         }
+         setPubValidationError({})
+         const loadedGenomePub = base.genome_publication as OrganismPublication | null | undefined
+         if (loadedGenomePub && typeof loadedGenomePub === 'object' && loadedGenomePub.id?.trim()) {
+            setGenomePublication(loadedGenomePub)
+            setGenomePubStatus('valid')
+         } else {
+            setGenomePublication(null)
+            setGenomePubStatus('idle')
+         }
+         setGenomePubError(null)
          if (Array.isArray(base.images)) {
             setImages(
                (base.images as OrganismImageRow[]).map((img) => normalizeOrganismImageLicenseFromApi(img)),
@@ -208,12 +259,22 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
          }
          resetStepper()
       } catch (e) {
+         if (seq !== loadOrganismSeqRef.current) return
          const msg = extractApiMessage(e, 'We could not load this organism.')
          setFetchError(msg)
       } finally {
-         setBusy(false)
+         if (seq === loadOrganismSeqRef.current) setBusy(false)
       }
-   }, [editTaxid, replaceOrganismForm, setImages, setMetadataList, setPublications, setVernacularNames, resetStepper])
+   }, [
+      editTaxid,
+      replaceOrganismForm,
+      setImages,
+      setMetadataList,
+      setPublications,
+      setGenomePublication,
+      setVernacularNames,
+      resetStepper,
+   ])
 
    useEffect(() => {
       if (editTaxid) void loadOrganism()
@@ -251,34 +312,49 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
    }, [isEditMode, existsWarning, activeIndex, goToStep])
 
    async function selectTaxon(hit: TaxonHit) {
+      const seq = ++taxonCheckSeqRef.current
       setExistsWarning(null)
+      setExistenceCheckError(null)
       setTaxonExistencePending(true)
       setOrganismForm({ taxid: hit.taxId, scientific_name: hit.scientificName })
       try {
          // Existence: GET /api/organisms/<taxid> (exact); avoid collection list + filter semantics.
          await cmsGetItem('organisms', hit.taxId)
+         if (seq !== taxonCheckSeqRef.current) return
          setExistsWarning(
             `Taxon ${hit.taxId} already exists in this portal. Select a different species to continue.`,
          )
       } catch (e) {
+         if (seq !== taxonCheckSeqRef.current) return
          const status = typeof e === 'object' && e !== null && 'status' in e ? (e as { status: number }).status : 0
-         if (status !== 404) {
-            /* network / server errors: do not treat as “missing”; leave form usable */
+         if (status === 404) {
+            setExistenceCheckError(null)
+         } else {
+            const msg = extractApiMessage(
+               e,
+               'Could not verify whether this taxon is already registered. Try selecting it again.',
+            )
+            setExistenceCheckError(msg)
+            toast.error(msg)
          }
       } finally {
-         setTaxonExistencePending(false)
+         if (seq === taxonCheckSeqRef.current) setTaxonExistencePending(false)
       }
    }
 
    async function handleImportImages() {
       const name = organismForm.scientific_name?.trim()
       if (!name) return
+      const seq = ++importImagesSeqRef.current
       setImportingImages(true)
       try {
          const job = await triggerSuggestImages(name)
+         if (seq !== importImagesSeqRef.current) return
          const status = await pollUntilReady(job.task_id)
+         if (seq !== importImagesSeqRef.current) return
          if (status.successful && status.result?.images?.length) {
-            setImages(mergeImageRows(images, status.result.images))
+            const currentImages = useOrganismFormStore.getState().images
+            setImages(mergeImageRows(currentImages, status.result.images))
             toast.success(`Imported ${status.result.images.length} image suggestion(s).`)
          } else if (status.successful) {
             toast.info('No licensable images found for this species.')
@@ -290,18 +366,67 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
             toast.error(msg)
          }
       } catch (e) {
+         if (seq !== importImagesSeqRef.current) return
          toast.error(extractApiMessage(e, 'Image import failed.'))
       } finally {
-         setImportingImages(false)
+         if (seq === importImagesSeqRef.current) setImportingImages(false)
+      }
+   }
+
+   function updatePublicationRow(i: number, patch: Partial<OrganismPublication>) {
+      setPublications(publications.map((p, j) => (j === i ? { ...p, ...patch } : p)))
+      setPubValidationStatus((s) => ({ ...s, [i]: 'idle' }))
+      setPubValidationError((s) => ({ ...s, [i]: '' }))
+   }
+
+   function updateGenomePublication(patch: Partial<OrganismPublication>) {
+      setGenomePublication({ source: genomePublication?.source ?? 'DOI', id: genomePublication?.id ?? '', ...patch })
+      setGenomePubStatus('idle')
+      setGenomePubError(null)
+   }
+
+   async function validatePublicationRow(i: number) {
+      const pub = publications[i]
+      if (!pub?.id?.trim()) return
+      setPubValidationStatus((s) => ({ ...s, [i]: 'checking' }))
+      setPubValidationError((s) => ({ ...s, [i]: '' }))
+      try {
+         const res = await cmsValidatePublication(pub.source, pub.id.trim(), { field: 'publications' })
+         if (res.valid) {
+            setPubValidationStatus((s) => ({ ...s, [i]: 'valid' }))
+         } else {
+            setPubValidationStatus((s) => ({ ...s, [i]: 'invalid' }))
+            setPubValidationError((s) => ({ ...s, [i]: res.error || 'Publication could not be validated.' }))
+         }
+      } catch (e) {
+         setPubValidationStatus((s) => ({ ...s, [i]: 'invalid' }))
+         setPubValidationError((s) => ({ ...s, [i]: extractApiMessage(e, 'Validation failed.') }))
+      }
+   }
+
+   async function validateGenomePublication() {
+      const id = genomePublication?.id?.trim()
+      if (!id || !organismForm.taxid) return
+      setGenomePubStatus('checking')
+      setGenomePubError(null)
+      try {
+         const res = await cmsValidatePublication(genomePublication?.source ?? 'DOI', id, {
+            field: 'genome_publication',
+            taxid: organismForm.taxid,
+         })
+         if (res.valid) {
+            setGenomePubStatus('valid')
+         } else {
+            setGenomePubStatus('invalid')
+            setGenomePubError(res.error || 'Publication could not be validated.')
+         }
+      } catch (e) {
+         setGenomePubStatus('invalid')
+         setGenomePubError(extractApiMessage(e, 'Validation failed.'))
       }
    }
 
    async function handleSubmit() {
-      const hasImages = images.some((img) => img.url?.trim())
-      if (hasImages && !imageUsageComplianceOk) {
-         toast.error('Please confirm image usage compliance before submitting.')
-         return
-      }
       setSubmitting(true)
       try {
          const payload = buildPayload()
@@ -364,16 +489,12 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
 
    return (
       <div className="space-y-6">
-         <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-            <Button variant="ghost" size="sm" className="gap-1" asChild>
-               <Link href="/admin">Dashboard</Link>
-            </Button>
-            <span>/</span>
-            <span className="text-foreground">{title}</span>
-         </div>
+         <Button variant="ghost" size="sm" asChild>
+            <Link href="/admin">← Dashboard</Link>
+         </Button>
          <div>
-            <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
-            <p className="mt-1 text-muted-foreground">{description}</p>
+            <h1 className="text-2xl font-bold">{title}</h1>
+            <p className="text-sm text-muted-foreground">{description}</p>
          </div>
 
          {!isEditMode && existsWarning ? (
@@ -409,14 +530,19 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
                <div className="flex flex-wrap gap-2">
                   {!isEditMode ? (
                      <>
-                        <Button variant="outline" size="sm" onClick={() => setShowChangeModal(true)}>
+                        <Button
+                           variant="outline"
+                           size="sm"
+                           onClick={() => setShowChangeModal(true)}
+                           disabled={importingImages || submitting}
+                        >
                            Change organism
                         </Button>
                         <Button
                            variant="destructive"
                            size="sm"
                            onClick={() => setShowResetModal(true)}
-                           disabled={submitting}
+                           disabled={importingImages || submitting}
                         >
                            Reset
                         </Button>
@@ -461,9 +587,6 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
 
                {sid === 'selectOrganism' && (
                   <div className="space-y-4">
-                     <p className="text-sm text-muted-foreground">
-                        Search NCBI / ENA taxonomy. Prefer numeric taxids when possible.
-                     </p>
                      {!isAdmin && userSpecies.length === 0 ? (
                         <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm">
                            No species assigned to your account. Ask an admin to assign species first.
@@ -473,6 +596,30 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
                      {searchLoading ? <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /> : null}
                      {taxonExistencePending ? (
                         <p className="text-xs text-muted-foreground">Checking whether this taxon is already registered…</p>
+                     ) : null}
+                     {!isEditMode && existenceCheckError ? (
+                        <Alert variant="destructive" className="border-destructive/50">
+                           <TriangleAlert className="h-4 w-4" />
+                           <AlertTitle>Could not verify taxon availability</AlertTitle>
+                           <AlertDescription className="space-y-2">
+                              <p>{existenceCheckError}</p>
+                              {organismForm.taxid ? (
+                                 <Button
+                                    type="button"
+                                    variant="secondary"
+                                    size="sm"
+                                    onClick={() =>
+                                       void selectTaxon({
+                                          taxId: organismForm.taxid!,
+                                          scientificName: organismForm.scientific_name ?? '',
+                                       })
+                                    }
+                                 >
+                                    Retry check
+                                 </Button>
+                              ) : null}
+                           </AlertDescription>
+                        </Alert>
                      ) : null}
                      <ScrollArea className="h-56 rounded-md border">
                         <ul className="divide-y p-1">
@@ -665,64 +812,177 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
                         Add image
                      </Button>
 
-                     {/* Compliance checkbox */}
-                     {images.some((img) => img.url?.trim()) && (
-                        <div className="flex items-start gap-3 rounded-md border border-amber-500/30 bg-amber-500/5 p-3">
-                           <Checkbox
-                              id="image-compliance"
-                              checked={imageUsageComplianceOk}
-                              onCheckedChange={(v) => setImageUsageComplianceOk(Boolean(v))}
-                              className="mt-0.5"
-                           />
-                           <label htmlFor="image-compliance" className="text-sm leading-snug cursor-pointer">
-                              I confirm that all images listed above are published under an open license (CC0, CC BY,
-                              CC BY-SA, or Public Domain) that permits unrestricted use and redistribution, and that
-                              the author and source information provided are correct to the best of my knowledge.
-                           </label>
-                        </div>
+                     {filterCompleteImages(images).length > 0 && (
+                        <p className="rounded-md border border-amber-500/30 bg-amber-500/5 p-3 text-sm leading-snug text-muted-foreground">
+                           Images must be published under an open license (CC0, CC BY, CC BY-SA, or Public Domain)
+                           that permits unrestricted use and redistribution. Author and source information must be
+                           correct.
+                        </p>
                      )}
                   </div>
                )}
 
                {sid === 'publications' && (
-                  <div className="space-y-3">
-                     {publications.map((pub, i) => (
-                        <div key={i} className="flex flex-wrap gap-2">
-                           <Select
-                              value={pub.source}
-                              onValueChange={(v) =>
-                                 setPublications(
-                                    publications.map((p, j) => (j === i ? { ...p, source: v as OrganismPublication['source'] } : p)),
-                                 )
-                              }
-                           >
-                              <SelectTrigger className="w-[160px]">
-                                 <SelectValue placeholder="Source" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                 <SelectItem value="DOI">DOI</SelectItem>
-                                 <SelectItem value="PubMed ID">PubMed ID</SelectItem>
-                                 <SelectItem value="PubMed CentralID">PubMed Central ID</SelectItem>
-                              </SelectContent>
-                           </Select>
-                           <Input
-                              className="min-w-[200px] flex-1"
-                              placeholder="Identifier"
-                              value={pub.id}
-                              onChange={(e) =>
-                                 setPublications(publications.map((p, j) => (j === i ? { ...p, id: e.target.value } : p)))
-                              }
-                           />
+                  <div className="space-y-6">
+                     <div className="space-y-3 rounded-lg border p-4">
+                        <div>
+                           <p className="flex items-center gap-2 font-medium">
+                              Genome assembly publication
+                              {assembliesLocked ? <Lock className="h-3.5 w-3.5 text-muted-foreground" /> : null}
+                           </p>
+                           <p className="text-sm text-muted-foreground">
+                              The single publication describing the genome assembly (drives the GoaT
+                              &ldquo;Publication Available&rdquo; status and the GoaT report). Only one publication
+                              can be set here, and only once an assembly is linked to this organism.
+                           </p>
                         </div>
-                     ))}
-                     <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setPublications([...publications, { source: 'DOI', id: '' }])}
-                     >
-                        Add publication
-                     </Button>
+                        {assembliesLocked ? (
+                           <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <Lock className="h-4 w-4" /> Locked — link an assembly to this organism to unlock this
+                              field.
+                           </p>
+                        ) : (
+                           <div className="space-y-2">
+                              <div className="flex flex-wrap items-center gap-2">
+                                 <Select
+                                    value={genomePublication?.source ?? ''}
+                                    onValueChange={(v) =>
+                                       updateGenomePublication({ source: v as OrganismPublication['source'] })
+                                    }
+                                 >
+                                    <SelectTrigger className="w-[160px]">
+                                       <SelectValue placeholder="Source" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                       <SelectItem value="DOI">DOI</SelectItem>
+                                       <SelectItem value="PubMed ID">PubMed ID</SelectItem>
+                                       <SelectItem value="PubMed CentralID">PubMed Central ID</SelectItem>
+                                    </SelectContent>
+                                 </Select>
+                                 <Input
+                                    className="min-w-[200px] flex-1"
+                                    placeholder="Identifier"
+                                    value={genomePublication?.id ?? ''}
+                                    onChange={(e) => updateGenomePublication({ id: e.target.value })}
+                                 />
+                                 {genomePublication?.id?.trim() ? (
+                                    <>
+                                       <Button
+                                          type="button"
+                                          variant="outline"
+                                          size="sm"
+                                          disabled={genomePubStatus === 'checking'}
+                                          onClick={() => void validateGenomePublication()}
+                                       >
+                                          {genomePubStatus === 'checking' ? (
+                                             <Loader2 className="h-4 w-4 animate-spin" />
+                                          ) : (
+                                             'Validate'
+                                          )}
+                                       </Button>
+                                       <Button
+                                          type="button"
+                                          variant="ghost"
+                                          size="sm"
+                                          className="text-destructive hover:text-destructive"
+                                          onClick={() => {
+                                             setGenomePublication(null)
+                                             setGenomePubStatus('idle')
+                                             setGenomePubError(null)
+                                          }}
+                                       >
+                                          Clear
+                                       </Button>
+                                    </>
+                                 ) : null}
+                              </div>
+                              {genomePubStatus === 'valid' ? (
+                                 <p className="flex items-center gap-1.5 text-xs text-chart-2">
+                                    <Check className="h-3.5 w-3.5" /> Validated.
+                                 </p>
+                              ) : null}
+                              {genomePubStatus === 'invalid' ? (
+                                 <p className="flex items-center gap-1.5 text-xs text-destructive">
+                                    <TriangleAlert className="h-3.5 w-3.5 shrink-0" /> {genomePubError}
+                                 </p>
+                              ) : null}
+                              {genomePublication?.id?.trim() && genomePubStatus === 'idle' ? (
+                                 <p className="text-xs text-muted-foreground">
+                                    Not yet validated — click Validate before submitting.
+                                 </p>
+                              ) : null}
+                           </div>
+                        )}
+                     </div>
+
+                     <div className="space-y-3">
+                        <p className="text-sm font-medium">Other publications</p>
+                        {publications.map((pub, i) => (
+                           <div key={i} className="space-y-1.5 rounded-md border p-3">
+                              <div className="flex flex-wrap items-center gap-2">
+                                 <Select
+                                    value={pub.source}
+                                    onValueChange={(v) =>
+                                       updatePublicationRow(i, { source: v as OrganismPublication['source'] })
+                                    }
+                                 >
+                                    <SelectTrigger className="w-[160px]">
+                                       <SelectValue placeholder="Source" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                       <SelectItem value="DOI">DOI</SelectItem>
+                                       <SelectItem value="PubMed ID">PubMed ID</SelectItem>
+                                       <SelectItem value="PubMed CentralID">PubMed Central ID</SelectItem>
+                                    </SelectContent>
+                                 </Select>
+                                 <Input
+                                    className="min-w-[200px] flex-1"
+                                    placeholder="Identifier"
+                                    value={pub.id}
+                                    onChange={(e) => updatePublicationRow(i, { id: e.target.value })}
+                                 />
+                                 {pub.id.trim() ? (
+                                    <Button
+                                       type="button"
+                                       variant="outline"
+                                       size="sm"
+                                       disabled={pubValidationStatus[i] === 'checking'}
+                                       onClick={() => void validatePublicationRow(i)}
+                                    >
+                                       {pubValidationStatus[i] === 'checking' ? (
+                                          <Loader2 className="h-4 w-4 animate-spin" />
+                                       ) : (
+                                          'Validate'
+                                       )}
+                                    </Button>
+                                 ) : null}
+                              </div>
+                              {pubValidationStatus[i] === 'valid' ? (
+                                 <p className="flex items-center gap-1.5 text-xs text-chart-2">
+                                    <Check className="h-3.5 w-3.5" /> Validated.
+                                 </p>
+                              ) : null}
+                              {pubValidationStatus[i] === 'invalid' ? (
+                                 <p className="flex items-center gap-1.5 text-xs text-destructive">
+                                    <TriangleAlert className="h-3.5 w-3.5 shrink-0" /> {pubValidationError[i]}
+                                 </p>
+                              ) : null}
+                              {pub.id.trim() && (!pubValidationStatus[i] || pubValidationStatus[i] === 'idle') ? (
+                                 <p className="text-xs text-muted-foreground">
+                                    Not yet validated — click Validate before submitting.
+                                 </p>
+                              ) : null}
+                           </div>
+                        ))}
+                        <Button
+                           type="button"
+                           variant="outline"
+                           size="sm"
+                           onClick={() => setPublications([...publications, { source: 'DOI', id: '' }])}
+                        >
+                           Add publication
+                        </Button>
+                     </div>
                   </div>
                )}
 
@@ -803,6 +1063,7 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
                         runtimeSteps={runtimeSteps}
                         organismForm={organismForm}
                         publications={publications}
+                        genomePublication={genomePublication}
                         vernacularNames={vernacularNames}
                         metadataList={metadataList}
                         images={images}
@@ -812,7 +1073,9 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
                         <p className="text-sm text-muted-foreground">
                            {canSubmit
                               ? 'All required steps are complete. Submit to save this record.'
-                              : 'Complete required steps before submitting.'}
+                              : publicationsBlockSubmit
+                                ? 'Validate all entered publications (including the genome assembly publication) before submitting.'
+                                : 'Complete required steps before submitting.'}
                         </p>
                         <Button disabled={!canSubmit || submitting} onClick={() => void handleSubmit()}>
                            {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : isEditMode ? 'Save changes' : 'Create organism'}
@@ -853,12 +1116,20 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
                   <AlertDialogAction
                      onClick={() => {
+                        ++taxonCheckSeqRef.current
+                        ++importImagesSeqRef.current
                         resetStore()
                         resetStepper()
                         setSearchQ('')
                         setSearchHits([])
                         setExistsWarning(null)
+                        setExistenceCheckError(null)
                         setTaxonExistencePending(false)
+                        setImportingImages(false)
+                        setPubValidationStatus({})
+                        setPubValidationError({})
+                        setGenomePubStatus('idle')
+                        setGenomePubError(null)
                         setShowChangeModal(false)
                      }}
                   >
@@ -878,13 +1149,21 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
                   <AlertDialogAction
                      onClick={() => {
+                        ++taxonCheckSeqRef.current
+                        ++importImagesSeqRef.current
                         if (isEditMode && editTaxid) void loadOrganism()
                         else {
                            resetStore()
                            resetStepper()
                            setExistsWarning(null)
+                           setExistenceCheckError(null)
                            setTaxonExistencePending(false)
+                           setPubValidationStatus({})
+                           setPubValidationError({})
+                           setGenomePubStatus('idle')
+                           setGenomePubError(null)
                         }
+                        setImportingImages(false)
                         setShowResetModal(false)
                      }}
                   >
@@ -916,9 +1195,10 @@ function ImageRow({
    const update = (patch: Partial<OrganismImageRow>) =>
       setImages(images.map((r, j) => (j === index ? { ...r, ...patch } : r)))
    const selectedOption = IMAGE_LICENSE_OPTIONS.find((o) => o.value === img.license)
+   const incompleteFields = getIncompleteImageRowFields(img)
 
    return (
-      <div className="rounded-md border p-3 space-y-3">
+      <div className={cn('rounded-md border p-3 space-y-3', incompleteFields.length > 0 && 'border-amber-500/50')}>
          {/* Preview + URL row */}
          <div className="flex gap-3 items-start">
             <div className="flex-shrink-0 h-32 w-32 rounded-md border bg-muted overflow-hidden flex items-center justify-center">
@@ -941,7 +1221,7 @@ function ImageRow({
                   value={img.url}
                   onChange={(e) => {
                      setPreviewError(false)
-                     update({ url: e.target.value })
+                     update(patchImageRowForUrlChange(img, e.target.value))
                   }}
                />
                <Input
@@ -980,6 +1260,13 @@ function ImageRow({
             </Select>
          </div>
 
+         {incompleteFields.length > 0 ? (
+            <p className="flex items-center gap-1.5 text-xs text-amber-700 dark:text-amber-400">
+               <TriangleAlert className="h-3.5 w-3.5 shrink-0" />
+               Missing {incompleteFields.join(', ')} — this image will not be saved until all fields are filled.
+            </p>
+         ) : null}
+
          {selectedOption && (
             <p className="text-xs text-muted-foreground">
                License deed:{' '}
@@ -1011,6 +1298,7 @@ function OrganismFormReview({
    runtimeSteps,
    organismForm,
    publications,
+   genomePublication,
    vernacularNames,
    metadataList,
    images,
@@ -1019,6 +1307,7 @@ function OrganismFormReview({
    runtimeSteps: RuntimeStep[]
    organismForm: OrganismFormState
    publications: OrganismPublication[]
+   genomePublication: OrganismPublication | null
    vernacularNames: OrganismCommonName[]
    metadataList: { key: string; value: string }[]
    images: OrganismImageRow[]
@@ -1091,7 +1380,7 @@ function OrganismFormReview({
             )
 
          case 'images': {
-            const validImages = images.filter((i) => i.url?.trim())
+            const validImages = filterCompleteImages(images)
             return validImages.length > 0 ? (
                <div className="flex flex-wrap gap-2">
                   {validImages.map((img, i) => (
@@ -1113,17 +1402,32 @@ function OrganismFormReview({
 
          case 'publications': {
             const validPubs = publications.filter((p) => p.id.trim())
-            return validPubs.length > 0 ? (
-               <ul className="space-y-1">
-                  {validPubs.map((p, i) => (
-                     <li key={i} className="text-sm">
-                        <span className="text-muted-foreground">{p.source}: </span>
-                        {p.id}
-                     </li>
-                  ))}
-               </ul>
-            ) : (
-               <p className="text-xs text-muted-foreground">No publications</p>
+            const hasGenomePub = Boolean(genomePublication?.id?.trim())
+            return (
+               <div className="space-y-2">
+                  {hasGenomePub ? (
+                     <p className="text-sm">
+                        <Badge variant="secondary" className="mr-2">
+                           Genome publication
+                        </Badge>
+                        <span className="text-muted-foreground">{genomePublication?.source}: </span>
+                        {genomePublication?.id}
+                     </p>
+                  ) : null}
+                  {validPubs.length > 0 ? (
+                     <ul className="space-y-1">
+                        {validPubs.map((p, i) => (
+                           <li key={i} className="text-sm">
+                              <span className="text-muted-foreground">{p.source}: </span>
+                              {p.id}
+                           </li>
+                        ))}
+                     </ul>
+                  ) : null}
+                  {!hasGenomePub && validPubs.length === 0 ? (
+                     <p className="text-xs text-muted-foreground">No publications</p>
+                  ) : null}
+               </div>
             )
          }
 

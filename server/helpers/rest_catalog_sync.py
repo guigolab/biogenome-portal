@@ -40,6 +40,7 @@ from helpers.organism_denorm_pure import (
     RelatedCounts,
     derive_organism_denorm,
 )
+from jobs.support.goat_status import has_genome_publication_set
 
 
 def fetch_related_counts(taxid: str) -> RelatedCounts:
@@ -52,11 +53,14 @@ def fetch_related_counts(taxid: str) -> RelatedCounts:
     )
 
 
-def _touch_goat_update_date(taxid: str, when: datetime.datetime) -> None:
-    """Persist GoaT last-updated timestamp."""
-    GoaTUpdateDate.objects(taxid=taxid).update_one(
-        set__updated=when,
-        set__taxid=taxid,
+def touch_goat_update_date(
+    taxid: str, when: Optional[datetime.datetime] = None
+) -> None:
+    """Persist GoaT last-updated timestamp for one species taxid."""
+    stamp = when or datetime.datetime.now()
+    GoaTUpdateDate.objects(taxid=str(taxid)).update_one(
+        set__updated=stamp,
+        set__taxid=str(taxid),
         upsert=True,
     )
 
@@ -83,7 +87,7 @@ def refresh_organism_status_fields(
     derived = derive_organism_denorm(
         counts,
         current_goat_status=getattr(document, "goat_status", None),
-        has_publications=bool(getattr(document, "publications", None)),
+        has_genome_publication=has_genome_publication_set(document),
         goat_project_name=goat_project_name,
         apply_goat_inference=apply_goat_inference,
         merge_context=merge_context,
@@ -96,8 +100,7 @@ def refresh_organism_status_fields(
     if derived.update_goat_field and derived.goat_status is not None:
         document.goat_status = derived.goat_status
     if derived.touch_goat_update_date:
-        when = now or datetime.datetime.now()
-        _touch_goat_update_date(document.taxid, when)
+        touch_goat_update_date(document.taxid, now)
 
 
 def refresh_taxon_counts_for_taxid_lineage(

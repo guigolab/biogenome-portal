@@ -27,6 +27,8 @@ export type OrganismFormState = {
    goat_status: string
    target_list_status: 'long_list' | 'family_representative' | 'other_priority' | ''
    sequencing_type: string[]
+   /** Read-only, denormalized on the organism; gates whether genome_publication can be set. */
+   assemblies_count: number
 }
 
 const emptyForm = (): OrganismFormState => ({
@@ -42,22 +44,24 @@ const emptyForm = (): OrganismFormState => ({
    goat_status: '',
    target_list_status: 'long_list',
    sequencing_type: [],
+   assemblies_count: 0,
 })
 
 type OrganismFormStore = {
    organismForm: OrganismFormState
    metadataList: { key: string; value: string }[]
    publications: OrganismPublication[]
+   /** Single publication describing the genome assembly; only settable once an assembly is linked. */
+   genomePublication: OrganismPublication | null
    vernacularNames: OrganismCommonName[]
    images: OrganismImageRow[]
-   imageUsageComplianceOk: boolean
    setOrganismForm: (p: Partial<OrganismFormState>) => void
    replaceOrganismForm: (f: OrganismFormState) => void
    setMetadataList: (v: { key: string; value: string }[]) => void
    setPublications: (v: OrganismPublication[]) => void
+   setGenomePublication: (v: OrganismPublication | null) => void
    setVernacularNames: (v: OrganismCommonName[]) => void
    setImages: (v: OrganismImageRow[]) => void
-   setImageUsageComplianceOk: (v: boolean) => void
    reset: () => void
 }
 
@@ -65,25 +69,25 @@ export const useOrganismFormStore = create<OrganismFormStore>((set) => ({
    organismForm: emptyForm(),
    metadataList: [],
    publications: [],
+   genomePublication: null,
    vernacularNames: [],
    images: [],
-   imageUsageComplianceOk: false,
 
    setOrganismForm: (p) => set((s) => ({ organismForm: { ...s.organismForm, ...p } })),
    replaceOrganismForm: (f) => set({ organismForm: f }),
    setMetadataList: (metadataList) => set({ metadataList }),
    setPublications: (publications) => set({ publications }),
+   setGenomePublication: (genomePublication) => set({ genomePublication }),
    setVernacularNames: (vernacularNames) => set({ vernacularNames }),
    setImages: (images) => set({ images }),
-   setImageUsageComplianceOk: (imageUsageComplianceOk) => set({ imageUsageComplianceOk }),
 
    reset: () =>
       set({
          organismForm: emptyForm(),
          metadataList: [],
          publications: [],
+         genomePublication: null,
          vernacularNames: [],
          images: [],
-         imageUsageComplianceOk: false,
       }),
 }))

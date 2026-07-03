@@ -1,5 +1,5 @@
 import type { CmsSessionUser } from '@/stores/cms-auth-store'
-import { cmsFetch, cmsFetchBlob, cmsFetchJson } from '@/lib/cms/fetch'
+import { cmsFetch, cmsFetchBlob, cmsFetchJson, cmsFetchOrThrow, throwCmsFetchError } from '@/lib/cms/fetch'
 import type { DataModels } from '@/lib/portal/types'
 
 /**
@@ -21,10 +21,7 @@ export async function cmsLogin(name: string, password: string): Promise<CmsSessi
       body: JSON.stringify({ name, password }),
       skipAuthRedirect: true,
    })
-   if (!res.ok) {
-      const text = await res.text().catch(() => '')
-      throw new Error(text.trim() || 'Bad user or password')
-   }
+   if (!res.ok) await throwCmsFetchError(res, 'Bad user or password')
    const raw = (await res.json()) as Record<string, unknown>
    return toCmsSessionUser(raw)
 }
@@ -32,11 +29,7 @@ export async function cmsLogin(name: string, password: string): Promise<CmsSessi
 /** GET /login — current session user or throws. */
 export async function cmsCheckSession(): Promise<CmsSessionUser> {
    const res = await cmsFetch('/login', { method: 'GET', skipAuthRedirect: true })
-   if (!res.ok) {
-      const err = new Error(String(res.status)) as Error & { status: number }
-      err.status = res.status
-      throw err
-   }
+   if (!res.ok) await throwCmsFetchError(res, String(res.status))
    const raw = (await res.json()) as Record<string, unknown>
    return toCmsSessionUser(raw)
 }
@@ -49,14 +42,10 @@ export async function cmsUpdateSelf(
    name: string,
    payload: { email?: string; password?: string },
 ): Promise<void> {
-   const res = await cmsFetch(`/users/${encodeURIComponent(name)}`, {
+   await cmsFetchOrThrow(`/users/${encodeURIComponent(name)}`, {
       method: 'PATCH',
       body: JSON.stringify(payload),
    })
-   if (!res.ok) {
-      const text = await res.text().catch(() => '')
-      throw new Error(text.trim() || 'Update failed')
-   }
 }
 
 export async function cmsGetUsers(params: Record<string, string | number | undefined>) {
@@ -76,31 +65,19 @@ export async function cmsGetUser(name: string) {
 }
 
 export async function cmsDeleteUser(name: string) {
-   const res = await cmsFetch(`/users/${encodeURIComponent(name)}`, { method: 'DELETE' })
-   if (!res.ok) {
-      const text = await res.text().catch(() => '')
-      throw new Error(text.trim() || 'Delete failed')
-   }
+   await cmsFetchOrThrow(`/users/${encodeURIComponent(name)}`, { method: 'DELETE' })
 }
 
 export async function cmsCreateUser(data: Record<string, unknown>) {
-   const res = await cmsFetch('/users', { method: 'POST', body: JSON.stringify(data) })
-   if (!res.ok) {
-      const text = await res.text().catch(() => '')
-      throw new Error(text.trim() || 'Create failed')
-   }
+   const res = await cmsFetchOrThrow('/users', { method: 'POST', body: JSON.stringify(data) })
    return res.json().catch(() => ({}))
 }
 
 export async function cmsUpdateUser(name: string, data: Record<string, unknown>) {
-   const res = await cmsFetch(`/users/${encodeURIComponent(name)}`, {
+   const res = await cmsFetchOrThrow(`/users/${encodeURIComponent(name)}`, {
       method: 'PUT',
       body: JSON.stringify(data),
    })
-   if (!res.ok) {
-      const text = await res.text().catch(() => '')
-      throw new Error(text.trim() || 'Update failed')
-   }
    return res.json().catch(() => ({}))
 }
 
@@ -171,52 +148,40 @@ export async function cmsGetUserSamples(name: string, params: Record<string, str
 }
 
 export async function cmsCreateOrganism(form: Record<string, unknown>) {
-   const res = await cmsFetch('/organisms', { method: 'POST', body: JSON.stringify(form) })
-   if (!res.ok) {
-      const text = await res.text().catch(() => '')
-      throw new Error(text.trim() || 'Create failed')
-   }
+   const res = await cmsFetchOrThrow('/organisms', { method: 'POST', body: JSON.stringify(form) })
    return res.json().catch(() => ({}))
 }
 
 export async function cmsUpdateOrganism(taxid: string, form: Record<string, unknown>) {
-   const res = await cmsFetch(`/organisms/${encodeURIComponent(taxid)}`, {
+   const res = await cmsFetchOrThrow(`/organisms/${encodeURIComponent(taxid)}`, {
       method: 'PUT',
       body: JSON.stringify(form),
    })
-   if (!res.ok) {
-      const text = await res.text().catch(() => '')
-      throw new Error(text.trim() || 'Update failed')
-   }
    return res.json().catch(() => ({}))
 }
 
+/** PATCH a single organism field (e.g. goat_status, target_list_status). */
+export async function cmsPatchOrganism(taxid: string, field: string, value: unknown) {
+   await cmsFetchOrThrow(`/organisms/${encodeURIComponent(taxid)}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ field, value }),
+   })
+}
+
 export async function cmsDeleteItem(model: DataModels, id: string) {
-   const res = await cmsFetch(`/${model}/${encodeURIComponent(id)}`, { method: 'DELETE' })
-   if (!res.ok) {
-      const text = await res.text().catch(() => '')
-      throw new Error(text.trim() || 'Delete failed')
-   }
+   await cmsFetchOrThrow(`/${model}/${encodeURIComponent(id)}`, { method: 'DELETE' })
 }
 
 export async function cmsCreateDeletionRequest(taxid: string) {
-   const res = await cmsFetch(`/organism_deletion_requests/${encodeURIComponent(taxid)}`, {
+   await cmsFetchOrThrow(`/organism_deletion_requests/${encodeURIComponent(taxid)}`, {
       method: 'POST',
    })
-   if (!res.ok) {
-      const text = await res.text().catch(() => '')
-      throw new Error(text.trim() || 'Request failed')
-   }
 }
 
 export async function cmsDeleteDeletionRequest(taxid: string) {
-   const res = await cmsFetch(`/organism_deletion_requests/${encodeURIComponent(taxid)}`, {
+   await cmsFetchOrThrow(`/organism_deletion_requests/${encodeURIComponent(taxid)}`, {
       method: 'DELETE',
    })
-   if (!res.ok) {
-      const text = await res.text().catch(() => '')
-      throw new Error(text.trim() || 'Deny failed')
-   }
 }
 
 export async function cmsTaskStatus(id: string) {
@@ -224,33 +189,21 @@ export async function cmsTaskStatus(id: string) {
 }
 
 export async function cmsCreateAnnotation(form: Record<string, unknown>) {
-   const res = await cmsFetch('/annotations', { method: 'POST', body: JSON.stringify(form) })
-   if (!res.ok) {
-      const text = await res.text().catch(() => '')
-      throw new Error(text.trim() || 'Create failed')
-   }
+   const res = await cmsFetchOrThrow('/annotations', { method: 'POST', body: JSON.stringify(form) })
    return res.json().catch(() => ({}))
 }
 
 /** Multipart create (file upload + fields); do not set Content-Type manually. */
 export async function cmsCreateAnnotationFormData(formData: FormData) {
-   const res = await cmsFetch('/annotations', { method: 'POST', body: formData })
-   if (!res.ok) {
-      const text = await res.text().catch(() => '')
-      throw new Error(text.trim() || 'Create failed')
-   }
+   const res = await cmsFetchOrThrow('/annotations', { method: 'POST', body: formData })
    return res.json().catch(() => ({}))
 }
 
 export async function cmsUpdateAnnotation(name: string, form: Record<string, unknown>) {
-   const res = await cmsFetch(`/annotations/${encodeURIComponent(name)}`, {
+   const res = await cmsFetchOrThrow(`/annotations/${encodeURIComponent(name)}`, {
       method: 'PUT',
       body: JSON.stringify(form),
    })
-   if (!res.ok) {
-      const text = await res.text().catch(() => '')
-      throw new Error(text.trim() || 'Update failed')
-   }
    return res.json().catch(() => ({}))
 }
 
@@ -259,30 +212,42 @@ export async function cmsLookupPublication(source: string, id: string) {
    return cmsFetchJson<Record<string, unknown>>(`/publications/lookup?${sp.toString()}`)
 }
 
+export type CmsPublicationValidation = {
+   valid: boolean
+   data?: Record<string, unknown>
+   error?: string
+}
+
+/**
+ * Validate a publication against the supported sources (DOI, PubMed, PubMed Central).
+ * Pass `field: 'genome_publication'` + `taxid` to also enforce the "must have a
+ * linked assembly" gate server-side (returns a rejected promise with status 400 if
+ * no assembly is linked).
+ */
+export async function cmsValidatePublication(
+   source: string,
+   id: string,
+   opts?: { taxid?: string; field?: 'genome_publication' | 'publications' },
+): Promise<CmsPublicationValidation> {
+   const res = await cmsFetchOrThrow('/publications/validate', {
+      method: 'POST',
+      body: JSON.stringify({ source, id, taxid: opts?.taxid, field: opts?.field }),
+   })
+   return res.json() as Promise<CmsPublicationValidation>
+}
+
 export async function cmsImportAssembly(accession: string) {
-   const res = await cmsFetch(`/assemblies/${encodeURIComponent(accession)}`, { method: 'POST' })
-   if (!res.ok) {
-      const text = await res.text().catch(() => '')
-      throw new Error(text.trim() || 'Import failed')
-   }
+   const res = await cmsFetchOrThrow(`/assemblies/${encodeURIComponent(accession)}`, { method: 'POST' })
    return res.json().catch(() => ({}))
 }
 
 export async function cmsImportBioSample(accession: string) {
-   const res = await cmsFetch(`/biosamples/${encodeURIComponent(accession)}`, { method: 'POST' })
-   if (!res.ok) {
-      const text = await res.text().catch(() => '')
-      throw new Error(text.trim() || 'Import failed')
-   }
+   const res = await cmsFetchOrThrow(`/biosamples/${encodeURIComponent(accession)}`, { method: 'POST' })
    return res.json().catch(() => ({}))
 }
 
 export async function cmsImportRead(accession: string) {
-   const res = await cmsFetch(`/reads/${encodeURIComponent(accession)}`, { method: 'POST' })
-   if (!res.ok) {
-      const text = await res.text().catch(() => '')
-      throw new Error(text.trim() || 'Import failed')
-   }
+   const res = await cmsFetchOrThrow(`/reads/${encodeURIComponent(accession)}`, { method: 'POST' })
    return res.json().catch(() => ({}))
 }
 
@@ -302,13 +267,7 @@ export async function cmsGetItems(
 }
 
 export async function cmsGetItem(model: DataModels, id: string) {
-   const res = await cmsFetch(`/${model}/${encodeURIComponent(id)}`)
-   if (!res.ok) {
-      const text = await res.text().catch(() => '')
-      const err = new Error(text.trim() || `${res.status}`) as Error & { status: number }
-      err.status = res.status
-      throw err
-   }
+   const res = await cmsFetchOrThrow(`/${model}/${encodeURIComponent(id)}`)
    return res.json() as Promise<Record<string, unknown>>
 }
 
@@ -326,7 +285,14 @@ export async function cmsGetItemsTsv(
 
 type OrganismListJson = { data?: Record<string, unknown>[]; total?: number }
 
-export type CmsOrganismAuditLogAction = 'create' | 'update' | 'patch' | 'delete' | string
+export type CmsOrganismAuditLogAction =
+   | 'create'
+   | 'update'
+   | 'patch'
+   | 'delete'
+   | 'request_deletion'
+   | 'deny_deletion'
+   | string
 
 export type CmsOrganismAuditLogRow = {
    _id?: unknown
@@ -368,6 +334,28 @@ export async function cmsGetOrganismsWithUsers(
    return cmsFetchJson<OrganismListJson>(path)
 }
 
+export async function cmsGetAllOrganismsWithUsers(
+   params: Record<string, string | number | boolean | undefined>,
+   download?: false,
+): Promise<OrganismListJson>
+export async function cmsGetAllOrganismsWithUsers(
+   params: Record<string, string | number | boolean | undefined>,
+   download: true,
+): Promise<Blob>
+export async function cmsGetAllOrganismsWithUsers(
+   params: Record<string, string | number | boolean | undefined>,
+   download = false,
+): Promise<OrganismListJson | Blob> {
+   const sp = new URLSearchParams()
+   for (const [k, v] of Object.entries(params)) {
+      if (v === undefined || v === '') continue
+      sp.set(k, String(v))
+   }
+   const path = `/organisms/all_with_users?${sp.toString()}`
+   if (download) return cmsFetchBlob(path)
+   return cmsFetchJson<OrganismListJson>(path)
+}
+
 export async function cmsGetUnassignedOrganisms(
    params: Record<string, string | number | boolean | undefined>,
    download?: false,
@@ -390,9 +378,18 @@ export async function cmsGetUnassignedOrganisms(
    return cmsFetchJson<OrganismListJson>(path)
 }
 
-export async function cmsGetOrganismAuditLogs(
-   params: Record<string, string | number | boolean | undefined>,
-) {
+export type CmsOrganismAuditLogsParams = {
+   q?: string
+   action?: string
+   date_from?: string
+   date_to?: string
+   limit?: number
+   offset?: number
+   sort_column?: string
+   sort_order?: string
+}
+
+export async function cmsGetOrganismAuditLogs(params: CmsOrganismAuditLogsParams) {
    const sp = new URLSearchParams()
    for (const [k, v] of Object.entries(params)) {
       if (v === undefined || v === '') continue
@@ -415,6 +412,31 @@ export async function cmsGetOrganismAuditLogsByTaxid(
    return cmsFetchJson<CmsOrganismAuditLogsResponse>(
       `/organisms/${encodeURIComponent(taxid)}/audit_logs${q ? `?${q}` : ''}`,
    )
+}
+
+export type CmsAdminOverviewStats = {
+   assigned_species: number
+   unassigned_species: number
+   my_submitted_biosamples: number
+   all_submitted_biosamples: number
+   pending_deletion_requests: number
+   goat_status: Record<string, number>
+   target_list_status: Record<string, number>
+}
+
+export type CmsDataManagerOverviewStats = {
+   assigned_species: number
+   submitted_biosamples: number
+   goat_status: Record<string, number>
+   target_list_status: Record<string, number>
+}
+
+export async function cmsGetAdminOverviewStats() {
+   return cmsFetchJson<CmsAdminOverviewStats>('/cms/stats/admin_overview')
+}
+
+export async function cmsGetDataManagerOverviewStats() {
+   return cmsFetchJson<CmsDataManagerOverviewStats>('/cms/stats/data_manager_overview')
 }
 
 export async function cmsGetModelFieldStats(
@@ -450,6 +472,14 @@ export async function cmsSubmitBiosample(payload: Record<string, unknown>) {
       }
       if (Array.isArray(parsed)) {
          throw Object.assign(new Error('Validation'), { body: parsed })
+      }
+      if (parsed && typeof parsed === 'object') {
+         const obj = parsed as Record<string, unknown>
+         const message =
+            (typeof obj.message === 'string' && obj.message) ||
+            (typeof obj.description === 'string' && obj.description) ||
+            text
+         throw new Error(message || 'Submit failed')
       }
       throw new Error(text || 'Submit failed')
    }

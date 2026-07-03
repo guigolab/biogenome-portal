@@ -132,7 +132,14 @@ def get_biosample_checklist():
 
 
 def get_submitted_biosamples(args):
-    return data.get_items('submitted_biosamples', args)
+    if hasattr(args, 'to_dict'):
+        params = args.to_dict(flat=True)
+    else:
+        params = dict(args)
+    user = user_helper.get_current_user()
+    if user and user.role.value != Roles.DATA_ADMIN.value:
+        params['user'] = user.name
+    return data.get_items('submitted_biosamples', params)
 
 
 def submit_sample(payload):
@@ -142,27 +149,27 @@ def submit_sample(payload):
     
     taxid = payload.get('taxid')
     if not taxid:
-        raise BadRequest(desciption=f"The field taxid is mandatory")
-    #check if taxid user is not admin and taxid is not in user.species
-    if user.role.value != Roles.DATA_ADMIN.value and taxid not in user.species:
-        raise Unauthorized(description=f"You can't add data related to {taxid}")
+        raise BadRequest(description="The field taxid is mandatory")
+    taxid = str(taxid)
+
+    is_admin = user.role.value == Roles.DATA_ADMIN.value
+    if not is_admin and taxid not in user.species:
+        existing_organism = Organism.objects(taxid=taxid).first()
+        label = existing_organism.scientific_name if existing_organism else taxid
+        raise Unauthorized(description=f"You can't add data related to {label}")
+
     ena_token = ebi_client.get_webin_token(WEBIN_USER, WEBIN_PWD)
 
     status_code = ebi_client.check_token_is_valid(ena_token)
     if status_code != 200:
         raise BadRequest(description='Token not found')
 
-    taxid = str(taxid)
-    ##check user has rights over species
-    existing_organism = Organism.objects(taxid=taxid).first()
-
-    if existing_organism and user.role.value != Roles.DATA_ADMIN.value and taxid not in user.species:
-        raise Unauthorized(description=f"You can't add data related to {existing_organism.scientific_name}")
-        #get user
     organism = organism_helper.handle_organism(taxid)
     if not organism:
         raise BadRequest(description=f"Organism {taxid} not found in INSDC")
-        
+
+    # TODO: EBI BioSamples JSON schema expects top-level "taxId" (see parsers/biosample.py),
+    # but the portal payload uses "taxid". Verify and rename before changing production submissions.
     validation_response = ebi_client.validate_biosample(payload, ena_token)
     if validation_response.status_code != 200:
         return validation_response.json(), validation_response.status_code

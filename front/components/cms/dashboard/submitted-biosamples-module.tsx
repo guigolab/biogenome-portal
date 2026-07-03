@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { FlaskConical, Loader2, Plus } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import {
    Table,
@@ -16,7 +16,8 @@ import {
    TableRow,
 } from '@/components/ui/table'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-import type { DashboardModuleVariant } from '@/components/cms/dashboard/dashboard-module-variant'
+import { DashboardModuleHeader } from '@/components/cms/dashboard/dashboard-module-header'
+import { DashboardModulePagination } from '@/components/cms/dashboard/dashboard-module-pagination'
 import { SubmittedBiosampleDetailDialog } from '@/components/cms/dashboard/submitted-biosample-detail-dialog'
 import { cmsGetSubmittedBioSamples } from '@/lib/cms/services/auth'
 import { cn } from '@/lib/utils'
@@ -24,13 +25,7 @@ import { useCmsAuthStore } from '@/stores/cms-auth-store'
 
 const LIMIT = 6
 
-export function SubmittedBiosamplesModule({
-   hasEnaTemplate,
-   variant = 'standalone',
-}: {
-   hasEnaTemplate: boolean
-   variant?: DashboardModuleVariant
-}) {
+export function SubmittedBiosamplesModule({ hasEnaTemplate }: { hasEnaTemplate: boolean }) {
    const userName = useCmsAuthStore((s) => s.userName)
    const isAdmin = useCmsAuthStore((s) => s.userRole === 'Admin')
 
@@ -75,52 +70,27 @@ export function SubmittedBiosamplesModule({
       void fetchData()
    }, [fetchData])
 
-   const embedded = variant === 'tabPanel'
-
    return (
-      <Card
-         className={cn(
-            'border-border/80 shadow-sm',
-            embedded && 'rounded-xl border bg-card',
-         )}
-      >
-         <CardHeader
-            className={cn(
-               'flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between',
-               embedded && 'pb-2',
-            )}
-         >
-            {embedded ? (
-               <p className="text-sm text-muted-foreground">
-                  {isAdmin
-                     ? 'All biosamples submitted to EBI across curators. Use Mine / All to change scope.'
-                     : 'Biosamples you have submitted to EBI BioSamples.'}
-               </p>
-            ) : (
-               <div>
-                  <CardTitle>{isAdmin ? 'Submitted biosamples' : 'My EBI biosamples'}</CardTitle>
-                  <CardDescription>
-                     {isAdmin ? 'All biosamples submitted to EBI.' : 'Your submissions to EBI BioSamples.'}
-                  </CardDescription>
-               </div>
-            )}
-            {hasEnaTemplate ? (
-               <Button size="sm" asChild className={cn('gap-2', embedded && 'shrink-0')}>
-                  <Link href="/admin/publish-biosample">
-                     <Plus className="h-4 w-4" />
-                     Submit
-                  </Link>
-               </Button>
-            ) : null}
-         </CardHeader>
+      <Card className="gap-3 border-border/80 shadow-sm">
+         <DashboardModuleHeader
+            description={
+               isAdmin
+                  ? 'All biosamples submitted to EBI across curators. Use Mine / All to change scope.'
+                  : 'Biosamples you have submitted to EBI BioSamples.'
+            }
+            action={
+               hasEnaTemplate ? (
+                  <Button size="sm" asChild className="gap-2">
+                     <Link href="/admin/publish-biosample">
+                        <Plus className="h-4 w-4" />
+                        Submit
+                     </Link>
+                  </Button>
+               ) : null
+            }
+         />
          <CardContent className="space-y-4">
-            <div
-               className={cn(
-                  'flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center',
-                  embedded &&
-                     'rounded-xl border border-border bg-card p-3 sm:p-4 dark:bg-card/60',
-               )}
-            >
+            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
                <Input
                   placeholder="Filter by name or accession…"
                   value={filterDraft}
@@ -222,24 +192,12 @@ export function SubmittedBiosamplesModule({
                </div>
             )}
             {total > LIMIT ? (
-               <div className="flex items-center justify-between text-sm text-muted-foreground">
-                  <span>
-                     Page {page} / {Math.ceil(total / LIMIT)}
-                  </span>
-                  <div className="flex gap-2">
-                     <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
-                        Previous
-                     </Button>
-                     <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={page >= Math.ceil(total / LIMIT)}
-                        onClick={() => setPage((p) => p + 1)}
-                     >
-                        Next
-                     </Button>
-                  </div>
-               </div>
+               <DashboardModulePagination
+                  page={page}
+                  totalPages={Math.ceil(total / LIMIT)}
+                  onPrevious={() => setPage((p) => p - 1)}
+                  onNext={() => setPage((p) => p + 1)}
+               />
             ) : null}
          </CardContent>
          <SubmittedBiosampleDetailDialog

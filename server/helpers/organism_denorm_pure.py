@@ -44,7 +44,7 @@ def derive_organism_denorm(
     counts: RelatedCounts,
     *,
     current_goat_status: Optional[GoaTStatus],
-    has_publications: bool,
+    has_genome_publication: bool,
     goat_project_name: Optional[str],
     apply_goat_inference: bool = True,
     merge_context: MergeContext = "default",
@@ -54,7 +54,7 @@ def derive_organism_denorm(
     resolved_goat = current_goat_status
 
     if goat_project_name and apply_goat_inference:
-        inferred = infer_goat_candidate(counts, has_publications)
+        inferred = infer_goat_candidate(counts, has_genome_publication)
         if should_apply_goat_inference(
             current_goat_status, inferred, merge_context=merge_context
         ):
