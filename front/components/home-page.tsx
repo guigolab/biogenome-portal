@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import type { LucideIcon } from 'lucide-react'
-import { ArrowRight, Dna, List } from 'lucide-react'
+import { ArrowRight, ArrowUpRight, Dna, List } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -25,6 +25,11 @@ const HERO_STRIP_STATS: { key: DataModels; labelKey: string }[] = [
    { key: 'annotations', labelKey: 'home.hero.stats.annotations' },
    { key: 'reads', labelKey: 'home.hero.stats.sequencingRuns' },
 ]
+
+function homeStatHref(key: DataModels): string {
+   if (key === 'organisms') return '/species'
+   return `/catalog?cat=${encodeURIComponent(key)}`
+}
 
 type HomeStatRow = {
    key: DataModels
@@ -160,6 +165,12 @@ export function HomePage() {
 
    const mapOn = config ? showMap(config) : true
 
+   const portalStatCounts = useMemo(() => {
+      if (!rootTaxon) return null
+      const counts = taxonNodeToPortalStats(rootTaxon)
+      return Object.fromEntries(counts.map((c) => [c.key, c.count])) as Partial<Record<DataModels, number>>
+   }, [rootTaxon])
+
    const features = useMemo(() => {
       const items: Array<{
          href: string
@@ -191,8 +202,19 @@ export function HomePage() {
          icon: navRouteIcons.species,
          color: 'bg-chart-3/10 text-chart-3',
       })
+      const assemblies = portalStatCounts?.assemblies ?? 0
+      const annotations = portalStatCounts?.annotations ?? 0
+      if (assemblies > 0 && annotations > 0) {
+         items.push({
+            href: '/genome-browser',
+            titleKey: 'home.genomeBrowserFeature.title',
+            descKey: 'home.genomeBrowserFeature.description',
+            icon: navRouteIcons.genomeBrowser,
+            color: 'bg-chart-4/10 text-chart-4',
+         })
+      }
       return items
-   }, [mapOn])
+   }, [mapOn, portalStatCounts])
 
    if (portalLoading || !config) {
       return (
@@ -288,13 +310,30 @@ export function HomePage() {
                   <div className="mx-auto grid w-full max-w-5xl justify-items-center gap-6 [grid-template-columns:repeat(auto-fit,minmax(11rem,1fr))]">
                      {stats.map((stat) => {
                         const Icon = modelLucideMap[stat.key] ?? List
+                        const href = homeStatHref(stat.key)
                         return (
                            <div key={stat.key} className="text-center">
                               <div className="mb-3 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
                                  <Icon className="h-6 w-6 text-primary" aria-hidden />
                               </div>
-                              <div className="mb-1 text-3xl font-bold text-foreground md:text-4xl">
-                                 {stat.value}
+                              <div className="mb-1 flex items-center justify-center gap-2 text-3xl font-bold text-foreground md:text-4xl">
+                                 <span>{stat.value}</span>
+                                 <Link
+                                    href={href}
+                                    className="inline-flex text-muted-foreground hover:text-foreground"
+                                    aria-label={
+                                       stat.key === 'organisms'
+                                          ? `Open ${stat.label}`
+                                          : `Open ${stat.label} in catalog`
+                                    }
+                                    title={
+                                       stat.key === 'organisms'
+                                          ? `Open ${stat.label}`
+                                          : `Open ${stat.label} in catalog`
+                                    }
+                                 >
+                                    <ArrowUpRight className="h-5 w-5" />
+                                 </Link>
                               </div>
                               <div className="text-sm text-muted-foreground">{stat.label}</div>
                            </div>

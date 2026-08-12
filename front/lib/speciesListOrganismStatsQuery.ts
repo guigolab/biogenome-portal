@@ -30,9 +30,6 @@ function appendGoatDimensions(
    if (facet !== 'goat_status' && ctx.goatStatusFilters.length > 0) {
       q.goat_status__in = [...ctx.goatStatusFilters].sort().join(',')
    }
-   if (facet !== 'target_list_status' && ctx.targetListFilter !== 'all') {
-      q.target_list_status__in = ctx.targetListFilter
-   }
 }
 
 /**

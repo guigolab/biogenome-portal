@@ -213,6 +213,10 @@
          "title": "Arten-Datenbank",
          "description": "Unsere umfassende Arten-Datenbank mit detaillierten Genomdaten durchsuchen und durchsuchen"
       },
+      "genomeBrowserFeature": {
+         "title": "Genom-Browser",
+         "description": "Referenzsequenzen und Genannotationen mit JBrowse 2 erkunden"
+      },
       "emptyStats": "Für diese Kennzahlen liegen noch keine aggregierten Zähler vor.",
       "cta": {
          "exploreSpecies": "Arten erkunden",
@@ -282,12 +286,7 @@
          "loadOrganisms": "Organismen konnten nicht geladen werden"
       },
       "legend": {
-         "sampleLocations": "Probenstandorte",
-         "locationTooltip": "Ort (Tooltip)",
-         "listHover": "Listen-Hover",
-         "selectedPoint": "Ausgewählter Punkt",
-         "taxonFilter": "Taxonfilter",
-         "clearSampleLocationHint": "Probenstandort-Filter aufheben: Karte (Kacheln) anklicken oder die Markierung erneut anklicken."
+         "sampleLocations": "Probenstandorte"
       },
       "filters": {
          "sampleLocationActive": "Probenstandort-Filter aktiv",
@@ -389,6 +388,7 @@
       "goatDrawerLearnMore": "Mehr erfahren",
       "viewInGoatProject": "In GoaT ansehen",
       "sort": {
+         "placeholder": "Sortieren nach",
          "alpha": "Alphabetisch (A–Z)",
          "recent": "Kürzlich hinzugefügt",
          "samples": "Meiste Proben",

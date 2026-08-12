@@ -11,7 +11,8 @@ import {
 } from '@/components/ui/select'
 import { useLocale } from '@/contexts/locale-context'
 import { cn } from '@/lib/utils'
-import type { SpeciesSortMode } from '@/lib/speciesListSort'
+import type { SpeciesSortMode, SpeciesSortSelection } from '@/lib/speciesListSort'
+import { SPECIES_SORT_UNSET } from '@/lib/speciesListSort'
 import * as TooltipPrimitive from '@radix-ui/react-tooltip'
 import { Download } from 'lucide-react'
 
@@ -51,9 +52,9 @@ export type SpeciesListResultsStatusProps = {
 }
 
 export type SpeciesListSortExportControlsProps = {
-   sortMode: SpeciesSortMode
+   sortMode: SpeciesSortSelection
    sortModes: SpeciesSortMode[]
-   onSortModeChange: (mode: SpeciesSortMode) => void
+   onSortModeChange: (mode: SpeciesSortSelection) => void
    onExportClick: () => void
 }
 
@@ -83,14 +84,18 @@ function SpeciesListSortExportControls({
 
    return (
       <div className="flex shrink-0 flex-nowrap items-center justify-end gap-2 sm:gap-3">
-         <Select value={sortMode} onValueChange={(v) => onSortModeChange(v as SpeciesSortMode)}>
+         <Select
+            value={sortMode}
+            onValueChange={(v) => onSortModeChange(v as SpeciesSortSelection)}
+         >
             <SelectTrigger
                className="h-9 w-[min(100%,11rem)] sm:min-w-[12rem] sm:w-[min(100%,16rem)]"
                aria-label={t('speciesList.sortSpeciesList')}
             >
-               <SelectValue />
+               <SelectValue placeholder={t('speciesList.sort.placeholder')} />
             </SelectTrigger>
             <SelectContent>
+               <SelectItem value={SPECIES_SORT_UNSET}>{t('speciesList.sort.placeholder')}</SelectItem>
                {sortModes.map((m) => (
                   <SelectItem key={m} value={m}>
                      {sortLabels(m)}

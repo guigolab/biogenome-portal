@@ -213,6 +213,10 @@
          "title": "Base de datos de especies",
          "description": "Explore y busque nuestra base completa de especies con datos genómicos detallados"
       },
+      "genomeBrowserFeature": {
+         "title": "Navegador de genomas",
+         "description": "Explore secuencias de referencia y anotaciones génicas con JBrowse 2"
+      },
       "emptyStats": "Aún no hay totales agregados para estas métricas.",
       "cta": {
          "exploreSpecies": "Explorar especies",
@@ -282,12 +286,7 @@
          "loadOrganisms": "Error al cargar organismos"
       },
       "legend": {
-         "sampleLocations": "Ubicaciones de muestras",
-         "locationTooltip": "Ubicación (tooltip)",
-         "listHover": "Hover de lista",
-         "selectedPoint": "Punto seleccionado",
-         "taxonFilter": "Filtro de taxón",
-         "clearSampleLocationHint": "Borrar filtro de ubicación de muestra: haga clic en el mapa (teselas) o de nuevo en el marcador seleccionado."
+         "sampleLocations": "Ubicaciones de muestras"
       },
       "filters": {
          "sampleLocationActive": "Filtro de ubicación de muestra activo",
@@ -389,6 +388,7 @@
       "goatDrawerLearnMore": "Más información",
       "viewInGoatProject": "Ver en GoaT",
       "sort": {
+         "placeholder": "Ordenar por",
          "alpha": "Alfabético (A–Z)",
          "recent": "Añadidos recientemente",
          "samples": "Más muestras",

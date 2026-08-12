@@ -14,7 +14,7 @@ import type { RankGroupDef } from '@/lib/taxonRankFilter'
 import { cn } from '@/lib/utils'
 import { Check } from 'lucide-react'
 import { SpeciesCountryListFilter } from '@/components/species-list/species-country-list-filter'
-import { GoatStatusFilterList, TargetListFilterList } from '@/components/species-list/goat-target-filter-lists'
+import { GoatStatusFilterList } from '@/components/species-list/goat-target-filter-lists'
 import { TaxonomyFilterSection } from '@/components/species-list/taxonomy-filter-section'
 import type { RankTaxonCache } from '@/components/species-list/types'
 import type { GoatTrackerStage } from '@/lib/goatPipelineTracker'
@@ -26,7 +26,6 @@ import {
    SpeciesListFilterAccordionProvider,
    SUB_PROJECT_SECTION_ID,
    TAXONOMY_SECTION_ID,
-   TARGET_LIST_SECTION_ID,
    useSpeciesListFilterAccordion,
 } from './species-list-filter-accordion-context'
 
@@ -212,14 +211,11 @@ export type SpeciesListFiltersPanelProps = {
    selectedCountryCodes: string[]
    onToggleCountryCode: (alpha2: string) => void
    onClearCountrySelection: () => void
-   /** When true, show GoaT + target list filter collapses (portal `general.goat`). */
+   /** When true, show GoaT filter collapses (portal `general.goat`). */
    showGoatFilters?: boolean
    goatTrackerStages?: GoatTrackerStage[]
    goatStatusFilters?: string[]
    onToggleGoatStatus?: (key: string) => void
-   targetListFilter?: string
-   onTargetListChange?: (value: string) => void
-   targetListStats?: Record<string, number> | null
    /** Raw facet map for loading spinners when a GoaT section is open (optional if omitted, loading is false). */
    goatStats?: Record<string, number> | null
    goatFacetStatsLoading?: boolean
@@ -268,9 +264,6 @@ export function SpeciesListFiltersPanel({
    goatTrackerStages = [],
    goatStatusFilters = [],
    onToggleGoatStatus,
-   targetListFilter = 'all',
-   onTargetListChange,
-   targetListStats = null,
    goatStats = null,
    goatFacetStatsLoading: goatFacetStatsLoadingProp,
 }: SpeciesListFiltersPanelProps) {
@@ -280,10 +273,7 @@ export function SpeciesListFiltersPanel({
    const { openSection } = useSpeciesListFilterAccordion()
    const goatFacetStatsLoading =
       goatFacetStatsLoadingProp ??
-      (showGoatFilters
-         ? (openSection === GOAT_STATUS_SECTION_ID && goatStats == null) ||
-           (openSection === TARGET_LIST_SECTION_ID && targetListStats == null)
-         : false)
+      (showGoatFilters ? openSection === GOAT_STATUS_SECTION_ID && goatStats == null : false)
 
    return (
       <div className={cn(filterSidebarScrollColumnClassName, className)}>
@@ -312,25 +302,12 @@ export function SpeciesListFiltersPanel({
                onLoadMoreRank={onLoadMoreExplorerRank}
             />
          </SpeciesFilterCollapsible>
-         {showGoatFilters && onToggleGoatStatus && onTargetListChange ? (
+         {showGoatFilters && onToggleGoatStatus ? (
             <SpeciesFilterCollapsible sectionId={GOAT_STATUS_SECTION_ID} title={t('statusPage.filterGoatSectionTitle')}>
                <GoatStatusFilterList
                   stages={goatTrackerStages}
                   selectedKeys={goatStatusFilters}
                   onToggleKey={onToggleGoatStatus}
-                  loading={goatFacetStatsLoading}
-               />
-            </SpeciesFilterCollapsible>
-         ) : null}
-         {showGoatFilters && onTargetListChange ? (
-            <SpeciesFilterCollapsible
-               sectionId={TARGET_LIST_SECTION_ID}
-               title={t('statusPage.filterTargetListSectionTitle')}
-            >
-               <TargetListFilterList
-                  value={targetListFilter}
-                  onChange={onTargetListChange}
-                  targetListStats={targetListStats}
                   loading={goatFacetStatsLoading}
                />
             </SpeciesFilterCollapsible>

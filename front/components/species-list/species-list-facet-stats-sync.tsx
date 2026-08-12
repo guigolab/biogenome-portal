@@ -16,7 +16,6 @@ import {
    IUCN_SECTION_ID,
    SEQUENCING_TYPE_SECTION_ID,
    SUB_PROJECT_SECTION_ID,
-   TARGET_LIST_SECTION_ID,
    TAXONOMY_SECTION_ID,
    useSpeciesListFilterAccordion,
 } from '@/components/species-list/species-list-filter-accordion-context'
@@ -26,7 +25,6 @@ const SUB_PROJECT_STATS_FIELD = 'sub_project'
 const SEQUENCING_TYPE_STATS_FIELD = 'sequencing_type'
 const COUNTRIES_STATS_FIELD = 'countries'
 const GOAT_STATS_FIELD = 'goat_status'
-const TARGET_LIST_STATS_FIELD = 'target_list_status'
 
 type CacheRef = MutableRefObject<Map<string, Record<string, number>>>
 
@@ -96,7 +94,6 @@ export function SpeciesListFacetStatsSync({
    setSubProjectStats,
    setSequencingTypeStats,
    setGoatStats,
-   setTargetListStats,
 }: {
    statsQueryBase: OrganismStatsQueryContext
    goatEnabled: boolean
@@ -106,7 +103,6 @@ export function SpeciesListFacetStatsSync({
    setSubProjectStats: (v: Record<string, number>) => void
    setSequencingTypeStats: (v: Record<string, number>) => void
    setGoatStats: (v: Record<string, number>) => void
-   setTargetListStats: (v: Record<string, number>) => void
 }) {
    const { openSection } = useSpeciesListFilterAccordion()
 
@@ -153,17 +149,6 @@ export function SpeciesListFacetStatsSync({
       if (openSection === GOAT_STATUS_SECTION_ID) {
          const q = buildOrganismStatsQuery(statsQueryBase, 'goat_status')
          runCachedFetch(organismStatsCacheRef, 'organisms', GOAT_STATS_FIELD, q, setGoatStats)
-         return
-      }
-      if (openSection === TARGET_LIST_SECTION_ID) {
-         const q = buildOrganismStatsQuery(statsQueryBase, 'target_list_status')
-         runCachedFetch(
-            organismStatsCacheRef,
-            'organisms',
-            TARGET_LIST_STATS_FIELD,
-            q,
-            setTargetListStats,
-         )
       }
    }, [
       openSection,
@@ -175,7 +160,6 @@ export function SpeciesListFacetStatsSync({
       setSubProjectStats,
       setSequencingTypeStats,
       setGoatStats,
-      setTargetListStats,
    ])
 
    return null

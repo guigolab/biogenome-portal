@@ -465,30 +465,6 @@ export default function MapClientPage() {
                      </div>
                   ) : null}
                </div>
-
-               <div className="absolute bottom-4 left-4 z-[1000] max-w-[min(100%,240px)] space-y-2 rounded-lg border border-border bg-card/95 p-3 text-xs backdrop-blur">
-                  <div className="font-medium">{t('map.legend.sampleLocations')}</div>
-                  <div className="flex items-center gap-2">
-                     <span className="h-3 w-3 shrink-0 rounded-full border border-primary/80 bg-primary/45" />
-                     <span className="text-muted-foreground">{t('map.legend.locationTooltip')}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                     <span className="h-3 w-3 shrink-0 rounded-full border border-secondary/80 bg-secondary/72" />
-                     <span className="text-muted-foreground">{t('map.legend.listHover')}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                     <span className="h-3 w-3 shrink-0 rounded-full border border-accent/90 bg-accent/85" />
-                     <span className="text-muted-foreground">{t('map.legend.selectedPoint')}</span>
-                  </div>
-                  {taxidFromUrl ? (
-                     <div className="text-muted-foreground">
-                        {t('map.legend.taxonFilter')}: {taxidFromUrl}
-                     </div>
-                  ) : null}
-                  <p className="text-[10px] leading-snug text-muted-foreground">
-                     {t('map.legend.clearSampleLocationHint')}
-                  </p>
-               </div>
             </div>
 
             <aside className="flex min-h-0 min-w-0 flex-col overflow-hidden border-t border-border bg-card lg:col-start-2 lg:row-start-1 lg:h-full lg:max-h-full lg:min-h-0 lg:border-l lg:border-t-0">

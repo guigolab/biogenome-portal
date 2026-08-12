@@ -190,11 +190,11 @@
    "home": {
       "hero": {
          "stats": {
-            "speciesTracked": "Espècies seguides",
+            "speciesTracked": "Espècies al portal",
             "genomesAvailable": "Genomes disponibles",
             "biosamples": "BioSamples",
             "annotations": "Anotacions gèniques",
-            "sequencingRuns": "Execucions de seqüenciació"
+            "sequencingRuns": "Lectures"
          }
       },
       "features": {
@@ -212,6 +212,10 @@
       "speciesFeature": {
          "title": "Base de dades d'espècies",
          "description": "Cerqueu i exploreu la base d'espècies amb dades genòmiques detallades"
+      },
+      "genomeBrowserFeature": {
+         "title": "Navegador de genomes",
+         "description": "Exploreu seqüències de referència i anotacions gèniques amb JBrowse 2"
       },
       "emptyStats": "Encara no hi ha recomptes agregats per a aquestes mètriques.",
       "cta": {
@@ -282,12 +286,7 @@
          "loadOrganisms": "No s’han pogut carregar els organismes"
       },
       "legend": {
-         "sampleLocations": "Ubicacions de mostres",
-         "locationTooltip": "Ubicació (infoemergent)",
-         "listHover": "Passar per la llista",
-         "selectedPoint": "Punt seleccionat",
-         "taxonFilter": "Filtre de tàxon",
-         "clearSampleLocationHint": "Esborrar el filtre de mostra: cliqueu el mapa (mosaics) o torneu a clicar el marcador seleccionat."
+         "sampleLocations": "Ubicacions de mostres"
       },
       "filters": {
          "sampleLocationActive": "Filtre de ubicació de mostra actiu",
@@ -389,6 +388,7 @@
       "goatDrawerLearnMore": "Més informació",
       "viewInGoatProject": "Veure a GoaT",
       "sort": {
+         "placeholder": "Ordenar per",
          "alpha": "Alfabètic (A-Z)",
          "recent": "Afegits recentment",
          "samples": "Més mostres",

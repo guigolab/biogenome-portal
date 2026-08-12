@@ -38,7 +38,6 @@ import { buildGoatTrackerStages } from '@/lib/goatPipelineTracker'
 import {
    GOAT_PIPELINE_STEPS,
    labelGoatStatus,
-   labelTargetListStatus,
 } from '@/lib/organismStatusLabels'
 import { navRouteIcons } from '@/lib/portal'
 import {
@@ -55,9 +54,11 @@ import {
 } from '@/lib/speciesFieldStats'
 import { useOrganismCountriesDisplayStore } from '@/stores/organism-countries-display-store'
 import {
+   resolveSpeciesSortMode,
+   SPECIES_SORT_UNSET,
    speciesSortToApi,
    visibleSpeciesSortModes,
-   type SpeciesSortMode,
+   type SpeciesSortSelection,
 } from '@/lib/speciesListSort'
 import { useMinWidthLg } from '@/hooks/use-min-width-lg'
 import { useRootTaxonStore } from '@/stores/root-taxon-store'
@@ -106,12 +107,11 @@ export function SpeciesListPageClient() {
    const [subProjectStats, setSubProjectStats] = useState<Record<string, number> | null>(null)
    const [sequencingTypeStats, setSequencingTypeStats] = useState<Record<string, number> | null>(null)
    const [selectedCountryCodes, setSelectedCountryCodes] = useState<string[]>([])
-   const [sortMode, setSortMode] = useState<SpeciesSortMode>('alpha')
+   const [sortMode, setSortMode] = useState<SpeciesSortSelection>(SPECIES_SORT_UNSET)
    const [exportSheetOpen, setExportSheetOpen] = useState(false)
    const [filtersOpen, setFiltersOpen] = useState(false)
 
    const [goatStatusFilters, setGoatStatusFilters] = useState<string[]>([])
-   const [targetListFilter, setTargetListFilter] = useState('all')
    const [goatStats, setGoatStats] = useState<Record<string, number> | null>(null)
    const [targetListStats, setTargetListStats] = useState<Record<string, number> | null>(null)
    const [goatReportLoading, setGoatReportLoading] = useState(false)
@@ -234,7 +234,7 @@ export function SpeciesListPageClient() {
          sequencingTypeFilter: effectiveSequencingTypeFilter,
          selectedCountryCodes,
          goatStatusFilters: goatEnabled ? goatStatusFilters : [],
-         targetListFilter: goatEnabled ? targetListFilter : 'all',
+         targetListFilter: 'all' as const,
       }),
       [
          selectedTaxonTaxid,
@@ -245,7 +245,6 @@ export function SpeciesListPageClient() {
          selectedCountryCodes,
          goatEnabled,
          goatStatusFilters,
-         targetListFilter,
       ],
    )
 
@@ -312,8 +311,8 @@ export function SpeciesListPageClient() {
    const loadMoreSentinelRef = useRef<HTMLDivElement>(null)
 
    useEffect(() => {
-      if (!visibleSortModes.includes(sortMode)) {
-         setSortMode('alpha')
+      if (sortMode !== SPECIES_SORT_UNSET && !visibleSortModes.includes(sortMode)) {
+         setSortMode(SPECIES_SORT_UNSET)
       }
    }, [visibleSortModes, sortMode])
 
@@ -477,7 +476,10 @@ export function SpeciesListPageClient() {
       return () => window.clearTimeout(timer)
    }, [searchInput])
 
-   const sortApi = useMemo(() => speciesSortToApi(sortMode), [sortMode])
+   const sortApi = useMemo(
+      () => speciesSortToApi(resolveSpeciesSortMode(sortMode)),
+      [sortMode],
+   )
 
    const queryBase = useMemo(() => {
       const q: Record<string, string | number> = {
@@ -501,9 +503,6 @@ export function SpeciesListPageClient() {
       if (goatEnabled && goatStatusFilters.length > 0) {
          q.goat_status__in = [...goatStatusFilters].sort().join(',')
       }
-      if (goatEnabled && targetListFilter !== 'all') {
-         q.target_list_status__in = targetListFilter
-      }
       return q
    }, [
       debouncedSearch,
@@ -515,7 +514,6 @@ export function SpeciesListPageClient() {
       selectedCountryCodes,
       goatEnabled,
       goatStatusFilters,
-      targetListFilter,
       sortApi,
    ])
 
@@ -539,9 +537,6 @@ export function SpeciesListPageClient() {
       if (goatEnabled && goatStatusFilters.length > 0) {
          q.goat_status__in = [...goatStatusFilters].sort().join(',')
       }
-      if (goatEnabled && targetListFilter !== 'all') {
-         q.target_list_status__in = targetListFilter
-      }
       return q
    }, [
       debouncedSearch,
@@ -553,7 +548,6 @@ export function SpeciesListPageClient() {
       selectedCountryCodes,
       goatEnabled,
       goatStatusFilters,
-      targetListFilter,
       sortApi,
    ])
 
@@ -676,8 +670,7 @@ export function SpeciesListPageClient() {
          effectiveSubProjectFilter !== 'all' ||
          effectiveSequencingTypeFilter !== 'all' ||
          selectedCountryCodes.length > 0 ||
-         (goatEnabled && goatStatusFilters.length > 0) ||
-         (goatEnabled && targetListFilter !== 'all'),
+         (goatEnabled && goatStatusFilters.length > 0),
    )
 
    const activeFilterChips = useMemo(() => {
@@ -755,15 +748,6 @@ export function SpeciesListPageClient() {
                clear: () => toggleGoatStatusFilter(key),
             })
          }
-         if (targetListFilter !== 'all') {
-            const tls = labelTargetListStatus(targetListFilter) || targetListFilter
-            chips.push({
-               id: 'target_list',
-               label: `${t('statusPage.filterTargetListSectionTitle')}: ${tls}`,
-               removeAriaLabel: t('statusPage.removeTargetListFilter'),
-               clear: () => setTargetListFilter('all'),
-            })
-         }
       }
       return chips
    }, [
@@ -781,7 +765,6 @@ export function SpeciesListPageClient() {
       formatMetadataBucketLabel,
       goatEnabled,
       goatStatusFilters,
-      targetListFilter,
       toggleGoatStatusFilter,
    ])
 
@@ -855,9 +838,6 @@ export function SpeciesListPageClient() {
          goatTrackerStages,
          goatStatusFilters,
          onToggleGoatStatus: toggleGoatStatusFilter,
-         targetListFilter,
-         onTargetListChange: setTargetListFilter,
-         targetListStats,
          goatStats,
       }),
       [
@@ -892,8 +872,6 @@ export function SpeciesListPageClient() {
          goatTrackerStages,
          goatStatusFilters,
          toggleGoatStatusFilter,
-         targetListFilter,
-         targetListStats,
          goatStats,
       ],
    )
@@ -967,7 +945,6 @@ export function SpeciesListPageClient() {
                      setSubProjectStats={setSubProjectStats}
                      setSequencingTypeStats={setSequencingTypeStats}
                      setGoatStats={setGoatStats}
-                     setTargetListStats={setTargetListStats}
                   />
                   <div className="flex min-h-0 min-w-0 flex-1 basis-0 items-stretch overflow-hidden">
                      {isLg ? (

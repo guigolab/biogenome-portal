@@ -213,6 +213,10 @@
          "title": "Base d’espèces",
          "description": "Parcourez et recherchez notre base d’espèces complète avec des données génomiques détaillées"
       },
+      "genomeBrowserFeature": {
+         "title": "Navigateur de génomes",
+         "description": "Explorer les séquences de référence et les annotations géniques avec JBrowse 2"
+      },
       "emptyStats": "Pas encore de totaux agrégés pour ces indicateurs.",
       "cta": {
          "exploreSpecies": "Explorer les espèces",
@@ -282,12 +286,7 @@
          "loadOrganisms": "Échec du chargement des organismes"
       },
       "legend": {
-         "sampleLocations": "Lieux d’échantillonnage",
-         "locationTooltip": "Lieu (infobulle)",
-         "listHover": "Survol de liste",
-         "selectedPoint": "Point sélectionné",
-         "taxonFilter": "Filtre taxon",
-         "clearSampleLocationHint": "Effacer le filtre lieu d’échantillon : cliquez sur la carte (tuiles) ou sur le marqueur sélectionné à nouveau."
+         "sampleLocations": "Lieux d’échantillonnage"
       },
       "filters": {
          "sampleLocationActive": "Filtre lieu d’échantillon actif",
@@ -389,6 +388,7 @@
       "goatDrawerLearnMore": "En savoir plus",
       "viewInGoatProject": "Voir dans GoaT",
       "sort": {
+         "placeholder": "Trier par",
          "alpha": "Alphabétique (A–Z)",
          "recent": "Récemment ajouté",
          "samples": "Le plus d’échantillons",

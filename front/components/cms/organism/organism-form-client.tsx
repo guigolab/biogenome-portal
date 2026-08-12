@@ -21,7 +21,6 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { usePortalConfig } from '@/contexts/portal-context'
@@ -87,15 +86,11 @@ const GOAT_STEPS = [
 const SELECTABLE_GOAT = new Set(['Sample Collected', 'Sample Acquired', 'Data Generation', 'In Assembly'])
 const TERMINAL_GOAT = new Set(['INSDC Submitted', 'Publication Available'])
 
-const TARGET_LIST: { key: 'long_list' | 'family_representative' | 'other_priority'; label: string }[] = [
+const TARGET_LIST: { key: 'long_list'; label: string }[] = [
    { key: 'long_list', label: 'Long list' },
-   { key: 'family_representative', label: 'Family representative' },
-   { key: 'other_priority', label: 'Other priority' },
 ]
 
-function normalizeTargetListStatusForForm(raw: unknown): OrganismFormState['target_list_status'] {
-   if (typeof raw !== 'string' || !raw.trim()) return 'long_list'
-   if (TARGET_LIST.some((t) => t.key === raw)) return raw as OrganismFormState['target_list_status']
+function normalizeTargetListStatusForForm(_raw: unknown): OrganismFormState['target_list_status'] {
    return 'long_list'
 }
 
@@ -104,6 +99,7 @@ function buildPayload() {
       useOrganismFormStore.getState()
    return {
       ...organismForm,
+      target_list_status: 'long_list',
       image: '',
       image_urls: [],
       metadata: buildMetadataPayload(metadataList),
@@ -675,22 +671,25 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
                      </div>
                      <div>
                         <Label className="mb-2 block">Target list</Label>
-                        <RadioGroup
-                           value={organismForm.target_list_status ?? 'long_list'}
-                           onValueChange={(val) =>
+                        <Select
+                           value={organismForm.target_list_status || 'long_list'}
+                           onValueChange={() =>
                               setOrganismForm({
-                                 target_list_status:
-                                    val === '__none__' ? 'long_list' : (val as OrganismFormState['target_list_status']),
+                                 target_list_status: 'long_list',
                               })
                            }
                         >
-                           {TARGET_LIST.map((t) => (
-                              <div key={t.key} className="flex items-center gap-2 py-1">
-                                 <RadioGroupItem value={t.key} id={t.key} />
-                                 <Label htmlFor={t.key}>{t.label}</Label>
-                              </div>
-                           ))}
-                        </RadioGroup>
+                           <SelectTrigger className="w-full sm:w-[16rem]">
+                              <SelectValue />
+                           </SelectTrigger>
+                           <SelectContent>
+                              {TARGET_LIST.map((t) => (
+                                 <SelectItem key={t.key} value={t.key}>
+                                    {t.label}
+                                 </SelectItem>
+                              ))}
+                           </SelectContent>
+                        </Select>
                      </div>
                   </div>
                )}

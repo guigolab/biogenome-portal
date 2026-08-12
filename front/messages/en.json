@@ -213,6 +213,10 @@
          "title": "Species Database",
          "description": "Browse and search our comprehensive species database with detailed genomic data"
       },
+      "genomeBrowserFeature": {
+         "title": "Genome Browser",
+         "description": "Explore reference sequences and gene annotations with JBrowse 2"
+      },
       "emptyStats": "No aggregate counts for these metrics yet.",
       "cta": {
          "exploreSpecies": "Explore Species",
@@ -282,12 +286,7 @@
          "loadOrganisms": "Failed to load organisms"
       },
       "legend": {
-         "sampleLocations": "Sample locations",
-         "locationTooltip": "Location (tooltip)",
-         "listHover": "List hover",
-         "selectedPoint": "Selected point",
-         "taxonFilter": "Taxon filter",
-         "clearSampleLocationHint": "Clear sample-location filter: click the map (tiles), or click the selected marker again."
+         "sampleLocations": "Sample locations"
       },
       "filters": {
          "sampleLocationActive": "Sample location filter active",
@@ -389,6 +388,7 @@
       "goatDrawerLearnMore": "Learn more",
       "viewInGoatProject": "View in GoaT",
       "sort": {
+         "placeholder": "Sort by",
          "alpha": "Alphabetical (A-Z)",
          "recent": "Recently added",
          "samples": "Most samples",

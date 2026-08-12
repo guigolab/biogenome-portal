@@ -9,6 +9,11 @@ export type SpeciesSortMode =
    | 'assemblies'
    | 'annotations'
 
+/** Sentinel for the empty “Sort by” option in the species list sort select. */
+export const SPECIES_SORT_UNSET = '__none__' as const
+
+export type SpeciesSortSelection = SpeciesSortMode | typeof SPECIES_SORT_UNSET
+
 /** Base order; `visibleSpeciesSortModes` may omit count-based modes when root has no data. */
 export const ALL_SPECIES_SORT_MODES: SpeciesSortMode[] = [
    'alpha',
@@ -34,6 +39,11 @@ export function visibleSpeciesSortModes(
    if ((byKey.assemblies ?? 0) > 0) out.push('assemblies')
    if ((byKey.annotations ?? 0) > 0) out.push('annotations')
    return out
+}
+
+/** When unset, list queries keep alphabetical order. */
+export function resolveSpeciesSortMode(mode: SpeciesSortSelection): SpeciesSortMode {
+   return mode === SPECIES_SORT_UNSET ? 'alpha' : mode
 }
 
 export function speciesSortToApi(mode: SpeciesSortMode): {
