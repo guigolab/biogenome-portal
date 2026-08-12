@@ -212,9 +212,21 @@ export async function cmsLookupPublication(source: string, id: string) {
    return cmsFetchJson<Record<string, unknown>>(`/publications/lookup?${sp.toString()}`)
 }
 
+/** Normalized Europe PMC hit returned by POST /publications/validate when valid. */
+export type CmsPublicationMetadata = {
+   title?: string
+   authors?: string
+   journal?: string
+   year?: string
+   doi?: string
+   pmid?: string
+   pmcid?: string
+   abstract?: string
+}
+
 export type CmsPublicationValidation = {
    valid: boolean
-   data?: Record<string, unknown>
+   data?: CmsPublicationMetadata
    error?: string
 }
 

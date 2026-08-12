@@ -40,6 +40,7 @@ import {
    cmsGetItem,
    cmsUpdateOrganism,
    cmsValidatePublication,
+   type CmsPublicationMetadata,
 } from '@/lib/cms/services/auth'
 import {
    mergeImageRows,
@@ -51,7 +52,7 @@ import {
    normalizeOrganismImageLicenseFromApi,
 } from '@/lib/cms/organism-image-license-options'
 import { patchImageRowForUrlChange } from '@/lib/cms/infer-image-source-record-url'
-import { searchExternalTaxons, type TaxonHit } from '@/lib/taxon-search'
+import { searchExternalTaxons, taxonSpeciesSuitabilityWarning, type TaxonHit } from '@/lib/taxon-search'
 import { useOrganismFormStepper, type RuntimeStep } from '@/hooks/use-organism-form-stepper'
 import { cn } from '@/lib/utils'
 import {
@@ -148,15 +149,19 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
    const [existsWarning, setExistsWarning] = useState<string | null>(null)
    const [existenceCheckError, setExistenceCheckError] = useState<string | null>(null)
    const [taxonExistencePending, setTaxonExistencePending] = useState(false)
+   const [taxonSpeciesWarning, setTaxonSpeciesWarning] = useState<string | null>(null)
 
    const taxonCheckSeqRef = useRef(0)
    const loadOrganismSeqRef = useRef(0)
    const importImagesSeqRef = useRef(0)
+   const lastSelectedTaxonRef = useRef<TaxonHit | null>(null)
 
    const [pubValidationStatus, setPubValidationStatus] = useState<Record<number, PublicationValidationStatus>>({})
    const [pubValidationError, setPubValidationError] = useState<Record<number, string>>({})
+   const [pubMetadata, setPubMetadata] = useState<Record<number, CmsPublicationMetadata>>({})
    const [genomePubStatus, setGenomePubStatus] = useState<PublicationValidationStatus>('idle')
    const [genomePubError, setGenomePubError] = useState<string | null>(null)
+   const [genomePubMetadata, setGenomePubMetadata] = useState<CmsPublicationMetadata | null>(null)
 
    const {
       runtimeSteps,
@@ -234,6 +239,7 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
             setPubValidationStatus({})
          }
          setPubValidationError({})
+         setPubMetadata({})
          const loadedGenomePub = base.genome_publication as OrganismPublication | null | undefined
          if (loadedGenomePub && typeof loadedGenomePub === 'object' && loadedGenomePub.id?.trim()) {
             setGenomePublication(loadedGenomePub)
@@ -243,6 +249,7 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
             setGenomePubStatus('idle')
          }
          setGenomePubError(null)
+         setGenomePubMetadata(null)
          if (Array.isArray(base.images)) {
             setImages(
                (base.images as OrganismImageRow[]).map((img) => normalizeOrganismImageLicenseFromApi(img)),
@@ -309,8 +316,10 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
 
    async function selectTaxon(hit: TaxonHit) {
       const seq = ++taxonCheckSeqRef.current
+      lastSelectedTaxonRef.current = hit
       setExistsWarning(null)
       setExistenceCheckError(null)
+      setTaxonSpeciesWarning(taxonSpeciesSuitabilityWarning(hit))
       setTaxonExistencePending(true)
       setOrganismForm({ taxid: hit.taxId, scientific_name: hit.scientificName })
       try {
@@ -373,12 +382,18 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
       setPublications(publications.map((p, j) => (j === i ? { ...p, ...patch } : p)))
       setPubValidationStatus((s) => ({ ...s, [i]: 'idle' }))
       setPubValidationError((s) => ({ ...s, [i]: '' }))
+      setPubMetadata((s) => {
+         const next = { ...s }
+         delete next[i]
+         return next
+      })
    }
 
    function updateGenomePublication(patch: Partial<OrganismPublication>) {
       setGenomePublication({ source: genomePublication?.source ?? 'DOI', id: genomePublication?.id ?? '', ...patch })
       setGenomePubStatus('idle')
       setGenomePubError(null)
+      setGenomePubMetadata(null)
    }
 
    async function validatePublicationRow(i: number) {
@@ -386,10 +401,16 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
       if (!pub?.id?.trim()) return
       setPubValidationStatus((s) => ({ ...s, [i]: 'checking' }))
       setPubValidationError((s) => ({ ...s, [i]: '' }))
+      setPubMetadata((s) => {
+         const next = { ...s }
+         delete next[i]
+         return next
+      })
       try {
          const res = await cmsValidatePublication(pub.source, pub.id.trim(), { field: 'publications' })
          if (res.valid) {
             setPubValidationStatus((s) => ({ ...s, [i]: 'valid' }))
+            if (res.data) setPubMetadata((s) => ({ ...s, [i]: res.data as CmsPublicationMetadata }))
          } else {
             setPubValidationStatus((s) => ({ ...s, [i]: 'invalid' }))
             setPubValidationError((s) => ({ ...s, [i]: res.error || 'Publication could not be validated.' }))
@@ -405,6 +426,7 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
       if (!id || !organismForm.taxid) return
       setGenomePubStatus('checking')
       setGenomePubError(null)
+      setGenomePubMetadata(null)
       try {
          const res = await cmsValidatePublication(genomePublication?.source ?? 'DOI', id, {
             field: 'genome_publication',
@@ -412,6 +434,7 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
          })
          if (res.valid) {
             setGenomePubStatus('valid')
+            setGenomePubMetadata(res.data ?? null)
          } else {
             setGenomePubStatus('invalid')
             setGenomePubError(res.error || 'Publication could not be validated.')
@@ -604,17 +627,27 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
                                     type="button"
                                     variant="secondary"
                                     size="sm"
-                                    onClick={() =>
-                                       void selectTaxon({
-                                          taxId: organismForm.taxid!,
-                                          scientificName: organismForm.scientific_name ?? '',
-                                       })
-                                    }
+                                    onClick={() => {
+                                       const hit =
+                                          lastSelectedTaxonRef.current ??
+                                          ({
+                                             taxId: organismForm.taxid!,
+                                             scientificName: organismForm.scientific_name ?? '',
+                                          } satisfies TaxonHit)
+                                       void selectTaxon(hit)
+                                    }}
                                  >
                                     Retry check
                                  </Button>
                               ) : null}
                            </AlertDescription>
+                        </Alert>
+                     ) : null}
+                     {!isEditMode && taxonSpeciesWarning && organismForm.taxid ? (
+                        <Alert className="border-amber-500/40 bg-amber-500/10 text-foreground [&>svg]:text-amber-700 dark:[&>svg]:text-amber-400">
+                           <TriangleAlert className="h-4 w-4" />
+                           <AlertTitle>Not a species-rank binomial</AlertTitle>
+                           <AlertDescription>{taxonSpeciesWarning}</AlertDescription>
                         </Alert>
                      ) : null}
                      <ScrollArea className="h-56 rounded-md border">
@@ -632,7 +665,10 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
                                        onClick={() => void selectTaxon(h)}
                                     >
                                        <span className="italic">{h.scientificName}</span>
-                                       <span className="font-mono text-xs text-muted-foreground">{h.taxId}</span>
+                                       <span className="font-mono text-xs text-muted-foreground">
+                                          {h.taxId}
+                                          {h.rank ? ` · ${h.rank}` : ''}
+                                       </span>
                                     </button>
                                  </li>
                               )
@@ -830,9 +866,11 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
                               {assembliesLocked ? <Lock className="h-3.5 w-3.5 text-muted-foreground" /> : null}
                            </p>
                            <p className="text-sm text-muted-foreground">
-                              The single publication describing the genome assembly (drives the GoaT
-                              &ldquo;Publication Available&rdquo; status and the GoaT report). Only one publication
-                              can be set here, and only once an assembly is linked to this organism.
+                              This must be the publication describing the genome assembly itself — the paper
+                              reporting the sequencing and assembly of this species&apos; genome — not a general
+                              publication about the species. It drives the GoaT &ldquo;Publication Available&rdquo;
+                              status and appears in the GoaT report. Only one genome assembly publication can be
+                              set, and only once an assembly is linked to this organism.
                            </p>
                         </div>
                         {assembliesLocked ? (
@@ -888,6 +926,7 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
                                              setGenomePublication(null)
                                              setGenomePubStatus('idle')
                                              setGenomePubError(null)
+                                             setGenomePubMetadata(null)
                                           }}
                                        >
                                           Clear
@@ -899,6 +938,9 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
                                  <p className="flex items-center gap-1.5 text-xs text-chart-2">
                                     <Check className="h-3.5 w-3.5" /> Validated.
                                  </p>
+                              ) : null}
+                              {genomePubStatus === 'valid' && genomePubMetadata ? (
+                                 <PublicationMetadataCard metadata={genomePubMetadata} />
                               ) : null}
                               {genomePubStatus === 'invalid' ? (
                                  <p className="flex items-center gap-1.5 text-xs text-destructive">
@@ -915,7 +957,15 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
                      </div>
 
                      <div className="space-y-3">
-                        <p className="text-sm font-medium">Other publications</p>
+                        <div>
+                           <p className="text-sm font-medium">Other publications</p>
+                           <p className="text-sm text-muted-foreground">
+                              Optional extra publications about this species (for example taxonomic descriptions
+                              or natural history papers). These are stored for reference only and are{' '}
+                              <strong>not</strong> reflected in GoaT status or the GoaT report. The main publication
+                              used for GoaT is the genome assembly publication above.
+                           </p>
+                        </div>
                         {publications.map((pub, i) => (
                            <div key={i} className="space-y-1.5 rounded-md border p-3">
                               <div className="flex flex-wrap items-center gap-2">
@@ -960,6 +1010,9 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
                                  <p className="flex items-center gap-1.5 text-xs text-chart-2">
                                     <Check className="h-3.5 w-3.5" /> Validated.
                                  </p>
+                              ) : null}
+                              {pubValidationStatus[i] === 'valid' && pubMetadata[i] ? (
+                                 <PublicationMetadataCard metadata={pubMetadata[i]} />
                               ) : null}
                               {pubValidationStatus[i] === 'invalid' ? (
                                  <p className="flex items-center gap-1.5 text-xs text-destructive">
@@ -1117,6 +1170,7 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
                      onClick={() => {
                         ++taxonCheckSeqRef.current
                         ++importImagesSeqRef.current
+                        lastSelectedTaxonRef.current = null
                         resetStore()
                         resetStepper()
                         setSearchQ('')
@@ -1124,11 +1178,14 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
                         setExistsWarning(null)
                         setExistenceCheckError(null)
                         setTaxonExistencePending(false)
+                        setTaxonSpeciesWarning(null)
                         setImportingImages(false)
                         setPubValidationStatus({})
                         setPubValidationError({})
+                        setPubMetadata({})
                         setGenomePubStatus('idle')
                         setGenomePubError(null)
+                        setGenomePubMetadata(null)
                         setShowChangeModal(false)
                      }}
                   >
@@ -1150,6 +1207,7 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
                      onClick={() => {
                         ++taxonCheckSeqRef.current
                         ++importImagesSeqRef.current
+                        lastSelectedTaxonRef.current = null
                         if (isEditMode && editTaxid) void loadOrganism()
                         else {
                            resetStore()
@@ -1157,10 +1215,13 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
                            setExistsWarning(null)
                            setExistenceCheckError(null)
                            setTaxonExistencePending(false)
+                           setTaxonSpeciesWarning(null)
                            setPubValidationStatus({})
                            setPubValidationError({})
+                           setPubMetadata({})
                            setGenomePubStatus('idle')
                            setGenomePubError(null)
+                           setGenomePubMetadata(null)
                         }
                         setImportingImages(false)
                         setShowResetModal(false)
@@ -1177,6 +1238,48 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
 
 function emptyImage(): OrganismImageRow {
    return { url: '', author: '', source_record_url: '', license: '' }
+}
+
+function publicationExternalUrl(metadata: CmsPublicationMetadata): string | null {
+   const doi = metadata.doi?.trim()
+   if (doi) return `https://doi.org/${doi.replace(/^https?:\/\/(dx\.)?doi\.org\//i, '')}`
+   const pmid = metadata.pmid?.trim()
+   if (pmid) return `https://pubmed.ncbi.nlm.nih.gov/${pmid}`
+   const pmcid = metadata.pmcid?.trim()
+   if (pmcid) {
+      const id = pmcid.toUpperCase().startsWith('PMC') ? pmcid : `PMC${pmcid}`
+      return `https://www.ncbi.nlm.nih.gov/pmc/articles/${id}`
+   }
+   return null
+}
+
+function PublicationMetadataCard({ metadata }: { metadata: CmsPublicationMetadata }) {
+   const title = metadata.title?.trim()
+   const authors = metadata.authors?.trim()
+   const journal = metadata.journal?.trim()
+   const year = metadata.year?.trim()
+   const journalLine = [journal, year].filter(Boolean).join(', ')
+   const href = publicationExternalUrl(metadata)
+
+   if (!title && !authors && !journalLine && !href) return null
+
+   return (
+      <div className="rounded-md border border-chart-2/30 bg-chart-2/5 p-3 text-sm space-y-1">
+         {title ? <p className="font-medium leading-snug">{title}</p> : null}
+         {authors ? <p className="text-xs text-muted-foreground line-clamp-2">{authors}</p> : null}
+         {journalLine ? <p className="text-xs text-muted-foreground">{journalLine}</p> : null}
+         {href ? (
+            <a
+               href={href}
+               target="_blank"
+               rel="noopener noreferrer"
+               className="inline-block text-xs underline hover:text-foreground"
+            >
+               View publication
+            </a>
+         ) : null}
+      </div>
+   )
 }
 
 function ImageRow({
