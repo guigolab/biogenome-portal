@@ -1,11 +1,12 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 
 import { Checkbox } from '@/components/ui/checkbox'
 import { fetchTaxonChildren, type TaxonRecord, taxonRecordFromApi } from '@/lib/api/taxon'
-import { fetchRootTaxon } from '@/lib/api/taxons'
 import { cn } from '@/lib/utils'
+import { useRootTaxonStore } from '@/stores/root-taxon-store'
+import { useTaxonomyTreeExpansionStore } from '@/stores/taxonomy-tree-expansion-store'
 import { ChevronDown, ChevronRight, Loader2 } from 'lucide-react'
 
 interface TreeNode {
@@ -54,9 +55,6 @@ export function CompactTaxonomicTree({
    onLoadMore,
    fillContainer = false,
 }: CompactTaxonomicTreeProps) {
-   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set())
-   const [childrenData, setChildrenData] = useState<Map<string, TaxonRecord[]>>(new Map())
-   const [fetchingNodes, setFetchingNodes] = useState<Set<string>>(new Set())
    const loadMoreObserverRef = useRef<HTMLDivElement>(null)
    /** Scrollport for infinite rank list; must be IntersectionObserver `root` when not using viewport. */
    const scrollContainerRef = useRef<HTMLDivElement>(null)
@@ -65,84 +63,56 @@ export function CompactTaxonomicTree({
    const useRankRoots = Boolean(rankRoots && rankRoots.length > 0)
    const skipPortalRootFetch = isRankListMode || useRankRoots
 
-   const [rootNode, setRootNode] = useState<Record<string, unknown> | null>(null)
-   const [resolvedRootTaxid, setResolvedRootTaxid] = useState<string>('')
-   const [isLoadingRoot, setIsLoadingRoot] = useState(!skipPortalRootFetch)
+   const rootTaxon = useRootTaxonStore((s) => s.rootTaxon)
+   const rootStatus = useRootTaxonStore((s) => s.status)
+   const loadRootTaxon = useRootTaxonStore((s) => s.loadRootTaxon)
 
-   useEffect(() => {
-      if (skipPortalRootFetch) {
-         setIsLoadingRoot(false)
-         return
-      }
-      let cancelled = false
-      setIsLoadingRoot(true)
-      void fetchRootTaxon()
-         .then((d) => {
-            if (!cancelled) {
-               setRootNode(d)
-               setResolvedRootTaxid(String(d.taxid ?? ''))
-            }
-         })
-         .catch(() => {
-            if (!cancelled) {
-               setRootNode(null)
-               setResolvedRootTaxid('')
-            }
-         })
-         .finally(() => {
-            if (!cancelled) setIsLoadingRoot(false)
-         })
-      return () => {
-         cancelled = true
-      }
-   }, [skipPortalRootFetch])
+   const expandedNodes = useTaxonomyTreeExpansionStore((s) => s.expandedNodes)
+   const childrenData = useTaxonomyTreeExpansionStore((s) => s.childrenData)
+   const fetchingNodes = useTaxonomyTreeExpansionStore((s) => s.fetchingNodes)
+   const expandNode = useTaxonomyTreeExpansionStore((s) => s.expandNode)
+   const toggleNode = useTaxonomyTreeExpansionStore((s) => s.toggleNode)
+   const setChildren = useTaxonomyTreeExpansionStore((s) => s.setChildren)
+   const setFetching = useTaxonomyTreeExpansionStore((s) => s.setFetching)
+
+   const resolvedRootTaxid = String(rootTaxon?.taxid ?? '')
+   const isLoadingRoot = rootStatus === 'loading' || rootStatus === 'idle'
 
    useEffect(() => {
       if (skipPortalRootFetch) return
-      if (rootNode && resolvedRootTaxid) {
-         setExpandedNodes((prev) => new Set([...prev, resolvedRootTaxid]))
-      }
-   }, [rootNode, resolvedRootTaxid, skipPortalRootFetch])
+      void loadRootTaxon()
+   }, [skipPortalRootFetch, loadRootTaxon])
 
    useEffect(() => {
-      const idsToFetch = [...expandedNodes].filter((tid) => !childrenData.has(tid))
+      if (skipPortalRootFetch) return
+      if (rootTaxon && resolvedRootTaxid) {
+         expandNode(resolvedRootTaxid)
+      }
+   }, [rootTaxon, resolvedRootTaxid, skipPortalRootFetch, expandNode])
+
+   useEffect(() => {
+      const idsToFetch = [...expandedNodes].filter(
+         (tid) => !childrenData.has(tid) && !fetchingNodes.has(tid),
+      )
       if (idsToFetch.length === 0) return
 
-      let cancelled = false
       for (const tid of idsToFetch) {
-         setFetchingNodes((prev) => new Set(prev).add(tid))
+         setFetching(tid, true)
          void fetchTaxonChildren(tid)
             .then((rows) => {
-               if (cancelled) return
                const children = rows
                   .map((r) => taxonRecordFromApi(r))
                   .sort((a, b) => (b.organisms_count ?? 0) - (a.organisms_count ?? 0))
-               setChildrenData((prev) => {
-                  const next = new Map(prev)
-                  next.set(tid, children)
-                  return next
-               })
+               setChildren(tid, children)
             })
             .catch(() => {
-               if (cancelled) return
-               setChildrenData((prev) => {
-                  const next = new Map(prev)
-                  next.set(tid, [])
-                  return next
-               })
+               setChildren(tid, [])
             })
             .finally(() => {
-               setFetchingNodes((prev) => {
-                  const next = new Set(prev)
-                  next.delete(tid)
-                  return next
-               })
+               setFetching(tid, false)
             })
       }
-      return () => {
-         cancelled = true
-      }
-   }, [expandedNodes, childrenData])
+   }, [expandedNodes, childrenData, fetchingNodes, setChildren, setFetching])
 
    const buildTree = useCallback(
       (taxid: string, data: TaxonRecord, level: number = 0): TreeNode => {
@@ -174,11 +144,11 @@ export function CompactTaxonomicTree({
       if (useRankRoots && rankRoots) {
          return rankRoots.map((root) => buildTree(root.taxid, root, 0))
       }
-      if (rootNode && resolvedRootTaxid) {
-         return [buildTree(resolvedRootTaxid, taxonRecordFromApi(rootNode), 0)]
+      if (rootTaxon && resolvedRootTaxid) {
+         return [buildTree(resolvedRootTaxid, taxonRecordFromApi(rootTaxon), 0)]
       }
       return []
-   }, [useRankRoots, rankRoots, rootNode, resolvedRootTaxid, buildTree])
+   }, [useRankRoots, rankRoots, rootTaxon, resolvedRootTaxid, buildTree])
 
    const flattenedNodes = useMemo(() => {
       if (trees.length === 0) return []
@@ -241,18 +211,13 @@ export function CompactTaxonomicTree({
       fillContainer,
    ])
 
-   const handleExpand = useCallback((taxid: string, e: React.MouseEvent) => {
-      e.stopPropagation()
-      setExpandedNodes((prev) => {
-         const next = new Set(prev)
-         if (next.has(taxid)) {
-            next.delete(taxid)
-         } else {
-            next.add(taxid)
-         }
-         return next
-      })
-   }, [])
+   const handleExpand = useCallback(
+      (taxid: string, e: React.MouseEvent) => {
+         e.stopPropagation()
+         toggleNode(taxid)
+      },
+      [toggleNode],
+   )
 
    const isTaxonSelected = useCallback(
       (taxid: string) => {
@@ -265,7 +230,7 @@ export function CompactTaxonomicTree({
       return (
          <div className="flex items-center justify-center py-4">
             <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
-            <span className="ml-2 text-xs text-muted-foreground">Loading tree…</span>
+            <span className="ml-2 text-xs text-muted-foreground">Loading tree...</span>
          </div>
       )
    }
@@ -274,7 +239,7 @@ export function CompactTaxonomicTree({
       return (
          <div className="flex items-center justify-center py-4">
             <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
-            <span className="ml-2 text-xs text-muted-foreground">Loading taxa…</span>
+            <span className="ml-2 text-xs text-muted-foreground">Loading taxa...</span>
          </div>
       )
    }
@@ -375,7 +340,7 @@ export function CompactTaxonomicTree({
                         >
                            {node.data.organisms_count > 0
                               ? node.data.organisms_count.toLocaleString()
-                              : '—'}
+                              : '-'}
                         </span>
                      </div>
                   )
@@ -386,7 +351,7 @@ export function CompactTaxonomicTree({
                      {loadingRankRoots || loadingMoreRankRoots ? (
                         <>
                            <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
-                           <span className="ml-2 text-xs text-muted-foreground">Loading more…</span>
+                           <span className="ml-2 text-xs text-muted-foreground">Loading more...</span>
                         </>
                      ) : (
                         <span className="text-xs text-muted-foreground">Scroll for more</span>

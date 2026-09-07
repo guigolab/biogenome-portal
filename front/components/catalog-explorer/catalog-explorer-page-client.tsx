@@ -273,11 +273,6 @@ export function CatalogExplorerPageClient() {
             target instanceof HTMLInputElement ||
             target instanceof HTMLTextAreaElement ||
             target.isContentEditable
-         if (e.key === '/' && !inInput) {
-            e.preventDefault()
-            document.getElementById('catalog-taxon-search')?.focus()
-            return
-         }
          if (e.key === 'Escape' && detailRow) {
             setDetailRow(null)
             return
@@ -336,7 +331,6 @@ export function CatalogExplorerPageClient() {
          scopedTaxonDoc={scopedTaxonDoc}
          scopedTaxonLoading={Boolean(speciesTaxid?.trim()) && scopedLoadState === 'loading'}
          scopedTaxonError={scopedTaxonError}
-         catalogModelKeys={allModelKeys}
          selectOptions={selectOptions}
          ensureSelectOptionsLoaded={ensureSelectOptionsLoaded}
          selectOptionsLoading={loadingFields}

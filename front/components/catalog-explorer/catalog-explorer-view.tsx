@@ -15,7 +15,7 @@ import { CatalogModelTabs } from '@/components/catalog-explorer/catalog-model-ta
 import { CatalogRecordCardGrid } from '@/components/catalog-explorer/catalog-record-card-grid'
 import { CatalogRecordDetailSheet } from '@/components/catalog-explorer/catalog-record-detail-sheet'
 import { CatalogViewModeTabs } from '@/components/catalog-explorer/catalog-results-bar'
-import { CatalogTaxonScopeRow } from '@/components/catalog-explorer/catalog-taxon-scope-row'
+import { CatalogTaxonScopePopover } from '@/components/catalog-explorer/catalog-taxon-scope-popover'
 import { SpeciesListActiveFilters } from '@/components/species-list/species-list-active-filters'
 import { useLocale } from '@/contexts/locale-context'
 import { useMinWidthLg } from '@/hooks/use-min-width-lg'
@@ -53,7 +53,6 @@ export type CatalogExplorerViewProps = {
    scopedTaxonDoc: Record<string, unknown> | null
    scopedTaxonLoading: boolean
    scopedTaxonError: string | null
-   catalogModelKeys: DataModels[]
    selectOptions: Record<string, SelectOptionWithCount[]>
    ensureSelectOptionsLoaded?: (fieldKey: string) => void
    selectOptionsLoading?: Record<string, boolean>
@@ -125,22 +124,14 @@ export function CatalogExplorerView(p: CatalogExplorerViewProps) {
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden px-2 py-2">
          <CatalogFilters
             key={p.catalogKey}
-            variant="sidebar"
             catalogKey={p.catalogKey}
             filterDefs={p.modelFilters}
             filterValues={p.filterValues}
             onChange={(key, next) => p.setFilterValues((prev) => ({ ...prev, [key]: next }))}
-            searchValue=""
-            onSearchChange={() => { }}
-            searchPlaceholder=""
-            speciesTaxid={p.speciesTaxid}
-            onSpeciesTaxidChange={p.onClearTaxon}
             statsQuery={p.statsQuery}
             selectOptions={p.selectOptions}
             ensureSelectOptionsLoaded={p.ensureSelectOptionsLoaded}
             selectOptionsLoading={p.selectOptionsLoading}
-            hideSearch
-            hideSpeciesFilter
          />
       </div>
    )
@@ -179,27 +170,26 @@ export function CatalogExplorerView(p: CatalogExplorerViewProps) {
                   ) : null}
                </div>
 
-               <CatalogTaxonScopeRow
-                  speciesTaxid={p.speciesTaxid}
-                  scopedTaxonDoc={p.scopedTaxonDoc}
-                  scopedTaxonLoading={p.scopedTaxonLoading}
-                  scopedTaxonError={p.scopedTaxonError}
-                  catalogModelKeys={p.catalogModelKeys}
-                  onSelectTaxon={p.onSelectTaxon}
-                  onClearTaxon={p.onClearTaxon}
-                  endSlot={
-                     showModelTabs ? (
-                        <CatalogModelTabs
-                           className="w-full md:justify-end"
-                           scopeTaxon={p.scopeTaxon}
-                           catalogKey={p.catalogKey}
-                           catalogKeys={p.visibleCatalogKeys}
-                           countsReady={p.countsReady}
-                           onSelectCatalog={p.onSelectCatalog}
-                        />
-                     ) : null
-                  }
-               />
+               <div className="flex min-w-0 flex-col gap-3 md:flex-row md:items-center">
+                  <CatalogTaxonScopePopover
+                     speciesTaxid={p.speciesTaxid}
+                     scopedTaxonDoc={p.scopedTaxonDoc}
+                     scopedTaxonLoading={p.scopedTaxonLoading}
+                     scopedTaxonError={p.scopedTaxonError}
+                     onSelectTaxon={p.onSelectTaxon}
+                     onClearTaxon={p.onClearTaxon}
+                  />
+                  {showModelTabs ? (
+                     <CatalogModelTabs
+                        className="w-full md:justify-end"
+                        scopeTaxon={p.scopeTaxon}
+                        catalogKey={p.catalogKey}
+                        catalogKeys={p.visibleCatalogKeys}
+                        countsReady={p.countsReady}
+                        onSelectCatalog={p.onSelectCatalog}
+                     />
+                  ) : null}
+               </div>
             </div>
          </header>
 

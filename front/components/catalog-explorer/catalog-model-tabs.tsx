@@ -49,7 +49,7 @@ export function CatalogModelTabs({
                role="tablist"
                aria-label={t('catalog.collectionTablist')}
             >
-               <div className="flex h-10 w-max min-w-full items-center gap-1 rounded-xl bg-muted/80 p-1 dark:bg-muted/60">
+               <div className="flex h-10 w-max items-center gap-1 rounded-xl bg-muted/80 p-1 dark:bg-muted/60">
                   {catalogKeys.map((k) => {
                      const n = countFor(k)
                      const active = k === catalogKey

@@ -30,11 +30,12 @@ type RootTaxonState = {
    loadRootTaxon: () => Promise<void>
 }
 
-export const useRootTaxonStore = create<RootTaxonState>((set) => ({
+export const useRootTaxonStore = create<RootTaxonState>((set, get) => ({
    rootTaxon: null,
    status: 'idle',
    error: null,
    loadRootTaxon: async () => {
+      if (get().status === 'loading' || get().status === 'success') return
       set({ status: 'loading', error: null })
       try {
          const rootTaxon = await fetchRootTaxon()
