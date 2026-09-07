@@ -55,7 +55,7 @@ export function TaxonomyFilterSection({
    const { t } = useLocale()
 
    const rankRoots = taxonOptionsToRecords(taxonCache.items)
-   const hasMore = taxonCache.items.length < taxonCache.total
+   const hasMore = !taxonCache.exhausted && taxonCache.items.length < taxonCache.total
    const lineageActive = Boolean(selectedTaxonTaxid)
    const treeMode = explorerRankId === TAXONOMY_EXPLORER_TREE_MODE_ID
 
@@ -77,6 +77,7 @@ export function TaxonomyFilterSection({
          onTaxonToggle={onTaxonToggle}
          selectionMode="single"
          loadingRankRoots={taxonCache.loading && taxonCache.items.length === 0}
+         loadingMoreRankRoots={taxonCache.loadingMore}
          hasMoreRankRoots={hasMore}
          onLoadMore={onLoadMoreRank}
          fillContainer

@@ -181,7 +181,6 @@ export function SpeciesListPageClient() {
          setCustomFieldFilters({})
          setSelectedCountryCodes([])
          setGoatStatusFilters([])
-         setTargetListFilter('all')
       }
    }, [selectedTaxonTaxid])
 
@@ -357,6 +356,7 @@ export function SpeciesListPageClient() {
             ...(prev[rankId] ?? emptyRankTaxonCache()),
             loading: true,
             loadingMore: false,
+            exhausted: false,
          },
       }))
 
@@ -381,6 +381,7 @@ export function SpeciesListPageClient() {
                   loading: false,
                   loadingMore: false,
                   initialized: true,
+                  exhausted: rows.length === 0 || rows.length < TAXON_PAGE_SIZE,
                },
             }))
          })
@@ -403,7 +404,9 @@ export function SpeciesListPageClient() {
       if (!def) return
 
       const cache = taxonByRankRef.current[rankId] ?? emptyRankTaxonCache()
-      if (cache.loading || cache.loadingMore || cache.items.length >= cache.total) return
+      if (cache.loading || cache.loadingMore || cache.exhausted || cache.items.length >= cache.total) {
+         return
+      }
 
       const offset = cache.nextOffset
 
@@ -431,6 +434,10 @@ export function SpeciesListPageClient() {
                   merged.push(t)
                }
             }
+            const exhausted =
+               rows.length === 0 ||
+               rows.length < TAXON_PAGE_SIZE ||
+               merged.length === cur.items.length
             return {
                ...prev,
                [rankId]: {
@@ -439,6 +446,7 @@ export function SpeciesListPageClient() {
                   total: res.total,
                   nextOffset: offset + rows.length,
                   loadingMore: false,
+                  exhausted,
                },
             }
          })
@@ -642,7 +650,6 @@ export function SpeciesListPageClient() {
       setSelectedTaxonRankId(null)
       setLineageDisplayName(null)
       setGoatStatusFilters([])
-      setTargetListFilter('all')
    }, [])
 
    const clearLineage = useCallback(() => {

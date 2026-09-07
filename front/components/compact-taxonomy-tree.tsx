@@ -33,6 +33,8 @@ export type CompactTaxonomicTreeProps = {
    selectionMode?: 'single' | 'multi'
    maxHeight?: string
    loadingRankRoots?: boolean
+   /** True while a subsequent rank-list page is being fetched. */
+   loadingMoreRankRoots?: boolean
    hasMoreRankRoots?: boolean
    onLoadMore?: () => void
    /** When true, tree fills the parent flex box (parent should be `min-h-0 flex-1`); omit fixed `maxHeight`. */
@@ -47,6 +49,7 @@ export function CompactTaxonomicTree({
    selectionMode = 'multi',
    maxHeight = '400px',
    loadingRankRoots = false,
+   loadingMoreRankRoots = false,
    hasMoreRankRoots = false,
    onLoadMore,
    fillContainer = false,
@@ -202,7 +205,13 @@ export function CompactTaxonomicTree({
       const scrollRoot = fillContainer ? scrollContainerRef.current : null
       const observer = new IntersectionObserver(
          (entries) => {
-            if (entries[0]?.isIntersecting && hasMoreRankRoots && !loadingRankRoots && onLoadMore) {
+            if (
+               entries[0]?.isIntersecting &&
+               hasMoreRankRoots &&
+               !loadingRankRoots &&
+               !loadingMoreRankRoots &&
+               onLoadMore
+            ) {
                onLoadMore()
             }
          },
@@ -223,7 +232,14 @@ export function CompactTaxonomicTree({
             observer.unobserve(currentTarget)
          }
       }
-   }, [hasMoreRankRoots, loadingRankRoots, onLoadMore, rankListPaging, fillContainer])
+   }, [
+      hasMoreRankRoots,
+      loadingRankRoots,
+      loadingMoreRankRoots,
+      onLoadMore,
+      rankListPaging,
+      fillContainer,
+   ])
 
    const handleExpand = useCallback((taxid: string, e: React.MouseEvent) => {
       e.stopPropagation()
@@ -367,7 +383,7 @@ export function CompactTaxonomicTree({
 
                {rankListPaging && hasMoreRankRoots ? (
                   <div ref={loadMoreObserverRef} className="flex items-center justify-center py-2">
-                     {loadingRankRoots ? (
+                     {loadingRankRoots || loadingMoreRankRoots ? (
                         <>
                            <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
                            <span className="ml-2 text-xs text-muted-foreground">Loading more…</span>

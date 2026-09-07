@@ -373,7 +373,12 @@ def get_items(model, immutable_dict, *, organisms_sample_location_geo=False):
 
         if sort_column and sort_order:
             sort = "-" + sort_column if sort_order == "desc" else sort_column
-            items = items.order_by(sort)
+            # Taxons: secondary taxid tiebreaker so skip/limit stays stable when many
+            # rows share the same organisms_count (otherwise pages overlap and drop taxa).
+            if model == "taxons":
+                items = items.order_by(sort, "taxid")
+            else:
+                items = items.order_by(sort)
 
         if selected_fields:
             items = items.only(*selected_fields)

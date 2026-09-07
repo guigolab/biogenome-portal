@@ -16,4 +16,4 @@ front/public/portal.json
 front/public/CBPLogo.png
 .pytest_cache/
 graphify-out/
-TODO.txt
+front/*.tsbuildinfo

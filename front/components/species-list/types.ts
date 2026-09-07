@@ -12,6 +12,8 @@ export type RankTaxonCache = {
    loading: boolean
    loadingMore: boolean
    initialized: boolean
+   /** True when a short/empty page (or zero new unique rows) means no further pages. */
+   exhausted: boolean
 }
 
 export function emptyRankTaxonCache(): RankTaxonCache {
@@ -22,6 +24,7 @@ export function emptyRankTaxonCache(): RankTaxonCache {
       loading: false,
       loadingMore: false,
       initialized: false,
+      exhausted: false,
    }
 }
 
