@@ -1,24 +1,15 @@
-import {
-   getRuntimeApiBaseRaw,
-   getRuntimeRootTaxidRaw,
-   resolveApiBaseForFetch,
-} from '@/lib/portal/apiRuntime'
+import { getRuntimeRootTaxidRaw, resolveApiBaseForFetch } from '@/lib/portal/apiRuntime'
 
 /**
  * REST API base for fetch URLs. Resolution order:
- * 1. `NEXT_PUBLIC_API_BASE` if set (local dev / emergency override)
- * 2. `portal.json` → `general.apiBase` (see `applyPortalGeneralRuntime` / root layout)
- * 3. Browser: `origin` + `NEXT_PUBLIC_BASE_PATH` + `/api`
- * 4. Server: path-only bases need `INTERNAL_FETCH_ORIGIN` (see `resolveApiBaseForFetch`) — Node cannot fetch relative URLs.
+ * 1. `NEXT_PUBLIC_API_BASE` if set (local dev / emergency override, unrelated to portal.json)
+ * 2. Browser: `origin` + `NEXT_PUBLIC_BASE_PATH` + `/api`
+ * 3. Server: path-only bases need `INTERNAL_FETCH_ORIGIN` (see `resolveApiBaseForFetch`) — Node cannot fetch relative URLs.
  */
 export function getApiBase(): string {
    const envOverride = process.env.NEXT_PUBLIC_API_BASE
    if (envOverride && envOverride.length > 0) {
       return envOverride.replace(/\/$/, '')
-   }
-   const fromPortal = getRuntimeApiBaseRaw()
-   if (fromPortal) {
-      return resolveApiBaseForFetch(fromPortal)
    }
    if (typeof window !== 'undefined') {
       const basePath = process.env.NEXT_PUBLIC_BASE_PATH || ''
@@ -32,13 +23,32 @@ export function getApiBase(): string {
 }
 
 /**
- * Root taxid fallback for UI. Prefer ``GET /taxons/root``. Order: `NEXT_PUBLIC_ROOT_TAXID` if set,
- * then portal.json `general.rootTaxid`, then cellular life default.
+ * Root taxid for UI. Backend-derived via `GET /taxons/root` (`fetchRootTaxid` below), fetched
+ * once per request server-side in the root layout and threaded through the portal context
+ * (see `applyRuntimeRootTaxid` in `lib/portal/apiRuntime.ts`). Falls back to the hardcoded
+ * cellular-life default when the backend is unreachable.
  */
 export function getRootTaxid(): string {
-   const env = process.env.NEXT_PUBLIC_ROOT_TAXID?.trim()
-   if (env) return env
    return getRuntimeRootTaxidRaw() || '131567'
+}
+
+/** GET /taxons/root — portal root taxon (server `ROOT_NODE`); returns just the taxid. */
+export async function fetchRootTaxid(): Promise<string> {
+   const base = getApiBase()
+   const url = `${base}/taxons/root`
+   const res = await fetch(url, {
+      credentials: 'include',
+      headers: { Accept: 'application/json' },
+   })
+   if (!res.ok) {
+      throw new Error(`taxons/root: ${res.status} ${res.statusText}`)
+   }
+   const doc = (await res.json()) as Record<string, unknown>
+   const taxid = String(doc.taxid ?? '').trim()
+   if (!taxid) {
+      throw new Error('taxons/root: response missing taxid')
+   }
+   return taxid
 }
 
 export async function fetchTaxon(taxid: string): Promise<Record<string, unknown>> {

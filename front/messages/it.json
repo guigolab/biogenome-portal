@@ -12,7 +12,7 @@
    },
    "catalog": {
       "pageTitle": "Catalogo",
-      "pageDescription": "INSDC collections for this portal: pick a dataset, filter, then browse the table or dashboard.",
+      "pageDescription": "Sfoglia e filtra le raccolte di dati genomici di questo progetto.",
       "records": "record",
       "taxonSearchLabel": "Cerca taxa per nome o taxid",
       "taxonSearchLoading": "Ricerca taxa…",
@@ -143,7 +143,7 @@
    },
    "genomeBrowser": {
       "title": "Browser del genoma",
-      "description": "Esplora sequenze di riferimento e annotazioni geniche con JBrowse 2.",
+      "description": "Sfoglia assemblati genomici e annotazioni.",
       "sessionsPanelScope": "Solo assembly a livello cromosomico e genoma completo.",
       "contextLabel": "Filtrato per tassonomia:",
       "contextTaxonLink": "Mostra taxon",
@@ -369,6 +369,8 @@
       }
    },
    "speciesList": {
+      "pageTitle": "Elenco delle specie",
+      "pageDescription": "Specie mirate da questo progetto.",
       "searchByNameTaxonomyId": "Cerca specie per nome, tassonomia o ID",
       "searchPlaceholder": "Cerca specie per nome, tassonomia o ID…",
       "filterByIucnCategory": "Filtra per categoria della Lista Rossa IUCN",
@@ -409,13 +411,9 @@
       "clearTaxonomyFilter": "Cancella",
       "iucnSectionTitle": "Categoria della Lista Rossa IUCN",
       "subProjectSectionTitle": "Sottoprogetto",
-      "sequencingTypeSectionTitle": "Tipo di sequenziamento",
       "allSubProjects": "Tutti i sottoprogetti",
-      "allSequencingTypes": "Tutti i tipi di sequenziamento",
       "filterBySubProject": "Filtra per sottoprogetto",
-      "filterBySequencingType": "Filtra per tipo di sequenziamento",
       "removeSubProjectFilter": "Rimuovi filtro sottoprogetto",
-      "removeSequencingTypeFilter": "Rimuovi filtro tipo di sequenziamento",
       "countrySectionTitle": "Paese",
       "countryListSearchPlaceholder": "Cerca paesi…",
       "countryClearSelection": "Cancella paesi",

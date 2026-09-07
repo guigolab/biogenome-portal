@@ -2,9 +2,10 @@
 
 import { useCallback, useMemo, useState } from 'react'
 
-import type { OrganismFormStepDef, OrganismFormStepId } from '@/lib/portal/types'
+import type { OrganismFormStepDef, OrganismFormStepId, CmsOrganismFieldWire } from '@/lib/portal/types'
 import {
    allPublicationsValidated,
+   customFieldsStepComplete,
    isCompleteImageRow,
    isGenomePublicationValidated,
    isPartialImageRow,
@@ -46,6 +47,8 @@ function computeCompletion(
       publicationValidation?: Record<number, PublicationValidationStatus>
       /** Validation status of `genomePublication` */
       genomePublicationValidation?: PublicationValidationStatus
+      organismCustomFields?: CmsOrganismFieldWire[]
+      customFieldValues?: Record<string, string[]>
    },
 ): StepCompletionState {
    switch (id) {
@@ -61,15 +64,20 @@ function computeCompletion(
          return { complete: Boolean(form.taxid), partial: false }
       case 'goatStatus':
          return { complete: Boolean(form.goat_status || form.target_list_status), partial: false }
-      case 'sequencingAndSubproject':
-         return {
-            complete: Boolean(form.sequencing_type?.length || (form.sub_project && form.sub_project.trim())),
-            partial: Boolean(
-               (form.sequencing_type?.length || 0) > 0 !== Boolean(form.sub_project && form.sub_project.trim()),
-            ),
+      case 'sequencingAndSubproject': {
+         const stepFields = (opts?.organismCustomFields ?? []).filter((f) => f.step === 'sequencingAndSubproject')
+         if (stepFields.length > 0) {
+            return {
+               complete: customFieldsStepComplete(
+                  opts?.organismCustomFields ?? [],
+                  'sequencingAndSubproject',
+                  opts?.customFieldValues ?? {},
+               ),
+               partial: false,
+            }
          }
-      case 'piOrEntity':
-         return { complete: Boolean(form.sub_project && form.sub_project.trim()), partial: false }
+         return { complete: false, partial: false }
+      }
       case 'images': {
          const complete = images.some(isCompleteImageRow)
          const partial = !complete && images.some(isPartialImageRow)
@@ -124,6 +132,8 @@ export function useOrganismFormStepper({
    createOrganismTaxonConflict = false,
    taxonExistenceCheckPending = false,
    taxonExistenceCheckFailed = false,
+   organismCustomFields = [],
+   customFieldValues = {},
 }: {
    steps: OrganismFormStepDef[]
    isEditMode: boolean
@@ -145,6 +155,8 @@ export function useOrganismFormStepper({
    taxonExistenceCheckPending?: boolean
    /** Create flow: true when the existence check errored (non-404) */
    taxonExistenceCheckFailed?: boolean
+   organismCustomFields?: CmsOrganismFieldWire[]
+   customFieldValues?: Record<string, string[]>
 }) {
    const [activeIndex, setActiveIndex] = useState(0)
 
@@ -166,6 +178,8 @@ export function useOrganismFormStepper({
          genomePublication,
          publicationValidation,
          genomePublicationValidation,
+         organismCustomFields,
+         customFieldValues,
       }),
       [
          isEditMode,
@@ -175,6 +189,8 @@ export function useOrganismFormStepper({
          genomePublication,
          publicationValidation,
          genomePublicationValidation,
+         organismCustomFields,
+         customFieldValues,
       ],
    )
 

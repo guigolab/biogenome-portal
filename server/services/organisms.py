@@ -8,6 +8,7 @@ from db.model import (
     GenomeAnnotation,
     LocalSample,
     Organism,
+    OrganismPrincipal,
     ReadRun,
     TaxonNode,
 )
@@ -261,7 +262,6 @@ _ORGANISM_PATCHABLE_FIELDS = frozenset(
         "image_urls",
         "images",
         "metadata",
-        "sequencing_type",
         "common_names",
         "publications",
         "genome_publication",
@@ -417,7 +417,7 @@ def _map_single_organism_field(field, value, taxid):
             raise BadRequest(description="'metadata' must be an object")
         return "metadata", value
 
-    if field in {"sequencing_type", "image_urls", "links", "countries"}:
+    if field in {"image_urls", "links", "countries"}:
         if value is None:
             return field, []
         if not isinstance(value, list):
@@ -525,15 +525,6 @@ def map_organism_data(data, taxid):
         else:
             raise BadRequest(description="'metadata' must be an object or null")
 
-    if "sequencing_type" in data:
-        st = data["sequencing_type"]
-        if st is None:
-            organism["sequencing_type"] = []
-        elif isinstance(st, list):
-            organism["sequencing_type"] = [str(x) for x in st if x is not None]
-        else:
-            raise BadRequest(description="'sequencing_type' must be an array or null")
-
     if "image_urls" in data:
         urls = data["image_urls"]
         if urls is None:
@@ -620,9 +611,12 @@ def get_unassigned_organisms(format='json',filter=None, limit=20, offset=0):
     assigned_taxids = assigned_organism_taxids()
     offset = int(offset)
     limit = int(limit)
+    # pi_* columns stay empty for unassigned rows (no curator → no principal projection)
+    # but keep the TSV schema aligned with the assigned/all exports.
     fields = [
         'scientific_name', 'taxid', 'sub_project',
-        'sequencing_type', 'insdc_status', 'goat_status', 'target_list_status'
+        'metadata', 'insdc_status', 'goat_status', 'target_list_status',
+        'pi_names', 'pi_institutes', 'pi_programs',
     ]
     if assigned_taxids:
         organisms = Organism.objects(taxid__not__in=assigned_taxids)
@@ -633,21 +627,145 @@ def get_unassigned_organisms(format='json',filter=None, limit=20, offset=0):
     return response_helper.generate_response(format, fields, organisms, limit, offset)
 
 
-def _build_organism_to_users_map(users) -> dict[str, list[str]]:
+def _build_organism_and_principal_maps(
+    users,
+) -> tuple[dict[str, list[str]], dict[str, list[str]]]:
+    """
+    Single pass over ``users`` building both the taxid -> assigned usernames map and the
+    username -> principal slugs map (used to project ``principals[]`` onto organism rows
+    via assigned curators; see docs/cbp-pi-contributor-migration.md).
+    """
     organism_to_users: dict[str, list[str]] = {}
+    user_to_principal_slugs: dict[str, list[str]] = {}
     for user in users:
         for species_id in user.species or []:
             taxid = str(species_id).strip()
             if not taxid:
                 continue
             organism_to_users.setdefault(taxid, []).append(user.name)
-    return organism_to_users
+        slugs = [str(s).strip() for s in (user.principal_ids or []) if str(s).strip()]
+        if slugs:
+            user_to_principal_slugs[user.name] = slugs
+    return organism_to_users, user_to_principal_slugs
 
 
-def _organism_row_with_users(organism, organism_to_users: dict[str, list[str]]) -> dict:
+def load_principals_by_slug(slugs) -> dict[str, dict]:
+    """Batch-load ``OrganismPrincipal`` rows for the given slugs, keyed by slug."""
+    unique_slugs = {s for s in slugs if s}
+    if not unique_slugs:
+        return {}
+    docs = OrganismPrincipal.objects(slug__in=list(unique_slugs)).only(
+        "slug", "name", "affiliations", "programs"
+    )
+    return {
+        doc.slug: {
+            "slug": doc.slug,
+            "name": doc.name,
+            "affiliations": list(doc.affiliations or []),
+            "programs": list(doc.programs or []),
+        }
+        for doc in docs
+    }
+
+
+def _principals_for_assigned_users(
+    assigned_users: list[str],
+    user_to_principal_slugs: dict[str, list[str]],
+    principals_by_slug: dict[str, dict],
+) -> list[dict]:
+    seen: set[str] = set()
+    principals: list[dict] = []
+    for user_name in assigned_users:
+        for slug in user_to_principal_slugs.get(user_name, []):
+            if slug in seen:
+                continue
+            principal = principals_by_slug.get(slug)
+            if not principal:
+                continue
+            seen.add(slug)
+            principals.append(principal)
+    return principals
+
+
+def _dedupe_preserve_order(values) -> list[str]:
+    """Order-preserving unique non-empty strings (for TSV / row flattening)."""
+    seen: set[str] = set()
+    out: list[str] = []
+    for raw in values:
+        text = str(raw).strip() if raw is not None else ""
+        if not text or text in seen:
+            continue
+        seen.add(text)
+        out.append(text)
+    return out
+
+
+def _flatten_principal_fields(principals: list[dict]) -> dict[str, str]:
+    """Comma-joined PI name / institute / program strings for table rows and TSV."""
+    names = _dedupe_preserve_order(p.get("name") for p in principals)
+    institutes = _dedupe_preserve_order(
+        aff for p in principals for aff in (p.get("affiliations") or [])
+    )
+    programs = _dedupe_preserve_order(
+        prog for p in principals for prog in (p.get("programs") or [])
+    )
+    return {
+        "pi_names": ", ".join(names),
+        "pi_institutes": ", ".join(institutes),
+        "pi_programs": ", ".join(programs),
+    }
+
+
+def _taxids_for_selected_users(
+    selected_users: set[str],
+    organism_to_users: dict[str, list[str]],
+) -> set[str]:
+    """Taxids assigned to any of the selected curator usernames."""
+    if not selected_users:
+        return set()
+    taxids: set[str] = set()
+    for taxid, usernames in organism_to_users.items():
+        if any(name in selected_users for name in usernames):
+            taxids.add(taxid)
+    return taxids
+
+
+def _taxids_for_selected_principals(
+    selected_principal_slugs: set[str],
+    organism_to_users: dict[str, list[str]],
+    user_to_principal_slugs: dict[str, list[str]],
+) -> set[str]:
+    """
+    Taxids whose assigned curators have any of the selected ``OrganismPrincipal`` slugs.
+    OR within the principal facet.
+    """
+    if not selected_principal_slugs:
+        return set()
+    matching_users = {
+        user_name
+        for user_name, slugs in user_to_principal_slugs.items()
+        if selected_principal_slugs.intersection(slugs)
+    }
+    if not matching_users:
+        return set()
+    return _taxids_for_selected_users(matching_users, organism_to_users)
+
+
+def _organism_row_with_users(
+    organism,
+    organism_to_users: dict[str, list[str]],
+    user_to_principal_slugs: dict[str, list[str]],
+    principals_by_slug: dict[str, dict],
+) -> dict:
     taxid = str(organism.taxid).strip()
     row = {k: v for k, v in organism.to_mongo().to_dict().items()}
-    row["assigned_users"] = list(organism_to_users.get(taxid, []))
+    assigned_users = list(organism_to_users.get(taxid, []))
+    row["assigned_users"] = assigned_users
+    principals = _principals_for_assigned_users(
+        assigned_users, user_to_principal_slugs, principals_by_slug
+    )
+    row["principals"] = principals
+    row.update(_flatten_principal_fields(principals))
     return row
 
 
@@ -655,27 +773,44 @@ def get_organisms_with_users_list(args, *, assigned_only=True):
     query = {**args}
     fields = [
         'scientific_name', 'taxid', 'assigned_users', 'sub_project',
-        'sequencing_type', 'insdc_status', 'goat_status', 'target_list_status'
+        'metadata', 'insdc_status', 'goat_status', 'target_list_status',
+        'pi_names', 'pi_institutes', 'pi_programs',
     ]
     output_format = query.pop('format', 'json')
     user_filter = query.pop('name__in', None)
+    principal_filter = query.pop('principal__in', None)
     organism_filter = query.pop('filter', None)
 
-    selected_users = {name.strip() for name in user_filter.split(',')} if user_filter else set()
-    users = BioGenomeUser.objects.only('name', 'species').no_cache()
+    selected_users = (
+        {name.strip() for name in user_filter.split(',') if name.strip()}
+        if user_filter
+        else set()
+    )
+    selected_principals = (
+        {slug.strip() for slug in principal_filter.split(',') if slug.strip()}
+        if principal_filter
+        else set()
+    )
+    users = BioGenomeUser.objects.only('name', 'species', 'principal_ids').no_cache()
 
-    organism_to_users = _build_organism_to_users_map(users)
-    filtered_taxids = set()
-    if selected_users:
-        for user in users:
-            if user.name in selected_users:
-                for species_id in user.species or []:
-                    taxid = str(species_id).strip()
-                    if taxid:
-                        filtered_taxids.add(taxid)
+    organism_to_users, user_to_principal_slugs = _build_organism_and_principal_maps(users)
+    principals_by_slug = load_principals_by_slug(
+        slug for slugs in user_to_principal_slugs.values() for slug in slugs
+    )
 
-    if selected_users:
+    curator_taxids = _taxids_for_selected_users(selected_users, organism_to_users)
+    principal_taxids = _taxids_for_selected_principals(
+        selected_principals, organism_to_users, user_to_principal_slugs
+    )
+
+    # Faceted AND across curator + principal filters; OR within each facet.
+    if selected_users and selected_principals:
+        filtered_taxids = curator_taxids & principal_taxids
         query['taxid__in'] = list(filtered_taxids)
+    elif selected_users:
+        query['taxid__in'] = list(curator_taxids)
+    elif selected_principals:
+        query['taxid__in'] = list(principal_taxids)
     elif assigned_only:
         organism_ids = list(organism_to_users.keys())
         if organism_ids:
@@ -692,7 +827,7 @@ def get_organisms_with_users_list(args, *, assigned_only=True):
         'scientific_name',
         'taxid',
         'sub_project',
-        'sequencing_type',
+        'metadata',
         'insdc_status',
         'goat_status',
         'target_list_status',
@@ -706,7 +841,9 @@ def get_organisms_with_users_list(args, *, assigned_only=True):
 
     def iter_payload(queryset):
         for organism in queryset:
-            yield _organism_row_with_users(organism, organism_to_users)
+            yield _organism_row_with_users(
+                organism, organism_to_users, user_to_principal_slugs, principals_by_slug
+            )
 
     # Handle different output formats
     if output_format == 'tsv':

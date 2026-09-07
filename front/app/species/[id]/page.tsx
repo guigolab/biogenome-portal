@@ -19,9 +19,13 @@ import {
   publicationsMatch,
   type ParsedPublication,
 } from '@/lib/publicationLinks'
-import { loadPortalConfigFromDisk } from '@/lib/portal/portalServer'
+import { loadPortalConfig, loadRootTaxid } from '@/lib/portal/portalServer'
+import { resolveOrganismCustomFields } from '@/lib/portal'
+import {
+  customFieldMetadataKeys,
+  organismCustomFieldRows,
+} from '@/lib/organismCustomFieldDisplay'
 import { buildSpeciesDetailView, parseOrganismImages } from '@/lib/species-detail-from-organism'
-import { getRootTaxid } from '@/lib/api/taxon'
 import { taxonomyTaxonHref } from '@/lib/taxonomyLinks'
 import {
   buildClassificationRows,
@@ -209,7 +213,7 @@ export default async function SpeciesDetailPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const portal = await loadPortalConfigFromDisk()
+  const portal = await loadPortalConfig()
   const goatPortalEnabled =
     portal?.general && typeof portal.general === 'object' && 'goat' in portal.general
       ? (portal.general as { goat?: boolean }).goat === true
@@ -245,14 +249,8 @@ export default async function SpeciesDetailPage({
 
   const ancestors = parseTaxonAncestors(ancestorRows)
   const detail = buildSpeciesDetailView(organism, [], [], [])
-  const portalRootTaxid =
-    portal?.general && typeof portal.general === 'object' && 'rootTaxid' in portal.general
-      ? str((portal.general as { rootTaxid?: string }).rootTaxid)
-      : ''
-  const lineageAncestors = filterAncestorsFromPortalRoot(
-    ancestors,
-    portalRootTaxid || getRootTaxid(),
-  )
+  const rootTaxid = await loadRootTaxid()
+  const lineageAncestors = filterAncestorsFromPortalRoot(ancestors, rootTaxid)
   const classificationRows = buildClassificationRows(detail, lineageAncestors)
   const organismImages = parseOrganismImages(organism)
 
@@ -285,15 +283,14 @@ export default async function SpeciesDetailPage({
     }
   }
 
-  const sequencingRaw = organism.sequencing_type
-  const sequencingTypes = Array.isArray(sequencingRaw)
-    ? (sequencingRaw as unknown[]).map((x) => str(x)).filter(Boolean)
-    : str(sequencingRaw)
-      ? [str(sequencingRaw)]
-      : []
   const subProject = str(organism.sub_project)
-  const metaPairs = metadataEntries(organism.metadata)
-  const showProjectBlock = Boolean(subProject) || sequencingTypes.length > 0
+  const customFields = resolveOrganismCustomFields(portal)
+  const customFieldRows = organismCustomFieldRows(organism, customFields)
+  const showCustomFieldsBlock = customFields.length > 0 && customFieldRows.length > 0
+  const showProjectBlock = customFields.length === 0 && Boolean(subProject)
+  const showProjectOrCustomBlock = showCustomFieldsBlock || showProjectBlock
+  const customFieldKeys = customFieldMetadataKeys(customFields)
+  const metaPairs = metadataEntries(organism.metadata).filter(([k]) => !customFieldKeys.has(k))
   const showMetadataBlock = metaPairs.length > 0
 
   const linkUrls: string[] = []
@@ -388,32 +385,38 @@ export default async function SpeciesDetailPage({
           <SpeciesIucnSection organism={organism} scientificName={detail.scientificName} />
         </div>
 
-        {showProjectBlock || showMetadataBlock ? (
-          <div className={cn('mb-6 grid gap-4', showProjectBlock && showMetadataBlock ? 'lg:grid-cols-2' : '')}>
-            {showProjectBlock ? (
+        {showProjectOrCustomBlock || showMetadataBlock ? (
+          <div className={cn('mb-6 grid gap-4', showProjectOrCustomBlock && showMetadataBlock ? 'lg:grid-cols-2' : '')}>
+            {showCustomFieldsBlock ? (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Project &amp; sequencing</CardTitle>
+                  <CardTitle className="text-lg">Project &amp; affiliation</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4 text-sm">
-                  {subProject ? (
-                    <div>
-                      <div className="text-muted-foreground mb-1">Sub-project</div>
-                      <p className="font-medium">{subProject}</p>
-                    </div>
-                  ) : null}
-                  {sequencingTypes.length > 0 ? (
-                    <div>
-                      <div className="text-muted-foreground mb-2">Sequencing type</div>
+                  {customFieldRows.map((row) => (
+                    <div key={row.key}>
+                      <div className="text-muted-foreground mb-2">{row.label}</div>
                       <div className="flex flex-wrap gap-2">
-                        {sequencingTypes.map((t) => (
-                          <Badge key={t} variant="secondary">
-                            {t}
+                        {row.values.map((value) => (
+                          <Badge key={value} variant="secondary">
+                            {value}
                           </Badge>
                         ))}
                       </div>
                     </div>
-                  ) : null}
+                  ))}
+                </CardContent>
+              </Card>
+            ) : showProjectBlock ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Project</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4 text-sm">
+                  <div>
+                    <div className="text-muted-foreground mb-1">Sub-project</div>
+                    <p className="font-medium">{subProject}</p>
+                  </div>
                 </CardContent>
               </Card>
             ) : null}
@@ -505,7 +508,7 @@ export default async function SpeciesDetailPage({
           </Card>
         ) : null}
 
-        {showCountriesUi() && countryCodes.length > 0 ? (
+        {showCountriesUi(portal) && countryCodes.length > 0 ? (
           <Card className="mb-6">
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">

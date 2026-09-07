@@ -239,12 +239,6 @@ export function goatStatusRank(goatStatus: string): number {
    return i >= 0 ? i : 0
 }
 
-/** Index into `INSDC_PIPELINE_STEPS` / `INSDC_STATUS_VALUES` for pipeline UI (unknown → 0). */
-export function insdcStatusRank(insdcStatus: string): number {
-   const i = INSDC_STATUS_VALUES.indexOf(insdcStatus as (typeof INSDC_STATUS_VALUES)[number])
-   return i >= 0 ? i : 0
-}
-
 export type GoatChipState = 'completed' | 'current' | 'todo'
 
 export function goatChipState(stepIndex: number, currentRank: number): GoatChipState {

@@ -5,7 +5,6 @@
   "scripts": {
     "dev": "next dev --webpack",
     "bake-portal": "node scripts/bake-portal.mjs",
-    "prebuild": "node scripts/bake-portal.mjs",
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint .",

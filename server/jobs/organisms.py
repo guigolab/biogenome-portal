@@ -18,6 +18,9 @@ from jobs.support.iucn_redlist_fetch import (
     run_iucn_fetch_missing_redlist,
     run_iucn_refresh_known_assessments,
 )
+from jobs.support.sequencing_type_metadata_backfill import (
+    run_sequencing_type_metadata_backfill,
+)
 from jobs.support.organism_enrich import (
     fetch_iucn_redlist_for_taxids,
     fetch_tolid_prefixes,
@@ -312,4 +315,21 @@ def backfill_genome_publication_task() -> Dict[str, Any]:
         logger.exception("organisms.backfill_genome_publication failed")
         raise
     logger.info("organisms.backfill_genome_publication: finished %s", result)
+    return result
+
+
+@shared_task(name="organisms.backfill_sequencing_type_metadata", ignore_result=False)
+def backfill_sequencing_type_metadata_task() -> Dict[str, Any]:
+    """
+    One-off migration: move the legacy top-level ``sequencing_type`` field into
+    ``metadata.sequencing_type``. See
+    ``jobs.support.sequencing_type_metadata_backfill.run_sequencing_type_metadata_backfill``.
+    """
+    logger.info("organisms.backfill_sequencing_type_metadata: starting")
+    try:
+        result = run_sequencing_type_metadata_backfill()
+    except Exception:
+        logger.exception("organisms.backfill_sequencing_type_metadata failed")
+        raise
+    logger.info("organisms.backfill_sequencing_type_metadata: finished %s", result)
     return result

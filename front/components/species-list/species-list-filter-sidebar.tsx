@@ -9,7 +9,10 @@ import {
 import { useLocale } from '@/contexts/locale-context'
 import { usePortalConfig } from '@/contexts/portal-context'
 import { showCmsLoginNav } from '@/lib/portal'
+import type { CmsOrganismFieldWire } from '@/lib/portal/types'
 import type { TaxonRecord } from '@/lib/api/taxon'
+import { customFieldSectionId } from '@/lib/speciesCustomFieldFilters'
+import { sortStatEntriesByCountDesc } from '@/lib/speciesFieldStats'
 import type { RankGroupDef } from '@/lib/taxonRankFilter'
 import { cn } from '@/lib/utils'
 import { Check } from 'lucide-react'
@@ -22,7 +25,6 @@ import {
    COUNTRIES_SECTION_ID,
    GOAT_STATUS_SECTION_ID,
    IUCN_SECTION_ID,
-   SEQUENCING_TYPE_SECTION_ID,
    SpeciesListFilterAccordionProvider,
    SUB_PROJECT_SECTION_ID,
    TAXONOMY_SECTION_ID,
@@ -200,11 +202,11 @@ export type SpeciesListFiltersPanelProps = {
    subProjectOptions: [string, number][]
    onSubProjectChange: (value: string) => void
    onSubProjectPanelOpen?: () => void
-   sequencingTypeFilterVisible: boolean
-   sequencingTypeFilter: string
-   sequencingTypeOptions: [string, number][]
-   onSequencingTypeChange: (value: string) => void
-   onSequencingTypePanelOpen?: () => void
+   customFieldsFilterVisible: boolean
+   customFields: CmsOrganismFieldWire[]
+   customFieldFilters: Record<string, string>
+   customFieldStats: Record<string, Record<string, number> | null>
+   onCustomFieldChange: (key: string, value: string) => void
    formatMetadataBucketLabel: (code: string) => string
    countryFilterSectionVisible: boolean
    countryStats: Record<string, number> | null
@@ -250,10 +252,11 @@ export function SpeciesListFiltersPanel({
    subProjectFilter,
    subProjectOptions,
    onSubProjectChange,
-   sequencingTypeFilterVisible,
-   sequencingTypeFilter,
-   sequencingTypeOptions,
-   onSequencingTypeChange,
+   customFieldsFilterVisible,
+   customFields,
+   customFieldFilters,
+   customFieldStats,
+   onCustomFieldChange,
    formatMetadataBucketLabel,
    countryFilterSectionVisible,
    countryStats,
@@ -334,21 +337,24 @@ export function SpeciesListFiltersPanel({
                />
             </SpeciesFilterCollapsible>
          ) : null}
-         {sequencingTypeFilterVisible && cmsEnabledFromConfig ? (
-            <SpeciesFilterCollapsible
-               sectionId={SEQUENCING_TYPE_SECTION_ID}
-               title={t('speciesList.sequencingTypeSectionTitle')}
-            >
-               <StringBucketFilterList
-                  value={sequencingTypeFilter}
-                  onChange={onSequencingTypeChange}
-                  options={sequencingTypeOptions}
-                  allLabel={t('speciesList.allSequencingTypes')}
-                  ariaLabel={t('speciesList.filterBySequencingType')}
-                  formatOptionLabel={formatMetadataBucketLabel}
-               />
-            </SpeciesFilterCollapsible>
-         ) : null}
+         {customFieldsFilterVisible && cmsEnabledFromConfig
+            ? customFields.map((field) => (
+                 <SpeciesFilterCollapsible
+                    key={field.key}
+                    sectionId={customFieldSectionId(field.key)}
+                    title={field.label}
+                 >
+                    <StringBucketFilterList
+                       value={customFieldFilters[field.key] ?? 'all'}
+                       onChange={(value) => onCustomFieldChange(field.key, value)}
+                       options={sortStatEntriesByCountDesc(Object.entries(customFieldStats[field.key] ?? {}))}
+                       allLabel={`All ${field.label}`}
+                       ariaLabel={`Filter by ${field.label}`}
+                       formatOptionLabel={formatMetadataBucketLabel}
+                    />
+                 </SpeciesFilterCollapsible>
+              ))
+            : null}
          {countryFilterSectionVisible ? (
             <SpeciesFilterCollapsible sectionId={COUNTRIES_SECTION_ID} title={t('speciesList.countrySectionTitle')}>
                <SpeciesCountryListFilter

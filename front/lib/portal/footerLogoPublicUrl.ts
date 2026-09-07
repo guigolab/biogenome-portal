@@ -1,23 +1,41 @@
 /**
- * `footer.logoUrl` from portal.json: path under `public/` (with or without leading `/`).
- * Use `footerLogoSrcWithBasePath` / `metadataFaviconIcon` so `<img src>` and `<link rel="icon">`
- * match when `NEXT_PUBLIC_BASE_PATH` / `basePath` is set.
+ * `footer.logoUrl` from portal.json: filename (or public-style path like `/CBPLogo.png`).
+ * Resolved through the backend's `GET /api/portal/assets/<filename>` so logos follow the same
+ * path as portal config and no longer need to be bind-mounted into Next `public/`.
+ * See front-config-centralization-plan.md Phase 4.
+ *
+ * Bundled fallback favicon (`/icon.svg`) stays a Next `public/` path — only real `logoUrl`
+ * values go through the asset endpoint.
  */
+
+/** Filename from `footer.logoUrl` (strips leading path segments). */
 export function normalizeFooterLogoPublicPath(logoUrl: string | undefined): string | null {
    const trimmed = logoUrl?.trim()
    if (!trimmed) return null
-   return trimmed.startsWith('/') ? trimmed : `/${trimmed}`
+   const filename = trimmed.split('/').filter(Boolean).pop()
+   return filename ? `/${filename}` : null
 }
 
-/** Absolute path for `<img src>` when the app uses `NEXT_PUBLIC_BASE_PATH` / `basePath`. */
+/**
+ * Relative URL for `<img src>` / favicon when a portal `logoUrl` is set.
+ * Goes through `${basePath}/api/portal/assets/<filename>` (Flask via the edge proxy).
+ */
 export function footerLogoSrcWithBasePath(logoUrl: string | undefined): string {
-   const path = normalizeFooterLogoPublicPath(logoUrl)
-   if (!path) return ''
+   const trimmed = logoUrl?.trim()
+   if (!trimmed) return ''
+   const filename = trimmed.split('/').filter(Boolean).pop()
+   if (!filename) return ''
    const bp = (process.env.NEXT_PUBLIC_BASE_PATH ?? '').replace(/\/$/, '')
-   return bp ? `${bp}${path}` : path
+   return `${bp}/api/portal/assets/${encodeURIComponent(filename)}`
 }
 
-/** For `<link rel="icon">` `type` when the URL points at a file under `public/`. */
+/** Bundled default favicon under Next `public/` (with basePath when set). */
+function bundledIconSrc(): string {
+   const bp = (process.env.NEXT_PUBLIC_BASE_PATH ?? '').replace(/\/$/, '')
+   return bp ? `${bp}/icon.svg` : '/icon.svg'
+}
+
+/** For `<link rel="icon">` `type` when the URL points at a known image extension. */
 export function faviconMimeTypeForPublicPath(publicPath: string): string | undefined {
    const lower = publicPath.toLowerCase()
    if (lower.endsWith('.svg')) return 'image/svg+xml'
@@ -34,10 +52,11 @@ export function metadataFaviconIcon(footerLogoUrl: string | undefined): {
    type?: string
 } {
    const normalized = normalizeFooterLogoPublicPath(footerLogoUrl)
-   const url = normalized
-      ? footerLogoSrcWithBasePath(footerLogoUrl)
-      : footerLogoSrcWithBasePath('/icon.svg')
-   const mimePath = normalized ?? '/icon.svg'
-   const type = faviconMimeTypeForPublicPath(mimePath)
-   return type ? { url, type } : { url }
+   if (normalized) {
+      const url = footerLogoSrcWithBasePath(footerLogoUrl)
+      const type = faviconMimeTypeForPublicPath(normalized)
+      return type ? { url, type } : { url }
+   }
+   const url = bundledIconSrc()
+   return { url, type: 'image/svg+xml' }
 }

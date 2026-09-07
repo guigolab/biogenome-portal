@@ -11,11 +11,13 @@ import type { PortalConfig } from '@/lib/portal'
 type ProvidersProps = {
    children: ReactNode
    initialPortal?: PortalConfig
+   /** Backend-derived root taxid (`GET /taxons/root`), fetched server-side in the root layout. */
+   initialRootTaxid?: string
 }
 
-export function Providers({ children, initialPortal }: ProvidersProps) {
+export function Providers({ children, initialPortal, initialRootTaxid }: ProvidersProps) {
    return (
-      <PortalProvider initialPortal={initialPortal}>
+      <PortalProvider initialPortal={initialPortal} initialRootTaxid={initialRootTaxid}>
          <AppThemeProvider>
             <LocaleProviderWrapper>
                {children}

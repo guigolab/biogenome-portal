@@ -28,6 +28,7 @@ tags:
 - name: "taxonomy"
 - name: "stats"
 - name: "geo_location"
+- name: "portal"
 
 paths:
   /goat_report:
@@ -1099,7 +1100,67 @@ paths:
                   $ref: "#/components/schemas/TaxonNode"
         "404":
           description: "Taxon not found"
-        
+
+  /portal:
+    get:
+      tags:
+        - "portal"
+      summary: "retrieve the backend-authoritative portal configuration (validated, derived; public, no auth required)"
+      description: >
+        Loads, validates against portal.schema.json, and derives/overrides backend-owned fields
+        (general.rootTaxid, general.goat) on top of the mounted portal.json (see
+        front-config-centralization-plan.md Phase 4). Falls back to a built-in default when no
+        config file is mounted.
+      parameters:
+        - in: 'header'
+          name: 'If-None-Match'
+          description: "ETag from a previous response; a matching value returns 304"
+          schema:
+            type: 'string'
+      responses:
+        "200":
+          description: "successful operation"
+          headers:
+            ETag:
+              schema:
+                type: "string"
+            Cache-Control:
+              schema:
+                type: "string"
+                example: "public, max-age=30"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortalConfig"
+        "304":
+          description: "Not Modified (If-None-Match matched the current ETag)"
+
+  /portal/assets/{filename}:
+    get:
+      tags:
+        - "portal"
+      summary: "retrieve an instance asset (e.g. logo) referenced by the portal configuration (public, no auth required)"
+      parameters:
+        - in: 'path'
+          name: 'filename'
+          required: true
+          schema:
+            type: 'string'
+      responses:
+        "200":
+          description: "successful operation"
+          headers:
+            Cache-Control:
+              schema:
+                type: "string"
+          content:
+            image/*:
+              schema:
+                type: string
+                format: binary
+        "404":
+          description: "Asset not found"
+
 components:
   schemas:
     Assembly:
@@ -1519,5 +1580,59 @@ components:
           $ref: "#/components/schemas/INSDCStatus"
         target_list_status:
           $ref: "#/components/schemas/TargetListStatus"
-          
-          
+
+    PortalConfig:
+      type: "object"
+      description: >
+        Front-end branding/feature configuration. See portal.schema.json (canonical copy in
+        bgp-configs/, kept byte-identical to biogenome-portal/front/portal.schema.json and
+        biogenome-portal/server/portal.schema.json — enforced in CI) for the full JSON Schema.
+        general.rootTaxid and general.goat are always backend-derived overrides, regardless of
+        what is present in the mounted portal.json.
+      properties:
+        general:
+          type: "object"
+          additionalProperties: true
+          properties:
+            title:
+              type: "object"
+              additionalProperties:
+                type: "string"
+            description:
+              type: "object"
+              additionalProperties:
+                type: "string"
+            cms:
+              type: "boolean"
+            goat:
+              type: "boolean"
+              description: "Backend-derived: bool(GOAT_PROJECT_NAME env var)."
+            map:
+              type: "boolean"
+            languages:
+              type: "array"
+              items:
+                type: "string"
+            rootTaxid:
+              type: "string"
+              nullable: true
+              description: "Backend-derived: ROOT_NODE env var."
+        theme:
+          type: "object"
+        cms:
+          type: "object"
+        models:
+          type: "object"
+        footer:
+          type: "object"
+          properties:
+            logoUrl:
+              type: "string"
+            copyright:
+              type: "object"
+              additionalProperties:
+                type: "string"
+            tagline:
+              type: "object"
+              additionalProperties:
+                type: "string"

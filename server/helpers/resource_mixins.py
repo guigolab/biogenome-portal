@@ -169,6 +169,10 @@ def _resolve_tsv_cell(item, field_key):
         value = get_nested_value(item, field_key)
         if value == " ":
             value = None
+        if isinstance(value, list):
+            if value and isinstance(value[0], dict):
+                return _format_tsv_scalar(value)
+            return ",".join(_format_tsv_scalar(x) for x in value)
         return _format_tsv_scalar(value)
 
     value = item.get(field_key)

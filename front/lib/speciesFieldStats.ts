@@ -1,6 +1,6 @@
 import { IUCN_STATS_NO_ENTRY } from '@/lib/iucnCategory'
 
-/** Stats bucket keys that represent “no value” for sub_project / sequencing_type filters. */
+/** Stats bucket keys that represent “no value” for sub_project / custom metadata field filters. */
 export function isSpeciesMetadataEmptyBucketKey(key: string): boolean {
    const k = key.trim()
    if (k === '') return true

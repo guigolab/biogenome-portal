@@ -1,19 +1,21 @@
 /**
  * bake-portal.mjs
  *
- * Generates public/portal.json before `next build`, allowing each Docker
- * image to carry its own branded configuration instead of relying on a
- * runtime bind-mount.
+ * Local development helper only — NOT part of the Docker build or any CI pipeline (see
+ * docs/front-config-centralization-plan.md Phase 3). Generates public/portal.json so a
+ * developer can preview a specific instance's branding with `npm run dev` without a runtime
+ * mount. Production containers get their config via a `${PORTAL_CONFIG_DIR}/portal.json`
+ * bind-mount instead (see `lib/portal/portalServer.ts`).
  *
  * Resolution order (last one wins):
  *   1. lib/portal/defaultPortal.json  — committed defaults
  *   2. branding/portal.config.json    — optional, from private config repo / CI
- *   3. Scalar env overrides           — PORTAL_API_BASE, PORTAL_ROOT_TAXID,
- *                                       NEXT_PUBLIC_CMS (+ PORTAL_GOAT, PORTAL_MAP, PORTAL_INSDC_STATUS)
+ *   3. Scalar env overrides           — NEXT_PUBLIC_CMS (+ PORTAL_GOAT, PORTAL_MAP,
+ *                                       PORTAL_SHOW_COUNTRIES)
  *
  * Asset copying:
  *   Any file placed in branding/ with a recognised name is copied to public/:
- *     portal-logo.png, portal-logo.svg, portal-logo.webp, hero-map.geojson
+ *     portal-logo.png, portal-logo.svg, portal-logo.webp
  *
  * Usage:
  *   node scripts/bake-portal.mjs
@@ -87,11 +89,6 @@ if (existsSync(presetPath)) {
 // 3. Scalar env overrides (only override when the var is non-empty)
 // ---------------------------------------------------------------------------
 
-function envStr(key) {
-  const v = process.env[key]
-  return typeof v === 'string' && v.trim().length > 0 ? v.trim() : null
-}
-
 function envBool(key) {
   const v = process.env[key]
   if (v === 'true') return true
@@ -99,21 +96,11 @@ function envBool(key) {
   return null
 }
 
-const apiBase = envStr('PORTAL_API_BASE')
-const rootTaxid = envStr('PORTAL_ROOT_TAXID')
 const cms = envBool('NEXT_PUBLIC_CMS')
 const goat = envBool('PORTAL_GOAT')
 const map = envBool('PORTAL_MAP')
-const insdcStatus = envBool('PORTAL_INSDC_STATUS')
+const showCountries = envBool('PORTAL_SHOW_COUNTRIES')
 
-if (apiBase !== null) {
-  config.general.apiBase = apiBase
-  console.log(`[bake-portal] general.apiBase = ${apiBase}`)
-}
-if (rootTaxid !== null) {
-  config.general.rootTaxid = rootTaxid
-  console.log(`[bake-portal] general.rootTaxid = ${rootTaxid}`)
-}
 if (cms !== null) {
   config.general.cms = cms
   console.log(`[bake-portal] general.cms = ${cms}`)
@@ -126,11 +113,10 @@ if (map !== null) {
   config.general.map = map
   console.log(`[bake-portal] general.map = ${map}`)
 }
-if (insdcStatus !== null) {
-  config.general.insdcStatus = insdcStatus
-  console.log(`[bake-portal] general.insdcStatus = ${insdcStatus}`)
+if (showCountries !== null) {
+  config.general.showCountries = showCountries
+  console.log(`[bake-portal] general.showCountries = ${showCountries}`)
 }
-
 // ---------------------------------------------------------------------------
 // 4. Write public/portal.json
 // ---------------------------------------------------------------------------

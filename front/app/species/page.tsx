@@ -3,7 +3,8 @@ import type { Metadata } from 'next'
 import { SpeciesListPageClient } from '@/components/species-list/species-list-page-client'
 
 export const metadata: Metadata = {
-   title: 'Species',
+   title: 'Species list',
+   description: 'Species targeted by this project.',
 }
 
 export default function SpeciesListPage() {

@@ -1,23 +1,26 @@
 import type { Metadata } from 'next'
-import type { CSSProperties } from 'react'
 import { Geist } from 'next/font/google'
 
 import { AppChrome } from '@/components/app-chrome'
 import { MatomoTracker } from '@/components/matomo-tracker'
 import { Providers } from '@/components/providers'
-import { applyPortalGeneralRuntime } from '@/lib/portal/apiRuntime'
 import { metadataFaviconIcon } from '@/lib/portal/footerLogoPublicUrl'
-import { normalizePortalConfig, normalizeUiColors } from '@/lib/portal'
+import { defaultPortalConfig, normalizePortalConfig, normalizeUiColors } from '@/lib/portal'
 import { portalSiteDescription, portalSiteTitle } from '@/lib/portal/portalDocumentMetadata'
-import { loadPortalConfigFromDisk } from '@/lib/portal/portalServer'
+import { loadPortalConfig } from '@/lib/portal/portalServer'
 import { portalThemeStyleProps } from '@/lib/portal/themeApply'
 
 import './globals.css'
 
 const geist = Geist({ subsets: ['latin'] })
 
+// Metadata only (title/description/favicon): cheap, has its own fallback chain, so it can stay
+// server-rendered. Revalidate every 30s (matches the backend fetch's own cache window) so a
+// newly mounted portal.json is picked up without a rebuild.
+export const revalidate = 30
+
 export async function generateMetadata(): Promise<Metadata> {
-   const portal = await loadPortalConfigFromDisk()
+   const portal = await loadPortalConfig()
    const siteTitle = portalSiteTitle(portal)
    const siteDescription = portalSiteDescription(portal)
    const favicon = metadataFaviconIcon(portal?.footer?.logoUrl)
@@ -32,28 +35,22 @@ export async function generateMetadata(): Promise<Metadata> {
    }
 }
 
-export default async function RootLayout({
+// Compiled-default brand style for first paint — zero I/O, no backend/network wait. The real
+// per-instance branding (and root taxid) is fetched client-side on mount and swapped in by
+// `PortalProvider` (see `applyPortalThemeToDocument` in `lib/portal/themeApply.ts`); light/dark
+// mode is unaffected — that's handled separately by `next-themes` in `AppThemeProvider`.
+const defaultAppConfig = normalizePortalConfig(defaultPortalConfig, normalizeUiColors)
+const defaultThemeStyle = portalThemeStyleProps(defaultAppConfig, defaultPortalConfig)
+
+export default function RootLayout({
    children,
 }: Readonly<{
    children: React.ReactNode
 }>) {
-   const portal = await loadPortalConfigFromDisk()
-   applyPortalGeneralRuntime(portal?.general ?? null)
-
-   let htmlThemeStyle: CSSProperties | undefined
-   if (portal) {
-      try {
-         const app = normalizePortalConfig(portal, normalizeUiColors)
-         htmlThemeStyle = portalThemeStyleProps(app, portal)
-      } catch {
-         htmlThemeStyle = undefined
-      }
-   }
-
    return (
-      <html lang="en" suppressHydrationWarning style={htmlThemeStyle}>
+      <html lang="en" suppressHydrationWarning style={defaultThemeStyle}>
          <body className={`${geist.className} font-sans antialiased`}>
-            <Providers initialPortal={portal ?? undefined}>
+            <Providers>
                <AppChrome>{children}</AppChrome>
             </Providers>
             <MatomoTracker />

@@ -7,13 +7,14 @@ add scientific name check for organisms (update it)
 
 
 FEATURES TO TEST:
+    -user management: create, update user (email, pwd and species)
     -edit/create/delete/import organisms/biosamples/assemblies/local_samples/annotations/reads
     -trigger assemblies from bioproject/list of accessions
     -trigger biosamples from project name 
     -trigger reads from bioproject
     -update organism goat status to in assembly and trigger sample import of the organism (it should stay in assembly)
     -upload biosample to EBI.
-    -audit logs
+    -audit logs checks
     
 fix user role select in user form, also admin can be created...
 
@@ -31,3 +32,9 @@ tree loading is slow
 
 genome browser:
 use chr aliases from annotrieve
+
+
+add a way to better manage custom form and fields of organisms, we should use the metadata fields and declare it in json schema
+
+
+check matomo on production

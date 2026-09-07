@@ -9,22 +9,11 @@ import {
    leafletMarkerPalettesFromRoot,
    type LeafletCircleMarkerStyle,
 } from '@/lib/portal/brandColorsFromDocument'
+import { CARTO_TILE_OPTIONS, cartoTileUrl } from '@/lib/portal/cartoBasemap'
 import { useAppearanceStore } from '@/stores/appearance-store'
 import { cn } from '@/lib/utils'
 
 export type SpeciesMapPoint = { lat: number; lng: number }
-
-const CARTO_ATTRIBUTION =
-   '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-
-const CARTO_TILE_OPTIONS = {
-   attribution: CARTO_ATTRIBUTION,
-   subdomains: 'abcd' as const,
-   maxZoom: 20,
-} as const
-
-const CARTO_DARK = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-const CARTO_LIGHT = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
 
 function toFiniteNumber(v: unknown): number {
    if (typeof v === 'number' && Number.isFinite(v)) return v
@@ -86,7 +75,7 @@ export function SpeciesLocationsMap({ points, className }: SpeciesLocationsMapPr
          preferCanvas: false,
       })
 
-      const url = basemapDark ? CARTO_DARK : CARTO_LIGHT
+      const url = cartoTileUrl(basemapDark)
       const tiles = L.tileLayer(url, CARTO_TILE_OPTIONS)
       tiles.addTo(map)
       tileLayerRef.current = tiles
@@ -126,7 +115,7 @@ export function SpeciesLocationsMap({ points, className }: SpeciesLocationsMapPr
    useEffect(() => {
       const map = mapInstanceRef.current
       if (!map || !mapReady) return
-      const url = basemapDark ? CARTO_DARK : CARTO_LIGHT
+      const url = cartoTileUrl(basemapDark)
       const prev = tileLayerRef.current
       if (prev && map.hasLayer(prev)) map.removeLayer(prev)
       const layer = L.tileLayer(url, CARTO_TILE_OPTIONS)

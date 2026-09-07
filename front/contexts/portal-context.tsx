@@ -20,14 +20,14 @@ import {
    type AppConfig,
    type PortalConfig,
 } from '@/lib/portal'
-import { applyPortalGeneralRuntime } from '@/lib/portal/apiRuntime'
+import { fetchRootTaxid } from '@/lib/api/taxon'
+import { applyRuntimeRootTaxid } from '@/lib/portal/apiRuntime'
 
 type PortalContextValue = {
    config: AppConfig | null
    raw: PortalConfig | null
    loading: boolean
    error: string | null
-   reload: () => Promise<void>
 }
 
 const PortalContext = createContext<PortalContextValue | null>(null)
@@ -40,17 +40,22 @@ type PortalProviderProps = {
     * Falls back to a client-side fetch when omitted (e.g. Storybook, tests).
     */
    initialPortal?: PortalConfig
+   /**
+    * Backend-derived root taxid (`GET /taxons/root`), fetched server-side in the root layout.
+    * Falls back to a client-side fetch when omitted (mirrors `initialPortal`'s fallback path).
+    */
+   initialRootTaxid?: string
 }
 
 function buildAppConfig(raw: PortalConfig) {
-   applyPortalGeneralRuntime(raw.general)
    return normalizePortalConfig(raw, normalizeUiColors)
 }
 
-export function PortalProvider({ children, initialPortal }: PortalProviderProps) {
-   const [config, setConfig] = useState<AppConfig | null>(
-      () => (initialPortal ? buildAppConfig(initialPortal) : null),
-   )
+export function PortalProvider({ children, initialPortal, initialRootTaxid }: PortalProviderProps) {
+   const [config, setConfig] = useState<AppConfig | null>(() => {
+      if (initialRootTaxid) applyRuntimeRootTaxid(initialRootTaxid)
+      return initialPortal ? buildAppConfig(initialPortal) : null
+   })
    const [raw, setRaw] = useState<PortalConfig | null>(initialPortal ?? null)
    const [loading, setLoading] = useState(!initialPortal)
    const [error, setError] = useState<string | null>(null)
@@ -66,6 +71,8 @@ export function PortalProvider({ children, initialPortal }: PortalProviderProps)
          setError(msg)
          rawConfig = defaultPortalConfig
       }
+      const rootTaxid = await fetchRootTaxid().catch(() => '131567')
+      applyRuntimeRootTaxid(rootTaxid)
       const app = buildAppConfig(rawConfig)
       setRaw(rawConfig)
       setConfig(app)
@@ -93,9 +100,8 @@ export function PortalProvider({ children, initialPortal }: PortalProviderProps)
          raw,
          loading,
          error,
-         reload: load,
       }),
-      [config, raw, loading, error, load],
+      [config, raw, loading, error],
    )
 
    return <PortalContext.Provider value={value}>{children}</PortalContext.Provider>

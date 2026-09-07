@@ -12,6 +12,7 @@ import {
    leafletMarkerPalettesFromRoot,
    type LeafletCircleMarkerStyle,
 } from '@/lib/portal/brandColorsFromDocument'
+import { CARTO_TILE_OPTIONS, cartoTileUrl } from '@/lib/portal/cartoBasemap'
 import { useAppearanceStore } from '@/stores/appearance-store'
 
 export type FrequencyHighlightPoint = {
@@ -38,18 +39,6 @@ export type MapViewProps = {
 }
 
 const DRAW_EVENT_CREATED = 'draw:created' as const
-
-const CARTO_ATTRIBUTION =
-   '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-
-const CARTO_TILE_OPTIONS = {
-   attribution: CARTO_ATTRIBUTION,
-   subdomains: 'abcd' as const,
-   maxZoom: 20,
-}
-
-const CARTO_DARK = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-const CARTO_LIGHT = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
 
 function coordKey(lng: number, lat: number): string {
    return `${lng}:${lat}`
@@ -258,7 +247,7 @@ export function MapView({
       const map = mapInstanceRef.current
       if (!map) return
 
-      const url = basemapDark ? CARTO_DARK : CARTO_LIGHT
+      const url = cartoTileUrl(basemapDark)
       const prev = tileLayerRef.current
       if (prev && map.hasLayer(prev)) {
          map.removeLayer(prev)

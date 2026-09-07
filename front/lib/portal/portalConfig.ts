@@ -1,6 +1,7 @@
 import type {
    AppConfig,
    CatalogCardFieldDef,
+   CmsOrganismFieldWire,
    ConfigFilter,
    ConfigModel,
    ConfigModelWire,
@@ -20,6 +21,7 @@ import {
    defaultOrganismCatalogWire,
    INSDC_CODE_ONLY_CATALOG_MODEL_KEYS,
 } from '@/lib/catalog-models'
+import { getApiBase } from '@/lib/api/taxon'
 import { dataModels } from './types'
 
 export const DEFAULT_VUESTIC_UI_BASE: Record<string, unknown> = {
@@ -79,23 +81,20 @@ function mergeThemeColorVariables(
    return { variables: merged }
 }
 
-export function portalJsonUrl(): string {
-   const base = process.env.NEXT_PUBLIC_BASE_PATH || ''
-   const normalized = base.endsWith('/') ? base.slice(0, -1) : base
-   const path = normalized ? `${normalized}/portal.json` : '/portal.json'
-   if (typeof window !== 'undefined' && window.location?.origin) {
-      return `${window.location.origin}${path}`
-   }
-   return path
-}
-
+/**
+ * Client fetch of backend-authoritative portal config (`GET {apiBase}/portal`).
+ * Uses the same `getApiBase()` helper as taxons/etc., so it resolves correctly through every
+ * proxy topology (dev nginx / Traefik root or subpath) — `${basePath}/api/*` already routes
+ * to Flask everywhere. On failure, callers (e.g. `PortalProvider`) fall back to
+ * `defaultPortalConfig`.
+ */
 export async function fetchPortalConfig(): Promise<PortalConfig> {
-   const res = await fetch(portalJsonUrl(), {
+   const res = await fetch(`${getApiBase()}/portal`, {
       credentials: 'same-origin',
       cache: 'no-store',
    })
    if (!res.ok) {
-      throw new Error(`portal.json: ${res.status} ${res.statusText}`)
+      throw new Error(`portal: ${res.status} ${res.statusText}`)
    }
    return res.json() as Promise<PortalConfig>
 }
@@ -334,15 +333,9 @@ const STEP_DEFAULTS: Record<
    },
    sequencingAndSubproject: {
       title: { en: 'Sequencing' },
-      description: { en: 'Sequencing technologies planned or completed, and the sub-project code.' },
+      description: { en: 'Sequencing technologies planned or completed for this organism.' },
       required: false,
       fixed: true,
-   },
-   piOrEntity: {
-      title: { en: 'PI or entity' },
-      description: { en: 'Sub-project, principal investigator, or responsible organisation for this record.' },
-      required: false,
-      fixed: false,
    },
    images: {
       title: { en: 'Images' },
@@ -380,7 +373,6 @@ const STEP_ORDER: OrganismFormStepId[] = [
    'selectOrganism',
    'goatStatus',
    'sequencingAndSubproject',
-   'piOrEntity',
    'images',
    'publications',
    'vernacularNames',
@@ -394,16 +386,23 @@ export function resolveOrganismFormSteps(raw: PortalConfig): OrganismFormStepDef
    const configSteps = org?.steps ?? org?.form?.steps ?? []
    const useRequiredStepsList = Array.isArray(requiredStepsPortal)
 
+   const knownStepIds = new Set<string>(STEP_ORDER)
    const configMap = new Map<OrganismFormStepId, (typeof configSteps)[number]>(
-      configSteps.map((s) => [s.id as OrganismFormStepId, s]),
+      configSteps
+         .filter((s) => knownStepIds.has(s.id))
+         .map((s) => [s.id as OrganismFormStepId, s]),
    )
+
+   const requiredStepsFiltered = useRequiredStepsList
+      ? requiredStepsPortal.filter((id): id is OrganismFormStepId => knownStepIds.has(id))
+      : undefined
 
    return STEP_ORDER.map((id) => {
       const defaults = STEP_DEFAULTS[id]
       const override = configMap.get(id)
 
       const required = useRequiredStepsList
-         ? requiredStepsPortal.includes(id)
+         ? requiredStepsFiltered!.includes(id)
             ? true
             : defaults.required
          : override?.required ?? defaults.required
@@ -417,6 +416,10 @@ export function resolveOrganismFormSteps(raw: PortalConfig): OrganismFormStepDef
          fixed: defaults.fixed,
       }
    })
+}
+
+export function resolveOrganismCustomFields(raw: PortalConfig): CmsOrganismFieldWire[] {
+   return raw.cms?.organisms?.fields ?? []
 }
 
 function migrateEsCtKeysToCat(value: unknown): unknown {
@@ -480,6 +483,7 @@ export function normalizePortalConfig(
          goatEnabled,
       }),
       organismFormSteps: resolveOrganismFormSteps(raw),
+      organismCustomFields: resolveOrganismCustomFields(raw),
       ...(footer ? { footer } : {}),
    }
 }

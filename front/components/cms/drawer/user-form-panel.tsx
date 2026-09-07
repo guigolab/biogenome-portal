@@ -30,6 +30,10 @@ import {
    cmsGetUserSpecies,
    cmsUpdateUser,
 } from '@/lib/cms/services/auth'
+import {
+   cmsGetOrganismPrincipalOptions,
+   type CmsOrganismPrincipalOption,
+} from '@/lib/cms/services/organism-principals'
 import { useCmsAuthStore } from '@/stores/cms-auth-store'
 import { useCmsDrawerStore } from '@/stores/cms-drawer-store'
 
@@ -49,6 +53,9 @@ export function UserFormPanel({ editName }: { editName?: string | null }) {
    const [password, setPassword] = useState('')
    const [email, setEmail] = useState('')
    const [role, setRole] = useState<'Admin' | 'DataManager'>('DataManager')
+
+   const [principalOptions, setPrincipalOptions] = useState<CmsOrganismPrincipalOption[]>([])
+   const [principalIds, setPrincipalIds] = useState<string[]>([])
 
    const [onlyUnassigned, setOnlyUnassigned] = useState(true)
    const [searchFilter, setSearchFilter] = useState('')
@@ -137,6 +144,17 @@ export function UserFormPanel({ editName }: { editName?: string | null }) {
    }, [fetchAvailable])
 
    useEffect(() => {
+      ;(async () => {
+         try {
+            const options = await cmsGetOrganismPrincipalOptions()
+            setPrincipalOptions(Array.isArray(options) ? options : [])
+         } catch {
+            setPrincipalOptions([])
+         }
+      })()
+   }, [])
+
+   useEffect(() => {
       void fetchAssignedSpecies()
    }, [fetchAssignedSpecies])
 
@@ -151,6 +169,7 @@ export function UserFormPanel({ editName }: { editName?: string | null }) {
             setName(String(u.name ?? editName))
             setEmail(String(u.email ?? ''))
             setRole((u.role === 'Admin' ? 'Admin' : 'DataManager') as 'Admin' | 'DataManager')
+            setPrincipalIds(Array.isArray(u.principal_ids) ? u.principal_ids.map(String) : [])
          } catch (e) {
             if (!cancelled) {
                toast.error(extractApiMessage(e, 'Failed to load user'))
@@ -244,6 +263,7 @@ export function UserFormPanel({ editName }: { editName?: string | null }) {
          name: name.trim(),
          role,
          email: email.trim(),
+         principal_ids: principalIds,
       }
       if (role === 'DataManager') {
          if (speciesVerified) {
@@ -425,6 +445,46 @@ export function UserFormPanel({ editName }: { editName?: string | null }) {
                      <SelectItem value="Admin">Admin</SelectItem>
                   </SelectContent>
                </Select>
+            </div>
+
+            <div className="sm:col-span-2">
+               <Label>Linked principals (optional)</Label>
+               <p className="mb-1.5 text-xs text-muted-foreground">
+                  Link this curator to a PI. Species assigned to this user will show that PI’s
+                  institute and program in the species table.
+               </p>
+               {principalOptions.length === 0 ? (
+                  <p className="rounded-md border border-border bg-muted/40 p-2 text-xs text-muted-foreground">
+                     No principals yet — create one from the Principals tab first.
+                  </p>
+               ) : (
+                  <>
+                     <ScrollArea className="h-32 w-full min-w-0 rounded-md border border-border">
+                        <ul className="w-full min-w-0 divide-y divide-border px-2 py-0.5">
+                           {principalOptions.map((p) => {
+                              const checked = principalIds.includes(p.slug)
+                              return (
+                                 <li key={p.slug}>
+                                    <label className="flex cursor-pointer items-center gap-2 py-1.5 text-sm">
+                                       <Checkbox
+                                          checked={checked}
+                                          onCheckedChange={() => {
+                                             setPrincipalIds((prev) =>
+                                                prev.includes(p.slug)
+                                                   ? prev.filter((s) => s !== p.slug)
+                                                   : [...prev, p.slug],
+                                             )
+                                          }}
+                                       />
+                                       <span>{p.name}</span>
+                                    </label>
+                                 </li>
+                              )
+                           })}
+                        </ul>
+                     </ScrollArea>
+                  </>
+               )}
             </div>
          </div>
 

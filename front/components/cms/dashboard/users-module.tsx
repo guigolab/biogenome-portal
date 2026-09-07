@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Loader2, Pencil, Trash2, UserPlus } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -21,7 +21,12 @@ import { Input } from '@/components/ui/input'
 import { extractApiMessage } from '@/lib/cms/extract-api-message'
 import { DashboardModuleHeader } from '@/components/cms/dashboard/dashboard-module-header'
 import { DashboardModulePagination } from '@/components/cms/dashboard/dashboard-module-pagination'
+import { UserPrincipalsCell } from '@/components/cms/dashboard/user-principals-cell'
 import { cmsDeleteUser, cmsGetUsers } from '@/lib/cms/services/auth'
+import {
+   cmsGetOrganismPrincipalOptions,
+   type CmsOrganismPrincipalOption,
+} from '@/lib/cms/services/organism-principals'
 import { useCmsAuthStore } from '@/stores/cms-auth-store'
 import { useCmsDrawerStore } from '@/stores/cms-drawer-store'
 
@@ -30,6 +35,7 @@ const LIMIT = 8
 export function UsersModule() {
    const currentName = useCmsAuthStore((s) => s.userName)
    const openDrawer = useCmsDrawerStore((s) => s.open)
+   const principalSavedAt = useCmsDrawerStore((s) => s.principalSavedAt)
 
    const [users, setUsers] = useState<Record<string, unknown>[]>([])
    const [total, setTotal] = useState(0)
@@ -39,6 +45,7 @@ export function UsersModule() {
    const [page, setPage] = useState(1)
    const [deleteUser, setDeleteUser] = useState<Record<string, unknown> | null>(null)
    const [deleting, setDeleting] = useState(false)
+   const [principalOptions, setPrincipalOptions] = useState<CmsOrganismPrincipalOption[]>([])
 
    useEffect(() => {
       const t = setTimeout(() => {
@@ -48,8 +55,26 @@ export function UsersModule() {
       return () => clearTimeout(t)
    }, [filterDraft])
 
-   const fetchData = useCallback(async () => {
-      setLoading(true)
+   const loadPrincipalOptions = useCallback(async () => {
+      try {
+         const options = await cmsGetOrganismPrincipalOptions()
+         setPrincipalOptions(Array.isArray(options) ? options : [])
+      } catch {
+         setPrincipalOptions([])
+      }
+   }, [])
+
+   useEffect(() => {
+      void loadPrincipalOptions()
+   }, [loadPrincipalOptions])
+
+   useEffect(() => {
+      if (principalSavedAt === 0) return
+      void loadPrincipalOptions()
+   }, [principalSavedAt, loadPrincipalOptions])
+
+   const fetchData = useCallback(async (opts?: { silent?: boolean }) => {
+      if (!opts?.silent) setLoading(true)
       try {
          const { data, total: t } = await cmsGetUsers({
             filter,
@@ -62,9 +87,12 @@ export function UsersModule() {
          setUsers([])
          setTotal(0)
       } finally {
-         setLoading(false)
+         if (!opts?.silent) setLoading(false)
       }
    }, [filter, page])
+
+   const fetchDataRef = useRef(fetchData)
+   fetchDataRef.current = fetchData
 
    useEffect(() => {
       void fetchData()
@@ -148,6 +176,18 @@ export function UsersModule() {
                                  <span className="text-sm text-muted-foreground">—</span>
                               )}
                            </div>
+                           {user.role === 'DataManager' ? (
+                              <UserPrincipalsCell
+                                 userName={String(user.name)}
+                                 assignedPrincipalIds={
+                                    Array.isArray(user.principal_ids)
+                                       ? user.principal_ids.map(String)
+                                       : []
+                                 }
+                                 principalOptions={principalOptions}
+                                 onUpdated={() => void fetchDataRef.current({ silent: true })}
+                              />
+                           ) : null}
                            <Badge
                               variant={user.role === 'Admin' ? 'secondary' : 'outline'}
                               className="shrink-0 capitalize"
@@ -161,7 +201,9 @@ export function UsersModule() {
                                     size="icon"
                                     className="h-8 w-8"
                                     title="Edit"
-                                    onClick={() => openDrawer({ panel: 'user', userName: String(user.name) })}
+                                    onClick={() =>
+                                       openDrawer({ panel: 'user', userName: String(user.name) })
+                                    }
                                  >
                                     <Pencil className="h-4 w-4" />
                                  </Button>

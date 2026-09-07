@@ -9,6 +9,11 @@ docker-compose-DEV.yml
 .venv
 .cursor
 .next
-# CI-injected branding assets (portal.config.json, logos, hero-map.geojson)
+# CI-injected branding assets (portal.config.json, logos)
 front/branding/
+# Baked per-instance output of front/scripts/bake-portal.mjs — instance branding must not live in this repo.
+front/public/portal.json
+front/public/CBPLogo.png
 .pytest_cache/
+graphify-out/
+TODO.txt

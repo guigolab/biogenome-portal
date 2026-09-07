@@ -25,13 +25,16 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { usePortalConfig } from '@/contexts/portal-context'
 import { defaultPortalConfig, resolveOrganismFormSteps } from '@/lib/portal'
+import type { CmsOrganismFieldWire, OrganismFormStepId } from '@/lib/portal/types'
 import {
+   buildCustomFieldsMetadata,
    buildGenomePublicationPayload,
    buildMetadataPayload,
    filterCompleteImages,
    filterValidPublications,
    filterValidVernacularNames,
    getIncompleteImageRowFields,
+   splitLoadedMetadata,
    type PublicationValidationStatus,
 } from '@/lib/cms/organism-form-payload'
 import { extractApiMessage } from '@/lib/cms/extract-api-message'
@@ -64,17 +67,6 @@ import {
 } from '@/stores/organism-form-store'
 import { useCmsAuthStore } from '@/stores/cms-auth-store'
 
-const SEQUENCING_OPTIONS = [
-   { name: 'ONT (Long Reads)', category: 'Long read' },
-   { name: 'PACBIO (Long Reads)', category: 'Long read' },
-   { name: 'Illumina (Short Reads)', category: 'Short read' },
-   { name: 'RNAseq (Transcriptomics)', category: 'Transcriptomics' },
-   { name: 'Isoseq (Transcriptomics)', category: 'Transcriptomics' },
-   { name: 'HIC (Scaffolding)', category: 'Scaffolding' },
-   { name: 'OmniC (Scaffolding)', category: 'Scaffolding' },
-   { name: 'Other', category: 'Other' },
-] as const
-
 const GOAT_STEPS = [
    'Sample Collected',
    'Sample Acquired',
@@ -95,15 +87,18 @@ function normalizeTargetListStatusForForm(_raw: unknown): OrganismFormState['tar
    return 'long_list'
 }
 
-function buildPayload() {
-   const { organismForm, metadataList, images, publications, genomePublication, vernacularNames } =
+function buildPayload(organismCustomFields: CmsOrganismFieldWire[]) {
+   const { organismForm, metadataList, images, publications, genomePublication, vernacularNames, customFieldValues } =
       useOrganismFormStore.getState()
    return {
       ...organismForm,
       target_list_status: 'long_list',
       image: '',
       image_urls: [],
-      metadata: buildMetadataPayload(metadataList),
+      metadata: {
+         ...buildMetadataPayload(metadataList),
+         ...buildCustomFieldsMetadata(organismCustomFields, customFieldValues),
+      },
       images: filterCompleteImages(images),
       publications: filterValidPublications(publications),
       genome_publication: buildGenomePublicationPayload(genomePublication),
@@ -115,6 +110,7 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
    const router = useRouter()
    const { config } = usePortalConfig()
    const steps = config?.organismFormSteps ?? resolveOrganismFormSteps(defaultPortalConfig)
+   const organismCustomFields = config?.organismCustomFields ?? []
    const general = config?.general as Record<string, unknown> | undefined
    const hasGoat = Boolean(general?.goat)
 
@@ -126,6 +122,8 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
    const setOrganismForm = useOrganismFormStore((s) => s.setOrganismForm)
    const metadataList = useOrganismFormStore((s) => s.metadataList)
    const setMetadataList = useOrganismFormStore((s) => s.setMetadataList)
+   const customFieldValues = useOrganismFormStore((s) => s.customFieldValues)
+   const setCustomFieldValues = useOrganismFormStore((s) => s.setCustomFieldValues)
    const publications = useOrganismFormStore((s) => s.publications)
    const setPublications = useOrganismFormStore((s) => s.setPublications)
    const genomePublication = useOrganismFormStore((s) => s.genomePublication)
@@ -145,6 +143,11 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
       if (isAdmin) return true
       return userSpecies.includes(tid)
    }, [isAdmin, organismForm.taxid, userSpecies])
+
+   const fieldsForStep = useCallback(
+      (stepId: OrganismFormStepId) => organismCustomFields.filter((field) => field.step === stepId),
+      [organismCustomFields],
+   )
 
    const [existsWarning, setExistsWarning] = useState<string | null>(null)
    const [existenceCheckError, setExistenceCheckError] = useState<string | null>(null)
@@ -189,6 +192,8 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
       createOrganismTaxonConflict: Boolean(existsWarning),
       taxonExistenceCheckPending: taxonExistencePending,
       taxonExistenceCheckFailed: Boolean(existenceCheckError),
+      organismCustomFields,
+      customFieldValues,
    })
 
    const [busy, setBusy] = useState(isEditMode)
@@ -222,10 +227,8 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
             image_urls: [],
             metadata: {},
             publications: [],
-            sub_project: (base.sub_project as string) ?? null,
             goat_status: (base.goat_status as string) ?? '',
             target_list_status: normalizeTargetListStatusForForm(base.target_list_status),
-            sequencing_type: Array.isArray(base.sequencing_type) ? (base.sequencing_type as string[]) : [],
             assemblies_count: Number(base.assemblies_count) || 0,
          })
          if (Array.isArray(base.publications)) {
@@ -258,7 +261,12 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
          if (Array.isArray(base.common_names)) setVernacularNames(base.common_names as OrganismCommonName[])
          const md = base.metadata
          if (md && typeof md === 'object' && !Array.isArray(md)) {
-            setMetadataList(Object.entries(md as Record<string, string>).map(([key, value]) => ({ key, value })))
+            const split = splitLoadedMetadata(md as Record<string, unknown>, organismCustomFields)
+            setCustomFieldValues(split.customFieldValues)
+            setMetadataList(split.metadataList)
+         } else {
+            setCustomFieldValues({})
+            setMetadataList([])
          }
          resetStepper()
       } catch (e) {
@@ -273,10 +281,12 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
       replaceOrganismForm,
       setImages,
       setMetadataList,
+      setCustomFieldValues,
       setPublications,
       setGenomePublication,
       setVernacularNames,
       resetStepper,
+      organismCustomFields,
    ])
 
    useEffect(() => {
@@ -448,7 +458,7 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
    async function handleSubmit() {
       setSubmitting(true)
       try {
-         const payload = buildPayload()
+         const payload = buildPayload(organismCustomFields)
          if (editTaxid) {
             await cmsUpdateOrganism(editTaxid, payload)
             toast.success(`${organismForm.scientific_name ?? 'Organism'} updated.`)
@@ -731,40 +741,23 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
                )}
 
                {sid === 'sequencingAndSubproject' && (
-                  <div className="grid gap-2 sm:grid-cols-2">
-                     {SEQUENCING_OPTIONS.map((tech) => {
-                        const sel = organismForm.sequencing_type?.includes(tech.name)
-                        return (
-                           <button
-                              key={tech.name}
-                              type="button"
-                              onClick={() => {
-                                 const cur = organismForm.sequencing_type ?? []
-                                 setOrganismForm({
-                                    sequencing_type: sel ? cur.filter((x) => x !== tech.name) : [...cur, tech.name],
-                                 })
-                              }}
-                              className={cn(
-                                 'rounded-lg border px-3 py-2 text-left text-sm',
-                                 sel && 'border-primary bg-primary/10',
-                              )}
-                           >
-                              <span className="font-medium">{tech.name}</span>
-                              <span className="block text-xs text-muted-foreground">{tech.category}</span>
-                           </button>
-                        )
-                     })}
-                  </div>
-               )}
-
-               {sid === 'piOrEntity' && (
-                  <div>
-                     <Label htmlFor="subproj">Sub-project, PI or entity</Label>
-                     <Input
-                        id="subproj"
-                        value={organismForm.sub_project ?? ''}
-                        onChange={(e) => setOrganismForm({ sub_project: e.target.value || null })}
-                     />
+                  <div className="space-y-6">
+                     {fieldsForStep('sequencingAndSubproject').length > 0 ? (
+                        fieldsForStep('sequencingAndSubproject').map((field) => (
+                           <CustomPicklistField
+                              key={field.key}
+                              field={field}
+                              selected={customFieldValues[field.key] ?? []}
+                              onChange={(values) =>
+                                 setCustomFieldValues({ ...customFieldValues, [field.key]: values })
+                              }
+                           />
+                        ))
+                     ) : (
+                        <p className="text-sm text-muted-foreground">
+                           No sequencing fields configured for this portal.
+                        </p>
+                     )}
                   </div>
                )}
 
@@ -1118,6 +1111,8 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
                         genomePublication={genomePublication}
                         vernacularNames={vernacularNames}
                         metadataList={metadataList}
+                        customFieldValues={customFieldValues}
+                        organismCustomFields={organismCustomFields}
                         images={images}
                         onGoToStep={goToStep}
                      />
@@ -1186,6 +1181,7 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
                         setGenomePubStatus('idle')
                         setGenomePubError(null)
                         setGenomePubMetadata(null)
+                        setCustomFieldValues({})
                         setShowChangeModal(false)
                      }}
                   >
@@ -1222,6 +1218,7 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
                            setGenomePubStatus('idle')
                            setGenomePubError(null)
                            setGenomePubMetadata(null)
+                           setCustomFieldValues({})
                         }
                         setImportingImages(false)
                         setShowResetModal(false)
@@ -1396,6 +1393,70 @@ function ImageRow({
    )
 }
 
+function CustomPicklistField({
+   field,
+   selected,
+   onChange,
+}: {
+   field: CmsOrganismFieldWire
+   selected: string[]
+   onChange: (values: string[]) => void
+}) {
+   if (field.type === 'single') {
+      return (
+         <div className="space-y-2">
+            <Label>
+               {field.label}
+               {field.required ? <span className="ml-1 text-destructive">*</span> : null}
+            </Label>
+            <Select value={selected[0] ?? ''} onValueChange={(value) => onChange(value ? [value] : [])}>
+               <SelectTrigger className="w-full">
+                  <SelectValue placeholder={`Select ${field.label.toLowerCase()}`} />
+               </SelectTrigger>
+               <SelectContent>
+                  {field.values.map((value) => (
+                     <SelectItem key={value} value={value}>
+                        {value}
+                     </SelectItem>
+                  ))}
+               </SelectContent>
+            </Select>
+         </div>
+      )
+   }
+
+   return (
+      <div className="space-y-2">
+         <Label>
+            {field.label}
+            {field.required ? <span className="ml-1 text-destructive">*</span> : null}
+         </Label>
+         <ScrollArea className="h-56 rounded-md border">
+            <div className="grid gap-2 p-2 sm:grid-cols-2">
+               {field.values.map((value) => {
+                  const isSelected = selected.includes(value)
+                  return (
+                     <button
+                        key={value}
+                        type="button"
+                        onClick={() =>
+                           onChange(isSelected ? selected.filter((item) => item !== value) : [...selected, value])
+                        }
+                        className={cn(
+                           'rounded-lg border px-3 py-2 text-left text-sm',
+                           isSelected && 'border-primary bg-primary/10',
+                        )}
+                     >
+                        {value}
+                     </button>
+                  )
+               })}
+            </div>
+         </ScrollArea>
+      </div>
+   )
+}
+
 function OrganismFormReview({
    runtimeSteps,
    organismForm,
@@ -1403,6 +1464,8 @@ function OrganismFormReview({
    genomePublication,
    vernacularNames,
    metadataList,
+   customFieldValues,
+   organismCustomFields,
    images,
    onGoToStep,
 }: {
@@ -1412,6 +1475,8 @@ function OrganismFormReview({
    genomePublication: OrganismPublication | null
    vernacularNames: OrganismCommonName[]
    metadataList: { key: string; value: string }[]
+   customFieldValues: Record<string, string[]>
+   organismCustomFields: CmsOrganismFieldWire[]
    images: OrganismImageRow[]
    onGoToStep: (index: number) => void
 }) {
@@ -1451,35 +1516,39 @@ function OrganismFormReview({
                </div>
             )
 
-         case 'sequencingAndSubproject':
+         case 'sequencingAndSubproject': {
+            const stepFields = organismCustomFields.filter((field) => field.step === 'sequencingAndSubproject')
+            if (stepFields.length === 0) {
+               return <p className="text-xs text-muted-foreground">Not filled</p>
+            }
+            const hasAnySelection = stepFields.some((field) => (customFieldValues[field.key] ?? []).length > 0)
+            if (!hasAnySelection) {
+               return <p className="text-xs text-muted-foreground">Not filled</p>
+            }
             return (
-               <div className="space-y-2">
-                  {(organismForm.sequencing_type?.length ?? 0) > 0 ? (
-                     <div className="flex flex-wrap gap-1.5">
-                        {organismForm.sequencing_type.map((t) => (
-                           <Badge key={t} variant="secondary">
-                              {t}
-                           </Badge>
-                        ))}
-                     </div>
-                  ) : (
-                     <p className="text-xs text-muted-foreground">No sequencing technologies</p>
-                  )}
-                  {organismForm.sub_project?.trim() && (
-                     <p className="text-sm">
-                        <span className="text-muted-foreground">Sub-project: </span>
-                        {organismForm.sub_project}
-                     </p>
-                  )}
+               <div className="space-y-3">
+                  {stepFields.map((field) => {
+                     const values = customFieldValues[field.key] ?? []
+                     return (
+                        <div key={field.key} className="space-y-1">
+                           <p className="text-xs font-medium text-muted-foreground">{field.label}</p>
+                           {values.length > 0 ? (
+                              <div className="flex flex-wrap gap-1.5">
+                                 {values.map((value) => (
+                                    <Badge key={value} variant="secondary">
+                                       {value}
+                                    </Badge>
+                                 ))}
+                              </div>
+                           ) : (
+                              <p className="text-xs text-muted-foreground">Not selected</p>
+                           )}
+                        </div>
+                     )
+                  })}
                </div>
             )
-
-         case 'piOrEntity':
-            return organismForm.sub_project?.trim() ? (
-               <p className="text-sm">{organismForm.sub_project}</p>
-            ) : (
-               <p className="text-xs text-muted-foreground">Not filled</p>
-            )
+         }
 
          case 'images': {
             const validImages = filterCompleteImages(images)

@@ -1,8 +1,10 @@
 export type {
    AppConfig,
+   CmsOrganismFieldWire,
    ConfigModel,
    DataModels,
    GeneralConfig,
+   OrganismCustomFieldType,
    OrganismFormStepDef,
    PortalCatalogModelWire,
    PortalConfig,
@@ -12,11 +14,9 @@ export type {
 } from './types'
 export { dataModels } from './types'
 export {
-   DEFAULT_VUESTIC_UI_BASE,
    fetchPortalConfig,
-   normalizeModelsForApp,
    normalizePortalConfig,
-   portalJsonUrl,
+   resolveOrganismCustomFields,
    resolveOrganismFormSteps,
    resolvePortalUiMode,
 } from './portalConfig'

@@ -1,4 +1,6 @@
 import { speciesMetadataBucketToQueryValue } from '@/lib/speciesFieldStats'
+import { appendCustomFieldFilters } from '@/lib/speciesCustomFieldFilters'
+import type { CmsOrganismFieldWire } from '@/lib/portal/types'
 
 /** Context for organism field stats — same dimensions as the species list + GoaT (when enabled). */
 export type OrganismStatsQueryContext = {
@@ -6,18 +8,18 @@ export type OrganismStatsQueryContext = {
    filter?: string
    iucnThreatFilter: string
    subProjectFilter: string
-   sequencingTypeFilter: string
    selectedCountryCodes: string[]
    /** Stored `goat_status` API values; omit from query when aggregating `goat_status`. */
    goatStatusFilters: string[]
    /** `'all'` or one `target_list_status` value. */
    targetListFilter: string
+   customFieldFilters: Record<string, string>
+   customFields: CmsOrganismFieldWire[]
 }
 
 export type OrganismStatsFacet =
    | 'iucn'
    | 'sub_project'
-   | 'sequencing_type'
    | 'countries'
    | 'goat_status'
    | 'target_list_status'
@@ -25,7 +27,7 @@ export type OrganismStatsFacet =
 function appendGoatDimensions(
    q: Record<string, string>,
    ctx: OrganismStatsQueryContext,
-   facet: OrganismStatsFacet,
+   facet: string,
 ): void {
    if (facet !== 'goat_status' && ctx.goatStatusFilters.length > 0) {
       q.goat_status__in = [...ctx.goatStatusFilters].sort().join(',')
@@ -38,7 +40,7 @@ function appendGoatDimensions(
  */
 export function buildOrganismStatsQuery(
    ctx: OrganismStatsQueryContext,
-   facet: OrganismStatsFacet,
+   facet: OrganismStatsFacet | string,
 ): Record<string, string> {
    const q: Record<string, string> = {}
    if (ctx.taxon_lineage) q.taxon_lineage = ctx.taxon_lineage
@@ -50,12 +52,10 @@ export function buildOrganismStatsQuery(
    if (facet !== 'sub_project' && ctx.subProjectFilter !== 'all') {
       q.sub_project = speciesMetadataBucketToQueryValue(ctx.subProjectFilter)
    }
-   if (facet !== 'sequencing_type' && ctx.sequencingTypeFilter !== 'all') {
-      q.sequencing_type = speciesMetadataBucketToQueryValue(ctx.sequencingTypeFilter)
-   }
    if (facet !== 'countries' && ctx.selectedCountryCodes.length > 0) {
       q.countries__in = [...ctx.selectedCountryCodes].sort().join(',')
    }
+   appendCustomFieldFilters(q, ctx, facet)
    appendGoatDimensions(q, ctx, facet)
    return q
 }

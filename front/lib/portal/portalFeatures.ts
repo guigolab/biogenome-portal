@@ -30,11 +30,14 @@ export function showMap(config: AppConfig | null): boolean {
 }
 
 /**
- * Country filter (species list) and country section (species detail) are controlled by the
- * `NEXT_PUBLIC_SHOW_COUNTRIES` build-time env var. Defaults to true when unset so existing
- * images keep their current behaviour.
+ * Country filter (species list) and country section (species detail). Prefers
+ * `general.showCountries` from the loaded portal config when explicitly set; otherwise falls
+ * back to the build-time `NEXT_PUBLIC_SHOW_COUNTRIES` env var default. Both default to true
+ * when unset, so existing images/instances keep their current behaviour.
  */
-export function showCountriesUi(): boolean {
+export function showCountriesUi(config?: { general?: Record<string, unknown> } | null): boolean {
+   const fromConfig = config?.general?.showCountries
+   if (typeof fromConfig === 'boolean') return fromConfig
    return process.env.NEXT_PUBLIC_SHOW_COUNTRIES !== 'false'
 }
 

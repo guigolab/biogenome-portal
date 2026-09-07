@@ -38,8 +38,11 @@ def _rows():
         goat_reports,
         local_samples,
         organisms,
+        organism_principals,
+        portal,
         publications,
         reads,
+        ror,
         sample_locations,
         stats,
         cms_stats,
@@ -55,8 +58,14 @@ def _rows():
         # --- Publication lookup / validation ---
         (publications.PublicationLookupApi, "/api/publications/lookup"),
         (publications.PublicationValidateApi, "/api/publications/validate"),
+        # --- ROR institute search / validation (auth required) ---
+        (ror.RorSearchApi, "/api/ror/search"),
+        (ror.RorValidateApi, "/api/ror/validate"),
         # --- GoaT reports ---
         (goat_reports.GoaTReportApi, "/api/goat_report"),
+        # --- Portal config (public; no auth — UI needs this before login) ---
+        (portal.PortalConfigApi, "/api/portal"),
+        (portal.PortalAssetApi, "/api/portal/assets/<path:filename>"),
         # --- Async task status ---
         (cronjobs.TaskStatusAPI, "/api/tasks/<task_id>"),
         # --- Stats (POST /api/stats/<model> before path-based GET so body carries field) ---
@@ -95,6 +104,10 @@ def _rows():
         (organisms.OrganismLineageApi, "/api/organisms/<taxid>/lineage"),
         (organisms.OrganismRelatedDataApi, "/api/organisms/<taxid>/<model>"),
         (organisms.OrganismToDeleteApi, "/api/organism_deletion_requests/<taxid>"),
+        # --- Organism principals (PI / institute / program catalog; admin-only writes) ---
+        (organism_principals.OrganismPrincipalOptionsApi, "/api/organism_principals/options"),
+        (organism_principals.OrganismPrincipalsApi, "/api/organism_principals"),
+        (organism_principals.OrganismPrincipalApi, "/api/organism_principals/<slug>"),
         # --- Assemblies ---
         (assemblies.AssembliesImportApi, "/api/assemblies/import"),
         (assemblies.AssembliesFromAnnotations, "/api/assemblies/from_annotations"),

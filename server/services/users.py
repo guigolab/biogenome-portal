@@ -1,4 +1,4 @@
-from db.model import BioGenomeUser, BioSampleSubmission, LocalSample, Organism
+from db.model import BioGenomeUser, BioSampleSubmission, LocalSample, Organism, OrganismPrincipal
 from db.enums import Roles
 from datetime import timedelta
 from mongoengine.queryset.visitor import Q
@@ -78,6 +78,20 @@ def get_users(offset=0, limit=20, filter=None):
 #         raise BadRequest(description=f"{e}")
 #     return f"Species {taxid} correctly assigned to {name}"
 
+def _validate_principal_ids(principal_ids):
+    """Reject unknown OrganismPrincipal slugs before linking them to a BioGenomeUser."""
+    if principal_ids is None:
+        return
+    slugs = set(principal_ids)
+    if not slugs:
+        return
+    existing = set(OrganismPrincipal.objects(slug__in=slugs).scalar('slug'))
+    missing = slugs - existing
+    if missing:
+        missing_str = ", ".join(sorted(str(s) for s in missing))
+        raise NotFound(description=f"The following principals were not found: {missing_str}. Please create them first.")
+
+
 def create_user(data):
     require_keys(data, ["name", "password", "role"], what="user")
 
@@ -103,6 +117,8 @@ def create_user(data):
             missing_species_str = ", ".join(str(sp) for sp in missing_species)
             raise NotFound(description=f"The following species were not found: {missing_species_str}. Please create them first.")
 
+    _validate_principal_ids(data.get('principal_ids'))
+
     BioGenomeUser(**data).save()
     return username
 
@@ -110,6 +126,7 @@ def update_user(name, data):
     _forbid_root(name)
     user = get_or_404(BioGenomeUser, f"User {name} not found", name=name)
     _assert_admin_may_modify_user(name, user)
+    _validate_principal_ids(data.get('principal_ids'))
     user.update(**data)
     return name
 
@@ -166,6 +183,26 @@ def lookup_user_data(name):
         'local_samples':local_samples
     }
 
+def _principals_for_user(user) -> list:
+    """
+    Resolve a single user's own ``principal_ids`` to full principal rows (self-view:
+    the "My data" species table shows the same PI set on every one of the user's species).
+    """
+    slugs = [str(s).strip() for s in (user.principal_ids or []) if str(s).strip()]
+    if not slugs:
+        return []
+    docs = OrganismPrincipal.objects(slug__in=slugs).only('slug', 'name', 'affiliations', 'programs')
+    return [
+        {
+            'slug': doc.slug,
+            'name': doc.name,
+            'affiliations': list(doc.affiliations or []),
+            'programs': list(doc.programs or []),
+        }
+        for doc in docs
+    ]
+
+
 ##return all species if admin
 def get_related_species(name, filter=None, offset=0, limit=10):
     user = get_or_404(BioGenomeUser, f"User {name} not found", name=name)
@@ -181,7 +218,13 @@ def get_related_species(name, filter=None, offset=0, limit=10):
     else:
         organisms = Organism.objects().exclude('id').skip(offset).limit(limit)
     total = organisms.count()
-    return response_helper.dump_json({'total':total, 'data': list(organisms.as_pymongo())})
+    principals = _principals_for_user(user)
+    data = []
+    for doc in organisms.as_pymongo():
+        row = dict(doc)
+        row['principals'] = principals
+        data.append(row)
+    return response_helper.dump_json({'total':total, 'data': data})
 
 def get_submitted_biosamples(name, filter=None, offset=0, limit=10):
     user = get_or_404(BioGenomeUser, f"User {name} not found", name=name)

@@ -4,6 +4,11 @@ import type { MutableRefObject } from 'react'
 import { useEffect } from 'react'
 
 import { fetchFieldStats } from '@/lib/api/stats'
+import type { CmsOrganismFieldWire } from '@/lib/portal/types'
+import {
+   customFieldStatsPath,
+   parseCustomFieldSectionId,
+} from '@/lib/speciesCustomFieldFilters'
 import type { OrganismStatsQueryContext } from '@/lib/speciesListOrganismStatsQuery'
 import {
    buildOrganismStatsQuery,
@@ -14,7 +19,6 @@ import {
    COUNTRIES_SECTION_ID,
    GOAT_STATUS_SECTION_ID,
    IUCN_SECTION_ID,
-   SEQUENCING_TYPE_SECTION_ID,
    SUB_PROJECT_SECTION_ID,
    TAXONOMY_SECTION_ID,
    useSpeciesListFilterAccordion,
@@ -22,7 +26,6 @@ import {
 
 const IUCN_STATS_FIELD = 'iucn_redlist.category'
 const SUB_PROJECT_STATS_FIELD = 'sub_project'
-const SEQUENCING_TYPE_STATS_FIELD = 'sequencing_type'
 const COUNTRIES_STATS_FIELD = 'countries'
 const GOAT_STATS_FIELD = 'goat_status'
 
@@ -92,8 +95,9 @@ export function SpeciesListFacetStatsSync({
    organismStatsCacheRef,
    setIucnThreatStats,
    setSubProjectStats,
-   setSequencingTypeStats,
    setGoatStats,
+   customFields,
+   setCustomFieldStats,
 }: {
    statsQueryBase: OrganismStatsQueryContext
    goatEnabled: boolean
@@ -101,8 +105,9 @@ export function SpeciesListFacetStatsSync({
    organismStatsCacheRef: CacheRef
    setIucnThreatStats: (v: Record<string, number>) => void
    setSubProjectStats: (v: Record<string, number>) => void
-   setSequencingTypeStats: (v: Record<string, number>) => void
    setGoatStats: (v: Record<string, number>) => void
+   customFields: CmsOrganismFieldWire[]
+   setCustomFieldStats: (key: string, stats: Record<string, number>) => void
 }) {
    const { openSection } = useSpeciesListFilterAccordion()
 
@@ -134,14 +139,12 @@ export function SpeciesListFacetStatsSync({
          )
          return
       }
-      if (openSection === SEQUENCING_TYPE_SECTION_ID) {
-         const q = buildOrganismStatsQuery(statsQueryBase, 'sequencing_type')
-         runCachedFetch(
-            organismStatsCacheRef,
-            'organisms',
-            SEQUENCING_TYPE_STATS_FIELD,
-            q,
-            setSequencingTypeStats,
+      const customFieldKey = parseCustomFieldSectionId(openSection)
+      if (customFieldKey && customFields.some((field) => field.key === customFieldKey)) {
+         const statsField = customFieldStatsPath(customFieldKey)
+         const q = buildOrganismStatsQuery(statsQueryBase, statsField)
+         runCachedFetch(organismStatsCacheRef, 'organisms', statsField, q, (raw) =>
+            setCustomFieldStats(customFieldKey, raw),
          )
          return
       }
@@ -158,8 +161,9 @@ export function SpeciesListFacetStatsSync({
       organismStatsCacheRef,
       setIucnThreatStats,
       setSubProjectStats,
-      setSequencingTypeStats,
       setGoatStats,
+      customFields,
+      setCustomFieldStats,
    ])
 
    return null

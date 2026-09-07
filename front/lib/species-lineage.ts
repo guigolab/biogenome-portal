@@ -5,8 +5,8 @@ export type AncestryNode = {
 }
 
 /**
- * Keep only ancestors from the portal root taxon downward (same as server ``ROOT_NODE`` /
- * ``portal.json`` ``general.rootTaxid``).
+ * Keep only ancestors from the portal root taxon downward (same as server ``ROOT_NODE``,
+ * exposed via ``GET /taxons/root`` — see ``getRootTaxid()`` in ``lib/api/taxon.ts``).
  */
 export function filterAncestorsFromPortalRoot(
    ancestors: AncestryNode[],

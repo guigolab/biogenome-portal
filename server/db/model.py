@@ -52,6 +52,10 @@ class BioGenomeUser(db.Document):
     species = db.ListField(db.StringField())
     sub_projects = db.ListField(db.StringField())
     email = db.StringField()
+    # Links this curator account to one or more OrganismPrincipal rows (by slug). Used to
+    # project PI / institute / program info onto species via assigned curators; see
+    # docs/cbp-pi-contributor-migration.md. Organism itself is never linked directly.
+    principal_ids = db.ListField(db.StringField())
 
 
 class BioProject(db.Document):
@@ -221,7 +225,6 @@ class Organism(db.Document):
     links = db.ListField(db.URLField())
     common_names = db.ListField(db.EmbeddedDocumentField(CommonName))
     countries = db.ListField(db.StringField())
-    sequencing_type = db.ListField(db.StringField())
     insdc_common_name = db.StringField()
     scientific_name = db.StringField(required=True, unique=True)
     taxid = db.StringField(required=True, unique=True)
@@ -277,6 +280,24 @@ class OrganismNames(db.Document):
     lang = db.StringField()
     locality = db.StringField()
     taxid = db.StringField(required=True)
+
+
+class OrganismPrincipal(db.Document):
+    """
+    Catalog row for a funding/scientific authority (e.g. CBP: Principal Investigator).
+
+    Linked only through ``BioGenomeUser.principal_ids`` — never directly on ``Organism``.
+    Species inherit PI / institute / program by projecting through assigned curators
+    (see ``services.organisms`` CMS list projection and docs/cbp-pi-contributor-migration.md).
+    """
+
+    slug = db.StringField(required=True, unique=True)
+    name = db.StringField(required=True)
+    affiliations = db.ListField(db.StringField())
+    programs = db.ListField(db.StringField())
+    email = db.StringField()
+    metadata = db.DictField()
+    meta = {"indexes": ["slug", "name"]}
 
 
 class OrganismPublication(db.Document):

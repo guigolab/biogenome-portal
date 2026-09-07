@@ -1,10 +1,15 @@
+'use client'
+
 import Link from 'next/link'
 import { Fragment } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
+import { usePortalConfig } from '@/contexts/portal-context'
 import { organismImageUrls } from '@/lib/organismImages'
 import { iucnRedListBadge } from '@/lib/iucnCategory'
 import { labelGoatStatus, TARGET_LIST_STATUS_LABELS } from '@/lib/organismStatusLabels'
+import { organismCustomFieldRows } from '@/lib/organismCustomFieldDisplay'
+import type { CmsOrganismFieldWire } from '@/lib/portal/types'
 import {
    lineageRankPillsFromOrganism,
    SPECIES_RANK_GROUPS,
@@ -193,7 +198,7 @@ function OrganismGoatChips({ organism }: { organism: Record<string, unknown> }) 
    )
 }
 
-function SubProjectSequencingLine({
+function SubProjectLine({
    organism,
    className,
 }: {
@@ -204,19 +209,52 @@ function SubProjectSequencingLine({
       typeof organism.sub_project === 'string' && organism.sub_project.trim()
          ? organism.sub_project.trim()
          : null
-   const stRaw = organism.sequencing_type
-   const st = Array.isArray(stRaw)
-      ? stRaw.map((x) => String(x)).filter((s) => s.length > 0)
-      : []
-   const stLabel = st.length > 0 ? st.join(', ') : null
-   if (!sp && !stLabel) return null
+   if (!sp) return null
    return (
       <p className={cn('text-[11px] text-muted-foreground line-clamp-2', className)}>
-         {sp ? <span>{sp}</span> : null}
-         {sp && stLabel ? <span className="text-muted-foreground/50"> · </span> : null}
-         {stLabel ? <span>{stLabel}</span> : null}
+         <span>{sp}</span>
       </p>
    )
+}
+
+function OrganismCustomFieldsLine({
+   organism,
+   customFields,
+   className,
+}: {
+   organism: Record<string, unknown>
+   customFields: CmsOrganismFieldWire[]
+   className?: string
+}) {
+   const rows = organismCustomFieldRows(organism, customFields)
+   if (rows.length === 0) return null
+   return (
+      <p className={cn('text-[11px] text-muted-foreground line-clamp-2', className)}>
+         {rows.map((row, i) => (
+            <Fragment key={row.key}>
+               {i > 0 ? <span className="text-muted-foreground/50"> · </span> : null}
+               <span>
+                  {row.label}: {row.values.join(', ')}
+               </span>
+            </Fragment>
+         ))}
+      </p>
+   )
+}
+
+function OrganismProjectLine({
+   organism,
+   customFields,
+   className,
+}: {
+   organism: Record<string, unknown>
+   customFields: CmsOrganismFieldWire[]
+   className?: string
+}) {
+   if (customFields.length > 0) {
+      return <OrganismCustomFieldsLine organism={organism} customFields={customFields} className={className} />
+   }
+   return <SubProjectLine organism={organism} className={className} />
 }
 
 function OrganismStatsRow({
@@ -274,6 +312,8 @@ export function SpeciesCard({
    hideCompactLineage = false,
    showGoatChips = false,
 }: SpeciesCardProps) {
+   const { config } = usePortalConfig()
+   const customFields = config?.organismCustomFields ?? []
    const comfy = compact && compactVariant === 'comfortable'
    const taxid = getTaxid(organism)
    const href = taxid ? `/species/${encodeURIComponent(taxid)}` : '#'
@@ -372,7 +412,7 @@ export function SpeciesCard({
                         {showGoatChips ? <OrganismGoatChips organism={organism} /> : null}
                      </div>
                   </div>
-                  <SubProjectSequencingLine organism={organism} className="mt-2" />
+                  <OrganismProjectLine organism={organism} customFields={customFields} className="mt-2" />
                   <OrganismStatsRow organism={organism} className="mt-2" />
                </CardContent>
             </Card>
@@ -422,7 +462,7 @@ export function SpeciesCard({
                   <div className="min-h-[2.5rem] flex-1">
                      <LineageRankText organism={organism} lineageMode={lineageMode} />
                   </div>
-                  <SubProjectSequencingLine organism={organism} className="mt-1" />
+                  <OrganismProjectLine organism={organism} customFields={customFields} className="mt-1" />
                </div>
 
                <OrganismStatsRow organism={organism} className="mt-auto" />

@@ -23,10 +23,8 @@ export type OrganismFormState = {
    image_urls: string[]
    metadata: Record<string, string>
    publications: OrganismPublication[]
-   sub_project: string | null
    goat_status: string
    target_list_status: 'long_list' | 'family_representative' | 'other_priority' | ''
-   sequencing_type: string[]
    /** Read-only, denormalized on the organism; gates whether genome_publication can be set. */
    assemblies_count: number
 }
@@ -40,16 +38,15 @@ const emptyForm = (): OrganismFormState => ({
    image_urls: [],
    metadata: {},
    publications: [],
-   sub_project: null,
    goat_status: '',
    target_list_status: 'long_list',
-   sequencing_type: [],
    assemblies_count: 0,
 })
 
 type OrganismFormStore = {
    organismForm: OrganismFormState
    metadataList: { key: string; value: string }[]
+   customFieldValues: Record<string, string[]>
    publications: OrganismPublication[]
    /** Single publication describing the genome assembly; only settable once an assembly is linked. */
    genomePublication: OrganismPublication | null
@@ -58,6 +55,7 @@ type OrganismFormStore = {
    setOrganismForm: (p: Partial<OrganismFormState>) => void
    replaceOrganismForm: (f: OrganismFormState) => void
    setMetadataList: (v: { key: string; value: string }[]) => void
+   setCustomFieldValues: (v: Record<string, string[]>) => void
    setPublications: (v: OrganismPublication[]) => void
    setGenomePublication: (v: OrganismPublication | null) => void
    setVernacularNames: (v: OrganismCommonName[]) => void
@@ -68,6 +66,7 @@ type OrganismFormStore = {
 export const useOrganismFormStore = create<OrganismFormStore>((set) => ({
    organismForm: emptyForm(),
    metadataList: [],
+   customFieldValues: {},
    publications: [],
    genomePublication: null,
    vernacularNames: [],
@@ -76,6 +75,7 @@ export const useOrganismFormStore = create<OrganismFormStore>((set) => ({
    setOrganismForm: (p) => set((s) => ({ organismForm: { ...s.organismForm, ...p } })),
    replaceOrganismForm: (f) => set({ organismForm: f }),
    setMetadataList: (metadataList) => set({ metadataList }),
+   setCustomFieldValues: (customFieldValues) => set({ customFieldValues }),
    setPublications: (publications) => set({ publications }),
    setGenomePublication: (genomePublication) => set({ genomePublication }),
    setVernacularNames: (vernacularNames) => set({ vernacularNames }),
@@ -85,6 +85,7 @@ export const useOrganismFormStore = create<OrganismFormStore>((set) => ({
       set({
          organismForm: emptyForm(),
          metadataList: [],
+         customFieldValues: {},
          publications: [],
          genomePublication: null,
          vernacularNames: [],

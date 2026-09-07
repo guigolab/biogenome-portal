@@ -1,0 +1,45 @@
+# Minimal, self-contained sanity check for front/portal.schema.json.
+#
+# This repo's other workflows only forward push events to the private bgp-configs repo (which
+# does not have biogenome-portal checked out at the paths this job needs), so this check does not
+# assume bgp-configs is present. It only confirms front/portal.schema.json is valid JSON and a
+# well-formed JSON Schema document — it does not compare it against bgp-configs/portal.schema.json
+# (see bgp-configs/.github/workflows/build-next-front-ecr.yml for that cross-repo sync check).
+name: Validate portal schema
+
+on:
+  push:
+    paths:
+      - "front/portal.schema.json"
+  pull_request:
+    paths:
+      - "front/portal.schema.json"
+  workflow_dispatch:
+
+jobs:
+  validate-schema:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install jsonschema
+        run: pip install jsonschema
+
+      - name: Validate front/portal.schema.json is well-formed JSON Schema
+        run: |
+          python3 -c "
+          import json
+          import jsonschema
+
+          with open('front/portal.schema.json', encoding='utf-8') as f:
+              schema = json.load(f)
+
+          jsonschema.Draft202012Validator.check_schema(schema)
+          print('front/portal.schema.json is valid JSON and a well-formed JSON Schema document.')
+          "

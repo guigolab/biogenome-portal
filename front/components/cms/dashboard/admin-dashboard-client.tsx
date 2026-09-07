@@ -3,8 +3,10 @@
 import Link from 'next/link'
 import { useState } from 'react'
 import {
+   ChevronDown,
    FlaskConical,
    History,
+   IdCard,
    LayoutDashboard,
    LayoutGrid,
    Plus,
@@ -17,10 +19,17 @@ import { AdminOverviewStatsModule } from '@/components/cms/dashboard/admin-overv
 import { DataManagerOverviewStatsModule } from '@/components/cms/dashboard/data-manager-overview-stats-module'
 import { DeleteRequestsModule } from '@/components/cms/dashboard/delete-requests-module'
 import { OrganismAuditLogsModule } from '@/components/cms/dashboard/organism-audit-logs-module'
+import { OrganismPrincipalsModule } from '@/components/cms/dashboard/organism-principals-module'
 import { SpeciesOverviewModule } from '@/components/cms/dashboard/species-overview-module'
 import { SubmittedBiosamplesModule } from '@/components/cms/dashboard/submitted-biosamples-module'
 import { UsersModule } from '@/components/cms/dashboard/users-module'
 import { Button } from '@/components/ui/button'
+import {
+   DropdownMenu,
+   DropdownMenuContent,
+   DropdownMenuItem,
+   DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { usePortalConfig } from '@/contexts/portal-context'
 import { useCmsAuthStore } from '@/stores/cms-auth-store'
@@ -52,30 +61,59 @@ export function AdminDashboardClient() {
                <p className="mt-2 max-w-2xl text-muted-foreground">{description}</p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-               <Button asChild size="sm" className="gap-2">
-                  <Link href="/admin/create-organism">
-                     <Plus className="h-4 w-4" />
-                     Create species
-                  </Link>
-               </Button>
-               <Button asChild size="sm" variant="secondary" className="gap-2">
-                  <Link href="/admin/publish-biosample">
-                     <FlaskConical className="h-4 w-4" />
-                     Submit biosample
-                  </Link>
-               </Button>
                {isAdmin ? (
-                  <Button
-                     type="button"
-                     size="sm"
-                     variant="outline"
-                     className="gap-2"
-                     onClick={() => openDrawer({ panel: 'user' })}
-                  >
-                     <User className="h-4 w-4" />
-                     Create user
-                  </Button>
-               ) : null}
+                  <DropdownMenu>
+                     <DropdownMenuTrigger asChild>
+                        <Button type="button" size="sm" className="gap-2">
+                           Actions
+                           <ChevronDown className="h-4 w-4 opacity-70" aria-hidden />
+                        </Button>
+                     </DropdownMenuTrigger>
+                     <DropdownMenuContent align="end" className="w-52">
+                        <DropdownMenuItem asChild>
+                           <Link href="/admin/create-organism" className="gap-2">
+                              <Plus className="h-4 w-4" />
+                              Create species
+                           </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                           <Link href="/admin/publish-biosample" className="gap-2">
+                              <FlaskConical className="h-4 w-4" />
+                              Submit biosample
+                           </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                           className="gap-2"
+                           onClick={() => openDrawer({ panel: 'user' })}
+                        >
+                           <User className="h-4 w-4" />
+                           Create user
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                           className="gap-2"
+                           onClick={() => openDrawer({ panel: 'principal' })}
+                        >
+                           <IdCard className="h-4 w-4" />
+                           Create principal
+                        </DropdownMenuItem>
+                     </DropdownMenuContent>
+                  </DropdownMenu>
+               ) : (
+                  <>
+                     <Button asChild size="sm" className="gap-2">
+                        <Link href="/admin/create-organism">
+                           <Plus className="h-4 w-4" />
+                           Create species
+                        </Link>
+                     </Button>
+                     <Button asChild size="sm" variant="secondary" className="gap-2">
+                        <Link href="/admin/publish-biosample">
+                           <FlaskConical className="h-4 w-4" />
+                           Submit biosample
+                        </Link>
+                     </Button>
+                  </>
+               )}
             </div>
          </div>
 
@@ -98,6 +136,10 @@ export function AdminDashboardClient() {
                      <Users className="h-4 w-4" />
                      Users
                   </TabsTrigger>
+                  <TabsTrigger value="principals" className="gap-1.5 rounded-lg px-3 py-2">
+                     <IdCard className="h-4 w-4" />
+                     Principals
+                  </TabsTrigger>
                   <TabsTrigger value="deletions" className="gap-1.5 rounded-lg px-3 py-2">
                      <Trash2 className="h-4 w-4" />
                      Pending deletions
@@ -118,6 +160,9 @@ export function AdminDashboardClient() {
                </TabsContent>
                <TabsContent value="users" className={DASHBOARD_TAB_PANEL_CLASS}>
                   <UsersModule />
+               </TabsContent>
+               <TabsContent value="principals" className={DASHBOARD_TAB_PANEL_CLASS}>
+                  <OrganismPrincipalsModule />
                </TabsContent>
                <TabsContent value="deletions" className={DASHBOARD_TAB_PANEL_CLASS}>
                   <DeleteRequestsModule />

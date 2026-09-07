@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useCallback, useEffect, useState } from 'react'
-import { ChevronDown, Download, History, Loader2, Plus } from 'lucide-react'
+import { ChevronDown, Download, History, Loader2, Pencil, Plus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 import {
@@ -19,6 +19,12 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
+import {
+   DropdownMenu,
+   DropdownMenuContent,
+   DropdownMenuItem,
+   DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import {
@@ -40,6 +46,12 @@ import { extractApiMessage } from '@/lib/cms/extract-api-message'
 import { DashboardModuleHeader } from '@/components/cms/dashboard/dashboard-module-header'
 import { DashboardModulePagination } from '@/components/cms/dashboard/dashboard-module-pagination'
 import { OrganismCuratorsCell } from '@/components/cms/dashboard/organism-curators-cell'
+import {
+   OrganismPrincipalAffiliationsCell,
+   OrganismPrincipalNamesCell,
+   OrganismPrincipalProgramsCell,
+   type OrganismPrincipalRow,
+} from '@/components/cms/dashboard/organism-principals-cell'
 import { OrganismStatusPatchSelect } from '@/components/cms/dashboard/organism-status-patch-select'
 import { OrganismAuditLogHistoryDialog } from '@/components/cms/dashboard/organism-audit-log-history-dialog'
 import {
@@ -51,7 +63,7 @@ import {
    cmsGetUserSpecies,
    cmsGetUsers,
 } from '@/lib/cms/services/auth'
-import { cn } from '@/lib/utils'
+import { cmsGetOrganismPrincipalOptions } from '@/lib/cms/services/organism-principals'
 import { usePortalConfig } from '@/contexts/portal-context'
 import { useCmsAuthStore } from '@/stores/cms-auth-store'
 import { useCmsDrawerStore } from '@/stores/cms-drawer-store'
@@ -82,6 +94,8 @@ export function SpeciesOverviewModule() {
    const [toggle, setToggle] = useState<'all' | 'assigned' | 'unassigned'>('all')
    const [users, setUsers] = useState<Record<string, unknown>[]>([])
    const [selectedUsers, setSelectedUsers] = useState<string[]>([])
+   const [principalOptions, setPrincipalOptions] = useState<{ slug: string; name: string }[]>([])
+   const [selectedPrincipals, setSelectedPrincipals] = useState<string[]>([])
    const [downloading, setDownloading] = useState(false)
 
    const [deleteReqOrg, setDeleteReqOrg] = useState<Record<string, unknown> | null>(null)
@@ -98,13 +112,15 @@ export function SpeciesOverviewModule() {
             offset: (page - 1) * LIMIT,
          }
          if (isAdmin) {
-            if (toggle === 'all') {
+            if (toggle === 'all' || toggle === 'assigned') {
                if (selectedUsers.length) params.name__in = selectedUsers.join(',')
+               if (selectedPrincipals.length) params.principal__in = selectedPrincipals.join(',')
+            }
+            if (toggle === 'all') {
                const { data, total: t } = await cmsGetAllOrganismsWithUsers(params)
                setOrganisms(data ?? [])
                setTotal(t ?? 0)
             } else if (toggle === 'assigned') {
-               if (selectedUsers.length) params.name__in = selectedUsers.join(',')
                const { data, total: t } = await cmsGetOrganismsWithUsers(params)
                setOrganisms(data ?? [])
                setTotal(t ?? 0)
@@ -124,7 +140,7 @@ export function SpeciesOverviewModule() {
       } finally {
          setLoading(false)
       }
-   }, [isAdmin, userName, filter, page, toggle, selectedUsers])
+   }, [isAdmin, userName, filter, page, toggle, selectedUsers, selectedPrincipals])
 
    useEffect(() => {
       void fetchData()
@@ -140,23 +156,30 @@ export function SpeciesOverviewModule() {
 
    useEffect(() => {
       if (!isAdmin) return
-         ; (async () => {
-            try {
-               const { data } = await cmsGetUsers({ limit: 10000 })
-               const list = (data ?? []).filter((u: Record<string, unknown>) => u.role !== 'Admin')
-               setUsers(list)
-            } catch {
-               setUsers([])
-            }
-         })()
+      ;(async () => {
+         try {
+            const { data } = await cmsGetUsers({ limit: 10000 })
+            const list = (data ?? []).filter((u: Record<string, unknown>) => u.role !== 'Admin')
+            setUsers(list)
+         } catch {
+            setUsers([])
+         }
+         try {
+            const options = await cmsGetOrganismPrincipalOptions()
+            setPrincipalOptions(Array.isArray(options) ? options : [])
+         } catch {
+            setPrincipalOptions([])
+         }
+      })()
    }, [isAdmin])
 
    async function downloadTsv() {
       setDownloading(true)
       try {
          const params: Record<string, string | number | boolean> = { format: 'tsv', filter }
-         if ((toggle === 'assigned' || toggle === 'all') && selectedUsers.length) {
-            params.name__in = selectedUsers.join(',')
+         if (toggle === 'assigned' || toggle === 'all') {
+            if (selectedUsers.length) params.name__in = selectedUsers.join(',')
+            if (selectedPrincipals.length) params.principal__in = selectedPrincipals.join(',')
          }
          const blob = (await (toggle === 'unassigned'
             ? cmsGetUnassignedOrganisms(params, true)
@@ -243,6 +266,7 @@ export function SpeciesOverviewModule() {
                                  setFilterDraft('')
                                  setFilter('')
                                  setSelectedUsers([])
+                                 setSelectedPrincipals([])
                               }
                            }}
                         >
@@ -327,6 +351,76 @@ export function SpeciesOverviewModule() {
                               </PopoverContent>
                            </Popover>
                         ) : null}
+                        {toggle === 'assigned' || toggle === 'all' ? (
+                           <Popover>
+                              <PopoverTrigger asChild>
+                                 <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    className="min-w-[10.5rem] justify-between gap-2"
+                                 >
+                                    <span>Principals</span>
+                                    {selectedPrincipals.length > 0 ? (
+                                       <Badge variant="secondary" className="font-mono text-xs font-normal">
+                                          {selectedPrincipals.length}
+                                       </Badge>
+                                    ) : null}
+                                    <ChevronDown className="h-4 w-4 shrink-0 opacity-50" aria-hidden />
+                                 </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-80 p-0" align="start">
+                                 <div className="border-b border-border px-3 py-2">
+                                    <p className="text-xs font-medium text-muted-foreground">
+                                       Filter by principal (PI)
+                                    </p>
+                                 </div>
+                                 <div className="max-h-56 space-y-1 overflow-y-auto p-2">
+                                    {principalOptions.length === 0 ? (
+                                       <p className="px-2 py-2 text-sm text-muted-foreground">No principals.</p>
+                                    ) : (
+                                       principalOptions.map((p) => {
+                                          const slug = p.slug
+                                          const checked = selectedPrincipals.includes(slug)
+                                          return (
+                                             <label
+                                                key={slug}
+                                                className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted/80"
+                                             >
+                                                <Checkbox
+                                                   checked={checked}
+                                                   onCheckedChange={() => {
+                                                      setSelectedPrincipals((prev) =>
+                                                         prev.includes(slug)
+                                                            ? prev.filter((x) => x !== slug)
+                                                            : [...prev, slug],
+                                                      )
+                                                      setPage(1)
+                                                   }}
+                                                />
+                                                <span className="truncate">{p.name}</span>
+                                             </label>
+                                          )
+                                       })
+                                    )}
+                                 </div>
+                                 <div className="flex justify-end border-t border-border p-2">
+                                    <Button
+                                       type="button"
+                                       variant="ghost"
+                                       size="sm"
+                                       disabled={selectedPrincipals.length === 0}
+                                       onClick={() => {
+                                          setSelectedPrincipals([])
+                                          setPage(1)
+                                       }}
+                                    >
+                                       Clear
+                                    </Button>
+                                 </div>
+                              </PopoverContent>
+                           </Popover>
+                        ) : null}
                         <Button
                            type="button"
                            variant="outline"
@@ -363,20 +457,33 @@ export function SpeciesOverviewModule() {
                            <TableRow>
                               <TableHead>Species</TableHead>
                               <TableHead>GoaT</TableHead>
-                              <TableHead>Target</TableHead>
                               {isAdmin ? <TableHead>Curators</TableHead> : null}
+                              <TableHead>PI</TableHead>
+                              <TableHead>Institute</TableHead>
+                              <TableHead>Project</TableHead>
                               <TableHead className="text-right">Actions</TableHead>
                            </TableRow>
                         </TableHeader>
                         <TableBody>
                            {organisms.map((org) => (
-                              <TableRow
-                                 key={String(org.taxid)}
-                                 className={cn(Boolean(org.pending_deletion) && 'opacity-60')}
-                              >
+                              <TableRow key={String(org.taxid)}>
                                  <TableCell>
-                                    <span className="block font-medium italic">{String(org.scientific_name)}</span>
-                                    <span className="text-xs text-muted-foreground">{String(org.taxid)}</span>
+                                    <div className="flex flex-wrap items-center gap-2">
+                                       <span className="font-medium italic">
+                                          {String(org.scientific_name)}
+                                       </span>
+                                       {org.pending_deletion ? (
+                                          <Badge
+                                             variant="destructive"
+                                             className="text-[0.65rem] font-medium uppercase tracking-wide"
+                                          >
+                                             Pending deletion
+                                          </Badge>
+                                       ) : null}
+                                    </div>
+                                    <span className="text-xs text-muted-foreground">
+                                       {String(org.taxid)}
+                                    </span>
                                  </TableCell>
                                  <TableCell>
                                     <OrganismStatusPatchSelect
@@ -386,16 +493,6 @@ export function SpeciesOverviewModule() {
                                        value={org.goat_status}
                                        disabled={Boolean(org.pending_deletion) && !isAdmin}
                                        readOnly={!hasGoat}
-                                       onUpdated={() => void fetchData()}
-                                    />
-                                 </TableCell>
-                                 <TableCell>
-                                    <OrganismStatusPatchSelect
-                                       taxid={String(org.taxid)}
-                                       scientificName={String(org.scientific_name ?? '')}
-                                       field="target_list_status"
-                                       value={org.target_list_status}
-                                       disabled={Boolean(org.pending_deletion) && !isAdmin}
                                        onUpdated={() => void fetchData()}
                                     />
                                  </TableCell>
@@ -415,45 +512,69 @@ export function SpeciesOverviewModule() {
                                        />
                                     </TableCell>
                                  ) : null}
+                                 <TableCell className="align-top">
+                                    <OrganismPrincipalNamesCell
+                                       principals={org.principals as OrganismPrincipalRow[] | undefined}
+                                    />
+                                 </TableCell>
+                                 <TableCell className="align-top">
+                                    <OrganismPrincipalAffiliationsCell
+                                       principals={org.principals as OrganismPrincipalRow[] | undefined}
+                                    />
+                                 </TableCell>
+                                 <TableCell className="align-top">
+                                    <OrganismPrincipalProgramsCell
+                                       principals={org.principals as OrganismPrincipalRow[] | undefined}
+                                    />
+                                 </TableCell>
                                  <TableCell className="text-right">
-                                    <div className="flex flex-wrap justify-end gap-1">
-                                       {org.pending_deletion && !isAdmin ? (
-                                          <span className="text-xs text-amber-600">Pending deletion</span>
-                                       ) : (
-                                          <>
+                                    {org.pending_deletion && !isAdmin ? (
+                                       <span className="text-xs text-amber-600">Pending deletion</span>
+                                    ) : (
+                                       <DropdownMenu>
+                                          <DropdownMenuTrigger asChild>
                                              <Button
+                                                type="button"
                                                 variant="outline"
                                                 size="sm"
                                                 className="gap-1.5"
+                                             >
+                                                Actions
+                                                <ChevronDown className="h-3.5 w-3.5 opacity-70" aria-hidden />
+                                             </Button>
+                                          </DropdownMenuTrigger>
+                                          <DropdownMenuContent align="end" className="w-44">
+                                             <DropdownMenuItem
+                                                className="gap-2"
                                                 onClick={() => setHistoryOrg(org)}
                                              >
-                                                <History className="h-3.5 w-3.5" />
+                                                <History className="h-4 w-4" />
                                                 History
-                                             </Button>
-                                             <Button variant="outline" size="sm" asChild>
-                                                <Link href={`/admin/update-organism/${org.taxid}`}>Edit</Link>
-                                             </Button>
-
-                                             {isAdmin ? (
-                                                <Button
-                                                   variant="destructive"
-                                                   size="sm"
-                                                   onClick={() => setAdminDeleteOrg(org)}
+                                             </DropdownMenuItem>
+                                             <DropdownMenuItem asChild>
+                                                <Link
+                                                   href={`/admin/update-organism/${org.taxid}`}
+                                                   className="gap-2"
                                                 >
-                                                   Delete
-                                                </Button>
-                                             ) : (
-                                                <Button
-                                                   variant="destructive"
-                                                   size="sm"
-                                                   onClick={() => setDeleteReqOrg(org)}
-                                                >
-                                                   Delete
-                                                </Button>
-                                             )}
-                                          </>
-                                       )}
-                                    </div>
+                                                   <Pencil className="h-4 w-4" />
+                                                   Edit
+                                                </Link>
+                                             </DropdownMenuItem>
+                                             <DropdownMenuItem
+                                                variant="destructive"
+                                                className="gap-2"
+                                                onClick={() =>
+                                                   isAdmin
+                                                      ? setAdminDeleteOrg(org)
+                                                      : setDeleteReqOrg(org)
+                                                }
+                                             >
+                                                <Trash2 className="h-4 w-4" />
+                                                Delete
+                                             </DropdownMenuItem>
+                                          </DropdownMenuContent>
+                                       </DropdownMenu>
+                                    )}
                                  </TableCell>
                               </TableRow>
                            ))}

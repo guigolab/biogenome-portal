@@ -3,21 +3,22 @@
 # Triggered by repository_dispatch from a private config repo (type: full-deploy)
 # or manually via workflow_dispatch.
 #
-# The private config repo is checked out first (path: bgp-configs/) and its
-# branding/ directory is copied into the Next build context so bake-portal.mjs
-# can merge the deployment-specific portal.config.json and assets.
+# Branding is NOT baked into these images (front-config-centralization-plan.md Phase 3):
+# portal.json and logos are bind-mounted at deploy time. Both Next builds below use an empty
+# NEXT_PUBLIC_BASE_PATH (root deploy). Subpath instance images are built by the matrix
+# workflow in bgp-configs/.github/workflows/build-next-front-ecr.yml.
 #
-# Each portal variant produces a distinct image tag, e.g.:
-#   portal_next:cbp      — Catalan Biogenome Project
-#   portal_next:biogenoma — default / demo
+# Tags produced:
+#   biogenome_back              — Flask backend
+#   portal_next / portal_next_biogenoma — generic root-basePath Next image
+#   portal_next_cbp             — CBP production root-basePath Next image (optional Matomo args)
 #
 # Required GitHub secrets:
 #   AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION
 #   ECR_REGISTRY, ECR_REPOSITORY
 #   PAT  — token for checking out the public repo
 #
-# Per-deployment secrets (optional, add more as needed):
-#   CBP_PORTAL_API_BASE, CBP_PORTAL_ROOT_TAXID, CBP_NEXT_PUBLIC_CMS
+# Optional (CBP Matomo only — still build-arg based; general.matomo in portal.json is not wired yet):
 #   CBP_NEXT_PUBLIC_MATOMO_URL, CBP_NEXT_PUBLIC_MATOMO_SITE_ID
 name: Build and Push
 
@@ -31,11 +32,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout private config repo
-        uses: actions/checkout@v4
-        with:
-          path: ./bgp-configs
-
       - name: Checkout public repo
         uses: actions/checkout@v4
         with:
@@ -67,7 +63,7 @@ jobs:
           docker build -t "${ECR_REGISTRY}/${ECR_REPOSITORY}:biogenome_back" ./biogenome-portal/server
           docker push "${ECR_REGISTRY}/${ECR_REPOSITORY}:biogenome_back"
 
-      # ── portal_next:biogenoma — generic / demo image (no branding) ──────────
+      # ── portal_next:biogenoma — generic root-basePath image ─────────────────
       - name: Build portal_next:biogenoma (default)
         env:
           ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
@@ -82,35 +78,18 @@ jobs:
           docker push "${ECR_REGISTRY}/${ECR_REPOSITORY}:portal_next"
           docker push "${ECR_REGISTRY}/${ECR_REPOSITORY}:portal_next_biogenoma"
 
-      # ── portal_next:cbp — Catalan Biogenome Project branded image ───────────
-      # Expects bgp-configs/cbp/branding/ with:
-      #   portal.config.json  — partial PortalConfig (titles, theme, footer, etc.)
-      #   portal-logo.png     — logo for navbar/footer/favicon
-      #   hero-map.geojson    — optional map overlay
-      - name: Inject CBP branding into build context
-        run: |
-          if [ -d ./bgp-configs/cbp/branding ]; then
-            cp -r ./bgp-configs/cbp/branding ./biogenome-portal/front/branding
-            echo "CBP branding injected."
-          else
-            echo "No CBP branding directory found — skipping (image will use defaults)."
-          fi
-
+      # ── portal_next:cbp — CBP production root-basePath image ────────────────
+      # Branding is mounted at deploy time (bgp-configs/biogenome-portal-cbp/). Matomo remains
+      # optional build-arg overrides until general.matomo is wired into the Next tracker.
       - name: Build portal_next:cbp
         env:
           ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
           ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
-          PORTAL_API_BASE: ${{ secrets.CBP_PORTAL_API_BASE }}
-          PORTAL_ROOT_TAXID: ${{ secrets.CBP_PORTAL_ROOT_TAXID }}
-          NEXT_PUBLIC_CMS: ${{ secrets.CBP_NEXT_PUBLIC_CMS }}
           NEXT_PUBLIC_MATOMO_URL: ${{ secrets.CBP_NEXT_PUBLIC_MATOMO_URL }}
           NEXT_PUBLIC_MATOMO_SITE_ID: ${{ secrets.CBP_NEXT_PUBLIC_MATOMO_SITE_ID }}
         run: |
           docker build \
             --build-arg "NEXT_PUBLIC_BASE_PATH=" \
-            --build-arg "PORTAL_API_BASE=${PORTAL_API_BASE}" \
-            --build-arg "PORTAL_ROOT_TAXID=${PORTAL_ROOT_TAXID}" \
-            --build-arg "NEXT_PUBLIC_CMS=${NEXT_PUBLIC_CMS}" \
             --build-arg "NEXT_PUBLIC_MATOMO_URL=${NEXT_PUBLIC_MATOMO_URL}" \
             --build-arg "NEXT_PUBLIC_MATOMO_SITE_ID=${NEXT_PUBLIC_MATOMO_SITE_ID}" \
             -t "${ECR_REGISTRY}/${ECR_REPOSITORY}:portal_next_cbp" \

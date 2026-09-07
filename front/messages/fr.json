@@ -12,7 +12,7 @@
    },
    "catalog": {
       "pageTitle": "Catalogue",
-      "pageDescription": "INSDC collections for this portal: pick a dataset, filter, then browse the table or dashboard.",
+      "pageDescription": "Parcourez et filtrez les collections de données génomiques de ce projet.",
       "records": "enregistrements",
       "taxonSearchLabel": "Rechercher des taxons par nom ou taxid",
       "taxonSearchLoading": "Recherche de taxons…",
@@ -143,7 +143,7 @@
    },
    "genomeBrowser": {
       "title": "Navigateur génomique",
-      "description": "Explorez les séquences de référence et les annotations géniques avec JBrowse 2.",
+      "description": "Parcourez les assemblages génomiques et les annotations.",
       "sessionsPanelScope": "Uniquement les assemblages au niveau chromosome et génome complet.",
       "contextLabel": "Filtré par taxonomie :",
       "contextTaxonLink": "Voir le taxon",
@@ -369,6 +369,8 @@
       }
    },
    "speciesList": {
+      "pageTitle": "Liste des espèces",
+      "pageDescription": "Espèces ciblées par ce projet.",
       "searchByNameTaxonomyId": "Rechercher des espèces par nom, taxonomie ou ID",
       "searchPlaceholder": "Rechercher des espèces par nom, taxonomie ou ID…",
       "filterByIucnCategory": "Filtrer par catégorie de la Liste rouge UICN",
@@ -409,13 +411,9 @@
       "clearTaxonomyFilter": "Effacer",
       "iucnSectionTitle": "Catégorie de la Liste rouge UICN",
       "subProjectSectionTitle": "Sous-projet",
-      "sequencingTypeSectionTitle": "Type de séquençage",
       "allSubProjects": "Tous les sous-projets",
-      "allSequencingTypes": "Tous les types de séquençage",
       "filterBySubProject": "Filtrer par sous-projet",
-      "filterBySequencingType": "Filtrer par type de séquençage",
       "removeSubProjectFilter": "Retirer le filtre sous-projet",
-      "removeSequencingTypeFilter": "Retirer le filtre type de séquençage",
       "countrySectionTitle": "Pays",
       "countryListSearchPlaceholder": "Rechercher des pays…",
       "countryClearSelection": "Effacer les pays",

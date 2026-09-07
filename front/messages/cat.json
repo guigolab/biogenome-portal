@@ -12,7 +12,7 @@
    },
    "catalog": {
       "pageTitle": "Catàleg",
-      "pageDescription": "Col·leccions INSDC d’aquest portal: trieu un conjunt de dades, filtreu i consulteu la taula o el panell.",
+      "pageDescription": "Exploreu i filtreu les col·leccions de dades genòmiques d'aquest projecte.",
       "records": "registres",
       "taxonSearchLabel": "Cerca tàxons per nom o taxid",
       "taxonSearchLoading": "Cercant tàxons…",
@@ -143,7 +143,7 @@
    },
    "genomeBrowser": {
       "title": "Navegador de genoma",
-      "description": "Exploreu seqüències de referència i anotacions de gens amb JBrowse 2.",
+      "description": "Exploreu assemblatges genòmics i anotacions.",
       "sessionsPanelScope": "Només assemblatges de nivell de cromosoma i genomes complets.",
       "contextLabel": "Filtrat per taxonomia:",
       "contextTaxonLink": "Veure tàxon",
@@ -369,6 +369,8 @@
       }
    },
    "speciesList": {
+      "pageTitle": "Llista d'espècies",
+      "pageDescription": "Espècies objectiu d'aquest projecte.",
       "searchByNameTaxonomyId": "Cercar espècies per nom, taxonomia o ID",
       "searchPlaceholder": "Cercar espècies per nom, taxonomia o ID…",
       "filterByIucnCategory": "Filtrar per categoria de la Llista Vermella UICN",
@@ -409,13 +411,9 @@
       "clearTaxonomyFilter": "Netejar",
       "iucnSectionTitle": "Categoria de la Llista Vermella UICN",
       "subProjectSectionTitle": "Subprojecte",
-      "sequencingTypeSectionTitle": "Tipus de seqüenciació",
       "allSubProjects": "Tots els subprojectes",
-      "allSequencingTypes": "Tots els tipus de seqüenciació",
       "filterBySubProject": "Filtrar per subprojecte",
-      "filterBySequencingType": "Filtrar per tipus de seqüenciació",
       "removeSubProjectFilter": "Treure el filtre de subprojecte",
-      "removeSequencingTypeFilter": "Treure el filtre de tipus de seqüenciació",
       "countrySectionTitle": "País",
       "countryListSearchPlaceholder": "Cercar països…",
       "countryClearSelection": "Esborrar països",

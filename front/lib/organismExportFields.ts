@@ -31,7 +31,7 @@ export const ORGANISM_EXPORT_FIELD_GROUPS: { id: string; label: string; fields: 
          { key: 'sub_project', label: 'Sub-project' },
          { key: 'taxon_lineage', label: 'Taxon lineage (taxids)' },
          { key: 'common_names', label: 'Common names (mapped)' },
-         { key: 'sequencing_type', label: 'Sequencing types' },
+         { key: 'metadata.sequencing_type', label: 'Sequencing types' },
       ],
    },
    {

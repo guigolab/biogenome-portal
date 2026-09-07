@@ -1,12 +1,11 @@
 export type ChartType = 'pie' | 'dateline' | 'bar' | 'scatter'
 
-export type ConfigurableStepId = 'goatStatus' | 'piOrEntity' | 'images'
+export type ConfigurableStepId = 'goatStatus' | 'images'
 
 export type OrganismFormStepId =
    | 'selectOrganism'
    | 'goatStatus'
    | 'sequencingAndSubproject'
-   | 'piOrEntity'
    | 'images'
    | 'publications'
    | 'vernacularNames'
@@ -24,10 +23,22 @@ export type CmsOrganismFormWire = {
    steps?: CmsOrganismFormStepWire[]
 }
 
+export type OrganismCustomFieldType = 'single' | 'multi'
+
+export type CmsOrganismFieldWire = {
+   key: string
+   label: string
+   type: OrganismCustomFieldType
+   step: OrganismFormStepId
+   required?: boolean
+   values: string[]
+}
+
 export type CmsOrganismsWire = {
    requiredSteps?: OrganismFormStepId[]
    steps?: CmsOrganismFormStepWire[]
    form?: CmsOrganismFormWire
+   fields?: CmsOrganismFieldWire[]
 }
 
 export type PortalCmsWire = {
@@ -42,17 +53,16 @@ export interface GeneralConfig extends Record<string, unknown> {
     */
    titleHighlight?: Record<string, string>
    /**
-    * REST API prefix for browser and server fetches: absolute URL (`https://host/api`)
-    * or same-origin path (`/api`, `/bgp/api`). Trailing slash is stripped when used.
-    */
-   apiBase?: string
-   /** Default root taxid for UI fallbacks; prefer GET /taxons/root when online. */
-   rootTaxid?: string
-   /**
     * Optional `http`/`https` URL to this portal’s Genomes on a Tree (GoaT) project.
     * When set, the species list GoaT drawer shows a “View in GoaT” action.
     */
    goatProjectLink?: string
+   /**
+    * Show the country filter (species list) and country section (species detail).
+    * Preferred over the build-time `NEXT_PUBLIC_SHOW_COUNTRIES` env var when set; both
+    * default to true when unset. See `showCountriesUi()` in `portalFeatures.ts`.
+    */
+   showCountries?: boolean
 }
 
 /** Wire format for portal.json theme colors (appearance is user-controlled in the Next app, not JSON). */
@@ -239,5 +249,6 @@ export interface AppConfig {
    ui: Record<string, unknown>
    models: Partial<Record<DataModels, ConfigModel>>
    organismFormSteps: OrganismFormStepDef[]
+   organismCustomFields: CmsOrganismFieldWire[]
    footer?: PortalFooterWire
 }

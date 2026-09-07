@@ -3,6 +3,7 @@
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { AnnotationFormPanel } from '@/components/cms/drawer/annotation-form-panel'
 import { InsdcImportPanel } from '@/components/cms/drawer/insdc-import-panel'
+import { OrganismPrincipalFormPanel } from '@/components/cms/drawer/organism-principal-form-panel'
 import { UserFormPanel } from '@/components/cms/drawer/user-form-panel'
 import { useCmsDrawerStore, type CmsDashboardDrawerPanel } from '@/stores/cms-drawer-store'
 import { cn } from '@/lib/utils'
@@ -20,11 +21,16 @@ const PANEL_COPY: Record<CmsDashboardDrawerPanel, { title: string; description: 
       title: 'Annotation',
       description: 'Create or edit annotation records.',
    },
+   principal: {
+      title: 'Principal',
+      description: 'Create or edit PI / institute / program catalog rows.',
+   },
 }
 
 function sheetWidth(panel: CmsDashboardDrawerPanel | null) {
    if (panel === 'user') return 'sm:max-w-2xl'
    if (panel === 'annotation') return 'sm:max-w-xl'
+   if (panel === 'principal') return 'sm:max-w-xl'
    return 'sm:max-w-md'
 }
 
@@ -35,6 +41,7 @@ export function CmsDashboardDrawer() {
    const userName = useCmsDrawerStore((s) => s.userName)
    const annotationName = useCmsDrawerStore((s) => s.annotationName)
    const insdcImportModel = useCmsDrawerStore((s) => s.insdcImportModel)
+   const principalSlug = useCmsDrawerStore((s) => s.principalSlug)
 
    const meta = panel ? PANEL_COPY[panel] : null
    const title =
@@ -46,7 +53,11 @@ export function CmsDashboardDrawer() {
              ? `Edit ${annotationName}`
              : panel === 'annotation'
                ? 'Create annotation'
-               : meta?.title ?? ''
+               : panel === 'principal' && principalSlug
+                 ? 'Edit principal'
+                 : panel === 'principal'
+                   ? 'Create principal'
+                   : meta?.title ?? ''
 
    return (
       <Sheet open={isOpen} onOpenChange={(open) => !open && close()}>
@@ -78,6 +89,7 @@ export function CmsDashboardDrawer() {
                   {panel === 'insdc' ? <InsdcImportPanel presetModel={insdcImportModel} /> : null}
                   {panel === 'user' ? <UserFormPanel editName={userName} /> : null}
                   {panel === 'annotation' ? <AnnotationFormPanel editName={annotationName} /> : null}
+                  {panel === 'principal' ? <OrganismPrincipalFormPanel editSlug={principalSlug} /> : null}
                </div>
             </div>
          </SheetContent>

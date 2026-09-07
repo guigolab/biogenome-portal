@@ -117,6 +117,39 @@ export async function cmsUnassignSpeciesFromUser(userName: string, taxid: string
    })
 }
 
+/** Append a principal slug to a user’s `principal_ids` (partial PUT). */
+export async function cmsAssignPrincipalToUser(
+   userName: string,
+   principalSlug: string,
+   currentPrincipalIds?: string[],
+) {
+   const slug = String(principalSlug)
+   let existing = currentPrincipalIds?.map(String)
+   if (!existing) {
+      const u = await cmsGetUser(userName)
+      existing = Array.isArray(u.principal_ids) ? u.principal_ids.map(String) : []
+   }
+   if (existing.includes(slug)) return
+   await cmsUpdateUser(userName, { principal_ids: [...existing, slug] })
+}
+
+/** Remove a principal slug from a user’s `principal_ids` (partial PUT). */
+export async function cmsUnassignPrincipalFromUser(
+   userName: string,
+   principalSlug: string,
+   currentPrincipalIds?: string[],
+) {
+   const slug = String(principalSlug)
+   let existing = currentPrincipalIds?.map(String)
+   if (!existing) {
+      const u = await cmsGetUser(userName)
+      existing = Array.isArray(u.principal_ids) ? u.principal_ids.map(String) : []
+   }
+   await cmsUpdateUser(userName, {
+      principal_ids: existing.filter((s) => s !== slug),
+   })
+}
+
 export async function cmsGetUserRelatedData(name: string) {
    return cmsFetchJson<Partial<Record<DataModels, number>>>(
       `/users/${encodeURIComponent(name)}/lookup`,

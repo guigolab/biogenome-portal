@@ -92,46 +92,44 @@ export function OrganismCuratorsCell({
    return (
       <>
          <div className="flex min-w-[12rem] max-w-[22rem] flex-wrap items-center gap-1.5">
-            {assignedUsers.length === 0 ? (
-               <span className="text-xs text-muted-foreground">None</span>
-            ) : (
-               assignedUsers.map((u) => (
-                  <span
-                     key={u}
-                     className={cn(
-                        'inline-flex max-w-full items-center gap-0.5 rounded-full border border-border bg-muted/60 pl-2 text-xs font-medium text-foreground',
-                        busy === `remove:${u}` && 'opacity-60',
-                     )}
-                  >
-                     {onOpenUser ? (
-                        <button
-                           type="button"
-                           className="truncate py-0.5 pr-0.5 text-left hover:underline"
-                           title="Edit user"
-                           onClick={() => onOpenUser(u)}
-                        >
-                           {u}
-                        </button>
-                     ) : (
-                        <span className="truncate py-0.5 pr-0.5">{u}</span>
-                     )}
-                     <button
-                        type="button"
-                        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-destructive/15 hover:text-destructive"
-                        title={`Remove ${u}`}
-                        disabled={!!busy}
-                        onClick={() => setRemoveUser(u)}
-                        aria-label={`Remove ${u} from this species`}
-                     >
-                        {busy === `remove:${u}` ? (
-                           <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        ) : (
-                           <X className="h-3.5 w-3.5" />
-                        )}
-                     </button>
-                  </span>
-               ))
-            )}
+            {assignedUsers.length > 0
+               ? assignedUsers.map((u) => (
+                    <span
+                       key={u}
+                       className={cn(
+                          'inline-flex max-w-full items-center gap-0.5 rounded-full border border-border bg-muted/60 pl-2 text-xs font-medium text-foreground',
+                          busy === `remove:${u}` && 'opacity-60',
+                       )}
+                    >
+                       {onOpenUser ? (
+                          <button
+                             type="button"
+                             className="truncate py-0.5 pr-0.5 text-left hover:underline"
+                             title="Edit user"
+                             onClick={() => onOpenUser(u)}
+                          >
+                             {u}
+                          </button>
+                       ) : (
+                          <span className="truncate py-0.5 pr-0.5">{u}</span>
+                       )}
+                       <button
+                          type="button"
+                          className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-destructive/15 hover:text-destructive"
+                          title={`Remove ${u}`}
+                          disabled={!!busy}
+                          onClick={() => setRemoveUser(u)}
+                          aria-label={`Remove ${u} from this species`}
+                       >
+                          {busy === `remove:${u}` ? (
+                             <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                             <X className="h-3.5 w-3.5" />
+                          )}
+                       </button>
+                    </span>
+                 ))
+               : null}
 
             <Popover open={addOpen} onOpenChange={setAddOpen}>
                <PopoverTrigger asChild>

@@ -1,25 +1,15 @@
-import type { GeneralConfig } from './types'
-
-let runtimeApiBase: string | null = null
 let runtimeRootTaxid: string | null = null
 
 /**
- * Apply `general.apiBase` and `general.rootTaxid` from portal.json (disk or fetched).
- * Safe for single-tenant deployments (one portal.json per process).
+ * Apply the backend-derived root taxid (``GET /taxons/root``), fetched once per request in the
+ * root layout (see `lib/portal/portalServer.ts` / `contexts/portal-context.tsx`), so
+ * `getRootTaxid()` in `lib/api/taxon.ts` can read it synchronously downstream.
+ * Safe for single-tenant deployments (one backend per process — the value never varies
+ * across requests within the same deployment).
  */
-export function applyPortalGeneralRuntime(general: GeneralConfig | undefined | null): void {
-   if (!general) return
-   const ab = general.apiBase
-   runtimeApiBase =
-      typeof ab === 'string' && ab.trim().length > 0 ? ab.trim().replace(/\/$/, '') : null
-
-   const rt = general.rootTaxid
+export function applyRuntimeRootTaxid(taxid: string | null | undefined): void {
    runtimeRootTaxid =
-      typeof rt === 'string' && rt.trim().length > 0 ? rt.trim() : null
-}
-
-export function getRuntimeApiBaseRaw(): string | null {
-   return runtimeApiBase
+      typeof taxid === 'string' && taxid.trim().length > 0 ? taxid.trim() : null
 }
 
 export function getRuntimeRootTaxidRaw(): string | null {
@@ -27,7 +17,7 @@ export function getRuntimeRootTaxidRaw(): string | null {
 }
 
 /**
- * Path or absolute URL from portal.
+ * Resolve a path-only API base (e.g. `/api`, `/bgp/api`) to an absolute URL for `fetch`.
  * Browser: origin + path.
  * Server: Node `fetch` needs an absolute URL — use `INTERNAL_FETCH_ORIGIN` (e.g. `http://bgp_server:5000`)
  * so `/bgp/api` becomes `http://bgp_server:5000/api` (strip `NEXT_PUBLIC_BASE_PATH` when it prefixes the path).
@@ -53,28 +43,4 @@ export function resolveApiBaseForFetch(raw: string): string {
       return `${internalOrigin.replace(/\/$/, '')}${suffix}`.replace(/\/$/, '')
    }
    return path
-}
-
-/**
- * Resolve `general.apiBase` to an absolute origin for Edge / middleware `fetch`, where `window` is undefined.
- * Prefer `INTERNAL_FETCH_ORIGIN` (Docker service URL) so the probe reaches Flask; otherwise use the request origin.
- */
-export function resolveApiBaseForMiddleware(raw: string, requestOrigin: string): string {
-   const trimmed = raw.replace(/\/$/, '')
-   if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
-      return trimmed
-   }
-   const path = trimmed.startsWith('/') ? trimmed : `/${trimmed}`
-   const internalOrigin = (
-      process.env.INTERNAL_FETCH_ORIGIN ?? process.env.INTERNAL_API_ORIGIN ?? ''
-   ).trim()
-   if (internalOrigin) {
-      let suffix = path
-      const bp = (process.env.NEXT_PUBLIC_BASE_PATH ?? '').replace(/\/$/, '')
-      if (bp && suffix.startsWith(`${bp}/`)) {
-         suffix = suffix.slice(bp.length)
-      }
-      return `${internalOrigin.replace(/\/$/, '')}${suffix}`.replace(/\/$/, '')
-   }
-   return new URL(path, requestOrigin).href.replace(/\/$/, '')
 }

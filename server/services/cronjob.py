@@ -41,6 +41,7 @@ JOB_MODELS = {
         'unset_organism_insdc_status_and_images': organisms.unset_organism_insdc_status_and_images,
         'unset_taxon_node_legacy_fields': taxonomy.unset_taxon_node_legacy_fields,
         'refresh_taxonomy': taxonomy.refresh_taxonomy_recurrent,
+        'backfill_sequencing_type_metadata': organisms.backfill_sequencing_type_metadata_task,
     },
     'organisms': {
         'fetch_tolid_prefixes': organisms.fetch_tolid_prefixes_task,
