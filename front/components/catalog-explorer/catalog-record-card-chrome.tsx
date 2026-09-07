@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react'
 
 import { Badge } from '@/components/ui/badge'
+import { ReferenceGenomeStarMark } from '@/components/catalog-explorer/reference-genome-star-mark'
 import { catalogColumnHeaderLabel } from '@/lib/catalog-explorer/catalogColumnLabels'
 import {
    catalogIdentifierField,
@@ -157,13 +158,7 @@ export function CatalogRecordCardHeader({
          </div>
          {headerBadge ? (
             headerBadge.variant === 'icon-only' ? (
-               <span
-                  title={headerBadge.label}
-                  aria-label={headerBadge.label}
-                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-amber-400/40 bg-amber-50 text-amber-500 dark:border-amber-500/30 dark:bg-amber-950/40 dark:text-amber-400"
-               >
-                  <Star className="h-3.5 w-3.5 fill-current" aria-hidden />
-               </span>
+               <ReferenceGenomeStarMark title={headerBadge.label} aria-label={headerBadge.label} />
             ) : (
                <Badge
                   variant="outline"

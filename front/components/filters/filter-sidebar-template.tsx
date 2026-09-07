@@ -27,7 +27,7 @@ export function FilterSectionCollapsible({
 }: {
    open: boolean
    onOpenChange: (next: boolean) => void
-   title: string
+   title: ReactNode
    children: ReactNode
    isActive?: boolean
    onReset?: () => void
@@ -50,7 +50,8 @@ export function FilterSectionCollapsible({
             >
                <span
                   className={cn(
-                     'min-w-0 truncate text-left',
+                     'min-w-0 flex-1 text-left',
+                     typeof title === 'string' ? 'truncate' : 'overflow-hidden',
                      isActive ? 'text-primary group-hover:text-primary' : 'text-foreground',
                   )}
                >

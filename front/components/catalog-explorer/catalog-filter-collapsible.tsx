@@ -15,7 +15,7 @@ export function CatalogFilterCollapsible({
    clearLabel,
 }: {
    sectionId: string
-   title: string
+   title: ReactNode
    children: ReactNode
    /** Called when the panel opens (lazy options load, etc.). */
    onPanelOpen?: () => void

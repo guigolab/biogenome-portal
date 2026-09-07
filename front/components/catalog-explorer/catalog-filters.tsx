@@ -20,6 +20,7 @@ import {
    useCatalogFilterAccordion,
 } from '@/components/catalog-explorer/catalog-filter-accordion-context'
 import { CatalogFilterCollapsible } from '@/components/catalog-explorer/catalog-filter-collapsible'
+import { ReferenceGenomeStarMark } from '@/components/catalog-explorer/reference-genome-star-mark'
 import {
    FilterSidebarSearchCard,
    filterSidebarScrollColumnClassName,
@@ -509,11 +510,24 @@ function CatalogSidebarModelFilterRows({
             const sectionId = catalogFilterSectionId(def.key)
             const isOpen = openSection === sectionId
             const active = isFieldActive(def, filterValues)
+            const title =
+               def.type === 'referenceGenome' ? (
+                  <span className="flex min-w-0 items-center gap-2">
+                     <ReferenceGenomeStarMark
+                        size="sm"
+                        title={flabel}
+                        aria-label={flabel}
+                     />
+                     <span className="min-w-0 truncate">{flabel}</span>
+                  </span>
+               ) : (
+                  flabel
+               )
             return (
                <CatalogFilterCollapsible
                   key={def.key}
                   sectionId={sectionId}
-                  title={flabel}
+                  title={title}
                   isActive={active}
                   clearLabel={t('catalog.clearThisFilter')}
                   onReset={
