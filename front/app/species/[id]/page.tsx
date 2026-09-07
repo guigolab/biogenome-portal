@@ -227,6 +227,7 @@ export default async function SpeciesDetailPage({
   const assemblyCount = nonNegInt(organism.assemblies_count)
   const biosampleCount = nonNegInt(organism.biosamples_count)
   const readsCount = nonNegInt(organism.reads_count)
+  const annotationCount = nonNegInt(organism.genome_annotations_count)
 
   const [locationsPeek, ancestorRows] = await Promise.all([
     fetchSampleLocations({ taxid: id, limit: 1 }).catch(() => ({
@@ -349,6 +350,7 @@ export default async function SpeciesDetailPage({
             assemblyCount={assemblyCount}
             biosampleCount={biosampleCount}
             readsCount={readsCount}
+            annotationCount={annotationCount}
             locationsTotal={locationsTotal}
             hasMapCoords={hasMapCoords}
           />

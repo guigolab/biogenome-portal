@@ -14,6 +14,7 @@ export type SpeciesPageStatsStripProps = {
   assemblyCount: number
   biosampleCount: number
   readsCount: number
+  annotationCount: number
   locationsTotal: number
   hasMapCoords: boolean
 }
@@ -35,6 +36,7 @@ export function SpeciesPageStatsStrip({
   assemblyCount,
   biosampleCount,
   readsCount,
+  annotationCount,
   locationsTotal,
   hasMapCoords,
 }: SpeciesPageStatsStripProps) {
@@ -69,6 +71,16 @@ export function SpeciesPageStatsStrip({
       labelKey: 'home.hero.stats.sequencingRuns',
       iconWrapClass: 'bg-chart-4/10',
       iconClass: 'text-chart-4',
+    })
+  }
+  if (annotationCount > 0) {
+    rows.push({
+      key: 'annotations',
+      modelKey: 'annotations',
+      value: annotationCount,
+      labelKey: 'home.hero.stats.annotations',
+      iconWrapClass: 'bg-chart-5/10',
+      iconClass: 'text-chart-5',
     })
   }
   if (hasMapCoords && locationsTotal > 0) {

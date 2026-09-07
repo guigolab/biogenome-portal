@@ -1,13 +1,13 @@
 import type { LucideIcon } from 'lucide-react'
 import {
    Activity,
-   Dna,
    FolderTree,
    Home,
    LayoutDashboard,
    Leaf,
    LogIn,
    Map,
+   ScanLine,
    TableProperties,
 } from 'lucide-react'
 
@@ -18,7 +18,7 @@ export const navRouteIcons = {
    taxonomy: FolderTree,
    species: Leaf,
    catalog: TableProperties,
-   genomeBrowser: Dna,
+   genomeBrowser: ScanLine,
    status: Activity,
    login: LogIn,
    myArea: LayoutDashboard,
