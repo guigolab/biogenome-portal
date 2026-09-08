@@ -350,6 +350,8 @@
          "exploreLineage": "Explore lineage",
          "exploreLineageTitle": "Re-root the radial tree on this taxon while keeping this taxon selected",
          "exploreLineageHint": "Sets this as the tree root — updates the radial tree and root details",
+         "viewRelatedData": "View related data",
+         "viewRelatedDataTitle": "Open this taxon's assemblies, biosamples, reads, and annotations in the catalog",
          "navigateAria": "Navigate parent and children",
          "navigateGuide": "Browse",
          "navigateChildren": "Children",

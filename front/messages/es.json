@@ -350,6 +350,8 @@
          "exploreLineage": "Explorar linaje",
          "exploreLineageTitle": "Reenraizar el arbol radial en este taxon manteniendo este taxon seleccionado",
          "exploreLineageHint": "Establece este como raíz del árbol — actualiza el árbol radial y los detalles de la raíz",
+         "viewRelatedData": "Ver datos relacionados",
+         "viewRelatedDataTitle": "Abrir los ensamblajes, biomuestras, lecturas y anotaciones de este taxón en el catálogo",
          "navigateAria": "Navegar padre e hijos",
          "navigateGuide": "Explorar",
          "navigateChildren": "Hijos",

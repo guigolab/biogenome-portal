@@ -10,9 +10,10 @@ import { useLocale } from '@/contexts/locale-context'
 import { usePortalConfig } from '@/contexts/portal-context'
 import { downloadOrganismsTsv, fetchOrganisms } from '@/lib/api/organisms'
 import { ModelIcon } from '@/lib/modelIcons'
+import { navRouteIcons } from '@/lib/portal'
 import type { DataModels } from '@/lib/portal/types'
 import { findSubtree } from '@/lib/taxonomy/treeFilter'
-import { taxonomyTaxonHref } from '@/lib/taxonomyLinks'
+import { catalogTaxonHref, taxonomyTaxonHref } from '@/lib/taxonomyLinks'
 import type { NestedTaxonNode } from '@/lib/taxonomy/flattenedTreeToNested'
 import type { FlatTreeNode, TreeTableRow } from '@/lib/taxonomy/treeTableTypes'
 import { formatRankFilterLabel } from '@/lib/taxonomy/treeRankOptions'
@@ -58,6 +59,7 @@ export function TaxonomyDetailAside({
 }: TaxonomyDetailAsideProps) {
    const { t } = useLocale()
    const { raw: portalRaw } = usePortalConfig()
+   const CatalogIcon = navRouteIcons.catalog
    const goatActive =
       portalRaw?.general && typeof portalRaw.general === 'object'
          ? (portalRaw.general as { goat?: boolean }).goat === true
@@ -402,6 +404,18 @@ export function TaxonomyDetailAside({
 
             {showExploreLineage ? (
                <div className="space-y-1">
+                  <Button
+                     variant="secondary"
+                     size="sm"
+                     type="button"
+                     asChild
+                     className="h-9 w-full font-medium"
+                  >
+                     <Link href={catalogTaxonHref(selectedTaxid)} title={t('taxonomy.detail.viewRelatedDataTitle')}>
+                        <CatalogIcon className="mr-1.5 h-4 w-4" aria-hidden />
+                        {t('taxonomy.detail.viewRelatedData')}
+                     </Link>
+                  </Button>
                   <Button
                      variant="default"
                      size="sm"

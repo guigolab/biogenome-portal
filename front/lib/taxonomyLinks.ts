@@ -5,7 +5,9 @@ export function taxonomyTaxonHref(taxid: string): string {
    return `/taxonomy?taxid=${encodeURIComponent(id)}`
 }
 
-/** Deep-link to catalog explorer (portal root scope; taxon argument ignored). */
-export function catalogTaxonHref(_taxid: string): string {
-   return '/catalog'
+/** Deep-link to catalog explorer, scoped to this taxon (`tid` query param). */
+export function catalogTaxonHref(taxid: string): string {
+   const id = String(taxid ?? '').trim()
+   if (!id) return '/catalog'
+   return `/catalog?tid=${encodeURIComponent(id)}`
 }

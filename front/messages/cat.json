@@ -361,6 +361,8 @@
          "loadingOrganisms": "S’estan carregant els organismes…",
          "noOrganismsInTaxon": "Cap organisme d’aquest tàxon al catàleg.",
          "exploreLineageHint": "Estableix aquest com a arrel de l'arbre — actualitza l'arbre radial i els detalls de l'arrel",
+         "viewRelatedData": "Veure dades relacionades",
+         "viewRelatedDataTitle": "Obre els assemblatges, biomostres, lectures i anotacions d'aquest tàxon al catàleg",
          "selectedMarker": "Seleccionat",
          "filterChildren": "Filtrar fills…"
       }

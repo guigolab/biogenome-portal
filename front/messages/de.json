@@ -350,6 +350,8 @@
          "exploreLineage": "Linie erkunden",
          "exploreLineageTitle": "Radialbaum auf dieses Taxon ausrichten und Auswahl beibehalten",
          "exploreLineageHint": "Setzt dieses als Baumwurzel — aktualisiert den Radialbaum und die Wurzeldetails",
+         "viewRelatedData": "Zugehörige Daten anzeigen",
+         "viewRelatedDataTitle": "Assemblies, Biosamples, Reads und Annotationen dieses Taxons im Katalog öffnen",
          "navigateAria": "Übergeordnetes und Kinder navigieren",
          "navigateGuide": "Stöbern",
          "navigateChildren": "Kinder",

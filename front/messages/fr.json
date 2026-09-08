@@ -361,6 +361,8 @@
          "loadingOrganisms": "Chargement des organismes…",
          "noOrganismsInTaxon": "Aucun organisme pour ce taxon dans le catalogue.",
          "exploreLineageHint": "Définit ceci comme racine de l'arbre — met à jour l'arbre radial et les détails de la racine",
+         "viewRelatedData": "Voir les données associées",
+         "viewRelatedDataTitle": "Ouvrir les assemblages, bioéchantillons, lectures et annotations de ce taxon dans le catalogue",
          "selectedMarker": "Sélectionné",
          "filterChildren": "Filtrer les enfants…"
       }
