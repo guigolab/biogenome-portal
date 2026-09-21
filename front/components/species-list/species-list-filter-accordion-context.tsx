@@ -17,6 +17,7 @@ export const IUCN_SECTION_ID = 'iucn'
 export const SUB_PROJECT_SECTION_ID = 'sub_project'
 export const COUNTRIES_SECTION_ID = 'countries'
 export const GOAT_STATUS_SECTION_ID = 'goat_status'
+export const DATA_SECTION_ID = 'data'
 
 type SpeciesListFilterAccordionContextValue = {
    openSection: string | undefined

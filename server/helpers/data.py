@@ -470,8 +470,8 @@ def create_query(args, q_query):
         if any(op in key for op in ["__gte", "__lte", "__gt", "__lt", "__size"]):
             q_query = add_range_filter(key, value, q_query)
 
-        # handle potential lists
-        elif "__in" in key:
+        # handle potential lists (__in / __nin); use endswith so __nin is not missed
+        elif key.endswith("__in") or key.endswith("__nin"):
             if isinstance(value, str):
                 result = [
                     None if part.strip() == "No Entry" else part.strip()

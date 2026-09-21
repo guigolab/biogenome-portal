@@ -55,7 +55,7 @@ export function AdminLayoutClient({ children }: { children: ReactNode }) {
    return (
       <div className="min-h-screen bg-background">
          <AdminHeader />
-         <main className="container mx-auto max-w-7xl px-4 py-8">{children}</main>
+         <main className="container mx-auto px-4 py-8">{children}</main>
          <CmsDashboardDrawer />
       </div>
    )

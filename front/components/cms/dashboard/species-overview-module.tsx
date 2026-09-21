@@ -76,6 +76,24 @@ const ASSIGNMENT_FILTER_OPTIONS = [
    { value: 'unassigned', label: 'Unassigned' },
 ] as const
 
+const ORGANISM_DATA_BADGE_DEFS = [
+   { key: 'reads_count', label: 'reads submitted' },
+   { key: 'biosamples_count', label: 'biosamples submitted' },
+   { key: 'assemblies_count', label: 'assemblies submitted' },
+   { key: 'genome_annotations_count', label: 'annotations submitted' },
+] as const
+
+function organismDataBadges(org: Record<string, unknown>): { key: string; text: string }[] {
+   const out: { key: string; text: string }[] = []
+   for (const def of ORGANISM_DATA_BADGE_DEFS) {
+      const raw = org[def.key]
+      const n = typeof raw === 'number' ? raw : Number(raw)
+      if (!Number.isFinite(n) || n <= 0) continue
+      out.push({ key: def.key, text: `${def.label} (${n})` })
+   }
+   return out
+}
+
 export function SpeciesOverviewModule() {
    const { config } = usePortalConfig()
    const general = config?.general as Record<string, unknown> | undefined
@@ -456,6 +474,7 @@ export function SpeciesOverviewModule() {
                         <TableHeader>
                            <TableRow>
                               <TableHead>Species</TableHead>
+                              <TableHead>Data</TableHead>
                               <TableHead>GoaT</TableHead>
                               {isAdmin ? <TableHead>Curators</TableHead> : null}
                               <TableHead>PI</TableHead>
@@ -465,7 +484,9 @@ export function SpeciesOverviewModule() {
                            </TableRow>
                         </TableHeader>
                         <TableBody>
-                           {organisms.map((org) => (
+                           {organisms.map((org) => {
+                              const dataBadges = organismDataBadges(org)
+                              return (
                               <TableRow key={String(org.taxid)}>
                                  <TableCell>
                                     <div className="flex flex-wrap items-center gap-2">
@@ -484,6 +505,21 @@ export function SpeciesOverviewModule() {
                                     <span className="text-xs text-muted-foreground">
                                        {String(org.taxid)}
                                     </span>
+                                 </TableCell>
+                                 <TableCell className="align-top">
+                                    {dataBadges.length > 0 ? (
+                                       <div className="flex max-w-[18rem] flex-wrap gap-1">
+                                          {dataBadges.map((b) => (
+                                             <Badge
+                                                key={b.key}
+                                                variant="secondary"
+                                                className="text-[0.65rem] font-normal"
+                                             >
+                                                {b.text}
+                                             </Badge>
+                                          ))}
+                                       </div>
+                                    ) : null}
                                  </TableCell>
                                  <TableCell>
                                     <OrganismStatusPatchSelect
@@ -577,7 +613,8 @@ export function SpeciesOverviewModule() {
                                     )}
                                  </TableCell>
                               </TableRow>
-                           ))}
+                              )
+                           })}
                         </TableBody>
                      </Table>
                   </div>

@@ -10,6 +10,8 @@ export type CatalogUrlState = {
    filterValues: Record<string, FilterValuesState | undefined>
    /** Taxon scope: exact catalog `taxid` (URL param `tid`). */
    speciesTaxid: string | null
+   /** Citizen taxonomy node id (URL param `ctid`); mutually exclusive with tid. */
+   citizenNodeId: string | null
 }
 
 function encodeFilterValues(fv: Record<string, FilterValuesState | undefined>): string | null {
@@ -45,13 +47,15 @@ export function readCatalogUrlState(searchParams: URLSearchParams): Partial<Cata
       : 50
    const filterValues = decodeFilterValues(searchParams.get('fv'))
    const tid = searchParams.get('tid')?.trim()
+   const ctid = searchParams.get('ctid')?.trim()
 
    return {
       catalogKey: cat,
       viewMode: view as 'table' | 'dashboard',
       pageSize,
       filterValues,
-      speciesTaxid: tid ? tid : null,
+      speciesTaxid: tid && !ctid ? tid : null,
+      citizenNodeId: ctid ? ctid : null,
    }
 }
 
@@ -62,6 +66,10 @@ export function writeCatalogUrlState(state: CatalogUrlState): URLSearchParams {
    if (state.pageSize !== 50) p.set('ps', String(state.pageSize))
    const fv = encodeFilterValues(state.filterValues)
    if (fv) p.set('fv', fv)
-   if (state.speciesTaxid?.trim()) p.set('tid', state.speciesTaxid.trim())
+   if (state.citizenNodeId?.trim()) {
+      p.set('ctid', state.citizenNodeId.trim())
+   } else if (state.speciesTaxid?.trim()) {
+      p.set('tid', state.speciesTaxid.trim())
+   }
    return p
 }

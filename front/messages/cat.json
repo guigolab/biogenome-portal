@@ -21,6 +21,11 @@
       "taxonScopeButtonAll": "Totes les espècies",
       "taxonScopeButtonAria": "Filtrar el catàleg per tàxon",
       "taxonScopeBrowseHint": "Exploreu la taxonomia per limitar aquest catàleg a un tàxon.",
+      "taxonSearchLabel": "Cerca tàxons per nom o taxid",
+      "taxonSearchPlaceholder": "Escriviu almenys 2 caràcters per cercar tàxons...",
+      "taxonSearchLoading": "Cercant tàxons...",
+      "taxonSearchNoResults": "Cap resultat. Proveu una altra grafia o taxid.",
+      "taxonSearchError": "Ha fallat la cerca de tàxons. Torneu-ho a provar.",
       "exportRecords": "Exportar registres",
       "exportSheetTitle": "Exportar catàleg",
       "exportSheetDescription": "Trieu columnes i format. El fitxer usa el mateix abast de filtres que la llista, no només la pàgina visible.",
@@ -217,10 +222,12 @@
       "emptyStats": "Encara no hi ha recomptes agregats per a aquestes mètriques.",
       "cta": {
          "exploreSpecies": "Explora espècies",
+         "exploreCatalog": "Explora el catàleg",
          "exploreMap": "Explora el mapa",
          "browseTaxonomy": "Explora la taxonomia",
          "viewSpecies": "Veure totes les espècies"
       },
+      "kickerPublicationAria": "Obre la publicació del Portal BioGenome",
       "footerMainWebsite": "Visita el web principal",
       "footer": "Portal BioGenome — Recerca en biodiversitat a través de la genòmica",
       "closing": {
@@ -303,6 +310,9 @@
       "loadingMap": "S’està carregant el mapa…"
    },
    "taxonomy": {
+      "browseCitizen": "Grups senzills",
+      "browseFull": "Arbre complet",
+      "browseModeAria": "Mode de navegació taxonòmica",
       "panel": {
          "title": "Arrel de l'arbre",
          "portalDefaultRoot": "Arrel per defecte del portal",
@@ -408,6 +418,12 @@
       "taxonomyRankSelectAria": "Rang taxonòmic per explorar tàxons",
       "taxonomyBrowseByRankTab": "Filtrar per rang",
       "clearTaxonomyFilter": "Netejar",
+      "dataSectionTitle": "Dades",
+      "filterByDataAria": "Filtrar per dades enviades",
+      "hasBiosamples": "Té biosamples",
+      "hasAssemblies": "Té assemblatges",
+      "hasReads": "Té lectures",
+      "hasAnnotations": "Té anotacions",
       "iucnSectionTitle": "Categoria de la Llista Vermella UICN",
       "subProjectSectionTitle": "Subprojecte",
       "allSubProjects": "Tots els subprojectes",
@@ -439,6 +455,7 @@
    },
    "iucn": {
       "noAssessment": "Sense avaluació",
+      "openOnRedList": "Obre a la Llista Vermella UICN",
       "labels": {
          "EX": "Extint",
          "EW": "Extint a l’estat salvatge",

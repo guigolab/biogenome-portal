@@ -35,11 +35,16 @@ def compute_field_stats(model, field, query):
     if model not in MODEL_LIST:
         raise ValueError("model not found")
 
-    db_model = MODEL_LIST[model]
-    parsed_query, q_query = data_helper.create_query(query, None)
-    items = db_model.objects(**parsed_query)
-    if q_query:
-        items = items.filter(q_query)
+    # Organisms use the catalog queryset so special params (insdc_counts_any,
+    # countries__in, text filter) match GET /organisms list semantics.
+    if model == "organisms":
+        items = data_helper.organism_queryset_catalog_only(dict(query or {}))
+    else:
+        db_model = MODEL_LIST[model]
+        parsed_query, q_query = data_helper.create_query(query, None)
+        items = db_model.objects(**parsed_query)
+        if q_query:
+            items = items.filter(q_query)
 
     # Normalize scalar vs array so $unwind is reliable for embedded dot paths (e.g. iucn_redlist.category).
     pipeline = [

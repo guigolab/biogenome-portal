@@ -1,10 +1,15 @@
 import { speciesMetadataBucketToQueryValue } from '@/lib/speciesFieldStats'
 import { appendCustomFieldFilters } from '@/lib/speciesCustomFieldFilters'
 import type { CmsOrganismFieldWire } from '@/lib/portal/types'
+import type { SpeciesDataFilterCode } from '@/lib/speciesDataFilter'
 
 /** Context for organism field stats — same dimensions as the species list + GoaT (when enabled). */
 export type OrganismStatsQueryContext = {
    taxon_lineage?: string | null
+   /** Comma-separated OR of lineage-contains (`taxon_lineage__in`). */
+   taxon_lineage__in?: string | null
+   /** Comma-separated lineage-not-contains (`taxon_lineage__nin`). */
+   taxon_lineage__nin?: string | null
    filter?: string
    iucnThreatFilter: string
    subProjectFilter: string
@@ -13,6 +18,8 @@ export type OrganismStatsQueryContext = {
    goatStatusFilters: string[]
    /** `'all'` or one `target_list_status` value. */
    targetListFilter: string
+   /** `insdc_counts_any` codes; omit when aggregating `insdc_counts`. */
+   insdcCountFilters: SpeciesDataFilterCode[]
    customFieldFilters: Record<string, string>
    customFields: CmsOrganismFieldWire[]
 }
@@ -23,6 +30,7 @@ export type OrganismStatsFacet =
    | 'countries'
    | 'goat_status'
    | 'target_list_status'
+   | 'insdc_counts'
 
 function appendGoatDimensions(
    q: Record<string, string>,
@@ -31,6 +39,16 @@ function appendGoatDimensions(
 ): void {
    if (facet !== 'goat_status' && ctx.goatStatusFilters.length > 0) {
       q.goat_status__in = [...ctx.goatStatusFilters].sort().join(',')
+   }
+}
+
+function appendInsdcCountDimensions(
+   q: Record<string, string>,
+   ctx: OrganismStatsQueryContext,
+   facet: string,
+): void {
+   if (facet !== 'insdc_counts' && ctx.insdcCountFilters.length > 0) {
+      q.insdc_counts_any = [...ctx.insdcCountFilters].sort().join(',')
    }
 }
 
@@ -44,6 +62,8 @@ export function buildOrganismStatsQuery(
 ): Record<string, string> {
    const q: Record<string, string> = {}
    if (ctx.taxon_lineage) q.taxon_lineage = ctx.taxon_lineage
+   if (ctx.taxon_lineage__in) q.taxon_lineage__in = ctx.taxon_lineage__in
+   if (ctx.taxon_lineage__nin) q.taxon_lineage__nin = ctx.taxon_lineage__nin
    if (ctx.filter?.trim()) q.filter = ctx.filter.trim()
 
    if (facet !== 'iucn' && ctx.iucnThreatFilter !== 'all') {
@@ -57,6 +77,7 @@ export function buildOrganismStatsQuery(
    }
    appendCustomFieldFilters(q, ctx, facet)
    appendGoatDimensions(q, ctx, facet)
+   appendInsdcCountDimensions(q, ctx, facet)
    return q
 }
 

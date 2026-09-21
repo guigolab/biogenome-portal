@@ -3,12 +3,14 @@
 import type { MutableRefObject } from 'react'
 import { useEffect } from 'react'
 
+import { fetchOrganisms } from '@/lib/api/organisms'
 import { fetchFieldStats } from '@/lib/api/stats'
 import type { CmsOrganismFieldWire } from '@/lib/portal/types'
 import {
    customFieldStatsPath,
    parseCustomFieldSectionId,
 } from '@/lib/speciesCustomFieldFilters'
+import { SPECIES_DATA_FILTER_CODES } from '@/lib/speciesDataFilter'
 import type { OrganismStatsQueryContext } from '@/lib/speciesListOrganismStatsQuery'
 import {
    buildOrganismStatsQuery,
@@ -17,6 +19,7 @@ import {
 import { useOrganismCountriesDisplayStore } from '@/stores/organism-countries-display-store'
 import {
    COUNTRIES_SECTION_ID,
+   DATA_SECTION_ID,
    GOAT_STATUS_SECTION_ID,
    IUCN_SECTION_ID,
    SUB_PROJECT_SECTION_ID,
@@ -28,6 +31,7 @@ const IUCN_STATS_FIELD = 'iucn_redlist.category'
 const SUB_PROJECT_STATS_FIELD = 'sub_project'
 const COUNTRIES_STATS_FIELD = 'countries'
 const GOAT_STATS_FIELD = 'goat_status'
+const INSDC_COUNTS_STATS_FIELD = 'insdc_counts_any'
 
 type CacheRef = MutableRefObject<Map<string, Record<string, number>>>
 
@@ -83,10 +87,58 @@ function fetchCountryFacetIntoStore(
       })
 }
 
+function fetchInsdcCountTotals(
+   cache: CacheRef,
+   statsQueryBase: OrganismStatsQueryContext,
+   setInsdcCountStats: (v: Record<string, number>) => void,
+   setInsdcCountStatsLoading: (v: boolean) => void,
+   cancelled: () => boolean,
+): void {
+   const base = buildOrganismStatsQuery(statsQueryBase, 'insdc_counts')
+   const cacheKey = organismStatsCacheKey('organisms', INSDC_COUNTS_STATS_FIELD, base)
+   const hit = cache.current.get(cacheKey)
+   if (hit) {
+      if (!cancelled()) {
+         setInsdcCountStats(hit)
+         setInsdcCountStatsLoading(false)
+      }
+      return
+   }
+
+   if (!cancelled()) setInsdcCountStatsLoading(true)
+
+   void Promise.all(
+      SPECIES_DATA_FILTER_CODES.map(async (code) => {
+         const res = await fetchOrganisms({
+            ...base,
+            insdc_counts_any: code,
+            limit: 1,
+            offset: 0,
+         })
+         return [code, res.total] as const
+      }),
+   )
+      .then((pairs) => {
+         if (cancelled()) return
+         const raw = Object.fromEntries(pairs) as Record<string, number>
+         cache.current.set(cacheKey, raw)
+         setInsdcCountStats(raw)
+         setInsdcCountStatsLoading(false)
+      })
+      .catch(() => {
+         if (cancelled()) return
+         const empty = Object.fromEntries(SPECIES_DATA_FILTER_CODES.map((c) => [c, 0]))
+         cache.current.set(cacheKey, empty)
+         setInsdcCountStats(empty)
+         setInsdcCountStatsLoading(false)
+      })
+}
+
 /**
  * Catalog-sidebar pattern: refresh organism facet `/stats` only for the accordion section that is
  * open. Country stats are fetched lazily — only when the countries panel is opened — matching the
  * behaviour of all other filter sections. When `showCountries` is false no country fetches run.
+ * Data (insdc) option totals use GET /organisms?limit=1 per code.
  */
 export function SpeciesListFacetStatsSync({
    statsQueryBase,
@@ -96,6 +148,8 @@ export function SpeciesListFacetStatsSync({
    setIucnThreatStats,
    setSubProjectStats,
    setGoatStats,
+   setInsdcCountStats,
+   setInsdcCountStatsLoading,
    customFields,
    setCustomFieldStats,
 }: {
@@ -106,6 +160,8 @@ export function SpeciesListFacetStatsSync({
    setIucnThreatStats: (v: Record<string, number>) => void
    setSubProjectStats: (v: Record<string, number>) => void
    setGoatStats: (v: Record<string, number>) => void
+   setInsdcCountStats: (v: Record<string, number>) => void
+   setInsdcCountStatsLoading: (v: boolean) => void
    customFields: CmsOrganismFieldWire[]
    setCustomFieldStats: (key: string, stats: Record<string, number>) => void
 }) {
@@ -114,6 +170,20 @@ export function SpeciesListFacetStatsSync({
    /** Immediate: facet counts for the open collapsible (same as catalog sidebar `isOpen ? control`). */
    useEffect(() => {
       if (!openSection || openSection === TAXONOMY_SECTION_ID) return
+
+      if (openSection === DATA_SECTION_ID) {
+         let cancelled = false
+         fetchInsdcCountTotals(
+            organismStatsCacheRef,
+            statsQueryBase,
+            setInsdcCountStats,
+            setInsdcCountStatsLoading,
+            () => cancelled,
+         )
+         return () => {
+            cancelled = true
+         }
+      }
 
       if (showCountries && openSection === COUNTRIES_SECTION_ID) {
          let cancelled = false
@@ -162,6 +232,8 @@ export function SpeciesListFacetStatsSync({
       setIucnThreatStats,
       setSubProjectStats,
       setGoatStats,
+      setInsdcCountStats,
+      setInsdcCountStatsLoading,
       customFields,
       setCustomFieldStats,
    ])

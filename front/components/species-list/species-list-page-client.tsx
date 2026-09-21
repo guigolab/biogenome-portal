@@ -39,6 +39,16 @@ import {
    GOAT_PIPELINE_STEPS,
    labelGoatStatus,
 } from '@/lib/organismStatusLabels'
+import {
+   sortSpeciesDataFilterCodes,
+   type SpeciesDataFilterCode,
+} from '@/lib/speciesDataFilter'
+import {
+   citizenNodeLabel,
+   citizenNodeToQueryParams,
+   resolveCitizenTaxonomy,
+} from '@/lib/citizenTaxonomy'
+import type { CitizenTaxonomyNode } from '@/lib/portal/types'
 import { navRouteIcons } from '@/lib/portal'
 import {
    GOAT_PUBLIC_INFO_URL,
@@ -84,7 +94,7 @@ const GOAT_STATS_FIELD = 'goat_status'
 const TARGET_LIST_STATS_FIELD = 'target_list_status'
 
 export function SpeciesListPageClient() {
-   const { t } = useLocale()
+   const { t, locale } = useLocale()
    const { config } = usePortalConfig()
    const cmsEnabled = showCmsLoginNav(config)
    const customFields = config?.organismCustomFields ?? []
@@ -119,6 +129,9 @@ export function SpeciesListPageClient() {
    const [goatReportLoading, setGoatReportLoading] = useState(false)
    const [goatReportError, setGoatReportError] = useState<string | null>(null)
    const [goatDrawerOpen, setGoatDrawerOpen] = useState(false)
+   const [insdcCountFilters, setInsdcCountFilters] = useState<SpeciesDataFilterCode[]>([])
+   const [insdcCountStats, setInsdcCountStats] = useState<Record<string, number> | null>(null)
+   const [insdcCountStatsLoading, setInsdcCountStatsLoading] = useState(false)
 
    const isLg = useMinWidthLg()
    const { resolvedTheme } = useTheme()
@@ -140,15 +153,21 @@ export function SpeciesListPageClient() {
    const [error, setError] = useState<string | null>(null)
 
    const [rankStats, setRankStats] = useState<Record<string, number> | null>(null)
-   const [selectedTaxonRankId, setSelectedTaxonRankId] = useState<string | null>(null)
-   const [selectedTaxonTaxid, setSelectedTaxonTaxid] = useState<string | null>(null)
-   const [lineageDisplayName, setLineageDisplayName] = useState<string | null>(null)
+   const [taxonScope, setTaxonScope] = useState<{
+      kind: 'full' | 'citizen'
+      nodeId: string
+      displayLabel: string
+      rankId: string | null
+      queryParams: Record<string, string>
+   } | null>(null)
    const [taxonByRank, setTaxonByRank] = useState<Record<string, RankTaxonCache>>({})
    const taxonByRankRef = useRef<Record<string, RankTaxonCache>>({})
    taxonByRankRef.current = taxonByRank
    const fetchSeqByRankRef = useRef<Record<string, number>>({})
    const [explorerRankId, setExplorerRankId] = useState<string>(TAXONOMY_EXPLORER_TREE_MODE_ID)
    const organismStatsCacheRef = useRef(new Map<string, Record<string, number>>())
+
+   const citizenTaxonomy = useMemo(() => resolveCitizenTaxonomy(config), [config])
 
    const setCustomFieldStats = useCallback((key: string, stats: Record<string, number>) => {
       setCustomFieldStatsState((prev) => ({ ...prev, [key]: stats }))
@@ -172,17 +191,25 @@ export function SpeciesListPageClient() {
       }
    }, [])
 
-   const prevTaxonForIucnRef = useRef<string | null>(null)
+   const taxonScopeKey = taxonScope
+      ? Object.keys(taxonScope.queryParams)
+           .sort()
+           .map((k) => `${k}=${taxonScope.queryParams[k]}`)
+           .join('&')
+      : ''
+
+   const prevTaxonForIucnRef = useRef<string>('')
    useEffect(() => {
-      if (prevTaxonForIucnRef.current !== selectedTaxonTaxid) {
-         prevTaxonForIucnRef.current = selectedTaxonTaxid
+      if (prevTaxonForIucnRef.current !== taxonScopeKey) {
+         prevTaxonForIucnRef.current = taxonScopeKey
          setIucnThreatFilter('all')
          setSubProjectFilter('all')
          setCustomFieldFilters({})
          setSelectedCountryCodes([])
          setGoatStatusFilters([])
+         setInsdcCountFilters([])
       }
-   }, [selectedTaxonTaxid])
+   }, [taxonScopeKey])
 
    const stageOrder = useMemo(
       () => new Map(GOAT_PIPELINE_STEPS.map((s, i) => [s.value, i] as const)),
@@ -199,6 +226,13 @@ export function SpeciesListPageClient() {
       },
       [stageOrder],
    )
+
+   const toggleInsdcCountFilter = useCallback((key: SpeciesDataFilterCode) => {
+      setInsdcCountFilters((prev) => {
+         if (prev.includes(key)) return prev.filter((k) => k !== key)
+         return sortSpeciesDataFilterCodes([...prev, key])
+      })
+   }, [])
 
    const loadRootTaxon = useRootTaxonStore((s) => s.loadRootTaxon)
    const rootTaxon = useRootTaxonStore((s) => s.rootTaxon)
@@ -230,24 +264,28 @@ export function SpeciesListPageClient() {
 
    const statsQueryBase = useMemo(
       () => ({
-         taxon_lineage: selectedTaxonTaxid ?? undefined,
+         taxon_lineage: taxonScope?.queryParams.taxon_lineage ?? undefined,
+         taxon_lineage__in: taxonScope?.queryParams.taxon_lineage__in ?? undefined,
+         taxon_lineage__nin: taxonScope?.queryParams.taxon_lineage__nin ?? undefined,
          filter: debouncedSearch,
          iucnThreatFilter: effectiveIucnThreatFilter,
          subProjectFilter: effectiveSubProjectFilter,
          selectedCountryCodes,
          goatStatusFilters: goatEnabled ? goatStatusFilters : [],
          targetListFilter: 'all' as const,
+         insdcCountFilters,
          customFieldFilters,
          customFields,
       }),
       [
-         selectedTaxonTaxid,
+         taxonScope,
          debouncedSearch,
          effectiveIucnThreatFilter,
          effectiveSubProjectFilter,
          selectedCountryCodes,
          goatEnabled,
          goatStatusFilters,
+         insdcCountFilters,
          customFieldFilters,
          customFields,
       ],
@@ -503,7 +541,11 @@ export function SpeciesListPageClient() {
          sort_order: sortApi.sort_order,
       }
       if (debouncedSearch) q.filter = debouncedSearch
-      if (selectedTaxonTaxid) q.taxon_lineage = selectedTaxonTaxid
+      if (taxonScope) {
+         for (const [k, v] of Object.entries(taxonScope.queryParams)) {
+            if (v) q[k] = v
+         }
+      }
       if (effectiveIucnThreatFilter !== 'all') q.iucn_redlist__category = effectiveIucnThreatFilter
       if (effectiveSubProjectFilter !== 'all') {
          q.sub_project = speciesMetadataBucketToQueryValue(effectiveSubProjectFilter)
@@ -514,17 +556,21 @@ export function SpeciesListPageClient() {
       if (goatEnabled && goatStatusFilters.length > 0) {
          q.goat_status__in = [...goatStatusFilters].sort().join(',')
       }
+      if (insdcCountFilters.length > 0) {
+         q.insdc_counts_any = [...insdcCountFilters].sort().join(',')
+      }
       appendCustomFieldListFilters(q, customFields, customFieldFilters)
       return q
    }, [
       debouncedSearch,
-      selectedTaxonTaxid,
+      taxonScope,
       effectiveIucnThreatFilter,
       effectiveSubProjectFilter,
       countriesEnabled,
       selectedCountryCodes,
       goatEnabled,
       goatStatusFilters,
+      insdcCountFilters,
       customFields,
       customFieldFilters,
       sortApi,
@@ -536,7 +582,11 @@ export function SpeciesListPageClient() {
          sort_order: sortApi.sort_order,
       }
       if (debouncedSearch) q.filter = debouncedSearch
-      if (selectedTaxonTaxid) q.taxon_lineage = selectedTaxonTaxid
+      if (taxonScope) {
+         for (const [k, v] of Object.entries(taxonScope.queryParams)) {
+            if (v) q[k] = v
+         }
+      }
       if (effectiveIucnThreatFilter !== 'all') q.iucn_redlist__category = effectiveIucnThreatFilter
       if (effectiveSubProjectFilter !== 'all') {
          q.sub_project = speciesMetadataBucketToQueryValue(effectiveSubProjectFilter)
@@ -547,17 +597,21 @@ export function SpeciesListPageClient() {
       if (goatEnabled && goatStatusFilters.length > 0) {
          q.goat_status__in = [...goatStatusFilters].sort().join(',')
       }
+      if (insdcCountFilters.length > 0) {
+         q.insdc_counts_any = [...insdcCountFilters].sort().join(',')
+      }
       appendCustomFieldListFilters(q, customFields, customFieldFilters)
       return q
    }, [
       debouncedSearch,
-      selectedTaxonTaxid,
+      taxonScope,
       effectiveIucnThreatFilter,
       effectiveSubProjectFilter,
       countriesEnabled,
       selectedCountryCodes,
       goatEnabled,
       goatStatusFilters,
+      insdcCountFilters,
       customFields,
       customFieldFilters,
       sortApi,
@@ -646,42 +700,64 @@ export function SpeciesListPageClient() {
       setSubProjectFilter('all')
       setCustomFieldFilters({})
       setSelectedCountryCodes([])
-      setSelectedTaxonTaxid(null)
-      setSelectedTaxonRankId(null)
-      setLineageDisplayName(null)
+      setTaxonScope(null)
       setGoatStatusFilters([])
+      setInsdcCountFilters([])
    }, [])
 
    const clearLineage = useCallback(() => {
-      setSelectedTaxonTaxid(null)
-      setSelectedTaxonRankId(null)
-      setLineageDisplayName(null)
+      setTaxonScope(null)
    }, [])
 
    const handleTreeTaxonToggle = useCallback(
       (taxon: TaxonRecord) => {
-         if (selectedTaxonTaxid === taxon.taxid) {
+         if (taxonScope?.kind === 'full' && taxonScope.nodeId === taxon.taxid) {
             clearLineage()
             return
          }
-         setSelectedTaxonTaxid(taxon.taxid)
-         setSelectedTaxonRankId(
-            rankGroupIdFromApiRank(taxon.rank) ??
+         setTaxonScope({
+            kind: 'full',
+            nodeId: taxon.taxid,
+            displayLabel: taxon.scientific_name || taxon.name || taxon.taxid,
+            rankId:
+               rankGroupIdFromApiRank(taxon.rank) ??
                (explorerRankId === TAXONOMY_EXPLORER_TREE_MODE_ID ? null : explorerRankId),
-         )
-         setLineageDisplayName(taxon.scientific_name || taxon.name || taxon.taxid)
+            queryParams: { taxon_lineage: taxon.taxid },
+         })
       },
-      [selectedTaxonTaxid, clearLineage, explorerRankId],
+      [taxonScope, clearLineage, explorerRankId],
    )
+
+   const handleCitizenNodeSelect = useCallback(
+      (node: CitizenTaxonomyNode) => {
+         if (taxonScope?.kind === 'citizen' && taxonScope.nodeId === node.taxid) {
+            clearLineage()
+            return
+         }
+         setTaxonScope({
+            kind: 'citizen',
+            nodeId: node.taxid,
+            displayLabel: citizenNodeLabel(node, locale),
+            rankId: null,
+            queryParams: citizenNodeToQueryParams(node),
+         })
+      },
+      [taxonScope, clearLineage, locale],
+   )
+
+   const handleTaxonomyBrowseModeChange = useCallback(() => {
+      clearLineage()
+   }, [clearLineage])
 
    const filtersActive = Boolean(
       debouncedSearch ||
-         selectedTaxonTaxid ||
+         taxonScope ||
          effectiveIucnThreatFilter !== 'all' ||
          effectiveSubProjectFilter !== 'all' ||
          customFields.some((field) => (customFieldFilters[field.key] ?? 'all') !== 'all') ||
          selectedCountryCodes.length > 0 ||
-         (goatEnabled && goatStatusFilters.length > 0),
+         (goatEnabled && goatStatusFilters.length > 0) ||
+         insdcCountFilters.length > 0,
    )
 
    const activeFilterChips = useMemo(() => {
@@ -710,12 +786,15 @@ export function SpeciesListPageClient() {
             clear: () => setIucnThreatFilter('all'),
          })
       }
-      if (selectedTaxonTaxid) {
-         const labelName = lineageDisplayName ?? selectedTaxonTaxid
-         const rg = selectedTaxonRankId
-            ? SPECIES_RANK_GROUPS.find((g) => g.id === selectedTaxonRankId)
+      if (taxonScope) {
+         const labelName = taxonScope.displayLabel
+         const rg = taxonScope.rankId
+            ? SPECIES_RANK_GROUPS.find((g) => g.id === taxonScope.rankId)
             : undefined
-         const rankLabel = rg?.label ?? t('speciesList.taxon')
+         const rankLabel =
+            taxonScope.kind === 'citizen'
+               ? t('speciesList.taxon')
+               : (rg?.label ?? t('speciesList.taxon'))
          chips.push({
             id: 'taxon',
             label: `${rankLabel}: ${labelName}`,
@@ -762,14 +841,29 @@ export function SpeciesListPageClient() {
             })
          }
       }
+      for (const key of insdcCountFilters) {
+         const labelKey =
+            key === 'bio'
+               ? 'speciesList.hasBiosamples'
+               : key === 'asm'
+                 ? 'speciesList.hasAssemblies'
+                 : key === 'reads'
+                   ? 'speciesList.hasReads'
+                   : 'speciesList.hasAnnotations'
+         const label = t(labelKey)
+         chips.push({
+            id: `data-${key}`,
+            label: `${t('speciesList.dataSectionTitle')}: ${label}`,
+            removeAriaLabel: `${t('speciesList.removeFilter')} ${label}`,
+            clear: () => toggleInsdcCountFilter(key),
+         })
+      }
       return chips
    }, [
       debouncedSearch,
       effectiveIucnThreatFilter,
       effectiveSubProjectFilter,
-      selectedTaxonTaxid,
-      selectedTaxonRankId,
-      lineageDisplayName,
+      taxonScope,
       selectedCountryCodes,
       clearLineage,
       t,
@@ -781,19 +875,22 @@ export function SpeciesListPageClient() {
       goatEnabled,
       goatStatusFilters,
       toggleGoatStatusFilter,
+      countriesEnabled,
+      insdcCountFilters,
+      toggleInsdcCountFilter,
    ])
 
    const activeFilterCount = activeFilterChips.length
 
    const treeSelectedTaxons = useMemo((): TaxonRecord[] => {
-      if (!selectedTaxonTaxid) return []
-      const label = lineageDisplayName ?? selectedTaxonTaxid
-      const rankVal = selectedTaxonRankId
-         ? SPECIES_RANK_GROUPS.find((g) => g.id === selectedTaxonRankId)?.apiRankParam.value
+      if (!taxonScope || taxonScope.kind !== 'full') return []
+      const label = taxonScope.displayLabel
+      const rankVal = taxonScope.rankId
+         ? SPECIES_RANK_GROUPS.find((g) => g.id === taxonScope.rankId)?.apiRankParam.value
          : undefined
       return [
          {
-            taxid: selectedTaxonTaxid,
+            taxid: taxonScope.nodeId,
             scientific_name: label,
             name: label,
             rank: rankVal,
@@ -802,7 +899,7 @@ export function SpeciesListPageClient() {
             annotations_count: 0,
          },
       ]
-   }, [selectedTaxonTaxid, lineageDisplayName, selectedTaxonRankId])
+   }, [taxonScope])
 
    const taxonCacheForExplorerRank = useMemo(() => {
       if (explorerRankId === TAXONOMY_EXPLORER_TREE_MODE_ID) return emptyRankTaxonCache()
@@ -829,7 +926,11 @@ export function SpeciesListPageClient() {
          treeSelectedTaxons,
          onTreeTaxonToggle: handleTreeTaxonToggle,
          onClearTaxonomyLineage: clearLineage,
-         selectedTaxonTaxid,
+         lineageActive: Boolean(taxonScope),
+         citizenTaxonomy,
+         selectedCitizenNodeId: taxonScope?.kind === 'citizen' ? taxonScope.nodeId : null,
+         onCitizenNodeSelect: handleCitizenNodeSelect,
+         onTaxonomyBrowseModeChange: handleTaxonomyBrowseModeChange,
          iucnFilterVisible,
          iucnThreatFilter,
          onIucnChange: setIucnThreatFilter,
@@ -855,6 +956,10 @@ export function SpeciesListPageClient() {
          goatStatusFilters,
          onToggleGoatStatus: toggleGoatStatusFilter,
          goatStats,
+         insdcCountFilters,
+         onToggleInsdcCount: toggleInsdcCountFilter,
+         insdcCountStats,
+         insdcCountStatsLoading,
       }),
       [
          searchInput,
@@ -867,7 +972,10 @@ export function SpeciesListPageClient() {
          treeSelectedTaxons,
          handleTreeTaxonToggle,
          clearLineage,
-         selectedTaxonTaxid,
+         taxonScope,
+         citizenTaxonomy,
+         handleCitizenNodeSelect,
+         handleTaxonomyBrowseModeChange,
          iucnFilterVisible,
          iucnThreatFilter,
          iucnThreatSelectOptions,
@@ -891,6 +999,10 @@ export function SpeciesListPageClient() {
          goatStatusFilters,
          toggleGoatStatusFilter,
          goatStats,
+         insdcCountFilters,
+         toggleInsdcCountFilter,
+         insdcCountStats,
+         insdcCountStatsLoading,
       ],
    )
 
@@ -962,6 +1074,8 @@ export function SpeciesListPageClient() {
                      setIucnThreatStats={setIucnThreatStats}
                      setSubProjectStats={setSubProjectStats}
                      setGoatStats={setGoatStats}
+                     setInsdcCountStats={setInsdcCountStats}
+                     setInsdcCountStatsLoading={setInsdcCountStatsLoading}
                      customFields={customFields}
                      setCustomFieldStats={setCustomFieldStats}
                   />

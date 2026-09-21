@@ -17,6 +17,10 @@ import { modelLucideMap } from '@/lib/modelIcons'
 import { navRouteIcons, showMap, taxonNodeToPortalStats, type DataModels } from '@/lib/portal'
 import { useRootTaxonStore } from '@/stores/root-taxon-store'
 
+/** Default hero kicker when portal.json omits general.kicker — links to the app publication. */
+const DEFAULT_KICKER_LABEL = 'BioGenome Portal'
+const DEFAULT_KICKER_PUBLICATION_URL = 'https://doi.org/10.1093/nargab/lqaf020'
+
 /** Fixed hero strip: same labels as the legacy home page; counts from root taxon aggregates. */
 const HERO_STRIP_STATS: { key: DataModels; labelKey: string }[] = [
    { key: 'organisms', labelKey: 'home.hero.stats.speciesTracked' },
@@ -79,10 +83,12 @@ export function HomePage() {
          ),
       [general?.description, locale],
    )
-   const kicker = useMemo(
-      () => pickLocalized(general?.kicker, locale, 'BioGenome Portal'),
+   const configuredKicker = useMemo(
+      () => pickLocalized(general?.kicker, locale, '').trim(),
       [general?.kicker, locale],
    )
+   const kicker = configuredKicker || DEFAULT_KICKER_LABEL
+   const kickerIsPublicationLink = !configuredKicker
 
    const footer = config?.footer
    const footerCopyright = useMemo(
@@ -177,7 +183,6 @@ export function HomePage() {
          titleKey: string
          descKey: string
          icon: LucideIcon
-         color: string
       }> = []
       if (mapOn) {
          items.push({
@@ -185,23 +190,8 @@ export function HomePage() {
             titleKey: 'home.mapFeature.title',
             descKey: 'home.mapFeature.description',
             icon: navRouteIcons.map,
-            color: 'bg-chart-1/10 text-chart-1',
          })
       }
-      items.push({
-         href: '/taxonomy',
-         titleKey: 'home.taxonomyFeature.title',
-         descKey: 'home.taxonomyFeature.description',
-         icon: navRouteIcons.taxonomy,
-         color: 'bg-chart-2/10 text-chart-2',
-      })
-      items.push({
-         href: '/species',
-         titleKey: 'home.speciesFeature.title',
-         descKey: 'home.speciesFeature.description',
-         icon: navRouteIcons.species,
-         color: 'bg-chart-3/10 text-chart-3',
-      })
       const assemblies = portalStatCounts?.assemblies ?? 0
       const annotations = portalStatCounts?.annotations ?? 0
       if (assemblies > 0 && annotations > 0) {
@@ -210,9 +200,14 @@ export function HomePage() {
             titleKey: 'home.genomeBrowserFeature.title',
             descKey: 'home.genomeBrowserFeature.description',
             icon: navRouteIcons.genomeBrowser,
-            color: 'bg-chart-4/10 text-chart-4',
          })
       }
+      items.push({
+         href: '/taxonomy',
+         titleKey: 'home.taxonomyFeature.title',
+         descKey: 'home.taxonomyFeature.description',
+         icon: navRouteIcons.taxonomy,
+      })
       return items
    }, [mapOn, portalStatCounts])
 
@@ -224,10 +219,8 @@ export function HomePage() {
       )
    }
 
-   const HomeHeroIcon = navRouteIcons.home
    const SpeciesCtaIcon = navRouteIcons.species
-   const TaxonomyCtaIcon = navRouteIcons.taxonomy
-   const MapCtaIcon = navRouteIcons.map
+   const CatalogCtaIcon = navRouteIcons.catalog
 
    return (
       <div className="min-h-screen bg-background">
@@ -248,10 +241,24 @@ export function HomePage() {
             />
             <div className="container relative mx-auto px-4 py-20 md:py-32">
                <div className="mx-auto max-w-3xl text-center">
-                  <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/[0.12] px-4 py-1.5 text-sm font-semibold text-primary shadow-sm ring-1 ring-primary/10 backdrop-blur-sm dark:bg-primary/20 dark:ring-primary/20">
-                     <Dna className="h-4 w-4 shrink-0" aria-hidden />
-                     {kicker}
-                  </div>
+                  {kickerIsPublicationLink ? (
+                     <a
+                        href={DEFAULT_KICKER_PUBLICATION_URL}
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-label={t('home.kickerPublicationAria')}
+                        className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/[0.12] px-4 py-1.5 text-sm font-semibold text-primary shadow-sm ring-1 ring-primary/10 backdrop-blur-sm transition-colors hover:bg-primary/[0.18] hover:ring-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:bg-primary/20 dark:ring-primary/20 dark:hover:bg-primary/30"
+                     >
+                        <Dna className="h-4 w-4 shrink-0" aria-hidden />
+                        {kicker}
+                        <ArrowUpRight className="h-3.5 w-3.5 shrink-0 opacity-70" aria-hidden />
+                     </a>
+                  ) : (
+                     <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/[0.12] px-4 py-1.5 text-sm font-semibold text-primary shadow-sm ring-1 ring-primary/10 backdrop-blur-sm dark:bg-primary/20 dark:ring-primary/20">
+                        <Dna className="h-4 w-4 shrink-0" aria-hidden />
+                        {kicker}
+                     </div>
+                  )}
                   <h1 className="mb-6 flex flex-wrap items-center justify-center gap-3 text-balance text-4xl font-bold tracking-tight text-foreground md:text-6xl">
                      <span>
                         {titleParts ? (
@@ -268,29 +275,19 @@ export function HomePage() {
                   <p className="mb-8 text-pretty text-lg leading-relaxed text-muted-foreground md:text-xl">
                      {description}
                   </p>
-                  <div className="flex flex-col items-center gap-5">
+                  <div className="flex w-full flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
                      <Button asChild size="lg" className="w-full sm:w-auto">
                         <Link href="/species">
                            <SpeciesCtaIcon className="mr-2 h-5 w-5" />
                            {t('home.cta.exploreSpecies')}
                         </Link>
                      </Button>
-                     <div className="flex flex-col items-stretch justify-center gap-2 sm:flex-row sm:items-center sm:gap-1">
-                        <Button asChild variant="ghost" size="lg" className="w-full sm:w-auto">
-                           <Link href="/taxonomy">
-                              <TaxonomyCtaIcon className="mr-2 h-5 w-5" />
-                              {t('home.cta.browseTaxonomy')}
-                           </Link>
-                        </Button>
-                        {mapOn && (
-                           <Button asChild variant="ghost" size="lg" className="w-full sm:w-auto">
-                              <Link href="/map">
-                                 <MapCtaIcon className="mr-2 h-5 w-5" />
-                                 {t('home.cta.exploreMap')}
-                              </Link>
-                           </Button>
-                        )}
-                     </div>
+                     <Button asChild variant="secondary" size="lg" className="w-full sm:w-auto">
+                        <Link href="/catalog">
+                           <CatalogCtaIcon className="mr-2 h-5 w-5" />
+                           {t('home.cta.exploreCatalog')}
+                        </Link>
+                     </Button>
                   </div>
                </div>
             </div>
@@ -311,23 +308,40 @@ export function HomePage() {
                      {stats.map((stat) => {
                         const Icon = modelLucideMap[stat.key] ?? List
                         const href = homeStatHref(stat.key)
+                        const isSpeciesStat = stat.key === 'organisms'
                         return (
                            <div key={stat.key} className="text-center">
-                              <div className="mb-3 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
-                                 <Icon className="h-6 w-6 text-primary" aria-hidden />
+                              <div
+                                 className={cn(
+                                    'mb-3 inline-flex h-12 w-12 items-center justify-center rounded-lg',
+                                    isSpeciesStat ? 'bg-primary/10' : 'bg-secondary/10',
+                                 )}
+                              >
+                                 <Icon
+                                    className={cn(
+                                       'h-6 w-6',
+                                       isSpeciesStat ? 'text-primary' : 'text-secondary',
+                                    )}
+                                    aria-hidden
+                                 />
                               </div>
                               <div className="mb-1 flex items-center justify-center gap-2 text-3xl font-bold text-foreground md:text-4xl">
                                  <span>{stat.value}</span>
                                  <Link
                                     href={href}
-                                    className="inline-flex text-muted-foreground hover:text-foreground"
+                                    className={cn(
+                                       'inline-flex text-muted-foreground',
+                                       isSpeciesStat
+                                          ? 'hover:text-primary'
+                                          : 'hover:text-secondary',
+                                    )}
                                     aria-label={
-                                       stat.key === 'organisms'
+                                       isSpeciesStat
                                           ? `Open ${stat.label}`
                                           : `Open ${stat.label} in catalog`
                                     }
                                     title={
-                                       stat.key === 'organisms'
+                                       isSpeciesStat
                                           ? `Open ${stat.label}`
                                           : `Open ${stat.label} in catalog`
                                     }
@@ -351,16 +365,14 @@ export function HomePage() {
                   {t('home.features.subtitle')}
                </p>
             </div>
-            <div className="mx-auto grid max-w-4xl gap-6 md:grid-cols-2">
+            <div className="mx-auto grid max-w-5xl gap-6 md:grid-cols-3">
                {features.map((feature) => {
                   const Icon = feature.icon
                   return (
                      <Link key={feature.href} href={feature.href}>
                         <Card className="group h-full cursor-pointer transition-all hover:border-primary/50">
                            <CardContent className="p-6">
-                              <div
-                                 className={`mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg ${feature.color}`}
-                              >
+                              <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-accent/10 text-accent">
                                  <Icon className="h-6 w-6" aria-hidden />
                               </div>
                               <h3 className="mb-2 flex items-center gap-2 text-xl font-semibold transition-colors group-hover:text-primary">

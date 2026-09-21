@@ -30,7 +30,11 @@ export function SpeciesCountryListFilter({
 
    const listEntries = useMemo(() => {
       const entries = sortStatEntriesByCountDesc(
-         countryStatRealCodes(countryStats).map((code) => [code, countryStats[code] ?? 0] as [string, number]),
+         countryStatRealCodes(countryStats)
+            .map((code) => [code, countryStats[code] ?? 0] as [string, number])
+            .filter(
+               ([code, count]) => count > 0 || selectedSet.has(code.toUpperCase()),
+            ),
       )
       const q = listFilter.trim().toLowerCase()
       if (!q) return entries
@@ -38,7 +42,7 @@ export function SpeciesCountryListFilter({
          const label = countryLabelForLocale(code, locale).toLowerCase()
          return code.toLowerCase().includes(q) || label.includes(q)
       })
-   }, [countryStats, listFilter, locale])
+   }, [countryStats, listFilter, locale, selectedSet])
 
    return (
       <div className="space-y-3">

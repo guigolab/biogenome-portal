@@ -25,7 +25,13 @@ import {
    catalogHasStructuredFilters,
    type SelectOptionWithCount,
 } from '@/lib/catalog-explorer'
-import type { CatalogCardFieldDef, ConfigFilter, DataModels } from '@/lib/portal/types'
+import type {
+   CatalogCardFieldDef,
+   CitizenTaxonomyConfig,
+   CitizenTaxonomyNode,
+   ConfigFilter,
+   DataModels,
+} from '@/lib/portal/types'
 import { navRouteIcons } from '@/lib/portal'
 import { cn } from '@/lib/utils'
 import { Download, Filter } from 'lucide-react'
@@ -48,11 +54,20 @@ export type CatalogExplorerViewProps = {
    setFilterValues: Dispatch<SetStateAction<Record<string, FilterValuesState | undefined>>>
    onClearAllFilters: () => void
    speciesTaxid: string | null
+   citizenNodeId: string | null
+   citizenTaxonomy: CitizenTaxonomyConfig | null
    onSelectTaxon: (taxid: string, node: Record<string, unknown>) => void
+   onSelectCitizenNode: (node: CitizenTaxonomyNode) => void
    onClearTaxon: () => void
+   onTaxonomyBrowseModeChange?: (mode: 'citizen' | 'full') => void
    scopedTaxonDoc: Record<string, unknown> | null
    scopedTaxonLoading: boolean
    scopedTaxonError: string | null
+   /** Portal catalog models (excluding organisms) for typeahead hit filtering. */
+   catalogModelKeys: DataModels[]
+   /** Extra lineage query bits for export (citizen exclude/union). */
+   taxonLineageIn?: string | null
+   taxonLineageNin?: string | null
    selectOptions: Record<string, SelectOptionWithCount[]>
    ensureSelectOptionsLoaded?: (fieldKey: string) => void
    selectOptionsLoading?: Record<string, boolean>
@@ -173,11 +188,16 @@ export function CatalogExplorerView(p: CatalogExplorerViewProps) {
                <div className="flex min-w-0 flex-col gap-3 md:flex-row md:items-center">
                   <CatalogTaxonScopePopover
                      speciesTaxid={p.speciesTaxid}
+                     citizenNodeId={p.citizenNodeId}
+                     citizenTaxonomy={p.citizenTaxonomy}
                      scopedTaxonDoc={p.scopedTaxonDoc}
                      scopedTaxonLoading={p.scopedTaxonLoading}
                      scopedTaxonError={p.scopedTaxonError}
+                     catalogModelKeys={p.catalogModelKeys}
                      onSelectTaxon={p.onSelectTaxon}
+                     onSelectCitizenNode={p.onSelectCitizenNode}
                      onClearTaxon={p.onClearTaxon}
+                     onBrowseModeChange={p.onTaxonomyBrowseModeChange}
                   />
                   {showModelTabs ? (
                      <CatalogModelTabs
@@ -363,6 +383,8 @@ export function CatalogExplorerView(p: CatalogExplorerViewProps) {
             fieldKeys={p.exportFieldKeys}
             cardFields={p.exportCardFields}
             taxonLineage={p.effectiveTaxonLineageExport}
+            taxonLineageIn={p.taxonLineageIn}
+            taxonLineageNin={p.taxonLineageNin}
             filterDefs={p.modelFilters}
             filterValues={p.filterValues}
             speciesTaxid={p.speciesTaxid}

@@ -616,7 +616,7 @@ def get_unassigned_organisms(format='json',filter=None, limit=20, offset=0):
     fields = [
         'scientific_name', 'taxid', 'sub_project',
         'metadata', 'insdc_status', 'goat_status', 'target_list_status',
-        'pi_names', 'pi_institutes', 'pi_programs',
+        'pi_names', 'pi_institutes', 'pi_programs', 'data_counts',
     ]
     if assigned_taxids:
         organisms = Organism.objects(taxid__not__in=assigned_taxids)
@@ -774,7 +774,7 @@ def get_organisms_with_users_list(args, *, assigned_only=True):
     fields = [
         'scientific_name', 'taxid', 'assigned_users', 'sub_project',
         'metadata', 'insdc_status', 'goat_status', 'target_list_status',
-        'pi_names', 'pi_institutes', 'pi_programs',
+        'pi_names', 'pi_institutes', 'pi_programs', 'data_counts',
     ]
     output_format = query.pop('format', 'json')
     user_filter = query.pop('name__in', None)
@@ -832,6 +832,10 @@ def get_organisms_with_users_list(args, *, assigned_only=True):
         'goat_status',
         'target_list_status',
         'pending_deletion',
+        'assemblies_count',
+        'reads_count',
+        'biosamples_count',
+        'genome_annotations_count',
     )
 
     if q:

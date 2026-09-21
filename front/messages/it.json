@@ -21,6 +21,11 @@
       "taxonScopeButtonAll": "Tutte le specie",
       "taxonScopeButtonAria": "Filtra il catalogo per taxon",
       "taxonScopeBrowseHint": "Sfoglia la tassonomia per limitare questo catalogo a un taxon.",
+      "taxonSearchLabel": "Cerca taxa per nome o taxid",
+      "taxonSearchPlaceholder": "Digita almeno 2 caratteri per cercare taxa...",
+      "taxonSearchLoading": "Ricerca taxa...",
+      "taxonSearchNoResults": "Nessun risultato. Provare un altro taxid o ortografia.",
+      "taxonSearchError": "Ricerca taxa non riuscita. Riprovare.",
       "exportRecords": "Esporta record",
       "exportSheetTitle": "Esporta catalogo",
       "exportSheetDescription": "Scegli colonne e formato. Il file usa lo stesso ambito di filtri dell’elenco, non solo la pagina visibile.",
@@ -217,10 +222,12 @@
       "emptyStats": "Nessun totale aggregato per queste metriche.",
       "cta": {
          "exploreSpecies": "Esplora le specie",
+         "exploreCatalog": "Esplora il catalogo",
          "exploreMap": "Esplora la mappa",
          "browseTaxonomy": "Sfoglia la tassonomia",
          "viewSpecies": "Mostra tutte le specie"
       },
+      "kickerPublicationAria": "Apri la pubblicazione del BioGenome Portal",
       "footerMainWebsite": "Visita il sito principale",
       "footer": "BioGenome Portal — Far avanzare la ricerca sulla biodiversità attraverso la genomica",
       "closing": {
@@ -408,6 +415,12 @@
       "taxonomyRankSelectAria": "Rango tassonomico per esplorare i taxa",
       "taxonomyBrowseByRankTab": "Filtra per rango",
       "clearTaxonomyFilter": "Cancella",
+      "dataSectionTitle": "Dati",
+      "filterByDataAria": "Filtra per dati inviati",
+      "hasBiosamples": "Ha biosamples",
+      "hasAssemblies": "Ha assemblaggi",
+      "hasReads": "Ha reads",
+      "hasAnnotations": "Ha annotazioni",
       "iucnSectionTitle": "Categoria della Lista Rossa IUCN",
       "subProjectSectionTitle": "Sottoprogetto",
       "allSubProjects": "Tutti i sottoprogetti",
@@ -439,6 +452,7 @@
    },
    "iucn": {
       "noAssessment": "Nessuna valutazione",
+      "openOnRedList": "Apri sulla Lista Rossa IUCN",
       "labels": {
          "EX": "Estinto",
          "EW": "Estinto in natura",

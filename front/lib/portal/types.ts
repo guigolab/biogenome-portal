@@ -63,6 +63,25 @@ export interface GeneralConfig extends Record<string, unknown> {
     * default to true when unset. See `showCountriesUi()` in `portalFeatures.ts`.
     */
    showCountries?: boolean
+   /**
+    * Optional flat citizen-friendly taxonomy (taxid + parent_taxid) for Popular groups browse.
+    */
+   citizenTaxonomy?: CitizenTaxonomyConfig
+}
+
+/** Flat citizen taxonomy node (d3 /tree-style parent pointers). */
+export type CitizenTaxonomyNode = {
+   taxid: string
+   parent_taxid?: string | null
+   labels: Record<string, string>
+   include_taxid?: string
+   include_taxids?: string[]
+   exclude_taxids?: string[]
+}
+
+export type CitizenTaxonomyConfig = {
+   defaultMode?: 'citizen' | 'full'
+   nodes: CitizenTaxonomyNode[]
 }
 
 /** Wire format for portal.json theme colors (appearance is user-controlled in the Next app, not JSON). */

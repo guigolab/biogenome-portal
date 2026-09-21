@@ -9,7 +9,7 @@ import {
 import { useLocale } from '@/contexts/locale-context'
 import { usePortalConfig } from '@/contexts/portal-context'
 import { showCmsLoginNav } from '@/lib/portal'
-import type { CmsOrganismFieldWire } from '@/lib/portal/types'
+import type { CmsOrganismFieldWire, CitizenTaxonomyConfig, CitizenTaxonomyNode } from '@/lib/portal/types'
 import type { TaxonRecord } from '@/lib/api/taxon'
 import { customFieldSectionId } from '@/lib/speciesCustomFieldFilters'
 import { sortStatEntriesByCountDesc } from '@/lib/speciesFieldStats'
@@ -17,12 +17,15 @@ import type { RankGroupDef } from '@/lib/taxonRankFilter'
 import { cn } from '@/lib/utils'
 import { Check } from 'lucide-react'
 import { SpeciesCountryListFilter } from '@/components/species-list/species-country-list-filter'
+import { SpeciesDataFilterList } from '@/components/species-list/species-data-filter-list'
 import { GoatStatusFilterList } from '@/components/species-list/goat-target-filter-lists'
 import { TaxonomyFilterSection } from '@/components/species-list/taxonomy-filter-section'
 import type { RankTaxonCache } from '@/components/species-list/types'
 import type { GoatTrackerStage } from '@/lib/goatPipelineTracker'
+import type { SpeciesDataFilterCode } from '@/lib/speciesDataFilter'
 import {
    COUNTRIES_SECTION_ID,
+   DATA_SECTION_ID,
    GOAT_STATUS_SECTION_ID,
    IUCN_SECTION_ID,
    SpeciesListFilterAccordionProvider,
@@ -72,6 +75,9 @@ function IucnFilterList({
    labelIucn: (code: string) => string
 }) {
    const { t } = useLocale()
+   const visibleOptions = iucnOptions.filter(
+      ([code, count]) => count > 0 || iucnThreatFilter === code,
+   )
    return (
       <div
          className="max-h-[min(50vh,20rem)] space-y-0.5 overflow-y-auto overscroll-contain py-1"
@@ -91,7 +97,7 @@ function IucnFilterList({
             <Check className={cn('h-4 w-4 shrink-0', iucnThreatFilter === 'all' ? 'opacity-100' : 'opacity-0')} />
             <span className="min-w-0 flex-1 font-medium">{t('speciesList.allIucnCategories')}</span>
          </button>
-         {iucnOptions.map(([code, count]) => {
+         {visibleOptions.map(([code, count]) => {
             const sel = iucnThreatFilter === code
             return (
                <button
@@ -132,6 +138,7 @@ function StringBucketFilterList({
    ariaLabel: string
    formatOptionLabel?: (code: string) => string
 }) {
+   const visibleOptions = options.filter(([code, count]) => count > 0 || value === code)
    return (
       <div
          className="max-h-[min(50vh,20rem)] space-y-0.5 overflow-y-auto overscroll-contain py-1"
@@ -151,7 +158,7 @@ function StringBucketFilterList({
             <Check className={cn('h-4 w-4 shrink-0', value === 'all' ? 'opacity-100' : 'opacity-0')} />
             <span className="min-w-0 flex-1 font-medium">{allLabel}</span>
          </button>
-         {options.map(([code, count], idx) => {
+         {visibleOptions.map(([code, count], idx) => {
             const sel = value === code
             const label = formatOptionLabel ? formatOptionLabel(code) : code
             return (
@@ -191,7 +198,11 @@ export type SpeciesListFiltersPanelProps = {
    treeSelectedTaxons: TaxonRecord[]
    onTreeTaxonToggle: (taxon: TaxonRecord) => void
    onClearTaxonomyLineage: () => void
-   selectedTaxonTaxid: string | null
+   lineageActive: boolean
+   citizenTaxonomy: CitizenTaxonomyConfig | null
+   selectedCitizenNodeId: string | null
+   onCitizenNodeSelect: (node: CitizenTaxonomyNode) => void
+   onTaxonomyBrowseModeChange?: (mode: 'citizen' | 'full') => void
    iucnFilterVisible: boolean
    iucnThreatFilter: string
    onIucnChange: (value: string) => void
@@ -221,6 +232,10 @@ export type SpeciesListFiltersPanelProps = {
    /** Raw facet map for loading spinners when a GoaT section is open (optional if omitted, loading is false). */
    goatStats?: Record<string, number> | null
    goatFacetStatsLoading?: boolean
+   insdcCountFilters?: SpeciesDataFilterCode[]
+   onToggleInsdcCount?: (key: SpeciesDataFilterCode) => void
+   insdcCountStats?: Record<string, number> | null
+   insdcCountStatsLoading?: boolean
 }
 
 export type SpeciesListFilterSidebarProps = SpeciesListFiltersPanelProps & {
@@ -242,7 +257,11 @@ export function SpeciesListFiltersPanel({
    treeSelectedTaxons,
    onTreeTaxonToggle,
    onClearTaxonomyLineage,
-   selectedTaxonTaxid,
+   lineageActive,
+   citizenTaxonomy,
+   selectedCitizenNodeId,
+   onCitizenNodeSelect,
+   onTaxonomyBrowseModeChange,
    iucnFilterVisible,
    iucnThreatFilter,
    onIucnChange,
@@ -269,6 +288,10 @@ export function SpeciesListFiltersPanel({
    onToggleGoatStatus,
    goatStats = null,
    goatFacetStatsLoading: goatFacetStatsLoadingProp,
+   insdcCountFilters = [],
+   onToggleInsdcCount,
+   insdcCountStats = null,
+   insdcCountStatsLoading = false,
 }: SpeciesListFiltersPanelProps) {
    const { t } = useLocale()
    const { config } = usePortalConfig()
@@ -277,6 +300,8 @@ export function SpeciesListFiltersPanel({
    const goatFacetStatsLoading =
       goatFacetStatsLoadingProp ??
       (showGoatFilters ? openSection === GOAT_STATUS_SECTION_ID && goatStats == null : false)
+   const dataFacetStatsLoading =
+      insdcCountStatsLoading || (openSection === DATA_SECTION_ID && insdcCountStats == null)
 
    return (
       <div className={cn(filterSidebarScrollColumnClassName, className)}>
@@ -298,11 +323,15 @@ export function SpeciesListFiltersPanel({
                explorerRankId={explorerRankId}
                onExplorerRankIdChange={onExplorerRankIdChange}
                taxonCache={taxonCacheForExplorerRank}
-               selectedTaxonTaxid={selectedTaxonTaxid}
+               lineageActive={lineageActive}
                treeSelectedTaxons={treeSelectedTaxons}
                onTaxonToggle={onTreeTaxonToggle}
                onClearLineage={onClearTaxonomyLineage}
                onLoadMoreRank={onLoadMoreExplorerRank}
+               citizenTaxonomy={citizenTaxonomy}
+               selectedCitizenNodeId={selectedCitizenNodeId}
+               onCitizenNodeSelect={onCitizenNodeSelect}
+               onBrowseModeChange={onTaxonomyBrowseModeChange}
             />
          </SpeciesFilterCollapsible>
          {showGoatFilters && onToggleGoatStatus ? (
@@ -312,6 +341,16 @@ export function SpeciesListFiltersPanel({
                   selectedKeys={goatStatusFilters}
                   onToggleKey={onToggleGoatStatus}
                   loading={goatFacetStatsLoading}
+               />
+            </SpeciesFilterCollapsible>
+         ) : null}
+         {onToggleInsdcCount ? (
+            <SpeciesFilterCollapsible sectionId={DATA_SECTION_ID} title={t('speciesList.dataSectionTitle')}>
+               <SpeciesDataFilterList
+                  selectedKeys={insdcCountFilters}
+                  onToggleKey={onToggleInsdcCount}
+                  counts={insdcCountStats}
+                  loading={dataFacetStatsLoading}
                />
             </SpeciesFilterCollapsible>
          ) : null}

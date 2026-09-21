@@ -21,6 +21,11 @@
       "taxonScopeButtonAll": "Toutes les espèces",
       "taxonScopeButtonAria": "Filtrer le catalogue par taxon",
       "taxonScopeBrowseHint": "Parcourez la taxonomie pour limiter ce catalogue à un taxon.",
+      "taxonSearchLabel": "Rechercher des taxons par nom ou taxid",
+      "taxonSearchPlaceholder": "Saisissez au moins 2 caractères pour rechercher des taxons...",
+      "taxonSearchLoading": "Recherche de taxons...",
+      "taxonSearchNoResults": "Aucun résultat. Essayez une autre orthographe ou un autre taxid.",
+      "taxonSearchError": "Échec de la recherche de taxons. Réessayez.",
       "exportRecords": "Exporter les enregistrements",
       "exportSheetTitle": "Exporter le catalogue",
       "exportSheetDescription": "Choisissez les colonnes et le format. Le fichier utilise le même périmètre de filtres que la liste, pas seulement la page visible.",
@@ -217,10 +222,12 @@
       "emptyStats": "Pas encore de totaux agrégés pour ces indicateurs.",
       "cta": {
          "exploreSpecies": "Explorer les espèces",
+         "exploreCatalog": "Explorer le catalogue",
          "exploreMap": "Explorer la carte",
          "browseTaxonomy": "Parcourir la taxonomie",
          "viewSpecies": "Afficher toutes les espèces"
       },
+      "kickerPublicationAria": "Ouvrir la publication du BioGenome Portal",
       "footerMainWebsite": "Visiter le site principal",
       "footer": "BioGenome Portal — Faire avancer la recherche sur la biodiversité par la génomique",
       "closing": {
@@ -408,6 +415,12 @@
       "taxonomyRankSelectAria": "Rang taxonomique pour parcourir les taxons",
       "taxonomyBrowseByRankTab": "Filtrer par rang",
       "clearTaxonomyFilter": "Effacer",
+      "dataSectionTitle": "Données",
+      "filterByDataAria": "Filtrer par données soumises",
+      "hasBiosamples": "A des biosamples",
+      "hasAssemblies": "A des assemblages",
+      "hasReads": "A des lectures",
+      "hasAnnotations": "A des annotations",
       "iucnSectionTitle": "Catégorie de la Liste rouge UICN",
       "subProjectSectionTitle": "Sous-projet",
       "allSubProjects": "Tous les sous-projets",
@@ -439,6 +452,7 @@
    },
    "iucn": {
       "noAssessment": "Pas d’évaluation",
+      "openOnRedList": "Ouvrir sur la Liste rouge UICN",
       "labels": {
          "EX": "Éteint",
          "EW": "Éteint à l’état sauvage",

@@ -37,6 +37,8 @@ export type CatalogExportSheetProps = {
    /** Card field defs (portal merge); optional `label` overrides column titles. */
    cardFields: CatalogCardFieldDef[] | undefined
    taxonLineage: string | null
+   taxonLineageIn?: string | null
+   taxonLineageNin?: string | null
    filterDefs: ConfigFilter[] | undefined
    filterValues: Record<string, FilterValuesState | undefined>
    speciesTaxid: string | null
@@ -69,6 +71,8 @@ export function CatalogExportSheet({
    fieldKeys,
    cardFields,
    taxonLineage,
+   taxonLineageIn = null,
+   taxonLineageNin = null,
    filterDefs,
    filterValues,
    speciesTaxid,
@@ -95,11 +99,13 @@ export function CatalogExportSheet({
       () =>
          buildCatalogQueryParams({
             taxonLineage,
-            speciesTaxid,
+            taxonLineageIn,
+            taxonLineageNin,
+            speciesTaxid: taxonLineageIn || taxonLineageNin || taxonLineage ? null : speciesTaxid,
             filterDefs,
             filterValues,
          }),
-      [taxonLineage, speciesTaxid, filterDefs, filterValues],
+      [taxonLineage, taxonLineageIn, taxonLineageNin, speciesTaxid, filterDefs, filterValues],
    )
 
    const toggle = useCallback((key: string, checked: boolean) => {

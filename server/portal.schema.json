@@ -18,7 +18,7 @@
            "title": { "$ref": "#/$defs/i18nStrings" },
            "description": { "$ref": "#/$defs/i18nStrings" },
            "kicker": {
-              "description": "Small eyebrow label shown above the home page hero title.",
+              "description": "Small eyebrow label shown above the home page hero title. When omitted, the home page shows a default \"BioGenome Portal\" badge linking to the app publication (DOI 10.1093/nargab/lqaf020).",
               "allOf": [{ "$ref": "#/$defs/i18nStrings" }]
            },
            "titleHighlight": {
@@ -62,6 +62,10 @@
            "showCountries": {
               "type": "boolean",
               "description": "Show the country filter (species list) and country section (species detail). Defaults to true when omitted. Overrides the build-time NEXT_PUBLIC_SHOW_COUNTRIES image default when set; last one wins."
+           },
+           "citizenTaxonomy": {
+              "$ref": "#/$defs/citizenTaxonomy",
+              "description": "Optional flat citizen-friendly taxonomy (taxid + parent_taxid) for Popular groups browse mode on species list and catalog."
            },
            "matomo": {
               "type": "object",
@@ -211,6 +215,57 @@
               "type": "array",
               "minItems": 1,
               "items": { "type": "string", "minLength": 1 }
+           }
+        }
+     },
+     "citizenTaxonomyNode": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["taxid", "labels"],
+        "properties": {
+           "taxid": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Unique hierarchy id (NCBI taxid when unique, else a stable slug)."
+           },
+           "parent_taxid": {
+              "type": ["string", "null"],
+              "description": "Parent node's taxid; null/omit for roots."
+           },
+           "labels": { "$ref": "#/$defs/i18nStrings" },
+           "include_taxid": {
+              "type": "string",
+              "pattern": "^[0-9]+$",
+              "description": "Single NCBI taxid for taxon_lineage= (when taxid is a slug or differs)."
+           },
+           "include_taxids": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "type": "string", "pattern": "^[0-9]+$" },
+              "description": "OR of lineage-contains → taxon_lineage__in."
+           },
+           "exclude_taxids": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "type": "string", "pattern": "^[0-9]+$" },
+              "description": "Lineage-not-contains → taxon_lineage__nin."
+           }
+        }
+     },
+     "citizenTaxonomy": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["nodes"],
+        "properties": {
+           "defaultMode": {
+              "type": "string",
+              "enum": ["citizen", "full"],
+              "description": "Initial browse mode when citizenTaxonomy is present. Defaults to citizen."
+           },
+           "nodes": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "$ref": "#/$defs/citizenTaxonomyNode" }
            }
         }
      },

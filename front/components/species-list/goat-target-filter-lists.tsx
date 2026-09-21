@@ -17,6 +17,9 @@ export function GoatStatusFilterList({
    loading: boolean
 }) {
    const { t } = useLocale()
+   const visibleStages = loading
+      ? stages
+      : stages.filter((s) => s.count > 0 || selectedKeys.includes(s.key))
    return (
       <div
          className="max-h-[min(50vh,24rem)] space-y-0.5 overflow-y-auto overscroll-contain py-1"
@@ -24,7 +27,7 @@ export function GoatStatusFilterList({
          aria-label={t('statusPage.filterByGoatStatus')}
          aria-multiselectable
       >
-         {stages.map((s) => {
+         {visibleStages.map((s) => {
             const sel = selectedKeys.includes(s.key)
             return (
                <button

@@ -21,6 +21,10 @@ export function buildCatalogQueryParams(options: {
    taxonLineage?: string | null
    /** Scoped taxon: matches records whose `taxon_lineage` contains this taxid (`taxon_lineage__in`). */
    speciesTaxid?: string | null
+   /** Comma-separated OR of lineage taxids (`taxon_lineage__in`); used by citizen unions. */
+   taxonLineageIn?: string | null
+   /** Comma-separated exclude taxids (`taxon_lineage__nin`). */
+   taxonLineageNin?: string | null
    filter?: string
    sortColumn?: string | null
    sortOrder?: 'asc' | 'desc'
@@ -29,14 +33,30 @@ export function buildCatalogQueryParams(options: {
 }): Record<string, string | number | boolean> {
    const out: Record<string, string | number | boolean> = {}
 
-   const { taxonLineage, speciesTaxid, filter, sortColumn, sortOrder, filterDefs, filterValues } =
-      options
+   const {
+      taxonLineage,
+      speciesTaxid,
+      taxonLineageIn,
+      taxonLineageNin,
+      filter,
+      sortColumn,
+      sortOrder,
+      filterDefs,
+      filterValues,
+   } = options
 
    if (taxonLineage && taxonLineage.trim()) {
       out.taxon_lineage = taxonLineage.trim()
    }
-   if (speciesTaxid && String(speciesTaxid).trim()) {
-      out.taxon_lineage__in = String(speciesTaxid).trim()
+   const lineageIn =
+      (taxonLineageIn && taxonLineageIn.trim()) ||
+      (speciesTaxid && String(speciesTaxid).trim()) ||
+      ''
+   if (lineageIn) {
+      out.taxon_lineage__in = lineageIn
+   }
+   if (taxonLineageNin && taxonLineageNin.trim()) {
+      out.taxon_lineage__nin = taxonLineageNin.trim()
    }
    if (filter && filter.trim()) {
       out.filter = filter.trim()

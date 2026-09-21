@@ -21,6 +21,11 @@
       "taxonScopeButtonAll": "All species",
       "taxonScopeButtonAria": "Filter catalog by taxon",
       "taxonScopeBrowseHint": "Browse the taxonomy to scope this catalog to a taxon.",
+      "taxonSearchLabel": "Search taxa by name or taxid",
+      "taxonSearchPlaceholder": "Type at least 2 characters to search taxa...",
+      "taxonSearchLoading": "Searching taxa...",
+      "taxonSearchNoResults": "No taxa match. Try another spelling or taxid.",
+      "taxonSearchError": "Taxon search failed. Try again.",
       "exportRecords": "Export records",
       "exportSheetTitle": "Export catalog",
       "exportSheetDescription": "Choose columns and format. The file uses the same filter scope as the list, not just the visible page.",
@@ -217,10 +222,12 @@
       "emptyStats": "No aggregate counts for these metrics yet.",
       "cta": {
          "exploreSpecies": "Explore Species",
+         "exploreCatalog": "Explore Catalog",
          "exploreMap": "Explore Map",
          "browseTaxonomy": "Browse Taxonomy",
          "viewSpecies": "View All Species"
       },
+      "kickerPublicationAria": "Open the BioGenome Portal publication",
       "footerMainWebsite": "Visit main website",
       "footer": "BioGenome Portal — Advancing biodiversity research through genomics",
       "closing": {
@@ -303,6 +310,9 @@
       "loadingMap": "Loading map..."
    },
    "taxonomy": {
+      "browseCitizen": "Popular groups",
+      "browseFull": "Full tree",
+      "browseModeAria": "Taxonomy browse mode",
       "panel": {
          "title": "Tree Root",
          "portalDefaultRoot": "Portal default root",
@@ -408,6 +418,12 @@
       "taxonomyRankSelectAria": "Taxonomic rank for browsing taxa",
       "taxonomyBrowseByRankTab": "Filter by rank",
       "clearTaxonomyFilter": "Clear",
+      "dataSectionTitle": "Data",
+      "filterByDataAria": "Filter by submitted data",
+      "hasBiosamples": "Has biosamples",
+      "hasAssemblies": "Has assemblies",
+      "hasReads": "Has reads",
+      "hasAnnotations": "Has annotations",
       "iucnSectionTitle": "IUCN Red List category",
       "subProjectSectionTitle": "Sub-project",
       "allSubProjects": "All sub-projects",
@@ -439,6 +455,7 @@
    },
    "iucn": {
       "noAssessment": "No assessment",
+      "openOnRedList": "Open on IUCN Red List",
       "labels": {
          "EX": "Extinct",
          "EW": "Extinct in the Wild",

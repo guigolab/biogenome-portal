@@ -24,7 +24,12 @@ import {
 import { defaultCatalogExportFields } from '@/lib/catalog-explorer/catalogRecordCardLayout'
 import { fetchTaxon, getRootTaxid } from '@/lib/api/taxon'
 import { pickLocalized } from '@/lib/i18n/pickLocalized'
-import type { DataModels } from '@/lib/portal/types'
+import {
+   citizenNodeToQueryParams,
+   findCitizenNode,
+   resolveCitizenTaxonomy,
+} from '@/lib/citizenTaxonomy'
+import type { CitizenTaxonomyNode, DataModels } from '@/lib/portal/types'
 import { useRootTaxonStore } from '@/stores/root-taxon-store'
 import { Loader2 } from 'lucide-react'
 import type { CatalogChartDef } from '@/components/catalog-explorer/catalog-chart-def'
@@ -64,16 +69,41 @@ export function CatalogExplorerPageClient() {
       initialUrl.filterValues ?? {},
    )
    const [speciesTaxid, setSpeciesTaxid] = useState<string | null>(initialUrl.speciesTaxid ?? null)
+   const [citizenNodeId, setCitizenNodeId] = useState<string | null>(
+      initialUrl.citizenNodeId ?? null,
+   )
    const [scopedTaxonDoc, setScopedTaxonDoc] = useState<Record<string, unknown> | null>(null)
    const [scopedLoadState, setScopedLoadState] = useState<'idle' | 'loading' | 'ok' | 'err'>('idle')
    const [scopedTaxonError, setScopedTaxonError] = useState<string | null>(null)
    const scopedFetchSeq = useRef(0)
 
+   const citizenTaxonomy = useMemo(() => resolveCitizenTaxonomy(config), [config])
+   const selectedCitizenNode = useMemo(
+      () =>
+         citizenNodeId && citizenTaxonomy
+            ? findCitizenNode(citizenTaxonomy.nodes, citizenNodeId)
+            : null,
+      [citizenNodeId, citizenTaxonomy],
+   )
+   const citizenQueryParams = useMemo(
+      () => (selectedCitizenNode ? citizenNodeToQueryParams(selectedCitizenNode) : null),
+      [selectedCitizenNode],
+   )
+
+   const fetchTaxidForCounts = useMemo(() => {
+      if (citizenQueryParams?.taxon_lineage) return citizenQueryParams.taxon_lineage
+      if (citizenQueryParams?.taxon_lineage__in) {
+         const first = citizenQueryParams.taxon_lineage__in.split(',')[0]?.trim()
+         return first || null
+      }
+      return speciesTaxid?.trim() || null
+   }, [citizenQueryParams, speciesTaxid])
+
    useEffect(() => {
-      const tid = speciesTaxid?.trim()
-      if (!tid) {
+      const tid = fetchTaxidForCounts
+      if (!tid || !/^[0-9]+$/.test(tid)) {
          setScopedTaxonDoc(null)
-         setScopedLoadState('idle')
+         setScopedLoadState(citizenNodeId ? 'ok' : 'idle')
          setScopedTaxonError(null)
          return
       }
@@ -91,19 +121,21 @@ export function CatalogExplorerPageClient() {
             setScopedLoadState('err')
             setScopedTaxonError(t('catalog.taxonScopeFetchError'))
          })
-   }, [speciesTaxid, t])
+   }, [fetchTaxidForCounts, citizenNodeId, t])
 
    const taxonForTabCounts = useMemo((): Record<string, unknown> | null => {
-      if (!speciesTaxid?.trim()) return scopeTaxon
+      if (!speciesTaxid?.trim() && !citizenNodeId) return scopeTaxon
       if (scopedTaxonDoc) return scopedTaxonDoc
-      if (scopedLoadState === 'err') return scopeTaxon
+      if (scopedLoadState === 'err' || (citizenNodeId && scopedLoadState === 'ok')) return scopeTaxon
       return null
-   }, [speciesTaxid, scopedTaxonDoc, scopedLoadState, scopeTaxon])
+   }, [speciesTaxid, citizenNodeId, scopedTaxonDoc, scopedLoadState, scopeTaxon])
 
    const tabsCountsReady =
       rootStatus === 'success' &&
       scopeTaxon != null &&
-      (!speciesTaxid?.trim() || scopedLoadState === 'ok' || scopedLoadState === 'err')
+      ((!speciesTaxid?.trim() && !citizenNodeId) ||
+         scopedLoadState === 'ok' ||
+         scopedLoadState === 'err')
 
    const visibleCatalogKeys = useMemo(
       () => deriveVisibleCatalogKeys(tabsCountsReady, taxonForTabCounts, allModelKeys),
@@ -153,12 +185,20 @@ export function CatalogExplorerPageClient() {
 
    const baseQuery = useMemo(() => {
       return buildCatalogQueryParams({
-         taxonLineage: effectiveTaxonLineage,
-         speciesTaxid,
+         taxonLineage: citizenQueryParams?.taxon_lineage ?? effectiveTaxonLineage,
+         taxonLineageIn: citizenQueryParams?.taxon_lineage__in ?? null,
+         taxonLineageNin: citizenQueryParams?.taxon_lineage__nin ?? null,
+         speciesTaxid: citizenQueryParams ? null : speciesTaxid,
          filterDefs: modelConfig?.filters,
          filterValues,
       })
-   }, [effectiveTaxonLineage, speciesTaxid, modelConfig?.filters, filterValues])
+   }, [
+      effectiveTaxonLineage,
+      citizenQueryParams,
+      speciesTaxid,
+      modelConfig?.filters,
+      filterValues,
+   ])
 
    const { selectOptions, loadingFields, ensureSelectOptionsLoaded } = useCatalogFilterSelectOptions({
       catalogKey,
@@ -213,17 +253,29 @@ export function CatalogExplorerPageClient() {
    }, [])
 
    const onSelectTaxon = useCallback((taxid: string, node: Record<string, unknown>) => {
+      setCitizenNodeId(null)
       setSpeciesTaxid(taxid)
       setScopedTaxonDoc(node)
       setScopedTaxonError(null)
    }, [])
 
+   const onSelectCitizenNode = useCallback((node: CitizenTaxonomyNode) => {
+      setSpeciesTaxid(null)
+      setCitizenNodeId(node.taxid)
+      setScopedTaxonError(null)
+   }, [])
+
    const onClearTaxon = useCallback(() => {
       setSpeciesTaxid(null)
+      setCitizenNodeId(null)
       setScopedTaxonDoc(null)
       setScopedLoadState('idle')
       setScopedTaxonError(null)
    }, [])
+
+   const onBrowseModeChange = useCallback(() => {
+      onClearTaxon()
+   }, [onClearTaxon])
 
    const charts: CatalogChartDef[] = useMemo(
       () =>
@@ -261,10 +313,11 @@ export function CatalogExplorerPageClient() {
          pageSize,
          filterValues,
          speciesTaxid,
+         citizenNodeId,
       })
       const qs = params.toString()
       router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false })
-   }, [catalogKey, viewMode, pageSize, filterValues, speciesTaxid, pathname, router])
+   }, [catalogKey, viewMode, pageSize, filterValues, speciesTaxid, citizenNodeId, pathname, router])
 
    useEffect(() => {
       function onKeyDown(e: KeyboardEvent) {
@@ -326,11 +379,22 @@ export function CatalogExplorerPageClient() {
          setFilterValues={setFilterValues}
          onClearAllFilters={clearAllFilters}
          speciesTaxid={speciesTaxid}
+         citizenNodeId={citizenNodeId}
+         citizenTaxonomy={citizenTaxonomy}
          onSelectTaxon={onSelectTaxon}
+         onSelectCitizenNode={onSelectCitizenNode}
          onClearTaxon={onClearTaxon}
+         onTaxonomyBrowseModeChange={onBrowseModeChange}
          scopedTaxonDoc={scopedTaxonDoc}
-         scopedTaxonLoading={Boolean(speciesTaxid?.trim()) && scopedLoadState === 'loading'}
+         scopedTaxonLoading={
+            Boolean(fetchTaxidForCounts) &&
+            /^[0-9]+$/.test(fetchTaxidForCounts ?? '') &&
+            scopedLoadState === 'loading'
+         }
          scopedTaxonError={scopedTaxonError}
+         catalogModelKeys={allModelKeys}
+         taxonLineageIn={citizenQueryParams?.taxon_lineage__in ?? null}
+         taxonLineageNin={citizenQueryParams?.taxon_lineage__nin ?? null}
          selectOptions={selectOptions}
          ensureSelectOptionsLoaded={ensureSelectOptionsLoaded}
          selectOptionsLoading={loadingFields}
@@ -356,7 +420,9 @@ export function CatalogExplorerPageClient() {
          speciesHref={speciesHref}
          exportOpen={exportOpen}
          setExportOpen={setExportOpen}
-         effectiveTaxonLineageExport={effectiveTaxonLineage}
+         effectiveTaxonLineageExport={
+            citizenQueryParams?.taxon_lineage ?? effectiveTaxonLineage
+         }
       />
    )
 }

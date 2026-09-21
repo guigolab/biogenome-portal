@@ -21,6 +21,11 @@
       "taxonScopeButtonAll": "Todas las especies",
       "taxonScopeButtonAria": "Filtrar el catálogo por taxón",
       "taxonScopeBrowseHint": "Explore la taxonomía para limitar este catálogo a un taxón.",
+      "taxonSearchLabel": "Buscar taxones por nombre o taxid",
+      "taxonSearchPlaceholder": "Escriba al menos 2 caracteres para buscar taxones...",
+      "taxonSearchLoading": "Buscando taxones...",
+      "taxonSearchNoResults": "Sin coincidencias. Pruebe otra grafía o taxid.",
+      "taxonSearchError": "Error en la búsqueda de taxones. Inténtelo de nuevo.",
       "exportRecords": "Exportar registros",
       "exportSheetTitle": "Exportar catálogo",
       "exportSheetDescription": "Elija columnas y formato. El archivo usa el mismo ámbito de filtros que la lista, no solo la página visible.",
@@ -217,10 +222,12 @@
       "emptyStats": "Aún no hay totales agregados para estas métricas.",
       "cta": {
          "exploreSpecies": "Explorar especies",
+         "exploreCatalog": "Explorar el catálogo",
          "exploreMap": "Explorar el mapa",
          "browseTaxonomy": "Explorar taxonomía",
          "viewSpecies": "Mostrar todas las especies"
       },
+      "kickerPublicationAria": "Abrir la publicación del BioGenome Portal",
       "footerMainWebsite": "Visitar el sitio web principal",
       "footer": "BioGenome Portal — Avanzar la investigación sobre la biodiversidad mediante la genómica",
       "closing": {
@@ -408,6 +415,12 @@
       "taxonomyRankSelectAria": "Rango taxonómico para explorar taxones",
       "taxonomyBrowseByRankTab": "Filtrar por rango",
       "clearTaxonomyFilter": "Borrar",
+      "dataSectionTitle": "Datos",
+      "filterByDataAria": "Filtrar por datos enviados",
+      "hasBiosamples": "Tiene biosamples",
+      "hasAssemblies": "Tiene ensamblajes",
+      "hasReads": "Tiene lecturas",
+      "hasAnnotations": "Tiene anotaciones",
       "iucnSectionTitle": "Categoría de la Lista Roja UICN",
       "subProjectSectionTitle": "Subproyecto",
       "allSubProjects": "Todos los subproyectos",
@@ -439,6 +452,7 @@
    },
    "iucn": {
       "noAssessment": "Sin evaluación",
+      "openOnRedList": "Abrir en la Lista Roja UICN",
       "labels": {
          "EX": "Extinto",
          "EW": "Extinto en estado silvestre",

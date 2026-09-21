@@ -11,7 +11,10 @@
       "cms": true,
       "goat": true,
       "map": true,
-      "languages": ["en", "cat"],
+      "languages": [
+         "en",
+         "cat"
+      ],
       "titleHighlight": {
          "en": "BioGenome",
          "cat": "BioGenome"
@@ -26,18 +29,25 @@
    },
    "cms": {
       "organisms": {
-         "requiredSteps": ["goatStatus"]
+         "requiredSteps": [
+            "goatStatus"
+         ]
       }
    },
    "models": {
       "local_samples": {
-         "label": { "en": "Local samples", "cat": "Mostres locals" },
+         "label": {
+            "en": "Local samples",
+            "cat": "Mostres locals"
+         },
          "description": {
             "en": "Locally registered samples",
             "cat": "Mostres registrades localment"
          },
          "filters": [],
-         "columns": ["local_id"],
+         "columns": [
+            "local_id"
+         ],
          "charts": []
       }
    },

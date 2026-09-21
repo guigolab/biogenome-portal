@@ -163,8 +163,36 @@ def _format_common_names_tsv(raw):
     return "; ".join(parts)
 
 
+def _count_as_int(value):
+    if value is None or value == "":
+        return 0
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return 0
+
+
+def _format_organism_data_counts_tsv(item):
+    """Semicolon-separated positive denormalized data counts for organism TSV export."""
+    pairs = (
+        ("assemblies", "assemblies_count"),
+        ("biosamples", "biosamples_count"),
+        ("reads", "reads_count"),
+        ("annotations", "genome_annotations_count"),
+    )
+    parts = []
+    for label, field in pairs:
+        n = _count_as_int(item.get(field) if isinstance(item, dict) else None)
+        if n > 0:
+            parts.append(f"{label}: {n}")
+    return "; ".join(parts)
+
+
 def _resolve_tsv_cell(item, field_key):
     """Resolve one TSV column from a catalog row dict (PyMongo-style)."""
+    if field_key == "data_counts":
+        return _format_organism_data_counts_tsv(item if isinstance(item, dict) else {})
+
     if "." in field_key:
         value = get_nested_value(item, field_key)
         if value == " ":
