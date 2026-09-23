@@ -431,11 +431,33 @@
       "countryClearSelection": "Länder löschen",
       "countryNoEntryHint": "Die Länderfilterung umfasst nur Organismen mit mindestens einem Ländercode; Einträge ohne Länderdaten werden ausgeschlossen.",
       "filterByCountry": "Nach Land filtern",
-      "removeCountryFilter": "Länderfilter entfernen"
+      "removeCountryFilter": "Länderfilter entfernen",
+      "instituteSectionTitle": "Institut",
+      "instituteListSearchPlaceholder": "Institute suchen...",
+      "instituteClearSelection": "Institute löschen",
+      "filterByInstitute": "Nach Institut filtern",
+      "removeInstituteFilter": "Institutsfilter entfernen",
+      "programSectionTitle": "Unterprojekt",
+      "programListSearchPlaceholder": "Unterprojekte suchen...",
+      "programClearSelection": "Unterprojekte löschen",
+      "filterByProgram": "Nach Unterprojekt filtern",
+      "removeProgramFilter": "Unterprojektfilter entfernen",
+      "principalFacetEmpty": "Keine Werte für die aktuellen Filter",
+      "sequencingTypeSectionTitle": "Sequenzierungstyp",
+      "sequencingTypeListSearchPlaceholder": "Sequenzierungstypen suchen...",
+      "sequencingTypeClearSelection": "Sequenzierungstypen löschen",
+      "filterBySequencingType": "Nach Sequenzierungstyp filtern",
+      "removeSequencingTypeFilter": "Sequenzierungstyp-Filter entfernen"
    },
    "speciesDetail": {
-      "goatPipelineHelp": "Erfasster GoaT-Sequenzierungsschritt und Ziellistenklassifikation für diese Art.",
-      "goatPipelineEmpty": "Für diese Art ist noch kein GoaT-Sequenzierungs- oder Ziellistenstatus erfasst.",
+      "goatPipelineHelp": "Erfasster GoaT-Sequenzierungsschritt und Ziellistenklassifikation fuer diese Art. Verknuepfte Zaehler oeffnen Katalogdaten oder die Karte auf dieser Seite.",
+      "goatPipelineEmpty": "Fuer diese Art ist noch kein GoaT-Sequenzierungs- oder Ziellistenstatus erfasst.",
+      "goatEvidenceNone": "Keine",
+      "goatOpenLocations": "Zur Karte der Probenstandorte springen",
+      "goatOpenCatalog": "{label} im Katalog oeffnen",
+      "goatOpenPublication": "Zu den Publikationen auf dieser Seite springen",
+      "goatGenomePublication": "Genom-Publikation",
+      "goatCurrentStep": "aktueller Schritt",
       "relatedRecordsTablist": "Verwandte Katalogsammlungen"
    },
    "speciesExport": {
@@ -445,6 +467,7 @@
       "mongoFieldHint": "MongoEngine-Feldnamen eingeben (z. B. metadata oder metadata.project).",
       "columns": "Spalten",
       "custom": "Benutzerdefiniert",
+      "otherMetadata": "Weitere Metadaten",
       "exportScope": "Exportumfang:",
       "withCurrentFilters": "mit aktuellen Filtern.",
       "preparingDownload": "Download wird vorbereitet…",
@@ -463,6 +486,38 @@
          "LC": "Nicht gefährdet",
          "DD": "Unzureichende Datenlage",
          "NE": "Nicht bewertet"
+      }
+   },
+   "goat": {
+      "steps": {
+         "noEntry": {
+            "title": "Status fehlt",
+            "description": "GoaT-Status nicht verfuegbar"
+         },
+         "sampleCollected": {
+            "title": "Probe gesammelt",
+            "description": "Eine Probe der Art wurde von Feldarbeitern gesammelt, aber noch nicht an ein Sequenzierzentrum gesendet"
+         },
+         "sampleAcquired": {
+            "title": "Probe erworben",
+            "description": "Eine Probe der Art wurde erworben und ist \"im Haus\" im Sequenzierzentrum, wurde aber noch nicht verarbeitet"
+         },
+         "dataGeneration": {
+            "title": "Datenerzeugung",
+            "description": "Sequenzierdaten werden derzeit fuer die Art erzeugt"
+         },
+         "inAssembly": {
+            "title": "In Assemblierung",
+            "description": "Alle Sequenzier- und zugehoerigen Daten wurden erfasst; die Genomassemblierung laeuft"
+         },
+         "insdcSubmitted": {
+            "title": "Bei INSDC eingereicht",
+            "description": "Die Genomassemblierung der Art wurde bei INSDC eingereicht und ist unter der Bioproject-ID des erzeugenden Projekts oeffentlich zugaenglich"
+         },
+         "publicationAvailable": {
+            "title": "Publikation verfuegbar",
+            "description": "Zur Assemblierung gibt es eine zugehoerige Publikation mit DOI oder PubMed-ID"
+         }
       }
    }
 }

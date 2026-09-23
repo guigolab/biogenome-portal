@@ -5,17 +5,17 @@ import { useEffect } from 'react'
 
 import { fetchOrganisms } from '@/lib/api/organisms'
 import { fetchFieldStats } from '@/lib/api/stats'
-import type { CmsOrganismFieldWire } from '@/lib/portal/types'
-import {
-   customFieldStatsPath,
-   parseCustomFieldSectionId,
-} from '@/lib/speciesCustomFieldFilters'
+import type { SpeciesListFacetDef } from '@/lib/portal/types'
 import { SPECIES_DATA_FILTER_CODES } from '@/lib/speciesDataFilter'
 import type { OrganismStatsQueryContext } from '@/lib/speciesListOrganismStatsQuery'
 import {
    buildOrganismStatsQuery,
    organismStatsCacheKey,
 } from '@/lib/speciesListOrganismStatsQuery'
+import {
+   parseSpeciesListFacetSectionId,
+   speciesListFacetStatsField,
+} from '@/lib/speciesListFacets'
 import { useOrganismCountriesDisplayStore } from '@/stores/organism-countries-display-store'
 import {
    COUNTRIES_SECTION_ID,
@@ -139,6 +139,7 @@ function fetchInsdcCountTotals(
  * open. Country stats are fetched lazily — only when the countries panel is opened — matching the
  * behaviour of all other filter sections. When `showCountries` is false no country fetches run.
  * Data (insdc) option totals use GET /organisms?limit=1 per code.
+ * Portal-declared metadata facets use `/stats/organisms/metadata.<key>`.
  */
 export function SpeciesListFacetStatsSync({
    statsQueryBase,
@@ -150,8 +151,8 @@ export function SpeciesListFacetStatsSync({
    setGoatStats,
    setInsdcCountStats,
    setInsdcCountStatsLoading,
-   customFields,
-   setCustomFieldStats,
+   speciesListFacets,
+   setFacetStats,
 }: {
    statsQueryBase: OrganismStatsQueryContext
    goatEnabled: boolean
@@ -162,12 +163,11 @@ export function SpeciesListFacetStatsSync({
    setGoatStats: (v: Record<string, number>) => void
    setInsdcCountStats: (v: Record<string, number>) => void
    setInsdcCountStatsLoading: (v: boolean) => void
-   customFields: CmsOrganismFieldWire[]
-   setCustomFieldStats: (key: string, stats: Record<string, number>) => void
+   speciesListFacets: SpeciesListFacetDef[]
+   setFacetStats: (key: string, stats: Record<string, number>) => void
 }) {
    const { openSection } = useSpeciesListFilterAccordion()
 
-   /** Immediate: facet counts for the open collapsible (same as catalog sidebar `isOpen ? control`). */
    useEffect(() => {
       if (!openSection || openSection === TAXONOMY_SECTION_ID) return
 
@@ -209,12 +209,12 @@ export function SpeciesListFacetStatsSync({
          )
          return
       }
-      const customFieldKey = parseCustomFieldSectionId(openSection)
-      if (customFieldKey && customFields.some((field) => field.key === customFieldKey)) {
-         const statsField = customFieldStatsPath(customFieldKey)
+      const facetKey = parseSpeciesListFacetSectionId(openSection)
+      if (facetKey && speciesListFacets.some((f) => f.key === facetKey)) {
+         const statsField = speciesListFacetStatsField(facetKey)
          const q = buildOrganismStatsQuery(statsQueryBase, statsField)
          runCachedFetch(organismStatsCacheRef, 'organisms', statsField, q, (raw) =>
-            setCustomFieldStats(customFieldKey, raw),
+            setFacetStats(facetKey, raw),
          )
          return
       }
@@ -234,8 +234,8 @@ export function SpeciesListFacetStatsSync({
       setGoatStats,
       setInsdcCountStats,
       setInsdcCountStatsLoading,
-      customFields,
-      setCustomFieldStats,
+      speciesListFacets,
+      setFacetStats,
    ])
 
    return null

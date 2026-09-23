@@ -431,11 +431,33 @@
       "countryClearSelection": "Effacer les pays",
       "countryNoEntryHint": "Le filtre par pays n’inclut que les organismes ayant au moins un code pays ; les entrées sans données pays sont exclues.",
       "filterByCountry": "Filtrer par pays",
-      "removeCountryFilter": "Retirer le filtre pays"
+      "removeCountryFilter": "Retirer le filtre pays",
+      "instituteSectionTitle": "Institut",
+      "instituteListSearchPlaceholder": "Rechercher des instituts...",
+      "instituteClearSelection": "Effacer les instituts",
+      "filterByInstitute": "Filtrer par institut",
+      "removeInstituteFilter": "Retirer le filtre institut",
+      "programSectionTitle": "Sous-projet",
+      "programListSearchPlaceholder": "Rechercher des sous-projets...",
+      "programClearSelection": "Effacer les sous-projets",
+      "filterByProgram": "Filtrer par sous-projet",
+      "removeProgramFilter": "Retirer le filtre sous-projet",
+      "principalFacetEmpty": "Aucune valeur pour les filtres actuels",
+      "sequencingTypeSectionTitle": "Type de sequencage",
+      "sequencingTypeListSearchPlaceholder": "Rechercher des types de sequencage...",
+      "sequencingTypeClearSelection": "Effacer les types de sequencage",
+      "filterBySequencingType": "Filtrer par type de sequencage",
+      "removeSequencingTypeFilter": "Retirer le filtre type de sequencage"
    },
    "speciesDetail": {
-      "goatPipelineHelp": "Étape de séquençage GoaT et classification de liste cible enregistrées pour cette espèce.",
-      "goatPipelineEmpty": "Aucun statut de séquençage GoaT ou de liste cible enregistré pour cette espèce pour l’instant.",
+      "goatPipelineHelp": "Étape de séquençage GoaT et classification de liste cible enregistrées pour cette espèce. Les compteurs liés ouvrent le catalogue ou la carte de cette page.",
+      "goatPipelineEmpty": "Aucun statut de séquençage GoaT ou de liste cible enregistré pour cette espèce pour l'instant.",
+      "goatEvidenceNone": "Aucun",
+      "goatOpenLocations": "Aller a la carte des localisations d'echantillons",
+      "goatOpenCatalog": "Ouvrir {label} dans le catalogue",
+      "goatOpenPublication": "Aller aux publications sur cette page",
+      "goatGenomePublication": "Publication du genome",
+      "goatCurrentStep": "etape actuelle",
       "relatedRecordsTablist": "Collections catalogue associées"
    },
    "speciesExport": {
@@ -445,6 +467,7 @@
       "mongoFieldHint": "Saisissez un nom de champ MongoEngine (p. ex. metadata ou metadata.project).",
       "columns": "Colonnes",
       "custom": "Personnalisé",
+      "otherMetadata": "Autres metadonnees",
       "exportScope": "Périmètre d’export :",
       "withCurrentFilters": "avec les filtres actuels.",
       "preparingDownload": "Préparation du téléchargement…",
@@ -463,6 +486,38 @@
          "LC": "Préoccupation mineure",
          "DD": "Données insuffisantes",
          "NE": "Non évalué"
+      }
+   },
+   "goat": {
+      "steps": {
+         "noEntry": {
+            "title": "Statut manquant",
+            "description": "Statut GoaT non disponible"
+         },
+         "sampleCollected": {
+            "title": "Échantillon collecté",
+            "description": "Un échantillon de l'espèce a été collecté sur le terrain mais n'a pas encore été envoyé à un centre de séquençage"
+         },
+         "sampleAcquired": {
+            "title": "Échantillon acquis",
+            "description": "Un échantillon de l'espèce a été acquis et est \"sur place\" au centre de séquençage, mais n'a pas encore été traité"
+         },
+         "dataGeneration": {
+            "title": "Génération de données",
+            "description": "Des données de séquençage sont actuellement en cours de génération pour l'espèce"
+         },
+         "inAssembly": {
+            "title": "En assemblage",
+            "description": "Toutes les données de séquençage et associées ont été collectées; l'assemblage du génome est en cours"
+         },
+         "insdcSubmitted": {
+            "title": "Soumis à l'INSDC",
+            "description": "L'assemblage du génome de l'espèce a été soumis à l'INSDC et est librement accessible sous l'identifiant Bioproject du projet générateur"
+         },
+         "publicationAvailable": {
+            "title": "Publication disponible",
+            "description": "L'assemblage a une publication associée avec un DOI ou un identifiant PubMed"
+         }
       }
    }
 }

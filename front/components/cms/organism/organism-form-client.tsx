@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Check, ChevronLeft, ChevronRight, Download, ImageOff, Loader2, Lock, Pencil, TriangleAlert } from 'lucide-react'
+import { Check, ChevronLeft, ChevronRight, ImageOff, Loader2, Lock, Pencil, TriangleAlert } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -23,6 +23,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
 import { usePortalConfig } from '@/contexts/portal-context'
 import { defaultPortalConfig, resolveOrganismFormSteps } from '@/lib/portal'
 import type { CmsOrganismFieldWire, OrganismFormStepId } from '@/lib/portal/types'
@@ -31,6 +32,7 @@ import {
    buildGenomePublicationPayload,
    buildMetadataPayload,
    filterCompleteImages,
+   filterValidLinks,
    filterValidPublications,
    filterValidVernacularNames,
    getIncompleteImageRowFields,
@@ -46,15 +48,10 @@ import {
    type CmsPublicationMetadata,
 } from '@/lib/cms/services/auth'
 import {
-   mergeImageRows,
-   pollUntilReady,
-   triggerSuggestImages,
-} from '@/lib/cms/organism-image-suggestions'
-import {
    IMAGE_LICENSE_OPTIONS,
    normalizeOrganismImageLicenseFromApi,
 } from '@/lib/cms/organism-image-license-options'
-import { patchImageRowForUrlChange } from '@/lib/cms/infer-image-source-record-url'
+import { patchImageRowForUrlChange, withInferredSourceRecordUrl } from '@/lib/cms/infer-image-source-record-url'
 import { searchExternalTaxons, taxonSpeciesSuitabilityWarning, type TaxonHit } from '@/lib/taxon-search'
 import { useOrganismFormStepper, type RuntimeStep } from '@/hooks/use-organism-form-stepper'
 import { cn } from '@/lib/utils'
@@ -88,7 +85,7 @@ function normalizeTargetListStatusForForm(_raw: unknown): OrganismFormState['tar
 }
 
 function buildPayload(organismCustomFields: CmsOrganismFieldWire[]) {
-   const { organismForm, metadataList, images, publications, genomePublication, vernacularNames, customFieldValues } =
+   const { organismForm, metadataList, images, publications, genomePublication, vernacularNames, customFieldValues, links } =
       useOrganismFormStore.getState()
    return {
       ...organismForm,
@@ -103,6 +100,7 @@ function buildPayload(organismCustomFields: CmsOrganismFieldWire[]) {
       publications: filterValidPublications(publications),
       genome_publication: buildGenomePublicationPayload(genomePublication),
       common_names: filterValidVernacularNames(vernacularNames),
+      links: filterValidLinks(links),
    } as Record<string, unknown>
 }
 
@@ -132,6 +130,8 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
    const setVernacularNames = useOrganismFormStore((s) => s.setVernacularNames)
    const images = useOrganismFormStore((s) => s.images)
    const setImages = useOrganismFormStore((s) => s.setImages)
+   const links = useOrganismFormStore((s) => s.links)
+   const setLinks = useOrganismFormStore((s) => s.setLinks)
    const replaceOrganismForm = useOrganismFormStore((s) => s.replaceOrganismForm)
    const resetStore = useOrganismFormStore((s) => s.reset)
 
@@ -156,7 +156,6 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
 
    const taxonCheckSeqRef = useRef(0)
    const loadOrganismSeqRef = useRef(0)
-   const importImagesSeqRef = useRef(0)
    const lastSelectedTaxonRef = useRef<TaxonHit | null>(null)
 
    const [pubValidationStatus, setPubValidationStatus] = useState<Record<number, PublicationValidationStatus>>({})
@@ -186,6 +185,7 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
       vernacularNames,
       metadataList,
       images,
+      links,
       genomePublication,
       publicationValidation: pubValidationStatus,
       genomePublicationValidation: genomePubStatus,
@@ -204,7 +204,6 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
    const [searchLoading, setSearchLoading] = useState(false)
    const [showChangeModal, setShowChangeModal] = useState(false)
    const [showResetModal, setShowResetModal] = useState(false)
-   const [importingImages, setImportingImages] = useState(false)
 
    const assembliesLocked = (organismForm.assemblies_count ?? 0) <= 0
 
@@ -238,27 +237,48 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
             setPubValidationStatus(
                Object.fromEntries(loadedPubs.map((p, i) => [i, p.id?.trim() ? 'valid' : 'idle'])),
             )
+            setPubMetadata(
+               Object.fromEntries(
+                  loadedPubs
+                     .map((p, i) => [i, p.data] as const)
+                     .filter((entry): entry is [number, CmsPublicationMetadata] =>
+                        Boolean(entry[1] && typeof entry[1] === 'object'),
+                     ),
+               ),
+            )
          } else {
             setPubValidationStatus({})
+            setPubMetadata({})
          }
          setPubValidationError({})
-         setPubMetadata({})
          const loadedGenomePub = base.genome_publication as OrganismPublication | null | undefined
          if (loadedGenomePub && typeof loadedGenomePub === 'object' && loadedGenomePub.id?.trim()) {
             setGenomePublication(loadedGenomePub)
             setGenomePubStatus('valid')
+            setGenomePubMetadata(
+               loadedGenomePub.data && typeof loadedGenomePub.data === 'object'
+                  ? loadedGenomePub.data
+                  : null,
+            )
          } else {
             setGenomePublication(null)
             setGenomePubStatus('idle')
+            setGenomePubMetadata(null)
          }
          setGenomePubError(null)
-         setGenomePubMetadata(null)
          if (Array.isArray(base.images)) {
             setImages(
-               (base.images as OrganismImageRow[]).map((img) => normalizeOrganismImageLicenseFromApi(img)),
+               (base.images as OrganismImageRow[])
+                  .map((img) => normalizeOrganismImageLicenseFromApi(img))
+                  .map((img) => withInferredSourceRecordUrl(img)),
             )
          }
          if (Array.isArray(base.common_names)) setVernacularNames(base.common_names as OrganismCommonName[])
+         if (Array.isArray(base.links)) {
+            setLinks((base.links as unknown[]).map((u) => (u == null ? '' : String(u))).filter((u) => u.trim()))
+         } else {
+            setLinks([])
+         }
          const md = base.metadata
          if (md && typeof md === 'object' && !Array.isArray(md)) {
             const split = splitLoadedMetadata(md as Record<string, unknown>, organismCustomFields)
@@ -285,6 +305,7 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
       setPublications,
       setGenomePublication,
       setVernacularNames,
+      setLinks,
       resetStepper,
       organismCustomFields,
    ])
@@ -357,39 +378,18 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
       }
    }
 
-   async function handleImportImages() {
-      const name = organismForm.scientific_name?.trim()
-      if (!name) return
-      const seq = ++importImagesSeqRef.current
-      setImportingImages(true)
-      try {
-         const job = await triggerSuggestImages(name)
-         if (seq !== importImagesSeqRef.current) return
-         const status = await pollUntilReady(job.task_id)
-         if (seq !== importImagesSeqRef.current) return
-         if (status.successful && status.result?.images?.length) {
-            const currentImages = useOrganismFormStore.getState().images
-            setImages(mergeImageRows(currentImages, status.result.images))
-            toast.success(`Imported ${status.result.images.length} image suggestion(s).`)
-         } else if (status.successful) {
-            toast.info('No licensable images found for this species.')
-         } else {
-            const msg =
-               typeof status.error === 'string'
-                  ? status.error
-                  : status.error?.message ?? 'Image import failed.'
-            toast.error(msg)
-         }
-      } catch (e) {
-         if (seq !== importImagesSeqRef.current) return
-         toast.error(extractApiMessage(e, 'Image import failed.'))
-      } finally {
-         if (seq === importImagesSeqRef.current) setImportingImages(false)
-      }
-   }
-
    function updatePublicationRow(i: number, patch: Partial<OrganismPublication>) {
-      setPublications(publications.map((p, j) => (j === i ? { ...p, ...patch } : p)))
+      setPublications(
+         publications.map((p, j) => {
+            if (j !== i) return p
+            const next = { ...p, ...patch }
+            // Source/id edits invalidate stored Europe PMC metadata.
+            if ('source' in patch || 'id' in patch) {
+               delete next.data
+            }
+            return next
+         }),
+      )
       setPubValidationStatus((s) => ({ ...s, [i]: 'idle' }))
       setPubValidationError((s) => ({ ...s, [i]: '' }))
       setPubMetadata((s) => {
@@ -400,7 +400,15 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
    }
 
    function updateGenomePublication(patch: Partial<OrganismPublication>) {
-      setGenomePublication({ source: genomePublication?.source ?? 'DOI', id: genomePublication?.id ?? '', ...patch })
+      const next: OrganismPublication = {
+         source: genomePublication?.source ?? 'DOI',
+         id: genomePublication?.id ?? '',
+         ...patch,
+      }
+      if ('source' in patch || 'id' in patch) {
+         delete next.data
+      }
+      setGenomePublication(next)
       setGenomePubStatus('idle')
       setGenomePubError(null)
       setGenomePubMetadata(null)
@@ -420,7 +428,10 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
          const res = await cmsValidatePublication(pub.source, pub.id.trim(), { field: 'publications' })
          if (res.valid) {
             setPubValidationStatus((s) => ({ ...s, [i]: 'valid' }))
-            if (res.data) setPubMetadata((s) => ({ ...s, [i]: res.data as CmsPublicationMetadata }))
+            const meta = (res.data ?? {}) as CmsPublicationMetadata
+            setPubMetadata((s) => ({ ...s, [i]: meta }))
+            const current = useOrganismFormStore.getState().publications
+            setPublications(current.map((p, j) => (j === i ? { ...p, data: meta } : p)))
          } else {
             setPubValidationStatus((s) => ({ ...s, [i]: 'invalid' }))
             setPubValidationError((s) => ({ ...s, [i]: res.error || 'Publication could not be validated.' }))
@@ -444,7 +455,13 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
          })
          if (res.valid) {
             setGenomePubStatus('valid')
-            setGenomePubMetadata(res.data ?? null)
+            const meta = (res.data ?? {}) as CmsPublicationMetadata
+            setGenomePubMetadata(meta)
+            setGenomePublication({
+               source: genomePublication?.source ?? 'DOI',
+               id,
+               data: meta,
+            })
          } else {
             setGenomePubStatus('invalid')
             setGenomePubError(res.error || 'Publication could not be validated.')
@@ -563,7 +580,7 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
                            variant="outline"
                            size="sm"
                            onClick={() => setShowChangeModal(true)}
-                           disabled={importingImages || submitting}
+                           disabled={submitting}
                         >
                            Change organism
                         </Button>
@@ -571,7 +588,7 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
                            variant="destructive"
                            size="sm"
                            onClick={() => setShowResetModal(true)}
-                           disabled={importingImages || submitting}
+                           disabled={submitting}
                         >
                            Reset
                         </Button>
@@ -782,9 +799,9 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
                               >
                                  Upload Wizard
                               </a>
-                              . After upload, copy the file page URL into <em>Source record URL</em>, select the
-                              license shown on the file page, and fill in the photographer name as{' '}
-                              <em>Author</em>.
+                              . After upload, paste the original file URL as <em>Image URL</em> (the source
+                              record is filled automatically). Select the license shown on the file page, and
+                              fill in the photographer name as <em>Author</em>.
                            </li>
                            <li>
                               <span className="font-medium text-foreground">Zenodo — </span>
@@ -797,32 +814,11 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
                               >
                                  zenodo.org
                               </a>
-                              . Use direct file URL as <em>Image URL</em> and the record page as{' '}
-                              <em>Source record URL</em>, and fill the license from the record metadata.
+                              . Use the direct file URL as <em>Image URL</em> (the record page is filled
+                              automatically as <em>Source record URL</em>), and fill the license from the
+                              record metadata.
                            </li>
                         </ul>
-                     </div>
-
-                     {/* Import from external sources */}
-                     <div className="flex items-center gap-3">
-                        <Button
-                           type="button"
-                           variant="outline"
-                           size="sm"
-                           disabled={importingImages || !organismForm.scientific_name?.trim()}
-                           onClick={() => void handleImportImages()}
-                           className="gap-2"
-                        >
-                           {importingImages ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                           ) : (
-                              <Download className="h-4 w-4" />
-                           )}
-                           {importingImages ? 'Searching…' : 'Import from external sources'}
-                        </Button>
-                        <span className="text-xs text-muted-foreground">
-                           Searches iNaturalist, Wikimedia Commons, and GBIF for openly licensed images.
-                        </span>
                      </div>
 
                      {/* Image rows */}
@@ -1071,34 +1067,93 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
                   </div>
                )}
 
+               {sid === 'speciesContext' && (
+                  <div className="space-y-6">
+                     {fieldsForStep('speciesContext').length > 0 ? (
+                        fieldsForStep('speciesContext').map((field) => (
+                           <CustomPicklistField
+                              key={field.key}
+                              field={field}
+                              selected={customFieldValues[field.key] ?? []}
+                              onChange={(values) =>
+                                 setCustomFieldValues({ ...customFieldValues, [field.key]: values })
+                              }
+                           />
+                        ))
+                     ) : (
+                        <p className="text-sm text-muted-foreground">
+                           No species context fields configured for this portal.
+                        </p>
+                     )}
+                  </div>
+               )}
+
                {sid === 'extraMetadata' && (
-                  <div className="space-y-3">
-                     {metadataList.map((m, i) => (
-                        <div key={i} className="flex gap-2">
-                           <Input
-                              placeholder="Key"
-                              value={m.key}
-                              onChange={(e) =>
-                                 setMetadataList(metadataList.map((x, j) => (j === i ? { ...x, key: e.target.value } : x)))
-                              }
-                           />
-                           <Input
-                              placeholder="Value"
-                              value={m.value}
-                              onChange={(e) =>
-                                 setMetadataList(metadataList.map((x, j) => (j === i ? { ...x, value: e.target.value } : x)))
-                              }
-                           />
+                  <div className="space-y-6">
+                     <div className="space-y-3">
+                        <div>
+                           <p className="text-sm font-medium">External links</p>
+                           <p className="text-sm text-muted-foreground">
+                              URLs to external resources related to this species (project pages, databases, etc.).
+                           </p>
                         </div>
-                     ))}
-                     <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setMetadataList([...metadataList, { key: '', value: '' }])}
-                     >
-                        Add field
-                     </Button>
+                        {links.map((link, i) => (
+                           <div key={i} className="flex gap-2">
+                              <Input
+                                 placeholder="https://example.org/resource"
+                                 value={link}
+                                 onChange={(e) => setLinks(links.map((x, j) => (j === i ? e.target.value : x)))}
+                              />
+                              <Button
+                                 type="button"
+                                 variant="ghost"
+                                 size="sm"
+                                 className="text-destructive hover:text-destructive"
+                                 onClick={() => setLinks(links.filter((_, j) => j !== i))}
+                              >
+                                 Remove
+                              </Button>
+                           </div>
+                        ))}
+                        <Button type="button" variant="outline" size="sm" onClick={() => setLinks([...links, ''])}>
+                           Add link
+                        </Button>
+                     </div>
+
+                     <div className="space-y-3">
+                        <div>
+                           <p className="text-sm font-medium">Extra metadata</p>
+                           <p className="text-sm text-muted-foreground">
+                              Custom key-value attributes stored alongside the organism record.
+                           </p>
+                        </div>
+                        {metadataList.map((m, i) => (
+                           <div key={i} className="flex gap-2">
+                              <Input
+                                 placeholder="Key"
+                                 value={m.key}
+                                 onChange={(e) =>
+                                    setMetadataList(metadataList.map((x, j) => (j === i ? { ...x, key: e.target.value } : x)))
+                                 }
+                              />
+                              <Input
+                                 placeholder="Value"
+                                 value={m.value}
+                                 onChange={(e) =>
+                                    setMetadataList(metadataList.map((x, j) => (j === i ? { ...x, value: e.target.value } : x)))
+                                 }
+                              />
+                           </div>
+                        ))}
+                        <Button
+                           type="button"
+                           variant="outline"
+                           size="sm"
+                           onClick={() => setMetadataList([...metadataList, { key: '', value: '' }])}
+                        >
+                           Add field
+                        </Button>
+                     </div>
                   </div>
                )}
 
@@ -1111,6 +1166,7 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
                         genomePublication={genomePublication}
                         vernacularNames={vernacularNames}
                         metadataList={metadataList}
+                        links={links}
                         customFieldValues={customFieldValues}
                         organismCustomFields={organismCustomFields}
                         images={images}
@@ -1164,7 +1220,6 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
                   <AlertDialogAction
                      onClick={() => {
                         ++taxonCheckSeqRef.current
-                        ++importImagesSeqRef.current
                         lastSelectedTaxonRef.current = null
                         resetStore()
                         resetStepper()
@@ -1174,7 +1229,6 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
                         setExistenceCheckError(null)
                         setTaxonExistencePending(false)
                         setTaxonSpeciesWarning(null)
-                        setImportingImages(false)
                         setPubValidationStatus({})
                         setPubValidationError({})
                         setPubMetadata({})
@@ -1202,7 +1256,6 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
                   <AlertDialogAction
                      onClick={() => {
                         ++taxonCheckSeqRef.current
-                        ++importImagesSeqRef.current
                         lastSelectedTaxonRef.current = null
                         if (isEditMode && editTaxid) void loadOrganism()
                         else {
@@ -1220,7 +1273,6 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
                            setGenomePubMetadata(null)
                            setCustomFieldValues({})
                         }
-                        setImportingImages(false)
                         setShowResetModal(false)
                      }}
                   >
@@ -1336,7 +1388,9 @@ function ImageRow({
             <Input
                placeholder="Source record URL"
                value={img.source_record_url}
-               onChange={(e) => update({ source_record_url: e.target.value })}
+               disabled
+               readOnly
+               title="Filled automatically from the image URL"
             />
             {/* License options mirror the server allowlist (organism_images_fetch.py) */}
             <Select
@@ -1402,6 +1456,23 @@ function CustomPicklistField({
    selected: string[]
    onChange: (values: string[]) => void
 }) {
+   if (field.type === 'text') {
+      return (
+         <div className="space-y-2">
+            <Label>
+               {field.label}
+               {field.required ? <span className="ml-1 text-destructive">*</span> : null}
+            </Label>
+            <Textarea
+               value={selected[0] ?? ''}
+               onChange={(e) => onChange(e.target.value ? [e.target.value] : [])}
+               placeholder={field.label}
+               rows={4}
+            />
+         </div>
+      )
+   }
+
    if (field.type === 'single') {
       return (
          <div className="space-y-2">
@@ -1414,7 +1485,7 @@ function CustomPicklistField({
                   <SelectValue placeholder={`Select ${field.label.toLowerCase()}`} />
                </SelectTrigger>
                <SelectContent>
-                  {field.values.map((value) => (
+                  {(field.values ?? []).map((value) => (
                      <SelectItem key={value} value={value}>
                         {value}
                      </SelectItem>
@@ -1433,7 +1504,7 @@ function CustomPicklistField({
          </Label>
          <ScrollArea className="h-56 rounded-md border">
             <div className="grid gap-2 p-2 sm:grid-cols-2">
-               {field.values.map((value) => {
+               {(field.values ?? []).map((value) => {
                   const isSelected = selected.includes(value)
                   return (
                      <button
@@ -1464,6 +1535,7 @@ function OrganismFormReview({
    genomePublication,
    vernacularNames,
    metadataList,
+   links,
    customFieldValues,
    organismCustomFields,
    images,
@@ -1475,6 +1547,7 @@ function OrganismFormReview({
    genomePublication: OrganismPublication | null
    vernacularNames: OrganismCommonName[]
    metadataList: { key: string; value: string }[]
+   links: string[]
    customFieldValues: Record<string, string[]>
    organismCustomFields: CmsOrganismFieldWire[]
    images: OrganismImageRow[]
@@ -1542,6 +1615,48 @@ function OrganismFormReview({
                               </div>
                            ) : (
                               <p className="text-xs text-muted-foreground">Not selected</p>
+                           )}
+                        </div>
+                     )
+                  })}
+               </div>
+            )
+         }
+
+         case 'speciesContext': {
+            const stepFields = organismCustomFields.filter((field) => field.step === 'speciesContext')
+            if (stepFields.length === 0) {
+               return <p className="text-xs text-muted-foreground">Not filled</p>
+            }
+            const hasAnyValue = stepFields.some((field) =>
+               (customFieldValues[field.key] ?? []).some((v) => typeof v === 'string' && v.trim()),
+            )
+            if (!hasAnyValue) {
+               return <p className="text-xs text-muted-foreground">Not filled</p>
+            }
+            return (
+               <div className="space-y-3">
+                  {stepFields.map((field) => {
+                     const values = (customFieldValues[field.key] ?? []).filter(
+                        (v) => typeof v === 'string' && v.trim(),
+                     )
+                     return (
+                        <div key={field.key} className="space-y-1">
+                           <p className="text-xs font-medium text-muted-foreground">{field.label}</p>
+                           {values.length > 0 ? (
+                              field.type === 'text' ? (
+                                 <p className="whitespace-pre-wrap text-sm">{values[0]}</p>
+                              ) : (
+                                 <div className="flex flex-wrap gap-1.5">
+                                    {values.map((value) => (
+                                       <Badge key={value} variant="secondary">
+                                          {value}
+                                       </Badge>
+                                    ))}
+                                 </div>
+                              )
+                           ) : (
+                              <p className="text-xs text-muted-foreground">Not filled</p>
                            )}
                         </div>
                      )
@@ -1624,21 +1739,39 @@ function OrganismFormReview({
 
          case 'extraMetadata': {
             const validMeta = metadataList.filter((m) => m.key.trim())
-            return validMeta.length > 0 ? (
-               <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
-                  {validMeta.map((m, i) => (
-                     <>
-                        <dt key={`k${i}`} className="text-muted-foreground font-medium truncate">
-                           {m.key}
-                        </dt>
-                        <dd key={`v${i}`} className="truncate">
-                           {m.value}
-                        </dd>
-                     </>
-                  ))}
-               </dl>
-            ) : (
-               <p className="text-xs text-muted-foreground">No extra metadata</p>
+            const validLinks = links.filter((l) => l.trim())
+            if (validMeta.length === 0 && validLinks.length === 0) {
+               return <p className="text-xs text-muted-foreground">No extra metadata</p>
+            }
+            return (
+               <div className="space-y-3">
+                  {validLinks.length > 0 ? (
+                     <div className="space-y-1">
+                        <p className="text-xs font-medium text-muted-foreground">External links</p>
+                        <ul className="space-y-1">
+                           {validLinks.map((l, i) => (
+                              <li key={i} className="break-all text-sm">
+                                 {l}
+                              </li>
+                           ))}
+                        </ul>
+                     </div>
+                  ) : null}
+                  {validMeta.length > 0 ? (
+                     <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
+                        {validMeta.map((m, i) => (
+                           <>
+                              <dt key={`k${i}`} className="text-muted-foreground font-medium truncate">
+                                 {m.key}
+                              </dt>
+                              <dd key={`v${i}`} className="truncate">
+                                 {m.value}
+                              </dd>
+                           </>
+                        ))}
+                     </dl>
+                  ) : null}
+               </div>
             )
          }
 

@@ -2,7 +2,13 @@
 
 import { create } from 'zustand'
 
-export type OrganismPublication = { source: 'DOI' | 'PubMed ID' | 'PubMed CentralID' | ''; id: string }
+import type { CmsPublicationMetadata } from '@/lib/cms/services/auth'
+
+export type OrganismPublication = {
+   source: 'DOI' | 'PubMed ID' | 'PubMed CentralID' | ''
+   id: string
+   data?: CmsPublicationMetadata
+}
 
 export type OrganismCommonName = { value: string; locality: string; lang: string }
 
@@ -52,6 +58,8 @@ type OrganismFormStore = {
    genomePublication: OrganismPublication | null
    vernacularNames: OrganismCommonName[]
    images: OrganismImageRow[]
+   /** External resource URLs related to this species (`organism.links`). */
+   links: string[]
    setOrganismForm: (p: Partial<OrganismFormState>) => void
    replaceOrganismForm: (f: OrganismFormState) => void
    setMetadataList: (v: { key: string; value: string }[]) => void
@@ -60,6 +68,7 @@ type OrganismFormStore = {
    setGenomePublication: (v: OrganismPublication | null) => void
    setVernacularNames: (v: OrganismCommonName[]) => void
    setImages: (v: OrganismImageRow[]) => void
+   setLinks: (v: string[]) => void
    reset: () => void
 }
 
@@ -71,6 +80,7 @@ export const useOrganismFormStore = create<OrganismFormStore>((set) => ({
    genomePublication: null,
    vernacularNames: [],
    images: [],
+   links: [],
 
    setOrganismForm: (p) => set((s) => ({ organismForm: { ...s.organismForm, ...p } })),
    replaceOrganismForm: (f) => set({ organismForm: f }),
@@ -80,6 +90,7 @@ export const useOrganismFormStore = create<OrganismFormStore>((set) => ({
    setGenomePublication: (genomePublication) => set({ genomePublication }),
    setVernacularNames: (vernacularNames) => set({ vernacularNames }),
    setImages: (images) => set({ images }),
+   setLinks: (links) => set({ links }),
 
    reset: () =>
       set({
@@ -90,5 +101,6 @@ export const useOrganismFormStore = create<OrganismFormStore>((set) => ({
          genomePublication: null,
          vernacularNames: [],
          images: [],
+         links: [],
       }),
 }))

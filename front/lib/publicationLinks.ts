@@ -16,7 +16,37 @@ export function publicationExternalUrl(source: string, id: string): string | nul
    return null
 }
 
-export type ParsedPublication = { source: string; id: string }
+/** Build a public URL from stored Europe PMC metadata when available. */
+export function publicationMetadataExternalUrl(data: PublicationMetadata | undefined | null): string | null {
+   if (!data) return null
+   const doi = data.doi?.trim()
+   if (doi) return `https://doi.org/${doi.replace(/^https?:\/\/(dx\.)?doi\.org\//i, '')}`
+   const pmid = data.pmid?.trim()
+   if (pmid) return `https://pubmed.ncbi.nlm.nih.gov/${pmid}`
+   const pmcid = data.pmcid?.trim()
+   if (pmcid) {
+      const id = pmcid.toUpperCase().startsWith('PMC') ? pmcid : `PMC${pmcid}`
+      return `https://www.ncbi.nlm.nih.gov/pmc/articles/${id}`
+   }
+   return null
+}
+
+export type PublicationMetadata = {
+   title?: string
+   authors?: string
+   journal?: string
+   year?: string
+   doi?: string
+   pmid?: string
+   pmcid?: string
+   abstract?: string
+}
+
+export type ParsedPublication = {
+   source: string
+   id: string
+   data?: PublicationMetadata
+}
 
 function normalizePublicationSource(raw: unknown): string {
    if (raw == null) return ''
@@ -28,6 +58,17 @@ function normalizePublicationSource(raw: unknown): string {
    return String(raw).trim()
 }
 
+function parsePublicationMetadata(raw: unknown): PublicationMetadata | undefined {
+   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return undefined
+   const o = raw as Record<string, unknown>
+   const out: PublicationMetadata = {}
+   for (const key of ['title', 'authors', 'journal', 'year', 'doi', 'pmid', 'pmcid', 'abstract'] as const) {
+      const v = o[key]
+      if (v != null && String(v).trim()) out[key] = String(v).trim()
+   }
+   return Object.keys(out).length > 0 ? out : undefined
+}
+
 /** Parse a single embedded publication (``genome_publication`` or list row). */
 export function parseOrganismPublication(raw: unknown): ParsedPublication | null {
    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null
@@ -35,7 +76,8 @@ export function parseOrganismPublication(raw: unknown): ParsedPublication | null
    const id = String(o.id ?? '').trim()
    if (!id) return null
    const source = normalizePublicationSource(o.source) || 'Publication'
-   return { source, id }
+   const data = parsePublicationMetadata(o.data)
+   return data ? { source, id, data } : { source, id }
 }
 
 /** Parse an organism ``publications`` list from API JSON. */

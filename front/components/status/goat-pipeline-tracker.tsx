@@ -5,6 +5,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import {
    TARGET_LIST_PIPELINE_STEPS,
    TARGET_LIST_STATUS_LABELS,
+   goatStepMessageKey,
 } from '@/lib/organismStatusLabels'
 import type { GoatTrackerStage } from '@/lib/goatPipelineTracker'
 import { useLocale } from '@/contexts/locale-context'
@@ -76,6 +77,18 @@ export function GoatPipelineTracker({
    const en = copyMode === 'en'
    function tx(key: keyof typeof GOAT_PIPELINE_COPY_EN): string {
       return en ? GOAT_PIPELINE_COPY_EN[key] : t(GOAT_PIPELINE_LOCALE_KEYS[key])
+   }
+
+   function stageTitle(s: GoatTrackerStage): string {
+      if (en) return s.label
+      const msgKey = goatStepMessageKey(s.key)
+      return msgKey ? t(`goat.steps.${msgKey}.title`) : s.label
+   }
+
+   function stageDescription(s: GoatTrackerStage): string {
+      if (en) return s.desc
+      const msgKey = goatStepMessageKey(s.key)
+      return msgKey ? t(`goat.steps.${msgKey}.description`) : s.desc
    }
 
    return (
@@ -227,12 +240,12 @@ export function GoatPipelineTracker({
                                  aria-hidden
                               />
                               <span className="min-w-0 text-[11px] font-medium leading-snug text-foreground">
-                                 {s.label}
+                                 {stageTitle(s)}
                               </span>
                            </div>
                         </TooltipTrigger>
                         <TooltipContent side="bottom" className={tooltipContentClassName}>
-                           {s.desc}
+                           {stageDescription(s)}
                         </TooltipContent>
                      </Tooltip>
                      <span className="mt-1.5 text-xl font-semibold tabular-nums text-foreground sm:text-[22px]">

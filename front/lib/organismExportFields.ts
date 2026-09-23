@@ -20,7 +20,6 @@ export const ORGANISM_EXPORT_FIELD_GROUPS: { id: string; label: string; fields: 
          { key: 'biosamples_count', label: 'Biosamples count' },
          { key: 'reads_count', label: 'Sequencing runs count' },
          { key: 'genome_annotations_count', label: 'Genome annotations count' },
-         { key: 'local_samples_count', label: 'Local samples count' },
       ],
    },
    {
@@ -31,7 +30,6 @@ export const ORGANISM_EXPORT_FIELD_GROUPS: { id: string; label: string; fields: 
          { key: 'sub_project', label: 'Sub-project' },
          { key: 'taxon_lineage', label: 'Taxon lineage (taxids)' },
          { key: 'common_names', label: 'Common names (mapped)' },
-         { key: 'metadata.sequencing_type', label: 'Sequencing types' },
       ],
    },
    {
@@ -57,7 +55,6 @@ export const ORGANISM_EXPORT_FIELD_GROUPS: { id: string; label: string; fields: 
       fields: [
          { key: 'goat_status', label: 'GoaT sequencing status' },
          { key: 'target_list_status', label: 'Target list status' },
-         { key: 'insdc_status', label: 'INSDC submission status' },
       ],
    },
    {
@@ -78,8 +75,21 @@ export const ORGANISM_EXPORT_FIELD_GROUPS: { id: string; label: string; fields: 
    },
 ]
 
-/** Stable column order for building the ``fields`` query param. */
+/** Stable column order for building the ``fields`` query param (static builtins only).
+ * Portal `speciesListFacets` export keys are appended by the export sheet.
+ */
 export const ORGANISM_EXPORT_KEYS_ORDERED: string[] = [
    ...ORGANISM_DEFAULT_EXPORT_FIELDS.map((f) => f.key),
    ...ORGANISM_EXPORT_FIELD_GROUPS.flatMap((g) => g.fields.map((f) => f.key)),
 ]
+
+/** Export column defs for portal.json `speciesListFacets` (`metadata.<key>`). */
+export function organismExportFieldsFromSpeciesListFacets(
+   facets: { key: string; label?: Record<string, string> }[],
+   resolveLabel: (facet: { key: string; label?: Record<string, string> }) => string,
+): OrganismExportFieldDef[] {
+   return facets.map((facet) => ({
+      key: `metadata.${facet.key}`,
+      label: resolveLabel(facet),
+   }))
+}

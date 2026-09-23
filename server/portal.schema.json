@@ -140,7 +140,7 @@
                  },
                  "fields": {
                     "type": "array",
-                    "description": "Custom picklist fields rendered in the CMS organism form, grouped by step; values are stored under organism.metadata[key]. Use this only for closed, portal-wide enums (e.g. sequencing_type). Do NOT use it for PI / institute / program-style catalogs that grow over time or are 'owned' by a specific curator — those belong in the OrganismPrincipal API (server/db/model.py, /api/organism_principals), linked via BioGenomeUser.principal_ids and projected onto species through assigned curators. See biogenome-portal/docs/cbp-pi-contributor-migration.md.",
+                    "description": "Custom fields rendered in the CMS organism form, grouped by step; values are stored under organism.metadata[key]. Use 'single'/'multi' for closed portal-wide enums (e.g. sequencing_type) and 'text' for free-text fields. Do NOT use it for PI / institute / program-style catalogs that grow over time or are 'owned' by a specific curator — those belong in the OrganismPrincipal API (server/db/model.py, /api/organism_principals), linked via BioGenomeUser.principal_ids and projected onto species through assigned curators. See biogenome-portal/docs/cbp-pi-contributor-migration.md.",
                     "items": { "$ref": "#/$defs/cmsOrganismFieldWire" }
                  }
               }
@@ -184,6 +184,7 @@
            "images",
            "publications",
            "vernacularNames",
+           "speciesContext",
            "extraMetadata",
            "reviewSubmit"
         ]
@@ -204,19 +205,38 @@
      "cmsOrganismFieldWire": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["key", "label", "type", "step", "values"],
+        "required": ["key", "label", "type", "step"],
         "properties": {
            "key": { "type": "string", "minLength": 1 },
            "label": { "type": "string", "minLength": 1 },
-           "type": { "type": "string", "enum": ["single", "multi"] },
+           "type": {
+              "type": "string",
+              "enum": ["single", "multi", "text"],
+              "description": "'single'/'multi' are closed picklists (require `values`). 'text' is a free-text field (Textarea) with no `values`."
+           },
            "step": { "$ref": "#/$defs/organismFormStepId" },
            "required": { "type": "boolean" },
            "values": {
               "type": "array",
-              "minItems": 1,
-              "items": { "type": "string", "minLength": 1 }
+              "items": { "type": "string", "minLength": 1 },
+              "description": "Required (min 1) for 'single'/'multi'; omit for 'text'."
            }
-        }
+        },
+        "allOf": [
+           {
+              "if": { "properties": { "type": { "enum": ["single", "multi"] } }, "required": ["type"] },
+              "then": {
+                 "required": ["values"],
+                 "properties": {
+                    "values": {
+                       "type": "array",
+                       "minItems": 1,
+                       "items": { "type": "string", "minLength": 1 }
+                    }
+                 }
+              }
+           }
+        ]
      },
      "citizenTaxonomyNode": {
         "type": "object",

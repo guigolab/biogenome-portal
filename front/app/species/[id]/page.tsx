@@ -9,15 +9,14 @@ import { SpeciesIucnSection } from '@/components/species-iucn-section'
 import { SpeciesLocationsMap } from '@/components/species-locations-map'
 import { SpeciesPageStatsStrip } from '@/components/species-page-stats-strip'
 import { SpeciesGoatPipelineSection } from '@/components/species-goat-pipeline-section'
+import { SpeciesPublicationsSection } from '@/components/species-publications-section'
 import { fetchSampleLocations, parseSampleLocationsPayload } from '@/lib/api/coordinates'
 import { fetchTaxonAncestors } from '@/lib/api/taxon'
 import { fetchOrganism } from '@/lib/api/organisms'
 import {
   parseOrganismPublication,
   parseOrganismPublications,
-  publicationExternalUrl,
   publicationsMatch,
-  type ParsedPublication,
 } from '@/lib/publicationLinks'
 import { loadPortalConfig, loadRootTaxid } from '@/lib/portal/portalServer'
 import { resolveOrganismCustomFields } from '@/lib/portal'
@@ -25,6 +24,7 @@ import {
   customFieldMetadataKeys,
   organismCustomFieldRows,
 } from '@/lib/organismCustomFieldDisplay'
+import { ORGANISM_PRINCIPAL_METADATA_KEYS } from '@/lib/cms/organism-form-payload'
 import { buildSpeciesDetailView, parseOrganismImages } from '@/lib/species-detail-from-organism'
 import { taxonomyTaxonHref } from '@/lib/taxonomyLinks'
 import {
@@ -35,7 +35,7 @@ import {
 } from '@/lib/species-lineage'
 import { countryLabelEn } from '@/lib/countryLabels'
 import { showCountriesUi } from '@/lib/portal'
-import { ArrowLeft, MapPin, Dna, ExternalLink, BookOpen, Tags, Globe } from 'lucide-react'
+import { ArrowLeft, MapPin, Dna, ExternalLink, Tags, Globe } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 function str(v: unknown): string {
@@ -169,28 +169,6 @@ function ClassificationCard({
   )
 }
 
-function PublicationRow({ pub }: { pub: ParsedPublication }) {
-  const href = publicationExternalUrl(pub.source, pub.id)
-  return (
-    <li className="flex flex-wrap items-baseline gap-2 text-sm">
-      <span className="text-muted-foreground">{pub.source}:</span>
-      {href ? (
-        <a
-          href={href}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-primary hover:underline inline-flex items-center gap-1 font-mono"
-        >
-          {pub.id}
-          <ExternalLink className="h-3 w-3 shrink-0" />
-        </a>
-      ) : (
-        <span className="font-mono">{pub.id}</span>
-      )}
-    </li>
-  )
-}
-
 export async function generateMetadata({
   params,
 }: {
@@ -266,7 +244,6 @@ export default async function SpeciesDetailPage({
   const otherPublications = parseOrganismPublications(organism.publications).filter(
     (pub) => !genomePublication || !publicationsMatch(pub, genomePublication),
   )
-  const showPublicationsCard = Boolean(genomePublication) || otherPublications.length > 0
 
   const commonNamesRaw = organism.common_names
   const commonNames: { value: string; lang?: string; locality?: string }[] = []
@@ -291,7 +268,10 @@ export default async function SpeciesDetailPage({
   const showProjectBlock = customFields.length === 0 && Boolean(subProject)
   const showProjectOrCustomBlock = showCustomFieldsBlock || showProjectBlock
   const customFieldKeys = customFieldMetadataKeys(customFields)
-  const metaPairs = metadataEntries(organism.metadata).filter(([k]) => !customFieldKeys.has(k))
+  const principalMetaKeys = new Set<string>(ORGANISM_PRINCIPAL_METADATA_KEYS)
+  const metaPairs = metadataEntries(organism.metadata).filter(
+    ([k]) => !customFieldKeys.has(k) && !principalMetaKeys.has(k),
+  )
   const showMetadataBlock = metaPairs.length > 0
 
   const linkUrls: string[] = []
@@ -345,21 +325,31 @@ export default async function SpeciesDetailPage({
             </div>
           </div>
 
-          <SpeciesPageStatsStrip
+          {!goatPortalEnabled ? (
+            <SpeciesPageStatsStrip
+              taxid={id}
+              assemblyCount={assemblyCount}
+              biosampleCount={biosampleCount}
+              readsCount={readsCount}
+              annotationCount={annotationCount}
+              locationsTotal={locationsTotal}
+              hasMapCoords={hasMapCoords}
+            />
+          ) : null}
+        </div>
+
+        {goatPortalEnabled ? (
+          <SpeciesGoatPipelineSection
             taxid={id}
+            goatStatusRaw={organism.goat_status}
+            targetListStatusRaw={organism.target_list_status}
             assemblyCount={assemblyCount}
             biosampleCount={biosampleCount}
             readsCount={readsCount}
             annotationCount={annotationCount}
             locationsTotal={locationsTotal}
             hasMapCoords={hasMapCoords}
-          />
-        </div>
-
-        {goatPortalEnabled ? (
-          <SpeciesGoatPipelineSection
-            goatStatusRaw={organism.goat_status}
-            targetListStatusRaw={organism.target_list_status}
+            genomePublication={genomePublication}
           />
         ) : null}
 
@@ -445,40 +435,10 @@ export default async function SpeciesDetailPage({
           </div>
         ) : null}
 
-        {showPublicationsCard ? (
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <BookOpen className="h-5 w-5 text-primary" />
-                Publications
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {genomePublication ? (
-                <div className="space-y-2">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Badge variant="secondary">Genome assembly publication</Badge>
-                  </div>
-                  <ul className="space-y-2">
-                    <PublicationRow pub={genomePublication} />
-                  </ul>
-                </div>
-              ) : null}
-              {otherPublications.length > 0 ? (
-                <div className="space-y-2">
-                  {genomePublication ? (
-                    <p className="text-sm font-medium text-muted-foreground">Other publications</p>
-                  ) : null}
-                  <ul className="space-y-2">
-                    {otherPublications.map((pub, idx) => (
-                      <PublicationRow key={`${pub.source}-${pub.id}-${idx}`} pub={pub} />
-                    ))}
-                  </ul>
-                </div>
-              ) : null}
-            </CardContent>
-          </Card>
-        ) : null}
+        <SpeciesPublicationsSection
+          genomePublication={genomePublication}
+          otherPublications={otherPublications}
+        />
 
         {commonNames.length > 0 ? (
           <Card className="mb-6">
@@ -531,7 +491,7 @@ export default async function SpeciesDetailPage({
         ) : null}
 
         {hasMapCoords && mapPoints.length > 0 ? (
-          <Card className="mb-6">
+          <Card id="sample-locations" className="mb-6 scroll-mt-24">
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
                 <MapPin className="h-5 w-5 text-chart-3" />

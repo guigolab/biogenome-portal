@@ -4,6 +4,13 @@ import type {
    OrganismPublication,
 } from '@/stores/organism-form-store'
 import type { CmsOrganismFieldWire } from '@/lib/portal/types'
+import {
+   ORGANISM_PRINCIPAL_METADATA_KEYS,
+} from '@/lib/organismPrincipalMetadata'
+
+export { ORGANISM_PRINCIPAL_METADATA_KEYS } from '@/lib/organismPrincipalMetadata'
+
+const PRINCIPAL_METADATA_KEY_SET = new Set<string>(ORGANISM_PRINCIPAL_METADATA_KEYS)
 
 /** True when an image row has all fields required for API persistence. */
 export function isCompleteImageRow(row: OrganismImageRow): boolean {
@@ -37,16 +44,32 @@ export function filterValidVernacularNames(names: OrganismCommonName[]): Organis
    return names.filter((n) => Boolean(n.value?.trim()))
 }
 
-export function filterValidPublications(publications: OrganismPublication[]): OrganismPublication[] {
-   return publications.filter((p) => Boolean(p.id?.trim()))
+/** Trim and drop blank entries from the external links list (`organism.links`). */
+export function filterValidLinks(links: string[]): string[] {
+   return links.map((l) => l.trim()).filter(Boolean)
 }
 
-/** Build the `genome_publication` payload value: null clears the field, otherwise a trimmed {source, id}. */
+export function filterValidPublications(publications: OrganismPublication[]): OrganismPublication[] {
+   return publications
+      .filter((p) => Boolean(p.id?.trim()))
+      .map((p) => {
+         const out: OrganismPublication = { source: p.source, id: p.id.trim() }
+         if (p.data && typeof p.data === 'object') out.data = p.data
+         return out
+      })
+}
+
+/** Build the `genome_publication` payload value: null clears the field, otherwise a trimmed {source, id, data?}. */
 export function buildGenomePublicationPayload(
    pub: OrganismPublication | null,
-): { source: string; id: string } | null {
+): { source: string; id: string; data?: OrganismPublication['data'] } | null {
    if (!pub || !pub.id?.trim() || !pub.source) return null
-   return { source: pub.source, id: pub.id.trim() }
+   const out: { source: string; id: string; data?: OrganismPublication['data'] } = {
+      source: pub.source,
+      id: pub.id.trim(),
+   }
+   if (pub.data && typeof pub.data === 'object') out.data = pub.data
+   return out
 }
 
 /** Client-side validation status for a single publication (list row or the genome_publication field). */
@@ -69,27 +92,29 @@ export function isGenomePublicationValidated(
    return status === 'valid'
 }
 
-/** Build metadata object: trim keys, skip blank keys, last duplicate wins. */
+/** Build metadata object: trim keys, skip blank keys, last duplicate wins.
+ * Reserved principal-projection keys are never written from the free-form editor.
+ */
 export function buildMetadataPayload(metadataList: { key: string; value: string }[]): Record<string, string> {
    const out: Record<string, string> = {}
    for (const { key, value } of metadataList) {
       const k = key.trim()
-      if (!k) continue
+      if (!k || PRINCIPAL_METADATA_KEY_SET.has(k)) continue
       out[k] = value
    }
    return out
 }
 
-/** Build metadata entries for portal-config custom picklist fields. */
+/** Build metadata entries for portal-config custom fields (picklists + free text). */
 export function buildCustomFieldsMetadata(
    fields: CmsOrganismFieldWire[],
    customFieldValues: Record<string, string[]>,
 ): Record<string, string | string[]> {
    const out: Record<string, string | string[]> = {}
    for (const field of fields) {
-      const selected = (customFieldValues[field.key] ?? []).filter(Boolean)
+      const selected = (customFieldValues[field.key] ?? []).filter((v) => typeof v === 'string' && v.trim())
       if (selected.length === 0) continue
-      out[field.key] = field.type === 'single' ? selected[0] : selected
+      out[field.key] = field.type === 'multi' ? selected : selected[0].trim()
    }
    return out
 }
@@ -111,6 +136,9 @@ export function splitLoadedMetadata(
    }
 
    for (const [key, rawValue] of Object.entries(metadata)) {
+      if (PRINCIPAL_METADATA_KEY_SET.has(key)) {
+         continue
+      }
       if (customFieldKeys.has(key)) {
          if (Array.isArray(rawValue)) {
             customFieldValues[key] = rawValue.map((v) => String(v)).filter(Boolean)
@@ -127,7 +155,7 @@ export function splitLoadedMetadata(
    return { customFieldValues, metadataList }
 }
 
-/** True when all required custom fields for a step have at least one selection. */
+/** True when all required custom fields for a step have at least one non-blank value. */
 export function customFieldsStepComplete(
    fields: CmsOrganismFieldWire[],
    stepId: CmsOrganismFieldWire['step'],
@@ -137,6 +165,6 @@ export function customFieldsStepComplete(
    if (stepFields.length === 0) return false
    return stepFields.every((field) => {
       if (!field.required) return true
-      return (customFieldValues[field.key] ?? []).some(Boolean)
+      return (customFieldValues[field.key] ?? []).some((v) => typeof v === 'string' && v.trim())
    })
 }

@@ -14,6 +14,7 @@ import type {
    PortalConfig,
    PortalFooterWire,
    PortalModelsWire,
+   SpeciesListFacetDef,
 } from './types'
 import {
    defaultInsdcCatalogModels,
@@ -339,7 +340,7 @@ const STEP_DEFAULTS: Record<
    },
    images: {
       title: { en: 'Images' },
-      description: { en: 'Attributed organism images (required when step is mandatory).' },
+      description: { en: 'Attributed organism images.' },
       required: false,
       fixed: false,
    },
@@ -352,6 +353,12 @@ const STEP_DEFAULTS: Record<
    vernacularNames: {
       title: { en: 'Vernacular names' },
       description: { en: 'Common names with language and locality.' },
+      required: false,
+      fixed: true,
+   },
+   speciesContext: {
+      title: { en: 'Species context' },
+      description: { en: 'Interest, distribution/origin, and funding context for this species (configured per portal).' },
       required: false,
       fixed: true,
    },
@@ -376,6 +383,7 @@ const STEP_ORDER: OrganismFormStepId[] = [
    'images',
    'publications',
    'vernacularNames',
+   'speciesContext',
    'extraMetadata',
    'reviewSubmit',
 ]
@@ -420,6 +428,30 @@ export function resolveOrganismFormSteps(raw: PortalConfig): OrganismFormStepDef
 
 export function resolveOrganismCustomFields(raw: PortalConfig): CmsOrganismFieldWire[] {
    return raw.cms?.organisms?.fields ?? []
+}
+
+/** Normalize portal.json `speciesListFacets`: dedupe by key, default multiSelect to false. */
+export function resolveSpeciesListFacets(raw: PortalConfig): SpeciesListFacetDef[] {
+   const wire = raw.speciesListFacets
+   if (!Array.isArray(wire) || wire.length === 0) return []
+   const seen = new Set<string>()
+   const out: SpeciesListFacetDef[] = []
+   for (const entry of wire) {
+      if (!entry || typeof entry !== 'object') continue
+      const key = typeof entry.key === 'string' ? entry.key.trim() : ''
+      if (!key || seen.has(key)) continue
+      seen.add(key)
+      const label =
+         entry.label && typeof entry.label === 'object' && !Array.isArray(entry.label)
+            ? (entry.label as Record<string, string>)
+            : undefined
+      out.push({
+         key,
+         multiSelect: entry.multiSelect === true,
+         ...(label && Object.keys(label).length > 0 ? { label } : {}),
+      })
+   }
+   return out
 }
 
 function migrateEsCtKeysToCat(value: unknown): unknown {
@@ -484,6 +516,7 @@ export function normalizePortalConfig(
       }),
       organismFormSteps: resolveOrganismFormSteps(raw),
       organismCustomFields: resolveOrganismCustomFields(raw),
+      speciesListFacets: resolveSpeciesListFacets(raw),
       ...(footer ? { footer } : {}),
    }
 }

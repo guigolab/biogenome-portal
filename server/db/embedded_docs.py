@@ -9,6 +9,8 @@ class CommonName(db.EmbeddedDocument):
 class Publication(db.EmbeddedDocument):
     source = db.EnumField(PublicationSource)
     id = db.StringField()
+    # Europe PMC hit snapshot: title, authors, journal, year, doi, pmid, pmcid, abstract
+    data = db.DictField()
 
 class OrganismImage(db.EmbeddedDocument):
     url = db.URLField(required=True)

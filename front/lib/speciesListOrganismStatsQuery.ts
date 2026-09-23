@@ -1,7 +1,7 @@
 import { speciesMetadataBucketToQueryValue } from '@/lib/speciesFieldStats'
-import { appendCustomFieldFilters } from '@/lib/speciesCustomFieldFilters'
-import type { CmsOrganismFieldWire } from '@/lib/portal/types'
+import type { SpeciesListFacetDef } from '@/lib/portal/types'
 import type { SpeciesDataFilterCode } from '@/lib/speciesDataFilter'
+import { appendSpeciesListFacetDimensions } from '@/lib/speciesListFacets'
 
 /** Context for organism field stats — same dimensions as the species list + GoaT (when enabled). */
 export type OrganismStatsQueryContext = {
@@ -14,14 +14,16 @@ export type OrganismStatsQueryContext = {
    iucnThreatFilter: string
    subProjectFilter: string
    selectedCountryCodes: string[]
+   /** Declared portal.json `speciesListFacets` (public list metadata filters). */
+   speciesListFacets: SpeciesListFacetDef[]
+   /** Selected values per facet key (multi: many; single: 0–1, never `'all'`). */
+   facetSelections: Record<string, string[]>
    /** Stored `goat_status` API values; omit from query when aggregating `goat_status`. */
    goatStatusFilters: string[]
    /** `'all'` or one `target_list_status` value. */
    targetListFilter: string
    /** `insdc_counts_any` codes; omit when aggregating `insdc_counts`. */
    insdcCountFilters: SpeciesDataFilterCode[]
-   customFieldFilters: Record<string, string>
-   customFields: CmsOrganismFieldWire[]
 }
 
 export type OrganismStatsFacet =
@@ -55,6 +57,7 @@ function appendInsdcCountDimensions(
 /**
  * Query params for GET /stats/organisms/:field — mirrors list filters but omits the facet
  * being aggregated so bucket counts stay meaningful.
+ * For metadata facets pass the full stats path (e.g. `metadata.sequencing_type`) as `facet`.
  */
 export function buildOrganismStatsQuery(
    ctx: OrganismStatsQueryContext,
@@ -75,9 +78,11 @@ export function buildOrganismStatsQuery(
    if (facet !== 'countries' && ctx.selectedCountryCodes.length > 0) {
       q.countries__in = [...ctx.selectedCountryCodes].sort().join(',')
    }
-   appendCustomFieldFilters(q, ctx, facet)
    appendGoatDimensions(q, ctx, facet)
    appendInsdcCountDimensions(q, ctx, facet)
+   const exclude =
+      typeof facet === 'string' && facet.startsWith('metadata.') ? facet : undefined
+   appendSpeciesListFacetDimensions(q, ctx.speciesListFacets, ctx.facetSelections, exclude)
    return q
 }
 

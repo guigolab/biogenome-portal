@@ -430,15 +430,37 @@
       "filterBySubProject": "Filter by sub-project",
       "removeSubProjectFilter": "Remove sub-project filter",
       "countrySectionTitle": "Country",
-      "countryListSearchPlaceholder": "Search countries…",
+      "countryListSearchPlaceholder": "Search countries...",
       "countryClearSelection": "Clear countries",
       "countryNoEntryHint": "Filtering by country only includes organisms with at least one country code; entries without country data are excluded.",
       "filterByCountry": "Filter by country",
-      "removeCountryFilter": "Remove country filter"
+      "removeCountryFilter": "Remove country filter",
+      "instituteSectionTitle": "Institute",
+      "instituteListSearchPlaceholder": "Search institutes...",
+      "instituteClearSelection": "Clear institutes",
+      "filterByInstitute": "Filter by institute",
+      "removeInstituteFilter": "Remove institute filter",
+      "programSectionTitle": "Sub-project",
+      "programListSearchPlaceholder": "Search sub-projects...",
+      "programClearSelection": "Clear sub-projects",
+      "filterByProgram": "Filter by sub-project",
+      "removeProgramFilter": "Remove sub-project filter",
+      "principalFacetEmpty": "No values for the current filters",
+      "sequencingTypeSectionTitle": "Sequencing type",
+      "sequencingTypeListSearchPlaceholder": "Search sequencing types...",
+      "sequencingTypeClearSelection": "Clear sequencing types",
+      "filterBySequencingType": "Filter by sequencing type",
+      "removeSequencingTypeFilter": "Remove sequencing type filter"
    },
    "speciesDetail": {
-      "goatPipelineHelp": "Recorded GoaT sequencing stage and target-list classification for this species.",
+      "goatPipelineHelp": "Recorded GoaT sequencing stage and target-list classification for this species. Linked counts open related catalog data or the map on this page.",
       "goatPipelineEmpty": "No GoaT sequencing or target-list status recorded for this species yet.",
+      "goatEvidenceNone": "None",
+      "goatOpenLocations": "Jump to sample locations map",
+      "goatOpenCatalog": "Open {label} in catalog",
+      "goatOpenPublication": "Jump to publications on this page",
+      "goatGenomePublication": "Genome publication",
+      "goatCurrentStep": "current step",
       "relatedRecordsTablist": "Related catalog collections"
    },
    "speciesExport": {
@@ -448,6 +470,7 @@
       "mongoFieldHint": "Enter a MongoEngine field name (e.g. metadata or metadata.project).",
       "columns": "Columns",
       "custom": "Custom",
+      "otherMetadata": "Other metadata",
       "exportScope": "Export scope:",
       "withCurrentFilters": "with current filters.",
       "preparingDownload": "Preparing download...",
@@ -466,6 +489,38 @@
          "LC": "Least Concern",
          "DD": "Data Deficient",
          "NE": "Not Evaluated"
+      }
+   },
+   "goat": {
+      "steps": {
+         "noEntry": {
+            "title": "Missing status",
+            "description": "GoaT status not available"
+         },
+         "sampleCollected": {
+            "title": "Sample collected",
+            "description": "A sample for the species has been collected by field workers but has not yet been sent to a sequencing center"
+         },
+         "sampleAcquired": {
+            "title": "Sample acquired",
+            "description": "A sample for the species has been acquired and is \"in house\" at the sequencing centre, but has not been processed yet"
+         },
+         "dataGeneration": {
+            "title": "Data generation",
+            "description": "Sequencing data are currently being generated for the species"
+         },
+         "inAssembly": {
+            "title": "In assembly",
+            "description": "All sequencing and related data have been collected and genome assembly is in process"
+         },
+         "insdcSubmitted": {
+            "title": "INSDC submitted",
+            "description": "The species' genome assembly has been submitted to INSDC and is openly accessible under the generating project's Bioproject ID"
+         },
+         "publicationAvailable": {
+            "title": "Publication available",
+            "description": "Assembly has an associated publication with a DOI or PubMed ID"
+         }
       }
    }
 }

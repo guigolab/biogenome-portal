@@ -403,7 +403,7 @@
          "alpha": "Alfabètic (A-Z)",
          "recent": "Afegits recentment",
          "samples": "Més mostres",
-         "reads": "Més execucions de seqüenciació",
+         "reads": "Més lectures",
          "assemblies": "Més assemblatges",
          "annotations": "Més anotacions"
       },
@@ -434,11 +434,33 @@
       "countryClearSelection": "Esborrar països",
       "countryNoEntryHint": "Filtrar per país només inclou organismes amb almenys un codi de país; les entrades sense dades de país queden excloses.",
       "filterByCountry": "Filtrar per país",
-      "removeCountryFilter": "Treure el filtre de país"
+      "removeCountryFilter": "Treure el filtre de país",
+      "instituteSectionTitle": "Institut",
+      "instituteListSearchPlaceholder": "Cerca instituts...",
+      "instituteClearSelection": "Esborra instituts",
+      "filterByInstitute": "Filtra per institut",
+      "removeInstituteFilter": "Treure el filtre d'institut",
+      "programSectionTitle": "Subprojecte",
+      "programListSearchPlaceholder": "Cerca subprojectes...",
+      "programClearSelection": "Esborra subprojectes",
+      "filterByProgram": "Filtra per subprojecte",
+      "removeProgramFilter": "Treure el filtre de subprojecte",
+      "principalFacetEmpty": "Cap valor per als filtres actuals",
+      "sequencingTypeSectionTitle": "Tipus de sequenciacio",
+      "sequencingTypeListSearchPlaceholder": "Cerca tipus de sequenciacio...",
+      "sequencingTypeClearSelection": "Esborra tipus de sequenciacio",
+      "filterBySequencingType": "Filtra per tipus de sequenciacio",
+      "removeSequencingTypeFilter": "Treure el filtre de tipus de sequenciacio"
    },
    "speciesDetail": {
-      "goatPipelineHelp": "Etapa de seqüenciació GoaT i classificació de la llista objectiu registrades per a aquesta espècie.",
+      "goatPipelineHelp": "Etapa de seqüenciació GoaT i classificació de la llista objectiu registrades per a aquesta espècie. Els comptadors enllaçats obren dades del catàleg o el mapa d'aquesta pàgina.",
       "goatPipelineEmpty": "Encara no hi ha estat de seqüenciació GoaT ni de llista objectiu per a aquesta espècie.",
+      "goatEvidenceNone": "Cap",
+      "goatOpenLocations": "Anar al mapa d'ubicacions de mostres",
+      "goatOpenCatalog": "Obrir {label} al catàleg",
+      "goatOpenPublication": "Anar a les publicacions d'aquesta pàgina",
+      "goatGenomePublication": "Publicació del genoma",
+      "goatCurrentStep": "pas actual",
       "relatedRecordsTablist": "Col·leccions del catàleg relacionades"
    },
    "speciesExport": {
@@ -448,6 +470,7 @@
       "mongoFieldHint": "Introduïu un nom de camp MongoEngine (p. ex. metadata o metadata.project).",
       "columns": "Columnes",
       "custom": "Personalitzat",
+      "otherMetadata": "Altra metadata",
       "exportScope": "Abast d’exportació:",
       "withCurrentFilters": "amb els filtres actuals.",
       "preparingDownload": "S’està preparant la baixada…",
@@ -466,6 +489,38 @@
          "LC": "Preocupació menor",
          "DD": "Dades insuficients",
          "NE": "No avaluat"
+      }
+   },
+   "goat": {
+      "steps": {
+         "noEntry": {
+            "title": "Estat absent",
+            "description": "Estat GoaT no disponible"
+         },
+         "sampleCollected": {
+            "title": "Mostra recol·lectada",
+            "description": "S'ha recol·lectat una mostra de l'espècie al camp, però encara no s'ha enviat a un centre de seqüenciació"
+         },
+         "sampleAcquired": {
+            "title": "Mostra adquirida",
+            "description": "S'ha adquirit una mostra de l'espècie i és \"a casa\" al centre de seqüenciació, però encara no s'ha processat"
+         },
+         "dataGeneration": {
+            "title": "Generació de dades",
+            "description": "Actualment s'estan generant dades de seqüenciació per a l'espècie"
+         },
+         "inAssembly": {
+            "title": "En assemblatge",
+            "description": "S'han recopilat totes les dades de seqüenciació i relacionades; l'assemblatge del genoma està en procés"
+         },
+         "insdcSubmitted": {
+            "title": "Enviat a INSDC",
+            "description": "L'assemblatge del genoma de l'espècie s'ha enviat a INSDC i és d'accés obert sota el Bioproject ID del projecte generador"
+         },
+         "publicationAvailable": {
+            "title": "Publicació disponible",
+            "description": "L'assemblatge té una publicació associada amb DOI o identificador de PubMed"
+         }
       }
    }
 }

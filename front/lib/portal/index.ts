@@ -11,6 +11,8 @@ export type {
    PortalFooterWire,
    PortalModelsWire,
    PortalTheme,
+   SpeciesListFacetDef,
+   SpeciesListFacetWire,
 } from './types'
 export { dataModels } from './types'
 export {
@@ -19,6 +21,7 @@ export {
    resolveOrganismCustomFields,
    resolveOrganismFormSteps,
    resolvePortalUiMode,
+   resolveSpeciesListFacets,
 } from './portalConfig'
 export type { PortalAppearanceMode } from './portalConfig'
 export { normalizeUiColors } from './uiColors'

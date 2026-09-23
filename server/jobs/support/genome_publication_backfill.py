@@ -26,6 +26,7 @@ import logging
 from typing import Any, Dict, List, Optional
 
 from db.constants import GOAT_PIPELINE_RANK, GOAT_PROJECT_NAME
+from db.embedded_docs import Publication
 from db.enums import GoaTStatus
 from db.model import Organism
 from helpers.rest_catalog_sync import touch_goat_update_date
@@ -121,7 +122,11 @@ def run_genome_publication_backfill() -> Dict[str, Any]:
             skipped_invalid += 1
             continue
 
-        organism.genome_publication = first
+        organism.genome_publication = Publication(
+            source=source,
+            id=identifier,
+            data=data,
+        )
         organism.publications = publications[1:]
         if _promote_goat_status_if_needed(organism):
             promoted_goat_status += 1

@@ -2,6 +2,7 @@
 
 import { useLocale } from '@/contexts/locale-context'
 import type { GoatTrackerStage } from '@/lib/goatPipelineTracker'
+import { goatStepMessageKey } from '@/lib/organismStatusLabels'
 import { cn } from '@/lib/utils'
 import { Check } from 'lucide-react'
 
@@ -29,12 +30,16 @@ export function GoatStatusFilterList({
       >
          {visibleStages.map((s) => {
             const sel = selectedKeys.includes(s.key)
+            const msgKey = goatStepMessageKey(s.key)
+            const label = msgKey ? t(`goat.steps.${msgKey}.title`) : s.label
+            const description = msgKey ? t(`goat.steps.${msgKey}.description`) : s.desc
             return (
                <button
                   key={s.key}
                   type="button"
                   role="option"
                   aria-selected={sel}
+                  title={description}
                   className={cn(
                      'flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm hover:bg-muted/80',
                      sel && 'bg-muted',
@@ -46,7 +51,7 @@ export function GoatStatusFilterList({
                      className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-muted-foreground/35"
                      aria-hidden
                   />
-                  <span className="min-w-0 flex-1 truncate">{s.label}</span>
+                  <span className="min-w-0 flex-1 truncate">{label}</span>
                   <span className="shrink-0 tabular-nums text-xs text-muted-foreground">
                      {loading ? '—' : s.count.toLocaleString()}
                   </span>

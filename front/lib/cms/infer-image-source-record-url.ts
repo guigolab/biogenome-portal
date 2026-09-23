@@ -47,10 +47,28 @@ function inferGbifSource(url: URL): string | null {
 
 function inferInaturalistSource(url: URL): string | null {
    const host = url.hostname.toLowerCase()
-   if (!host.includes('inaturalist.org')) return null
-   const match = url.pathname.match(/\/observations\/(\d+)/i)
-   if (!match) return null
-   return `https://www.inaturalist.org/observations/${match[1]}`
+   const path = url.pathname
+   if (host.includes('inaturalist.org')) {
+      const obs = path.match(/\/observations\/(\d+)/i)
+      if (obs) return `https://www.inaturalist.org/observations/${obs[1]}`
+   }
+   if (
+      host.includes('inaturalist.org') ||
+      host.includes('inaturalist-open-data') ||
+      host.includes('inaturalist')
+   ) {
+      const photo = path.match(/\/photos\/(\d+)/i)
+      if (photo) return `https://www.inaturalist.org/photos/${photo[1]}`
+   }
+   return null
+}
+
+/** Keep a Commons/Wikipedia File: page as the source when pasted as the image URL. */
+function inferWikiFilePage(url: URL): string | null {
+   const host = url.hostname.toLowerCase()
+   if (host !== 'commons.wikimedia.org' && !host.endsWith('.wikipedia.org')) return null
+   if (!/\/wiki\/File:/i.test(decodeURIComponent(url.pathname))) return null
+   return `${url.origin}${url.pathname}`
 }
 
 /** Parent URL with the last path segment removed when it looks like a file name. */
@@ -83,30 +101,34 @@ export function inferSourceRecordUrlFromImageUrl(imageUrl: string): string | nul
    }
 
    if (url.hostname.toLowerCase() === 'upload.wikimedia.org') {
-      return inferWikimediaUploadSource(url) ?? stripFilenameFromUrl(url)
+      return inferWikimediaUploadSource(url) ?? stripFilenameFromUrl(url) ?? url.origin
    }
 
    return (
+      inferWikiFilePage(url) ??
       inferZenodoSource(url) ??
       inferGbifSource(url) ??
       inferInaturalistSource(url) ??
-      stripFilenameFromUrl(url)
+      stripFilenameFromUrl(url) ??
+      url.origin
    )
 }
 
-/** Patch image row fields when the image URL changes (autofill source when appropriate). */
+/** Always set source_record_url from the image URL (the field is not user-editable). */
 export function patchImageRowForUrlChange(
-   current: { url: string; source_record_url: string },
+   _current: { url: string; source_record_url: string },
    nextUrl: string,
-): { url: string; source_record_url?: string } {
-   const patch: { url: string; source_record_url?: string } = { url: nextUrl }
-   const inferred = inferSourceRecordUrlFromImageUrl(nextUrl)
-   if (!inferred) return patch
-
-   const prevInferred = inferSourceRecordUrlFromImageUrl(current.url)
-   const source = current.source_record_url.trim()
-   if (!source || (prevInferred !== null && source === prevInferred)) {
-      patch.source_record_url = inferred
+): { url: string; source_record_url: string } {
+   return {
+      url: nextUrl,
+      source_record_url: inferSourceRecordUrlFromImageUrl(nextUrl) ?? '',
    }
-   return patch
+}
+
+/** Fill an empty source_record_url from the image URL (e.g. rows loaded from the API). */
+export function withInferredSourceRecordUrl<T extends { url: string; source_record_url: string }>(row: T): T {
+   if (row.source_record_url?.trim()) return row
+   const inferred = inferSourceRecordUrlFromImageUrl(row.url)
+   if (!inferred) return row
+   return { ...row, source_record_url: inferred }
 }

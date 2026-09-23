@@ -12,12 +12,14 @@ from wrappers.admin import admin_required
 class OrganismPrincipalOptionsApi(Resource):
     """GET /api/organism_principals/options — {slug, name} pairs for combobox UIs."""
 
+    @jwt_required()
     def get(self):
         options = organism_principals.list_principal_options()
         return Response(json.dumps(options), mimetype="application/json", status=200)
 
 
 class OrganismPrincipalsApi(Resource):
+    @jwt_required()
     def get(self):
         payload = organism_principals.list_principals(**request.args)
         return Response(json.dumps(payload), mimetype="application/json", status=200)
@@ -31,6 +33,7 @@ class OrganismPrincipalsApi(Resource):
 
 
 class OrganismPrincipalApi(Resource):
+    @jwt_required()
     def get(self, slug):
         principal = organism_principals.get_principal(slug)
         return document_json_response(principal)

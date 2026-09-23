@@ -33,6 +33,7 @@ function computeCompletion(
    vernacularNames: OrganismCommonName[],
    metadataList: { key: string; value: string }[],
    images: OrganismImageRow[],
+   links: string[],
    opts?: {
       isEditMode: boolean
       /** Selected taxid already exists in portal (create flow) */
@@ -78,6 +79,20 @@ function computeCompletion(
          }
          return { complete: false, partial: false }
       }
+      case 'speciesContext': {
+         const stepFields = (opts?.organismCustomFields ?? []).filter((f) => f.step === 'speciesContext')
+         if (stepFields.length > 0) {
+            return {
+               complete: customFieldsStepComplete(
+                  opts?.organismCustomFields ?? [],
+                  'speciesContext',
+                  opts?.customFieldValues ?? {},
+               ),
+               partial: false,
+            }
+         }
+         return { complete: false, partial: false }
+      }
       case 'images': {
          const complete = images.some(isCompleteImageRow)
          const partial = !complete && images.some(isPartialImageRow)
@@ -108,7 +123,13 @@ function computeCompletion(
       }
       case 'extraMetadata': {
          const valid = metadataList.filter((m) => m.key.trim())
-         return { complete: valid.length > 0, partial: metadataList.some((m) => !m.key.trim() && m.value) }
+         const validLinks = links.filter((l) => l.trim())
+         return {
+            complete: valid.length > 0 || validLinks.length > 0,
+            partial:
+               metadataList.some((m) => !m.key.trim() && m.value) ||
+               (links.length > 0 && links.some((l) => !l.trim())),
+         }
       }
       case 'reviewSubmit':
          return { complete: false, partial: false }
@@ -126,6 +147,7 @@ export function useOrganismFormStepper({
    vernacularNames,
    metadataList,
    images,
+   links,
    genomePublication = null,
    publicationValidation = {},
    genomePublicationValidation = 'idle',
@@ -143,6 +165,8 @@ export function useOrganismFormStepper({
    vernacularNames: OrganismCommonName[]
    metadataList: { key: string; value: string }[]
    images: OrganismImageRow[]
+   /** External resource URLs related to this species (`organism.links`) */
+   links: string[]
    /** Single genome-assembly publication (locked until an assembly is linked) */
    genomePublication?: OrganismPublication | null
    /** Per-row validation status, keyed by index into `publications` */
@@ -204,6 +228,7 @@ export function useOrganismFormStepper({
             vernacularNames,
             metadataList,
             images,
+            links,
             completionOpts,
          )
          if (step.id === 'goatStatus' && step.required) {
@@ -225,7 +250,7 @@ export function useOrganismFormStepper({
          }
          return { ...step, index, completion, blocked }
       })
-   }, [visibleSteps, form, publications, vernacularNames, metadataList, images, completionOpts])
+   }, [visibleSteps, form, publications, vernacularNames, metadataList, images, links, completionOpts])
 
    const activeStep = runtimeSteps[activeIndex] ?? runtimeSteps[0]
 

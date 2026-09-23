@@ -37,6 +37,7 @@ import { countryLabelEn } from '@/lib/countryLabels'
 import { buildGoatTrackerStages } from '@/lib/goatPipelineTracker'
 import {
    GOAT_PIPELINE_STEPS,
+   goatStepMessageKey,
    labelGoatStatus,
 } from '@/lib/organismStatusLabels'
 import {
@@ -62,7 +63,11 @@ import {
    sortStatEntriesByCountDesc,
    speciesMetadataBucketToQueryValue,
 } from '@/lib/speciesFieldStats'
-import { appendCustomFieldListFilters } from '@/lib/speciesCustomFieldFilters'
+import {
+   appendSpeciesListFacetDimensions,
+   resolveSpeciesListFacetLabel,
+   resolveSpeciesListFacetRemoveLabel,
+} from '@/lib/speciesListFacets'
 import { useOrganismCountriesDisplayStore } from '@/stores/organism-countries-display-store'
 import {
    resolveSpeciesSortMode,
@@ -98,6 +103,7 @@ export function SpeciesListPageClient() {
    const { config } = usePortalConfig()
    const cmsEnabled = showCmsLoginNav(config)
    const customFields = config?.organismCustomFields ?? []
+   const speciesListFacets = config?.speciesListFacets ?? []
    const goatEnabled = showGoatStatusPage(config)
    const countriesEnabled = showCountriesUi(config)
    const labelIucnThreatOption = useCallback(
@@ -116,8 +122,8 @@ export function SpeciesListPageClient() {
    const [iucnThreatStats, setIucnThreatStats] = useState<Record<string, number> | null>(null)
    const [subProjectFilter, setSubProjectFilter] = useState<string>('all')
    const [subProjectStats, setSubProjectStats] = useState<Record<string, number> | null>(null)
-   const [customFieldFilters, setCustomFieldFilters] = useState<Record<string, string>>({})
-   const [customFieldStats, setCustomFieldStatsState] = useState<Record<string, Record<string, number>>>({})
+   const [facetSelections, setFacetSelections] = useState<Record<string, string[]>>({})
+   const [facetStats, setFacetStatsState] = useState<Record<string, Record<string, number> | null>>({})
    const [selectedCountryCodes, setSelectedCountryCodes] = useState<string[]>([])
    const [sortMode, setSortMode] = useState<SpeciesSortSelection>(SPECIES_SORT_UNSET)
    const [exportSheetOpen, setExportSheetOpen] = useState(false)
@@ -169,12 +175,36 @@ export function SpeciesListPageClient() {
 
    const citizenTaxonomy = useMemo(() => resolveCitizenTaxonomy(config), [config])
 
-   const setCustomFieldStats = useCallback((key: string, stats: Record<string, number>) => {
-      setCustomFieldStatsState((prev) => ({ ...prev, [key]: stats }))
+   const setFacetStats = useCallback((key: string, stats: Record<string, number>) => {
+      setFacetStatsState((prev) => ({ ...prev, [key]: stats }))
    }, [])
 
-   const setCustomFieldFilter = useCallback((key: string, value: string) => {
-      setCustomFieldFilters((prev) => ({ ...prev, [key]: value }))
+   const toggleFacetValue = useCallback(
+      (key: string, value: string) => {
+         const facet = speciesListFacets.find((f) => f.key === key)
+         if (!facet) return
+         if (facet.multiSelect) {
+            const v = value.trim()
+            if (!v || v === 'all') return
+            setFacetSelections((prev) => {
+               const cur = prev[key] ?? []
+               const next = cur.includes(v) ? cur.filter((x) => x !== v) : [...cur, v]
+               return { ...prev, [key]: next }
+            })
+            return
+         }
+         // Single-select: 'all' clears; otherwise replace with one value.
+         if (value === 'all' || value === '') {
+            setFacetSelections((prev) => ({ ...prev, [key]: [] }))
+            return
+         }
+         setFacetSelections((prev) => ({ ...prev, [key]: [value] }))
+      },
+      [speciesListFacets],
+   )
+
+   const clearFacetSelection = useCallback((key: string) => {
+      setFacetSelections((prev) => ({ ...prev, [key]: [] }))
    }, [])
 
    useEffect(() => {
@@ -204,7 +234,7 @@ export function SpeciesListPageClient() {
          prevTaxonForIucnRef.current = taxonScopeKey
          setIucnThreatFilter('all')
          setSubProjectFilter('all')
-         setCustomFieldFilters({})
+         setFacetSelections({})
          setSelectedCountryCodes([])
          setGoatStatusFilters([])
          setInsdcCountFilters([])
@@ -252,8 +282,11 @@ export function SpeciesListPageClient() {
    )
 
    const iucnFilterVisible = true
-   const subProjectFilterVisible = cmsEnabled && customFields.length === 0
-   const customFieldsFilterVisible = cmsEnabled && customFields.length > 0
+   /** Legacy scalar `sub_project` only when CMS is on, no custom fields, and pi_programs facet is not declared. */
+   const subProjectFilterVisible =
+      cmsEnabled &&
+      customFields.length === 0 &&
+      !speciesListFacets.some((f) => f.key === 'pi_programs')
    const countryFrequencyStats = useOrganismCountriesDisplayStore((s) =>
       countriesEnabled ? s.countryFrequencyStats : null,
    )
@@ -271,11 +304,11 @@ export function SpeciesListPageClient() {
          iucnThreatFilter: effectiveIucnThreatFilter,
          subProjectFilter: effectiveSubProjectFilter,
          selectedCountryCodes,
+         speciesListFacets,
+         facetSelections,
          goatStatusFilters: goatEnabled ? goatStatusFilters : [],
          targetListFilter: 'all' as const,
          insdcCountFilters,
-         customFieldFilters,
-         customFields,
       }),
       [
          taxonScope,
@@ -283,11 +316,11 @@ export function SpeciesListPageClient() {
          effectiveIucnThreatFilter,
          effectiveSubProjectFilter,
          selectedCountryCodes,
+         speciesListFacets,
+         facetSelections,
          goatEnabled,
          goatStatusFilters,
          insdcCountFilters,
-         customFieldFilters,
-         customFields,
       ],
    )
 
@@ -553,13 +586,13 @@ export function SpeciesListPageClient() {
       if (countriesEnabled && selectedCountryCodes.length > 0) {
          q.countries__in = [...selectedCountryCodes].sort().join(',')
       }
+      appendSpeciesListFacetDimensions(q, speciesListFacets, facetSelections)
       if (goatEnabled && goatStatusFilters.length > 0) {
          q.goat_status__in = [...goatStatusFilters].sort().join(',')
       }
       if (insdcCountFilters.length > 0) {
          q.insdc_counts_any = [...insdcCountFilters].sort().join(',')
       }
-      appendCustomFieldListFilters(q, customFields, customFieldFilters)
       return q
    }, [
       debouncedSearch,
@@ -568,11 +601,11 @@ export function SpeciesListPageClient() {
       effectiveSubProjectFilter,
       countriesEnabled,
       selectedCountryCodes,
+      speciesListFacets,
+      facetSelections,
       goatEnabled,
       goatStatusFilters,
       insdcCountFilters,
-      customFields,
-      customFieldFilters,
       sortApi,
    ])
 
@@ -594,13 +627,13 @@ export function SpeciesListPageClient() {
       if (countriesEnabled && selectedCountryCodes.length > 0) {
          q.countries__in = [...selectedCountryCodes].sort().join(',')
       }
+      appendSpeciesListFacetDimensions(q, speciesListFacets, facetSelections)
       if (goatEnabled && goatStatusFilters.length > 0) {
          q.goat_status__in = [...goatStatusFilters].sort().join(',')
       }
       if (insdcCountFilters.length > 0) {
          q.insdc_counts_any = [...insdcCountFilters].sort().join(',')
       }
-      appendCustomFieldListFilters(q, customFields, customFieldFilters)
       return q
    }, [
       debouncedSearch,
@@ -609,11 +642,11 @@ export function SpeciesListPageClient() {
       effectiveSubProjectFilter,
       countriesEnabled,
       selectedCountryCodes,
+      speciesListFacets,
+      facetSelections,
       goatEnabled,
       goatStatusFilters,
       insdcCountFilters,
-      customFields,
-      customFieldFilters,
       sortApi,
    ])
 
@@ -698,7 +731,7 @@ export function SpeciesListPageClient() {
       setDebouncedSearch('')
       setIucnThreatFilter('all')
       setSubProjectFilter('all')
-      setCustomFieldFilters({})
+      setFacetSelections({})
       setSelectedCountryCodes([])
       setTaxonScope(null)
       setGoatStatusFilters([])
@@ -754,7 +787,7 @@ export function SpeciesListPageClient() {
          taxonScope ||
          effectiveIucnThreatFilter !== 'all' ||
          effectiveSubProjectFilter !== 'all' ||
-         customFields.some((field) => (customFieldFilters[field.key] ?? 'all') !== 'all') ||
+         speciesListFacets.some((f) => (facetSelections[f.key] ?? []).length > 0) ||
          selectedCountryCodes.length > 0 ||
          (goatEnabled && goatStatusFilters.length > 0) ||
          insdcCountFilters.length > 0,
@@ -810,15 +843,29 @@ export function SpeciesListPageClient() {
             clear: () => setSubProjectFilter('all'),
          })
       }
-      for (const field of customFields) {
-         const filterValue = customFieldFilters[field.key] ?? 'all'
-         if (filterValue === 'all') continue
-         chips.push({
-            id: `custom_field-${field.key}`,
-            label: `${field.label}: ${formatMetadataBucketLabel(filterValue)}`,
-            removeAriaLabel: `${t('speciesList.removeFilter')} ${field.label}`,
-            clear: () => setCustomFieldFilter(field.key, 'all'),
-         })
+      for (const facet of speciesListFacets) {
+         const selected = facetSelections[facet.key] ?? []
+         if (selected.length === 0) continue
+         const facetTitle = resolveSpeciesListFacetLabel(facet, locale, t)
+         const removeBase = resolveSpeciesListFacetRemoveLabel(facet, t)
+         if (facet.multiSelect) {
+            for (const value of [...selected].sort()) {
+               chips.push({
+                  id: `facet-${facet.key}-${value}`,
+                  label: `${facetTitle}: ${value}`,
+                  removeAriaLabel: `${removeBase} ${value}`,
+                  clear: () => toggleFacetValue(facet.key, value),
+               })
+            }
+         } else {
+            const value = selected[0]
+            chips.push({
+               id: `facet-${facet.key}`,
+               label: `${facetTitle}: ${formatMetadataBucketLabel(value)}`,
+               removeAriaLabel: removeBase,
+               clear: () => clearFacetSelection(facet.key),
+            })
+         }
       }
       if (countriesEnabled) {
          for (const code of [...selectedCountryCodes].sort()) {
@@ -832,7 +879,10 @@ export function SpeciesListPageClient() {
       }
       if (goatEnabled) {
          for (const key of goatStatusFilters) {
-            const label = labelGoatStatus(key) || key
+            const msgKey = goatStepMessageKey(key)
+            const label = msgKey
+               ? t(`goat.steps.${msgKey}.title`)
+               : labelGoatStatus(key) || key
             chips.push({
                id: `goat-${key}`,
                label: `${t('statusPage.filterGoatSectionTitle')}: ${label}`,
@@ -865,13 +915,15 @@ export function SpeciesListPageClient() {
       effectiveSubProjectFilter,
       taxonScope,
       selectedCountryCodes,
+      speciesListFacets,
+      facetSelections,
+      toggleFacetValue,
+      clearFacetSelection,
       clearLineage,
       t,
+      locale,
       labelIucnThreatOption,
       formatMetadataBucketLabel,
-      customFields,
-      customFieldFilters,
-      setCustomFieldFilter,
       goatEnabled,
       goatStatusFilters,
       toggleGoatStatusFilter,
@@ -940,17 +992,17 @@ export function SpeciesListPageClient() {
          subProjectFilter,
          subProjectOptions,
          onSubProjectChange: setSubProjectFilter,
-         customFieldsFilterVisible,
-         customFields,
-         customFieldFilters,
-         customFieldStats,
-         onCustomFieldChange: setCustomFieldFilter,
          formatMetadataBucketLabel,
          countryFilterSectionVisible,
          countryStats: countryFrequencyStats,
          selectedCountryCodes,
          onToggleCountryCode: toggleCountryCode,
          onClearCountrySelection: clearCountrySelection,
+         speciesListFacets,
+         facetSelections,
+         facetStats,
+         onToggleFacetValue: toggleFacetValue,
+         onClearFacetSelection: clearFacetSelection,
          showGoatFilters: goatEnabled,
          goatTrackerStages,
          goatStatusFilters,
@@ -983,17 +1035,17 @@ export function SpeciesListPageClient() {
          subProjectFilterVisible,
          subProjectFilter,
          subProjectOptions,
-         customFieldsFilterVisible,
-         customFields,
-         customFieldFilters,
-         customFieldStats,
-         setCustomFieldFilter,
          formatMetadataBucketLabel,
          countryFilterSectionVisible,
          countryFrequencyStats,
          selectedCountryCodes,
          toggleCountryCode,
          clearCountrySelection,
+         speciesListFacets,
+         facetSelections,
+         facetStats,
+         toggleFacetValue,
+         clearFacetSelection,
          goatEnabled,
          goatTrackerStages,
          goatStatusFilters,
@@ -1076,8 +1128,8 @@ export function SpeciesListPageClient() {
                      setGoatStats={setGoatStats}
                      setInsdcCountStats={setInsdcCountStats}
                      setInsdcCountStatsLoading={setInsdcCountStatsLoading}
-                     customFields={customFields}
-                     setCustomFieldStats={setCustomFieldStats}
+                     speciesListFacets={speciesListFacets}
+                     setFacetStats={setFacetStats}
                   />
                   <div className="flex min-h-0 min-w-0 flex-1 basis-0 items-stretch overflow-hidden">
                      {isLg ? (
@@ -1275,6 +1327,7 @@ export function SpeciesListPageClient() {
                            <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
                               <GoatPipelineTracker
                                  layout="drawer"
+                                 copyMode="locale"
                                  stages={goatTrackerStages}
                                  totalSpecies={pipelineTotal}
                                  loading={goatFacetStatsLoading}

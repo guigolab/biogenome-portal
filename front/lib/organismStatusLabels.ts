@@ -246,3 +246,18 @@ export function goatChipState(stepIndex: number, currentRank: number): GoatChipS
    if (stepIndex === currentRank) return 'current'
    return 'todo'
 }
+
+/** Locale message id under ``goat.steps.*`` for a stored GoaT API value. */
+const GOAT_STEP_MESSAGE_KEYS: Record<string, string> = {
+   'No Entry': 'noEntry',
+   'Sample Collected': 'sampleCollected',
+   'Sample Acquired': 'sampleAcquired',
+   'Data Generation': 'dataGeneration',
+   'In Assembly': 'inAssembly',
+   'INSDC Submitted': 'insdcSubmitted',
+   'Publication Available': 'publicationAvailable',
+}
+
+export function goatStepMessageKey(value: string): string | null {
+   return GOAT_STEP_MESSAGE_KEYS[value] ?? null
+}

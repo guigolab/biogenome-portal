@@ -42,6 +42,39 @@ MODEL_LIST = {
     'reads':{'model':ReadRun, 'id':'run_accession'},
     }
 
+
+def _sanitize_organism_metadata(meta, existing=None):
+    """
+    Drop client-supplied reserved PI projection keys; optionally merge existing
+    reserved lists so a full metadata replace cannot wipe them before sync runs.
+    """
+    from jobs.support.organism_principal_metadata_sync import RESERVED_METADATA_KEYS
+
+    if not isinstance(meta, dict):
+        return meta
+    out = {k: v for k, v in meta.items() if k not in RESERVED_METADATA_KEYS}
+    if isinstance(existing, dict):
+        for key in RESERVED_METADATA_KEYS:
+            if key in existing:
+                out[key] = existing[key]
+    return out
+
+
+def _sync_principal_metadata_safe(taxids):
+    """Best-effort projection of PI institutes/programs onto organism metadata."""
+    try:
+        from jobs.support.organism_principal_metadata_sync import (
+            sync_organism_principal_metadata,
+        )
+
+        sync_organism_principal_metadata(taxids)
+    except Exception:
+        logger.exception(
+            "sync_organism_principal_metadata failed taxids=%s",
+            taxids,
+        )
+
+
 def get_organism_related_data(taxid, model, args):
     get_or_404(Organism, f"Organism {taxid} not found!", taxid=taxid)
 
@@ -114,6 +147,12 @@ def update_organism(data, taxid):
     if not organism_data:
         return taxid
 
+    if "metadata" in organism_data:
+        organism_data["metadata"] = _sanitize_organism_metadata(
+            organism_data["metadata"],
+            existing=getattr(organism, "metadata", None) or {},
+        )
+
     previous_goat_status = (
         getattr(organism, "goat_status", None)
         if "goat_status" in organism_data
@@ -146,6 +185,11 @@ def update_organism(data, taxid):
         organism.reload()
     except Exception:
         pass
+
+    # Form/API metadata replaces can wipe reserved PI projection keys; restore them.
+    if "metadata" in organism_data:
+        _sync_principal_metadata_safe([taxid])
+
     record_organism_audit(
         action="update",
         taxid=str(organism.taxid),
@@ -217,6 +261,8 @@ def create_organism(data):
 
     if user:
         user_helper.add_species_to_datamanager([taxid], user)
+
+    _sync_principal_metadata_safe([taxid])
 
     try:
         from jobs.support.organism_enrich import run_enrich_followup_for_taxids
@@ -297,10 +343,16 @@ def _coerce_publications_list(value):
             raise BadRequest(description=f"'publications[{idx}]' must be an object")
         if "id" not in item:
             raise BadRequest(description=f"'publications[{idx}].id' is required")
-        validate_publication_or_raise(
+        resolved = validate_publication_or_raise(
             item.get("source"), item.get("id"), context=f"publications[{idx}]"
         )
-        out.append(Publication(**item))
+        out.append(
+            Publication(
+                source=item.get("source"),
+                id=str(item.get("id") or "").strip(),
+                data=resolved,
+            )
+        )
     return out
 
 
@@ -326,10 +378,14 @@ def _coerce_genome_publication(value, taxid):
                 "organism yet."
             )
         )
-    validate_publication_or_raise(
+    resolved = validate_publication_or_raise(
         value.get("source"), value.get("id"), context="genome_publication"
     )
-    return Publication(**value)
+    return Publication(
+        source=value.get("source"),
+        id=str(value.get("id") or "").strip(),
+        data=resolved,
+    )
 
 
 def _coerce_images_list(value):
@@ -415,7 +471,7 @@ def _map_single_organism_field(field, value, taxid):
             return "metadata", {}
         if not isinstance(value, dict):
             raise BadRequest(description="'metadata' must be an object")
-        return "metadata", value
+        return "metadata", _sanitize_organism_metadata(value)
 
     if field in {"image_urls", "links", "countries"}:
         if value is None:
@@ -448,6 +504,11 @@ def patch_organism(data, taxid):
     )
     try:
         mapped_field, mapped_value = _map_single_organism_field(field, value, taxid)
+        if mapped_field == "metadata":
+            mapped_value = _sanitize_organism_metadata(
+                mapped_value if isinstance(mapped_value, dict) else {},
+                existing=getattr(organism, "metadata", None) or {},
+            )
         setattr(organism, mapped_field, mapped_value)
         if mapped_field == "goat_status":
             _touch_goat_update_date_on_manual_goat_status_change(
@@ -466,6 +527,10 @@ def patch_organism(data, taxid):
         organism.reload()
     except Exception:
         pass
+
+    if field == "metadata":
+        _sync_principal_metadata_safe([taxid])
+
     record_organism_audit(
         action="patch",
         taxid=str(organism.taxid),
@@ -521,7 +586,7 @@ def map_organism_data(data, taxid):
         if meta is None:
             organism["metadata"] = {}
         elif isinstance(meta, dict):
-            organism["metadata"] = meta
+            organism["metadata"] = _sanitize_organism_metadata(meta)
         else:
             raise BadRequest(description="'metadata' must be an object or null")
 

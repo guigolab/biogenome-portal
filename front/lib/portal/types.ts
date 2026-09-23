@@ -9,6 +9,7 @@ export type OrganismFormStepId =
    | 'images'
    | 'publications'
    | 'vernacularNames'
+   | 'speciesContext'
    | 'extraMetadata'
    | 'reviewSubmit'
 
@@ -23,7 +24,7 @@ export type CmsOrganismFormWire = {
    steps?: CmsOrganismFormStepWire[]
 }
 
-export type OrganismCustomFieldType = 'single' | 'multi'
+export type OrganismCustomFieldType = 'single' | 'multi' | 'text'
 
 export type CmsOrganismFieldWire = {
    key: string
@@ -31,7 +32,8 @@ export type CmsOrganismFieldWire = {
    type: OrganismCustomFieldType
    step: OrganismFormStepId
    required?: boolean
-   values: string[]
+   /** Required for 'single'/'multi' picklists; omitted for free-text ('text') fields. */
+   values?: string[]
 }
 
 export type CmsOrganismsWire = {
@@ -43,6 +45,22 @@ export type CmsOrganismsWire = {
 
 export type PortalCmsWire = {
    organisms?: CmsOrganismsWire
+}
+
+/** Wire format for portal.json `speciesListFacets` entries. */
+export type SpeciesListFacetWire = {
+   key: string
+   /** Optional i18n section title; falls back to built-in keys for known facets. */
+   label?: Record<string, string>
+   /** When true, OR-within-facet via `metadata.<key>__in`. Defaults to false. */
+   multiSelect?: boolean
+}
+
+/** Normalized species-list facet (multiSelect always resolved). */
+export type SpeciesListFacetDef = {
+   key: string
+   label?: Record<string, string>
+   multiSelect: boolean
 }
 
 export interface GeneralConfig extends Record<string, unknown> {
@@ -237,6 +255,8 @@ export type PortalConfig = {
    theme?: PortalTheme
    /** Optional `local_samples` / `annotations` card layout overrides. */
    models?: PortalModelsWire
+   /** Declarative metadata filters on the public species list (independent of CMS form fields). */
+   speciesListFacets?: SpeciesListFacetWire[]
    cms?: PortalCmsWire
    footer?: PortalFooterWire
 }
@@ -269,5 +289,7 @@ export interface AppConfig {
    models: Partial<Record<DataModels, ConfigModel>>
    organismFormSteps: OrganismFormStepDef[]
    organismCustomFields: CmsOrganismFieldWire[]
+   /** Normalized public species-list metadata facets from portal.json. */
+   speciesListFacets: SpeciesListFacetDef[]
    footer?: PortalFooterWire
 }

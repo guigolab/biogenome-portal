@@ -333,3 +333,24 @@ def backfill_sequencing_type_metadata_task() -> Dict[str, Any]:
         raise
     logger.info("organisms.backfill_sequencing_type_metadata: finished %s", result)
     return result
+
+
+@shared_task(name="organisms.sync_principal_metadata", ignore_result=False)
+def sync_principal_metadata_task() -> Dict[str, Any]:
+    """
+    Recompute ``metadata.pi_institutes`` / ``metadata.pi_programs`` for all assigned
+    organisms (and clear stale keys). See
+    ``jobs.support.organism_principal_metadata_sync.sync_organism_principal_metadata``.
+    """
+    from jobs.support.organism_principal_metadata_sync import (
+        sync_organism_principal_metadata,
+    )
+
+    logger.info("organisms.sync_principal_metadata: starting")
+    try:
+        result = sync_organism_principal_metadata()
+    except Exception:
+        logger.exception("organisms.sync_principal_metadata failed")
+        raise
+    logger.info("organisms.sync_principal_metadata: finished %s", result)
+    return result

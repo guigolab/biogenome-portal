@@ -9,20 +9,27 @@ import {
 import { useLocale } from '@/contexts/locale-context'
 import { usePortalConfig } from '@/contexts/portal-context'
 import { showCmsLoginNav } from '@/lib/portal'
-import type { CmsOrganismFieldWire, CitizenTaxonomyConfig, CitizenTaxonomyNode } from '@/lib/portal/types'
+import type { CitizenTaxonomyConfig, CitizenTaxonomyNode, SpeciesListFacetDef } from '@/lib/portal/types'
 import type { TaxonRecord } from '@/lib/api/taxon'
-import { customFieldSectionId } from '@/lib/speciesCustomFieldFilters'
 import { sortStatEntriesByCountDesc } from '@/lib/speciesFieldStats'
 import type { RankGroupDef } from '@/lib/taxonRankFilter'
 import { cn } from '@/lib/utils'
 import { Check } from 'lucide-react'
 import { SpeciesCountryListFilter } from '@/components/species-list/species-country-list-filter'
 import { SpeciesDataFilterList } from '@/components/species-list/species-data-filter-list'
+import { SpeciesStringMultiselectFilter } from '@/components/species-list/species-string-multiselect-filter'
 import { GoatStatusFilterList } from '@/components/species-list/goat-target-filter-lists'
 import { TaxonomyFilterSection } from '@/components/species-list/taxonomy-filter-section'
 import type { RankTaxonCache } from '@/components/species-list/types'
 import type { GoatTrackerStage } from '@/lib/goatPipelineTracker'
 import type { SpeciesDataFilterCode } from '@/lib/speciesDataFilter'
+import {
+   resolveSpeciesListFacetAriaLabel,
+   resolveSpeciesListFacetClearLabel,
+   resolveSpeciesListFacetLabel,
+   resolveSpeciesListFacetSearchPlaceholder,
+   speciesListFacetSectionId,
+} from '@/lib/speciesListFacets'
 import {
    COUNTRIES_SECTION_ID,
    DATA_SECTION_ID,
@@ -213,23 +220,23 @@ export type SpeciesListFiltersPanelProps = {
    subProjectOptions: [string, number][]
    onSubProjectChange: (value: string) => void
    onSubProjectPanelOpen?: () => void
-   customFieldsFilterVisible: boolean
-   customFields: CmsOrganismFieldWire[]
-   customFieldFilters: Record<string, string>
-   customFieldStats: Record<string, Record<string, number> | null>
-   onCustomFieldChange: (key: string, value: string) => void
    formatMetadataBucketLabel: (code: string) => string
    countryFilterSectionVisible: boolean
    countryStats: Record<string, number> | null
    selectedCountryCodes: string[]
    onToggleCountryCode: (alpha2: string) => void
    onClearCountrySelection: () => void
+   /** Portal-declared metadata facets (public species list). */
+   speciesListFacets?: SpeciesListFacetDef[]
+   facetSelections?: Record<string, string[]>
+   facetStats?: Record<string, Record<string, number> | null>
+   onToggleFacetValue?: (key: string, value: string) => void
+   onClearFacetSelection?: (key: string) => void
    /** When true, show GoaT filter collapses (portal `general.goat`). */
    showGoatFilters?: boolean
    goatTrackerStages?: GoatTrackerStage[]
    goatStatusFilters?: string[]
    onToggleGoatStatus?: (key: string) => void
-   /** Raw facet map for loading spinners when a GoaT section is open (optional if omitted, loading is false). */
    goatStats?: Record<string, number> | null
    goatFacetStatsLoading?: boolean
    insdcCountFilters?: SpeciesDataFilterCode[]
@@ -240,7 +247,6 @@ export type SpeciesListFiltersPanelProps = {
 
 export type SpeciesListFilterSidebarProps = SpeciesListFiltersPanelProps & {
    onTaxonomySectionOpen: () => void
-   /** Outer wrapper (e.g. desktop column). */
    wrapperClassName?: string
 }
 
@@ -271,17 +277,17 @@ export function SpeciesListFiltersPanel({
    subProjectFilter,
    subProjectOptions,
    onSubProjectChange,
-   customFieldsFilterVisible,
-   customFields,
-   customFieldFilters,
-   customFieldStats,
-   onCustomFieldChange,
    formatMetadataBucketLabel,
    countryFilterSectionVisible,
    countryStats,
    selectedCountryCodes,
    onToggleCountryCode,
    onClearCountrySelection,
+   speciesListFacets = [],
+   facetSelections = {},
+   facetStats = {},
+   onToggleFacetValue,
+   onClearFacetSelection,
    showGoatFilters = false,
    goatTrackerStages = [],
    goatStatusFilters = [],
@@ -293,7 +299,7 @@ export function SpeciesListFiltersPanel({
    insdcCountStats = null,
    insdcCountStatsLoading = false,
 }: SpeciesListFiltersPanelProps) {
-   const { t } = useLocale()
+   const { t, locale } = useLocale()
    const { config } = usePortalConfig()
    const cmsEnabledFromConfig = showCmsLoginNav(config)
    const { openSection } = useSpeciesListFilterAccordion()
@@ -376,23 +382,39 @@ export function SpeciesListFiltersPanel({
                />
             </SpeciesFilterCollapsible>
          ) : null}
-         {customFieldsFilterVisible && cmsEnabledFromConfig
-            ? customFields.map((field) => (
-                 <SpeciesFilterCollapsible
-                    key={field.key}
-                    sectionId={customFieldSectionId(field.key)}
-                    title={field.label}
-                 >
-                    <StringBucketFilterList
-                       value={customFieldFilters[field.key] ?? 'all'}
-                       onChange={(value) => onCustomFieldChange(field.key, value)}
-                       options={sortStatEntriesByCountDesc(Object.entries(customFieldStats[field.key] ?? {}))}
-                       allLabel={`All ${field.label}`}
-                       ariaLabel={`Filter by ${field.label}`}
-                       formatOptionLabel={formatMetadataBucketLabel}
-                    />
-                 </SpeciesFilterCollapsible>
-              ))
+         {onToggleFacetValue && onClearFacetSelection
+            ? speciesListFacets.map((facet) => {
+                 const sectionId = speciesListFacetSectionId(facet.key)
+                 const title = resolveSpeciesListFacetLabel(facet, locale, t)
+                 const stats = facetStats[facet.key] ?? null
+                 const selected = facetSelections[facet.key] ?? []
+                 const loading = openSection === sectionId && stats == null
+                 return (
+                    <SpeciesFilterCollapsible key={facet.key} sectionId={sectionId} title={title}>
+                       {facet.multiSelect ? (
+                          <SpeciesStringMultiselectFilter
+                             stats={stats}
+                             selectedValues={selected}
+                             onToggleValue={(value) => onToggleFacetValue(facet.key, value)}
+                             onClearSelection={() => onClearFacetSelection(facet.key)}
+                             ariaLabel={resolveSpeciesListFacetAriaLabel(facet, locale, t)}
+                             searchPlaceholder={resolveSpeciesListFacetSearchPlaceholder(facet, t)}
+                             clearLabel={resolveSpeciesListFacetClearLabel(facet, t)}
+                             loading={loading}
+                          />
+                       ) : (
+                          <StringBucketFilterList
+                             value={selected[0] ?? 'all'}
+                             onChange={(value) => onToggleFacetValue(facet.key, value)}
+                             options={sortStatEntriesByCountDesc(Object.entries(stats ?? {}))}
+                             allLabel={`All ${title}`}
+                             ariaLabel={resolveSpeciesListFacetAriaLabel(facet, locale, t)}
+                             formatOptionLabel={formatMetadataBucketLabel}
+                          />
+                       )}
+                    </SpeciesFilterCollapsible>
+                 )
+              })
             : null}
          {countryFilterSectionVisible ? (
             <SpeciesFilterCollapsible sectionId={COUNTRIES_SECTION_ID} title={t('speciesList.countrySectionTitle')}>

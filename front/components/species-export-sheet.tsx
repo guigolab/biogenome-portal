@@ -19,20 +19,21 @@ import {
    SheetTitle,
 } from '@/components/ui/sheet'
 import { useLocale } from '@/contexts/locale-context'
+import { usePortalConfig } from '@/contexts/portal-context'
 import { downloadOrganismsTsv } from '@/lib/api/organisms'
 import {
    ORGANISM_DEFAULT_EXPORT_FIELDS,
    ORGANISM_EXPORT_FIELD_GROUPS,
    ORGANISM_EXPORT_KEYS_ORDERED,
+   organismExportFieldsFromSpeciesListFacets,
 } from '@/lib/organismExportFields'
+import { resolveSpeciesListFacetLabel } from '@/lib/speciesListFacets'
 import { cn } from '@/lib/utils'
 import { ChevronDown, Download, Loader2 } from 'lucide-react'
 
-const ORDERED_KNOWN_KEYS = ORGANISM_EXPORT_KEYS_ORDERED
-
-function buildFieldsList(selected: Set<string>): string[] {
-   const ordered = ORDERED_KNOWN_KEYS.filter((k) => selected.has(k))
-   const rest = [...selected].filter((k) => !ORDERED_KNOWN_KEYS.includes(k)).sort()
+function buildFieldsList(selected: Set<string>, orderedKnownKeys: string[]): string[] {
+   const ordered = orderedKnownKeys.filter((k) => selected.has(k))
+   const rest = [...selected].filter((k) => !orderedKnownKeys.includes(k)).sort()
    return [...ordered, ...rest]
 }
 
@@ -63,7 +64,27 @@ export function SpeciesExportSheet({
    exportParams,
    totalCount,
 }: SpeciesExportSheetProps) {
-   const { t } = useLocale()
+   const { t, locale } = useLocale()
+   const { config } = usePortalConfig()
+   const speciesListFacets = config?.speciesListFacets ?? []
+
+   const otherMetadataFields = useMemo(
+      () =>
+         organismExportFieldsFromSpeciesListFacets(speciesListFacets, (facet) =>
+            resolveSpeciesListFacetLabel(
+               { key: facet.key, multiSelect: false, label: facet.label },
+               locale,
+               t,
+            ),
+         ),
+      [speciesListFacets, locale, t],
+   )
+
+   const orderedKnownKeys = useMemo(
+      () => [...ORGANISM_EXPORT_KEYS_ORDERED, ...otherMetadataFields.map((f) => f.key)],
+      [otherMetadataFields],
+   )
+
    const [selected, setSelected] = useState<Set<string>>(
       () => new Set(ORGANISM_DEFAULT_EXPORT_FIELDS.map((f) => f.key)),
    )
@@ -93,12 +114,12 @@ export function SpeciesExportSheet({
    }, [customFieldInput])
 
    const customKeys = useMemo(
-      () => [...selected].filter((k) => !ORDERED_KNOWN_KEYS.includes(k)),
-      [selected],
+      () => [...selected].filter((k) => !orderedKnownKeys.includes(k)),
+      [selected, orderedKnownKeys],
    )
 
    const onDownload = useCallback(async () => {
-      const fields = buildFieldsList(selected)
+      const fields = buildFieldsList(selected, orderedKnownKeys)
       if (fields.length === 0) return
       setExporting(true)
       setExportError(null)
@@ -112,7 +133,7 @@ export function SpeciesExportSheet({
       } finally {
          setExporting(false)
       }
-   }, [exportParams, onOpenChange, selected])
+   }, [exportParams, onOpenChange, selected, orderedKnownKeys])
 
    return (
       <Sheet open={open} onOpenChange={onOpenChange}>
@@ -212,6 +233,32 @@ export function SpeciesExportSheet({
                         ))}
                      </div>
                   ))}
+
+                  {otherMetadataFields.length > 0 ? (
+                     <div className="border-t border-border pt-3 space-y-2">
+                        <p className="text-xs font-semibold text-muted-foreground">
+                           {t('speciesExport.otherMetadata')}
+                        </p>
+                        {otherMetadataFields.map(({ key, label }) => (
+                           <label
+                              key={key}
+                              className="flex cursor-pointer items-start gap-2 text-sm leading-snug"
+                           >
+                              <Checkbox
+                                 className="mt-0.5"
+                                 checked={selected.has(key)}
+                                 onCheckedChange={(v) => toggle(key, v === true)}
+                              />
+                              <span>
+                                 <span className="font-medium">{label}</span>
+                                 <span className="mt-0.5 block font-mono text-[10px] text-muted-foreground">
+                                    {key}
+                                 </span>
+                              </span>
+                           </label>
+                        ))}
+                     </div>
+                  ) : null}
 
                   {customKeys.length > 0 ? (
                      <div className="border-t border-border pt-3 space-y-2">

@@ -1,0 +1,5 @@
+# Test-only dependencies (not needed to run the app itself - see requirements.txt).
+# Install with: pip install -r requirements.txt -r requirements-test.txt
+# Run with: pytest
+pytest==9.1.1
+mongomock==4.3.0

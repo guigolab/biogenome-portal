@@ -198,16 +198,25 @@ def refresh_taxonomy_recurrent(tmp_dir: Optional[str] = None) -> Dict[str, Any]:
     Pipeline (implemented in :func:`jobs.support.taxonomy_refresh.execute_taxonomy_refresh_pipeline`):
 
     1. Collect species taxids plus lineage taxids from organisms and TaxonNode documents; fetch ENA.
+       Taxids missing from the bulk response get a single-taxon provider retry before being
+       treated as genuinely gone.
     2. Compare each organism's ``scientific_name``, ``taxid``, and ``taxon_lineage`` to ENA.
-    3. On change: update ``Organism`` and ``update_many`` related catalog rows (assemblies,
-       biosamples, read runs, genome annotations, local samples, sample coordinates) for
-       ``taxid`` / ``scientific_name`` / ``taxon_lineage``.
-    4. Prune organisms missing lineage; insert missing TaxonNode rows; apply ENA ``name`` /
-       ``rank`` updates on existing nodes; rebuild ``parent`` / ``children`` from organism lineages
-       (preferring ENA taxon payloads over stale DB copies when both exist).
-    5. :func:`~jobs.support.stats.update_organism_counts` and
-       :func:`~jobs.support.stats.update_taxon_node_counts` for catalog counters on touched
-       species (no INSDC/GoaT status refresh).
+    3. Guard changes against ``Organism`` unique-index collisions (disambiguate colliding
+       names, skip colliding taxid remaps) before applying anything.
+    4. On change: update ``Organism`` first (so it stays authoritative), then ``update_many``
+       related catalog rows (assemblies, biosamples, read runs, genome annotations, local
+       samples, sample coordinates) for ``taxid`` / ``scientific_name`` / ``taxon_lineage``.
+       Each change is applied in isolation so one failure does not abort the rest.
+    5. Prune organisms missing lineage; insert missing TaxonNode rows; apply ENA ``name`` /
+       ``rank`` updates on existing nodes unconditionally; rebuild ``parent`` / ``children``
+       from organism lineages (preferring ENA taxon payloads over stale DB copies when both
+       exist) and correct ``children`` for nodes that lost a descendant.
+    6. Refresh ``lineage_rank_labels`` for touched organisms.
+    7. :func:`~jobs.support.stats.update_organism_counts` and
+       :func:`~jobs.support.stats.update_taxon_node_counts` /
+       :func:`~jobs.support.stats.refresh_taxon_node_counts_for_lineage_keys` for catalog
+       counters on touched species, covering both the old and new lineage (no INSDC/GoaT
+       status refresh).
     """
     if tmp_dir is None:
         tmp_dir = os.getenv("TMP_DIR", tempfile.gettempdir())

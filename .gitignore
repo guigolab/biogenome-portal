@@ -17,3 +17,4 @@ front/public/CBPLogo.png
 .pytest_cache/
 graphify-out/
 front/*.tsbuildinfo
+celerybeat-schedule

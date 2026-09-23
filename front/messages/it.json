@@ -431,11 +431,33 @@
       "countryClearSelection": "Cancella paesi",
       "countryNoEntryHint": "Il filtro per paese include solo organismi con almeno un codice paese; le voci senza dati paese sono escluse.",
       "filterByCountry": "Filtra per paese",
-      "removeCountryFilter": "Rimuovi filtro paese"
+      "removeCountryFilter": "Rimuovi filtro paese",
+      "instituteSectionTitle": "Istituto",
+      "instituteListSearchPlaceholder": "Cerca istituti...",
+      "instituteClearSelection": "Cancella istituti",
+      "filterByInstitute": "Filtra per istituto",
+      "removeInstituteFilter": "Rimuovi filtro istituto",
+      "programSectionTitle": "Sottoprogetto",
+      "programListSearchPlaceholder": "Cerca sottoprogetti...",
+      "programClearSelection": "Cancella sottoprogetti",
+      "filterByProgram": "Filtra per sottoprogetto",
+      "removeProgramFilter": "Rimuovi filtro sottoprogetto",
+      "principalFacetEmpty": "Nessun valore per i filtri attuali",
+      "sequencingTypeSectionTitle": "Tipo di sequenziamento",
+      "sequencingTypeListSearchPlaceholder": "Cerca tipi di sequenziamento...",
+      "sequencingTypeClearSelection": "Cancella tipi di sequenziamento",
+      "filterBySequencingType": "Filtra per tipo di sequenziamento",
+      "removeSequencingTypeFilter": "Rimuovi filtro tipo di sequenziamento"
    },
    "speciesDetail": {
-      "goatPipelineHelp": "Fase di sequenziamento GoaT e classificazione della lista target registrate per questa specie.",
+      "goatPipelineHelp": "Fase di sequenziamento GoaT e classificazione della lista target registrate per questa specie. I conteggi collegati aprono i dati del catalogo o la mappa in questa pagina.",
       "goatPipelineEmpty": "Nessuno stato di sequenziamento GoaT o della lista target registrato per questa specie.",
+      "goatEvidenceNone": "Nessuno",
+      "goatOpenLocations": "Vai alla mappa delle posizioni dei campioni",
+      "goatOpenCatalog": "Apri {label} nel catalogo",
+      "goatOpenPublication": "Vai alle pubblicazioni in questa pagina",
+      "goatGenomePublication": "Pubblicazione del genoma",
+      "goatCurrentStep": "passo corrente",
       "relatedRecordsTablist": "Raccolte catalogo correlate"
    },
    "speciesExport": {
@@ -445,6 +467,7 @@
       "mongoFieldHint": "Inserisci un nome campo MongoEngine (es. metadata o metadata.project).",
       "columns": "Colonne",
       "custom": "Personalizzato",
+      "otherMetadata": "Altri metadati",
       "exportScope": "Ambito di esportazione:",
       "withCurrentFilters": "con i filtri attuali.",
       "preparingDownload": "Preparazione download…",
@@ -463,6 +486,38 @@
          "LC": "Minor preoccupazione",
          "DD": "Dati insufficienti",
          "NE": "Non valutato"
+      }
+   },
+   "goat": {
+      "steps": {
+         "noEntry": {
+            "title": "Stato mancante",
+            "description": "Stato GoaT non disponibile"
+         },
+         "sampleCollected": {
+            "title": "Campione raccolto",
+            "description": "Un campione della specie è stato raccolto sul campo ma non è ancora stato inviato a un centro di sequenziamento"
+         },
+         "sampleAcquired": {
+            "title": "Campione acquisito",
+            "description": "Un campione della specie è stato acquisito ed è \"in sede\" presso il centro di sequenziamento, ma non è ancora stato processato"
+         },
+         "dataGeneration": {
+            "title": "Generazione dati",
+            "description": "I dati di sequenziamento sono attualmente in fase di generazione per la specie"
+         },
+         "inAssembly": {
+            "title": "In assemblaggio",
+            "description": "Tutti i dati di sequenziamento e correlati sono stati raccolti; l'assemblaggio del genoma è in corso"
+         },
+         "insdcSubmitted": {
+            "title": "Inviato a INSDC",
+            "description": "L'assemblaggio del genoma della specie è stato inviato a INSDC ed è liberamente accessibile con il Bioproject ID del progetto generatore"
+         },
+         "publicationAvailable": {
+            "title": "Pubblicazione disponibile",
+            "description": "L'assemblaggio ha una pubblicazione associata con DOI o identificativo PubMed"
+         }
       }
    }
 }
