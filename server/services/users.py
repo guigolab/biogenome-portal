@@ -92,6 +92,41 @@ def _validate_principal_ids(principal_ids):
         raise NotFound(description=f"The following principals were not found: {missing_str}. Please create them first.")
 
 
+def _normalize_taxid_list(raw) -> list:
+    out = []
+    seen = set()
+    for item in raw or []:
+        tid = str(item).strip() if item is not None else ""
+        if not tid or tid in seen:
+            continue
+        seen.add(tid)
+        out.append(tid)
+    return out
+
+
+def _taxids_affected_by_user_change(prev_species, data) -> list:
+    """
+    Taxids whose ``metadata.pi_*`` projection may change after a user update.
+
+    - ``species`` in payload: union of previous and new assignments
+    - ``principal_ids`` only: current (previous) species — PI set changed for those taxids
+    """
+    prev = set(_normalize_taxid_list(prev_species))
+    if "species" in data:
+        return _normalize_taxid_list(prev | set(_normalize_taxid_list(data.get("species"))))
+    if "principal_ids" in data:
+        return list(prev)
+    return []
+
+
+def _sync_principal_metadata_for_taxids(taxids):
+    if not taxids:
+        return
+    from services.organisms import _sync_principal_metadata_safe
+
+    _sync_principal_metadata_safe(taxids)
+
+
 def create_user(data):
     require_keys(data, ["name", "password", "role"], what="user")
 
@@ -120,6 +155,7 @@ def create_user(data):
     _validate_principal_ids(data.get('principal_ids'))
 
     BioGenomeUser(**data).save()
+    _sync_principal_metadata_for_taxids(_normalize_taxid_list(data.get("species")))
     return username
 
 def update_user(name, data):
@@ -127,7 +163,9 @@ def update_user(name, data):
     user = get_or_404(BioGenomeUser, f"User {name} not found", name=name)
     _assert_admin_may_modify_user(name, user)
     _validate_principal_ids(data.get('principal_ids'))
+    affected = _taxids_affected_by_user_change(user.species, data)
     user.update(**data)
+    _sync_principal_metadata_for_taxids(affected)
     return name
 
 

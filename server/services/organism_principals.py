@@ -58,6 +58,28 @@ def _coerce_string_list(value, field_name):
     return out
 
 
+def _taxids_linked_to_principal(slug) -> list:
+    """Species taxids assigned to any user that links this principal slug."""
+    taxids = []
+    seen = set()
+    for user in BioGenomeUser.objects(principal_ids=slug).only("species"):
+        for raw in user.species or []:
+            tid = str(raw).strip() if raw is not None else ""
+            if not tid or tid in seen:
+                continue
+            seen.add(tid)
+            taxids.append(tid)
+    return taxids
+
+
+def _sync_principal_metadata_for_taxids(taxids):
+    if not taxids:
+        return
+    from services.organisms import _sync_principal_metadata_safe
+
+    _sync_principal_metadata_safe(taxids)
+
+
 def list_principals(offset=0, limit=20, filter=None):
     limit, offset = response_helper.get_pagination({"limit": limit, "offset": offset})
     qs = OrganismPrincipal.objects()
@@ -160,12 +182,17 @@ def update_principal(slug, data):
         raise BadRequest(description=_mongo_validation_message(e)) from e
     except NotUniqueError as e:
         raise Conflict(description="Another principal already uses this slug.") from e
+
+    if "affiliations" in data or "programs" in data:
+        _sync_principal_metadata_for_taxids(_taxids_linked_to_principal(slug))
     return principal.slug
 
 
 def delete_principal(slug):
     principal = get_or_404(OrganismPrincipal, f"Principal {slug} not found", slug=slug)
+    linked_taxids = _taxids_linked_to_principal(slug)
     principal.delete()
     # Clean up dangling references so CMS list projection never resolves a ghost slug.
     BioGenomeUser.objects(principal_ids=slug).update(pull__principal_ids=slug)
+    _sync_principal_metadata_for_taxids(linked_taxids)
     return slug

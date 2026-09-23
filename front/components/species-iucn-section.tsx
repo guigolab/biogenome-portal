@@ -143,15 +143,17 @@ export function SpeciesIucnSection({ organism, scientificName, className }: Spec
             {narrativeEntries.length === 0 ? (
                <p className="text-muted-foreground">No narrative text stored.</p>
             ) : (
-               <div className="space-y-6">
-                  {narrativeEntries.map(([key, text]) => (
-                     <div key={key}>
-                        <h4 className="text-xs font-semibold text-muted-foreground mb-2 capitalize">
-                           {formatNarrativeLabel(key)}
-                        </h4>
-                        <HtmlChunk html={text.trim()} />
-                     </div>
-                  ))}
+               <div className="max-h-[min(28rem,50vh)] overflow-y-auto overscroll-contain pr-1">
+                  <div className="space-y-6">
+                     {narrativeEntries.map(([key, text]) => (
+                        <div key={key}>
+                           <h4 className="text-xs font-semibold text-muted-foreground mb-2 capitalize">
+                              {formatNarrativeLabel(key)}
+                           </h4>
+                           <HtmlChunk html={text.trim()} />
+                        </div>
+                     ))}
+                  </div>
                </div>
             )}
          </CardContent>

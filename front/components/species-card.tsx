@@ -231,25 +231,6 @@ function OrganismGoatChips({ organism }: { organism: Record<string, unknown> }) 
    )
 }
 
-function SubProjectLine({
-   organism,
-   className,
-}: {
-   organism: Record<string, unknown>
-   className?: string
-}) {
-   const sp =
-      typeof organism.sub_project === 'string' && organism.sub_project.trim()
-         ? organism.sub_project.trim()
-         : null
-   if (!sp) return null
-   return (
-      <p className={cn('text-[11px] text-muted-foreground line-clamp-2', className)}>
-         <span>{sp}</span>
-      </p>
-   )
-}
-
 function OrganismStatsRow({
    organism,
    className,
@@ -411,7 +392,6 @@ export function SpeciesCard({
                         {showGoatChips ? <OrganismGoatChips organism={organism} /> : null}
                      </div>
                   </div>
-                  <SubProjectLine organism={organism} className="mt-2" />
                   <OrganismStatsRow organism={organism} className="mt-2" />
                </CardContent>
             </Card>
@@ -464,7 +444,6 @@ export function SpeciesCard({
                      </div>
                      <SpeciesCardFieldSnippet organism={organism} field={cardField} />
                   </div>
-                  <SubProjectLine organism={organism} className="mt-1" />
                </div>
 
                <OrganismStatsRow organism={organism} className="mt-auto" />
