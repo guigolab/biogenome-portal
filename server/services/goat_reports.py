@@ -66,7 +66,7 @@ def _stream_goat_report_tsv():
     buf = StringIO()
     tsv = csv.writer(buf, delimiter="\t")
 
-    goat_update = GoaTUpdateDate.objects().first()
+    goat_update = GoaTUpdateDate.objects.order_by("-updated").first()
     formatted_date = goat_update.updated.strftime("%Y-%m-%d") if goat_update else None
 
     headers = GOAT_HEADER_ROWS.copy()
