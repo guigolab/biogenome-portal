@@ -245,6 +245,10 @@
               "type": "array",
               "items": { "type": "string", "minLength": 1 },
               "description": "Required (min 1) for 'single'/'multi'; omit for 'text'."
+           },
+           "showOnSpeciesCard": {
+              "type": "boolean",
+              "description": "Shows this field's metadata value on the public species card lineage row. At most one field across cms.organisms.fields should set this to true; if more than one is set, the first one wins."
            }
         },
         "allOf": [

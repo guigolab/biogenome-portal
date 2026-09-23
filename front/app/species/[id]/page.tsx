@@ -34,6 +34,7 @@ import {
   type AncestryNode,
 } from '@/lib/species-lineage'
 import { countryLabelEn } from '@/lib/countryLabels'
+import { getStaticLocaleLabel } from '@/lib/i18n/localeLabels'
 import { showCountriesUi } from '@/lib/portal'
 import { ArrowLeft, MapPin, Dna, ExternalLink, Tags, Globe } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -456,7 +457,7 @@ export default async function SpeciesDetailPage({
                       <span className="font-medium">{n.value}</span>
                       {n.lang ? (
                         <Badge variant="outline" className="font-normal">
-                          {n.lang}
+                          {getStaticLocaleLabel(n.lang)}
                         </Badge>
                       ) : null}
                     </div>

@@ -34,6 +34,8 @@ export type CmsOrganismFieldWire = {
    required?: boolean
    /** Required for 'single'/'multi' picklists; omitted for free-text ('text') fields. */
    values?: string[]
+   /** At most one field across `cms.organisms.fields` should set this; shown on the public species card lineage row. */
+   showOnSpeciesCard?: boolean
 }
 
 export type CmsOrganismsWire = {

@@ -23,6 +23,15 @@ export function customFieldMetadataKeys(fields: CmsOrganismFieldWire[]): Set<str
    return new Set(fields.map((f) => f.key))
 }
 
+/**
+ * Resolve the single CMS field (if any) whose value should be shown on the
+ * public species card. At most one field in `cms.organisms.fields` should set
+ * `showOnSpeciesCard: true`; if more than one does, the first one wins.
+ */
+export function resolveSpeciesCardCustomField(fields: CmsOrganismFieldWire[]): CmsOrganismFieldWire | null {
+   return fields.find((f) => f.showOnSpeciesCard === true) ?? null
+}
+
 /** Map config fields to display rows in config order. */
 export function organismCustomFieldRows(
    organism: Record<string, unknown>,

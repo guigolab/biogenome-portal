@@ -8,7 +8,7 @@ import { usePortalConfig } from '@/contexts/portal-context'
 import { organismImageUrls } from '@/lib/organismImages'
 import { iucnRedListBadge } from '@/lib/iucnCategory'
 import { labelGoatStatus, TARGET_LIST_STATUS_LABELS } from '@/lib/organismStatusLabels'
-import { organismCustomFieldRows } from '@/lib/organismCustomFieldDisplay'
+import { readOrganismCustomFieldValues, resolveSpeciesCardCustomField } from '@/lib/organismCustomFieldDisplay'
 import type { CmsOrganismFieldWire } from '@/lib/portal/types'
 import {
    lineageRankPillsFromOrganism,
@@ -72,6 +72,39 @@ function getKingdomLabel(row: Record<string, unknown>): string | null {
 
 function lineageRankGroupLabel(styleKey: string): string {
    return SPECIES_RANK_GROUPS.find((g) => g.id === styleKey)?.label ?? styleKey
+}
+
+/** Keep the first `maxWords` words of free text, appending `...` if more remain. */
+function truncateWords(text: string, maxWords = 6): string {
+   const words = text.trim().split(/\s+/).filter(Boolean)
+   if (words.length <= maxWords) return words.join(' ')
+   return `${words.slice(0, maxWords).join(' ')}...`
+}
+
+/**
+ * Right-aligned snippet for the single CMS field flagged `showOnSpeciesCard`
+ * (e.g. CBP demo's "Interest"). Renders next to the lineage row, truncated to
+ * a handful of words since the underlying field is free text.
+ */
+function SpeciesCardFieldSnippet({
+   organism,
+   field,
+}: {
+   organism: Record<string, unknown>
+   field: CmsOrganismFieldWire | null
+}) {
+   if (!field) return null
+   const values = readOrganismCustomFieldValues(organism.metadata, field.key)
+   if (values.length === 0) return null
+   const fullText = values.join(', ')
+   return (
+      <p
+         className="max-w-[40%] shrink-0 text-right text-[10px] leading-snug text-muted-foreground line-clamp-1"
+         title={`${field.label}: ${fullText}`}
+      >
+         {truncateWords(fullText)}
+      </p>
+   )
 }
 
 function LineageRankText({
@@ -217,46 +250,6 @@ function SubProjectLine({
    )
 }
 
-function OrganismCustomFieldsLine({
-   organism,
-   customFields,
-   className,
-}: {
-   organism: Record<string, unknown>
-   customFields: CmsOrganismFieldWire[]
-   className?: string
-}) {
-   const rows = organismCustomFieldRows(organism, customFields)
-   if (rows.length === 0) return null
-   return (
-      <p className={cn('text-[11px] text-muted-foreground line-clamp-2', className)}>
-         {rows.map((row, i) => (
-            <Fragment key={row.key}>
-               {i > 0 ? <span className="text-muted-foreground/50"> · </span> : null}
-               <span>
-                  {row.label}: {row.values.join(', ')}
-               </span>
-            </Fragment>
-         ))}
-      </p>
-   )
-}
-
-function OrganismProjectLine({
-   organism,
-   customFields,
-   className,
-}: {
-   organism: Record<string, unknown>
-   customFields: CmsOrganismFieldWire[]
-   className?: string
-}) {
-   if (customFields.length > 0) {
-      return <OrganismCustomFieldsLine organism={organism} customFields={customFields} className={className} />
-   }
-   return <SubProjectLine organism={organism} className={className} />
-}
-
 function OrganismStatsRow({
    organism,
    className,
@@ -314,6 +307,7 @@ export function SpeciesCard({
 }: SpeciesCardProps) {
    const { config } = usePortalConfig()
    const customFields = config?.organismCustomFields ?? []
+   const cardField = resolveSpeciesCardCustomField(customFields)
    const comfy = compact && compactVariant === 'comfortable'
    const taxid = getTaxid(organism)
    const href = taxid ? `/species/${encodeURIComponent(taxid)}` : '#'
@@ -407,12 +401,17 @@ export function SpeciesCard({
                            </div>
                         </div>
                         {hideCompactLineage ? null : (
-                           <LineageRankText organism={organism} compact compactComfortable={comfy} />
+                           <div className="flex items-start justify-between gap-2">
+                              <div className="min-w-0 flex-1">
+                                 <LineageRankText organism={organism} compact compactComfortable={comfy} />
+                              </div>
+                              <SpeciesCardFieldSnippet organism={organism} field={cardField} />
+                           </div>
                         )}
                         {showGoatChips ? <OrganismGoatChips organism={organism} /> : null}
                      </div>
                   </div>
-                  <OrganismProjectLine organism={organism} customFields={customFields} className="mt-2" />
+                  <SubProjectLine organism={organism} className="mt-2" />
                   <OrganismStatsRow organism={organism} className="mt-2" />
                </CardContent>
             </Card>
@@ -459,10 +458,13 @@ export function SpeciesCard({
                      </div>
                   </div>
 
-                  <div className="min-h-[2.5rem] flex-1">
-                     <LineageRankText organism={organism} lineageMode={lineageMode} />
+                  <div className="flex min-h-[2.5rem] items-start justify-between gap-2">
+                     <div className="min-w-0 flex-1">
+                        <LineageRankText organism={organism} lineageMode={lineageMode} />
+                     </div>
+                     <SpeciesCardFieldSnippet organism={organism} field={cardField} />
                   </div>
-                  <OrganismProjectLine organism={organism} customFields={customFields} className="mt-1" />
+                  <SubProjectLine organism={organism} className="mt-1" />
                </div>
 
                <OrganismStatsRow organism={organism} className="mt-auto" />

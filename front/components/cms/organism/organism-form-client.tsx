@@ -24,6 +24,7 @@ import { Label } from '@/components/ui/label'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { useLocale } from '@/contexts/locale-context'
 import { usePortalConfig } from '@/contexts/portal-context'
 import { defaultPortalConfig, resolveOrganismFormSteps } from '@/lib/portal'
 import type { CmsOrganismFieldWire, OrganismFormStepId } from '@/lib/portal/types'
@@ -40,6 +41,7 @@ import {
    type PublicationValidationStatus,
 } from '@/lib/cms/organism-form-payload'
 import { extractApiMessage } from '@/lib/cms/extract-api-message'
+import { getLocaleLabel } from '@/lib/i18n/localeLabels'
 import {
    cmsCreateOrganism,
    cmsGetItem,
@@ -107,6 +109,7 @@ function buildPayload(organismCustomFields: CmsOrganismFieldWire[]) {
 export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
    const router = useRouter()
    const { config } = usePortalConfig()
+   const { allowedLocales, t } = useLocale()
    const steps = config?.organismFormSteps ?? resolveOrganismFormSteps(defaultPortalConfig)
    const organismCustomFields = config?.organismCustomFields ?? []
    const general = config?.general as Record<string, unknown> | undefined
@@ -1038,13 +1041,26 @@ export function OrganismFormClient({ taxid: editTaxid }: { taxid?: string }) {
                                  setVernacularNames(vernacularNames.map((x, j) => (j === i ? { ...x, value: e.target.value } : x)))
                               }
                            />
-                           <Input
-                              placeholder="Language"
+                           <Select
                               value={n.lang}
-                              onChange={(e) =>
-                                 setVernacularNames(vernacularNames.map((x, j) => (j === i ? { ...x, lang: e.target.value } : x)))
+                              onValueChange={(v) =>
+                                 setVernacularNames(vernacularNames.map((x, j) => (j === i ? { ...x, lang: v } : x)))
                               }
-                           />
+                           >
+                              <SelectTrigger className="w-full">
+                                 <SelectValue placeholder="Language" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                 {n.lang && !allowedLocales.includes(n.lang) && (
+                                    <SelectItem value={n.lang}>{getLocaleLabel(n.lang, t)}</SelectItem>
+                                 )}
+                                 {allowedLocales.map((code) => (
+                                    <SelectItem key={code} value={code}>
+                                       {getLocaleLabel(code, t)}
+                                    </SelectItem>
+                                 ))}
+                              </SelectContent>
+                           </Select>
                            <Input
                               placeholder="Locality"
                               value={n.locality}
@@ -1553,6 +1569,7 @@ function OrganismFormReview({
    images: OrganismImageRow[]
    onGoToStep: (index: number) => void
 }) {
+   const { t } = useLocale()
    const reviewableSections = runtimeSteps.filter((s) => s.id !== 'reviewSubmit')
 
    function renderContent(step: RuntimeStep) {
@@ -1726,7 +1743,7 @@ function OrganismFormReview({
                         {n.value}
                         {(n.lang || n.locality) && (
                            <span className="text-muted-foreground ml-1 text-xs">
-                              ({[n.lang, n.locality].filter(Boolean).join(', ')})
+                              ({[n.lang ? getLocaleLabel(n.lang, t) : '', n.locality].filter(Boolean).join(', ')})
                            </span>
                         )}
                      </li>
