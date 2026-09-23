@@ -104,6 +104,11 @@
            }
         }
      },
+     "speciesListFacets": {
+        "type": "array",
+        "description": "Declarative metadata-backed filters on the public species list. Each entry's key is an organism.metadata sub-key (stats/list/export use metadata.<key>). Independent of cms.organisms.fields (CMS form only) and of general.cms.",
+        "items": { "$ref": "#/$defs/speciesListFacet" }
+     },
      "cms": {
         "type": "object",
         "description": "CMS-only options (organism form step requirements, etc.).",
@@ -175,6 +180,26 @@
      }
   },
   "$defs": {
+     "speciesListFacet": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["key"],
+        "properties": {
+           "key": {
+              "type": "string",
+              "minLength": 1,
+              "description": "organism.metadata sub-key (e.g. sequencing_type, pi_institutes, pi_programs)."
+           },
+           "multiSelect": {
+              "type": "boolean",
+              "description": "When true, OR-within-facet checkbox list using metadata.<key>__in. When false/omitted, single-select exact metadata.<key> match."
+           },
+           "label": {
+              "description": "Optional i18n section title override. Falls back to built-in keys for sequencing_type / pi_institutes / pi_programs, else a humanized key.",
+              "allOf": [{ "$ref": "#/$defs/i18nStrings" }]
+           }
+        }
+     },
      "organismFormStepId": {
         "type": "string",
         "enum": [
